@@ -1,0 +1,81 @@
+#![allow(unused)]
+use iced::{Color, Element, Length, Theme};
+use iced::widget::{progress_bar, ProgressBar};
+use crate::app;
+
+
+#[derive(Debug, Clone)]
+pub struct IpgProgressBar {
+    pub id: usize,
+    pub show: bool,
+    
+    pub min: f32,
+    pub max: f32,
+    pub value: f32,
+    pub width: Length,
+    pub height: Length,
+    // style: <Renderer::Theme as StyleSheet>::Style,
+}
+
+impl IpgProgressBar {
+    pub fn new( 
+        id: usize,
+        show: bool,
+        min: f32,
+        max: f32,
+        value: f32,
+        width: Length,
+        height: Length,
+        // style: <Renderer::Theme as StyleSheet>::Style,
+    ) -> Self {
+        Self {
+            id,
+            show,
+            min,
+            max,
+            value,
+            width,
+            height,
+            // style,
+        }
+    }
+}
+
+pub fn construct_progress_bar(bar: &IpgProgressBar) -> Element<'static, app::Message> {
+    
+    ProgressBar::new(bar.min..=bar.max, bar.value)
+                            .width(bar.width)
+                            .height(bar.height)
+                            .into()
+}
+
+fn progress_bar_custom_style(theme: &Theme) -> progress_bar::Appearance {
+    progress_bar::Appearance {
+        background: theme.extended_palette().background.strong.color.into(),
+        bar: Color::from_rgb8(250, 85, 134).into(),
+        border_radius: 0.0.into(),
+    }
+}
+
+pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
+                                item: String,
+                                value_str: Option<String>,
+                                value_bool: Option<bool>,
+                                value_i64: Option<i64>,
+                                value_f64: Option<f64>,
+                                value_tup_str_i64: Option<(String, i64)>,
+                                value_tup_str_f64: Option<(String, f64)>,
+                                value_vec_f64: Option<Vec<f64>>,
+                                )
+{
+
+    if item == "value".to_string() {
+        pb.value = match value_f64 {
+            Some(val) => val as f32,
+            None => panic!("A float value is needed to update the progress bar"),
+        };
+    }
+    
+
+
+}
