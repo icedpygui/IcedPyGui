@@ -1,6 +1,5 @@
-workspace = { members = ["rounding"] }
 [package]
-authors = ["ray5050 <c.ray5252@gmail.com>"]
+authors = ["Charles Ray <icedpygui@gmail.com>"]
 name = "IcedPyGui"
 version = "0.1.0"
 edition = "2021"
@@ -17,7 +16,7 @@ extension-module = ["pyo3/extension-module"]
 default = ["extension-module"]
 
 [dependencies]
-iced = { version = "0.12.0", features = ["advanced", "debug", "highlighter", 
+iced = { version = "0.12.1", features = ["advanced", "debug", "highlighter", 
                                         "lazy", "smol", "svg", "multi-window"] }
 iced_aw = { version = "0.8.0", features = ["color_picker", "icons",]}
 rfd = "0.12"
