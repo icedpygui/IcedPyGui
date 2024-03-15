@@ -3,7 +3,7 @@
 use core::panic;
 
 use super::ipg_button::IpgButton;
-// use super::ipg_card::IpgCard;
+use super::ipg_card::IpgCard;
 use super::ipg_checkbox::IpgCheckBox;
 use super::ipg_color_picker::IpgColorPicker;
 use super::ipg_container::IpgContainer;
@@ -47,7 +47,7 @@ pub enum IpgContainers {
 #[derive(Debug)]
 pub enum IpgWidgets {
     IpgButton(IpgButton),
-    // IpgCard(IpgCard),
+    IpgCard(IpgCard),
     IpgCheckBox(IpgCheckBox),
     IpgColorPicker(IpgColorPicker),
     IpgDatePicker(IpgDatePicker),
@@ -89,6 +89,12 @@ pub fn get_set_widget_data(id: usize,
                 IpgWidgets::IpgButton(btn) => {
                     let user_data = btn.user_data.clone();
                     let cb_name = btn.cb_name.clone();
+                    drop(state);
+                    return (cb_name, user_data, None, None)
+                },
+                IpgWidgets::IpgCard(crd) => {
+                    let user_data = crd.user_data.clone();
+                    let cb_name = crd.cb_name.clone();
                     drop(state);
                     return (cb_name, user_data, None, None)
                 },

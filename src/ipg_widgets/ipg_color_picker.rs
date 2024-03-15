@@ -1,6 +1,4 @@
 
-use std::collections::BTreeMap;
-
 use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
 use crate::{access_state, access_callbacks};
 use crate::app::Message;
@@ -78,7 +76,7 @@ pub enum ColPikMessage {
 
 pub fn construct_color_picker(cp: IpgColorPicker) -> Element<'static, Message> {
 
-    let btn_label: Element<'static, Message> = Text::new("Set Color").into();
+    let btn_label: Element<Message> = Text::new("Set Color").into();
 
     let style = get_button_style(cp.style.clone());
     
@@ -90,7 +88,6 @@ pub fn construct_color_picker(cp: IpgColorPicker) -> Element<'static, Message> {
                                 .style(theme::Button::Custom(Box::new(
                                     ButtonStyleRadius::new(style, cp.corner_radius))))
                                 .into();
-    // let mapped_btn: Element<Message, Theme, Renderer> = btn.map(move |message| Message::ColorPicker(cp.id, message));
 
     let color_picker: Element<ColPikMessage> = ColorPicker::new(
                                     cp.show,

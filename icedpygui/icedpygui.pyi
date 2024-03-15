@@ -1,4 +1,7 @@
+from dataclasses import dataclass
 from types import Callable, Union, List
+from enums import CardStyle
+
 
 class IPG:
     """
@@ -360,39 +363,38 @@ class IPG:
             int: internal id of widget and can be used by user if equated or use user_id.\n
         """
 
-    # def add_card(self,
-    #                 parent_id, 
-    #                 head, 
-    #                 body, 
-    #                 foot: str=None, 
-    #                 close_size: float=0.0, 
-    #                 on_close=None,
-    #                 width: float=None, 
-    #                 height: float=None, 
-    #                 max_width: float="inf",
-    #                 max_height: float="inf", 
-    #                 padding_head: float=10.0, 
-    #                 padding_body: float=10.0, 
-    #                 padding_foot: float=10.0,
-    #                 show: bool=True, 
-    #                 user_data_str=List[str], 
-    #                 user_data_flt=List[float], 
-    #                 user_data_int=List[int], 
-    #                 user_id=None, 
+    def add_card(self,
+                    parent_id, 
+                    head, 
+                    body, 
+                    foot: str=None, 
+                    close_size: float=0.0, 
+                    on_close=None,
+                    width: float=None, 
+                    height: float=None, 
+                    max_width: float="inf",
+                    max_height: float="inf", 
+                    padding_head: float=5.0, 
+                    padding_body: float=5.0, 
+                    padding_foot: float=5.0,
+                    show: bool=True,
+                    style: str=IPG.card_style(primary=1), 
+                    user_data: any=None, 
+                    user_id: str=None, 
                     
-    #             ) -> int:
-    #     """
-    #     Adds a card to hold text strings
+                ) -> int:
+        """
+        Adds a card to hold text strings
 
-    #     Args:
-    #         parent_id (str, required): id of another container or window.\n
-    #         head (str, required): Text in the header of the card.\n
-    #         body (str, required): Text in the body of the card.\n
-    #         foot (str, optional): Text in the footer of the card.\n
-    #         user_data_str (List[str], optional): List of strings needed by user to be passed through a callback.\n 
-    #         user_data_flt (List[float], optional): List of floats needed by user to be passed through a callback.\n
-    #         user_data_int (List[int], optional): List of integers needed by user to be passed through a callback.\n
-    #     """
+        Args:
+            parent_id (str, required): id of another container or window.\n
+            head (str, required): Text in the header of the card.\n
+            body (str, required): Text in the body of the card.\n
+            foot (str, optional): Text in the footer of the card.\n
+            user_data_str (any, optional): Data needed by user to be passed through a callback.\n 
+        Return: 
+            int: internal id of widget and can be used by user if equated or use user_id.\n
+        """
 
     def add_checkbox(self,
                      parent_id: str,
@@ -947,4 +949,13 @@ class IPG:
                     value):
         """
         Update a widget by supplying the id, the parameter to update and values as a str or number
+        """
+
+
+    def card_style(self, primary: int=None, secondary: int=None, success: int=None, 
+                        danger: int=None, warning: int=None, info: int=None, light: int=None, 
+                        dark: int=None, white: int=None, default=None):
+        """
+        Sets the card style.  Set any stle to any number to active, i.e. primary=1.
+        If you activate more than one, the first item will be chosen.
         """

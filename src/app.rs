@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 use crate::ipg_widgets;
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_update};
-// use ipg_widgets::ipg_card::{CardMessage, construct_card, card_update};
+use ipg_widgets::ipg_card::{CardMessage, construct_card, card_update};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_update};
 use ipg_widgets::ipg_color_picker::{ColPikMessage, construct_color_picker, color_picker_update};
 use ipg_widgets::ipg_column::construct_column;
@@ -50,7 +50,7 @@ pub enum Message {
     EventOccurred(Event),
 
     Button(usize, BTNMessage),
-    // Card(CardMessage),
+    Card(usize, CardMessage),
     CheckBox(usize, CHKMessage),
     ColorPicker(usize, ColPikMessage),
     DatePicker(usize, DPMessage),
@@ -146,10 +146,10 @@ impl multi_window::Application for App {
                 button_update(id, message);
                 Command::none()
             },
-            // Message::Card(message) => {
-            //     card_update(message);
-            //      Command::none()
-            // }
+            Message::Card(id, message) => {
+                card_update(id, message);
+                 Command::none()
+            },
             Message::CheckBox(id, message) => {
                 checkbox_update(id, message);
                 Command::none()
@@ -467,9 +467,9 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgButton(btn) => {
                     return construct_button(btn.clone())
                 },
-                // IpgWidgets::IpgCard(crd) => {
-                //   return construct_card(crd)
-                // },
+                IpgWidgets::IpgCard(crd) => {
+                  return construct_card(crd.clone())
+                },
                 IpgWidgets::IpgCheckBox(chk) => {
                     return construct_checkbox(chk.clone())
                 },

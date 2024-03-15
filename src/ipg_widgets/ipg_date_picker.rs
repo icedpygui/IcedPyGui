@@ -483,7 +483,7 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
     match widget {      
         
         IpgWidgets::IpgButton(_) => (),
-        // IpgWidgets::IpgCard(_) => (),
+        IpgWidgets::IpgCard(_) => (),
         IpgWidgets::IpgCheckBox(_) => (),
         IpgWidgets::IpgColorPicker(_) => (),
         IpgWidgets::IpgDatePicker(dp) => {

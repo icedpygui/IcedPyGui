@@ -34,7 +34,8 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/8d03f5e9-2586-4fe2-8b48-
     * Tooltip
     * Windows multiple with debug option
 * Iced_aw widgets
-    * color_picker 
+    * Card
+    * Color_picker 
 
 * IPG widgets
     * Date_picker - compact and resizable
@@ -66,7 +67,7 @@ maturin develop
 ## Overview
 
 * IcedPyGui is based on Rust Iced https://github.com/iced-rs/iced.
-* Some code is used from Iced_aw https://github.com/iced-rs/iced_aw.
+* Widgets for Iced_aw are used too https://github.com/iced-rs/iced_aw.
 * Pyo3 is used as the python wrapper https://github.com/pyo3/pyo3.
 * Maturin is used to build and publish the module https://github.com/PyO3/maturin.
 * The syntax and the design of the callbacks were inspired by the python wrapper of Dear ImGui, DearPyGui(DPG) https://github.com/hoffstadt/DearPyGui.
