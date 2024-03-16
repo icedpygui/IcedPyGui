@@ -106,7 +106,7 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
 
     match message {
         PLMessage::Selected(value) => {
-            let (cb_name, user_data,_,_) = 
+            let (cb_name, user_data,_,_,_) = 
                             get_set_widget_data(
                                                 id, 
                                                 None,

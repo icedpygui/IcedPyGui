@@ -20,6 +20,7 @@ use ipg_widgets::ipg_container::construct_container;
 use ipg_widgets::ipg_date_picker::{DPMessage, construct_date_picker, date_picker_update};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 use ipg_widgets::ipg_events::process_events;
+use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_update};
 use ipg_widgets::ipg_menu::{MenuMessage, construct_menu_bar, menu_bar_update, 
                                          construct_menu_item, menu_item_update};
 use ipg_widgets::ipg_pane_grid::{PGMessage, construct_pane_grid, pane_grid_update, 
@@ -54,6 +55,7 @@ pub enum Message {
     CheckBox(usize, CHKMessage),
     ColorPicker(usize, ColPikMessage),
     DatePicker(usize, DPMessage),
+    Image(usize, ImageMessage),
     MenuBar(MenuMessage),
     MenuItem(MenuMessage),
     Pane(PGMessage),
@@ -160,6 +162,10 @@ impl multi_window::Application for App {
             },
             Message::DatePicker(id, message) => {
                 date_picker_update(id, message);
+                Command::none()
+            },
+            Message::Image(id, message) => {
+                image_update(id, message);
                 Command::none()
             },
             Message::MenuBar(mn) => {
@@ -476,6 +482,9 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgColorPicker(cp) => {
                     return construct_color_picker(cp.clone())
                 },
+                IpgWidgets::IpgImage(img) => {
+                    return construct_image(img.clone())
+                }
                 IpgWidgets::IpgMenuBar(mn) => {
                     return construct_menu_bar(mn)
                 }

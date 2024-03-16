@@ -106,7 +106,7 @@ pub fn card_update(id: usize, message: CardMessage) {
     match message {
         CardMessage::OnClose(id) => {
 
-            let (cb_name, user_data,_,_) = 
+            let (cb_name, user_data,_,_,_) = 
                                             get_set_widget_data(
                                                                 id, 
                                                                 None,

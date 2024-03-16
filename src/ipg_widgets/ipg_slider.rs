@@ -90,7 +90,7 @@ pub fn slider_update(id: usize, message: SLMessage) {
 
 fn slider_on_release(id: usize) {
 
-    let (cb_name, user_data,_, value_opt) = 
+    let (cb_name, user_data,_, value_opt,_) = 
                                     get_set_widget_data(
                                                         id, 
                                                         None, 
@@ -117,7 +117,7 @@ fn slider_on_release(id: usize) {
 
 pub fn slider_on_change(id: usize, value: f32) {
 
-    let (cb_name, user_data,_,_) = 
+    let (cb_name, user_data,_,_,_) = 
                                     get_set_widget_data(
                                                         id, 
                                                         None, 

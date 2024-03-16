@@ -117,7 +117,7 @@ fn setup_for_callback(id: usize, value: String, name: String) {
         event_name = "on_input".to_string();
     }
 
-    let (cb_name, user_data,_,_) 
+    let (cb_name, user_data,_,_,_) 
                                     = get_set_widget_data(
                                                             id, 
                                                             None, 

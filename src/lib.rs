@@ -34,6 +34,7 @@ use ipg_widgets::ipg_container::IpgContainer;
 use ipg_widgets::ipg_date_picker::{IpgDatePicker, date_picker_item_update};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, 
                                 IpgMouseEvent, IpgWindowEvent};
+use ipg_widgets::ipg_image::IpgImage;
 use ipg_widgets::ipg_menu::{IpgMenuBar, IpgMenuItem};
 use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
 use ipg_widgets::ipg_pick_list::IpgPickList;
@@ -976,7 +977,7 @@ impl IPG {
                         padding=vec![10.0], corner_radius=0.0, 
                         style="primary".to_string(), user_data=None, user_id=None, 
                         ))]
-fn add_color_picker(
+    fn add_color_picker(
                     &mut self,
                     parent_id: String,
                     // ** above required
@@ -994,50 +995,50 @@ fn add_color_picker(
                     user_data: Option<PyObject>,
                     user_id: Option<String>,
                     ) -> PyResult<usize> 
-{
-    self.id += 1;
+    {
+        self.id += 1;
 
-    let mut cb_name: Option<String> = None;
+        let mut cb_name: Option<String> = None;
 
-    if on_submit.is_some() {
-        cb_name = Some("color_on_submit".to_string());
-        let cb = CallBack{id: self.id, cb: on_submit, name: cb_name.clone()};
+        if on_submit.is_some() {
+            cb_name = Some("color_on_submit".to_string());
+            let cb = CallBack{id: self.id, cb: on_submit, name: cb_name.clone()};
 
-        add_callback_to_mutex(cb);
+            add_callback_to_mutex(cb);
+        }
+
+        let color = Color::from_rgba(start_up_color[0], 
+                                            start_up_color[1], 
+                                            start_up_color[2], 
+                                            start_up_color[3]);
+
+        let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
+
+        let padding = get_padding(padding);
+
+        set_state_of_widget(self.id, parent_id, user_id);
+
+        let mut state = access_state();
+
+        state.widgets.insert(self.id, IpgWidgets::IpgColorPicker(
+                            IpgColorPicker::new(
+                                            self.id,
+                                            show,
+                                            color,
+                                            user_data,
+                                            label,
+                                            width,
+                                            height,
+                                            padding,
+                                            corner_radius,
+                                            style,
+                                            cb_name,                              
+                                        )));
+
+        Ok(self.id)
+
     }
-
-    let color = Color::from_rgba(start_up_color[0], 
-                                        start_up_color[1], 
-                                        start_up_color[2], 
-                                        start_up_color[3]);
-
-    let width = get_width(width, width_fill);
-    let height = get_height(height, height_fill);
-
-    let padding = get_padding(padding);
-
-    set_state_of_widget(self.id, parent_id, user_id);
-
-    let mut state = access_state();
-
-    state.widgets.insert(self.id, IpgWidgets::IpgColorPicker(
-                        IpgColorPicker::new(
-                                        self.id,
-                                        show,
-                                        color,
-                                        user_data,
-                                        label,
-                                        width,
-                                        height,
-                                        padding,
-                                        corner_radius,
-                                        style,
-                                        cb_name,                              
-                                    )));
-
-    Ok(self.id)
-
-}
 
     #[pyo3(signature = (parent_id, label="Calendar".to_string(), size_factor=1.0, 
                         padding=vec![5.0], on_select=None, 
@@ -1086,6 +1087,110 @@ fn add_color_picker(
                                         )));
         Ok(self.id)
     }
+
+    #[pyo3(signature = (parent_id, image_path, width=None, width_fill=false, 
+                        height=None, height_fill=false, 
+                        padding=vec![5.0], on_press=None, on_release=None,
+                        on_right_press=None, on_right_release=None,
+                        on_middle_press=None, on_middle_release=None, 
+                        user_data=None, show=false, user_id=None))]
+fn add_image(&mut self,
+                    parent_id: String,
+                    image_path: String,
+                    width: Option<f32>,
+                    width_fill: bool,
+                    height: Option<f32>,
+                    height_fill: bool,
+                    padding: Vec<f64>,
+                    on_press: Option<PyObject>,
+                    on_release: Option<PyObject>,
+                    on_right_press: Option<PyObject>,
+                    on_right_release: Option<PyObject>,
+                    on_middle_press: Option<PyObject>,
+                    on_middle_release: Option<PyObject>,
+                    user_data: Option<PyObject>,
+                    show: bool,
+                    user_id: Option<String>,
+) -> PyResult<usize>
+{
+    self.id += 1;
+
+    let mut callback_made = false;
+
+    let mut cb_on_press: Option<String> = None;
+
+    if on_press.is_some() {
+        cb_on_press = Some("cb_on_press".to_string());
+        callback_made = true;
+    }
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_press, name: cb_on_press.clone()});
+
+    let mut cb_on_release: Option<String> = None;
+
+    if on_release.is_some() {
+        cb_on_release = Some("cb_on_release".to_string());
+        callback_made = true;
+    }
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_release, name: cb_on_release.clone()});
+
+    let mut cb_on_right_press: Option<String> = None;
+
+    if on_right_press.is_some() {
+        cb_on_right_press = Some("cb_on_right_press".to_string());
+        callback_made = true;
+    }
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_right_press, name: cb_on_right_press.clone()});
+
+    let mut cb_on_right_release: Option<String> = None;
+
+    if on_right_release.is_some() {
+        cb_on_right_release = Some("cb_on_right_release".to_string());
+        callback_made = true;
+    }
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_right_release, name: cb_on_right_release.clone()});
+
+    let mut cb_on_middle_press: Option<String> = None;
+
+    if on_middle_press.is_some() {
+        cb_on_middle_press = Some("cb_on_middle_press".to_string());
+        callback_made = true;
+    }
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_middle_press, name: cb_on_middle_press.clone()});
+
+    let mut cb_on_middle_release: Option<String> = None;
+
+    if on_middle_release.is_some() {
+        cb_on_middle_release = Some("cb_on_middle_release".to_string());
+        callback_made = true;
+    }
+
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_middle_release, name: cb_on_middle_release.clone()});
+
+    let width = get_width(width, width_fill);
+    let height = get_height(height, height_fill);
+
+    set_state_of_widget(self.id, parent_id, user_id);
+
+    let mut state = access_state();
+
+    state.widgets.insert(self.id, IpgWidgets::IpgImage(IpgImage::new(
+                                                self.id,
+                                                image_path,
+                                                width,
+                                                height,
+                                                show,
+                                                user_data,
+                                                cb_on_press,
+                                                cb_on_release,
+                                                cb_on_right_press,
+                                                cb_on_right_release,
+                                                cb_on_middle_press,
+                                                cb_on_middle_release,
+                                                callback_made,
+                                            )));
+
+    Ok(self.id)
+}
 
     #[pyo3(signature = (parent_id, items, user_id=None))]
     fn add_menu_bar(&mut self, 
@@ -2133,6 +2238,7 @@ return
                 drop(state);
                 return
             },
+            IpgWidgets::IpgImage(img) => (),
             IpgWidgets::IpgMenuBar(_wid) => (),
             IpgWidgets::IpgMenuItem(_wid) => (),
             IpgWidgets::IpgPickList(_wid) => (),

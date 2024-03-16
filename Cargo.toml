@@ -16,7 +16,7 @@ extension-module = ["pyo3/extension-module"]
 default = ["extension-module"]
 
 [dependencies]
-iced = { version = "0.12.1", features = ["advanced", "debug", "highlighter", 
+iced = { version = "0.12.1", features = ["advanced", "debug", "highlighter", "image", 
                                         "lazy", "smol", "svg", "multi-window"] }
 iced_aw = { version = "0.8.0", features = ["card", "color_picker", "icons",]}
 rfd = "0.12"

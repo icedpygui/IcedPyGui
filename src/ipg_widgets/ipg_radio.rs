@@ -159,7 +159,7 @@ pub fn radio_update(id: usize, message: RDMessage) {
     let (cb_name, 
         user_data, 
         selected_label_opt,
-        _) = get_set_widget_data(
+        _,_) = get_set_widget_data(
                                 id,
                                 None,
                                 None,

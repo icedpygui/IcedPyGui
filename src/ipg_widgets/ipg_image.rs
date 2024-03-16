@@ -4,27 +4,19 @@ use crate::app;
 use crate::{access_state, access_callbacks};
 
 use iced::{Length, Element};
-use iced::alignment::{Horizontal, Vertical};
-use iced::widget::text::{LineHeight, Shaping};
-use iced::widget::{MouseArea, Text};
+use iced::widget::{Container, Image, MouseArea};
 use iced::mouse::Interaction;
+use iced::advanced::image;
 
 use pyo3::{PyObject, Python};
 
 #[derive(Debug, Clone)]
-pub struct IpgSelectableText {
+pub struct IpgImage {
         pub id: usize,
-        pub content: String,
+        pub image_path: String,
         pub width: Length,
         pub height: Length,
-        pub horizontal_alignment: Horizontal,
-        pub vertical_alignment: Vertical,
-        pub line_height: LineHeight,
-        pub size: f32,
         pub show: bool,
-        // pub font: Font,
-        pub shaping: Shaping,
-        // pub style: Style,
         pub user_data: Option<PyObject>,
         pub cb_on_press: Option<String>,
         pub cb_on_release: Option<String>,
@@ -32,22 +24,16 @@ pub struct IpgSelectableText {
         pub cb_on_right_release: Option<String>,
         pub cb_on_middle_press: Option<String>,
         pub cb_on_middle_release: Option<String>,
+        pub callback_made: bool,
 }
 
-impl IpgSelectableText {
+impl IpgImage {
     pub fn new( 
         id: usize,
-        content: String,
+        image_path: String,
         width: Length,
         height: Length,
-        horizontal_alignment: Horizontal,
-        vertical_alignment: Vertical,
-        line_height: LineHeight,
-        size: f32,
         show: bool,
-        // font: Font,
-        shaping: Shaping,
-        // style: Style,
         user_data: Option<PyObject>,
         cb_on_press: Option<String>,
         cb_on_release: Option<String>,
@@ -55,20 +41,14 @@ impl IpgSelectableText {
         cb_on_right_release: Option<String>,
         cb_on_middle_press: Option<String>,
         cb_on_middle_release: Option<String>,
+        callback_made: bool,
         ) -> Self {
         Self {
             id,
-            content,
+            image_path,
             width,
             height,
-            horizontal_alignment,
-            vertical_alignment,
-            line_height,
-            size,
             show,
-            // font: Font,
-            shaping,
-            // style: Style,
             user_data,
             cb_on_press,
             cb_on_release,
@@ -76,12 +56,13 @@ impl IpgSelectableText {
             cb_on_right_release,
             cb_on_middle_press,
             cb_on_middle_release,
+            callback_made,
         }
     }
 }
 
 #[derive(Debug, Clone)]
-pub enum SLTXTMessage {
+pub enum ImageMessage {
     OnPress,
     OnRelease,
     OnRightPress,
@@ -90,39 +71,33 @@ pub enum SLTXTMessage {
     OnMiddleRelease,
 }
 
-pub fn construct_selectable_text(sl_text: IpgSelectableText) -> Element<'static, app::Message> {
+pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
     
-    let content: Element<'_, SLTXTMessage> = 
-                        Text::new(sl_text.content.clone())
-                            .size(sl_text.size)
-                            .line_height(sl_text.line_height)
-                            .width(sl_text.width)
-                            .height(sl_text.height)
-                            .horizontal_alignment(sl_text.horizontal_alignment)
-                            .vertical_alignment(sl_text.vertical_alignment)
-                            // font: Font,
-                            .shaping(sl_text.shaping)
-                            // style: Style,
-                            .into();
+    let img: Element<ImageMessage> = Image::<image::Handle>::new(image.image_path).into();
 
-    let ma: Element<'_, SLTXTMessage> = 
-                MouseArea::new(content)
-                    .on_press(SLTXTMessage::OnPress)
-                    .on_release(SLTXTMessage::OnRelease)
-                    .on_right_press(SLTXTMessage::OnRightPress)
-                    .on_right_release(SLTXTMessage::OnRightRelease)
-                    .on_middle_press(SLTXTMessage::OnMiddlePress)
-                    .on_middle_release(SLTXTMessage::OnMiddleRelease)
+    let cont: Element<ImageMessage> = Container::new(img)
+                                                .width(image.width)
+                                                .height(image.height)
+                                                .into();
+
+    let ma: Element<ImageMessage> = 
+                MouseArea::new(cont)
+                    .on_press(ImageMessage::OnPress)
+                    .on_release(ImageMessage::OnRelease)
+                    .on_right_press(ImageMessage::OnRightPress)
+                    .on_right_release(ImageMessage::OnRightRelease)
+                    .on_middle_press(ImageMessage::OnMiddlePress)
+                    .on_middle_release(ImageMessage::OnMiddleRelease)
                     .interaction(Interaction::Pointer)
                     .into();
 
-    ma.map(move |message| app::Message::SelectableText(sl_text.id, message))
+    ma.map(move |message| app::Message::Image(image.id, message))
 
 }
 
-pub fn selectable_text_update(id: usize, message: SLTXTMessage) {
+pub fn image_update(id: usize, message: ImageMessage) {
 
-    let (_, user_data, _, _,_) = 
+    let (_, user_data, _, _,cb_made) = 
                                 get_set_widget_data(
                                                     id,
                                                     None,
@@ -131,8 +106,16 @@ pub fn selectable_text_update(id: usize, message: SLTXTMessage) {
                                                     None,
                                                     );
 
+    // Since Iced responds to messages regardless if the user sets thenm or not
+    // then each widget has a variable for callback_made which will return if none set.
+    match cb_made {
+        Some(false) => return,
+        Some(true) => (),
+        None => return,
+    }
+    
     match message {
-        SLTXTMessage::OnPress => {
+        ImageMessage::OnPress => {
             let event_name = "on_press".to_string();
             process_callback(id, 
                                 event_name,
@@ -140,7 +123,7 @@ pub fn selectable_text_update(id: usize, message: SLTXTMessage) {
                                 Some("cb_on_press".to_string())
                                 );
         },
-        SLTXTMessage::OnRelease => {
+        ImageMessage::OnRelease => {
             let event_name = "on_release".to_string();
             process_callback(id, 
                                 event_name,
@@ -148,14 +131,14 @@ pub fn selectable_text_update(id: usize, message: SLTXTMessage) {
                                 Some("cb_on_release".to_string())
                             );
         },
-        SLTXTMessage::OnRightPress => {
+        ImageMessage::OnRightPress => {
             let event_name = "on_right_press".to_string();
             process_callback(id, event_name,
                                 user_data,
                                 Some("cb_on_right_press".to_string())
                             );
         },
-        SLTXTMessage::OnRightRelease => {
+        ImageMessage::OnRightRelease => {
             let event_name = "on_right_release".to_string();
             process_callback(id, 
                                 event_name,
@@ -163,7 +146,7 @@ pub fn selectable_text_update(id: usize, message: SLTXTMessage) {
                                 Some("cb_on_right_release".to_string())
                             );
         },
-        SLTXTMessage::OnMiddlePress => {
+        ImageMessage::OnMiddlePress => {
             let event_name = "on_middle_press".to_string();
             process_callback(id, 
                                 event_name,
@@ -171,14 +154,14 @@ pub fn selectable_text_update(id: usize, message: SLTXTMessage) {
                                 Some("cb_on_middle_press".to_string())
                             );
         },
-        SLTXTMessage::OnMiddleRelease => {
+        ImageMessage::OnMiddleRelease => {
             let event_name = "on_middle_release".to_string();
             process_callback(id, 
                                 event_name,
                                 user_data,
                                 Some("cb_on_middle_release".to_string())
                             );
-        },
+        }
     }
 }
 
@@ -198,32 +181,32 @@ fn process_callback(id: usize,
 
         if id == callback.id && cb_name == callback.name {
 
-        found_callback = match callback.cb.clone() {
-            Some(cb) => Some(cb),
-            None => {drop(app_cbs); panic!("Callback could not be found with id {}", id)},
-        };
-            break;
+            found_callback = match callback.cb.clone() {
+                Some(cb) => Some(cb),
+                None => panic!("Callback could not be found with id {}", id),
+            };
+                break;
         }                   
-    };
+    }
 
     drop(app_cbs);
 
     match found_callback {
 
     Some(cb) => Python::with_gil(|py| {
-                            match user_data {
-                                Some(ud) => cb.call1(py, 
-                                                                (id.clone(),
-                                                                event_name, 
-                                                                ud,
-                                                                )).unwrap(),
-                                None => cb.call1(py, 
-                                                (id.clone(), 
-                                                        event_name
+                match user_data {
+                    Some(ud) => cb.call1(py, 
+                                                    (id.clone(),
+                                                    event_name, 
+                                                    ud,
                                                     )).unwrap(),
-                            }
-                        }),
-    None => panic!("Selectable text callback could not be found"),
+                    None => cb.call1(py, 
+                                    (id.clone(), 
+                                            event_name
+                                        )).unwrap(),
+                }
+            }),
+    None => panic!("Image callback could not be found"),
     };
 
 }

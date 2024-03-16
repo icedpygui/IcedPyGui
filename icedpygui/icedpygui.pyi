@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from types import Callable, Union, List
-from enums import CardStyle
 
 
 class IPG:
@@ -513,6 +512,48 @@ class IPG:
             internal id of widget and can be used by user if equated or use user_id.\n
         """
     
+    def add_image(self, 
+                    parent_id: str, 
+                    image_path: str,
+                    *, 
+                    on_press: Callable=None, 
+                    on_release: Callable=None, 
+                    on_right_press: Callable=None, 
+                    on_right_release: Callable=None, 
+                    on_middle_press: Callable=None, 
+                    on_middle_release: Callable=None, 
+                    width: float=None,
+                    height: float=None,
+                    width_fill: bool=False,
+                    height_fill: bool=False, 
+                    user_id: str=None,
+                    show: bool=True,  
+                    user_data: any=None,
+                    ) -> int:
+        """
+        Adds an image widget.  The image is selectable using callbcks for all 3 mouse buttons.
+
+        Args:
+            parent_id (str, required): id of another container or window.\n 
+            image_path (str, required): A full path of where the image is located.\n
+            on_press (Callable, optional): default=None, what function to use after left mouse button pressed.\n 
+            on_release (Callable, optional): default=None, what function to use after left mouse button released.\n 
+            on_right_press (Callable, optional): default=None, what function to use after right mouse button pressed.\n 
+            on_right_release (Callable, optional): default=None, what function to use after right mouse button released.\n  
+            on_middle_press (Callable, optional): default=None, what function to use after middle mouse button pressed.\n 
+            on_middle_release (Callable, optional): default=None, what function to use after middle mouse button released.\n
+            width (float, optional): default=None, width of the widget.\n
+            height (float, optional): default=None, height of the widget.\n   
+            width_fill (bool, optional): default=False, Fill available width.\n
+            height_fill (bool, optional): default=False, Fill available height.\n
+            user_id (str, optional): literal used to identify widget instead of using the \n
+                                     returned integer, if variable is inconvenient.\n  
+            show (bool, optional) default=True, To show the widget or not.\n
+            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n   
+        Return: 
+            int: internal id of widget and can be used by user if equated or use user_id.\n
+        """
+
     def add_pick_list(self,
                         parent_id: str,
                         options: List=[str],

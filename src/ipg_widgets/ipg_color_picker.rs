@@ -122,7 +122,7 @@ pub fn color_picker_update(id: usize, message: ColPikMessage) {
         ColPikMessage::SubmitColor(color) => {
             let show = false;
             let color_list: Vec<f64> = convert_color_to_list(color);
-            let (cb_name, user_data,_,_) = 
+            let (cb_name, user_data,_,_,_) = 
                                             get_set_widget_data(
                                                                 id, 
                                                                 Some(show),
@@ -165,7 +165,7 @@ pub fn color_picker_item_update(
 fn open_close_color_picker(id: usize, show: bool) {
 
     // Non callback just seeting the show value.
-    let (_, _, _, _) = get_set_widget_data(id, 
+    let (_, _, _, _,_) = get_set_widget_data(id, 
                                             Some(show),
                                             None, 
                                             None,

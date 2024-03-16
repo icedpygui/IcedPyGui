@@ -10,6 +10,7 @@ pub mod ipg_container;
 pub mod ipg_date_picker;
 pub mod ipg_enums;
 pub mod ipg_events;
+pub mod ipg_image;
 pub mod ipg_menu;
 pub mod ipg_modal;
 pub mod ipg_pane_grid;

@@ -508,6 +508,7 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
                 return                  
             } 
         }
+        IpgWidgets::IpgImage(_) => (),
         IpgWidgets::IpgMenuBar(_) => (),
         IpgWidgets::IpgMenuItem(_) => (),
         IpgWidgets::IpgPickList(_) => (),

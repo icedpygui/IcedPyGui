@@ -9,6 +9,7 @@ use super::ipg_color_picker::IpgColorPicker;
 use super::ipg_container::IpgContainer;
 use super::ipg_column::IpgColumn;
 use super::ipg_date_picker::IpgDatePicker;
+use super::ipg_image::IpgImage;
 use super::ipg_menu::{IpgMenuBar, IpgMenuItem};
 use super::ipg_pane_grid::{IpgPaneGrid, IpgPane};
 use super::ipg_pick_list::IpgPickList;
@@ -51,6 +52,7 @@ pub enum IpgWidgets {
     IpgCheckBox(IpgCheckBox),
     IpgColorPicker(IpgColorPicker),
     IpgDatePicker(IpgDatePicker),
+    IpgImage(IpgImage),
     IpgMenuBar(IpgMenuBar),
     IpgMenuItem(IpgMenuItem),
     IpgPickList(IpgPickList),
@@ -75,6 +77,7 @@ pub fn get_set_widget_data(id: usize,
                                     Option<PyObject>, 
                                     Option<String>,
                                     Option<f64>,
+                                    Option<bool>,
                                     )
 {
 
@@ -90,13 +93,13 @@ pub fn get_set_widget_data(id: usize,
                     let user_data = btn.user_data.clone();
                     let cb_name = btn.cb_name.clone();
                     drop(state);
-                    return (cb_name, user_data, None, None)
+                    return (cb_name, user_data, None, None, None)
                 },
                 IpgWidgets::IpgCard(crd) => {
                     let user_data = crd.user_data.clone();
                     let cb_name = crd.cb_name.clone();
                     drop(state);
-                    return (cb_name, user_data, None, None)
+                    return (cb_name, user_data, None, None, None)
                 },
                 IpgWidgets::IpgCheckBox(cbox) => {
                     cbox.is_checked = match data_bool {
@@ -107,7 +110,7 @@ pub fn get_set_widget_data(id: usize,
                     let user_data = cbox.user_data.clone();
                     let cb_name = cbox.cb_name.clone();
                     drop(state);
-                    return (cb_name, user_data, None, None)
+                    return (cb_name, user_data, None, None, None)
                 },
                 IpgWidgets::IpgColorPicker(cp) => {
                     cp.show = match data_bool {
@@ -128,26 +131,32 @@ pub fn get_set_widget_data(id: usize,
                     let user_data = cp.user_data.clone();
                     let cb_name = cp.cb_name.clone();
                     drop(state);
-                    return (cb_name, user_data, None, None)
+                    return (cb_name, user_data, None, None, None)
                 },
                 IpgWidgets::IpgDatePicker(_) => {
-                    return (None, None, None, None)
+                    return (None, None, None, None, None)
+                },
+                IpgWidgets::IpgImage(img) => {
+                    let user_data = img.user_data.clone();
+                    let cb_made = Some(img.callback_made.clone());
+                    drop(state);
+                    return (None, user_data, None, None, cb_made)
                 },
                 IpgWidgets::IpgMenuBar(_) => {
-                    return (None, None, None, None)
+                    return (None, None, None, None, None)
                 },
                 IpgWidgets::IpgMenuItem(_) => {
-                    return (None, None, None, None)
+                    return (None, None, None, None, None)
                 },
                 IpgWidgets::IpgPickList(pl) => {
                     pl.selected = data_str;
                     let user_data = pl.user_data.clone();
                     let cb_name = pl.cb_name.clone();
                     drop(state);
-                    return (cb_name, user_data, None, None)
+                    return (cb_name, user_data, None, None, None)
                 },
                 IpgWidgets::IpgProgressBar(_) => {
-                    return (None, None, None, None)
+                    return (None, None, None, None, None)
                 },
                 IpgWidgets::IpgRadio(radio) => {
                     let mut selected_index = 0;
@@ -166,13 +175,13 @@ pub fn get_set_widget_data(id: usize,
 
                     drop(state);
 
-                    return (cb_name, user_data, selected_label, None)
+                    return (cb_name, user_data, selected_label, None, None)
                 },
                 IpgWidgets::IpgSelectableText(st) => {
                     let user_data = st.user_data.clone();
         
                     drop(state);
-                    return (None, user_data, None, None)
+                    return (None, user_data, None, None, None)
                 },
                 IpgWidgets::IpgSlider(slider) => {
                     let mut cb_name: Option<String> = None;
@@ -190,19 +199,19 @@ pub fn get_set_widget_data(id: usize,
                     let user_data = slider.user_data.clone();
                     
                     drop(state);
-                    return (cb_name, user_data, None, Some(value))
+                    return (cb_name, user_data, None, Some(value), None)
                 },
                 IpgWidgets::IpgSpace(_) => {
-                    return (None, None, None, None)
+                    return (None, None, None, None, None)
                 },
                 IpgWidgets::IpgTable(_) => {
-                    return (None, None, None, None)
+                    return (None, None, None, None, None)
                 },
                 IpgWidgets::IpgText(_) => {
-                    return (None, None, None, None)
+                    return (None, None, None, None, None)
                 },
                 IpgWidgets::IpgTextEditor(_) => {
-                    return (None, None, None, None)
+                    return (None, None, None, None, None)
                 },
                 IpgWidgets::IpgTextInput(input) => {
                     let value = match data_str {
@@ -215,7 +224,7 @@ pub fn get_set_widget_data(id: usize,
 
                     drop(state);
 
-                    return (cb_name, user_data, None, None)
+                    return (cb_name, user_data, None, None, None)
                 },
             },
     
