@@ -1006,3 +1006,13 @@ class IPG:
         Sets the card style.  Set any stle to any number to active, i.e. primary=1.
         If you activate more than one, the first item will be chosen.
         """
+
+    def get_window_theme(self, Light=False, Dark=False, Dracula=False, Nord=False,SolarizedLight=False,
+                        SolarizedDark=False, GruvboxLight=False,GruvboxDark=False,CatppuccinLatte=False,
+                        CatppuccinFrappe=False, CatppuccinMacchiato=False, CatppuccinMocha=False,
+                        TokyoNight=False,TokyoNightStorm=False, TokyoNightLight=False, KanagawaWave=False,
+                        KanagawaDragon=False, KanagawaLotus=False, Moonfly=False,Nightfly=False,Oxocarbon=False):
+        """
+        Gets the window them.  The return value needs to be used in the theme parameter of the window.  
+        Therefore, this command needs to precede the add_window.
+        """

@@ -231,49 +231,6 @@ impl multi_window::Application for App {
                             .map(|window| window.debug)
                             .unwrap_or(false);
 
-        let scroll = self.windows
-                                .get(&window)
-                                .map(|window|window.scroll)
-                                .unwrap_or(false);
-        
-        if scroll {
-        //     let width = self.windows
-        //                                 .get(&window)
-        //                                 .map(|window|window.scroll_width)
-        //                                 .unwrap();
-        //     let height = self.windows
-        //                                 .get(&window)
-        //                                 .map(|window|window.scroll_height)
-        //                                 .unwrap();
-        //     let direction = self.windows
-        //                                 .get(&window)
-        //                                 .map(|window|window.scroll_direction)
-        //                                 .unwrap();
-        //     let on_scroll_opt = self.windows
-        //                                 .get(&window)
-        //                                 .map(|window|window.on_scroll)
-        //                                 .unwrap();
-            
-        //     match on_scroll_opt {
-        //         Some(on_scroll) => {
-        //             content = Scrollable::new(content)
-        //                                     .width(width)
-        //                                     .height(height)
-        //                                     .direction(direction)
-        //                                     .on_scroll(on_scroll)
-        //                                     .into();
-                    
-        //         },
-        //         None => {
-        //             content = Scrollable::new(content)
-        //                                     .width(width)
-        //                                     .height(height)
-        //                                     .direction(direction)
-        //                                     .into();
-        //         }
-        //     }
-        };
-
         let theme = self.windows
                                 .get(&window)
                                 .map(|window|window.theme.clone())

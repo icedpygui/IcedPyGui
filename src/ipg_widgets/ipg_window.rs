@@ -26,10 +26,6 @@ pub struct IpgWindow {
     pub exit_on_close_request: bool,
     pub resizable: bool,
     pub visible: bool,
-    pub scroll: bool,
-    pub scroll_width: Length,
-    pub scroll_height: Length,
-    pub scroll_direction: Direction,
     pub debug: bool,
     pub user_data: Option<PyObject>,
     pub cb_name: Option<String>,
@@ -48,10 +44,6 @@ impl IpgWindow {
         theme: Theme,
         resizable: bool,
         visible: bool,
-        scroll: bool,
-        scroll_width: Length,
-        scroll_height: Length,
-        scroll_direction: Direction,
         debug: bool,
         user_data: Option<PyObject>,
         cb_name: Option<String>,
@@ -68,10 +60,6 @@ impl IpgWindow {
             theme,
             resizable,
             visible,
-            scroll,
-            scroll_width,
-            scroll_height,
-            scroll_direction,
             debug,
             user_data,
             cb_name,
@@ -104,7 +92,7 @@ pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Command<app::Messag
                 position: state.windows[i].position,
                 visible: state.windows[i].visible,
                 resizable: state.windows[i].resizable,
-                exit_on_close_request: true,//state.windows[i].exit_on_close_request,
+                exit_on_close_request: true,
                 ..Default::default()
             }) as (window::Id, Command<app::Message>);
 
@@ -145,12 +133,14 @@ pub fn window_update(message:WndMessage) -> Command<app::Message> {
     Command::none()
 }
 
-fn process_callback_resized(id: usize,
-                    event_name: String,
-                    width: f32,
-                    height: f32,
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>) 
+fn process_callback_resized(
+                            id: usize,
+                            event_name: String,
+                            width: f32,
+                            height: f32,
+                            user_data: Option<PyObject>, 
+                            cb_name: Option<String>
+                            ) 
 {
     if !cb_name.is_some() {return}
 

@@ -1,5 +1,4 @@
 #![allow(non_snake_case)]
-#![recursion_limit="2048"]
 #![allow(unused)]
 
 use pyo3::prelude::*;
@@ -8,7 +7,7 @@ use pyo3::PyObject;
 
 use iced::multi_window::Application;
 use iced::window::{self, Position};
-use iced::{Color, Font, Length, Point, Settings, Size};
+use iced::{Color, Font, Length, Point, Settings, Size, Theme};
 use iced::widget::text::{self, LineHeight};
 
 use iced_aw::CardStyles;
@@ -229,10 +228,8 @@ impl IPG {
 
     #[pyo3(signature = (window_id, title, width, height, pos_x=None, pos_y=None,
                         pos_centered=false, resizable=true, 
-                        theme="dark".to_string(), exit_on_close=true, on_resize=None, show=true, 
-                        scroll=false, scroll_width=None, scroll_height=None, 
-                        scroll_direction=None, on_scroll=None, debug=false,
-                        user_data=None))]
+                        theme="Dark".to_string(), exit_on_close=true, on_resize=None, 
+                        show=true, debug=false, user_data=None))]
     fn add_window(&mut self,
                         window_id: String, 
                         title: String, 
@@ -246,29 +243,37 @@ impl IPG {
                         exit_on_close: bool,
                         on_resize: Option<PyObject>,
                         show: bool,
-                        scroll: bool,
-                        scroll_width: Option<f32>,
-                        scroll_height: Option<f32>,
-                        scroll_direction: Option<String>,
-                        on_scroll: Option<bool>,
                         debug: bool,
                         user_data: Option<PyObject>,
                     ) -> PyResult<usize>
     {
         self.id += 1;
 
-        let _on_scroll = on_scroll;
-
-        let scroll_width = get_width(scroll_width, false);
-        let scroll_height = get_height(scroll_height, false);
-
-        let scroll_direction = get_scroll_direction(scroll_direction);
-        
-        let mut window_theme = iced::Theme::Dark;
-
-        if theme == "light" {
-            window_theme = iced::Theme::Light;
-        }
+        // TODO: add custom
+        let mut window_theme = match theme.as_str() {
+            "Light" => Theme::Light,
+            "Dark" => Theme::Dark,
+            "Dracula" => Theme::Dracula,
+            "Nord" => Theme::Nord,
+            "SolarizedLight" => Theme::SolarizedLight,
+            "SolarizedDark" => Theme::SolarizedDark,
+            "GruvboxLight" => Theme::GruvboxLight,
+            "GruvboxDark" => Theme::GruvboxDark,
+            "CatppuccinLatte" => Theme::CatppuccinLatte,
+            "CatppuccinFrappe" => Theme::CatppuccinFrappe,
+            "CatppuccinMacchiato" => Theme::CatppuccinMacchiato,
+            "CatppuccinMocha" => Theme::CatppuccinMocha,
+            "TokyoNight" => Theme::TokyoNight,
+            "TokyoNightStorm" => Theme::TokyoNightStorm,
+            "TokyoNightLight" => Theme::TokyoNightLight,
+            "KanagawaWave" => Theme::KanagawaWave,
+            "KanagawaDragon" => Theme::KanagawaDragon,
+            "KanagawaLotus" => Theme::KanagawaLotus,
+            "Moonfly" => Theme::Moonfly,
+            "Nightfly" => Theme::Nightfly,
+            "Oxocarbon" => Theme::Oxocarbon,
+            _ => Theme::Dark,
+        };
 
         let mut window_position = Position::Default;
 
@@ -324,10 +329,6 @@ impl IPG {
                                             window_theme.clone(), 
                                             resizable,
                                             visible,
-                                            scroll,
-                                            scroll_width,
-                                            scroll_height,
-                                            scroll_direction,
                                             debug,
                                             user_data.clone(),
                                             cb_name.clone(),
@@ -345,10 +346,6 @@ impl IPG {
                                         window_theme, 
                                         resizable,
                                         show,
-                                        scroll,
-                                        scroll_width,
-                                        scroll_height,
-                                        scroll_direction,
                                         debug,
                                         user_data,
                                         cb_name,
@@ -2340,6 +2337,61 @@ return
             add_callback_to_mutex(cb);
         }
         
+    }
+
+    #[pyo3(signature = (Light=false, Dark=false, Dracula=false, Nord=false,SolarizedLight=false,
+                        SolarizedDark=false, GruvboxLight=false,GruvboxDark=false,CatppuccinLatte=false,
+                        CatppuccinFrappe=false, CatppuccinMacchiato=false, CatppuccinMocha=false,
+                        TokyoNight=false,TokyoNightStorm=false, TokyoNightLight=false, KanagawaWave=false,
+                        KanagawaDragon=false, KanagawaLotus=false, Moonfly=false,Nightfly=false,Oxocarbon=false))]
+    fn get_window_theme(&mut self,
+                            Light: bool,
+                            Dark: bool,
+                            Dracula: bool,
+                            Nord: bool,
+                            SolarizedLight: bool,
+                            SolarizedDark: bool,
+                            GruvboxLight: bool,
+                            GruvboxDark: bool,
+                            CatppuccinLatte: bool,
+                            CatppuccinFrappe: bool,
+                            CatppuccinMacchiato: bool,
+                            CatppuccinMocha: bool,
+                            TokyoNight: bool,
+                            TokyoNightStorm: bool,
+                            TokyoNightLight: bool,
+                            KanagawaWave: bool,
+                            KanagawaDragon: bool,
+                            KanagawaLotus: bool,
+                            Moonfly: bool,
+                            Nightfly: bool,
+                            Oxocarbon: bool,
+                        ) -> String
+    {
+        if Light {return "Light".to_string()}
+        if Dark {return "Dark".to_string()}
+        if Dracula {return "Dracula".to_string()}
+        if Nord {return "Nord".to_string()}
+        if SolarizedLight {return "SolarizedLight".to_string()}
+        if SolarizedDark {return "SolarizedDark".to_string()}
+        if GruvboxLight {return "GruvboxLight".to_string()}
+        if GruvboxDark {return "GruvboxDark".to_string()}
+        if CatppuccinLatte {return "CatppuccinLatte".to_string()}
+        if CatppuccinFrappe {return "CatppuccinFrappe".to_string()}
+        if CatppuccinMacchiato {return "CatppuccinMacchiato".to_string()}
+        if CatppuccinMocha {return "CatppuccinMocha".to_string()}
+        if TokyoNight {return "TokyoNight".to_string()}
+        if TokyoNightStorm {return "TokyoNightStorm".to_string()}
+        if TokyoNightLight {return "TokyoNightLight".to_string()}
+        if KanagawaWave {return "KanagawaWave".to_string()}
+        if KanagawaDragon {return "KanagawaDragon".to_string()}
+        if KanagawaLotus {return "KanagawaLotus".to_string()}
+        if Moonfly {return "Moonfly".to_string()}
+        if Nightfly {return "Nightfly".to_string()}
+        if Oxocarbon {return "Oxocarbon".to_string()}
+
+        return "Dark".to_string()
+
     }
 
 }
