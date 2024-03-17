@@ -774,7 +774,7 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_width=f32::INFINITY, max_height=f32::INFINITY, 
                         padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
-                        show=true, style=None, user_data=None, user_id=None))]
+                        show=true, style="Default".to_string(), user_data=None, user_id=None))]
     fn add_card(&mut self,
                 parent_id: String, 
                 head: String,
@@ -793,17 +793,13 @@ impl IPG {
                 padding_body: Vec<f64>,
                 padding_foot: Vec<f64>,
                 show: bool,
-                style: Option<String>,
+                style: String,
                 user_data: Option<PyObject>, 
                 user_id: Option<String>,
                 ) -> PyResult<usize> 
     {
         self.id += 1;
 
-        let style = self.card_style.clone();
-
-        self.card_style = None;
-        
         let mut cb_name: Option<String> = None;
 
         if on_close.is_some() {
@@ -845,63 +841,6 @@ impl IPG {
 
         Ok(self.id)
 
-    }
-
-    #[pyo3(signature = (primary=None, secondary=None, success=None, danger=None, 
-                        warning=None, info=None, light=None, dark=None, white=None,
-                        default=None))]
-    fn card_style(&mut self,
-                    primary: Option<i32>,
-                    secondary: Option<i32>,
-                    success: Option<i32>, 
-                    danger: Option<i32>, 
-                    warning: Option<i32>,
-                    info: Option<i32>, 
-                    light: Option<i32>,
-                    dark: Option<i32>,
-                    white: Option<i32>,
-                    default: Option<i32>,
-                    ) 
-    {
-        if primary.is_some() {
-            self.card_style = Some("primary".to_string());
-            return
-        }
-        if secondary.is_some() {
-            self.card_style = Some("secondary".to_string());
-        }
-        if success.is_some() {
-            self.card_style = Some("success".to_string());
-            return
-        }
-        if danger.is_some() {
-            self.card_style = Some("danger".to_string());
-            return
-        }
-        if warning.is_some() {
-            self.card_style = Some("warning".to_string());
-            return
-        }
-        if info.is_some() {
-            self.card_style = Some("info".to_string());
-            return
-        }
-        if light.is_some() {
-            self.card_style = Some("light".to_string());
-            return
-        }
-        if dark.is_some() {
-            self.card_style = Some("dark".to_string());
-            return
-        }
-        if white.is_some() {
-            self.card_style = Some("white".to_string());
-            return
-        }
-        if default.is_some() {
-            self.card_style = Some("default".to_string());
-            return
-        }
     }
 
     #[pyo3(signature = (parent_id, on_checked=None, is_checked=false, label="".to_string(), 
@@ -2337,6 +2276,35 @@ return
             add_callback_to_mutex(cb);
         }
         
+    }
+
+    #[pyo3(signature = (Primary=false, Secondary=false, Success=false, Danger=false, 
+                        Warning=false, Info=false, Light=false, Dark=false, White=false,
+                        Default=false))]
+    fn get_card_style(&mut self,
+                        Primary: bool,
+                        Secondary: bool,
+                        Success: bool, 
+                        Danger: bool, 
+                        Warning: bool,
+                        Info: bool, 
+                        Light: bool,
+                        Dark: bool,
+                        White: bool,
+                        Default: bool,
+                        ) -> String
+    {
+        if Primary {return "Primary".to_string()}
+        if Secondary {return "Secondary".to_string()}
+        if Success {return "Success".to_string()}
+        if Danger { return "danger".to_string()}
+        if Warning { return "Warning".to_string()}
+        if Info { return "Info".to_string()}
+        if Light { return "Light".to_string()}
+        if Dark { return "Dark".to_string()}
+        if White { return "White".to_string()}
+        if Default { return "Default".to_string()}
+        return "Dark".to_string()
     }
 
     #[pyo3(signature = (Light=false, Dark=false, Dracula=false, Nord=false,SolarizedLight=false,

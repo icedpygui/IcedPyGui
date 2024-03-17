@@ -999,12 +999,14 @@ class IPG:
         """
 
 
-    def card_style(self, primary: int=None, secondary: int=None, success: int=None, 
-                        danger: int=None, warning: int=None, info: int=None, light: int=None, 
-                        dark: int=None, white: int=None, default=None):
+    def get_card_style(self, Primary: bool=False, Secondary: bool=False, Success: bool=False, 
+                        Danger: bool=False, warning: bool=False, info: bool=False, light: bool=False, 
+                        dark: bool=False, white: bool=False, default: bool=False):
         """
-        Sets the card style.  Set any stle to any number to active, i.e. primary=1.
+        Gets the card style.  Set any style to True to active.
         If you activate more than one, the first item will be chosen.
+        Define this first by equating to a variable them put in the card style parameter.
+        ALternately, put the function in the style parameter.
         """
 
     def get_window_theme(self, Light=False, Dark=False, Dracula=False, Nord=False,SolarizedLight=False,
@@ -1013,6 +1015,8 @@ class IPG:
                         TokyoNight=False,TokyoNightStorm=False, TokyoNightLight=False, KanagawaWave=False,
                         KanagawaDragon=False, KanagawaLotus=False, Moonfly=False,Nightfly=False,Oxocarbon=False):
         """
-        Gets the window them.  The return value needs to be used in the theme parameter of the window.  
-        Therefore, this command needs to precede the add_window.
+        Gets the window them.  Set any theme to True to active.  
+        If you activate more than one, the first item will be chosen.
+        Define this first by equating to a variable them put in the window theme parameter.
+        ALternately, put the function in the style parameter.
         """

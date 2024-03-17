@@ -28,7 +28,7 @@ pub struct IpgCard {
     pub head: String,
     pub body: String,
     pub foot: Option<String>,
-    pub style: Option<String>,
+    pub style: String,
     pub cb_name: Option<String>,
 }
 
@@ -48,7 +48,7 @@ impl IpgCard {
         head: String,
         body: String,
         foot: Option<String>,
-        style: Option<String>,
+        style: String,
         cb_name: Option<String>,
         ) -> Self {
         Self {
@@ -79,11 +79,11 @@ pub enum CardMessage {
 
 pub fn construct_card (crd: IpgCard) -> Element<'static, Message> {
 
+    let style = match_style(crd.style);
+
     let head: Element<CardMessage> = Text::new(crd.head.clone()).width(Length::Fill).into();
 
     let body: Element<CardMessage> = Column::new().push(Text::new(crd.body.clone())).into();
-
-    let style = match_style(crd.style.clone());
 
     let card: Element<CardMessage> = Card::new(head, body)
                                                 .width(crd.width)
@@ -195,24 +195,19 @@ fn process_callback(
 
 }
 
-fn match_style(style_opt: Option<String>) -> CardStyles {
-    
-    let style = match style_opt {
-        Some(s) => s,
-        None => "default".to_string(),
-    };
+fn match_style(style: String) -> CardStyles {
 
     match style.as_str() {
-        "primary" => CardStyles::Primary,
-        "secondary" => CardStyles::Secondary, 
-        "success" => CardStyles::Success, 
-        "danger" => CardStyles::Danger, 
-        "warning" => CardStyles::Warning,
-        "info" => CardStyles::Info, 
-        "light" => CardStyles::Light, 
-        "dark" => CardStyles::Dark, 
-        "white" => CardStyles::White, 
-        "default" => CardStyles::Default,
-        _ => panic!("No matching style found for Card, checked the docs.")
+        "Primary" => CardStyles::Primary,
+        "Secondary" => CardStyles::Secondary, 
+        "Success" => CardStyles::Success, 
+        "Danger" => CardStyles::Danger, 
+        "Warning" => CardStyles::Warning,
+        "Info" => CardStyles::Info, 
+        "Light" => CardStyles::Light, 
+        "Dark" => CardStyles::Dark, 
+        "White" => CardStyles::White, 
+        "Default" => CardStyles::Default,
+        _ => CardStyles::Default,
     }
 }
