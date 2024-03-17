@@ -210,6 +210,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
     if item == "style".to_string() {
+        dbg!(&value_str);
         btn.style = match value_str {
             Some(st) => st,
             None => panic!("Style must be of type string.")
@@ -271,15 +272,15 @@ fn process_callback(id: usize,
 
 pub fn get_button_style(style: String) -> theme::Button {
 
-    let style = match style.as_str() {
-        "primary" => theme::Button::Primary,
-        "secondary" => theme::Button::Secondary,
-        "positive" => theme::Button::Positive,
-        "destructive" => theme::Button::Destructive,
-        "text" => theme::Button::Text,
-        _ => panic!("Button style not found"),
-    };
-    style
+    match style.as_str() {
+        "Primary" => theme::Button::Primary,
+        "Secondary" => theme::Button::Secondary,
+        "Positive" => theme::Button::Positive,
+        "Destructive" => theme::Button::Destructive,
+        "Text" => theme::Button::Text,
+        _ => theme::Button::Primary,
+    }
+ 
 }
 
 pub struct ButtonStyleRadius {

@@ -998,6 +998,14 @@ class IPG:
         Update a widget by supplying the id, the parameter to update and values as a str or number
         """
 
+    def get_button_style(self, Primary: bool=False, Secondary: bool=False, Positive: bool=False, 
+                        Destructive: bool=False, Text: bool=False):
+        """
+        Gets the button style.  Set any style to True to active.
+        If you activate more than one, the first item will be chosen.
+        Define this first by equating to a variable them put in the button style parameter.
+        ALternately, put the function directly in the style parameter.
+        """
 
     def get_card_style(self, Primary: bool=False, Secondary: bool=False, Success: bool=False, 
                         Danger: bool=False, warning: bool=False, info: bool=False, light: bool=False, 
@@ -1006,7 +1014,7 @@ class IPG:
         Gets the card style.  Set any style to True to active.
         If you activate more than one, the first item will be chosen.
         Define this first by equating to a variable them put in the card style parameter.
-        ALternately, put the function in the style parameter.
+        ALternately, put the function directly in the style parameter.
         """
 
     def get_window_theme(self, Light=False, Dark=False, Dracula=False, Nord=False,SolarizedLight=False,
@@ -1018,5 +1026,5 @@ class IPG:
         Gets the window them.  Set any theme to True to active.  
         If you activate more than one, the first item will be chosen.
         Define this first by equating to a variable them put in the window theme parameter.
-        ALternately, put the function in the style parameter.
+        ALternately, put the function directly in the style parameter.
         """

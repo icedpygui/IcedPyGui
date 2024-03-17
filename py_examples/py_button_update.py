@@ -19,11 +19,11 @@ def update_button(id, name):
     ipg.update_item(height_btn, "label", "Heigth Changed")
 
     # Changing the padding around the label
-    ipg.update_item(padding_btn, "padding", [20.0])
+    ipg.update_item(padding_btn, "padding", [30.0])
     ipg.update_item(padding_btn, "label", "Padding Changed")
 
     # Changing the style
-    ipg.update_item(style_btn, "style", "secondary")
+    ipg.update_item(style_btn, "style", "Secondary")
     ipg.update_item(style_btn, "label", "Styling Changed")
 
     # Hide the button

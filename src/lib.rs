@@ -714,7 +714,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, label, on_press=None, width=None,
                         height=None, width_fill=false, height_fill=false,
                         padding=vec![10.0], corner_radius=15.0, 
-                        style="primary".to_string(), user_data=None, show=true, user_id=None, 
+                        style="Primary".to_string(), user_data=None, show=true, user_id=None, 
                         ))]
     fn add_button(&mut self,
                         parent_id: String,
@@ -727,7 +727,7 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         corner_radius: f32,
-                        style:String,
+                        style: String,
                         user_data: Option<PyObject>,
                         show: bool,
                         user_id: Option<String>,
@@ -2278,6 +2278,25 @@ return
         
     }
 
+    #[pyo3(signature = (Primary=false, Secondary=false, Positive=false, 
+                        Destructive=false, Text=false))]
+    fn get_button_style(&mut self,
+                        Primary: bool,
+                        Secondary: bool,
+                        Positive: bool,
+                        Destructive: bool,
+                        Text: bool,
+                        ) -> String 
+    {
+        if Primary {return "Primary".to_string()}
+        if Secondary {return "Secondary".to_string()}
+        if Positive {return "Positive".to_string()}
+        if Destructive { return "Destructive".to_string()}
+        if Text { return "Text".to_string()}
+
+        return "Primary".to_string()
+    }
+
     #[pyo3(signature = (Primary=false, Secondary=false, Success=false, Danger=false, 
                         Warning=false, Info=false, Light=false, Dark=false, White=false,
                         Default=false))]
@@ -2297,7 +2316,7 @@ return
         if Primary {return "Primary".to_string()}
         if Secondary {return "Secondary".to_string()}
         if Success {return "Success".to_string()}
-        if Danger { return "danger".to_string()}
+        if Danger { return "Danger".to_string()}
         if Warning { return "Warning".to_string()}
         if Info { return "Info".to_string()}
         if Light { return "Light".to_string()}

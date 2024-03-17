@@ -58,27 +58,27 @@ class ButtonDemo:
         # The callback is the same for each button but may be different based on needs.
         self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id, 
                                                                     label="Primary", 
-                                                                    style="primary", 
+                                                                    style=self.ipg.get_button_style(Primary=True), 
                                                                     on_press=self.button_pressed, 
                                                                     user_data="Primary"))
         self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id, 
                                                                     label="Secondary", 
-                                                                    style="secondary", 
+                                                                    style=self.ipg.get_button_style(Secondary=True), 
                                                                     on_press=self.button_pressed, 
                                                                     user_data="Secondary"))
         self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id, 
                                                                     label="Positive", 
-                                                                    style="positive", 
+                                                                    style=self.ipg.get_button_style(Positive=True), 
                                                                     on_press=self.button_pressed, 
                                                                     user_data="Positive"))
         self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id, 
                                                                     label="Destructive", 
-                                                                    style="destructive", 
+                                                                    style=self.ipg.get_button_style(Destructive=True), 
                                                                     on_press=self.button_pressed, 
                                                                     user_data="Destructive"))
         self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id, 
                                                                     label="Text", 
-                                                                    style="text", 
+                                                                    style=self.ipg.get_button_style(Text=True), 
                                                                     on_press=self.button_pressed, 
                                                                     user_data="Text"))
 
