@@ -16,17 +16,22 @@ def on_mouse_move(id, name, point):
     ipg.update_item(text_points[index], "content", f"x={x}\ny={y}\n")
 
 
+def on_mouse_exit(id, name):
+    index = image_ids.index(id)
+    ipg.update_item(text_points[index], "content", "Point")
+
 ipg.add_window(window_id="main", title="Date Picker Demo", width=800, height=800, 
                                     pos_x=500, pos_y=100)
 
 ipg.add_container(window_id="main", container_id="cont", align_x="center", 
                   align_y="center", width_fill=True, height_fill=True)
 
+# height was used in the column here because the default is shrink and when the 
+# text widgets change in height due to the content, the column will shrink or expand
+# and move back to center.  So to reduce this movement, height was set.
+ipg.add_column(window_id="main", container_id="col1", parent_id="cont", height=400.0)
 
-ipg.add_column(window_id="main", container_id="col1", parent_id="cont")
-
-# path = "/home/charles/Documents/rust/icedpygui_project/IcedPyGui/resources/ferris.png"
-path = "/home/charles/Documents/icedpygui_project/IcedPyGui/resources/ferris.png"
+path = "/home/charles/Documents/rust/icedpygui_project/IcedPyGui/resources/ferris.png"
 
 ipg.add_row(window_id="main", container_id="row1", parent_id="col1")
 
@@ -36,7 +41,8 @@ for i in range(0, 5):
     image_ids.append(ipg.add_image(parent_id="row1", image_path=path, 
                                    width=100.0, height=50.0, 
                                    on_press=image_selected,
-                                   on_move=on_mouse_move))
+                                   on_move=on_mouse_move,
+                                   on_exit=on_mouse_exit))
 
 ipg.add_row(window_id="main", container_id="row2", parent_id="col1")
 
