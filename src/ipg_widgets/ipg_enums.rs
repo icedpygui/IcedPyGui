@@ -138,9 +138,8 @@ pub fn get_set_widget_data(id: usize,
                 },
                 IpgWidgets::IpgImage(img) => {
                     let user_data = img.user_data.clone();
-                    let cb_made = Some(img.callback_made.clone());
                     drop(state);
-                    return (None, user_data, None, None, cb_made)
+                    return (None, user_data, None, None, None)
                 },
                 IpgWidgets::IpgMenuBar(_) => {
                     return (None, None, None, None, None)

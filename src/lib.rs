@@ -34,7 +34,7 @@ use ipg_widgets::ipg_container::IpgContainer;
 use ipg_widgets::ipg_date_picker::{IpgDatePicker, date_picker_item_update};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, 
                                 IpgMouseEvent, IpgWindowEvent};
-use ipg_widgets::ipg_image::IpgImage;
+use ipg_widgets::ipg_image::{IpgImage, ImageMessage};
 use ipg_widgets::ipg_menu::{IpgMenuBar, IpgMenuItem};
 use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
 use ipg_widgets::ipg_pick_list::IpgPickList;
@@ -1092,7 +1092,8 @@ impl IPG {
                         height=None, height_fill=false, 
                         padding=vec![5.0], on_press=None, on_release=None,
                         on_right_press=None, on_right_release=None,
-                        on_middle_press=None, on_middle_release=None, 
+                        on_middle_press=None, on_middle_release=None,
+                        on_enter=None, on_move=None, on_exit=None, 
                         user_data=None, show=false, user_id=None))]
 fn add_image(&mut self,
                     parent_id: String,
@@ -1108,6 +1109,9 @@ fn add_image(&mut self,
                     on_right_release: Option<PyObject>,
                     on_middle_press: Option<PyObject>,
                     on_middle_release: Option<PyObject>,
+                    on_enter: Option<PyObject>,
+                    on_move: Option<PyObject>,
+                    on_exit: Option<PyObject>,
                     user_data: Option<PyObject>,
                     show: bool,
                     user_id: Option<String>,
@@ -1115,56 +1119,58 @@ fn add_image(&mut self,
 {
     self.id += 1;
 
-    let mut callback_made = false;
-
-    let mut cb_on_press: Option<String> = None;
-
+    let mut cb_on_press = ImageMessage::None;
     if on_press.is_some() {
-        cb_on_press = Some("cb_on_press".to_string());
-        callback_made = true;
+        cb_on_press = ImageMessage::OnPress;
     }
-    add_callback_to_mutex(CallBack{id: self.id, cb: on_press, name: cb_on_press.clone()});
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_press, name: Some("on_press".to_string())});
 
-    let mut cb_on_release: Option<String> = None;
-
+    let mut cb_on_release = ImageMessage::None;
     if on_release.is_some() {
-        cb_on_release = Some("cb_on_release".to_string());
-        callback_made = true;
+        cb_on_release = ImageMessage::OnRelease;
     }
-    add_callback_to_mutex(CallBack{id: self.id, cb: on_release, name: cb_on_release.clone()});
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_release, name: Some("on_release".to_string())});
 
-    let mut cb_on_right_press: Option<String> = None;
-
+    let mut cb_on_right_press = ImageMessage::None;
     if on_right_press.is_some() {
-        cb_on_right_press = Some("cb_on_right_press".to_string());
-        callback_made = true;
+        cb_on_right_press = ImageMessage::OnRightPress;
     }
-    add_callback_to_mutex(CallBack{id: self.id, cb: on_right_press, name: cb_on_right_press.clone()});
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_right_press, name: Some("on_right_press".to_string())});
 
-    let mut cb_on_right_release: Option<String> = None;
-
+    let mut cb_on_right_release = ImageMessage::None;
     if on_right_release.is_some() {
-        cb_on_right_release = Some("cb_on_right_release".to_string());
-        callback_made = true;
+        cb_on_right_release = ImageMessage::OnRightRelease;
     }
-    add_callback_to_mutex(CallBack{id: self.id, cb: on_right_release, name: cb_on_right_release.clone()});
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_right_release, name: Some("on_right_release".to_string())});
 
-    let mut cb_on_middle_press: Option<String> = None;
-
+    let mut cb_on_middle_press = ImageMessage::None;
     if on_middle_press.is_some() {
-        cb_on_middle_press = Some("cb_on_middle_press".to_string());
-        callback_made = true;
+        cb_on_middle_press = ImageMessage::OnMiddlePress;
     }
-    add_callback_to_mutex(CallBack{id: self.id, cb: on_middle_press, name: cb_on_middle_press.clone()});
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_middle_press, name: Some("on_middle_press".to_string())});
 
-    let mut cb_on_middle_release: Option<String> = None;
-
+    let mut cb_on_middle_release = ImageMessage::None;
     if on_middle_release.is_some() {
-        cb_on_middle_release = Some("cb_on_middle_release".to_string());
-        callback_made = true;
+        cb_on_middle_release = ImageMessage::OnMiddleRelease;
     }
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_middle_release, name: Some("on_middle_release".to_string())});
 
-    add_callback_to_mutex(CallBack{id: self.id, cb: on_middle_release, name: cb_on_middle_release.clone()});
+    let mut cb_on_enter = ImageMessage::None;
+    if on_enter.is_some() {
+        cb_on_enter = ImageMessage::OnEnter;
+    }
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_enter, name: Some("on_enter".to_string())});
+
+    if on_move.is_some() {
+        add_callback_to_mutex(CallBack{id: self.id, cb: on_move, name: Some("on_move".to_string())});
+    }
+    
+    let mut cb_on_exit = ImageMessage::None;
+    if on_exit.is_some() {
+        cb_on_exit = ImageMessage::OnExit;
+    }
+    add_callback_to_mutex(CallBack{id: self.id, cb: on_exit, name: Some("on_exit".to_string())});
+
 
     let width = get_width(width, width_fill);
     let height = get_height(height, height_fill);
@@ -1186,7 +1192,8 @@ fn add_image(&mut self,
                                                 cb_on_right_release,
                                                 cb_on_middle_press,
                                                 cb_on_middle_release,
-                                                callback_made,
+                                                cb_on_enter,
+                                                cb_on_exit,
                                             )));
 
     Ok(self.id)
@@ -2384,7 +2391,7 @@ fn set_state_of_widget(
 
     let wnd_id_str = match state.container_wnd_str_ids.get(&parent_id) {
         Some(id) => id.clone(),
-        None => panic!("The main window id could not be found using parent_id {}, check that your parent_id matches a contaier", parent_id)
+        None => panic!("The main window id could not be found using parent_id {}, check that your parent_id matches a container", parent_id)
     };
 
     let wnd_id_usize = match state.windows_str_ids.get(&wnd_id_str) {

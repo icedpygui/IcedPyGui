@@ -521,7 +521,10 @@ class IPG:
                     on_right_press: Callable=None, 
                     on_right_release: Callable=None, 
                     on_middle_press: Callable=None, 
-                    on_middle_release: Callable=None, 
+                    on_middle_release: Callable=None,
+                    on_enter: Callable=None,
+                    on_move: Callable=None,
+                    on_exit: Callable=None, 
                     width: float=None,
                     height: float=None,
                     width_fill: bool=False,
@@ -536,12 +539,15 @@ class IPG:
         Args:
             parent_id (str, required): id of another container or window.\n 
             image_path (str, required): A full path of where the image is located.\n
-            on_press (Callable, optional): default=None, what function to use after left mouse button pressed.\n 
-            on_release (Callable, optional): default=None, what function to use after left mouse button released.\n 
-            on_right_press (Callable, optional): default=None, what function to use after right mouse button pressed.\n 
-            on_right_release (Callable, optional): default=None, what function to use after right mouse button released.\n  
-            on_middle_press (Callable, optional): default=None, what function to use after middle mouse button pressed.\n 
-            on_middle_release (Callable, optional): default=None, what function to use after middle mouse button released.\n
+            on_press (Callable, optional): default=None, function to call after left mouse button pressed.\n 
+            on_release (Callable, optional): default=None, function to call after left mouse button released.\n 
+            on_right_press (Callable, optional): default=None, function to call after right mouse button pressed.\n 
+            on_right_release (Callable, optional): default=None, function to call after right mouse button released.\n  
+            on_middle_press (Callable, optional): default=None, function to call after middle mouse button pressed.\n 
+            on_middle_release (Callable, optional): default=None, function to call after middle mouse button released.\n
+            on_enter (Callable, optional): default=None, function to call after mouse enters image.\n
+            on_move (Callable, optional): default=None, function to call after mouse moves in image.\n
+            on_exit (Callable, optional): default=None, function to call after mouse exits image.\n
             width (float, optional): default=None, width of the widget.\n
             height (float, optional): default=None, height of the widget.\n   
             width_fill (bool, optional): default=False, Fill available width.\n
