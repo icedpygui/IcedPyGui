@@ -1,9 +1,15 @@
-from icedpygui.icedpygui import IPG
+from icedpygui.icedpygui import IPG, IpgButtonStyles
+
 
 ipg = IPG()
 
 text_id = 0
 
+# Since the widget construction and callbacks are handled differently
+# and at different times during this process, making a new widget in 
+# a callback is not allowed because of clashing Gils.  Therefore,
+# the only IPG commands allowed in a callback are the ones 
+# starting with update_
 def update_button(id, name):
     # changing the radius using a float
     ipg.update_item(radius_btn, "corner_radius", 5.0)
@@ -23,7 +29,7 @@ def update_button(id, name):
     ipg.update_item(padding_btn, "label", "Padding Changed")
 
     # Changing the style
-    ipg.update_item(style_btn, "style", "Secondary")
+    ipg.update_item(style_btn, "style", IpgButtonStyles.Secondary)
     ipg.update_item(style_btn, "label", "Styling Changed")
 
     # Hide the button
@@ -53,5 +59,7 @@ padding_btn = ipg.add_button("col", "Padding Will Change")
 style_btn = ipg.add_button("col", "Styling Will Change")
 
 show_btn = ipg.add_button("col", "This button will disappear")
+
+
 
 ipg.start_session()

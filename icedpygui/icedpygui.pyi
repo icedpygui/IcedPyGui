@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from types import Callable, Union, List
 
 
@@ -1028,3 +1027,23 @@ class IPG:
         Define this first by equating to a variable them put in the window theme parameter.
         ALternately, put the function directly in the style parameter.
         """
+
+
+class IpgButtonStyles:
+    Primary = "Primary"
+    Secondary = "Secondary"
+    Positive = "Positive"
+    Destructive = "Destructive"
+    Text = "Text"
+
+class IpgCardStyles: 
+    Primary = "Primary"
+    Secondary = "Secondary"
+    Success = "Success"
+    Danger = "Danger"
+    Warning = "Warning"
+    Info = "Info"
+    Light = "Light"
+    Dark = "Dark"
+    White = "White"
+    Default = "Default"

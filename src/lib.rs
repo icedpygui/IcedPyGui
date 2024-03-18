@@ -10,8 +10,6 @@ use iced::window::{self, Position};
 use iced::{Color, Font, Length, Point, Settings, Size, Theme};
 use iced::widget::text::{self, LineHeight};
 
-use iced_aw::CardStyles;
-
 use core::panic;
 use std::iter::Iterator;
 use std::collections::HashMap;
@@ -24,8 +22,8 @@ mod iced_widgets;
 
 use crate::iced_widgets::scrollable::Direction;
 
-use ipg_widgets::ipg_button::{IpgButton, button_item_update};
-use ipg_widgets::ipg_card::{IpgCard, card_item_update};
+use ipg_widgets::ipg_button::{IpgButton, IpgButtonStyles, button_item_update, get_button_str_from_style};
+use ipg_widgets::ipg_card::{IpgCard, IpgCardStyles, card_item_update, get_card_str_from_style};
 use ipg_widgets::ipg_checkbox::{IpgCheckBox, checkbox_item_update};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::IpgColumn;
@@ -2049,7 +2047,7 @@ fn add_image(&mut self,
                     Err(_) => None,
                 } 
             }
-            
+
             let res = value.extract::<bool>(py);
             if !res.is_err() {
                 value_bool = match res {
@@ -2096,6 +2094,22 @@ fn add_image(&mut self,
                     Ok(res) => Some(res),
                     Err(_) => None,
                 } 
+            }
+
+            let res = value.extract::<IpgButtonStyles>(py);
+            if !res.is_err() {
+                value_str = match res {
+                    Ok(style) => get_button_str_from_style(style),
+                    Err(_) => None,
+                }
+            }
+
+            let res = value.extract::<IpgCardStyles>(py);
+            if !res.is_err() {
+                value_str = match res {
+                    Ok(style) => get_card_str_from_style(style),
+                    Err(_) => None,
+                }
             }
 
         });
@@ -2383,6 +2397,15 @@ return
 
 }
 
+
+#[pymodule]
+fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_class::<IPG>()?;
+    m.add_class::<IpgButtonStyles>()?;
+    m.add_class::<IpgCardStyles>()?;
+    Ok(())
+}
+
 fn set_state_of_container(
                             id: usize, 
                             window_id: String, 
@@ -2481,14 +2504,6 @@ pub fn py_extract_list(list_opt: Option<&PyList>) -> Vec<Vec<String>> {
             None => return vec![vec![]],
         };
 }
-
-
-#[pymodule]
-fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<IPG>()?;
-    Ok(())
-}
-
 
 
 fn add_callback_to_mutex(callback: CallBack) {

@@ -5,7 +5,7 @@ use crate::app;
 use crate::{access_state, access_callbacks};
 use super::helpers::{get_padding, get_width, get_height};
 
-use pyo3::{Python, PyObject};
+use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{Button, Space, Text};
 use iced::{alignment, Border, Color, Element, Length, Padding, theme, Theme, };
@@ -62,6 +62,21 @@ impl IpgButton {
 #[derive(Debug, Clone)]
 pub enum BTNMessage {
     ButtonPressed,
+}
+
+// The enums above are different than iced enums though they have the
+// same names.  The iced ones go into the Button widget so have to be
+// from theme::Button.  These are the Ipg version so that they can be
+// used in puthon.  Since they go through a String for matching, they 
+// can be kept separate.
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgButtonStyles {
+    Primary,
+    Secondary,
+    Positive,
+    Destructive,
+    Text
 }
 
 pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
@@ -210,7 +225,6 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
     if item == "style".to_string() {
-        dbg!(&value_str);
         btn.style = match value_str {
             Some(st) => st,
             None => panic!("Style must be of type string.")
@@ -282,6 +296,18 @@ pub fn get_button_style(style: String) -> theme::Button {
     }
  
 }
+
+
+pub fn get_button_str_from_style(style: IpgButtonStyles) -> Option<String> {
+    match style {
+        IpgButtonStyles::Primary => Some("Primary".to_string()),
+        IpgButtonStyles::Secondary => Some("Secondary".to_string()),
+        IpgButtonStyles::Positive => Some("Positive".to_string()),
+        IpgButtonStyles::Destructive => Some("Destructive".to_string()),
+        IpgButtonStyles::Text => Some("Text".to_string()),
+    }
+}
+
 
 pub struct ButtonStyleRadius {
     theme: theme::Button,
