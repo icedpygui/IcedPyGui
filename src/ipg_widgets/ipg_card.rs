@@ -1,7 +1,7 @@
 
 use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
 use crate::app::Message;
-use crate::{access_state, access_callbacks};
+use crate::{access_callbacks, access_state, UpdateItems};
 
 use iced::widget::shader::wgpu::core::gfx_if_metal_hidden;
 use iced::{Element, Length, Padding};
@@ -166,17 +166,11 @@ pub fn card_update(id: usize, message: CardMessage) {
 
 pub fn card_item_update(crd: &mut IpgCard,
                             item: String,
-                            value_str: Option<String>,
-                            _value_bool: Option<bool>,
-                            _value_i64: Option<i64>,
-                            _value_f64: Option<f64>,
-                            _value_tup_str_i64: Option<(String, i64)>,
-                            _value_tup_str_f64: Option<(String, f64)>,
-                            _value_vec_f64: Option<Vec<f64>>,
+                            items: UpdateItems,
                             )
 {
     if item == "head".to_string() {
-        crd.head = match value_str {
+        crd.head = match items.value_str {
             Some(head) => head,
             None => panic!("A string value is needed to update Card head."),
         };
@@ -184,7 +178,7 @@ pub fn card_item_update(crd: &mut IpgCard,
     }
 
     if item == "body".to_string() {
-        crd.body = match value_str {
+        crd.body = match items.value_str {
             Some(body) => body,
             None => panic!("A string value is needed to update Card body."),
         };
@@ -192,7 +186,7 @@ pub fn card_item_update(crd: &mut IpgCard,
     }
 
     if item == "foot".to_string() {
-        crd.foot = match value_str {
+        crd.foot = match items.value_str {
             Some(foot) => Some(foot),
             None => panic!("A string value is needed to update Card foot."),
         };
@@ -200,7 +194,7 @@ pub fn card_item_update(crd: &mut IpgCard,
     }
 
     if item == "style".to_string() {
-        crd.style = match value_str {
+        crd.style = match items.value_str {
             Some(st) => st,
             None => panic!("Style must be of type string.")
         };

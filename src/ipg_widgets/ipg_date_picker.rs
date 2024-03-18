@@ -1,7 +1,7 @@
 #![allow(unused_must_use)]
 
 use crate::app::{Message, self};
-use crate::{access_state, access_callbacks};
+use crate::{access_callbacks, access_state, UpdateItems};
 use super::ipg_modal::IpgModal;
 use crate::ICON_FONT_BOOT;
 
@@ -588,17 +588,12 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
 
 pub fn date_picker_item_update(dp: &mut IpgDatePicker,
                                 item: String,
-                                value_str: Option<String>,
-                                value_bool: Option<bool>,
-                                _value_i64: Option<i64>,
-                                value_f64: Option<f64>,
-                                _value_tup_str_i64: Option<(String, i64)>,
-                                _value_tup_str_f64: Option<(String, f64)>,
-                                value_vec_f64: Option<Vec<f64>>)
+                                items: UpdateItems,
+                                )
 {
     
     if item == "label".to_string() {
-        dp.label = match value_str {
+        dp.label = match items.value_str {
             Some(lb) => lb,
             None => panic!("A string value is required to update label for the calendar.")
         };
@@ -606,7 +601,7 @@ pub fn date_picker_item_update(dp: &mut IpgDatePicker,
     }
 
     if item == "size_factor".to_string() {
-        dp.size_factor = match value_f64 {
+        dp.size_factor = match items.value_f64 {
             Some(sf) => sf as f32,
             None => panic!("A float value is required to update size_factor for the calendar.")
         };
@@ -614,7 +609,7 @@ pub fn date_picker_item_update(dp: &mut IpgDatePicker,
     }
 
     if item == "padding".to_string() {
-        dp.padding = match value_vec_f64 {
+        dp.padding = match items.value_vec_f64 {
             Some(pad) => get_padding(pad),
             None => panic!("Padding must have a List of length 1, 2, or 4.")
         };
@@ -622,7 +617,7 @@ pub fn date_picker_item_update(dp: &mut IpgDatePicker,
     }
 
     if item == "show".to_string() {
-        dp.show = match value_bool {
+        dp.show = match items.value_bool {
             Some(sh) => sh,
             None => panic!("Show value must be either True or False.")
         };

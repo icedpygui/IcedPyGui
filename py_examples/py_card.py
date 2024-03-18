@@ -24,14 +24,15 @@ ipg.add_container(window_id="main", container_id="cont", align_x="center",
                   align_y="center", width_fill=True, height_fill=True)
 
 ipg.add_scrollable(window_id="main", container_id="scroller", parent_id="cont")
-ipg.add_column(window_id="main", container_id="col", parent_id="scroller", align_items="center")
+ipg.add_column(window_id="main", container_id="col", parent_id="scroller", 
+               align_items="center", width=400.0)
 
 
 head = "Python Iced_aw Card"
-body = "This is the body of the card.  Note how the style is add style=ipg.card_style(primary=1).  The opton was to type in the word promary and 8 others or use a function where the IDE show you the options.  All of the paramters are set to None.  If you give any one an integer value, that will be the style selected.  This should cut down on type errors."
+body = "\nThis is the body of the card.  \nNote how the style is add style=ipg.get_card_style(primary=True).  \nSetting any of the dropdown values to True will select it.  This method should cut down on typo errors versus having to type in parameters that need to match exactly."
 
 # you can set the style by creating a variable as below and setting the parameter style
-# or put the function into the add_card, as below.
+# or put the function into the add_card, as shown below.
 p = ipg.get_card_style(Primary=True)
 
 card_id = ipg.add_card("col", head, "Pimary: "+ body, foot="Foot", style=p)
@@ -45,6 +46,6 @@ ipg.add_card("col", head, "Dark: " + body, foot="Foot", style=ipg.get_card_style
 ipg.add_card("col", head, body="White: " + body, foot="Foot", style=ipg.get_card_style(White=True))
 ipg.add_card("col", head, "Default: " + body, foot="Foot", style=ipg.get_card_style(Default=True))
 # if you use no style, them this is what you get, which is Default.
-ipg.add_card("col", head, "Default: " + body, foot="Foot")
+ipg.add_card("col", head, "Default: If you use no style setting.\n" + body, foot="Foot")
 
 ipg.start_session()

@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
-use crate::app;
+use crate::{app, UpdateItems};
 use crate::{access_state, access_callbacks};
 use super::helpers::{get_padding, get_width, get_height};
 
@@ -151,17 +151,11 @@ pub fn button_update(id: usize, message: BTNMessage) {
 
 pub fn button_item_update(btn: &mut IpgButton,
                             item: String,
-                            value_str: Option<String>,
-                            value_bool: Option<bool>,
-                            _value_i64: Option<i64>,
-                            value_f64: Option<f64>,
-                            _value_tup_str_i64: Option<(String, i64)>,
-                            _value_tup_str_f64: Option<(String, f64)>,
-                            value_vec_f64: Option<Vec<f64>>,
+                            items: UpdateItems,
                             )
 {
     if item == "corner_radius".to_string() {
-        btn.corner_radius = match value_f64 {
+        btn.corner_radius = match items.value_f64 {
             Some(flt) => flt as f32,
             None => panic!("A float value is needed to update button corner radius."),
         };
@@ -169,7 +163,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
     if item == "label".to_string() {
-        btn.label = match value_str {
+        btn.label = match items.value_str {
             Some(str) => str,
             None => panic!("A string value is needed to update the button label.")
         };
@@ -177,7 +171,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
     if item == "width".to_string() {
-        btn.width = match value_f64 {
+        btn.width = match items.value_f64 {
             Some(wd) => get_width(Some(wd as f32), false),
             None => panic!("A float is needed to update the button width.")
         };
@@ -185,7 +179,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
     if item == "width_fill".to_string() {
-        btn.width = match value_bool {
+        btn.width = match items.value_bool {
             Some(wd) => get_width(None, wd),
             None => panic!("A boolean is needed to update the button width_fill.")
         };
@@ -193,7 +187,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
     if item == "height".to_string() {
-        btn.height = match value_f64 {
+        btn.height = match items.value_f64 {
             Some(ht) => get_height(Some(ht as f32), false),
             None => panic!("A float is needed to update the button height.")
         };
@@ -201,7 +195,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
     if item == "height_fill".to_string() {
-        btn.height = match value_bool {
+        btn.height = match items.value_bool {
             Some(ht) => get_height(None, ht),
             None => panic!("A boolean is needed to update the button height_fill.")
         };
@@ -209,7 +203,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
     if item == "padding".to_string() {
-        btn.padding = match value_vec_f64 {
+        btn.padding = match items.value_vec_f64 {
             Some(pad) => get_padding(pad),
             None => panic!("Padding must have a List of length 1, 2, or 4.")
         };
@@ -217,7 +211,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
     if item == "show".to_string() {
-        btn.show = match value_bool {
+        btn.show = match items.value_bool {
             Some(sh) => sh,
             None => panic!("Show value must be either True or False.")
         };
@@ -225,7 +219,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
     if item == "style".to_string() {
-        btn.style = match value_str {
+        btn.style = match items.value_str {
             Some(st) => st,
             None => panic!("Style must be of type string.")
         };

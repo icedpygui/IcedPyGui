@@ -2030,19 +2030,13 @@ fn add_image(&mut self,
     #[pyo3(signature = (id, item, value))]
     fn update_item(&self, id: usize, item: String, value: PyObject) {
 
-        let mut value_str: Option<String> = None;
-        let mut value_bool: Option<bool> = None;
-        let mut value_i64: Option<i64> = None;
-        let mut value_f64: Option<f64> = None;
-        let mut value_tup_str_i64: Option<(String, i64)> = None;
-        let mut value_tup_str_f64: Option<(String, f64)> = None;
-        let mut value_vec_f64: Option<Vec<f64>> = None;
+        let mut items = UpdateItems::default();
         
         Python::with_gil(|py| {
 
             let res = value.extract::<String>(py);
             if !res.is_err() {
-                value_str = match res {
+                items.value_str = match res {
                     Ok(res) => Some(res),
                     Err(_) => None,
                 } 
@@ -2050,7 +2044,7 @@ fn add_image(&mut self,
 
             let res = value.extract::<bool>(py);
             if !res.is_err() {
-                value_bool = match res {
+                items.value_bool = match res {
                     Ok(res) => Some(res),
                     Err(_) => None,
                 } 
@@ -2058,7 +2052,7 @@ fn add_image(&mut self,
 
             let res = value.extract::<i64>(py);
             if !res.is_err() { 
-                value_i64 = match res {
+                items.value_i64 = match res {
                     Ok(res) => Some(res),
                     Err(_) => None,
                 } 
@@ -2066,7 +2060,7 @@ fn add_image(&mut self,
             
             let res = value.extract::<f64>(py);
             if !res.is_err() { 
-                value_f64 = match res {
+                items.value_f64 = match res {
                     Ok(res) => Some(res),
                     Err(_) => None,
                 } 
@@ -2074,7 +2068,7 @@ fn add_image(&mut self,
 
             let res = value.extract::<(String, i64)>(py);
             if !res.is_err() { 
-                value_tup_str_i64 = match res {
+                items.value_tup_str_i64 = match res {
                     Ok(res) => Some(res),
                     Err(_) => None,
                 } 
@@ -2082,7 +2076,7 @@ fn add_image(&mut self,
 
             let res = value.extract::<(String, f64)>(py);
             if !res.is_err() { 
-                value_tup_str_f64 = match res {
+                items.value_tup_str_f64 = match res {
                     Ok(res) => Some(res),
                     Err(_) => None,
                 } 
@@ -2090,7 +2084,7 @@ fn add_image(&mut self,
 
             let res = value.extract::<Vec<f64>>(py);
             if !res.is_err() { 
-                value_vec_f64 = match res {
+                items.value_vec_f64 = match res {
                     Ok(res) => Some(res),
                     Err(_) => None,
                 } 
@@ -2098,7 +2092,7 @@ fn add_image(&mut self,
 
             let res = value.extract::<IpgButtonStyles>(py);
             if !res.is_err() {
-                value_str = match res {
+                items.value_str = match res {
                     Ok(style) => get_button_str_from_style(style),
                     Err(_) => None,
                 }
@@ -2106,7 +2100,7 @@ fn add_image(&mut self,
 
             let res = value.extract::<IpgCardStyles>(py);
             if !res.is_err() {
-                value_str = match res {
+                items.value_str = match res {
                     Ok(style) => get_card_str_from_style(style),
                     Err(_) => None,
                 }
@@ -2127,13 +2121,7 @@ fn add_image(&mut self,
             IpgWidgets::IpgButton(btn) => {
                 button_item_update(btn,
                                     item,
-                                    value_str,
-                                    value_bool,
-                                    value_i64,
-                                    value_f64,
-                                    value_tup_str_i64,
-                                    value_tup_str_f64,
-                                    value_vec_f64,
+                                    items,
                                     );
                 drop(state);
                 return
@@ -2142,27 +2130,15 @@ fn add_image(&mut self,
                 card_item_update(
                                     crd,
                                     item,
-                                    value_str,
-                                    value_bool,
-                                    value_i64,
-                                    value_f64,
-                                    value_tup_str_i64,
-                                    value_tup_str_f64,
-                                    value_vec_f64,
+                                    items,
                                 );
-drop(state);
-return
+                drop(state);
+                return
             },
             IpgWidgets::IpgCheckBox(chk) => {
                 checkbox_item_update(chk,
                                     item,
-                                    value_str,
-                                    value_bool,
-                                    value_i64,
-                                    value_f64,
-                                    value_tup_str_i64,
-                                    value_tup_str_f64,
-                                    value_vec_f64,
+                                    items,
                                     );
                 drop(state);
                 return
@@ -2170,13 +2146,7 @@ return
             IpgWidgets::IpgColorPicker(cp) => {
                 color_picker_item_update(cp,
                                     item,
-                                    value_str,
-                                    value_bool,
-                                    value_i64,
-                                    value_f64,
-                                    value_tup_str_i64,
-                                    value_tup_str_f64,
-                                    value_vec_f64,
+                                    items,
                                     );
                 drop(state);
                 return
@@ -2184,13 +2154,7 @@ return
             IpgWidgets::IpgDatePicker(dp) => {
                 date_picker_item_update(dp,
                                     item,
-                                    value_str,
-                                    value_bool,
-                                    value_i64,
-                                    value_f64,
-                                    value_tup_str_i64,
-                                    value_tup_str_f64,
-                                    value_vec_f64,
+                                    items,
                                     );
                 drop(state);
                 return
@@ -2202,13 +2166,7 @@ return
             IpgWidgets::IpgProgressBar(pb) => {
                 progress_bar_item_update(pb,
                                     item,
-                                    value_str,
-                                    value_bool,
-                                    value_i64,
-                                    value_f64,
-                                    value_tup_str_i64,
-                                    value_tup_str_f64,
-                                    value_vec_f64,
+                                    items,
                                     );
                 drop(state);
                 return
@@ -2220,13 +2178,13 @@ return
             IpgWidgets::IpgTable(_wid) => (),
             IpgWidgets::IpgText(wid) => {
                 if item == "content".to_string() {
-                    wid.content = match value_str {
+                    wid.content = match items.value_str {
                         Some(str) => str,
                         None => panic!("A string value is needed to update text"),
                     };
                 } 
                 if item == "show".to_string() {
-                    wid.show = match value_bool {
+                    wid.show = match items.value_bool {
                         Some(bl) => bl,
                         None => panic!("The show parameter must be of type bool")
                     };
@@ -2405,6 +2363,19 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IpgCardStyles>()?;
     Ok(())
 }
+
+#[derive(Default, Debug, PartialEq)]
+pub struct UpdateItems {
+    value_str: Option<String>,
+    value_bool: Option<bool>,
+    value_i64: Option<i64>,
+    value_f64: Option<f64>,
+    value_tup_str_i64: Option<(String, i64)>,
+    value_tup_str_f64: Option<(String, f64)>,
+    value_vec_f64: Option<Vec<f64>>,
+}
+
+impl UpdateItems {}
 
 fn set_state_of_container(
                             id: usize, 

@@ -1,5 +1,5 @@
 
-use crate::{access_state, access_callbacks};
+use crate::{access_callbacks, access_state, UpdateItems};
 use crate::app;
 use super::helpers::{get_width, get_shaping};
 use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
@@ -126,17 +126,11 @@ pub fn checkbox_update(id: usize, message: CHKMessage) {
 
 pub fn checkbox_item_update(chk: &mut IpgCheckBox,
                             item: String,
-                            value_str: Option<String>,
-                            value_bool: Option<bool>,
-                            _value_i64: Option<i64>,
-                            value_f64: Option<f64>,
-                            _value_tup_str_i64: Option<(String, i64)>,
-                            _value_tup_str_f64: Option<(String, f64)>,
-                            _value_vec_f64: Option<Vec<f64>>,
+                            items: UpdateItems,
                             )
 {
     if item == "is_checked".to_string() {
-        chk.is_checked = match value_bool {
+        chk.is_checked = match items.value_bool {
             Some(checked) => checked,
             None => panic!("A bool value is required to update  is_checked for the checkbox.")
         };
@@ -144,7 +138,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 
     if item == "label".to_string() {
-        chk.label = match value_str {
+        chk.label = match items.value_str {
             Some(str) => str,
             None => panic!("A string value is needed to update the button label.")
         };
@@ -152,7 +146,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 
     if item == "width".to_string() {
-        chk.width = match value_f64 {
+        chk.width = match items.value_f64 {
             Some(wd) => get_width(Some(wd as f32), false),
             None => Length::Shrink,
         };
@@ -160,7 +154,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 
     if item == "width_fill".to_string() {
-        chk.width = match value_bool {
+        chk.width = match items.value_bool {
             Some(wd) => get_width(None, wd),
             None => panic!("A boolean is needed to update the button width_fill.")
         };
@@ -168,7 +162,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 
     if item == "size".to_string() {
-        chk.size = match value_f64 {
+        chk.size = match items.value_f64 {
             Some(sz) => sz as f32,
             None => panic!("A float is needed to update the size for the checkbox.")
         };
@@ -176,7 +170,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 
     if item == "spacing".to_string() {
-        chk.spacing = match value_f64 {
+        chk.spacing = match items.value_f64 {
             Some(sp) => sp as f32,
             None => panic!("A float is needed to update the spacing for the checkbox")
         };
@@ -184,7 +178,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 
     if item == "text_size".to_string() {
-        chk.text_size = match value_f64 {
+        chk.text_size = match items.value_f64 {
             Some(ts) => ts as f32,
             None => panic!("A float is needed to update the text_size for the checkbox")
         };
@@ -192,7 +186,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 
     if item == "text_line_height".to_string() {
-        chk.text_line_height = match value_f64 {
+        chk.text_line_height = match items.value_f64 {
             Some(tlh) => LineHeight::Relative(tlh as f32),
             None => panic!("A float is needed to update the text_line_height for the checkbox")
         };
@@ -200,7 +194,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 
     if item == "text_shaping".to_string() {
-        chk.text_shaping = match value_str {
+        chk.text_shaping = match items.value_str {
             Some(ts) => get_shaping(ts),
             None => panic!("A string = 'basic' or 'advanced' is needed for text_shaping for the checkbox")
         };
@@ -208,7 +202,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 
     if item == "show".to_string() {
-        chk.show = match value_bool {
+        chk.show = match items.value_bool {
             Some(sh) => sh,
             None => panic!("Show value must be either True or False.")
         };

@@ -1,6 +1,6 @@
 
 use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
-use crate::{access_state, access_callbacks};
+use crate::{access_callbacks, access_state, UpdateItems};
 use crate::app::Message;
 use crate::ipg_widgets::ipg_button::{ButtonStyleRadius, get_button_style};
 
@@ -149,13 +149,7 @@ pub fn color_picker_update(id: usize, message: ColPikMessage) {
 pub fn color_picker_item_update(
                                 cp: &mut IpgColorPicker,
                                 item: String,
-                                value_str: Option<String>,
-                                value_bool: Option<bool>,
-                                value_i64: Option<i64>,
-                                value_f64: Option<f64>,
-                                value_tup_str_i64: Option<(String, i64)>,
-                                value_tup_str_f64: Option<(String, f64)>,
-                                value_vec_f64: Option<Vec<f64>>,
+                                items: UpdateItems,
                                 ) 
 {
 

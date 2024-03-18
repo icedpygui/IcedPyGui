@@ -1,7 +1,7 @@
 #![allow(unused)]
 use iced::{Color, Element, Length, Theme};
 use iced::widget::{progress_bar, ProgressBar};
-use crate::app;
+use crate::{app, UpdateItems};
 
 
 #[derive(Debug, Clone)]
@@ -59,23 +59,15 @@ fn progress_bar_custom_style(theme: &Theme) -> progress_bar::Appearance {
 
 pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
                                 item: String,
-                                value_str: Option<String>,
-                                value_bool: Option<bool>,
-                                value_i64: Option<i64>,
-                                value_f64: Option<f64>,
-                                value_tup_str_i64: Option<(String, i64)>,
-                                value_tup_str_f64: Option<(String, f64)>,
-                                value_vec_f64: Option<Vec<f64>>,
+                                items: UpdateItems,
                                 )
 {
 
     if item == "value".to_string() {
-        pb.value = match value_f64 {
+        pb.value = match items.value_f64 {
             Some(val) => val as f32,
             None => panic!("A float value is needed to update the progress bar"),
         };
     }
     
-
-
 }
