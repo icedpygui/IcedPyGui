@@ -402,7 +402,6 @@ class IPG:
     def add_checkbox(self,
                      parent_id: str,
                      *,
-                     gen_id: int=None,
                      callback: Callable = None,
                      is_checked: bool=False,
                      label: str=None,

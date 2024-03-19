@@ -26,28 +26,6 @@ pub fn check_for_dup_container_ids(id: usize, container_id: Option<String>) {
     drop(state);
 }
 
-pub fn check_for_dup_user_ids(id: usize, user_id: &Option<String>) {
-
-    match user_id {
-        Some(_id) => (),
-        None => return,
-    }
-
-    let state = access_state();
-
-    let parents = match state.ids.get(&id) {
-        Some(ids) => ids,
-        None => panic!("Ids in check_for_dup_container_ids not found")
-    };
-
-    for parent in parents {
-        if user_id == &parent.user_id {
-            panic!("User id {:?} is not unique", user_id);
-        }
-    }
-    
-    drop(state);
-}
 
 pub fn get_usize_of_id(iced_id: window::Id) -> usize {
 

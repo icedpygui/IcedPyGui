@@ -4,7 +4,7 @@ from icedpygui.icedpygui import IPG
 ipg = IPG()
 
 x_id = ipg.generate_id()
-
+cont_id = ipg.generate_id()
 
 def on_checked(id, name, data, user_data):
     ipg.update_item(x_id, "icon_x",  data)
