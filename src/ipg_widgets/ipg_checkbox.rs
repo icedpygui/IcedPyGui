@@ -3,12 +3,14 @@ use crate::{access_callbacks, access_state, UpdateItems};
 use crate::app;
 use super::helpers::{get_width, get_shaping};
 use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
-// use crate::ICON_FONT;
 
 use iced::{Length, Element};
-use iced::widget::text::{LineHeight, Shaping};
+use iced::widget::text::{self, LineHeight, Shaping};
 use iced::widget::{Checkbox, Space};
+use iced::widget::checkbox::Icon;
 
+use iced_aw::graphics::icons::{icon_to_char, icon_to_string};
+use iced_aw::{BootstrapIcon, BOOTSTRAP_FONT};
 use pyo3::{Python, PyObject};
 
 #[derive(Debug, Clone)]
@@ -26,7 +28,8 @@ pub struct IpgCheckBox {
     pub text_line_height: LineHeight,
     pub text_shaping: Shaping,
     // font: Option<Font>,
-    // icon: Icon<Font>,
+    pub icon_x: bool,
+    pub icon_size: f32,
     // style: Style,
     pub cb_name: Option<String>,
 }
@@ -45,6 +48,8 @@ impl IpgCheckBox {
         text_size: f32,
         text_line_height: LineHeight,
         text_shaping: Shaping,
+        icon_x: bool,
+        icon_size: f32,
         cb_name: Option<String>,
         ) -> Self {
             Self {
@@ -59,6 +64,8 @@ impl IpgCheckBox {
                 text_size,
                 text_line_height,
                 text_shaping,
+                icon_x,
+                icon_size,
                 cb_name,
             }
     }
@@ -75,6 +82,10 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
         return Space::new(Length::Shrink, Length::Shrink).into()
     };
     
+    let check = icon_to_char(BootstrapIcon::Check);
+    let x = icon_to_char(BootstrapIcon::X);
+
+
     let ipg_chk: Element<'_, CHKMessage> = Checkbox::new(chk.label.clone(), 
                             chk.is_checked)
                             .on_toggle(CHKMessage::Checked)
@@ -83,14 +94,24 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
                             .text_line_height(chk.text_line_height)
                             .text_shaping(chk.text_shaping)
                             .text_size(chk.text_size)
+                            //TODO: .font(BOOTSTRAP_FONT)
                             .width(chk.width)
-                            // .icon(Icon {
-                            //     font: ICON_FONT,
-                            //     code_point: '\u{e901}',
-                            //     size: None,
-                            //     line_height: text::LineHeight::Relative(1.0),
-                            //     shaping: text::Shaping::Basic,
-                            // })
+                            .icon(if chk.icon_x {
+                                        Icon {
+                                        font: BOOTSTRAP_FONT,
+                                        code_point: x,
+                                        size: Some(iced::Pixels(chk.icon_size)),
+                                        line_height: text::LineHeight::Relative(1.0),
+                                        shaping: text::Shaping::Basic}
+                                    } else {
+                                        Icon {
+                                            font: BOOTSTRAP_FONT,
+                                            code_point: check,
+                                            size: Some(iced::Pixels(chk.icon_size)),
+                                            line_height: text::LineHeight::Relative(1.0),
+                                            shaping: text::Shaping::Basic}
+                                    }
+                            )
                             .into();
 
     ipg_chk.map(move |message| app::Message::CheckBox(chk.id, message))
@@ -129,10 +150,26 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
                             items: UpdateItems,
                             )
 {
+    if item == "icon_size".to_string() {
+        chk.icon_size = match items.value_f64 {
+            Some(size) => size as f32,
+            None => panic!("A float value is required to update icon_size for the checkbox.")
+        };
+        return
+    }
+
+    if item == "icon_x".to_string() {
+        chk.icon_x = match items.value_bool {
+            Some(x) => x,
+            None => panic!("A bool value is required to update icon_x for the checkbox.")
+        };
+        return
+    }
+
     if item == "is_checked".to_string() {
         chk.is_checked = match items.value_bool {
             Some(checked) => checked,
-            None => panic!("A bool value is required to update  is_checked for the checkbox.")
+            None => panic!("A bool value is required to update is_checked for the checkbox.")
         };
         return
     }
@@ -145,18 +182,10 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
         return
     }
 
-    if item == "width".to_string() {
-        chk.width = match items.value_f64 {
-            Some(wd) => get_width(Some(wd as f32), false),
-            None => Length::Shrink,
-        };
-        return
-    }
-
-    if item == "width_fill".to_string() {
-        chk.width = match items.value_bool {
-            Some(wd) => get_width(None, wd),
-            None => panic!("A boolean is needed to update the button width_fill.")
+    if item == "show".to_string() {
+        chk.show = match items.value_bool {
+            Some(sh) => sh,
+            None => panic!("Show value must be either True or False.")
         };
         return
     }
@@ -177,13 +206,12 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
         return
     }
 
-    if item == "text_size".to_string() {
-        chk.text_size = match items.value_f64 {
-            Some(ts) => ts as f32,
-            None => panic!("A float is needed to update the text_size for the checkbox")
-        };
-        return
-    }
+    // if item == "style".to_string() {
+    //     chk.style = match value_str {
+    //         Some(st) => st,
+    //         None => panic!("Style must be of type string.")
+    //     }
+    // }
 
     if item == "text_line_height".to_string() {
         chk.text_line_height = match items.value_f64 {
@@ -201,20 +229,29 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
         return
     }
 
-    if item == "show".to_string() {
-        chk.show = match items.value_bool {
-            Some(sh) => sh,
-            None => panic!("Show value must be either True or False.")
+    if item == "text_size".to_string() {
+        chk.text_size = match items.value_f64 {
+            Some(ts) => ts as f32,
+            None => panic!("A float is needed to update the text_size for the checkbox")
         };
         return
     }
 
-    // if item == "style".to_string() {
-    //     chk.style = match value_str {
-    //         Some(st) => st,
-    //         None => panic!("Style must be of type string.")
-    //     }
-    // }
+    if item == "width".to_string() {
+        chk.width = match items.value_f64 {
+            Some(wd) => get_width(Some(wd as f32), false),
+            None => Length::Shrink,
+        };
+        return
+    }
+
+    if item == "width_fill".to_string() {
+        chk.width = match items.value_bool {
+            Some(wd) => get_width(None, wd),
+            None => panic!("A boolean is needed to update the button width_fill.")
+        };
+        return
+    }
 
     panic!("Checkbox update item {} could not be found", item)
 

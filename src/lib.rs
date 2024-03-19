@@ -63,7 +63,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
-const ICON_FONT: Font = Font::with_name("icons");
+// const ICON_FONT: Font = Font::with_name("icons");
 const RADIO_SIZE: usize = 26;
 
 use std::sync::{Mutex, MutexGuard};
@@ -160,6 +160,7 @@ pub struct IpgIds {
 pub struct IPG {
     id: usize,
     window_id: usize,
+    gen_ids: Vec<usize>,
     card_style: Option<String>,
 }
 
@@ -170,6 +171,7 @@ impl IPG {
         IPG {
             id: 0,
             window_id: 0,
+            gen_ids: vec![],
             card_style: None,
         }
     }
@@ -222,6 +224,14 @@ impl IPG {
             flags,
             ..Default::default()
         });
+    }
+
+    #[pyo3(signature = ())]
+    fn generate_id(&mut self) -> PyResult<usize>
+    {
+        self.id += 1;
+        self.gen_ids.push(self.id);
+        Ok(self.id)
     }
 
     #[pyo3(signature = (window_id, title, width, height, pos_x=None, pos_y=None,
@@ -841,13 +851,14 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (parent_id, on_checked=None, is_checked=false, label="".to_string(), 
+    #[pyo3(signature = (parent_id, gen_id=None, on_checked=None, is_checked=false, label="".to_string(), 
                         width=None, width_fill=false, size=16.0, spacing=20.0, 
                         text_line_height=1.3, text_shaping="basic".to_string(),
-                        text_size=16.0, user_data=None, show=true, user_id=None))] 
+                        text_size=16.0, icon_x=false, icon_size=25.0, user_data=None, show=true, user_id=None))] 
     fn add_checkbox(&mut self,
                         parent_id: String,
                         // ** above required
+                        gen_id: Option<usize>,
                         on_checked: Option<PyObject>,
                         is_checked: bool,
                         label: String,
@@ -858,19 +869,32 @@ impl IPG {
                         text_line_height: f32,
                         text_shaping: String,
                         text_size: f32,
+                        icon_x: bool,
+                        icon_size: f32,
                         user_data: Option<PyObject>,
                         show: bool,
                         user_id: Option<String>,
                         ) -> PyResult<usize> 
     {
-
-        self.id += 1;
+        let id = match gen_id {
+            Some(id) => {
+                if self.gen_ids.contains(&id) {
+                    id
+                } else {
+                    panic!("The generated id {id} is not in the widget ids")
+                }
+            }
+            None => {
+                self.id += 1;
+                self.id
+                },
+        };
 
         let mut cb_name: Option<String> = None;
 
         if on_checked.is_some() {
             cb_name = Some("checkbox".to_string());
-            let cb = CallBack{id: self.id, cb: on_checked, name: cb_name.clone()};
+            let cb = CallBack{id, cb: on_checked, name: cb_name.clone()};
 
             add_callback_to_mutex(cb);
         }
@@ -881,12 +905,12 @@ impl IPG {
 
         let width = get_width(width, width_fill);
         
-        set_state_of_widget(self.id, parent_id, user_id);
+        set_state_of_widget(id, parent_id, user_id);
 
         let mut state = access_state();
 
-        state.widgets.insert(self.id, IpgWidgets::IpgCheckBox(IpgCheckBox::new(
-                                                    self.id,
+        state.widgets.insert(id, IpgWidgets::IpgCheckBox(IpgCheckBox::new(
+                                                    id,
                                                     show,
                                                     user_data,
                                                     is_checked,
@@ -897,10 +921,12 @@ impl IPG {
                                                     text_size,
                                                     text_line_height,
                                                     text_shaping,
+                                                    icon_x,
+                                                    icon_size,
                                                     cb_name,
                                                     )));
 
-        Ok(self.id)
+        Ok(id)
 
     }
 

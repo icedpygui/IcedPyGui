@@ -13,6 +13,11 @@ class IPG:
         Starts the gui session.  Must be the last called.
         """
 
+    def generate_id(self) -> None:
+        """
+        Generates an id for some future widget
+        """
+
     def add_window(self,
                     window_id: str,
                     title: str,
@@ -397,6 +402,7 @@ class IPG:
     def add_checkbox(self,
                      parent_id: str,
                      *,
+                     gen_id: int=None,
                      callback: Callable = None,
                      is_checked: bool=False,
                      label: str=None,
@@ -407,6 +413,8 @@ class IPG:
                      text_line_height: float=1.3,
                      text_shaping: str = "basic",
                      text_size: float=16.0,
+                     icon_x: bool=False,
+                     icon_size: float=25.0,
                      user_data: any=None,
                      user_id: str = "",
                      show: bool=True,
@@ -426,6 +434,8 @@ class IPG:
             text_line_height (float, optional): default=1.3 Sets the text Line Height of the Checkbox.
             text_shaping (str, optional): default="Basic", other value is "Advanced", requires adding fonts.\n
             text_size (float, optional): default=16.0, size of the text beside the checkbox.\n
+            icon_x (bool, option): default=False, whether to use the x versis the checkmark icon.\n
+            icon_size (float, option): default=25.0, the size of either the check or x icon.\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n
             show (bool, optional): default=True, Shows or hides widget.\n
             user_id (str, optional): literal used to identify widget instead of using the \n

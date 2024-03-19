@@ -103,9 +103,7 @@ impl multi_window::Application for App {
     fn new(flags: Flags) -> (Self, Command<Message>) {
         
         let (windows, mut spawn) = add_windows();
-        spawn.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice())
-                                            .map(Message::FontLoaded));
-        // spawn.push(font::load(iced_aw::BOOTSTRAP_FONT_BYTES).map(Message::FontLoaded));
+        spawn.push(font::load(iced_aw::graphics::icons::BOOTSTRAP_FONT_BYTES).map(Message::FontLoaded));
 
         (
             Self {
