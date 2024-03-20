@@ -2,7 +2,7 @@
 use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
 use crate::{access_callbacks, access_state, UpdateItems};
 use crate::app::Message;
-use crate::ipg_widgets::ipg_button::{ButtonStyleRadius, get_button_style};
+use crate::ipg_widgets::ipg_button::{ButtonStyleRadius, get_button_style_from_str};
 
 use iced::widget::{Button, Row, Space, Text};
 use iced::{alignment, Alignment, Border, Color, Element, Length, Padding, Renderer, theme, Theme, };
@@ -29,7 +29,7 @@ pub struct IpgColorPicker {
     pub height: Length,
     pub padding: Padding,
     pub corner_radius: f32,
-    pub style: String,
+    pub style: Option<String>,
     pub cb_name: Option<String>,
 }
 
@@ -45,7 +45,7 @@ impl IpgColorPicker {
         height: Length,
         padding: Padding,
         corner_radius: f32,
-        style: String,
+        style: Option<String>,
         cb_name: Option<String>,
         ) -> Self {
         Self {
@@ -78,7 +78,7 @@ pub fn construct_color_picker(cp: IpgColorPicker) -> Element<'static, Message> {
 
     let btn_label: Element<Message> = Text::new("Set Color").into();
 
-    let style = get_button_style(cp.style.clone());
+    let style = get_button_style_from_str(cp.style.clone());
     
     let btn: Element<ColPikMessage> = Button::new(Text::new(cp.label.clone()))
                                 .height(cp.height)

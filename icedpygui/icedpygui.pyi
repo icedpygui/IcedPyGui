@@ -26,13 +26,8 @@ class IPG:
                     pos_x: float=None,
                     pos_y: float=None,
                     pos_centered: bool=False,
-                    resizable: bool=True,
+                    resizable:str="primary",
                     theme: str="dark",
-                    scroll: bool=False,
-                    scroll_width: tuple=(str, float),
-                    scroll_height: tuple=(str, float),
-                    scroll_direction: str="vertical",
-                    on_scroll: Callable=None,
                     debug: bool=False,
                     show: bool=True,
                     ) -> None:
@@ -51,10 +46,6 @@ class IPG:
             pos_centered (bool, optional): default=False; Centered position of window.\n
             resizable (bool, optional): default=True; Whether the window can be resized.\n
             theme (str, optioonal): default=dark; Optional=white. More to come later.\n
-            scroll (bool, optional): default=false; Turns scrolling on or off.\n
-            scroll_width (float, optional): default=16.0; Width of the scroll bar.\n
-            scroll_height (float, optional): default=Fill; Fill height of window.\n
-            on_scroll (Callable, optional): default=None; Callback function.\n
             show (bool, optional): default=True; First window always true, others can be set.\n
             debug (bool, optional): default=False; Draws a box around widgets to see layout.\n
         """
@@ -74,7 +65,6 @@ class IPG:
                         align_y: str="Top",
                         padding: List=[10.0], 
                         show: bool=True,
-                        user_id: str=None,
                         ) -> int:
         """
         Adds a generic container to the gui
@@ -102,8 +92,7 @@ class IPG:
                                         use [float, float] for [top&bottom, left&right]\n
                                         use [float, float, float, float] for [top, right, bottom, left]\n
             show (bool, Optional): default=True, Shows or hides container and all of its contents.\n
-            user_id (str, optional): literal used to identify container instead of using the \n
-                                        returned integer, if int type is inconvenient.\n
+            
         Return: 
             int: internal id of container and can be used by user if equated or use user_id.\n
         """
@@ -122,7 +111,6 @@ class IPG:
                     padding: List=[10.0], 
                     spacing: float=20.0,
                     show: bool=True,
-                    user_id: str="",
                     ) -> int:
 
         """ Adds a Column which is a container that distributes its contents vertically
@@ -148,8 +136,7 @@ class IPG:
                         user_id (str, optional): literal used to identify container instead of using the \n
                                      returned integer, if variable is inconvenient.\n
             show (bool, Optional): default=True, Shows or hides container and all of its contents.\n
-            user_id (str, optional): literal used to identify container instead of using the \n
-                                        returned integer, if int type is inconvenient.\n
+            
         Return: 
             int: internal id of container and can be used by user if equated or use user_id\n
         """
@@ -167,7 +154,6 @@ class IPG:
                 padding: List=[10.0], 
                 spacing: float=20.0,
                 show: bool=True,
-                user_id: str=None,
                 ) -> int:
 
         """
@@ -199,8 +185,7 @@ class IPG:
                                     ("shrink", 0): Fills the least amount of space.\n
                                     ("fixed", float): Fixed amount of space.\n
             show (bool, Optional): default=True, Shows or hides container and all of its contents.\n
-            user_id (str, optional): literal used to identify container instead of using the \n
-                                        returned integer, if int type is inconvenient.\n
+            
         Return: 
             int: internal id of container and can be used by user if equated or use user_id.\n
         """
@@ -215,7 +200,6 @@ class IPG:
     #                     spacing: float=20.0,
     #                     padding: List=[10.0],
     #                     show: bool=True,
-    #                     user_id: str="",
     #                   ) -> int:
     #     """
     #     Adds a pane grid to the gui.
@@ -235,7 +219,6 @@ class IPG:
     #         spacing: float=20.0,
     #         padding: List=[10.0],
     #         show: bool=True,
-    #         user_id: str="",
     #     """
 
     # def add_pane(self,
@@ -244,7 +227,6 @@ class IPG:
     #             parent_id: str, 
     #             add_direction: str,
     #             ratio: float,
-    #             user_id: str="",
     #              ) -> int:
     #     """
     #     Adds a pane into the pane grid of the gui.
@@ -255,7 +237,6 @@ class IPG:
     #         parent_id (str, required): id of another container or window.\n 
     #         add_direction: (required: "first", "right", or "below")
     #         ratio: float,
-    #         user_id: str="",
     #     """
 
     def add_scrollable(self,
@@ -269,7 +250,6 @@ class IPG:
                         height_fill: bool=False,
                         direction: str="vertical",
                         on_scroll: Callable=None,
-                        user_id: str=None,
                         ) -> int:
         """
         Wraps a scrollable widget around a container.
@@ -295,8 +275,7 @@ class IPG:
                                     ("shrink", 0): Fills the least amount of space.\n
                                     ("fixed", float): Fixed amount of space.\n
             show (bool, Optional): default=True, Shows or hides container and all of its contents.\n
-            user_id (str, optional): literal used to identify container instead of using the \n
-                                        returned integer, if int type is inconvenient.\n
+    
         Return: 
             int: internal id of container and can be used by user if equated or use user_id.\n
         """
@@ -335,10 +314,10 @@ class IPG:
                     height_fill: bool=False,
                     padding: List=[10.0],
                     corner_radius: float=15.0,
-                    style: str="primary",
+                    style: any=None,
+                    arrow_style: any=None,
                     user_data: any=None,
                     show: bool=True, 
-                    user_id: str=None,
                     ) -> int:
         """
         Adds a button to the gui
@@ -356,11 +335,14 @@ class IPG:
                                         use [float, float] for [top&bottom, left&right]\n
                                         use [float, float, float, float] for [top, right, bottom, left]\n
             corner_radius (float, optional): default=15.0, How rounded the corner is, effective range 0 to ~25.\n
-            style (str, optional): default="primary", others "secondary", "positive", "destructive", "text"\n
+            style (IpgButtonStyle, optional): default = IpgButtonStyles.Primary\n
+                                        IpgButtonStyles.Primary,\n
+                                        IpgButtonStyles.Secondary,\n
+                                        IpgButtonStyles.Positive,\n
+                                        IpgButtonStyles.Destructive,\n
+                                        IpgButtonStyles.Text,\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n 
             show (bool, optional): default=True, Shows or hides widget.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n
             
         Return: 
             int: internal id of widget and can be used by user if equated or use user_id.\n
@@ -383,8 +365,6 @@ class IPG:
                     show: bool=True,
                     style: str=IPG.card_style(primary=1), 
                     user_data: any=None, 
-                    user_id: str=None, 
-                    
                 ) -> int:
         """
         Adds a card to hold text strings
@@ -394,7 +374,7 @@ class IPG:
             head (str, required): Text in the header of the card.\n
             body (str, required): Text in the body of the card.\n
             foot (str, optional): Text in the footer of the card.\n
-            user_data_str (any, optional): Data needed by user to be passed through a callback.\n 
+
         Return: 
             int: internal id of widget and can be used by user if equated or use user_id.\n
         """
@@ -415,7 +395,6 @@ class IPG:
                      icon_x: bool=False,
                      icon_size: float=25.0,
                      user_data: any=None,
-                     user_id: str = "",
                      show: bool=True,
                      ) -> int:
         """
@@ -437,8 +416,7 @@ class IPG:
             icon_size (float, option): default=25.0, the size of either the check or x icon.\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n
             show (bool, optional): default=True, Shows or hides widget.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n
+           
         Return 
             internal id of widget and can be used by user if equated or use user_id.\n
         """
@@ -458,7 +436,6 @@ class IPG:
                         style: str="primary",
                         user_data: any=None,
                         show: bool=True, 
-                        user_id: str=None,
                         ) -> int:
         """
         Add a color picker.  The args just style the intial button.
@@ -480,8 +457,6 @@ class IPG:
             style (str, optional): default="primary", others "secondary", "positive", "destructive", "text"\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n 
             show (bool, optional): default=True, Shows or hides widget.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n
             
         Return: 
             int: internal id of widget and can be used by user if equated or use user_id.\n
@@ -495,8 +470,7 @@ class IPG:
                         padding: List=[5.0],
                         on_select: Callable=None,
                         user_data: any=None,
-                        show=False,
-                        user_id: str="", 
+                        show=False, 
                         )  -> int:
         
         """
@@ -514,8 +488,7 @@ class IPG:
             on_select (Callable, optional): Callback function when checkbox checked or unchecked.\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n
             show (bool, optional): default=True, Shows or hides widget.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n
+            
         Return 
             internal id of widget and can be used by user if equated or use user_id.\n
         """
@@ -537,7 +510,6 @@ class IPG:
                     height: float=None,
                     width_fill: bool=False,
                     height_fill: bool=False, 
-                    user_id: str=None,
                     show: bool=True,  
                     user_data: any=None,
                     ) -> int:
@@ -560,8 +532,6 @@ class IPG:
             height (float, optional): default=None, height of the widget.\n   
             width_fill (bool, optional): default=False, Fill available width.\n
             height_fill (bool, optional): default=False, Fill available height.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n  
             show (bool, optional) default=True, To show the widget or not.\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n   
         Return: 
@@ -583,7 +553,6 @@ class IPG:
                         text_shaping: str="basic",
                         user_data: any=None,
                         show: bool=True,
-                        user_id: str=None,
                       ) -> int:
         """
         Adds a pick list to the gui.
@@ -607,7 +576,6 @@ class IPG:
             text_shaping: (str, optional): default="basic,
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n
             show: (bool, optional) default=True, Show or hides the widget.\n
-            user_id: (str, optional): default=None, A str for widget id if number inconvenient.\n
     
         return: id of the widget
         """
@@ -623,7 +591,6 @@ class IPG:
                          height: float=1.0,
                          user_data: any=None,
                          show: bool=True,
-                         user_id: str=None,
                          ) -> int:
         """
         Adds a progress bar to the gui
@@ -638,8 +605,7 @@ class IPG:
             height (float, optional ): default=1.0, height of bar\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n
             show: (bool, optional) default=True, Show or hides the widget.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n
+            
         return: id of the widget
         """
 
@@ -661,7 +627,6 @@ class IPG:
                     text_shaping: str="basic",
                     user_data=None,
                     show: bool=True,
-                    user_id: str="",
                   ) -> int:
         """
         Adds a radio button to the gui
@@ -688,8 +653,7 @@ class IPG:
             text_size (f32, optional): default=15.0, size of the text.\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n
             show: (bool, optional) default=True, Show or hides the widget.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n
+    
         Return: 
             int: internal id of widget and can be used by user if equated or use user_id.\n
         """
@@ -713,7 +677,6 @@ class IPG:
                             line_height: float=1.3, 
                             shaping: str="basic",
                             size: float=16.0, 
-                            user_id: str=None,
                             show: bool=True,  
                             user_data: any=None,
                             ) -> int:
@@ -739,8 +702,6 @@ class IPG:
             line_height (float, optional): default=1.3, size of the box the text is in.\n
             shaping (str, optional): shaping of text.\n
             size (float, optional) default=16.0, text size.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n  
             show (bool, optional) default=True, To show the widget or not.\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n   
         Return: 
@@ -758,8 +719,7 @@ class IPG:
                    show: bool=True, 
                    on_change: Callable=None, 
                    on_release: Callable=None, 
-                   user_data=None,
-                   user_id: str=None, 
+                   user_data=None, 
                    width: float=100.0,
                    width_fill: bool=False,
                    height: float=20.0
@@ -781,8 +741,6 @@ class IPG:
             on_change (Callable, optional): default=None, If set, will use callback with each change.\n 
             on_release (Callable, optional): default=None, If set, will use callback when released.\n 
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n 
             width (float, optional): default=100.0\n   
             width_fill (bool, optional): default=False;  Fill overides width when set to True.\n
             height (float, optional): default=20.0; The height of the slider.\n
@@ -820,7 +778,6 @@ class IPG:
                   column_widths: List=[float, ...],
                   show: bool=True, 
                   user_data=None,
-                  user_id: str=None,
                   ) -> int:
 
         """
@@ -836,8 +793,7 @@ class IPG:
             column_widths (List[float], optional): If only one value is supplied [20.0], thats the default.\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n
             show (bool, optional): default=show, whether to show the widget or not.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n 
+            
         Return: 
             int: internal id of widget and can be used by user if equated or use user_id.\n
         """
@@ -847,7 +803,6 @@ class IPG:
                      title: str=None, 
                      columns: List=None, 
                      data: List=None, 
-                     user_id: str=None, 
                      callback: Callable=None
                      ) -> int:
         """
@@ -868,7 +823,6 @@ class IPG:
                  size: float=16.0,
                  shaping: str="basic",
                  show: bool=True,
-                 user_id: str="",
                  ) -> int:
         """
         Adds a text widget to the gui.
@@ -888,8 +842,7 @@ class IPG:
             text_size (f32, optional): default=16.0, size of the text.\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n
             show (bool, optional): default=True, shows or hides widget.\n
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n
+        
         Return: 
             int: internal id of widget and can be used by user if equated or use user_id.\n
 
@@ -918,7 +871,6 @@ class IPG:
                        size: Union[float, None]=None,
                        user_data=None,
                        is_secure: bool=False,
-                       user_id: str="",
                        ) -> int:
         """
         Adds a text_input widget to the gui.  Callbacks on_input and on_submit are
@@ -941,8 +893,7 @@ class IPG:
             size (f32, optional): default=16.0, text size.\n
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.\n
             is_secure (bool, optional): hides the text as typed, for passwords, etc.
-            user_id (str, optional): literal used to identify widget instead of using the \n
-                                     returned integer, if variable is inconvenient.\n
+            
         Return:
             int: internal id of widget and can be used by user if equated or use user_id.\n
         """
@@ -1006,7 +957,7 @@ class IPG:
         Update a widget by supplying the id, the parameter to update and values as a str or number
         """
 
-    def get_button_style(self, Primary: bool=False, Secondary: bool=False, Positive: bool=False, 
+    def button_style(self, Primary: bool=False, Secondary: bool=False, Positive: bool=False, 
                         Destructive: bool=False, Text: bool=False):
         """
         Gets the button style.  Set any style to True to active.
@@ -1015,7 +966,7 @@ class IPG:
         ALternately, put the function directly in the style parameter.
         """
 
-    def get_card_style(self, Primary: bool=False, Secondary: bool=False, Success: bool=False, 
+    def card_style(self, Primary: bool=False, Secondary: bool=False, Success: bool=False, 
                         Danger: bool=False, warning: bool=False, info: bool=False, light: bool=False, 
                         dark: bool=False, white: bool=False, default: bool=False):
         """
@@ -1025,7 +976,7 @@ class IPG:
         ALternately, put the function directly in the style parameter.
         """
 
-    def get_window_theme(self, Light=False, Dark=False, Dracula=False, Nord=False,SolarizedLight=False,
+    def window_theme(self, Light=False, Dark=False, Dracula=False, Nord=False,SolarizedLight=False,
                         SolarizedDark=False, GruvboxLight=False,GruvboxDark=False,CatppuccinLatte=False,
                         CatppuccinFrappe=False, CatppuccinMacchiato=False, CatppuccinMocha=False,
                         TokyoNight=False,TokyoNightStorm=False, TokyoNightLight=False, KanagawaWave=False,
@@ -1044,6 +995,12 @@ class IpgButtonStyles:
     Positive = "Positive"
     Destructive = "Destructive"
     Text = "Text"
+
+class IpgButtonArrrows:
+    UpArrow = "UpArrow"
+    RightArrow = "RightArrow"
+    DownArrow = "DownArrow"
+    LeftArrow = "LeftArrow"
 
 class IpgCardStyles: 
     Primary = "Primary"

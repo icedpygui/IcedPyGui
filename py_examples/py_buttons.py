@@ -1,4 +1,4 @@
-from icedpygui.icedpygui import IPG
+from icedpygui.icedpygui import IPG, IpgButtonStyles
 
 
 class ButtonDemo:
@@ -58,27 +58,27 @@ class ButtonDemo:
         # The callback is the same for each button but may be different based on needs.
         self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id, 
                                                                     label="Primary", 
-                                                                    style=self.ipg.get_button_style(Primary=True), 
+                                                                    style=IpgButtonStyles.Primary, 
                                                                     on_press=self.button_pressed, 
                                                                     user_data="Primary"))
         self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id, 
                                                                     label="Secondary", 
-                                                                    style=self.ipg.get_button_style(Secondary=True), 
+                                                                    style=IpgButtonStyles.Secondary, 
                                                                     on_press=self.button_pressed, 
                                                                     user_data="Secondary"))
         self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id, 
                                                                     label="Positive", 
-                                                                    style=self.ipg.get_button_style(Positive=True), 
+                                                                    style=IpgButtonStyles.Positive, 
                                                                     on_press=self.button_pressed, 
                                                                     user_data="Positive"))
         self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id, 
                                                                     label="Destructive", 
-                                                                    style=self.ipg.get_button_style(Destructive=True), 
+                                                                    style=IpgButtonStyles.Destructive, 
                                                                     on_press=self.button_pressed, 
                                                                     user_data="Destructive"))
         self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id, 
                                                                     label="Text", 
-                                                                    style=self.ipg.get_button_style(Text=True), 
+                                                                    style=IpgButtonStyles.Text, 
                                                                     on_press=self.button_pressed, 
                                                                     user_data="Text"))
 

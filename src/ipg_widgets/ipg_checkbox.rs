@@ -13,6 +13,7 @@ use iced_aw::graphics::icons::{icon_to_char, icon_to_string};
 use iced_aw::{BootstrapIcon, BOOTSTRAP_FONT};
 use pyo3::{Python, PyObject};
 
+
 #[derive(Debug, Clone)]
 pub struct IpgCheckBox {
     pub id: usize,

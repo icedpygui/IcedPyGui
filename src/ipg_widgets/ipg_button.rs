@@ -12,7 +12,7 @@ use iced::{alignment, Border, Color, Element, Length, Padding, theme, Theme, };
 use iced::font::Font;
 use iced::widget::button::{self, Appearance, StyleSheet};
 
-const ICON_FONT: Font = Font::with_name("icons");
+use iced_aw::{BootstrapIcon, BOOTSTRAP_FONT};
 
 
 #[derive(Debug, Clone)]
@@ -26,7 +26,8 @@ pub struct IpgButton {
     pub height: Length,
     pub padding: Padding,
     pub corner_radius: f32,
-    pub style: String,
+    pub style: Option<String>,
+    pub arrow_type: Option<String>,
     pub cb_name: Option<String>,
 }
 
@@ -41,7 +42,8 @@ impl IpgButton {
         height: Length,
         padding: Padding,
         corner_radius: f32,
-        style: String,
+        style: Option<String>,
+        arrow_type: Option<String>,
         cb_name: Option<String>,
         ) -> Self {
         Self {
@@ -54,6 +56,7 @@ impl IpgButton {
             padding,
             corner_radius,
             style,
+            arrow_type,
             cb_name,
         }
     }
@@ -79,16 +82,21 @@ pub enum IpgButtonStyles {
     Text
 }
 
+pub enum IpgButtonArrows {
+    UpArrow,
+    RightArrow,
+    DownArrow,
+    LwftArrow,
+}
+
+
 pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
 
-    // let btn_text: Element<'static, BTNMessage> = Text::new(btn.content.clone())
-    //                                         .font(ICON_FONT)
-    //                                         .into();
     if !btn.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
     }
     
-    let style = get_button_style(btn.style.clone());
+    let style = get_button_style_from_str(btn.style);
     
     let ipg_btn: Element<BTNMessage> = Button::new(Text::new(btn.label.clone()))
                                 .height(btn.height)
@@ -104,7 +112,7 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
 
 fn icon(unicode: char) -> Text<'static> {
     Text::new(unicode.to_string())
-        .font(ICON_FONT)
+        .font(BOOTSTRAP_FONT)
         .size(10)
         .width(10)
         .horizontal_alignment(alignment::Horizontal::Center)
@@ -220,7 +228,7 @@ pub fn button_item_update(btn: &mut IpgButton,
 
     if item == "style".to_string() {
         btn.style = match items.value_str {
-            Some(st) => st,
+            Some(st) => Some(st),
             None => panic!("Style must be of type string.")
         };
         return
@@ -278,9 +286,14 @@ fn process_callback(id: usize,
 }                   
 
 
-pub fn get_button_style(style: String) -> theme::Button {
+pub fn get_button_style_from_str(style_opt: Option<String>) -> theme::Button {
 
-    match style.as_str() {
+    let style_str = match style_opt {
+        Some(st) => st,
+        None => return theme::Button::Primary,
+    };
+
+    match style_str.as_str() {
         "Primary" => theme::Button::Primary,
         "Secondary" => theme::Button::Secondary,
         "Positive" => theme::Button::Positive,
@@ -288,7 +301,6 @@ pub fn get_button_style(style: String) -> theme::Button {
         "Text" => theme::Button::Text,
         _ => theme::Button::Primary,
     }
- 
 }
 
 
@@ -302,6 +314,46 @@ pub fn get_button_str_from_style(style: IpgButtonStyles) -> Option<String> {
     }
 }
 
+pub fn try_extract_button_style(style_obj: PyObject, py: Python<'_>) -> Option<String> {
+
+    let mut style: Option<String> = None;
+
+    let res = style_obj.extract::<IpgButtonStyles>(py);
+            if !res.is_err() {
+                style = match res {
+                    Ok(st) => get_button_str_from_style(st),
+                    Err(_) => None,
+                }
+            }
+
+    style
+}
+
+// fn get_button_arrows(arrow_opt: Option<PyObject>) {
+
+//     Python::with_gil(|py| {
+
+//         let arrow: Option<String> = None;
+
+//         if arrow_opt.is_some() {
+//             arrow 
+//         }
+//         let res = value.extract::<IpgButtonStyles>(py);
+//             if !res.is_err() {
+//                 items.value_str = match res {
+//                     Ok(style) => get_button_str_from_style(style),
+//                     Err(_) => None,
+//                 }
+//             }
+//     });
+    
+//     match arrow {
+//         IpgButtonArrows::UpArrow => todo!(),
+//         IpgButtonArrows::RightArrow => todo!(),
+//         IpgButtonArrows::DownArrow => todo!(),
+//         IpgButtonArrows::LwftArrow => todo!(),
+//     }
+// }
 
 pub struct ButtonStyleRadius {
     theme: theme::Button,
@@ -355,3 +407,4 @@ impl button::StyleSheet for ButtonStyle {
         }
     }
 }
+

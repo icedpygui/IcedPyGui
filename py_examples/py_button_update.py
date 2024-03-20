@@ -1,4 +1,4 @@
-from icedpygui.icedpygui import IPG, IpgButtonStyles
+from icedpygui.icedpygui import IPG, ButtonStyles
 
 
 ipg = IPG()
@@ -29,7 +29,7 @@ def update_button(id, name):
     ipg.update_item(padding_btn, "label", "Padding Changed")
 
     # Changing the style
-    ipg.update_item(style_btn, "style", IpgButtonStyles.Secondary)
+    ipg.update_item(style_btn, "style", ButtonStyles.Secondary)
     ipg.update_item(style_btn, "label", "Styling Changed")
 
     # Hide the button

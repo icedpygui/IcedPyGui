@@ -23,7 +23,7 @@ mod iced_widgets;
 
 use crate::iced_widgets::scrollable::Direction;
 
-use ipg_widgets::ipg_button::{IpgButton, IpgButtonStyles, button_item_update, get_button_str_from_style};
+use ipg_widgets::ipg_button::{button_item_update, get_button_str_from_style, try_extract_button_style, IpgButton, IpgButtonStyles};
 use ipg_widgets::ipg_card::{IpgCard, IpgCardStyles, card_item_update, get_card_str_from_style};
 use ipg_widgets::ipg_checkbox::{IpgCheckBox, checkbox_item_update};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
@@ -718,10 +718,11 @@ impl IPG {
 
     }
     
-    #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, width=None,
-                        height=None, width_fill=false, height_fill=false,
-                        padding=vec![10.0], corner_radius=15.0, 
-                        style="Primary".to_string(), user_data=None, show=true, 
+    #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
+                        width=None, height=None, width_fill=false, 
+                        height_fill=false, padding=vec![10.0], corner_radius=15.0, 
+                        style=None, arrow_type=None, user_data=None, 
+                        show=true, 
                         ))]
     fn add_button(&mut self,
                         parent_id: String,
@@ -735,7 +736,8 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         corner_radius: f32,
-                        style: String,
+                        style: Option<PyObject>,
+                        arrow_type: Option<String>,
                         user_data: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
@@ -755,6 +757,16 @@ impl IPG {
         let height = get_height(height, height_fill);
 
         let padding = get_padding(padding);
+
+        let mut style_opt: Option<String> = None;
+
+        Python::with_gil(|py| {
+            
+            style_opt = match style {
+                Some(st) => try_extract_button_style(st, py),
+                None => None,
+            };
+        });
         
         set_state_of_widget(id, parent_id);
 
@@ -769,7 +781,8 @@ impl IPG {
                                                 height,
                                                 padding,
                                                 corner_radius,
-                                                style,
+                                                style_opt,
+                                                arrow_type,
                                                 cb_name,                              
                                                 )));
         
@@ -923,7 +936,7 @@ impl IPG {
                         start_up_color=[0.5, 0.2, 0.7, 1.0], 
                         width=None, height=None, width_fill=false, height_fill=false,
                         padding=vec![10.0], corner_radius=0.0, 
-                        style="primary".to_string(), user_data=None, 
+                        style=None, user_data=None, 
                         ))]
     fn add_color_picker(
                     &mut self,
@@ -940,7 +953,7 @@ impl IPG {
                     height_fill: bool,
                     padding: Vec<f64>,
                     corner_radius: f32,
-                    style:String,
+                    style: Option<String>,
                     user_data: Option<PyObject>,
                     ) -> PyResult<usize> 
     {
@@ -2116,14 +2129,14 @@ fn add_image(&mut self,
                 } 
             }
 
-            let res = value.extract::<IpgButtonStyles>(py);
-            if !res.is_err() {
+            let res = try_extract_button_style(value.clone(), py);
+            if res.is_some() {
                 items.value_str = match res {
-                    Ok(style) => get_button_str_from_style(style),
-                    Err(_) => None,
-                }
+                    Some(r) => Some(r),
+                    None => None,
+                };
             }
-
+            
             let res = value.extract::<IpgCardStyles>(py);
             if !res.is_err() {
                 items.value_str = match res {
@@ -2261,11 +2274,6 @@ fn add_image(&mut self,
         
         let data = py_extract_list(data);
         
-        // let mut app_temp = access_temp();
-        // let input = data.last().unwrap();
-        // app_temp.my_text = Some(input[1].clone());
-        // drop(app_temp);
-
         let mut cb_name: Option<String> = None;
         if callback.is_some() {
             cb_name = Some("update_table".to_string());
@@ -2276,60 +2284,78 @@ fn add_image(&mut self,
         
     }
 
-    #[pyo3(signature = (Primary=false, Secondary=false, Positive=false, 
-                        Destructive=false, Text=false))]
-    fn get_button_style(&mut self,
-                        Primary: bool,
-                        Secondary: bool,
-                        Positive: bool,
-                        Destructive: bool,
-                        Text: bool,
-                        ) -> String 
-    {
-        if Primary {return "Primary".to_string()}
-        if Secondary {return "Secondary".to_string()}
-        if Positive {return "Positive".to_string()}
-        if Destructive { return "Destructive".to_string()}
-        if Text { return "Text".to_string()}
+    // #[pyo3(signature = (Primary=false, Secondary=false, Positive=false, 
+    //                     Destructive=false, Text=false))]
+    // fn button_style(&mut self,
+    //                     Primary: bool,
+    //                     Secondary: bool,
+    //                     Positive: bool,
+    //                     Destructive: bool,
+    //                     Text: bool,
+    //                     ) -> String 
+    // {
+    //     if Primary {return "Primary".to_string()}
+    //     if Secondary {return "Secondary".to_string()}
+    //     if Positive {return "Positive".to_string()}
+    //     if Destructive { return "Destructive".to_string()}
+    //     if Text { return "Text".to_string()}
 
-        return "Primary".to_string()
-    }
+    //     panic!("The button style must be one of the types listed in the docs.")
+    // }
 
-    #[pyo3(signature = (Primary=false, Secondary=false, Success=false, Danger=false, 
-                        Warning=false, Info=false, Light=false, Dark=false, White=false,
-                        Default=false))]
-    fn get_card_style(&mut self,
-                        Primary: bool,
-                        Secondary: bool,
-                        Success: bool, 
-                        Danger: bool, 
-                        Warning: bool,
-                        Info: bool, 
-                        Light: bool,
-                        Dark: bool,
-                        White: bool,
-                        Default: bool,
-                        ) -> String
-    {
-        if Primary {return "Primary".to_string()}
-        if Secondary {return "Secondary".to_string()}
-        if Success {return "Success".to_string()}
-        if Danger { return "Danger".to_string()}
-        if Warning { return "Warning".to_string()}
-        if Info { return "Info".to_string()}
-        if Light { return "Light".to_string()}
-        if Dark { return "Dark".to_string()}
-        if White { return "White".to_string()}
-        if Default { return "Default".to_string()}
-        return "Dark".to_string()
-    }
+    // #[pyo3(signature = (UpArrow=false, RightArrow=false, DownArrow=false, 
+    //                     LeftArrow=false))]
+    // fn button_arrow(&mut self,
+    //                 UpArrow: bool,
+    //                 RightArrow: bool,
+    //                 DownArrow: bool,
+    //                 LeftArrow: bool,
+    //                 ) -> String
+    // {
+    //     if UpArrow { return "UpArrow".to_string()}
+    //     if RightArrow { return "RightArrow".to_string()}
+    //     if DownArrow { return "DownArrow".to_string()}
+    //     if LeftArrow { return "LeftArrow".to_string()}
+
+    //     panic!("The button arrow must be one of those listed in the docs.")
+    // }
+
+    // #[pyo3(signature = (Primary=false, Secondary=false, Success=false, Danger=false, 
+    //                     Warning=false, Info=false, Light=false, Dark=false, White=false,
+    //                     Default=false))]
+    // fn card_style(&mut self,
+    //                     Primary: bool,
+    //                     Secondary: bool,
+    //                     Success: bool, 
+    //                     Danger: bool, 
+    //                     Warning: bool,
+    //                     Info: bool, 
+    //                     Light: bool,
+    //                     Dark: bool,
+    //                     White: bool,
+    //                     Default: bool,
+    //                     ) -> String
+    // {
+    //     if Primary {return "Primary".to_string()}
+    //     if Secondary {return "Secondary".to_string()}
+    //     if Success {return "Success".to_string()}
+    //     if Danger { return "Danger".to_string()}
+    //     if Warning { return "Warning".to_string()}
+    //     if Info { return "Info".to_string()}
+    //     if Light { return "Light".to_string()}
+    //     if Dark { return "Dark".to_string()}
+    //     if White { return "White".to_string()}
+    //     if Default { return "Default".to_string()}
+        
+    //     panic!("The Card style must be one of those listed in the docs.")
+    // }
 
     #[pyo3(signature = (Light=false, Dark=false, Dracula=false, Nord=false,SolarizedLight=false,
                         SolarizedDark=false, GruvboxLight=false,GruvboxDark=false,CatppuccinLatte=false,
                         CatppuccinFrappe=false, CatppuccinMacchiato=false, CatppuccinMocha=false,
                         TokyoNight=false,TokyoNightStorm=false, TokyoNightLight=false, KanagawaWave=false,
                         KanagawaDragon=false, KanagawaLotus=false, Moonfly=false,Nightfly=false,Oxocarbon=false))]
-    fn get_window_theme(&mut self,
+    fn window_theme(&mut self,
                             Light: bool,
                             Dark: bool,
                             Dracula: bool,
@@ -2375,7 +2401,7 @@ fn add_image(&mut self,
         if Nightfly {return "Nightfly".to_string()}
         if Oxocarbon {return "Oxocarbon".to_string()}
 
-        return "Dark".to_string()
+        panic!("The window style must be one of those listed in the docs.")
 
     }
 
