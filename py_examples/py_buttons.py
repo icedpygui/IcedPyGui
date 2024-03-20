@@ -5,12 +5,14 @@ class ButtonDemo:
     def __init__(self) -> None:
         self.ipg = IPG()
         
-        self.button_style_ids: list = [] 
+        self.button_style_ids: list = []
+        self.button_arrow_ids: list = []
 
         # ids - I prefer to give my string ids a variable name so that
         # it I select them from a list and it reduced spelling errors.
         self.wnd_id: str="main"
         self.style_col_id: str="style_col"
+        self.arrow_row_id: str= "arrow_row"
         self.style_id: str="style_id"
         self.btn_info: str="btn_info"
         self.sld_col: str="sld_col"
@@ -85,7 +87,13 @@ class ButtonDemo:
         # This is the text that will change when a button is pressed therefore the id is needed.
         self.btn_info = self.ipg.add_text(parent_id=self.style_col_id, content="This will change when a button is pressed")
 
+        # The row is needed fpr the horizontal alignment of the buttons
+        self.ipg.add_row(window_id=self.wnd_id, container_id=self.arrow_row_id, parent_id=self.style_col_id)
         
+        # self.btn_arrow_ids.append(self.ipg.add_button(self.arrow_row_id, "", 
+        #                                               on_press=self.arrow_selected, 
+        #                                               arrow_style=IpgButtonArrrows.UpArrow))
+
     def setup_slider_section(self):
 
         # A column is added for center alignment of the remaining items
@@ -152,6 +160,9 @@ class ButtonDemo:
         #  In this case, it was just the name of the button style used in the value_str below.
         
         self.ipg.update_item(self.btn_info, "content", f"Last button pressed was {user_data}")
+
+    def arrow_selected(self, id, name):
+        print("UpArrow")
 
 
 demo = ButtonDemo()

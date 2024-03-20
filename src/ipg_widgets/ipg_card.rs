@@ -29,7 +29,7 @@ pub struct IpgCard {
     pub head: String,
     pub body: String,
     pub foot: Option<String>,
-    pub style: String,
+    pub style: Option<String>,
     pub cb_name: Option<String>,
 }
 
@@ -49,7 +49,7 @@ impl IpgCard {
         head: String,
         body: String,
         foot: Option<String>,
-        style: String,
+        style: Option<String>,
         cb_name: Option<String>,
         ) -> Self {
         Self {
@@ -78,11 +78,19 @@ pub enum CardMessage {
     OnClose(usize),
 }
 
-// The enums above are different than iced_aw enums though they have the
-// same names.  The iced ones go into the Card widget so have to be
-// from theme::Button.  These are the Ipg version so that they can be
-// used in puthon.  Since they go through a String for matching, they 
-// can be kept separate.
+// The enums below are different than iced_aw CardStyles enums though they have the
+// same members.  The reason is that the iced_aw CardStyles don't have a Clone method 
+// and the python styles are defined as IpgCardStyles. Therefore
+// one has to send a Option<String> representing the style, using an IpgCardStyles enum.
+// Steps are different based on the intitial contruction and the updating routine.
+// 
+// Construction phase: 
+// lib.add_card() ==> PyObject ==> String ==> construct_card() ==> iced_aw style
+// 
+// Update phase: 
+// lib.update_item() ==> PyObject ==> try_extract (method below) ==> Option<String> returned to update_item
+// lib.update_item() => iced update => construction phase.
+
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum IpgCardStyles {
@@ -100,7 +108,7 @@ pub enum IpgCardStyles {
 
 pub fn construct_card (crd: IpgCard) -> Element<'static, Message> {
 
-    let style = match_style(crd.style);
+    let style = get_card_style_from_str(crd.style);
 
     let head: Element<CardMessage> = Text::new(crd.head.clone())
                                                 .width(Length::Fill)
@@ -195,7 +203,7 @@ pub fn card_item_update(crd: &mut IpgCard,
 
     if item == "style".to_string() {
         crd.style = match items.value_str {
-            Some(st) => st,
+            Some(st) => Some(st),
             None => panic!("Style must be of type string.")
         };
         return
@@ -259,9 +267,14 @@ fn process_callback(
 
 }
 
-fn match_style(style: String) -> CardStyles {
+pub fn get_card_style_from_str(style_opt: Option<String>) -> CardStyles {
 
-    match style.as_str() {
+    let style_str = match style_opt {
+        Some(st) => st,
+        None => return CardStyles::Primary,
+    };
+
+    match style_str.as_str() {
         "Primary" => CardStyles::Primary,
         "Secondary" => CardStyles::Secondary, 
         "Success" => CardStyles::Success, 
@@ -290,3 +303,19 @@ pub fn get_card_str_from_style(style: IpgCardStyles) -> Option<String> {
             IpgCardStyles::Default => Some("Default".to_string()),
         }
 }
+
+pub fn try_extract_card_style(style_obj: PyObject, py: Python<'_>) -> Option<String> {
+
+    let mut style: Option<String> = None;
+
+    let res = style_obj.extract::<IpgCardStyles>(py);
+            if !res.is_err() {
+                style = match res {
+                    Ok(st) => get_card_str_from_style(st),
+                    Err(_) => None,
+                }
+            }
+
+    style
+}
+

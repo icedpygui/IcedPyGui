@@ -67,11 +67,18 @@ pub enum BTNMessage {
     ButtonPressed,
 }
 
-// The enums above are different than iced enums though they have the
-// same names.  The iced ones go into the Button widget so have to be
-// from theme::Button.  These are the Ipg version so that they can be
-// used in puthon.  Since they go through a String for matching, they 
-// can be kept separate.
+// The enums below are different than iced ButtonStyles enums though they have the
+// same members.  The reason is that the python styles are defined as IpgButtonStyles. Therefore
+// one has to send a Option<String> representing the style, using an IpgButtonStyles enum.
+// Steps are different based on the intitial contruction and the updating routine.
+// 
+// Construction phase: 
+// lib.add_card() ==> PyObject ==> String ==> construct_button() ==> iced style
+// 
+// Update phase: 
+// lib.update_item() ==> PyObject ==> try_extract (method below) ==> Option<String> returned to update_item
+// lib.update_item() => iced update => construction phase.
+
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum IpgButtonStyles {
@@ -82,7 +89,7 @@ pub enum IpgButtonStyles {
     Text
 }
 
-pub enum IpgButtonArrows {
+pub enum IpgButtonArrrows {
     UpArrow,
     RightArrow,
     DownArrow,

@@ -24,7 +24,7 @@ mod iced_widgets;
 use crate::iced_widgets::scrollable::Direction;
 
 use ipg_widgets::ipg_button::{button_item_update, get_button_str_from_style, try_extract_button_style, IpgButton, IpgButtonStyles};
-use ipg_widgets::ipg_card::{IpgCard, IpgCardStyles, card_item_update, get_card_str_from_style};
+use ipg_widgets::ipg_card::{card_item_update, get_card_str_from_style, try_extract_card_style, IpgCard, IpgCardStyles};
 use ipg_widgets::ipg_checkbox::{IpgCheckBox, checkbox_item_update};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::IpgColumn;
@@ -794,7 +794,7 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_width=f32::INFINITY, max_height=f32::INFINITY, 
                         padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
-                        show=true, style="Default".to_string(), user_data=None))]
+                        show=true, style=None, user_data=None))]
     fn add_card(&mut self,
                 parent_id: String, 
                 head: String,
@@ -814,7 +814,7 @@ impl IPG {
                 padding_body: Vec<f64>,
                 padding_foot: Vec<f64>,
                 show: bool,
-                style: String,
+                style: Option<PyObject>,
                 user_data: Option<PyObject>, 
                 ) -> PyResult<usize> 
     {
@@ -836,6 +836,16 @@ impl IPG {
         let padding_body = get_padding(padding_body);
         let padding_foot = get_padding(padding_foot);
 
+        let mut style_opt: Option<String> = None;
+
+        Python::with_gil(|py| {
+            
+            style_opt = match style {
+                Some(st) => try_extract_card_style(st, py),
+                None => None,
+            };
+        });
+
         set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
@@ -855,7 +865,7 @@ impl IPG {
                                                     head,
                                                     body,
                                                     foot,
-                                                    style,
+                                                    style_opt,
                                                     cb_name,
                                                 )));
 
@@ -2137,12 +2147,12 @@ fn add_image(&mut self,
                 };
             }
             
-            let res = value.extract::<IpgCardStyles>(py);
-            if !res.is_err() {
+            let res = try_extract_card_style(value.clone(), py);
+            if res.is_some() {
                 items.value_str = match res {
-                    Ok(style) => get_card_str_from_style(style),
-                    Err(_) => None,
-                }
+                    Some(r) => Some(r),
+                    None => None,
+                };
             }
 
         });

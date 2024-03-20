@@ -31,20 +31,18 @@ ipg.add_column(window_id="main", container_id="col", parent_id="scroller",
 head = "Python Iced_aw Card"
 body = "\nThis is the body of the card.  \nNote how the style is add style=ipg.get_card_style(primary=True).  \nSetting any of the dropdown values to True will select it.  This method should cut down on typo errors versus having to type in parameters that need to match exactly."
 
-# you can set the style by creating a variable as below and setting the parameter style
-# or put the function into the add_card, as shown below.
-p = ipg.get_card_style(Primary=True)
-
-card_id = ipg.add_card("col", head, "Pimary: "+ body, foot="Foot", style=p)
-ipg.add_card("col", head, "Secondary: " + body, foot="Foot", style=ipg.get_card_style(Secondary=True))
-ipg.add_card("col", head, "Success: " + body, foot="Foot", style=ipg.get_card_style(Success=True))
-ipg.add_card("col", head, "Danger: " + body, foot="Foot", style=ipg.get_card_style(Danger=True))
-ipg.add_card("col", head, "Warning: " + body, foot="Foot", style=ipg.get_card_style(Warning=True))
-ipg.add_card("col", head, "Info: " + body, foot="Foot", style=ipg.get_card_style(Info=True))
-ipg.add_card("col", head, "Light: " + body, foot="Foot", style=ipg.get_card_style(Light=True))
-ipg.add_card("col", head, "Dark: " + body, foot="Foot", style=ipg.get_card_style(Dark=True))
-ipg.add_card("col", head, body="White: " + body, foot="Foot", style=ipg.get_card_style(White=True))
-ipg.add_card("col", head, "Default: " + body, foot="Foot", style=ipg.get_card_style(Default=True))
+# Styles are set by import the appropiate module, in the case IpgCardStyles, and selecting
+# the needed style from your IDE dropdown list.
+card_id = ipg.add_card("col", head, "Primary: "+ body, foot="Foot", style=IpgCardStyles.Primary)
+ipg.add_card("col", head, "Secondary: " + body, foot="Foot", style=IpgCardStyles.Secondary)
+ipg.add_card("col", head, "Success: " + body, foot="Foot", style=IpgCardStyles.Success)
+ipg.add_card("col", head, "Danger: " + body, foot="Foot", style=IpgCardStyles.Danger)
+ipg.add_card("col", head, "Warning: " + body, foot="Foot", style=IpgCardStyles.Warning)
+ipg.add_card("col", head, "Info: " + body, foot="Foot", style=IpgCardStyles.Info)
+ipg.add_card("col", head, "Light: " + body, foot="Foot", style=IpgCardStyles.Light)
+ipg.add_card("col", head, "Dark: " + body, foot="Foot", style=IpgCardStyles.Dark)
+ipg.add_card("col", head, body="White: " + body, foot="Foot", style=IpgCardStyles.White)
+ipg.add_card("col", head, "Default: " + body, foot="Foot", style=IpgCardStyles.Default)
 # if you use no style, them this is what you get, which is Default.
 ipg.add_card("col", head, "Default: If you use no style setting.\n" + body, foot="Foot")
 
