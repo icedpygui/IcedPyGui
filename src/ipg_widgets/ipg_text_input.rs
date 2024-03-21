@@ -1,13 +1,16 @@
-#![allow(unused)]
-use crate::{access_state, access_callbacks};
+
+use crate::access_callbacks;
 use crate::app;
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
+use super::callbacks::{WidgetCallbackIn, 
+                        WidgetCallbackOut, 
+                        get_set_widget_callback_data};
 
 use iced::widget::text::LineHeight;
 use iced::{Padding, Length, Element};
-use iced::widget::TextInput;
+use iced::widget::{TextInput, Space};
 
 use pyo3::{PyObject, Python};
+
 
 #[derive(Debug, Clone)]
 pub struct IpgTextInput {
@@ -23,9 +26,6 @@ pub struct IpgTextInput {
     pub user_data: Option<PyObject>,
     // icon: Option<Message>,
     // style: Style,
-    pub cb_name_input: Option<String>,
-    pub cb_name_submit: Option<String>,
-    pub cb_name_paste: Option<String>,
     show: bool,
 }
 
@@ -42,9 +42,6 @@ impl IpgTextInput {
         user_data: Option<PyObject>,
         // icon: Option<Message>,
         // style: Style
-        cb_name_input: Option<String>,
-        cb_name_submit: Option<String>,
-        cb_name_paste: Option<String>,
         show: bool,
         ) -> Self {
         Self {
@@ -60,9 +57,6 @@ impl IpgTextInput {
             user_data,
             // icon,
             // style: Style,
-            cb_name_input,
-            cb_name_submit,
-            cb_name_paste,
             show,
         }
     }
@@ -71,18 +65,22 @@ impl IpgTextInput {
 #[derive(Debug, Clone)]
 pub enum TIMessage {
     OnInput(String),
-    OnSubmitted(String),
-    // OnPasted,
+    OnSubmit(String),
+    OnPast(String),
 }
 
 pub fn construct_text_input(input: IpgTextInput) -> Element<'static, app::Message> {
+
+    if !input.show {
+        return Space::new(0.0, 0.0).into()
+    }
     
     let txt: Element<TIMessage> =  TextInput::new(input.placeholder.as_str(), 
                                                 input.value.as_str()
                                             )
                                             .on_input(TIMessage::OnInput)
-                                            .on_submit(TIMessage::OnSubmitted(input.value))
-                                            // .on_paste(TIMessage::OnPasted)
+                                            .on_submit(TIMessage::OnSubmit(input.value))
+                                            .on_paste(TIMessage::OnPast)
                                             .width(input.width)
                                             .padding(input.padding)
                                             .size(input.size)
@@ -92,55 +90,42 @@ pub fn construct_text_input(input: IpgTextInput) -> Element<'static, app::Messag
     txt.map(move |message| app::Message::TextInput(input.id, message))
 }
 
-pub fn text_input_update(id: usize, message: TIMessage) {
-
+pub fn text_input_callback(id: usize, message: TIMessage) {
+    // During the input, the widget is assigned the value so that it shows
+    // during typing.  On submit, the text box is cleared, so no value.
+    // However, in both cases the value is passed to the callback.
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+    wci.id = id;
+           
     match message {
         TIMessage::OnInput(value) => {
-            setup_for_callback(id, value, "on_input".to_string());
+            wci.value_str = Some(value);
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_input".to_string());
+            process_callback(wco);
         },
-        TIMessage::OnSubmitted(value) => {
-            setup_for_callback(id, value, "submitted".to_string());
+        TIMessage::OnSubmit(value) => {
+            wci.value_str = Some(value);
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_submit".to_string());
+            process_callback(wco);
+        }
+        TIMessage::OnPast(value) => {
+            wci.value_str = Some(value);
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_paste".to_string());
+            process_callback(wco);
         }
             
     }
 }
 
-fn setup_for_callback(id: usize, value: String, name: String) {
-    // During the input, the widget is assigned the value so that it shows
-    // during typing.  On submit, the text box is cleared, so no value.
-    // However, in both cases the value is passed to the callback.
-    let mut val  = "".to_string();
-    let mut event_name = "on_submit".to_string();
-
-    if name == "on_input".to_string() {
-        val = value.clone();
-        event_name = "on_input".to_string();
-    }
-
-    let (cb_name, user_data,_,_,_) 
-                                    = get_set_widget_data(
-                                                            id, 
-                                                            None, 
-                                                            Some(val), 
-                                                            None, 
-                                                            None,
-                                                            );
-    process_callback(id.clone(),
-                        event_name,
-                        value.clone(),   
-                        user_data, 
-                        cb_name);
-
-}
-
-
-fn process_callback(id: usize,
-                    event_name: String,
-                    value: String, 
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !cb_name.is_some() {return}
+    if !wco.event_name.is_some() {return}
 
     let app_cbs = access_callbacks();
 
@@ -148,11 +133,11 @@ fn process_callback(id: usize,
 
     for callback in app_cbs.callbacks.iter() {
 
-        if id == callback.id && cb_name == callback.name {
+        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
             found_callback = match callback.cb.clone() {
                                 Some(cb) => Some(cb),
-                                None => panic!("Callback could not be found with id {}", id),
+                                None => return,
                             };
             break;
         }                   
@@ -162,16 +147,19 @@ fn process_callback(id: usize,
     match found_callback {
 
     Some(cb) => Python::with_gil(|py| {
-                            match user_data {
+                            match wco.user_data {
                                 Some(ud) => cb.call1(py, 
-                                                                (id.clone(),
-                                                                        event_name,
-                                                                        value, 
-                                                                        ud)).unwrap(),
+                                                                (
+                                                                        wco.id.clone(),
+                                                                        wco.event_name,
+                                                                        wco.value_str, 
+                                                                        ud
+                                                                    )).unwrap(),
                                 None => cb.call1(py, 
-                                                (id.clone(), 
-                                                        event_name,
-                                                        value,
+                                                (
+                                                        wco.id.clone(), 
+                                                        wco.event_name,
+                                                        wco.value_str,
                                                         )).unwrap(),
                             }
                         }),

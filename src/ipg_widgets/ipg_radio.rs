@@ -1,13 +1,18 @@
 #![allow(unused)]
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
+
 use crate::{access_state, access_callbacks};
 use crate::app;
+use super::ipg_enums::IpgWidgets;
+use super::callbacks::{WidgetCallbackIn, 
+                        WidgetCallbackOut, 
+                        get_set_widget_callback_data};
 
 use iced::{Length, Element, Padding};
 use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{Column, Radio, Row};
 
 use pyo3::{PyObject, Python};
+
 
 #[derive(Debug, Clone)]
 pub struct IpgRadio {
@@ -29,7 +34,6 @@ pub struct IpgRadio {
     pub text_shaping: Shaping,
     // pub font: Option<Font>,
     // pub style: <Renderer::Theme as StyleSheet>::Style,
-    pub cb_name: Option<String>,
 }
 
 impl IpgRadio {
@@ -51,7 +55,6 @@ impl IpgRadio {
         text_shaping: Shaping,
         // font: Option<Font>,
         // style: <Renderer::Theme as StyleSheet>::Style,
-        cb_name: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -71,7 +74,6 @@ impl IpgRadio {
             text_shaping,
             // font: None,
             // style: Default::default(),
-            cb_name,
         }
     }
 }
@@ -142,57 +144,33 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
 
 }
 
-pub fn radio_update(id: usize, message: RDMessage) {
+pub fn radio_callback(id: usize, message: RDMessage) {
 
-    let selected_choice = match message {
-        RDMessage::RadioSelected(selected) => selected,
-    };
-    let mut selected_index = 0;
-    for (i, choice) in  Choice::into_iter().enumerate() {
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+    wci.id = id;
 
-        if choice == selected_choice {
-            selected_index = i;
-            break;
-        }
+    match message {
+        RDMessage::RadioSelected(selected) => {
+            wci.choice = Some(selected);
+        },
     }
+    
+    let mut wco = get_set_widget_callback_data(wci);
 
-    let (cb_name, 
-        user_data, 
-        selected_label_opt,
-        _,_) = get_set_widget_data(
-                                id,
-                                None,
-                                None,
-                                None,
-                                Some(selected_choice)
-                                );
-
-    let event_name = "selected".to_string();
-
-    let selected_label = match selected_label_opt {
-        Some(l) => l,
-        None => panic!("Selcted_label for radio not found id {id}"),
+    let selected_label = match wco.selected_label {
+        Some(ref lb) => lb,
+        None => panic!("Selected_label for radio not found id {}", wco.id),
     };
-
-    process_callback(id, 
-                    event_name,
-                    selected_index,
-                    selected_label,
-                    user_data,
-                    cb_name
-                    );
+    wco.id = id;
+    wco.event_name = Some("on_select".to_string());
+    process_callback(wco);
 
 }
 
 
-fn process_callback(id: usize,
-                    event_name: String,
-                    selected_index: usize,
-                    selected_label: String, 
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !cb_name.is_some() {return}
+    if !wco.event_name.is_some() {return}
 
     let app_cbs = access_callbacks();
 
@@ -200,11 +178,11 @@ fn process_callback(id: usize,
 
     for callback in app_cbs.callbacks.iter() {
 
-        if id == callback.id && cb_name == callback.name {
+        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
         found_callback = match callback.cb.clone() {
             Some(cb) => Some(cb),
-            None => {drop(app_cbs); panic!("Callback could not be found with id {}", id)},
+            None => {drop(app_cbs); panic!("Callback could not be found with id {}", wco.id)},
         };
         break;
         }                   
@@ -215,19 +193,20 @@ fn process_callback(id: usize,
 
     Some(cb) => Python::with_gil(|py| {
         
-        if user_data.is_some() {
+        if wco.user_data.is_some() {
             cb.call1(py, 
-                    (id.clone(),
-                            event_name,
-                            (selected_index, selected_label),
-                            user_data
+                    (
+                            wco.id.clone(),
+                            wco.event_name,
+                            (wco.selected_index, wco.selected_label),
+                            wco.user_data
                             )).unwrap();
         } else {
             cb.call1(py, 
                     (
-                        id.clone(), 
-                        event_name,
-                        (selected_index, selected_label),
+                            wco.id.clone(), 
+                            wco.event_name,
+                            (wco.selected_index, wco.selected_label),
                         )).unwrap();
         }      
     }),

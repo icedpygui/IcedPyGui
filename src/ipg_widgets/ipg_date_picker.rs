@@ -1,17 +1,18 @@
-#![allow(unused_must_use)]
+
 
 use crate::app::{Message, self};
-use crate::{access_callbacks, access_state, UpdateItems};
+use crate::{access_callbacks, UpdateItems};
 use super::ipg_modal::IpgModal;
+use super::callbacks::{WidgetCallbackIn, 
+                        WidgetCallbackOut, 
+                        get_set_widget_callback_data};
 use crate::ICON_FONT_BOOT;
-
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
+use super::helpers::{get_padding, MONTH_NAMES, DATE_FORMATS, DAYS, WEEKDAYS};
 
 use iced::advanced::graphics::core::Element;
 use iced::{Padding, Length, Renderer, Theme, theme};
 use iced::alignment::{self, Alignment};
-use iced::widget::{Button, Column, Container, PickList, Row, Space, Text, focus_next};
-use super::helpers::get_padding;
+use iced::widget::{Button, Column, Container, PickList, Row, Space, Text};
 
 use chrono::prelude::*;
 use pyo3::{PyObject, Python};
@@ -33,13 +34,12 @@ pub struct IpgDatePicker {
     pub selected_month_index: usize,
     pub selected_day: usize,
     pub selected_date: String,
-    pub cb_name: Option<String>,
 
     show_width: f32,
     show_height: f32,
     hide_width: Length,
     hide_height: Length,
-    is_submitted: bool,
+    pub is_submitted: bool,
 }
 
 impl IpgDatePicker {
@@ -50,7 +50,6 @@ impl IpgDatePicker {
         padding: Padding,
         show: bool,
         user_data: Option<PyObject>,
-        cb_name: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -59,7 +58,6 @@ impl IpgDatePicker {
             padding,
             show,
             user_data,
-            cb_name,
 
             selected_format: "YYYY-mm-dd".to_string(),
             selected_year: Utc::now().year(),
@@ -88,17 +86,8 @@ pub enum DPMessage {
     YearLeftPressed,
     YearRightPressed,
     DatePickerFormat(String),
-    Submit,
+    OnSubmit,
 }   
-
-const MONTH_NAMES: [&'static str; 13] = ["", "January", "Feburary", "March", 
-                                        "April", "May", "June", "July", 
-                                        "August", "September", "October", 
-                                        "November", "December"];
-                                
-const DATE_FORMATS: [&'static str; 3] = ["mm-dd-YYYY", "YYYY-mm-dd", "mm-dd-YY"];
-const WEEKDAYS: [&'static str; 7] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const DAYS: [&'static str; 7] = ["S", "M", "T", "W", "T", "F", "S"];
 
 pub fn construct_date_picker(dp: IpgDatePicker) -> Element<'static, Message, Theme, Renderer> {
 
@@ -456,7 +445,7 @@ fn create_submit_row(id: usize, size_factor: f32, selected_date: String) -> Elem
 
     let submit_btn: Element<DPMessage, Theme, Renderer> = 
                                             Button::new(submit_text)
-                                                    .on_press(DPMessage::Submit)
+                                                    .on_press(DPMessage::OnSubmit)
                                                     .into();
     let submit_btn_mapped: Element<Message, Theme, Renderer> = 
                                 submit_btn.map(move |message| app::Message::DatePicker(id, message));
@@ -472,117 +461,85 @@ fn create_submit_row(id: usize, size_factor: f32, selected_date: String) -> Elem
 
 pub fn date_picker_update(id: usize, message: DPMessage) {
 
-    let mut state = access_state();
-
-    let widget_opt = state.widgets.get_mut(&id);
-    let widget = match widget_opt {
-        Some(w) => w,
-        None => panic!("Date_picker widget with id {id} could not be found"),
-    };
-
-    match widget {      
-        
-        IpgWidgets::IpgButton(_) => (),
-        IpgWidgets::IpgCard(_) => (),
-        IpgWidgets::IpgCheckBox(_) => (),
-        IpgWidgets::IpgColorPicker(_) => (),
-        IpgWidgets::IpgDatePicker(dp) => {
-            if id == dp.id {
-                
-                match_message(message.clone(), dp);
-
-                let submitted_date = Some(dp.selected_date.clone());
-                let user_data = dp.user_data.clone();
-                let cb_name = dp.cb_name.clone();
-                let submiited = dp.is_submitted;
-
-                drop(state);
-
-                if  submiited {
-                    process_callback(id.clone(), 
-                                submitted_date, 
-                                user_data,
-                                cb_name,
-                                );
-                }
-                return                  
-            } 
+    match message {
+        DPMessage::ShowModal => {
+            // Non callback just sending the values.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.show = Some(true);
+            wci.is_submitted = Some(false);
+            let _ = get_set_widget_callback_data(wci);
+            // focus_next::<DPMessage>();
         }
-        IpgWidgets::IpgImage(_) => (),
-        IpgWidgets::IpgMenuBar(_) => (),
-        IpgWidgets::IpgMenuItem(_) => (),
-        IpgWidgets::IpgPickList(_) => (),
-        IpgWidgets::IpgProgressBar(_) => (),
-        IpgWidgets::IpgRadio(_) => (),
-        IpgWidgets::IpgSelectableText(_) => (),
-        IpgWidgets::IpgSlider(_) => (),
-        IpgWidgets::IpgSpace(_) => (),
-        IpgWidgets::IpgTable(_) => (),
-        IpgWidgets::IpgText(_) => (),
-        IpgWidgets::IpgTextEditor(_) => (),
-        IpgWidgets::IpgTextInput(_) => (),
+        DPMessage::HideModal => {
+            // Non callback just sending the values.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.show = Some(false);
+            wci.is_submitted = Some(false);
+            let _ = get_set_widget_callback_data(wci);
+        }
+        DPMessage::DayPressed(day) => {
+            // Non callback just sending the values.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.selected_day = Some(day);
+            wci.is_submitted = Some(false);
+            let _ = get_set_widget_callback_data(wci);
+        }
+        DPMessage::DatePickerFormat(formated_date) => {
+            // Non callback just sending the values.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.value_str = Some(formated_date);
+            let _ = get_set_widget_callback_data(wci);
+        }
+        DPMessage::MonthRightPressed(index) => {
+            // Non callback just sending the values.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.index = Some(index);
+            wci.is_submitted = Some(false);
+            let _ = get_set_widget_callback_data(wci);
+        }
+        DPMessage::MonthLeftPressed(index) => {
+            // Non callback just sending the values.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.index = Some(index);
+            wci.is_submitted = Some(false);
+            let _ = get_set_widget_callback_data(wci);
+        }
+        DPMessage::YearRightPressed => {
+            // Non callback just sending the values.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.selected_year = Some(1);
+            wci.is_submitted = Some(false);
+            let _ = get_set_widget_callback_data(wci);
+        }
+        DPMessage::YearLeftPressed => {
+            // Non callback just sending the values.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.selected_year = Some(-1);
+            wci.is_submitted = Some(false);
+            let _ = get_set_widget_callback_data(wci);
+        }
+        DPMessage::OnSubmit => {
+            // Non callback just sending the values.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.is_submitted = Some(true);
+            
+            let _ = get_set_widget_callback_data(wci);
+            let mut wco = WidgetCallbackOut::default();
+            wco.id = id;
+            wco.event_name = Some("on_submit".to_string());
+            process_callback(wco);
+        }
     }
     
-    fn match_message(message: DPMessage, dp: &mut IpgDatePicker) {
-        match message {
-            DPMessage::ShowModal => {
-                dp.show = true;
-                dp.is_submitted = false;
-                focus_next::<DPMessage>();
-            }
-            DPMessage::HideModal => {
-                dp.show = false;
-                dp.is_submitted = false;
-            }
-            DPMessage::DayPressed(day) => {
-                dp.selected_day = day;
-                dp.selected_date = format_date(dp.selected_format.clone(), 
-                                                dp.selected_year, 
-                                                dp.selected_month_index, 
-                                                day);
-                dp.is_submitted = false;
-            }
-            DPMessage::DatePickerFormat(format) => {
-                dp.selected_format = format;
-                if dp.selected_date != "".to_string() {
-                    dp.selected_date = format_date(dp.selected_format.clone(), 
-                                                dp.selected_year, 
-                                                dp.selected_month_index, 
-                                                dp.selected_day);
-                }
-                dp.is_submitted = false;
-            }
-            DPMessage::MonthRightPressed(index) => {
-                if index == 12 {
-                    dp.selected_month_index = 1
-                } else {
-                    dp.selected_month_index += 1; 
-                }
-                dp.selected_month = MONTH_NAMES[dp.selected_month_index].to_string();
-                dp.is_submitted = false;
-            }
-            DPMessage::MonthLeftPressed(index) => {
-                if index == 1 {
-                    dp.selected_month_index = 12
-                } else {
-                    dp.selected_month_index -= 1; 
-                }
-                dp.selected_month = MONTH_NAMES[dp.selected_month_index].to_string();
-                dp.is_submitted = false;
-            }
-            DPMessage::YearRightPressed => {
-                dp.selected_year += 1;
-                dp.is_submitted = false;
-            }
-            DPMessage::YearLeftPressed => {
-                dp.selected_year -= 1;
-                dp.is_submitted = false;
-            }
-            DPMessage::Submit => {
-                dp.is_submitted = true;
-            }
-        }
-    }
 
 }
 
@@ -624,46 +581,10 @@ pub fn date_picker_item_update(dp: &mut IpgDatePicker,
     }
 }
 
-fn format_date(format: String, year: i32, month: usize, day: usize) -> String {
 
-    match format.as_str() {
-        "YYYY-mm-dd" => {
-            let mon_str = convert_to_len_two(month);
-            let day_str = convert_to_len_two(day);
-            format!("{}-{}-{}", year, mon_str, day_str)
-        },
-        "mm-dd-YYYY" => {
-            let mon_str = convert_to_len_two(month);
-            let day_str = convert_to_len_two(day);
-            format!("{}-{}-{}", mon_str, day_str, year)
-        },
-        "mm-dd-YY" => {
-            let mon_str = convert_to_len_two(month);
-            let day_str = convert_to_len_two(day);
-            let s = year.to_string();
-            format!("{}-{}-{}", mon_str, day_str, &s[2..4])
-        },
-        _ => panic!("Calendar Date format {} not found", format)
-    }
-}
-
-fn convert_to_len_two(value: usize) -> String {
-
-    if value < 10 {
-        "0".to_string() + &value.to_string() 
-    } else {
-        value.to_string()
-    }
-}
-
-fn process_callback(id: usize,
-                    submitted_date: Option<String>, 
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !cb_name.is_some() {return}
-
-    let event_name = "Date_Submitted".to_string();
+    if !wco.event_name.is_some() {return}
 
     let app_cbs = access_callbacks();
 
@@ -671,11 +592,11 @@ fn process_callback(id: usize,
 
     for callback in app_cbs.callbacks.iter() {
 
-        if id == callback.id && cb_name == callback.name {
+        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
             found_callback = match callback.cb.clone() {
                 Some(cb) => Some(cb),
-                None => {drop(app_cbs); panic!("Callback could not be found with id {}", id)},
+                None => panic!("Callback could not be found with id {}", wco.id),
             };
             break;
         }                   
@@ -686,16 +607,18 @@ fn process_callback(id: usize,
     match found_callback {
 
         Some(cb) => Python::with_gil(|py| {
-            if user_data.is_some() {
-                cb.call1(py, (id.clone(), 
-                                    event_name, 
-                                    submitted_date, 
-                                    user_data)
+            if wco.user_data.is_some() {
+                cb.call1(py, (
+                                    wco.id.clone(), 
+                                    wco.event_name, 
+                                    wco.selected_date, 
+                                    wco.user_data)
                                 ).unwrap();
             } else {
-                cb.call1(py, (id.clone(), 
-                                    event_name, 
-                                    submitted_date)
+                cb.call1(py, (
+                                    wco.id.clone(), 
+                                    wco.event_name, 
+                                    wco.selected_date)
                                 ).unwrap();
             }           
         }),

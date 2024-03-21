@@ -382,7 +382,7 @@ class IPG:
     def add_checkbox(self,
                      parent_id: str,
                      *,
-                     on_checked: Callable = None,
+                     on_toggle: Callable = None,
                      is_checked: bool=False,
                      label: str=None,
                      width: float=None,
@@ -402,7 +402,7 @@ class IPG:
         
         Args:
             parent_id (str, required): id of another container or window.
-            on_checked (Callable, optional): function executed when button pressed.
+            on_toggle (Callable, optional): function executed when checkbox checked.
             is_checked (bool, optional): default=False, Whether checked or not.
             label (str, optional): label to the right of the checkbox.
             width (float, optional): default=None, width of the widget.
@@ -468,7 +468,7 @@ class IPG:
                         label: str="Calendar",
                         size_factor: float=1.0,
                         padding: List=[5.0],
-                        on_select: Callable=None,
+                        on_submiy: Callable=None,
                         user_data: any=None,
                         show=False, 
                         )  -> int:
@@ -485,7 +485,7 @@ class IPG:
                                         use [float] for all sides,
                                         use [float, float] for [top&bottom, left&right]
                                         use [float, float, float, float] for [top, right, bottom, left]
-            on_select (Callable, optional): Callback function when checkbox checked or unchecked.
+            on_submit (Callable, optional): Callback function date selected is submitted.
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.
             show (bool, optional): default=True, Shows or hides widget.
             
@@ -542,7 +542,7 @@ class IPG:
                         parent_id: str,
                         options: List=[str],
                         *,
-                        callback: Callable=None,
+                        on_select: Callable=None,
                         width: float=None,
                         width_fill: bool=False,
                         padding: List=[5.0],
@@ -561,7 +561,7 @@ class IPG:
             parent_id (str, required): id of another container or window.
             options: (List, required): List of items to select from.
             *
-            callback (Callable, optional): function executed when item selected.
+            on_select (Callable, optional): function executed when item selected.
             width (float, optional): default=None, width of the widget.
             width_fill (bool, optional): default=False, Fill available width.
             padding ([float], optional): default=[10.0], Padding for container.
@@ -667,7 +667,10 @@ class IPG:
                             on_right_press: Callable=None, 
                             on_right_release: Callable=None, 
                             on_middle_press: Callable=None, 
-                            on_middle_release: Callable=None, 
+                            on_middle_release: Callable=None,
+                            on_enter: Callable=None,
+                            on_move: Callable=None,
+                            on_exit: Callable=None, 
                             width: float=None,
                             height: float=None,
                             width_fill: bool=False,
@@ -687,12 +690,15 @@ class IPG:
         Args:
             parent_id (str, required): id of another container or window. 
             text (str, required): The text as wanted.
-            on_press (Callable, optional): default=None, what function to use after left mouse button pressed. 
-            on_release (Callable, optional): default=None, what function to use after left mouse button released. 
-            on_right_press (Callable, optional): default=None, what function to use after right mouse button pressed. 
-            on_right_release (Callable, optional): default=None, what function to use after right mouse button released.  
-            on_middle_press (Callable, optional): default=None, what function to use after middle mouse button pressed. 
-            on_middle_release (Callable, optional): default=None, what function to use after middle mouse button released.
+            on_press (Callable, optional): default=None, function to call for left mouse button pressed. 
+            on_release (Callable, optional): default=None, function to call for left mouse button released. 
+            on_right_press (Callable, optional): default=None, function to call for right mouse button pressed. 
+            on_right_release (Callable, optional): default=None, function to call for right mouse button released.  
+            on_middle_press (Callable, optional): default=None, function to call for middle mouse button pressed. 
+            on_middle_release (Callable, optional): default=None, function to call for middle mouse button released.
+            on_enter (Callable, optional): default=None, function to call for mouse enters in text area.
+            on_move (Callable, optional): default=None, function to call for mouse moves in text area.
+            on_exit (Callable, optional): default=None, function to call for mouse exits text area.
             width (float, optional): default=None, width of the widget.
             height (float, optional): default=None, height of the widget.   
             width_fill (bool, optional): default=False, Fill available width.

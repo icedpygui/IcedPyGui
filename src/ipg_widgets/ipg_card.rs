@@ -1,15 +1,19 @@
 
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
-use crate::app::Message;
-use crate::{access_callbacks, access_state, UpdateItems};
 
-use iced::widget::shader::wgpu::core::gfx_if_metal_hidden;
+use crate::app::Message;
+use crate::{access_callbacks, UpdateItems};
+use super::callbacks::{WidgetCallbackIn, 
+                        WidgetCallbackOut, 
+                        get_set_widget_callback_data};
+
 use iced::{Element, Length, Padding};
 use iced::widget::{Column, Text};
 
-use iced_aw::{style, Card, CardStyles};
+use iced_aw::{Card, CardStyles};
 
 use pyo3::{pyclass, PyObject, Python};
+
+
 
 
 #[derive(Debug, Clone)]
@@ -30,7 +34,6 @@ pub struct IpgCard {
     pub body: String,
     pub foot: Option<String>,
     pub style: Option<String>,
-    pub cb_name: Option<String>,
 }
 
 impl IpgCard {
@@ -50,7 +53,6 @@ impl IpgCard {
         body: String,
         foot: Option<String>,
         style: Option<String>,
-        cb_name: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -68,14 +70,13 @@ impl IpgCard {
             body,
             foot,
             style,
-            cb_name,
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub enum CardMessage {
-    OnClose(usize),
+    OnClose,
 }
 
 // The enums below are different than iced_aw CardStyles enums though they have the
@@ -139,7 +140,7 @@ pub fn construct_card (crd: IpgCard) -> Element<'static, Message> {
                                                 .padding_body(crd.padding_body)
                                                 .padding_foot(crd.padding_foot)
                                                 .close_size(crd.close_size)
-                                                .on_close(CardMessage::OnClose(crd.id.clone()))
+                                                .on_close(CardMessage::OnClose)
                                                 .style(style)
                                                 .into();
 
@@ -147,27 +148,15 @@ pub fn construct_card (crd: IpgCard) -> Element<'static, Message> {
     card_mapped
 }
 
-pub fn card_update(id: usize, message: CardMessage) {
+pub fn card_callback(id: usize, message: CardMessage) {
     match message {
-        CardMessage::OnClose(id) => {
-
-            let (cb_name, user_data,_,_,_) = 
-                                            get_set_widget_data(
-                                                                id, 
-                                                                None,
-                                                                None, 
-                                                                None,
-                                                                None, 
-                                                                );
-            
-            let event_name = "Card_Closed".to_string();
-
-            process_callback(
-                            id, 
-                            event_name, 
-                            user_data,
-                            cb_name
-                            );
+        CardMessage::OnClose => {
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_close".to_string());
+            process_callback(wco);
         }
     }
 }
@@ -213,15 +202,9 @@ pub fn card_item_update(crd: &mut IpgCard,
 
 }
 
-fn process_callback(
-                    id: usize, 
-                    event_name: String,
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>
-                    ) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
-
-    if !cb_name.is_some() {return};
+    if !wco.event_name.is_some() {return};
 
     let app_cbs = access_callbacks();
 
@@ -229,13 +212,13 @@ fn process_callback(
 
     for callback in app_cbs.callbacks.iter() {
 
-    if id == callback.id && cb_name == callback.name {
+    if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
     found_callback = match callback.cb.clone() 
                             {
                                 Some(cb) => Some(cb),
                                 None => {
-                                    panic!("Callback could not be found with id {}", id)
+                                    panic!("Callback could not be found with id {}", wco.id)
                                 },
                             };
     break;
@@ -247,17 +230,17 @@ fn process_callback(
     match found_callback {
 
     Some(cb) => Python::with_gil(|py| {
-        if user_data.is_some() {
+        if wco.user_data.is_some() {
             cb.call1(py, (
-                                id.clone(), 
-                                event_name, 
-                                user_data
+                                wco.id.clone(), 
+                                wco.event_name, 
+                                wco.user_data
                                 )
                     ).unwrap();
         } else {
             cb.call1(py, (
-                                id.clone(), 
-                                event_name,
+                                wco.id.clone(), 
+                                wco.event_name,
                                 )
                     ).unwrap();
         }                    

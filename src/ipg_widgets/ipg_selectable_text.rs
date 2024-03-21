@@ -1,15 +1,19 @@
 
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
-use crate::app;
-use crate::{access_state, access_callbacks};
 
-use iced::{Length, Element};
+use crate::app;
+use crate::access_callbacks;
+use super::callbacks::{WidgetCallbackIn, 
+                        WidgetCallbackOut, 
+                        get_set_widget_callback_data};
+
+use iced::{Length, Element, Point};
 use iced::alignment::{Horizontal, Vertical};
 use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{MouseArea, Text};
 use iced::mouse::Interaction;
 
 use pyo3::{PyObject, Python};
+
 
 #[derive(Debug, Clone)]
 pub struct IpgSelectableText {
@@ -26,12 +30,6 @@ pub struct IpgSelectableText {
         pub shaping: Shaping,
         // pub style: Style,
         pub user_data: Option<PyObject>,
-        pub cb_on_press: Option<String>,
-        pub cb_on_release: Option<String>,
-        pub cb_on_right_press: Option<String>,
-        pub cb_on_right_release: Option<String>,
-        pub cb_on_middle_press: Option<String>,
-        pub cb_on_middle_release: Option<String>,
 }
 
 impl IpgSelectableText {
@@ -49,12 +47,6 @@ impl IpgSelectableText {
         shaping: Shaping,
         // style: Style,
         user_data: Option<PyObject>,
-        cb_on_press: Option<String>,
-        cb_on_release: Option<String>,
-        cb_on_right_press: Option<String>,
-        cb_on_right_release: Option<String>,
-        cb_on_middle_press: Option<String>,
-        cb_on_middle_release: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -70,12 +62,6 @@ impl IpgSelectableText {
             shaping,
             // style: Style,
             user_data,
-            cb_on_press,
-            cb_on_release,
-            cb_on_right_press,
-            cb_on_right_release,
-            cb_on_middle_press,
-            cb_on_middle_release,
         }
     }
 }
@@ -88,6 +74,9 @@ pub enum SLTXTMessage {
     OnRightRelease,
     OnMiddlePress,
     OnMiddleRelease,
+    OnMove(Point),
+    OnEnter,
+    OnExit,
 }
 
 pub fn construct_selectable_text(sl_text: IpgSelectableText) -> Element<'static, app::Message> {
@@ -113,6 +102,9 @@ pub fn construct_selectable_text(sl_text: IpgSelectableText) -> Element<'static,
                     .on_right_release(SLTXTMessage::OnRightRelease)
                     .on_middle_press(SLTXTMessage::OnMiddlePress)
                     .on_middle_release(SLTXTMessage::OnMiddleRelease)
+                    .on_move(SLTXTMessage::OnMove)
+                    .on_enter(SLTXTMessage::OnEnter)
+                    .on_exit(SLTXTMessage::OnExit)
                     .interaction(Interaction::Pointer)
                     .into();
 
@@ -120,75 +112,74 @@ pub fn construct_selectable_text(sl_text: IpgSelectableText) -> Element<'static,
 
 }
 
-pub fn selectable_text_update(id: usize, message: SLTXTMessage) {
+pub fn selectable_text_callback(id: usize, message: SLTXTMessage) {
 
-    let (_, user_data, _, _,_) = 
-                                get_set_widget_data(
-                                                    id,
-                                                    None,
-                                                    None,
-                                                    None,
-                                                    None,
-                                                    );
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+    wci.id = id;
 
     match message {
         SLTXTMessage::OnPress => {
-            let event_name = "on_press".to_string();
-            process_callback(id, 
-                                event_name,
-                                user_data,
-                                Some("cb_on_press".to_string())
-                                );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_press".to_string());
+            process_callback(wco);
         },
         SLTXTMessage::OnRelease => {
-            let event_name = "on_release".to_string();
-            process_callback(id, 
-                                event_name,
-                                user_data,
-                                Some("cb_on_release".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_release".to_string());
+            process_callback(wco);
         },
         SLTXTMessage::OnRightPress => {
-            let event_name = "on_right_press".to_string();
-            process_callback(id, event_name,
-                                user_data,
-                                Some("cb_on_right_press".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_right_press".to_string());
+            process_callback(wco);
         },
         SLTXTMessage::OnRightRelease => {
-            let event_name = "on_right_release".to_string();
-            process_callback(id, 
-                                event_name,
-                                user_data,
-                                Some("cb_on_right_release".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_right_release".to_string());
+            process_callback(wco);
         },
         SLTXTMessage::OnMiddlePress => {
-            let event_name = "on_middle_press".to_string();
-            process_callback(id, 
-                                event_name,
-                                user_data,
-                                Some("cb_on_middle_press".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_middle_press".to_string());
+            process_callback(wco);
         },
         SLTXTMessage::OnMiddleRelease => {
-            let event_name = "on_middle_release".to_string();
-            process_callback(id, 
-                                event_name,
-                                user_data,
-                                Some("cb_on_middle_release".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_middle_release".to_string());
+            process_callback(wco);
         },
-    }
+        SLTXTMessage::OnEnter => {
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_enter".to_string());
+            process_callback(wco);
+        },
+        SLTXTMessage::OnMove(point) => {
+            wci.point = Some(point);
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_move".to_string());
+            process_callback(wco);
+        },
+        SLTXTMessage::OnExit => {
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_exit".to_string());
+            process_callback(wco);
+        },
+    }    
 }
 
 
-fn process_callback(id: usize,
-                    event_name: String, 
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !cb_name.is_some() {return}
+    if !wco.event_name.is_some() {return}
 
     let app_cbs = access_callbacks();
 
@@ -196,11 +187,11 @@ fn process_callback(id: usize,
 
     for callback in app_cbs.callbacks.iter() {
 
-        if id == callback.id && cb_name == callback.name {
+        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
         found_callback = match callback.cb.clone() {
             Some(cb) => Some(cb),
-            None => {drop(app_cbs); panic!("Callback could not be found with id {}", id)},
+            None => {drop(app_cbs); panic!("Callback could not be found with id {}", wco.id)},
         };
             break;
         }                   
@@ -211,15 +202,17 @@ fn process_callback(id: usize,
     match found_callback {
 
     Some(cb) => Python::with_gil(|py| {
-                            match user_data {
+                            match wco.user_data {
                                 Some(ud) => cb.call1(py, 
-                                                                (id.clone(),
-                                                                event_name, 
-                                                                ud,
+                                                                (
+                                                                    wco.id.clone(),
+                                                                    wco.event_name, 
+                                                                    ud,
                                                                 )).unwrap(),
                                 None => cb.call1(py, 
-                                                (id.clone(), 
-                                                        event_name
+                                                (
+                                                        wco.id.clone(), 
+                                                        wco.event_name
                                                     )).unwrap(),
                             }
                         }),

@@ -1,18 +1,17 @@
-#![allow(unused)]
-
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
+#![allow(dead_code)]
 use crate::{app, UpdateItems};
-use crate::{access_state, access_callbacks};
+use crate::access_callbacks;
 use super::helpers::{get_padding, get_width, get_height};
+use super::callbacks::{WidgetCallbackIn, WidgetCallbackOut, get_set_widget_callback_data};
 
 use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{Button, Space, Text};
-use iced::{alignment, Border, Color, Element, Length, Padding, theme, Theme, };
-use iced::font::Font;
+use iced::{Border, Color, Element, Length, Padding, theme, Theme, };
+
 use iced::widget::button::{self, Appearance, StyleSheet};
 
-use iced_aw::{BootstrapIcon, BOOTSTRAP_FONT};
+// use iced_aw::BOOTSTRAP_FONT;
 
 
 #[derive(Debug, Clone)]
@@ -28,7 +27,6 @@ pub struct IpgButton {
     pub corner_radius: f32,
     pub style: Option<String>,
     pub arrow_type: Option<String>,
-    pub cb_name: Option<String>,
 }
 
 impl IpgButton {
@@ -44,7 +42,6 @@ impl IpgButton {
         corner_radius: f32,
         style: Option<String>,
         arrow_type: Option<String>,
-        cb_name: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -57,14 +54,13 @@ impl IpgButton {
             corner_radius,
             style,
             arrow_type,
-            cb_name,
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub enum BTNMessage {
-    ButtonPressed,
+    OnPress,
 }
 
 // The enums below are different than iced ButtonStyles enums though they have the
@@ -89,12 +85,12 @@ pub enum IpgButtonStyles {
     Text
 }
 
-pub enum IpgButtonArrrows {
-    UpArrow,
-    RightArrow,
-    DownArrow,
-    LwftArrow,
-}
+// pub enum IpgButtonArrrows {
+//     UpArrow,
+//     RightArrow,
+//     DownArrow,
+//     LwftArrow,
+// }
 
 
 pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
@@ -109,7 +105,7 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
                                 .height(btn.height)
                                 .padding(btn.padding)
                                 .width(btn.width)
-                                .on_press(BTNMessage::ButtonPressed)
+                                .on_press(BTNMessage::OnPress)
                                 .style(theme::Button::Custom(Box::new(
                                     ButtonStyleRadius::new(style, btn.corner_radius))))
                                 .into();
@@ -117,49 +113,43 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
     ipg_btn.map(move |message| app::Message::Button(btn.id, message))
 }
 
-fn icon(unicode: char) -> Text<'static> {
-    Text::new(unicode.to_string())
-        .font(BOOTSTRAP_FONT)
-        .size(10)
-        .width(10)
-        .horizontal_alignment(alignment::Horizontal::Center)
-        .vertical_alignment(alignment::Vertical::Center)
-}
+// fn icon(unicode: char) -> Text<'static> {
+//     Text::new(unicode.to_string())
+//         .font(BOOTSTRAP_FONT)
+//         .size(10)
+//         .width(10)
+//         .horizontal_alignment(alignment::Horizontal::Center)
+//         .vertical_alignment(alignment::Vertical::Center)
+// }
 
-fn left_arrow_icon() -> Text<'static> {
-    icon('\u{f12c}')
-}
+// fn left_arrow_icon() -> Text<'static> {
+//     icon('\u{f12c}')
+// }
 
-fn right_arrow_icon() -> Text<'static> {
-    icon('\u{f135}')
-}
+// fn right_arrow_icon() -> Text<'static> {
+//     icon('\u{f135}')
+// }
 
-fn up_arrow_icon() -> Text<'static> {
-    icon('\u{f12c}')
-}
+// fn up_arrow_icon() -> Text<'static> {
+//     icon('\u{f12c}')
+// }
 
-fn down_arrow_icon() -> Text<'static> {
-    icon('\u{f12c}')
-}
+// fn down_arrow_icon() -> Text<'static> {
+//     icon('\u{f12c}')
+// }
 
-pub fn button_update(id: usize, message: BTNMessage) {
+pub fn button_callback(id: usize, message: BTNMessage) {
 
-    let (cb_name, user_data,_,_, _) = 
-                                    get_set_widget_data(
-                                                        id, 
-                                                        None, 
-                                                        None,
-                                                        None,
-                                                        None,
-                                                        );
+    let mut wci = WidgetCallbackIn::default();
+    wci.id = id;
 
     match message {
-        BTNMessage::ButtonPressed => {
-            let event_name = "Button_Pressed".to_string();
-            process_callback(id.clone(),
-                                event_name,   
-                                user_data, 
-                                cb_name);
+        BTNMessage::OnPress => {
+            // getting only
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_press".to_string());
+            process_callback(wco);
         }
     }
 }
@@ -246,23 +236,20 @@ pub fn button_item_update(btn: &mut IpgButton,
 }
 
 
-fn process_callback(id: usize,
-                    event_name: String, 
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !cb_name.is_some() {return}
+    if !wco.event_name.is_some() {return}
 
     let app_cbs = access_callbacks();
 
     let mut found_callback = None;
 
     for callback in app_cbs.callbacks.iter() {
-        if id == callback.id && cb_name == callback.name {
+        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
             
             found_callback = match callback.cb.clone() {
                 Some(cb) => Some(cb),
-                None => panic!("Callback could not be found with id {}", id),
+                None => panic!("Callback could not be found with id {}", wco.id),
             };
             break;
         }                   
@@ -272,17 +259,17 @@ fn process_callback(id: usize,
     match found_callback {
 
         Some(cb) => Python::with_gil(|py| {
-            if user_data.is_some() {
+            if wco.user_data.is_some() {
                 cb.call1(py, (
-                                    id.clone(), 
-                                    event_name, 
-                                    user_data
+                                    wco.id.clone(), 
+                                    wco.event_name, 
+                                    wco.user_data
                                     )
                                 ).unwrap();
             } else {
                 cb.call1(py, (
-                                    id.clone(), 
-                                    event_name, 
+                                    wco.id.clone(), 
+                                    wco.event_name, 
                                     )
                                 ).unwrap();
             } 

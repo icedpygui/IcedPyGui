@@ -1,7 +1,10 @@
 
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
+
 use crate::app;
-use crate::{access_state, access_callbacks};
+use crate::access_callbacks;
+use super::callbacks::{WidgetCallbackIn, 
+                        WidgetCallbackOut, 
+                        get_set_widget_callback_data};
 
 use iced::{Length, Element, Theme};
 use iced::widget::Slider;
@@ -22,8 +25,6 @@ pub struct IpgSlider {
     pub width: Length,
     pub height: f32,
     // style: <Renderer::Theme as StyleSheet>::Style,
-    pub cb_name_change: Option<String>,
-    pub cb_name_release: Option<String>,
 }
 
 impl IpgSlider {
@@ -37,8 +38,6 @@ impl IpgSlider {
         value: f32,
         width: Length,
         height: f32,
-        cb_name_change: Option<String>,
-        cb_name_release: Option<String>,
     ) -> Self {
         Self {
             id,
@@ -50,8 +49,6 @@ impl IpgSlider {
             value,
             width,
             height,
-            cb_name_change,
-            cb_name_release,
         }
     }
 }
@@ -77,73 +74,33 @@ pub fn construct_slider(slider: IpgSlider) -> Element<'static, app::Message> {
     sld.map(move |message| app::Message::Slider(slider.id, message))
 }
 
-pub fn slider_update(id: usize, message: SLMessage) {
+pub fn slider_callback(id: usize, message: SLMessage) {
+
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+    wci.id = id;
+           
     match message {
         SLMessage::OnChange(value) => {
-            slider_on_change(id, value);
+            wci.value_float = Some(value as f64);
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_change".to_string());
+            process_callback(wco);
         },
         SLMessage::OnRelease => {
-            slider_on_release(id);
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_release".to_string());
+            process_callback(wco);
         },
     }
 }
 
-fn slider_on_release(id: usize) {
 
-    let (cb_name, user_data,_, value_opt,_) = 
-                                    get_set_widget_data(
-                                                        id, 
-                                                        None, 
-                                                        None, 
-                                                        None, 
-                                                        None,
-                                                        );
-
-    let event_name = "Slider".to_string();
-
-    let value = match value_opt {
-        Some(v) => v,
-        None => panic!("Could not get the value of the slider"),
-    };
-
-    process_callback(id, 
-                        event_name, 
-                        value,
-                        user_data,
-                        cb_name
-                    );
-                    
-}
-
-pub fn slider_on_change(id: usize, value: f32) {
-
-    let (cb_name, user_data,_,_,_) = 
-                                    get_set_widget_data(
-                                                        id, 
-                                                        None, 
-                                                        None, 
-                                                        Some(vec![value as f64]), 
-                                                        None,
-                                                        );
-    let event_name = "Slider".to_string();
-                                    
-    process_callback(
-                        id, 
-                        event_name, 
-                        value as f64,
-                        user_data,
-                        cb_name
-                    );
-}
-
-fn process_callback(id: usize, 
-                    event_name: String,
-                    value: f64,
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
 
-    if !cb_name.is_some() {return};
+    if !wco.event_name.is_some() {return};
 
     let app_cbs = access_callbacks();
 
@@ -151,12 +108,12 @@ fn process_callback(id: usize,
 
     for callback in app_cbs.callbacks.iter() {
 
-        if id == callback.id && cb_name == callback.name {
+        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
             found_callback = match callback.cb.clone() {
                                         Some(cb) => Some(cb),
                                         None => {
-                                            panic!("Callback could not be found with id {}", id)},
+                                            panic!("Callback could not be found with id {}", wco.id)},
                                     };
             break;
             }                   
@@ -166,19 +123,19 @@ fn process_callback(id: usize,
     match found_callback {
 
     Some(cb) => Python::with_gil(|py| {
-                match user_data {
+                match wco.user_data {
                     Some(ud) => cb.call1(py, 
                                                     (
-                                                        id.clone(),
-                                                        event_name,
-                                                        value, 
+                                                        wco.id.clone(),
+                                                        wco.event_name,
+                                                        wco.value_float, 
                                                         ud,
                                                     )).unwrap(),
                     None => cb.call1(py, 
                                     (
-                                        id.clone(), 
-                                        event_name,
-                                        value,
+                                            wco.id.clone(), 
+                                            wco.event_name,
+                                            wco.value_float,
                                     )).unwrap(),
                 };
             }),

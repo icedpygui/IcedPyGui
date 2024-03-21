@@ -1,16 +1,16 @@
 
-use std::collections::HashMap;
-
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
 use crate::app;
-use crate::{access_state, access_callbacks};
-
-use iced::{Length, Element, Point};
+use crate::access_callbacks;
+use super::callbacks::{WidgetCallbackIn, 
+                        WidgetCallbackOut, 
+                        get_set_widget_callback_data};
+use iced::{Length, Element, Padding, Point};
 use iced::widget::{Container, Image, MouseArea};
 use iced::mouse::Interaction;
 use iced::advanced::image;
 
 use pyo3::{PyObject, Python};
+
 
 #[derive(Debug, Clone)]
 pub struct IpgImage {
@@ -18,16 +18,9 @@ pub struct IpgImage {
         pub image_path: String,
         pub width: Length,
         pub height: Length,
+        pub padding: Padding,
         pub show: bool,
         pub user_data: Option<PyObject>,
-        pub cb_on_press: ImageMessage,
-        pub cb_on_release: ImageMessage,
-        pub cb_on_right_press: ImageMessage,
-        pub cb_on_right_release: ImageMessage,
-        pub cb_on_middle_press: ImageMessage,
-        pub cb_on_middle_release: ImageMessage,
-        pub cb_on_enter: ImageMessage,
-        pub cb_on_exit: ImageMessage,
 }
 
 impl IpgImage {
@@ -36,32 +29,18 @@ impl IpgImage {
         image_path: String,
         width: Length,
         height: Length,
+        padding: Padding,
         show: bool,
         user_data: Option<PyObject>,
-        cb_on_press: ImageMessage,
-        cb_on_release: ImageMessage,
-        cb_on_right_press: ImageMessage,
-        cb_on_right_release: ImageMessage,
-        cb_on_middle_press: ImageMessage,
-        cb_on_middle_release: ImageMessage,
-        cb_on_enter: ImageMessage,
-        cb_on_exit: ImageMessage,
         ) -> Self {
         Self {
             id,
             image_path,
             width,
             height,
+            padding,
             show,
             user_data,
-            cb_on_press,
-            cb_on_release,
-            cb_on_right_press,
-            cb_on_right_release,
-            cb_on_middle_press,
-            cb_on_middle_release,
-            cb_on_enter,
-            cb_on_exit,
         }
     }
 }
@@ -77,7 +56,6 @@ pub enum ImageMessage {
     OnEnter,
     OnMove(Point),
     OnExit,
-    None,
 }
 
 pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
@@ -87,19 +65,20 @@ pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
     let cont: Element<ImageMessage> = Container::new(img)
                                                 .width(image.width)
                                                 .height(image.height)
+                                                .padding(image.padding)
                                                 .into();
 
     let ma: Element<ImageMessage> = 
                 MouseArea::new(cont)
-                    .on_press(image.cb_on_press)
-                    .on_release(image.cb_on_release)
-                    .on_right_press(image.cb_on_right_press)
-                    .on_right_release(image.cb_on_right_release)
-                    .on_middle_press(image.cb_on_middle_press)
-                    .on_middle_release(image.cb_on_middle_release)
-                    .on_enter(image.cb_on_enter)
+                    .on_press(ImageMessage::OnPress)
+                    .on_release(ImageMessage::OnRelease)
+                    .on_right_press(ImageMessage::OnRightPress)
+                    .on_right_release(ImageMessage::OnRightRelease)
+                    .on_middle_press(ImageMessage::OnMiddlePress)
+                    .on_middle_release(ImageMessage::OnMiddleRelease)
+                    .on_enter(ImageMessage::OnEnter)
                     .on_move(ImageMessage::OnMove)
-                    .on_exit(image.cb_on_exit)
+                    .on_exit(ImageMessage::OnExit)
                     .interaction(Interaction::Pointer)
                     .into();
 
@@ -107,122 +86,79 @@ pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
 
 }
 
-pub fn image_update(id: usize, message: ImageMessage) {
+pub fn image_callback(id: usize, message: ImageMessage) {
 
-    let (_, user_data, _, _,_) = 
-                                get_set_widget_data(
-                                                    id,
-                                                    None,
-                                                    None,
-                                                    None,
-                                                    None,
-                                                    );
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+    wci.id = id;
 
     match message {
         ImageMessage::OnPress => {
-            let event_name = "on_press".to_string();
-            process_callback(id, 
-                                event_name,
-                                None,
-                                user_data,
-                                Some("on_press".to_string())
-                                );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_press".to_string());
+            process_callback(wco);
         },
         ImageMessage::OnRelease => {
-            let event_name = "on_release".to_string();
-            process_callback(id, 
-                            event_name,
-                            None,
-                            user_data,
-                            Some("on_release".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_release".to_string());
+            process_callback(wco);
         },
         ImageMessage::OnRightPress => {
-            let event_name = "on_right_press".to_string();
-            process_callback(id, 
-                            event_name,
-                            None,
-                            user_data,
-                            Some("on_right_press".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_right_press".to_string());
+            process_callback(wco);
         },
         ImageMessage::OnRightRelease => {
-            let event_name = "on_right_release".to_string();
-            process_callback(id, 
-                            event_name,
-                            None,
-                            user_data,
-                            Some("on_right_release".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_right_release".to_string());
+            process_callback(wco);
         },
         ImageMessage::OnMiddlePress => {
-            let event_name = "on_middle_press".to_string();
-            process_callback(id, 
-                                event_name,
-                                None,
-                                user_data,
-                                Some("on_middle_press".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_middle_press".to_string());
+            process_callback(wco);
         },
         ImageMessage::OnMiddleRelease => {
-            let event_name = "on_middle_release".to_string();
-            process_callback(id, 
-                                event_name,
-                                None,
-                                user_data,
-                                Some("on_middle_release".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_middle_release".to_string());
+            process_callback(wco);
         },
         ImageMessage::OnEnter => {
-            let event_name = "on_enter".to_string();
-            process_callback(id, 
-                                event_name,
-                                None,
-                                user_data,
-                                Some("on_enter".to_string())
-                            );
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_enter".to_string());
+            process_callback(wco);
         },
         ImageMessage::OnMove(point) => {
-            let event_name = "on_move".to_string();
-            let mut points: HashMap<String, f32> = HashMap::new();
-            points.insert("x".to_string(), point.x);
-            points.insert("y".to_string(), point.y);
-
-            process_callback(id, 
-                                event_name,
-                                Some(points),
-                                user_data,
-                                Some("on_move".to_string())
-                            );
+            wci.point = Some(point);
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_move".to_string());
+            process_callback(wco);
         },
         ImageMessage::OnExit => {
-            let event_name = "on_exit".to_string();
-            process_callback(id, 
-                                event_name,
-                                None,
-                                user_data,
-                                Some("on_exit".to_string())
-                            );
-        },
-        ImageMessage::None => {
-
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_exit".to_string());
+            process_callback(wco);
         },
     }
 }
 
 
-fn process_callback(id: usize,
-                    event_name: String,
-                    point: Option<HashMap<String, f32>>, 
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
     // TODO: No error for not finding a callback since the on_enter cannot
     // be switched to a None enum as the rest are done when not being used.
     // Will ne to figure out a way to get an error if no cb found unless its
     // on_move.
 
-    if !cb_name.is_some() {return}
+    if !wco.event_name.is_some() {return}
 
     let app_cbs = access_callbacks();
 
@@ -230,11 +166,11 @@ fn process_callback(id: usize,
 
     for callback in app_cbs.callbacks.iter() {
 
-        if id == callback.id && cb_name == callback.name {
+        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
             found_callback = match callback.cb.clone() {
                 Some(cb) => Some(cb),
-                None => panic!("Callback could not be found with id {}", id),
+                None => panic!("Callback could not be found with id {}", wco.id),
             };
                 break;
         }                   
@@ -242,9 +178,9 @@ fn process_callback(id: usize,
 
     drop(app_cbs);
 
-    if point.is_some() {
+    if wco.points.is_some() {
 
-        let points = match point {
+        let points = match wco.points {
             Some(pt) => pt,
             None => panic!("Could not find the Point for Image mouse move")
         };
@@ -252,16 +188,18 @@ fn process_callback(id: usize,
         match found_callback {
 
         Some(cb) => Python::with_gil(|py| {
-                    match user_data {
+                    match wco.user_data {
                         Some(ud) => cb.call1(py, 
-                                                        (id.clone(),
-                                                        event_name,
-                                                        points, 
-                                                        ud,
-                                                        )).unwrap(),
+                                                        (
+                                                            wco.id.clone(),
+                                                            wco.event_name,
+                                                            points, 
+                                                            ud,
+                                                            )).unwrap(),
                         None => cb.call1(py, 
-                                        (id.clone(), 
-                                                event_name,
+                                        (
+                                                wco.id.clone(), 
+                                                wco.event_name,
                                                 points,
                                             )).unwrap(),
                     }
@@ -272,15 +210,17 @@ fn process_callback(id: usize,
         match found_callback {
 
             Some(cb) => Python::with_gil(|py| {
-                        match user_data {
+                        match wco.user_data {
                             Some(ud) => cb.call1(py, 
-                                                            (id.clone(),
-                                                            event_name, 
-                                                            ud,
+                                                            (
+                                                                wco.id.clone(),
+                                                                wco.event_name, 
+                                                                ud,
                                                             )).unwrap(),
                             None => cb.call1(py, 
-                                            (id.clone(), 
-                                                    event_name
+                                            (
+                                                    wco.id.clone(), 
+                                                    wco.event_name
                                                 )).unwrap(),
                         }
                     }),

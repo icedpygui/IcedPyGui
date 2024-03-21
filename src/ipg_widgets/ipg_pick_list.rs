@@ -1,7 +1,10 @@
 
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
-use crate::{access_state, access_callbacks};
+
+use crate::access_callbacks;
 use crate::app;
+use super::callbacks::{WidgetCallbackIn, 
+                        WidgetCallbackOut, 
+                        get_set_widget_callback_data};
 
 use iced::{Padding, Length, Element};
 use iced::widget::PickList;
@@ -27,7 +30,6 @@ pub struct IpgPickList {
     // font: Option<Renderer::Font>,
     // handle: Handle<Renderer::Font>,
     // style: <Renderer::Theme as StyleSheet>::Style,
-    pub cb_name: Option<String>,
 }
 
 impl IpgPickList {
@@ -47,7 +49,6 @@ impl IpgPickList {
         // font: Option<Renderer::Font>,
         // handle: Handle<Renderer::Font>,
         // style: <Renderer::Theme as StyleSheet>::Style,
-        cb_name: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -64,14 +65,13 @@ impl IpgPickList {
             // font: Option<Renderer::Font>,
             // handle: Handle<Renderer::Font>,
             // style: <Renderer::Theme as StyleSheet>::Style,
-            cb_name,
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub enum PLMessage {
-    Selected(String),
+    OnSelect(String),
 }
 
 pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
@@ -87,7 +87,7 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
 
     let pl: Element<'_, PLMessage> = PickList::new(pick.options.clone(), 
                                             pick.selected.clone(), 
-                                            PLMessage::Selected,
+                                            PLMessage::OnSelect,
                                         )
                                         .placeholder(placeholder)
                                         .width(pick.width)
@@ -102,37 +102,25 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
 }
  
 
- pub fn pick_list_update(id: usize, message: PLMessage) {
+ pub fn pick_list_callback(id: usize, message: PLMessage) {
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+    wci.id = id;
 
     match message {
-        PLMessage::Selected(value) => {
-            let (cb_name, user_data,_,_,_) = 
-                            get_set_widget_data(
-                                                id, 
-                                                None,
-                                                Some(value.clone()),
-                                                None,
-                                                None, 
-                                                );
-            
-            process_callback(id, 
-                            value.clone(), 
-                            user_data,
-                            cb_name, 
-                            );
+        PLMessage::OnSelect(value) => {
+            wci.value_str = Some(value);
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_select".to_string());
+            process_callback(wco);
         },
     }
  }
 
 
-fn process_callback(id: usize,
-                    data: String, 
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !cb_name.is_some() {return}
-
-    let event_name = "Button_Pressed".to_string();
+    if !wco.event_name.is_some() {return}
 
     let app_cbs = access_callbacks();
 
@@ -140,11 +128,11 @@ fn process_callback(id: usize,
 
     for callback in app_cbs.callbacks.iter() {
 
-        if id == callback.id && cb_name == callback.name {
+        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
             found_callback = match callback.cb.clone() {
                 Some(cb) => Some(cb),
-                None => {drop(app_cbs); panic!("Callback could not be found with id {}", id)},
+                None => {drop(app_cbs); panic!("Callback could not be found with id {}", wco.id)},
             };
             break;
         }                   
@@ -154,18 +142,20 @@ fn process_callback(id: usize,
     match found_callback {
 
         Some(cb) => Python::with_gil(|py| {
-            if user_data.is_some() {
+            if wco.user_data.is_some() {
                 cb.call1(py, 
-                        (id.clone(),
-                                event_name,
-                                data, 
-                                user_data,
+                        (
+                                wco.id.clone(),
+                                wco.event_name,
+                                wco.points, 
+                                wco.user_data,
                         )).unwrap();
             } else {
                 cb.call1(py, 
-                    (id.clone(),
-                            event_name,
-                            data, 
+                    (
+                            wco.id.clone(),
+                            wco.event_name,
+                            wco.points, 
                     )).unwrap();
             }
                                     

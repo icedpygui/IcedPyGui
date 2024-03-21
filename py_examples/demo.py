@@ -251,7 +251,7 @@ class Demo:
         # when the box is checked.
     def construct_checkbox(self):
         self.ipg.add_checkbox(parent_id=self.l_col_1, label="Check Me", 
-                                        on_checked=self.box_checked_id)
+                                        on_toggle=self.box_checked_id)
         
         self.text_id_chkbox = self.ipg.add_text(parent_id=self.l_col_1, 
                                                     content="You Checked the box above", 
@@ -286,7 +286,7 @@ class Demo:
         # A picklist is defined here width a place holder. The option list holder the selections.
     def construct_pick_list(self):
         self.ipg.add_pick_list(parent_id=self.l_col_1, options=["one", "two", "three"], 
-                               callback=self.picked_item, 
+                               on_select=self.picked_item, 
                                 placeholder="Choose a string number")
 
         self.picklist_text_id = self.ipg.add_text(self.l_col_1, "You picked:")
@@ -330,7 +330,11 @@ class Demo:
                                      on_middle_press=self.selecting_text,
                                      on_middle_release=self.selecting_text,
                                      on_right_press=self.selecting_text,
-                                     on_right_release=self.selecting_text)
+                                     on_right_release=self.selecting_text,
+                                     on_enter=self.selecting_text,
+                                     on_move=self.selecting_text,
+                                     on_exit=self.selecting_text
+                                     )
         
         self.selectable_text_id = self.ipg.add_text(self.r_col_1, "Selectable actions:")
 
@@ -367,7 +371,7 @@ class Demo:
         
         # A date picker is defined and the results are put in a text widget.
     def construct_date_picker(self):
-        self.ipg.add_date_picker(self.l_col_2, on_select=self.date_selected)
+        self.ipg.add_date_picker(self.l_col_2, on_submit=self.date_selected)
 
         self.date_text_id = self.ipg.add_text(self.l_col_2, 
                                               "You selected:") 

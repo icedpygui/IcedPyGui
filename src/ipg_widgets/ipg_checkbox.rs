@@ -1,16 +1,19 @@
 
-use crate::{access_callbacks, access_state, UpdateItems};
+use crate::{access_callbacks, UpdateItems};
 use crate::app;
 use super::helpers::{get_width, get_shaping};
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
+use super::callbacks::{WidgetCallbackIn, 
+                        WidgetCallbackOut, 
+                        get_set_widget_callback_data};
 
 use iced::{Length, Element};
 use iced::widget::text::{self, LineHeight, Shaping};
 use iced::widget::{Checkbox, Space};
 use iced::widget::checkbox::Icon;
 
-use iced_aw::graphics::icons::{icon_to_char, icon_to_string};
+use iced_aw::graphics::icons::icon_to_char;
 use iced_aw::{BootstrapIcon, BOOTSTRAP_FONT};
+
 use pyo3::{Python, PyObject};
 
 
@@ -31,8 +34,7 @@ pub struct IpgCheckBox {
     // font: Option<Font>,
     pub icon_x: bool,
     pub icon_size: f32,
-    // style: Style,
-    pub cb_name: Option<String>,
+    pub style: Option<String>,
 }
 
 impl IpgCheckBox {
@@ -51,7 +53,7 @@ impl IpgCheckBox {
         text_shaping: Shaping,
         icon_x: bool,
         icon_size: f32,
-        cb_name: Option<String>,
+        style: Option<String>,
         ) -> Self {
             Self {
                 id,
@@ -67,14 +69,14 @@ impl IpgCheckBox {
                 text_shaping,
                 icon_x,
                 icon_size,
-                cb_name,
+                style,
             }
     }
 }
 
 #[derive(Debug, Clone)]
 pub enum CHKMessage {
-    Checked(bool),
+    OnToggle(bool),
 }
 
 pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
@@ -89,7 +91,7 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
 
     let ipg_chk: Element<'_, CHKMessage> = Checkbox::new(chk.label.clone(), 
                             chk.is_checked)
-                            .on_toggle(CHKMessage::Checked)
+                            .on_toggle(CHKMessage::OnToggle)
                             .size(chk.size)
                             .spacing(chk.spacing)
                             .text_line_height(chk.text_line_height)
@@ -118,29 +120,17 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
     ipg_chk.map(move |message| app::Message::CheckBox(chk.id, message))
 }
 
-pub fn checkbox_update(id: usize, message: CHKMessage) {
+pub fn checkbox_callback(id: usize, message: CHKMessage) {
 
     match message {
-        CHKMessage::Checked(checked) => {
-            
-            let (cb_name, user_data,_,_,_) = 
-                                    get_set_widget_data(
-                                                        id, 
-                                                        Some(checked), 
-                                                        None,
-                                                        None,
-                                                        None,
-                                                        );
-            
-            let event_name = "Checked".to_string();
-
-            process_callback(
-                                id, 
-                                event_name, 
-                                checked,
-                                user_data,
-                                cb_name
-                            );
+        CHKMessage::OnToggle(on_toggle) => {
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.on_toggle = Some(on_toggle);
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_toggle".to_string());
+            process_callback(wco);
         }
     }
 }
@@ -258,14 +248,10 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
 
 }
 
-fn process_callback(id: usize, 
-                        event_name: String,
-                        checked: bool,
-                        user_data: Option<PyObject>, 
-                        cb_name: Option<String>) 
-                    {
+fn process_callback(wco: WidgetCallbackOut)
+{
 
-    if !cb_name.is_some() {return};
+    if !wco.event_name.is_some() {return};
 
     let app_cbs = access_callbacks();
 
@@ -273,12 +259,12 @@ fn process_callback(id: usize,
 
     for callback in app_cbs.callbacks.iter() {
 
-        if id == callback.id && cb_name == callback.name {
+        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
             found_callback = match callback.cb.clone() {
                                         Some(cb) => Some(cb),
                                         None => {
-                                            panic!("Callback could not be found with id {}", id)
+                                            panic!("Callback could not be found with id {}", wco.id)
                                         },
                                     };
             break;
@@ -289,19 +275,19 @@ fn process_callback(id: usize,
     match found_callback {
 
         Some(cb) => Python::with_gil(|py| {
-            if user_data.is_some() {
+            if wco.user_data.is_some() {
                 cb.call1(py, (
-                                    id.clone(), 
-                                    event_name,
-                                    checked,  
-                                    user_data
+                                    wco.id.clone(), 
+                                    wco.event_name,
+                                    wco.is_checked,  
+                                    wco.user_data
                                     )
                                 ).unwrap();
             } else {
                 cb.call1(py, (
-                                    id.clone(), 
-                                    event_name,
-                                    checked, 
+                                    wco.id.clone(), 
+                                    wco.event_name,
+                                    wco.is_checked, 
                                     )
                                 ).unwrap();
             }                    

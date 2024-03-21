@@ -204,3 +204,44 @@ pub fn get_scroll_direction(direction_str: Option<String>) -> Direction {
 
     scroll
 }
+
+pub const MONTH_NAMES: [&'static str; 13] = ["", "January", "Feburary", "March", 
+                                        "April", "May", "June", "July", 
+                                        "August", "September", "October", 
+                                        "November", "December"];
+                                
+pub const DATE_FORMATS: [&'static str; 3] = ["mm-dd-YYYY", "YYYY-mm-dd", "mm-dd-YY"];
+pub const WEEKDAYS: [&'static str; 7] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+pub const DAYS: [&'static str; 7] = ["S", "M", "T", "W", "T", "F", "S"];
+
+pub fn format_date(format: String, year: i32, month: usize, day: usize) -> String {
+
+    match format.as_str() {
+        "YYYY-mm-dd" => {
+            let mon_str = convert_to_len_two(month);
+            let day_str = convert_to_len_two(day);
+            format!("{}-{}-{}", year, mon_str, day_str)
+        },
+        "mm-dd-YYYY" => {
+            let mon_str = convert_to_len_two(month);
+            let day_str = convert_to_len_two(day);
+            format!("{}-{}-{}", mon_str, day_str, year)
+        },
+        "mm-dd-YY" => {
+            let mon_str = convert_to_len_two(month);
+            let day_str = convert_to_len_two(day);
+            let s = year.to_string();
+            format!("{}-{}-{}", mon_str, day_str, &s[2..4])
+        },
+        _ => panic!("Calendar Date format {} not found", format)
+    }
+}
+
+fn convert_to_len_two(value: usize) -> String {
+
+    if value < 10 {
+        "0".to_string() + &value.to_string() 
+    } else {
+        value.to_string()
+    }
+}

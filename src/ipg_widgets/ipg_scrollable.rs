@@ -1,10 +1,9 @@
-#![allow(unused)]
+
 use std::collections::HashMap;
 
 use crate::access_callbacks;
 use crate::app;
 use crate::access_state;
-use crate::ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 use crate::iced_widgets::scrollable::{Direction, Scrollable, Viewport};
 
 
@@ -12,6 +11,8 @@ use iced::{Element, Length};
 use iced::widget::Column;
 
 use pyo3::{Python, PyObject};
+
+use super::ipg_enums::IpgContainers;
 
 #[derive(Debug, Clone)]
 pub struct IpgScrollable {
@@ -21,7 +22,6 @@ pub struct IpgScrollable {
     pub direction: Direction,
     pub user_data: Option<PyObject>,
     // pub style: Default,
-    pub cb_name: Option<String>,
 }
 
 impl IpgScrollable {
@@ -32,7 +32,6 @@ impl IpgScrollable {
         direction: Direction,
         user_data: Option<PyObject>,
         // style: Default::default(),
-        cb_name: Option<String>,
     ) -> Self {
         Self {
             id,
@@ -41,7 +40,6 @@ impl IpgScrollable {
             direction,
             user_data,
             // style,
-            cb_name,
         }
     }
 }
@@ -62,7 +60,7 @@ pub fn construct_scrollable(scroll: &IpgScrollable, content: Vec<Element<'static
   
 }
 
-pub fn scrollable_update(id: usize, vp: Viewport) {
+pub fn scrollable_callback(id: usize, vp: Viewport) {
 
     let mut offsets: HashMap<String, f32> = HashMap::new();
     offsets.insert("abs_offset_x".to_string(), vp.absolute_offset().x);
@@ -72,18 +70,18 @@ pub fn scrollable_update(id: usize, vp: Viewport) {
     offsets.insert("rev_offset_x".to_string(), vp.absolute_offset_reversed().x);
     offsets.insert("rev_offset_y".to_string(), vp.absolute_offset_reversed().y);
     
-    let (user_data, cb_name) = get_set_data(id);
+    let user_data = get_set_data(id);
 
-    let event_name = "Scrolled".to_string();
+    let event_name = "on_scroll".to_string();
 
     process_callback(id, 
                         event_name, 
                         offsets,
-                        cb_name
+                        user_data,
                     );
 }
 
-fn get_set_data(id: usize) -> (Option<PyObject>, Option<String>) {
+fn get_set_data(id: usize) -> Option<PyObject> {
     let state = access_state();
 
     let container_type_opt = state.containers.get(&id);
@@ -96,17 +94,16 @@ fn get_set_data(id: usize) -> (Option<PyObject>, Option<String>) {
     match container_type {
         IpgContainers::IpgScrollable(scroll) => {
             let user_data = scroll.user_data.clone();
-            let cb_name = scroll.cb_name.clone();
             drop(state);
-            return (user_data, cb_name) 
+            return user_data
         }
-        IpgContainers::IpgColumn(_) => return (None, None),
-        IpgContainers::IpgContainer(_) => return (None, None),
-        IpgContainers::IpgPaneGrid(_) => return (None, None),
-        IpgContainers::IpgPane(_) => return (None, None),
-        IpgContainers::IpgRow(_) => return (None, None),
-        IpgContainers::IpgToolTip(_) => return (None, None),
-        IpgContainers::IpgWindow(_) => return (None, None),
+        IpgContainers::IpgColumn(_) => return None,
+        IpgContainers::IpgContainer(_) => return None,
+        IpgContainers::IpgPaneGrid(_) => return None,
+        IpgContainers::IpgPane(_) => return None,
+        IpgContainers::IpgRow(_) => return None,
+        IpgContainers::IpgToolTip(_) => return None,
+        IpgContainers::IpgWindow(_) => return None,
     }
         
 }
@@ -114,18 +111,15 @@ fn get_set_data(id: usize) -> (Option<PyObject>, Option<String>) {
 fn process_callback(id: usize, 
                     event_name: String,
                     offsets: HashMap<String, f32>,
-                    cb_name: Option<String>) 
+                    _user_data: Option<PyObject>) 
 {
-
-    if !cb_name.is_some() {return};
-
     let app_cbs = access_callbacks();
 
     let mut found_callback = None;
 
     for callback in app_cbs.callbacks.iter() {
 
-    if id == callback.id && cb_name == callback.name {
+    if id == callback.id && event_name == callback.event_name.clone() {
 
         found_callback = match callback.cb.clone() {
                             Some(cb) => Some(cb),

@@ -1,6 +1,6 @@
-#![allow(unused)]
-use iced::{Color, Element, Length, Theme};
-use iced::widget::{progress_bar, ProgressBar};
+
+use iced::{Element, Length};
+use iced::widget::ProgressBar;
 use crate::{app, UpdateItems};
 
 
@@ -49,13 +49,13 @@ pub fn construct_progress_bar(bar: &IpgProgressBar) -> Element<'static, app::Mes
                             .into()
 }
 
-fn progress_bar_custom_style(theme: &Theme) -> progress_bar::Appearance {
-    progress_bar::Appearance {
-        background: theme.extended_palette().background.strong.color.into(),
-        bar: Color::from_rgb8(250, 85, 134).into(),
-        border_radius: 0.0.into(),
-    }
-}
+// fn progress_bar_custom_style(theme: &Theme) -> progress_bar::Appearance {
+//     progress_bar::Appearance {
+//         background: theme.extended_palette().background.strong.color.into(),
+//         bar: Color::from_rgb8(250, 85, 134).into(),
+//         border_radius: 0.0.into(),
+//     }
+// }
 
 pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
                                 item: String,

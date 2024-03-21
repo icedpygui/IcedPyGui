@@ -11,32 +11,32 @@ use iced::Color;
 use std::collections::HashMap;
 
 use crate::ipg_widgets;
-use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_update};
-use ipg_widgets::ipg_card::{CardMessage, construct_card, card_update};
-use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_update};
+use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
+use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
+use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
 use ipg_widgets::ipg_color_picker::{ColPikMessage, construct_color_picker, color_picker_update};
 use ipg_widgets::ipg_column::construct_column;
 use ipg_widgets::ipg_container::construct_container;
 use ipg_widgets::ipg_date_picker::{DPMessage, construct_date_picker, date_picker_update};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 use ipg_widgets::ipg_events::process_events;
-use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_update};
+use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
 use ipg_widgets::ipg_menu::{MenuMessage, construct_menu_bar, menu_bar_update, 
                                          construct_menu_item, menu_item_update};
 use ipg_widgets::ipg_pane_grid::{PGMessage, construct_pane_grid, pane_grid_update, 
                                  construct_pane, pane_update};
-use ipg_widgets::ipg_pick_list::{PLMessage, construct_picklist, pick_list_update};
+use ipg_widgets::ipg_pick_list::{PLMessage, construct_picklist, pick_list_callback};
 use ipg_widgets::ipg_progress_bar::construct_progress_bar;
-use ipg_widgets::ipg_radio::{RDMessage, construct_radio, radio_update};
+use ipg_widgets::ipg_radio::{RDMessage, construct_radio, radio_callback};
 use ipg_widgets::ipg_row::construct_row;
-use ipg_widgets::ipg_scrollable::{construct_scrollable, scrollable_update};
-use ipg_widgets::ipg_selectable_text::{SLTXTMessage, construct_selectable_text, selectable_text_update};
-use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_update};
+use ipg_widgets::ipg_scrollable::{construct_scrollable, scrollable_callback};
+use ipg_widgets::ipg_selectable_text::{SLTXTMessage, construct_selectable_text, selectable_text_callback};
+use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_callback};
 use ipg_widgets::ipg_space::construct_space;
 use ipg_widgets::ipg_table::contruct_table;
 use ipg_widgets::ipg_text::construct_text;
 use ipg_widgets::ipg_text_editor::TEMessage;
-use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_update};
+use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_callback};
 use ipg_widgets::ipg_tool_tip::construct_tool_tip;
 use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_window, window_update};
 
@@ -143,15 +143,15 @@ impl multi_window::Application for App {
                 Command::none()
             },
             Message::Button(id, message) => {
-                button_update(id, message);
+                button_callback(id, message);
                 Command::none()
             },
             Message::Card(id, message) => {
-                card_update(id, message);
+                card_callback(id, message);
                  Command::none()
             },
             Message::CheckBox(id, message) => {
-                checkbox_update(id, message);
+                checkbox_callback(id, message);
                 Command::none()
             },
             Message::ColorPicker(id, message) => {
@@ -163,7 +163,7 @@ impl multi_window::Application for App {
                 Command::none()
             },
             Message::Image(id, message) => {
-                image_update(id, message);
+                image_callback(id, message);
                 Command::none()
             },
             Message::MenuBar(mn) => {
@@ -183,23 +183,23 @@ impl multi_window::Application for App {
                 Command::none()
             },
             Message::PickList(id, message) => {
-                pick_list_update(id, message);
+                pick_list_callback(id, message);
                 Command::none()
             },
             Message::Radio(id, message) => {
-                radio_update(id, message);
+                radio_callback(id, message);
                 Command::none()
             },
             Message::Scrolled(id, vp) => {
-                scrollable_update(id, vp);
+                scrollable_callback(id, vp);
                 Command::none()
             },
             Message::SelectableText(id, message) => {
-                selectable_text_update(id, message);
+                selectable_text_callback(id, message);
                 Command::none()
             },
             Message::Slider(id, message) => {
-                slider_update(id, message);
+                slider_callback(id, message);
                 Command::none()
             },
             Message::TextEditor(_message) => {
@@ -207,7 +207,7 @@ impl multi_window::Application for App {
                 Command::none()
             },
             Message::TextInput(id, message) => {
-                text_input_update(id, message);
+                text_input_callback(id, message);
                 Command::none()
             },
             Message::UpdateText => {
@@ -405,7 +405,7 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                 IpgContainers::IpgToolTip(tool) => {
                     return construct_tool_tip(tool, content)
                 },
-                IpgContainers::IpgWindow(wnd) => {
+                IpgContainers::IpgWindow(_wnd) => {
                     return construct_window(content)
                 }
             },

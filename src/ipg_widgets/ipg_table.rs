@@ -29,7 +29,6 @@ pub struct IpgTable {
         pub column_widths: Vec<f32>,
         pub show: bool,
         pub user_data: Option<PyObject>,
-        pub cb_name:  Option<String>,
 }
 
 impl IpgTable {
@@ -42,7 +41,6 @@ impl IpgTable {
         column_widths: Vec<f32>,
         show: bool,
         user_data: Option<PyObject>,
-        cb_name: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -53,7 +51,6 @@ impl IpgTable {
             column_widths,
             show,
             user_data,
-            cb_name,
         }
     }
 }

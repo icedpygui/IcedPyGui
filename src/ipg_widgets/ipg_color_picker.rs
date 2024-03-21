@@ -1,19 +1,18 @@
 
-use crate::ipg_widgets::ipg_enums::{IpgWidgets, get_set_widget_data};
-use crate::{access_callbacks, access_state, UpdateItems};
-use crate::app::Message;
-use crate::ipg_widgets::ipg_button::{ButtonStyleRadius, get_button_style_from_str};
 
-use iced::widget::{Button, Row, Space, Text};
-use iced::{alignment, Alignment, Border, Color, Element, Length, Padding, Renderer, theme, Theme, };
-use iced::font::Font;
-use iced::widget::button::{self, Appearance, StyleSheet};
+use crate::{access_callbacks, UpdateItems};
+use crate::app::Message;
+use super::ipg_button::{ButtonStyleRadius, get_button_style_from_str};
+use super::callbacks::{WidgetCallbackIn, 
+                        WidgetCallbackOut, 
+                        get_set_widget_callback_data};
+
+use iced::widget::{Button, Row, Text};
+use iced::{Alignment, Color, Element, Length, Padding, theme,};
 
 use iced_aw::ColorPicker;
 
 use pyo3::{Python, PyObject};
-
-const ICON_FONT: Font = Font::with_name("icons");
 
 
 #[derive(Debug, Clone)]
@@ -30,7 +29,6 @@ pub struct IpgColorPicker {
     pub padding: Padding,
     pub corner_radius: f32,
     pub style: Option<String>,
-    pub cb_name: Option<String>,
 }
 
 impl IpgColorPicker {
@@ -46,7 +44,6 @@ impl IpgColorPicker {
         padding: Padding,
         corner_radius: f32,
         style: Option<String>,
-        cb_name: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -60,7 +57,6 @@ impl IpgColorPicker {
             padding,
             corner_radius,
             style,
-            cb_name,
         }
     }
 }
@@ -69,14 +65,14 @@ impl IpgColorPicker {
 #[derive(Debug, Clone)]
 pub enum ColPikMessage {
     ChooseColor,
-    SubmitColor(Color),
-    CancelColor,
+    OnCancel,
+    OnSubmit(Color),
 }
 
 
 pub fn construct_color_picker(cp: IpgColorPicker) -> Element<'static, Message> {
 
-    let btn_label: Element<Message> = Text::new("Set Color").into();
+    // let btn_label: Element<Message> = Text::new("Set Color").into();
 
     let style = get_button_style_from_str(cp.style.clone());
     
@@ -93,8 +89,8 @@ pub fn construct_color_picker(cp: IpgColorPicker) -> Element<'static, Message> {
                                     cp.show,
                                     cp.color,
                                     btn,
-                                    ColPikMessage::CancelColor,
-                                    ColPikMessage::SubmitColor,
+                                    ColPikMessage::OnCancel,
+                                    ColPikMessage::OnSubmit,
                                 ).into();
 
     let mapped_cp: Element<Message> = color_picker.map(move |message| Message::ColorPicker(cp.id, message));
@@ -112,72 +108,45 @@ pub fn color_picker_update(id: usize, message: ColPikMessage) {
 
     match message {
         ColPikMessage::ChooseColor => {
-            let show = true;
-            open_close_color_picker(id, show);
+            // Non callback just setting the show value.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.show = Some(true);
+            let _ = get_set_widget_callback_data(wci);
         },
-        ColPikMessage::CancelColor => {
-            let show: bool = false;
-            open_close_color_picker(id, show);
+        ColPikMessage::OnCancel => {
+            // Non callback just setting the show value.
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.show = Some(false);
+            let _ = get_set_widget_callback_data(wci);
         },
-        ColPikMessage::SubmitColor(color) => {
-            let show = false;
-            let color_list: Vec<f64> = convert_color_to_list(color);
-            let (cb_name, user_data,_,_,_) = 
-                                            get_set_widget_data(
-                                                                id, 
-                                                                Some(show),
-                                                                None, 
-                                                                Some(color_list.clone()),
-                                                                None, 
-                                                                );
-            let event_name = "Color_Submitted".to_string();
-            
-            let show = false;
-            
-            process_callback(
-                            id, 
-                            event_name, 
-                            color_list,
-                            user_data,
-                            cb_name
-                            );
+        ColPikMessage::OnSubmit(color) => {
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            wci.show = Some(false);
+            wci.color = Some(convert_color_to_list(color));
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = Some("on_submit".to_string());
+            process_callback(wco);
         }
     }
 
 }
 
-pub fn color_picker_item_update(
-                                cp: &mut IpgColorPicker,
-                                item: String,
-                                items: UpdateItems,
+pub fn color_picker_item_update(_cp: &mut IpgColorPicker,
+                                _item: String,
+                                _items: UpdateItems,
                                 ) 
 {
 
 }
 
 
-fn open_close_color_picker(id: usize, show: bool) {
-
-    // Non callback just seeting the show value.
-    let (_, _, _, _,_) = get_set_widget_data(id, 
-                                            Some(show),
-                                            None, 
-                                            None,
-                                            None, 
-                                            );
-
-}
-
-fn process_callback(
-                    id: usize, 
-                    event_name: String,
-                    color: Vec<f64>,
-                    user_data: Option<PyObject>, 
-                    cb_name: Option<String>
-                    ) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
-
-    if !cb_name.is_some() {return};
+    if !wco.event_name.is_some() {return};
 
     let app_cbs = access_callbacks();
     
@@ -185,13 +154,13 @@ fn process_callback(
 
     for callback in app_cbs.callbacks.iter() {
 
-        if id == callback.id && cb_name == callback.name {
+        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
             found_callback = match callback.cb.clone() 
                                         {
                                             Some(cb) => Some(cb),
                                             None => {
-                                                panic!("Callback could not be found with id {}", id)
+                                                panic!("Callback could not be found with id {}", wco.id)
                                             },
                                         };
             break;
@@ -203,19 +172,19 @@ fn process_callback(
     match found_callback {
 
         Some(cb) => Python::with_gil(|py| {
-                    if user_data.is_some() {
+                    if wco.user_data.is_some() {
                         cb.call1(py, (
-                                            id.clone(), 
-                                            event_name,
-                                            color,  
-                                            user_data
+                                            wco.id.clone(), 
+                                            wco.event_name,
+                                            wco.color,  
+                                            wco.user_data
                                             )
                                 ).unwrap();
                     } else {
                         cb.call1(py, (
-                                            id.clone(), 
-                                            event_name,
-                                            color, 
+                                            wco.id.clone(), 
+                                            wco.event_name,
+                                            wco.color, 
                                             )
                                 ).unwrap();
                     }                    

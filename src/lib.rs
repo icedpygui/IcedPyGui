@@ -1,9 +1,7 @@
 #![allow(non_snake_case)]
-#![allow(unused)]
 
-use iced::advanced::graphics::image::image_rs::GenericImageView;
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyList, PyModule, PyTuple};
+use pyo3::types::{PyAny, PyList, PyModule};
 use pyo3::PyObject;
 
 use iced::multi_window::Application;
@@ -23,8 +21,8 @@ mod iced_widgets;
 
 use crate::iced_widgets::scrollable::Direction;
 
-use ipg_widgets::ipg_button::{button_item_update, get_button_str_from_style, try_extract_button_style, IpgButton, IpgButtonStyles};
-use ipg_widgets::ipg_card::{card_item_update, get_card_str_from_style, try_extract_card_style, IpgCard, IpgCardStyles};
+use ipg_widgets::ipg_button::{button_item_update, try_extract_button_style, IpgButton, IpgButtonStyles};
+use ipg_widgets::ipg_card::{card_item_update, try_extract_card_style, IpgCard, IpgCardStyles};
 use ipg_widgets::ipg_checkbox::{IpgCheckBox, checkbox_item_update};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::IpgColumn;
@@ -32,7 +30,7 @@ use ipg_widgets::ipg_container::IpgContainer;
 use ipg_widgets::ipg_date_picker::{IpgDatePicker, date_picker_item_update};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, 
                                 IpgMouseEvent, IpgWindowEvent};
-use ipg_widgets::ipg_image::{IpgImage, ImageMessage};
+use ipg_widgets::ipg_image::IpgImage;
 use ipg_widgets::ipg_menu::{IpgMenuBar, IpgMenuItem};
 use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
 use ipg_widgets::ipg_pick_list::IpgPickList;
@@ -64,7 +62,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
 // const ICON_FONT: Font = Font::with_name("icons");
-const RADIO_SIZE: usize = 26;
+// const RADIO_SIZE: usize = 26;
 
 use std::sync::{Mutex, MutexGuard};
 use once_cell::sync::Lazy;
@@ -74,8 +72,7 @@ use once_cell::sync::Lazy;
 pub struct CallBack {
     id: usize,
     cb: Option<PyObject>,
-    name: Option<String>,
-    
+    event_name: String,
 }
 
 #[derive(Debug, Clone)]
@@ -91,14 +88,12 @@ pub struct Callbacks {
     callbacks: Vec<CallBack>,
     cb_events: Vec<CallBackEvent>,
     user_data: Vec<(usize, Option<PyObject>)>,
-    radios: Vec<(String, Vec<usize>)>,
 }
 
 pub static CALLBACKS: Mutex<Callbacks> = Mutex::new(Callbacks {
     callbacks: vec![],
     cb_events: vec![],
     user_data: vec![],
-    radios: vec![],
 });
 
 pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
@@ -160,7 +155,7 @@ pub struct IPG {
     id: usize,
     window_id: usize,
     gen_ids: Vec<usize>,
-    card_style: Option<String>,
+    // card_style: Option<String>,
 }
 
 #[pymethods]
@@ -171,7 +166,7 @@ impl IPG {
             id: 0,
             window_id: 0,
             gen_ids: vec![],
-            card_style: None,
+            // card_style: None,
         }
     }
 
@@ -257,7 +252,7 @@ impl IPG {
         self.id += 1;
 
         // TODO: add custom
-        let mut window_theme = match theme.as_str() {
+        let window_theme = match theme.as_str() {
             "Light" => Theme::Light,
             "Dark" => Theme::Dark,
             "Dracula" => Theme::Dracula,
@@ -308,11 +303,8 @@ impl IPG {
             panic!("Window id {} is not unique", window_id)
         };
 
-        let mut cb_name: Option<String> = None;
-
         if on_resize.is_some() {
-            cb_name = Some("window_on_resize".to_string());
-            let cb = CallBack{id: self.id, cb: on_resize, name: cb_name.clone()};
+            let cb = CallBack{id: self.id, cb: on_resize, event_name: "on_resize".to_string()};
 
             add_callback_to_mutex(cb);
         }
@@ -338,7 +330,6 @@ impl IPG {
                                             visible,
                                             debug,
                                             user_data.clone(),
-                                            cb_name.clone(),
                                             )));
 
         state.windows.push(IpgWindow::new(
@@ -355,7 +346,6 @@ impl IPG {
                                         show,
                                         debug,
                                         user_data,
-                                        cb_name,
                                         ));
         drop(state);
 
@@ -638,13 +628,8 @@ impl IPG {
     {
         self.id += 1;
 
-        let mut cb_name: Option<String> = None;
-
         if on_scroll.is_some() {
-            cb_name = Some("on_scroll".to_string());
-            let cb = CallBack{id: self.id, cb: on_scroll, name: cb_name.clone()};
-
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id: self.id, cb: on_scroll, event_name: "on_scroll".to_string()});
         }
 
         let width = get_width(width, width_fill);
@@ -668,7 +653,6 @@ impl IPG {
                                                     direction,
                                                     user_data,
                                                     // style,
-                                                    cb_name,
                                                     )));
 
         Ok(self.id)
@@ -744,13 +728,8 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let mut cb_name: Option<String> = None;
-
         if on_press.is_some() {
-            cb_name = Some("button".to_string());
-            let cb = CallBack{id, cb: on_press, name: cb_name.clone()};
-
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id, cb: on_press, event_name: "on_press".to_string()});
         }
 
         let width = get_width(width, width_fill);
@@ -782,8 +761,7 @@ impl IPG {
                                                 padding,
                                                 corner_radius,
                                                 style_opt,
-                                                arrow_type,
-                                                cb_name,                              
+                                                arrow_type,                              
                                                 )));
         
         Ok(id)
@@ -820,13 +798,8 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let mut cb_name: Option<String> = None;
-
         if on_close.is_some() {
-            cb_name = Some("card".to_string());
-            let cb = CallBack{id, cb: on_close, name: cb_name.clone()};
-
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id, cb: on_close, event_name: "on_close".to_string()});
         }
 
         let width = get_width(width, width_fill);
@@ -866,24 +839,23 @@ impl IPG {
                                                     body,
                                                     foot,
                                                     style_opt,
-                                                    cb_name,
                                                 )));
 
         Ok(id)
 
     }
 
-    #[pyo3(signature = (parent_id, gen_id=None, on_checked=None, is_checked=false, 
+    #[pyo3(signature = (parent_id, gen_id=None, on_toggle=None, is_checked=false, 
                         label="".to_string(), width=None, width_fill=false, 
                         size=16.0, spacing=20.0, text_line_height=1.3, 
                         text_shaping="basic".to_string(),text_size=16.0, icon_x=false, 
-                        icon_size=25.0, user_data=None, show=true,
+                        icon_size=25.0, user_data=None, show=true, style=None,
                         ))] 
     fn add_checkbox(&mut self,
                         parent_id: String,
                         // ** above required
                         gen_id: Option<usize>,
-                        on_checked: Option<PyObject>,
+                        on_toggle: Option<PyObject>,
                         is_checked: bool,
                         label: String,
                         width: Option<f32>,
@@ -897,17 +869,13 @@ impl IPG {
                         icon_size: f32,
                         user_data: Option<PyObject>,
                         show: bool,
+                        style: Option<String>,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
 
-        let mut cb_name: Option<String> = None;
-
-        if on_checked.is_some() {
-            cb_name = Some("checkbox".to_string());
-            let cb = CallBack{id, cb: on_checked, name: cb_name.clone()};
-
-            add_callback_to_mutex(cb);
+        if on_toggle.is_some() {
+            add_callback_to_mutex(CallBack{id, cb: on_toggle, event_name: "on_toggle".to_string()});
         }
        
         let text_shaping = get_shaping(text_shaping);
@@ -934,7 +902,7 @@ impl IPG {
                                                     text_shaping,
                                                     icon_x,
                                                     icon_size,
-                                                    cb_name,
+                                                    style,
                                                     )));
 
         Ok(id)
@@ -969,13 +937,8 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let mut cb_name: Option<String> = None;
-
         if on_submit.is_some() {
-            cb_name = Some("color_on_submit".to_string());
-            let cb = CallBack{id, cb: on_submit, name: cb_name.clone()};
-
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id, cb: on_submit, event_name: "on_submit".to_string()});
         }
 
         let color = Color::from_rgba(start_up_color[0], 
@@ -1003,8 +966,7 @@ impl IPG {
                                             height,
                                             padding,
                                             corner_radius,
-                                            style,
-                                            cb_name,                              
+                                            style,                              
                                         )));
 
         Ok(id)
@@ -1012,7 +974,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, label="Calendar".to_string(), gen_id=None,
-                        size_factor=1.0, padding=vec![5.0], on_select=None, 
+                        size_factor=1.0, padding=vec![5.0], on_submit=None, 
                         user_data=None, show=false,
                         ))]
     fn add_date_picker(&mut self,
@@ -1022,24 +984,19 @@ impl IPG {
                         gen_id: Option<usize>,
                         size_factor: f32,
                         padding: Vec<f64>,
-                        on_select: Option<PyObject>,
+                        on_submit: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
 
-        let mut cb_name: Option<String> = None;
-
         if size_factor < 1.0 {
             panic!("Size factor for date picker must be > 1.0")
         }
 
-        if on_select.is_some() {
-            cb_name = Some("date_picker".to_string());
-            let cb = CallBack{id, cb: on_select, name: cb_name.clone()};
-
-            add_callback_to_mutex(cb);
+        if on_submit.is_some() {
+            add_callback_to_mutex(CallBack{id, cb: on_submit, event_name: "on_submit".to_string()});
         }
 
         let padding = get_padding(padding);
@@ -1054,8 +1011,7 @@ impl IPG {
                                             size_factor,
                                             padding,
                                             show,
-                                            user_data,
-                                            cb_name,                            
+                                            user_data,                            
                                         )));
         Ok(id)
     }
@@ -1094,61 +1050,46 @@ fn add_image(&mut self,
 {
     let id = self.get_id(gen_id);
 
-    let mut cb_on_press = ImageMessage::None;
     if on_press.is_some() {
-        cb_on_press = ImageMessage::OnPress;
-    }
-    add_callback_to_mutex(CallBack{id, cb: on_press, name: Some("on_press".to_string())});
-
-    let mut cb_on_release = ImageMessage::None;
-    if on_release.is_some() {
-        cb_on_release = ImageMessage::OnRelease;
-    }
-    add_callback_to_mutex(CallBack{id, cb: on_release, name: Some("on_release".to_string())});
-
-    let mut cb_on_right_press = ImageMessage::None;
-    if on_right_press.is_some() {
-        cb_on_right_press = ImageMessage::OnRightPress;
-    }
-    add_callback_to_mutex(CallBack{id, cb: on_right_press, name: Some("on_right_press".to_string())});
-
-    let mut cb_on_right_release = ImageMessage::None;
-    if on_right_release.is_some() {
-        cb_on_right_release = ImageMessage::OnRightRelease;
-    }
-    add_callback_to_mutex(CallBack{id, cb: on_right_release, name: Some("on_right_release".to_string())});
-
-    let mut cb_on_middle_press = ImageMessage::None;
-    if on_middle_press.is_some() {
-        cb_on_middle_press = ImageMessage::OnMiddlePress;
-    }
-    add_callback_to_mutex(CallBack{id, cb: on_middle_press, name: Some("on_middle_press".to_string())});
-
-    let mut cb_on_middle_release = ImageMessage::None;
-    if on_middle_release.is_some() {
-        cb_on_middle_release = ImageMessage::OnMiddleRelease;
-    }
-    add_callback_to_mutex(CallBack{id, cb: on_middle_release, name: Some("on_middle_release".to_string())});
-
-    let mut cb_on_enter = ImageMessage::None;
-    if on_enter.is_some() {
-        cb_on_enter = ImageMessage::OnEnter;
-    }
-    add_callback_to_mutex(CallBack{id, cb: on_enter, name: Some("on_enter".to_string())});
-
-    if on_move.is_some() {
-        add_callback_to_mutex(CallBack{id, cb: on_move, name: Some("on_move".to_string())});
+        add_callback_to_mutex(CallBack{id, cb: on_press, event_name: "on_press".to_string()});
     }
     
-    let mut cb_on_exit = ImageMessage::None;
-    if on_exit.is_some() {
-        cb_on_exit = ImageMessage::OnExit;
+    if on_release.is_some() {
+        add_callback_to_mutex(CallBack{id, cb: on_release, event_name: "event_name".to_string()});
     }
-    add_callback_to_mutex(CallBack{id, cb: on_exit, name: Some("on_exit".to_string())});
-
-
+    
+    if on_right_press.is_some() {
+        add_callback_to_mutex(CallBack{id, cb: on_right_press, event_name: "on_right_press".to_string()});
+    }
+    
+    if on_right_release.is_some() {
+        add_callback_to_mutex(CallBack{id, cb: on_right_release, event_name: "on_right_release".to_string()});
+    }
+    
+    if on_middle_press.is_some() {
+        add_callback_to_mutex(CallBack{id, cb: on_middle_press, event_name: "on_middle_press".to_string()});
+    }
+    
+    if on_middle_release.is_some() {
+        add_callback_to_mutex(CallBack{id, cb: on_middle_release, event_name: "on_middle_release".to_string()});
+    }
+    
+    if on_enter.is_some() {
+        add_callback_to_mutex(CallBack{id, cb: on_enter, event_name: "on_enter".to_string()});
+    }
+    
+    if on_move.is_some() {
+        add_callback_to_mutex(CallBack{id, cb: on_move, event_name: "on_move".to_string()});
+    }
+    
+    if on_exit.is_some() {
+        add_callback_to_mutex(CallBack{id, cb: on_exit, event_name: "on_exit".to_string()});
+    }
+    
     let width = get_width(width, width_fill);
     let height = get_height(height, height_fill);
+
+    let padding = get_padding(padding);
 
     set_state_of_widget(id, parent_id);
 
@@ -1159,16 +1100,9 @@ fn add_image(&mut self,
                                                 image_path,
                                                 width,
                                                 height,
+                                                padding,
                                                 show,
                                                 user_data,
-                                                cb_on_press,
-                                                cb_on_release,
-                                                cb_on_right_press,
-                                                cb_on_right_release,
-                                                cb_on_middle_press,
-                                                cb_on_middle_release,
-                                                cb_on_enter,
-                                                cb_on_exit,
                                             )));
 
     Ok(id)
@@ -1216,7 +1150,7 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, options, gen_id=None, callback=None, 
+    #[pyo3(signature = (parent_id, options, gen_id=None, on_select=None, 
                         width=None, width_fill=false, padding=vec![5.0],  
                         placeholder=None, selected=None, text_size=None, 
                         text_line_height=1.3, text_shaping="basic".to_string(), 
@@ -1227,7 +1161,7 @@ fn add_image(&mut self,
                         options: Vec<String>,
                         // **above required
                         gen_id: Option<usize>,
-                        callback: Option<PyObject>,
+                        on_select: Option<PyObject>,
                         width: Option<f32>,
                         width_fill: bool,
                         padding: Vec<f64>,
@@ -1243,13 +1177,8 @@ fn add_image(&mut self,
 
         let id = self.get_id(gen_id);
 
-        let mut cb_name: Option<String> = None;
-
-        if callback.is_some() {
-            cb_name = Some("picklist".to_string());
-            let cb = CallBack{id, cb: callback, name: cb_name.clone()};
-
-            add_callback_to_mutex(cb);
+        if on_select.is_some() {
+            add_callback_to_mutex(CallBack{id, cb: on_select, event_name: "on_select".to_string()});
         }
 
         let padding = get_padding(padding);
@@ -1276,7 +1205,6 @@ fn add_image(&mut self,
                                                         text_size,
                                                         text_line_height,
                                                         text_shaping,
-                                                        cb_name,
                                                     )));
 
         Ok(id)
@@ -1285,7 +1213,7 @@ fn add_image(&mut self,
     #[pyo3(signature = (parent_id, min, max, value,
                         gen_id=None, width=None, height=Some(16.0), 
                         width_fill=true, height_fill=false,
-                        show=true, user_id=None, 
+                        show=true, 
                         ))]
     fn add_progress_bar(&mut self,
                             parent_id: String,
@@ -1299,7 +1227,6 @@ fn add_image(&mut self,
                             width_fill: bool,
                             height_fill: bool,
                             show: bool,
-                            user_id: Option<String>,
                             ) -> PyResult<usize> 
     {
 
@@ -1359,8 +1286,6 @@ fn add_image(&mut self,
 
         let id = self.get_id(gen_id);
 
-        let mut cb_name: Option<String> = None;
-
         let direction = match direction.as_str() {
             "horizontal" => RadioDirection::Horizontal,
             "vertical" => RadioDirection::Vertical,
@@ -1381,10 +1306,7 @@ fn add_image(&mut self,
         let padding = get_padding(padding);
 
         if on_select.is_some() {
-            cb_name = Some("radio".to_string());
-            let cb = CallBack{id, cb: on_select, name: cb_name.clone()};
-
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id, cb: on_select, event_name: "on_select".to_string()});
         }
 
         let text_line_height = text::LineHeight::Relative(text_line_height);
@@ -1412,15 +1334,15 @@ fn add_image(&mut self,
                                         text_size,
                                         text_line_height,
                                         text_shaping,
-                                        cb_name,
                                     )));
                                               
         Ok(id)
 
     }
 
-    #[pyo3(signature = (parent_id, text, gen_id=None, on_press=None, on_release=None, on_right_press=None, 
-                        on_right_release=None, on_middle_press=None, on_middle_release=None, 
+    #[pyo3(signature = (parent_id, text, gen_id=None, on_press=None, on_release=None, 
+                        on_right_press=None, on_right_release=None, on_middle_press=None, 
+                        on_middle_release=None, on_move=None, on_enter=None, on_exit=None, 
                         width=None, height=None, width_fill=false, height_fill=false, 
                         h_align="left".to_string(), v_align="top".to_string(), 
                         line_height=1.3, size=16.0, show=true, 
@@ -1437,6 +1359,9 @@ fn add_image(&mut self,
                             on_right_release: Option<PyObject>,
                             on_middle_press: Option<PyObject>,
                             on_middle_release: Option<PyObject>,
+                            on_move: Option<PyObject>,
+                            on_enter: Option<PyObject>,
+                            on_exit: Option<PyObject>,
                             width: Option<f32>,
                             height: Option<f32>,
                             width_fill: bool,
@@ -1455,47 +1380,41 @@ fn add_image(&mut self,
 
         let content = text.clone();
 
-        let mut cb_on_press: Option<String> = None;
-
         if on_press.is_some() {
-            cb_on_press = Some("cb_on_press".to_string());
+            add_callback_to_mutex(CallBack{id, cb: on_press, event_name: "on_press".to_string()});
         }
-        add_callback_to_mutex(CallBack{id, cb: on_press, name: cb_on_press.clone()});
         
-        let mut cb_on_release: Option<String> = None;
-
         if on_release.is_some() {
-            cb_on_release = Some("cb_on_release".to_string());
+            add_callback_to_mutex(CallBack{id, cb: on_release, event_name: "on_release".to_string()});
         }
-        add_callback_to_mutex(CallBack{id, cb: on_release, name: cb_on_release.clone()});
-
-        let mut cb_on_right_press: Option<String> = None;
-
+        
         if on_right_press.is_some() {
-            cb_on_right_press = Some("cb_on_right_press".to_string());
+            add_callback_to_mutex(CallBack{id, cb: on_right_press, event_name: "on_right_press".to_string()});
         }
-        add_callback_to_mutex(CallBack{id, cb: on_right_press, name: cb_on_right_press.clone()});
-
-        let mut cb_on_right_release: Option<String> = None;
-
+        
         if on_right_release.is_some() {
-            cb_on_right_release = Some("cb_on_right_release".to_string());
+            add_callback_to_mutex(CallBack{id, cb: on_right_release, event_name: "on_right_release".to_string()});
         }
-        add_callback_to_mutex(CallBack{id, cb: on_right_release, name: cb_on_right_release.clone()});
         
-        let mut cb_on_middle_press: Option<String> = None;
-
         if on_middle_press.is_some() {
-            cb_on_middle_press = Some("cb_on_middle_press".to_string());
+            add_callback_to_mutex(CallBack{id, cb: on_middle_press, event_name: "on_middle_press".to_string()});
         }
-        add_callback_to_mutex(CallBack{id, cb: on_middle_press, name: cb_on_middle_press.clone()});
         
-        let mut cb_on_middle_release: Option<String> = None;
-
         if on_middle_release.is_some() {
-            cb_on_middle_release = Some("cb_on_middle_release".to_string());
+            add_callback_to_mutex(CallBack{id, cb: on_middle_release, event_name: "on_middle_release".to_string()});
         }
-        add_callback_to_mutex(CallBack{id, cb: on_middle_release, name: cb_on_middle_release.clone()});
+        
+        if on_enter.is_some() {
+            add_callback_to_mutex(CallBack{id, cb: on_enter, event_name: "on_enter".to_string()});
+        }
+        
+        if on_move.is_some() {
+            add_callback_to_mutex(CallBack{id, cb: on_move, event_name: "on_move".to_string()});
+        }
+        
+        if on_exit.is_some() {
+            add_callback_to_mutex(CallBack{id, cb: on_exit, event_name: "on_exit".to_string()});
+        }
         
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
@@ -1524,12 +1443,6 @@ fn add_image(&mut self,
                                         show,
                                         shaping,
                                         user_data,
-                                        cb_on_press,
-                                        cb_on_release,
-                                        cb_on_right_press,
-                                        cb_on_right_release,
-                                        cb_on_middle_press,
-                                        cb_on_middle_release,
                                     )));
             
         Ok(id)
@@ -1560,18 +1473,11 @@ fn add_image(&mut self,
 
         let id = self.get_id(gen_id);
 
-        let mut cb_name_change: Option<String> = None;
-        let mut cb_name_release: Option<String> = None;
-
         if on_change.is_some() {
-            cb_name_change = Some("on_change".to_string());
-            let cb = CallBack{id, cb: on_change, name: cb_name_change.clone()};
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id, cb: on_change, event_name: "on_change".to_string()});
         }
         if on_release.is_some() {
-            cb_name_release = Some("on_release".to_string());
-            let cb = CallBack{id, cb: on_release, name: cb_name_release.clone()};
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id, cb: on_release, event_name: "on_release".to_string()});
         }
         
         let width = get_width(width, width_fill);
@@ -1594,8 +1500,6 @@ fn add_image(&mut self,
                                             value,
                                             width,
                                             height,
-                                            cb_name_change,
-                                            cb_name_release,
                                         )));
 
         Ok(id)
@@ -1618,8 +1522,6 @@ fn add_image(&mut self,
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
 
-        let user_id: Option<String> = None;
-
         set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
@@ -1635,7 +1537,7 @@ fn add_image(&mut self,
 
     #[pyo3(signature = (parent_id, title, data, width, height,
                         gen_id=None, callback=None, column_widths=vec![], 
-                        show=true, user_data=None, user_id=None))]
+                        show=true, user_data=None))]
     fn add_table(&mut self,
                     parent_id: String,
                     title: String,
@@ -1648,19 +1550,13 @@ fn add_image(&mut self,
                     column_widths: Vec<f32>,
                     show: bool,
                     user_data: Option<PyObject>,
-                    user_id: Option<String>,
                 ) -> PyResult<usize> 
     {
 
         let id = self.get_id(gen_id);
 
-        let mut cb_name: Option<String> = None;
-
         if callback.is_some() {
-            cb_name = Some("table".to_string());
-            let cb = CallBack{id, cb: callback, name: cb_name.clone()};
-
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id, cb: callback, event_name: "table".to_string()});
         }
 
         set_state_of_widget(id, parent_id);
@@ -1676,7 +1572,6 @@ fn add_image(&mut self,
                                                     column_widths,
                                                     show,
                                                     user_data,
-                                                    cb_name,
                                                     )));
 
         Ok(id)
@@ -1792,25 +1687,15 @@ fn add_image(&mut self,
 
         let id = self.get_id(gen_id);
 
-        let mut cb_name_input: Option<String> = None;
-        let mut cb_name_submit: Option<String> = None;
-        let mut cb_name_paste: Option<String> = None;
-
         if on_input.is_some() {
-            cb_name_input = Some("on_input".to_string());
-            let cb = CallBack{id, cb: on_input, name: cb_name_input.clone()};
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id, cb: on_input, event_name: "on_input".to_string()});
         }
         if on_submit.is_some() {
-            cb_name_submit = Some("on_submit".to_string());
-            let cb = CallBack{id, cb: on_submit, name: cb_name_submit.clone()};
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id, cb: on_submit, event_name: "on_submit".to_string()});
         }
 
         if on_paste.is_some() {
-            cb_name_paste = Some("on_paste".to_string());
-            let cb = CallBack{id, cb: on_paste, name: cb_name_paste.clone()};
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(CallBack{id, cb: on_paste, event_name: "on_paste".to_string()});
         }
         
         let padding = get_padding(padding);
@@ -1833,9 +1718,6 @@ fn add_image(&mut self,
                                                                 size,
                                                                 line_height,
                                                                 user_data,
-                                                                cb_name_input,
-                                                                cb_name_submit,
-                                                                cb_name_paste,
                                                                 show,
                                                                 )));
 
@@ -2208,7 +2090,7 @@ fn add_image(&mut self,
                 drop(state);
                 return
             },
-            IpgWidgets::IpgImage(img) => (),
+            IpgWidgets::IpgImage(_img) => (),
             IpgWidgets::IpgMenuBar(_wid) => (),
             IpgWidgets::IpgMenuItem(_wid) => (),
             IpgWidgets::IpgPickList(_wid) => (),
@@ -2247,14 +2129,14 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (id, title=None, headers=None, data=None, user_id=None, callback=None))]
+    #[pyo3(signature = (id, title=None, headers=None, data=None, user_id=None, on_update=None))]
     fn update_table(&self, 
                             id: Option<usize>,
                             title: Option<String>,
                             headers: Option<Vec<String>>,
                             data: Option<&PyList>,
                             user_id: Option<String>,
-                            callback: Option<PyObject>,
+                            on_update: Option<PyObject>,
                     ) 
     {
         
@@ -2272,24 +2154,20 @@ fn add_image(&mut self,
             panic!("You must supply either an id or user_id to update the table.")
         }
 
-        let title = match title {
+        let _title = match title {
             Some(title) => title,
             None => "".to_string(),
         };
 
-        let headers = match headers {
+        let _headers = match headers {
             Some(hd) => hd,
             None => vec![],
         };
         
-        let data = py_extract_list(data);
+        let _data = py_extract_list(data);
         
-        let mut cb_name: Option<String> = None;
-        if callback.is_some() {
-            cb_name = Some("update_table".to_string());
-            let cb = CallBack{id, cb: callback, name: cb_name.clone()};
-
-            add_callback_to_mutex(cb);
+        if on_update.is_some() {
+            add_callback_to_mutex(CallBack{id, cb: on_update, event_name: "on_update".to_string()});
         }
         
     }
@@ -2575,40 +2453,40 @@ fn add_user_data_to_mutex(id: usize, user_data: Option<PyObject>) {
     drop(cb);
 }
 
-fn add_radio_to_mutex(id: usize, group_id: String) -> usize {
-    let mut cb = access_callbacks();
+// fn add_radio_to_mutex(id: usize, group_id: String) -> usize {
+//     let mut cb = access_callbacks();
 
-    let mut found = false;
-    let mut index = 0;
+//     let mut found = false;
+//     let mut index = 0;
 
-    for radio in cb.radios.iter_mut() {
-        if group_id == radio.0 {
-            found = true;
-            radio.1.push(id);
-            index = radio.1.len();
-        }
-    }
+//     for radio in cb.radios.iter_mut() {
+//         if group_id == radio.0 {
+//             found = true;
+//             radio.1.push(id);
+//             index = radio.1.len();
+//         }
+//     }
 
-    if !found {
-        cb.radios.push((group_id, vec![id]));
-        index = 1;
-    }
+//     if !found {
+//         cb.radios.push((group_id, vec![id]));
+//         index = 1;
+//     }
 
-    drop(cb);
+//     drop(cb);
 
-    index -= 1;
+//     index -= 1;
 
-    if index > RADIO_SIZE {
-        panic!("The number of radio buttons in a group is currently limited to {RADIO_SIZE}, put in a request for additional ones")
-    }
+//     if index > RADIO_SIZE {
+//         panic!("The number of radio buttons in a group is currently limited to {RADIO_SIZE}, put in a request for additional ones")
+//     }
 
-    index
+//     index
 
-}
+// }
 
-fn print_type_of<T>(_: &T) {
-    println!("{}", std::any::type_name::<T>())
-}
+// fn print_type_of<T>(_: &T) {
+//     println!("{}", std::any::type_name::<T>())
+// }
 
 fn find_parent_uid(ipg_ids: &Vec<IpgIds>, parent_id: String) -> usize {
 
@@ -2618,30 +2496,4 @@ fn find_parent_uid(ipg_ids: &Vec<IpgIds>, parent_id: String) -> usize {
         }
     }
     panic!("Parent id {:?} not found in function find_parent_uid()", parent_id)
-}
-
-fn create_tips_columns(table_columns: &Vec<String>,
-                        tooltip_columns: &Vec<String>, 
-                        mut tooltips: Vec<Vec<String>>) 
-                        -> Vec<Vec<String>> 
-{
-
-    tooltips.reverse();
-
-    let mut tips: Vec<Vec<String>> = vec![];
-
-    for _ in table_columns {
-        tips.push(vec![]);
-    }
-
-    for (index, name) in table_columns.iter().enumerate() {
-        if tooltip_columns.contains(name) {
-            match tooltips.pop() {
-                Some(tip) => tips[index] = tip,
-                None => {},
-            }
-        }
-    }
-
-    tips
 }

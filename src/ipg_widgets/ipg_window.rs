@@ -1,14 +1,12 @@
-#![allow(unused)]
+#![allow(dead_code)]
 use std::collections::HashMap;
 
 use crate::app;
 use crate::{access_state, access_callbacks};
 
 use iced::window;
-use iced::{Command, Element, Length, Theme, Size};
+use iced::{Command, Element, Theme, Size};
 use iced::widget::Column;
-
-use crate::iced_widgets::scrollable::Direction;
 
 use pyo3::{PyObject, Python};
 
@@ -28,7 +26,6 @@ pub struct IpgWindow {
     pub visible: bool,
     pub debug: bool,
     pub user_data: Option<PyObject>,
-    pub cb_name: Option<String>,
 }
 
 impl IpgWindow {
@@ -46,7 +43,6 @@ impl IpgWindow {
         visible: bool,
         debug: bool,
         user_data: Option<PyObject>,
-        cb_name: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -62,7 +58,6 @@ impl IpgWindow {
             visible,
             debug,
             user_data,
-            cb_name,
         }
     }
 }
@@ -118,19 +113,19 @@ pub fn window_update(message:WndMessage) -> Command<app::Message> {
 
     match message {
             WndMessage::TitleChanged(_id, _title) => {
-
+                Command::none()
             },
             WndMessage::NewWindow => {
-
+                Command::none()
             },
             WndMessage::ScaleInputChanged(_id, _something) => {
-
+                Command::none()
             },
             WndMessage::ScaleChanged(_id, _scale) => {
-
+                Command::none()
             }, 
     }
-    Command::none()
+
 }
 
 fn process_callback_resized(
@@ -150,7 +145,7 @@ fn process_callback_resized(
 
     for callback in app_cbs.callbacks.iter() {
 
-        if id == callback.id && cb_name == callback.name {
+        if id == callback.id && cb_name == Some(callback.event_name.clone()) {
 
             found_callback = match callback.cb.clone() {
                 Some(cb) => Some(cb),
