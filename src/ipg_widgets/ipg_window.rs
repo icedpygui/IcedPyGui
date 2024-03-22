@@ -10,6 +10,8 @@ use iced::widget::Column;
 
 use pyo3::{PyObject, Python};
 
+use super::callbacks::WidgetCallbackOut;
+
 
 #[derive(Debug, Clone)]
 pub struct IpgWindow {
@@ -128,52 +130,43 @@ pub fn window_update(message:WndMessage) -> Command<app::Message> {
 
 }
 
-fn process_callback_resized(
-                            id: usize,
-                            event_name: String,
-                            width: f32,
-                            height: f32,
-                            user_data: Option<PyObject>, 
-                            cb_name: Option<String>
-                            ) 
+pub fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !cb_name.is_some() {return}
+    if !wco.event_name.is_some() {return}
+
+    let evt_name = match wco.event_name {
+        Some(name) => name,
+        None => panic!("event_name not found")
+    };
 
     let app_cbs = access_callbacks();
 
-    let mut found_callback = None;
-
-    for callback in app_cbs.callbacks.iter() {
-
-        if id == callback.id && cb_name == Some(callback.event_name.clone()) {
-
-            found_callback = match callback.cb.clone() {
-                Some(cb) => Some(cb),
-                None => {drop(app_cbs); panic!("Callback could not be found with id {}", id)},
-            };
-            break;
-        }                   
+    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
+       
+    let callback = match callback_opt {
+        Some(cb) => cb,
+        None => panic!("Callback could not be found with id {}", wco.id),
     };
+                  
+    Python::with_gil(|py| {
+        if wco.user_data.is_some() {
+            callback.call1(py, (
+                                    wco.id.clone(), 
+                                    evt_name.clone(),
+                                    wco.value_float, 
+                                    wco.user_data
+                                    )
+                            ).unwrap();
+        } else {
+            callback.call1(py, (
+                                    wco.id.clone(), 
+                                    evt_name.clone(),
+                                    wco.value_float, 
+                                    )
+                            ).unwrap();
+        } 
+    });
+
     drop(app_cbs);
-
-    match found_callback {
-
-    Some(cb) => Python::with_gil(|py| {
-                            match user_data {
-                                Some(ud) => cb.call1(py, 
-                                                                (id.clone(),
-                                                                event_name,
-                                                                width,
-                                                                height, 
-                                                                ud)).unwrap(),
-                                None => cb.call1(py, 
-                                                (id.clone(),
-                                                width,
-                                                height, 
-                                                event_name)).unwrap(),
-                            }
-                        }),
-    None => panic!("Button callback could not be found"),
-    };
 
 }

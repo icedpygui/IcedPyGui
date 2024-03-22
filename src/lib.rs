@@ -68,30 +68,29 @@ use std::sync::{Mutex, MutexGuard};
 use once_cell::sync::Lazy;
 
 
-#[derive(Debug, Clone)]
-pub struct CallBack {
-    id: usize,
-    cb: Option<PyObject>,
-    event_name: String,
-}
+// #[derive(Debug, Clone)]
+// pub struct CallBack {
+//     id: usize,
+//     cb: Option<PyObject>,
+//     event_name: String,
+// }
 
 #[derive(Debug, Clone)]
 pub struct CallBackEvent {
     id: usize,
     cb: PyObject,
     name: IpgEventCallbacks,
-    
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Callbacks {
-    callbacks: Vec<CallBack>,
+    callbacks: Lazy<HashMap<(usize, String), Option<PyObject>>>,
     cb_events: Vec<CallBackEvent>,
     user_data: Vec<(usize, Option<PyObject>)>,
 }
 
 pub static CALLBACKS: Mutex<Callbacks> = Mutex::new(Callbacks {
-    callbacks: vec![],
+    callbacks: Lazy::new(||HashMap::new()),
     cb_events: vec![],
     user_data: vec![],
 });
@@ -304,9 +303,7 @@ impl IPG {
         };
 
         if on_resize.is_some() {
-            let cb = CallBack{id: self.id, cb: on_resize, event_name: "on_resize".to_string()};
-
-            add_callback_to_mutex(cb);
+            add_callback_to_mutex(self.id, "on_resize".to_string(), on_resize);
         }
         
         state.windows_str_ids.insert(window_id.clone(), self.window_id);
@@ -629,7 +626,7 @@ impl IPG {
         self.id += 1;
 
         if on_scroll.is_some() {
-            add_callback_to_mutex(CallBack{id: self.id, cb: on_scroll, event_name: "on_scroll".to_string()});
+            add_callback_to_mutex(self.id, "on_scroll".to_string(), on_scroll);
         }
 
         let width = get_width(width, width_fill);
@@ -729,7 +726,7 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_press.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_press, event_name: "on_press".to_string()});
+            add_callback_to_mutex(id, "on_press".to_string(), on_press);
         }
 
         let width = get_width(width, width_fill);
@@ -799,7 +796,7 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_close.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_close, event_name: "on_close".to_string()});
+            add_callback_to_mutex(id, "on_close".to_string(), on_close);
         }
 
         let width = get_width(width, width_fill);
@@ -875,7 +872,7 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_toggle.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_toggle, event_name: "on_toggle".to_string()});
+            add_callback_to_mutex(id, "on_toggle".to_string(), on_toggle);
         }
        
         let text_shaping = get_shaping(text_shaping);
@@ -938,7 +935,7 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_submit.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_submit, event_name: "on_submit".to_string()});
+            add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
         }
 
         let color = Color::from_rgba(start_up_color[0], 
@@ -996,7 +993,7 @@ impl IPG {
         }
 
         if on_submit.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_submit, event_name: "on_submit".to_string()});
+            add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
         }
 
         let padding = get_padding(padding);
@@ -1051,39 +1048,39 @@ fn add_image(&mut self,
     let id = self.get_id(gen_id);
 
     if on_press.is_some() {
-        add_callback_to_mutex(CallBack{id, cb: on_press, event_name: "on_press".to_string()});
+        add_callback_to_mutex(id, "on_press".to_string(), on_press);
     }
     
     if on_release.is_some() {
-        add_callback_to_mutex(CallBack{id, cb: on_release, event_name: "event_name".to_string()});
+        add_callback_to_mutex(id, "event_name".to_string(), on_release);
     }
     
     if on_right_press.is_some() {
-        add_callback_to_mutex(CallBack{id, cb: on_right_press, event_name: "on_right_press".to_string()});
+        add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press);
     }
     
     if on_right_release.is_some() {
-        add_callback_to_mutex(CallBack{id, cb: on_right_release, event_name: "on_right_release".to_string()});
+        add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release);
     }
     
     if on_middle_press.is_some() {
-        add_callback_to_mutex(CallBack{id, cb: on_middle_press, event_name: "on_middle_press".to_string()});
+        add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press);
     }
     
     if on_middle_release.is_some() {
-        add_callback_to_mutex(CallBack{id, cb: on_middle_release, event_name: "on_middle_release".to_string()});
+        add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release);
     }
     
     if on_enter.is_some() {
-        add_callback_to_mutex(CallBack{id, cb: on_enter, event_name: "on_enter".to_string()});
+        add_callback_to_mutex(id, "on_enter".to_string(), on_enter);
     }
     
     if on_move.is_some() {
-        add_callback_to_mutex(CallBack{id, cb: on_move, event_name: "on_move".to_string()});
+        add_callback_to_mutex(id, "on_move".to_string(), on_move);
     }
     
     if on_exit.is_some() {
-        add_callback_to_mutex(CallBack{id, cb: on_exit, event_name: "on_exit".to_string()});
+        add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
     }
     
     let width = get_width(width, width_fill);
@@ -1178,7 +1175,7 @@ fn add_image(&mut self,
         let id = self.get_id(gen_id);
 
         if on_select.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_select, event_name: "on_select".to_string()});
+            add_callback_to_mutex(id, "on_select".to_string(), on_select);
         }
 
         let padding = get_padding(padding);
@@ -1306,7 +1303,7 @@ fn add_image(&mut self,
         let padding = get_padding(padding);
 
         if on_select.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_select, event_name: "on_select".to_string()});
+            add_callback_to_mutex(id, "on_select".to_string(), on_select);
         }
 
         let text_line_height = text::LineHeight::Relative(text_line_height);
@@ -1381,39 +1378,39 @@ fn add_image(&mut self,
         let content = text.clone();
 
         if on_press.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_press, event_name: "on_press".to_string()});
+            add_callback_to_mutex(id, "on_press".to_string(), on_press);
         }
         
         if on_release.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_release, event_name: "on_release".to_string()});
+            add_callback_to_mutex(id, "on_release".to_string(), on_release);
         }
         
         if on_right_press.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_right_press, event_name: "on_right_press".to_string()});
+            add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press);
         }
         
         if on_right_release.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_right_release, event_name: "on_right_release".to_string()});
+            add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release);
         }
         
         if on_middle_press.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_middle_press, event_name: "on_middle_press".to_string()});
+            add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press);
         }
         
         if on_middle_release.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_middle_release, event_name: "on_middle_release".to_string()});
+            add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release);
         }
         
         if on_enter.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_enter, event_name: "on_enter".to_string()});
+            add_callback_to_mutex(id, "on_enter".to_string(), on_enter);
         }
         
         if on_move.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_move, event_name: "on_move".to_string()});
+            add_callback_to_mutex(id, "on_move".to_string(), on_move);
         }
         
         if on_exit.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_exit, event_name: "on_exit".to_string()});
+            add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
         }
         
         let width = get_width(width, width_fill);
@@ -1474,10 +1471,10 @@ fn add_image(&mut self,
         let id = self.get_id(gen_id);
 
         if on_change.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_change, event_name: "on_change".to_string()});
+            add_callback_to_mutex(id, "on_change".to_string(), on_change);
         }
         if on_release.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_release, event_name: "on_release".to_string()});
+            add_callback_to_mutex(id, "on_release".to_string(), on_release);
         }
         
         let width = get_width(width, width_fill);
@@ -1556,7 +1553,7 @@ fn add_image(&mut self,
         let id = self.get_id(gen_id);
 
         if callback.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: callback, event_name: "table".to_string()});
+            add_callback_to_mutex(id, "table".to_string(), callback);
         }
 
         set_state_of_widget(id, parent_id);
@@ -1688,14 +1685,14 @@ fn add_image(&mut self,
         let id = self.get_id(gen_id);
 
         if on_input.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_input, event_name: "on_input".to_string()});
+            add_callback_to_mutex(id, "on_input".to_string(), on_input);
         }
         if on_submit.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_submit, event_name: "on_submit".to_string()});
+            add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
         }
 
         if on_paste.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_paste, event_name: "on_paste".to_string()});
+            add_callback_to_mutex(id, "on_paste".to_string(), on_paste);
         }
         
         let padding = get_padding(padding);
@@ -1737,14 +1734,14 @@ fn add_image(&mut self,
 
         match on_key_press {
             Some(kp) => {
-                let cb = CallBackEvent{id: self.id, cb: kp, name: IpgEventCallbacks::OnKeyPress};
+                let cb = CallBackEvent{id: self.id, cb:kp, name: IpgEventCallbacks::OnKeyPress};
                 add_callback_event_to_mutex(cb);
             },
             None => (),
         }
         match on_key_release {
             Some(kr) => {
-                let cb = CallBackEvent{id: self.id, cb: kr, name: IpgEventCallbacks::OnKeyRelease};
+                let cb = CallBackEvent{id: self.id, cb:kr, name: IpgEventCallbacks::OnKeyRelease};
                 add_callback_event_to_mutex(cb);
             },
             None => (),
@@ -2167,7 +2164,7 @@ fn add_image(&mut self,
         let _data = py_extract_list(data);
         
         if on_update.is_some() {
-            add_callback_to_mutex(CallBack{id, cb: on_update, event_name: "on_update".to_string()});
+            add_callback_to_mutex(id, "on_update".to_string(), on_update);
         }
         
     }
@@ -2429,10 +2426,10 @@ pub fn py_extract_list(list_opt: Option<&PyList>) -> Vec<Vec<String>> {
 }
 
 
-fn add_callback_to_mutex(callback: CallBack) {
+fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>) {
     let mut app_cbs = access_callbacks();
 
-        app_cbs.callbacks.push(callback);
+        app_cbs.callbacks.insert((id, event_name), py_obj);
 
         drop(app_cbs);
 }

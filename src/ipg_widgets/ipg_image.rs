@@ -153,79 +153,62 @@ pub fn image_callback(id: usize, message: ImageMessage) {
 
 fn process_callback(wco: WidgetCallbackOut) 
 {
-    // TODO: No error for not finding a callback since the on_enter cannot
-    // be switched to a None enum as the rest are done when not being used.
-    // Will ne to figure out a way to get an error if no cb found unless its
-    // on_move.
-
     if !wco.event_name.is_some() {return}
+
+    let evt_name = match wco.event_name {
+        Some(name) => name,
+        None => panic!("event_name not found")
+    };
 
     let app_cbs = access_callbacks();
 
-    let mut found_callback = None;
+    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
+       
+    let callback = match callback_opt {
+        Some(cb) => cb,
+        None => panic!("Callback could not be found with id {}", wco.id),
+    };
+                  
+    if evt_name == "on_move".to_string() {
 
-    for callback in app_cbs.callbacks.iter() {
+        Python::with_gil(|py| {
+            if wco.user_data.is_some() {
+                callback.call1(py, (
+                                        wco.id.clone(), 
+                                        evt_name.clone(),
+                                        wco.points, 
+                                        wco.user_data
+                                        )
+                                ).unwrap();
+            } else {
+                callback.call1(py, (
+                                        wco.id.clone(), 
+                                        evt_name.clone(),
+                                        wco.points, 
+                                        )
+                                ).unwrap();
+            } 
+        });
 
-        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
-
-            found_callback = match callback.cb.clone() {
-                Some(cb) => Some(cb),
-                None => panic!("Callback could not be found with id {}", wco.id),
-            };
-                break;
-        }                   
-    }
-
-    drop(app_cbs);
-
-    if wco.points.is_some() {
-
-        let points = match wco.points {
-            Some(pt) => pt,
-            None => panic!("Could not find the Point for Image mouse move")
-        };
-
-        match found_callback {
-
-        Some(cb) => Python::with_gil(|py| {
-                    match wco.user_data {
-                        Some(ud) => cb.call1(py, 
-                                                        (
-                                                            wco.id.clone(),
-                                                            wco.event_name,
-                                                            points, 
-                                                            ud,
-                                                            )).unwrap(),
-                        None => cb.call1(py, 
-                                        (
-                                                wco.id.clone(), 
-                                                wco.event_name,
-                                                points,
-                                            )).unwrap(),
-                    }
-                }),
-        None => return,
-        };
     } else {
-        match found_callback {
-
-            Some(cb) => Python::with_gil(|py| {
-                        match wco.user_data {
-                            Some(ud) => cb.call1(py, 
-                                                            (
-                                                                wco.id.clone(),
-                                                                wco.event_name, 
-                                                                ud,
-                                                            )).unwrap(),
-                            None => cb.call1(py, 
-                                            (
-                                                    wco.id.clone(), 
-                                                    wco.event_name
-                                                )).unwrap(),
-                        }
-                    }),
-            None => return,
-            };
+        Python::with_gil(|py| {
+            if wco.user_data.is_some() {
+                callback.call1(py, (
+                                        wco.id.clone(), 
+                                        evt_name.clone(), 
+                                        wco.user_data
+                                        )
+                                ).unwrap();
+            } else {
+                callback.call1(py, (
+                                        wco.id.clone(), 
+                                        evt_name.clone(), 
+                                        )
+                                ).unwrap();
+            } 
+        });
     }
+    
+    drop(app_cbs);   
 
 }

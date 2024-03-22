@@ -3,12 +3,13 @@
 use std::collections::HashMap;
 
 use crate::access_state;
-
+use crate::access_callbacks;
+use super::ipg_enums::IpgContainers;
 use super::{helpers::{format_date, MONTH_NAMES}, ipg_enums::IpgWidgets, ipg_radio::Choice};
 
 use iced::{Color, Point};
 
-use pyo3::PyObject;
+use pyo3::{Python, PyObject};
 
 
 #[derive(Default, Debug)]
@@ -37,13 +38,14 @@ impl WidgetCallbackIn{}
 pub struct WidgetCallbackOut {
     pub id: usize,
     pub color: Option<Vec<f64>>,
-    pub is_checked: Option<bool>,
     pub event_name: Option<String>,
+    pub is_checked: Option<bool>,
     pub points: Option<HashMap<String, f32>>,
-    pub user_data: Option<PyObject>, 
+    pub scroll_pos: Option<HashMap<String, f32>>, 
     pub selected_index: Option<usize>,
     pub selected_label: Option<String>,
     pub selected_date: Option<String>,
+    pub user_data: Option<PyObject>,
     pub value_float: Option<f64>,
     pub value_str: Option<String>,
 }
@@ -252,4 +254,95 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
     
     None => panic!("Widget with id {} not found", wci.id)
     }
+}
+
+
+pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut {
+
+    let mut state = access_state();
+
+    let container_type_opt = state.containers.get_mut(&wci.id);
+
+    let container_type = match container_type_opt {
+        Some(cont) => cont,
+        None => panic!("Container with id {} could not be found", wci.id),
+    };
+    
+    match container_type {
+        IpgContainers::IpgColumn(_) => {
+            let wco = WidgetCallbackOut::default();
+            return wco
+        },
+        IpgContainers::IpgContainer(_) => {
+            let wco = WidgetCallbackOut::default();
+            return wco
+        },
+        IpgContainers::IpgPaneGrid(_) => {
+            let wco = WidgetCallbackOut::default();
+            return wco
+        },
+        IpgContainers::IpgPane(_) => {
+            let wco = WidgetCallbackOut::default();
+            return wco
+        },
+        IpgContainers::IpgRow(_) => {
+            let wco = WidgetCallbackOut::default();
+            return wco
+        },
+        IpgContainers::IpgScrollable(scroll) => {
+            let mut wco = WidgetCallbackOut::default();
+            wco.user_data = scroll.user_data.clone();
+            drop(state);
+            return wco
+        }
+        IpgContainers::IpgToolTip(_) => {
+            let wco = WidgetCallbackOut::default();
+            return wco
+        },
+        IpgContainers::IpgWindow(_) => {
+            let wco = WidgetCallbackOut::default();
+            return wco
+        },
+    }
+        
+}
+
+
+pub fn process_callback(wco: WidgetCallbackOut) 
+{
+    if !wco.event_name.is_some() {return}
+
+    let evt_name = match wco.event_name {
+        Some(name) => name,
+        None => panic!("event_name not found")
+    };
+
+    let app_cbs = access_callbacks();
+
+    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
+       
+    let callback = match callback_opt {
+        Some(cb) => cb,
+        None => panic!("Callback could not be found with id {}", wco.id),
+    };
+
+    Python::with_gil(|py| {
+            if wco.user_data.is_some() {
+                callback.call1(py, (
+                                        wco.id.clone(), 
+                                        evt_name.clone(), 
+                                        wco.user_data
+                                        )
+                                ).unwrap();
+            } else {
+                callback.call1(py, (
+                                        wco.id.clone(), 
+                                        evt_name.clone(), 
+                                        )
+                                ).unwrap();
+            } 
+    });
+    
+    drop(app_cbs);
+         
 }

@@ -1,8 +1,10 @@
 #![allow(dead_code)]
+
 use crate::{app, UpdateItems};
-use crate::access_callbacks;
 use super::helpers::{get_padding, get_width, get_height};
-use super::callbacks::{WidgetCallbackIn, WidgetCallbackOut, get_set_widget_callback_data};
+use super::callbacks::{WidgetCallbackIn, WidgetCallbackOut, 
+                        get_set_widget_callback_data,
+                        process_callback};
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -234,50 +236,6 @@ pub fn button_item_update(btn: &mut IpgButton,
     panic!("Button update item {} could not be found", item)
 
 }
-
-
-fn process_callback(wco: WidgetCallbackOut) 
-{
-    if !wco.event_name.is_some() {return}
-
-    let app_cbs = access_callbacks();
-
-    let mut found_callback = None;
-
-    for callback in app_cbs.callbacks.iter() {
-        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
-            
-            found_callback = match callback.cb.clone() {
-                Some(cb) => Some(cb),
-                None => panic!("Callback could not be found with id {}", wco.id),
-            };
-            break;
-        }                   
-    };
-    drop(app_cbs);
-
-    match found_callback {
-
-        Some(cb) => Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                cb.call1(py, (
-                                    wco.id.clone(), 
-                                    wco.event_name, 
-                                    wco.user_data
-                                    )
-                                ).unwrap();
-            } else {
-                cb.call1(py, (
-                                    wco.id.clone(), 
-                                    wco.event_name, 
-                                    )
-                                ).unwrap();
-            } 
-        }),
-        None => panic!("Button callback could not be found"),
-    };
-            
-}                   
 
 
 pub fn get_button_style_from_str(style_opt: Option<String>) -> theme::Button {

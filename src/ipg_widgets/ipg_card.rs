@@ -1,10 +1,11 @@
-
+#![allow(unused_imports)]
 
 use crate::app::Message;
 use crate::{access_callbacks, UpdateItems};
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
-                        get_set_widget_callback_data};
+                        get_set_widget_callback_data,
+                        process_callback};
 
 use iced::{Element, Length, Padding};
 use iced::widget::{Column, Text};
@@ -202,53 +203,53 @@ pub fn card_item_update(crd: &mut IpgCard,
 
 }
 
-fn process_callback(wco: WidgetCallbackOut) 
-{
-    if !wco.event_name.is_some() {return};
+// fn process_callback(wco: WidgetCallbackOut) 
+// {
+//     if !wco.event_name.is_some() {return};
 
-    let app_cbs = access_callbacks();
+//     let app_cbs = access_callbacks();
 
-    let mut found_callback = None;
+//     let mut found_callback = None;
 
-    for callback in app_cbs.callbacks.iter() {
+//     for callback in app_cbs.callbacks.iter() {
 
-    if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
+//     if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
 
-    found_callback = match callback.cb.clone() 
-                            {
-                                Some(cb) => Some(cb),
-                                None => {
-                                    panic!("Callback could not be found with id {}", wco.id)
-                                },
-                            };
-    break;
-    }                   
-    };
+//     found_callback = match callback.cb.clone() 
+//                             {
+//                                 Some(cb) => Some(cb),
+//                                 None => {
+//                                     panic!("Callback could not be found with id {}", wco.id)
+//                                 },
+//                             };
+//     break;
+//     }                   
+//     };
 
-    drop(app_cbs);
+//     drop(app_cbs);
 
-    match found_callback {
+//     match found_callback {
 
-    Some(cb) => Python::with_gil(|py| {
-        if wco.user_data.is_some() {
-            cb.call1(py, (
-                                wco.id.clone(), 
-                                wco.event_name, 
-                                wco.user_data
-                                )
-                    ).unwrap();
-        } else {
-            cb.call1(py, (
-                                wco.id.clone(), 
-                                wco.event_name,
-                                )
-                    ).unwrap();
-        }                    
-        }),
-    None => panic!("Checkbox callback not found"),
-    };
+//     Some(cb) => Python::with_gil(|py| {
+//         if wco.user_data.is_some() {
+//             cb.call1(py, (
+//                                 wco.id.clone(), 
+//                                 wco.event_name, 
+//                                 wco.user_data
+//                                 )
+//                     ).unwrap();
+//         } else {
+//             cb.call1(py, (
+//                                 wco.id.clone(), 
+//                                 wco.event_name,
+//                                 )
+//                     ).unwrap();
+//         }                    
+//         }),
+//     None => panic!("Checkbox callback not found"),
+//     };
 
-}
+// }
 
 pub fn get_card_style_from_str(style_opt: Option<String>) -> CardStyles {
 

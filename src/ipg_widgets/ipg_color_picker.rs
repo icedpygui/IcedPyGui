@@ -146,51 +146,42 @@ pub fn color_picker_item_update(_cp: &mut IpgColorPicker,
 
 fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !wco.event_name.is_some() {return};
+    if !wco.event_name.is_some() {return}
+
+    let evt_name = match wco.event_name {
+        Some(name) => name,
+        None => panic!("event_name not found")
+    };
 
     let app_cbs = access_callbacks();
+
+    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
+       
+    let callback = match callback_opt {
+        Some(cb) => cb,
+        None => panic!("Callback could not be found with id {}", wco.id),
+    };
+                  
+    Python::with_gil(|py| {
+            if wco.user_data.is_some() {
+                callback.call1(py, (
+                                        wco.id.clone(), 
+                                        evt_name.clone(),
+                                        wco.color,
+                                        wco.user_data
+                                        )
+                                ).unwrap();
+            } else {
+                callback.call1(py, (
+                                        wco.id.clone(),
+                                        wco.color,
+                                        evt_name.clone(), 
+                                        )
+                                ).unwrap();
+            } 
+    });
     
-    let mut found_callback = None;
-
-    for callback in app_cbs.callbacks.iter() {
-
-        if wco.id == callback.id && wco.event_name == Some(callback.event_name.clone()) {
-
-            found_callback = match callback.cb.clone() 
-                                        {
-                                            Some(cb) => Some(cb),
-                                            None => {
-                                                panic!("Callback could not be found with id {}", wco.id)
-                                            },
-                                        };
-            break;
-        }                   
-    };
-
     drop(app_cbs);
-
-    match found_callback {
-
-        Some(cb) => Python::with_gil(|py| {
-                    if wco.user_data.is_some() {
-                        cb.call1(py, (
-                                            wco.id.clone(), 
-                                            wco.event_name,
-                                            wco.color,  
-                                            wco.user_data
-                                            )
-                                ).unwrap();
-                    } else {
-                        cb.call1(py, (
-                                            wco.id.clone(), 
-                                            wco.event_name,
-                                            wco.color, 
-                                            )
-                                ).unwrap();
-                    }                    
-                    }),
-        None => panic!("Checkbox callback not found"),
-    };
 
 }
 
