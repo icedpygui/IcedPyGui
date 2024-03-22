@@ -128,60 +128,61 @@ pub fn color_picker_update(id: usize, message: ColPikMessage) {
             wci.color = Some(convert_color_to_list(color));
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_submit".to_string());
+            wco.event_name = "on_submit".to_string();
             process_callback(wco);
         }
     }
 
 }
 
-pub fn color_picker_item_update(_cp: &mut IpgColorPicker,
-                                _item: String,
-                                _items: UpdateItems,
-                                ) 
-{
-
-}
-
 
 fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !wco.event_name.is_some() {return}
-
-    let evt_name = match wco.event_name {
-        Some(name) => name,
-        None => panic!("event_name not found")
-    };
-
     let app_cbs = access_callbacks();
 
-    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
-       
+    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+
+    let callback_opt = match callback_present {
+        Some(cb) => cb,
+        None => return,
+    };
+
     let callback = match callback_opt {
         Some(cb) => cb,
         None => panic!("Callback could not be found with id {}", wco.id),
     };
                   
     Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        evt_name.clone(),
-                                        wco.color,
-                                        wco.user_data
-                                        )
-                                ).unwrap();
-            } else {
-                callback.call1(py, (
-                                        wco.id.clone(),
-                                        wco.color,
-                                        evt_name.clone(), 
-                                        )
-                                ).unwrap();
-            } 
+        if wco.user_data.is_some() {
+            let user_data = match wco.user_data {
+                Some(ud) => ud,
+                None => panic!("ColorPicker user_data in callback could not be found"),
+            };
+            callback.call1(py, (
+                                    wco.id.clone(), 
+                                    wco.color,
+                                    user_data
+                                    )
+                            ).unwrap();
+        } else {
+            callback.call1(py, (
+                                    wco.id.clone(),
+                                    wco.color, 
+                                    )
+                            ).unwrap();
+        } 
     });
     
     drop(app_cbs);
+
+}
+
+
+pub fn color_picker_item_update(_cp: &mut IpgColorPicker,
+                                _item: String,
+                                _items: UpdateItems,
+                                ) 
+{
 
 }
 

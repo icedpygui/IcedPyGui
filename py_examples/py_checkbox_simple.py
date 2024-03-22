@@ -6,7 +6,7 @@ ipg = IPG()
 x_id = ipg.generate_id()
 cont_id = ipg.generate_id()
 
-def on_checked(id, name, data, user_data):
+def on_toggle(id, data, user_data):
     ipg.update_item(x_id, "icon_x",  data)
 
 
@@ -22,7 +22,7 @@ ipg.add_column(window_id="main", container_id="col", parent_id="cont",
 
 
 ipg.add_checkbox(parent_id="col", label="Check Me!!!",
-                                                on_checked=on_checked,
+                                                on_toggle=on_toggle,
                                                 user_data="Some string data")
 
 ipg.add_checkbox(parent_id="col", gen_id=x_id, label="Check Me!!!", is_checked=True)

@@ -352,7 +352,8 @@ class IPG:
                     parent_id, 
                     head, 
                     body, 
-                    foot: str=None, 
+                    foot: str=None,
+                    is_open: bool=True, 
                     close_size: float=0.0, 
                     on_close=None,
                     width: float=None, 
@@ -468,7 +469,7 @@ class IPG:
                         label: str="Calendar",
                         size_factor: float=1.0,
                         padding: List=[5.0],
-                        on_submiy: Callable=None,
+                        on_submit: Callable=None,
                         user_data: any=None,
                         show=False, 
                         )  -> int:

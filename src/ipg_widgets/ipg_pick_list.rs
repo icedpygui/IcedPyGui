@@ -111,50 +111,55 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
             wci.value_str = Some(value);
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_select".to_string());
+            wco.event_name = "on_select".to_string();
             process_callback(wco);
         },
     }
  }
 
 
- pub fn process_callback(wco: WidgetCallbackOut) 
+ fn process_callback(wco: WidgetCallbackOut) 
  {
-     if !wco.event_name.is_some() {return}
- 
-     let evt_name = match wco.event_name {
-         Some(name) => name,
-         None => panic!("event_name not found")
-     };
- 
-     let app_cbs = access_callbacks();
- 
-     let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
-        
-     let callback = match callback_opt {
-         Some(cb) => cb,
-         None => panic!("Callback could not be found with id {}", wco.id),
-     };
-                   
-     Python::with_gil(|py| {
-             if wco.user_data.is_some() {
-                 callback.call1(py, (
-                                         wco.id.clone(), 
-                                         evt_name.clone(),
-                                         wco.value_str, 
-                                         wco.user_data
-                                         )
-                                 ).unwrap();
-             } else {
-                 callback.call1(py, (
-                                         wco.id.clone(), 
-                                         evt_name.clone(),
-                                         wco.value_str, 
-                                         )
-                                 ).unwrap();
-             } 
-     });
+    let app_cbs = access_callbacks();
 
-     drop(app_cbs); 
+    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+
+    let callback_opt = match callback_present {
+    Some(cb) => cb,
+    None => return,
+    };
+
+    let callback = match callback_opt {
+        Some(cb) => cb,
+        None => panic!("PickList Callback could not be found with id {}", wco.id),
+    };
+
+    let value = match wco.value_str {
+    Some(vl) => vl,
+    None => panic!("Picklist selected value could not be found."),
+    };
+                   
+    Python::with_gil(|py| {
+        if wco.user_data.is_some() {
+        let user_data = match wco.user_data {
+            Some(ud) => ud,
+            None => panic!("PickList callback user_data not found."),
+        };
+            callback.call1(py, (
+                                    wco.id.clone(), 
+                                    value, 
+                                    user_data
+                                    )
+                            ).unwrap();
+        } else {
+            callback.call1(py, (
+                                    wco.id.clone(), 
+                                    value, 
+                                    )
+                            ).unwrap();
+        } 
+    });
+
+    drop(app_cbs); 
 
  }

@@ -9,6 +9,7 @@ use iced::widget::{Container, Image, MouseArea};
 use iced::mouse::Interaction;
 use iced::advanced::image;
 
+use pyo3::types::IntoPyDict;
 use pyo3::{PyObject, Python};
 
 
@@ -95,56 +96,60 @@ pub fn image_callback(id: usize, message: ImageMessage) {
         ImageMessage::OnPress => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_press".to_string());
+            wco.event_name = "on_press".to_string();
             process_callback(wco);
         },
         ImageMessage::OnRelease => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_release".to_string());
+            wco.event_name = "on_release".to_string();
             process_callback(wco);
         },
         ImageMessage::OnRightPress => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_right_press".to_string());
+            wco.event_name = "on_right_press".to_string();
             process_callback(wco);
         },
         ImageMessage::OnRightRelease => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_right_release".to_string());
+            wco.event_name = "on_right_release".to_string();
             process_callback(wco);
         },
         ImageMessage::OnMiddlePress => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_middle_press".to_string());
+            wco.event_name = "on_middle_press".to_string();
             process_callback(wco);
         },
         ImageMessage::OnMiddleRelease => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_middle_release".to_string());
+            wco.event_name = "on_middle_release".to_string();
             process_callback(wco);
         },
         ImageMessage::OnEnter => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_enter".to_string());
+            wco.event_name = "on_enter".to_string();
             process_callback(wco);
         },
         ImageMessage::OnMove(point) => {
-            wci.point = Some(point);
+            let mut points: Vec<(String, f32)> = vec![];
+            points.push(("x".to_string(), point.x));
+            points.push(("y".to_string(), point.y));
+            
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_move".to_string());
+            wco.event_name = "on_move".to_string();
+            wco.points = Some(points);
             process_callback(wco);
         },
         ImageMessage::OnExit => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_exit".to_string());
+            wco.event_name = "on_exit".to_string();
             process_callback(wco);
         },
     }
@@ -153,38 +158,43 @@ pub fn image_callback(id: usize, message: ImageMessage) {
 
 fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !wco.event_name.is_some() {return}
-
-    let evt_name = match wco.event_name {
-        Some(name) => name,
-        None => panic!("event_name not found")
-    };
-
     let app_cbs = access_callbacks();
 
-    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
+    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+
+    let callback_opt = match callback_present {
+        Some(cb) => cb,
+        None => return,
+    };
        
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Callback could not be found with id {}", wco.id),
+        None => panic!("Image Callback could not be found with id {}", wco.id),
     };
                   
-    if evt_name == "on_move".to_string() {
+    if wco.event_name == "on_move".to_string() {
+
+        let points = match wco.points {
+            Some(pts) => pts,
+            None => panic!("Image Points not found"),
+        };
 
         Python::with_gil(|py| {
             if wco.user_data.is_some() {
+                let user_data = match wco.user_data {
+                    Some(ud) => ud,
+                    None => panic!("Image callback user_data not found."),
+                };
                 callback.call1(py, (
                                         wco.id.clone(), 
-                                        evt_name.clone(),
-                                        wco.points, 
-                                        wco.user_data
+                                        points.into_py_dict(py), 
+                                        user_data
                                         )
                                 ).unwrap();
             } else {
                 callback.call1(py, (
                                         wco.id.clone(), 
-                                        evt_name.clone(),
-                                        wco.points, 
+                                        points.into_py_dict(py), 
                                         )
                                 ).unwrap();
             } 
@@ -193,16 +203,18 @@ fn process_callback(wco: WidgetCallbackOut)
     } else {
         Python::with_gil(|py| {
             if wco.user_data.is_some() {
+                let user_data = match wco.user_data {
+                    Some(ud) => ud,
+                    None => panic!("Image callback user_data not found."),
+                };
                 callback.call1(py, (
                                         wco.id.clone(), 
-                                        evt_name.clone(), 
-                                        wco.user_data
+                                        user_data
                                         )
                                 ).unwrap();
             } else {
                 callback.call1(py, (
-                                        wco.id.clone(), 
-                                        evt_name.clone(), 
+                                        wco.id.clone(),  
                                         )
                                 ).unwrap();
             } 

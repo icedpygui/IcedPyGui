@@ -139,7 +139,7 @@ class ButtonDemo:
         # Another text widget for info.
         self.ipg.add_text(parent_id=self.sld_col, content="The height and width will be show in a separate example")
 
-    def set_corner_radius(self, id, name, value, user_data):
+    def set_corner_radius(self, id, value, user_data):
         # The slider uses this callback and the slider id, value and any user data is
         # returned.  These parameter names can be anything you like as long
         # as you know that the order is all the same for all callbacks.
@@ -152,7 +152,7 @@ class ButtonDemo:
 
         self.ipg.update_item(self.text_id, "content", f"Slider Value {value}")
 
-    def button_pressed(self, id, name, user_data):
+    def button_pressed(self, id, user_data):
         # This is a callback that occurs when the button is pressed
         # The id equals the button that was pressed and the data
         # for the button is None but its needed as a placeholder in the fucntion.

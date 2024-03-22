@@ -3,7 +3,7 @@ from icedpygui.icedpygui import IPG
 
 ipg = IPG()
 
-def color_submitted(id, name, color):
+def color_submitted(id, color):
     value= f"Color selected = {color}"
     ipg.update_item(color_id, "content", value=value)
 

@@ -10,7 +10,7 @@ text_id = 0
 # a callback is not allowed because of clashing Gils.  Therefore,
 # the only IPG commands allowed in a callback are the ones 
 # starting with update_
-def update_button(id, name):
+def update_button(id):
     # changing the radius using a float
     ipg.update_item(radius_btn, "corner_radius", 5.0)
     ipg.update_item(radius_btn, "label", "Corner Radius Changed")

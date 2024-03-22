@@ -40,7 +40,7 @@ class CheckboxDemo:
         # You can send data types a number of different data types.  
         # See the item_update example for more info.
         self.chk_main = self.ipg.add_checkbox(parent_id=self.col, label="Check Me!!!",
-                                                        on_checked=self.on_checked,
+                                                        on_toggle=self.on_toggled,
                                                         user_data="Some string data")
         
         # These text widgets will show some content when the checkbox is checked.
@@ -48,6 +48,7 @@ class CheckboxDemo:
         # show parameter to false also and have the same effect, at least for the text widget.
 
         self.text_id = self.ipg.add_text(parent_id=self.col, content="The callback name is show here")
+
         self.text_user_data_id = self.ipg.add_text(parent_id=self.col, content="The callback user data will show here")
 
         self.checked_id = self.ipg.add_checkbox(self.col, label="My icon will change", 
@@ -69,7 +70,7 @@ class CheckboxDemo:
 
         self.ipg.start_session()
 
-    def on_checked(self, id, name, is_checked, user_data):
+    def on_toggled(self, id, is_checked, user_data):
         # This is the callback for the checkbox.  The id parameter is the id of the checkbox
         # that is checked, so if other widgets need to be manipulated, as in this case, 
         # you must obtain their ids by equating them and storing them in a class or using them globally.  
@@ -83,7 +84,7 @@ class CheckboxDemo:
             self.ipg.update_item(self.chk_main, "label", "Check Me Again!!!")
 
             self.ipg.update_item(self.text_id, "content", 
-                                            f"Callback name = {name}     is_checked = {is_checked}")
+                                            f"is_checked = {is_checked}")
             self.ipg.update_item(self.text_user_data_id, "content", value=f"user data = {user_data}")
 
             # changing the icon to a x

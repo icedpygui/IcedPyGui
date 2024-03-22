@@ -12,6 +12,7 @@ use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{MouseArea, Text};
 use iced::mouse::Interaction;
 
+use pyo3::types::IntoPyDict;
 use pyo3::{PyObject, Python};
 
 
@@ -121,56 +122,59 @@ pub fn selectable_text_callback(id: usize, message: SLTXTMessage) {
         SLTXTMessage::OnPress => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_press".to_string());
+            wco.event_name = "on_press".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnRelease => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_release".to_string());
+            wco.event_name = "on_release".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnRightPress => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_right_press".to_string());
+            wco.event_name = "on_right_press".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnRightRelease => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_right_release".to_string());
+            wco.event_name = "on_right_release".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnMiddlePress => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_middle_press".to_string());
+            wco.event_name = "on_middle_press".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnMiddleRelease => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_middle_release".to_string());
+            wco.event_name = "on_middle_release".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnEnter => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_enter".to_string());
+            wco.event_name = "on_enter".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnMove(point) => {
-            wci.point = Some(point);
+            let mut points: Vec<(String, f32)> = vec![];
+            points.push(("x".to_string(), point.x));
+            points.push(("y".to_string(), point.y));
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_move".to_string());
+            wco.event_name = "on_move".to_string();
+            wco.points = Some(points);
             process_callback(wco);
         },
         SLTXTMessage::OnExit => {
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_exit".to_string());
+            wco.event_name = "on_exit".to_string();
             process_callback(wco);
         },
     }    
@@ -179,38 +183,44 @@ pub fn selectable_text_callback(id: usize, message: SLTXTMessage) {
 
 fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !wco.event_name.is_some() {return}
-
-    let evt_name = match wco.event_name {
-        Some(name) => name,
-        None => panic!("event_name not found")
-    };
-
     let app_cbs = access_callbacks();
 
-    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
-       
+    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+
+    let callback_opt = match callback_present {
+        Some(cb) => cb,
+        None => return,
+    };
+
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Callback could not be found with id {}", wco.id),
+        None => panic!("SelectableText Callback could not be found with id {}", wco.id),
     };
                   
-    if evt_name == "on_move".to_string() {
+    if wco.event_name == "on_move".to_string() {
+
+        let points = match wco.points {
+            Some(pts) => pts,
+            None => panic!("Points not found"),
+        };
 
         Python::with_gil(|py| {
+
             if wco.user_data.is_some() {
+                let user_data = match wco.user_data {
+                    Some(dt) => dt,
+                    None => panic!("SelectableText user_data not found"),
+                };
                 callback.call1(py, (
                                         wco.id.clone(), 
-                                        evt_name.clone(),
-                                        wco.points, 
-                                        wco.user_data
+                                        points.into_py_dict(py), 
+                                        user_data
                                         )
                                 ).unwrap();
             } else {
                 callback.call1(py, (
                                         wco.id.clone(), 
-                                        evt_name.clone(),
-                                        wco.points, 
+                                        points.into_py_dict(py), 
                                         )
                                 ).unwrap();
             } 
@@ -219,16 +229,18 @@ fn process_callback(wco: WidgetCallbackOut)
     } else {
         Python::with_gil(|py| {
             if wco.user_data.is_some() {
+                let user_data = match wco.user_data {
+                    Some(dt) => dt,
+                    None => panic!("SelectableText user_data not found"),
+                };
                 callback.call1(py, (
-                                        wco.id.clone(), 
-                                        evt_name.clone(), 
-                                        wco.user_data
+                                        wco.id.clone(),
+                                        user_data
                                         )
                                 ).unwrap();
             } else {
                 callback.call1(py, (
                                         wco.id.clone(), 
-                                        evt_name.clone(), 
                                         )
                                 ).unwrap();
             } 

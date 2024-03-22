@@ -10,7 +10,7 @@ use crate::ICON_FONT_BOOT;
 use super::helpers::{get_padding, MONTH_NAMES, DATE_FORMATS, DAYS, WEEKDAYS};
 
 use iced::advanced::graphics::core::Element;
-use iced::{Padding, Length, Renderer, Theme, theme};
+use iced::{Length, Padding, Renderer, Theme, theme};
 use iced::alignment::{self, Alignment};
 use iced::widget::{Button, Column, Container, PickList, Row, Space, Text};
 
@@ -97,7 +97,8 @@ pub fn construct_date_picker(dp: IpgDatePicker) -> Element<'static, Message, The
         
         let col_content: Element<Message, Theme, Renderer> =
             Column::with_children(vec![
-                create_first_row_arrows(dp.id, dp.selected_month, 
+                create_first_row_arrows(dp.id, 
+                                        dp.selected_month, 
                                         dp.selected_month_index, 
                                         dp.selected_year,
                                         dp.size_factor),
@@ -469,14 +470,12 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
             wci.show = Some(true);
             wci.is_submitted = Some(false);
             let _ = get_set_widget_callback_data(wci);
-            // focus_next::<DPMessage>();
         }
         DPMessage::HideModal => {
             // Non callback just sending the values.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.show = Some(false);
-            wci.is_submitted = Some(false);
             let _ = get_set_widget_callback_data(wci);
         }
         DPMessage::DayPressed(day) => {
@@ -484,14 +483,13 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.selected_day = Some(day);
-            wci.is_submitted = Some(false);
             let _ = get_set_widget_callback_data(wci);
         }
-        DPMessage::DatePickerFormat(formated_date) => {
+        DPMessage::DatePickerFormat(date_format) => {
             // Non callback just sending the values.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
-            wci.value_str = Some(formated_date);
+            wci.date_format = Some(date_format);
             let _ = get_set_widget_callback_data(wci);
         }
         DPMessage::MonthRightPressed(index) => {
@@ -527,21 +525,61 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
             let _ = get_set_widget_callback_data(wci);
         }
         DPMessage::OnSubmit => {
-            // Non callback just sending the values.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.is_submitted = Some(true);
-            
-            let _ = get_set_widget_callback_data(wci);
-            let mut wco = WidgetCallbackOut::default();
+            let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_submit".to_string());
+            wco.event_name = "on_submit".to_string();
             process_callback(wco);
         }
     }
     
 
 }
+
+
+fn process_callback(wco: WidgetCallbackOut) 
+{
+    let app_cbs = access_callbacks();
+
+    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+
+    let callback_opt = match callback_present {
+        Some(cb) => cb,
+        None => return,
+    };
+
+    let callback = match callback_opt {
+        Some(cb) => cb,
+        None => panic!("DatePicker callback could not be found with id {}", wco.id),
+    };
+                  
+    Python::with_gil(|py| {
+        if wco.user_data.is_some() {
+            let user_data = match wco.user_data {
+                Some(ud) => ud,
+                None => panic!("DatePicker user_data in callback not found"),
+            };
+            callback.call1(py, (
+                                    wco.id.clone(), 
+                                    wco.selected_date, 
+                                    user_data
+                                    )
+                            ).unwrap();
+        } else {
+            callback.call1(py, (
+                                    wco.id.clone(),
+                                    wco.selected_date, 
+                                    )
+                            ).unwrap();
+        } 
+    });
+
+    drop(app_cbs); 
+
+}      
+
 
 pub fn date_picker_item_update(dp: &mut IpgDatePicker,
                                 item: String,
@@ -580,48 +618,3 @@ pub fn date_picker_item_update(dp: &mut IpgDatePicker,
         };
     }
 }
-
-
-fn process_callback(wco: WidgetCallbackOut) 
-{
-    if !wco.event_name.is_some() {return}
-
-    let evt_name = match wco.event_name {
-        Some(name) => name,
-        None => panic!("event_name not found")
-    };
-
-    let app_cbs = access_callbacks();
-
-    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
-       
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("Callback could not be found with id {}", wco.id),
-    };
-                  
-    
-
-    Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        evt_name.clone(),
-                                        wco.selected_date, 
-                                        wco.user_data
-                                        )
-                                ).unwrap();
-            } else {
-                callback.call1(py, (
-                                        wco.id.clone(),
-                                        wco.selected_date, 
-                                        evt_name.clone(), 
-                                        )
-                                ).unwrap();
-            } 
-    });
-
-    drop(app_cbs); 
-
-}      
-                                                 

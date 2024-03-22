@@ -1,15 +1,11 @@
 
-
-use std::collections::HashMap;
-
 use crate::access_state;
-use crate::access_callbacks;
 use super::ipg_enums::IpgContainers;
 use super::{helpers::{format_date, MONTH_NAMES}, ipg_enums::IpgWidgets, ipg_radio::Choice};
 
 use iced::{Color, Point};
 
-use pyo3::{Python, PyObject};
+use pyo3::PyObject;
 
 
 #[derive(Default, Debug)]
@@ -26,10 +22,12 @@ pub struct WidgetCallbackIn {
     pub selected_date: Option<String>,
     pub selected_month: Option<String>,
     pub selected_year: Option<i32>,
+    pub date_format: Option<String>,
     pub show: Option<bool>,
     pub submit_str: Option<String>,
     pub value_float: Option<f64>,
     pub value_str: Option<String>,
+    pub value_bool: Option<bool>,
 }
 
 impl WidgetCallbackIn{}
@@ -38,10 +36,10 @@ impl WidgetCallbackIn{}
 pub struct WidgetCallbackOut {
     pub id: usize,
     pub color: Option<Vec<f64>>,
-    pub event_name: Option<String>,
+    pub event_name: String,
     pub is_checked: Option<bool>,
-    pub points: Option<HashMap<String, f32>>,
-    pub scroll_pos: Option<HashMap<String, f32>>, 
+    pub points: Option<Vec<(String, f32)>>,
+    pub scroll_pos: Vec<(String, f32)>, 
     pub selected_index: Option<usize>,
     pub selected_label: Option<String>,
     pub selected_date: Option<String>,
@@ -70,6 +68,11 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     return wco
                 },
                 IpgWidgets::IpgCard(crd) => {
+                    let is_open = match wci.value_bool {
+                        Some(open) => open,
+                        None => panic!("Card is_open value not found"),
+                    };
+                    crd.is_open = is_open;
                     let mut wco = WidgetCallbackOut::default();
                     wco.user_data = crd.user_data.clone();
                     drop(state);
@@ -107,6 +110,13 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     return wco
                 },
                 IpgWidgets::IpgDatePicker(dp) => {
+                    
+                    if wci.selected_day.is_some() {
+                        dp.selected_day = match wci.selected_day {
+                            Some(day) => day,
+                            None => panic!("DatePicker could not find selected_day"),
+                        };
+                    }
                     if wci.index.is_some() {
                         let index = match wci.index {
                                             Some(idx) => idx,
@@ -126,19 +136,32 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                                             None => panic!("Selected year not found")
                                         };
                     }
-                    if dp.selected_date != "".to_string() {
-                        dp.selected_date = format_date(dp.selected_format.clone(), 
-                                                dp.selected_year, 
-                                                dp.selected_month_index, 
-                                                dp.selected_day);
+                    if wci.date_format.is_some() {
+                        dp.selected_format = match wci.date_format {
+                            Some(format) => format,
+                            None => panic!("DatePicker selected_format could not be found."),
+                        };
                     }
+                    dp.selected_date = format_date(
+                                                    dp.selected_format.clone(), 
+                                                    dp.selected_year, 
+                                                    dp.selected_month_index, 
+                                                    dp.selected_day
+                                                    );
+                    
                     
                     if wci.is_submitted.is_some() {
                         dp.is_submitted = match wci.is_submitted {
                             Some(is_sub) => is_sub,
-                            None => panic!("is_submitted not found")
+                            None => panic!("DatePicker is_submitted not found")
                         }
                     }
+                    if wci.show.is_some() {
+                        dp.show = match wci.show {
+                            Some(sh) => sh,
+                            None => panic!("DatePicker show is not found"),
+                        }
+                    };
                     let mut wco = WidgetCallbackOut::default();
                     wco.selected_date = Some(dp.selected_date.clone());
                     wco.user_data = dp.user_data.clone();
@@ -146,14 +169,14 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     return wco
                 },
                 IpgWidgets::IpgImage(img) => {
-                    let mut points: HashMap<String, f32> = HashMap::new();
+                    let mut points: Vec<(String, f32)> = vec![];
                     if wci.point.is_some() {
                         match wci.point {
                             Some(pt) => {
-                            points.insert("x".to_string(), pt.x);
-                            points.insert("y".to_string(), pt.y);
+                            points.push(("x".to_string(), pt.x));
+                            points.push(("y".to_string(), pt.y));
                         },
-                            None => panic!("Point could not be found")
+                            None => panic!("Image Point could not be found")
                         }
                     }
                     
@@ -305,44 +328,4 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
         },
     }
         
-}
-
-
-pub fn process_callback(wco: WidgetCallbackOut) 
-{
-    if !wco.event_name.is_some() {return}
-
-    let evt_name = match wco.event_name {
-        Some(name) => name,
-        None => panic!("event_name not found")
-    };
-
-    let app_cbs = access_callbacks();
-
-    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
-       
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("Callback could not be found with id {}", wco.id),
-    };
-
-    Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        evt_name.clone(), 
-                                        wco.user_data
-                                        )
-                                ).unwrap();
-            } else {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        evt_name.clone(), 
-                                        )
-                                ).unwrap();
-            } 
-    });
-    
-    drop(app_cbs);
-         
 }

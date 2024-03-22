@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 
-use crate::{app, UpdateItems};
+use crate::{access_callbacks, app, UpdateItems};
 use super::helpers::{get_padding, get_width, get_height};
-use super::callbacks::{WidgetCallbackIn, WidgetCallbackOut, 
-                        get_set_widget_callback_data,
-                        process_callback};
+use super::callbacks::{
+    WidgetCallbackIn, WidgetCallbackOut, 
+    get_set_widget_callback_data
+};
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -65,13 +66,13 @@ pub enum BTNMessage {
     OnPress,
 }
 
-// The enums below are different than iced ButtonStyles enums though they have the
+// The style enums below are different than iced ButtonStyles enums though they have the
 // same members.  The reason is that the python styles are defined as IpgButtonStyles. Therefore
 // one has to send a Option<String> representing the style, using an IpgButtonStyles enum.
 // Steps are different based on the intitial contruction and the updating routine.
 // 
 // Construction phase: 
-// lib.add_card() ==> PyObject ==> String ==> construct_button() ==> iced style
+// lib.add_button() ==> PyObject ==> String ==> construct_button() ==> iced style
 // 
 // Update phase: 
 // lib.update_item() ==> PyObject ==> try_extract (method below) ==> Option<String> returned to update_item
@@ -150,11 +151,52 @@ pub fn button_callback(id: usize, message: BTNMessage) {
             // getting only
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_press".to_string());
+            wco.event_name = "on_press".to_string();
             process_callback(wco);
         }
     }
 }
+
+
+pub fn process_callback(wco: WidgetCallbackOut) 
+{
+    let app_cbs = access_callbacks();
+
+    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+
+    let callback_opt = match callback_present {
+        Some(cb) => cb,
+        None => return,
+    };
+
+    let callback = match callback_opt {
+        Some(cb) => cb,
+        None => panic!("Button callback could not be found with id {}", wco.id),
+    };
+
+    Python::with_gil(|py| {
+            if wco.user_data.is_some() {
+                let user_data = match wco.user_data {
+                    Some(ud) => ud,
+                    None => panic!("User Data could not be found in Button callback"),
+                };
+                callback.call1(py, (
+                                        wco.id.clone(),  
+                                        user_data
+                                        )
+                                ).unwrap();
+            } else {
+                callback.call1(py, (
+                                        wco.id.clone(),  
+                                        )
+                                ).unwrap();
+            } 
+    });
+    
+    drop(app_cbs);
+         
+}
+
 
 pub fn button_item_update(btn: &mut IpgButton,
                             item: String,
@@ -164,7 +206,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     if item == "corner_radius".to_string() {
         btn.corner_radius = match items.value_f64 {
             Some(flt) => flt as f32,
-            None => panic!("A float value is needed to update button corner radius."),
+            None => panic!("Button update corner_radius must be a float."),
         };
         return
     }
@@ -172,7 +214,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     if item == "label".to_string() {
         btn.label = match items.value_str {
             Some(str) => str,
-            None => panic!("A string value is needed to update the button label.")
+            None => panic!("Button update label must be a string.")
         };
         return
     }
@@ -180,7 +222,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     if item == "width".to_string() {
         btn.width = match items.value_f64 {
             Some(wd) => get_width(Some(wd as f32), false),
-            None => panic!("A float is needed to update the button width.")
+            None => panic!("Button update width must be a float.")
         };
         return
     }
@@ -188,7 +230,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     if item == "width_fill".to_string() {
         btn.width = match items.value_bool {
             Some(wd) => get_width(None, wd),
-            None => panic!("A boolean is needed to update the button width_fill.")
+            None => panic!("Button update width_fill must be a  boolean.")
         };
         return
     }
@@ -196,7 +238,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     if item == "height".to_string() {
         btn.height = match items.value_f64 {
             Some(ht) => get_height(Some(ht as f32), false),
-            None => panic!("A float is needed to update the button height.")
+            None => panic!("Button update height must be a float.")
         };
         return
     }
@@ -204,7 +246,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     if item == "height_fill".to_string() {
         btn.height = match items.value_bool {
             Some(ht) => get_height(None, ht),
-            None => panic!("A boolean is needed to update the button height_fill.")
+            None => panic!("Button update height_fill must be a boolean.")
         };
         return
     }
@@ -212,7 +254,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     if item == "padding".to_string() {
         btn.padding = match items.value_vec_f64 {
             Some(pad) => get_padding(pad),
-            None => panic!("Padding must have a List of length 1, 2, or 4.")
+            None => panic!("Button update padding must be a List of length 1, 2, or 4.")
         };
         return
     }
@@ -220,7 +262,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     if item == "show".to_string() {
         btn.show = match items.value_bool {
             Some(sh) => sh,
-            None => panic!("Show value must be either True or False.")
+            None => panic!("Button update show value must be a boolean.")
         };
         return
     }
@@ -228,7 +270,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     if item == "style".to_string() {
         btn.style = match items.value_str {
             Some(st) => Some(st),
-            None => panic!("Style must be of type string.")
+            None => panic!("Button update style must be of string.")
         };
         return
     }

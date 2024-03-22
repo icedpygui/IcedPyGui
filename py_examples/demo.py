@@ -332,14 +332,17 @@ class Demo:
                                      on_right_press=self.selecting_text,
                                      on_right_release=self.selecting_text,
                                      on_enter=self.selecting_text,
-                                     on_move=self.selecting_text,
+                                     on_move=self.selecting_text_with_point,
                                      on_exit=self.selecting_text
                                      )
         
         self.selectable_text_id = self.ipg.add_text(self.r_col_1, "Selectable actions:")
 
-    def selecting_text(self, id, name):
-        self.ipg.update_item(self.selectable_text_id, "content", f"Selectable action: \n{name}")
+    def selecting_text(self, id):
+        self.ipg.update_item(self.selectable_text_id, "content", f"Selectable id: {id}")
+
+    def selecting_text_with_point(self, id, data):
+        self.ipg.update_item(self.selectable_text_id, "content", f"point: {data}")
 
     def construct_text_input(self):
         self.ipg.add_text_input(parent_id=self.r_col_1, 

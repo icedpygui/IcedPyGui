@@ -614,8 +614,8 @@ impl IPG {
                             container_id: String,
                             // above required
                             parent_id: Option<String>,
-                            width: Option<f32>,
-                            height: Option<f32>,
+                            mut width: Option<f32>,
+                            mut height: Option<f32>,
                             width_fill: bool,
                             height_fill: bool,
                             direction: String,
@@ -628,9 +628,12 @@ impl IPG {
         if on_scroll.is_some() {
             add_callback_to_mutex(self.id, "on_scroll".to_string(), on_scroll);
         }
-
-        let width = get_width(width, width_fill);
-        let height = get_height(height, height_fill);
+        // For scrollable the fill doesn't work well so as long as the fixed is
+        // larger than the window, it will fill wahtever space is left.
+        if width_fill {width = Some(10_000.0)}
+        if height_fill {height = Some(10_000.0)}
+        let width = get_width(width, false);
+        let height = get_height(height, false);
 
         let direction: Direction = get_scroll_direction(Some(direction));
 
@@ -765,16 +768,19 @@ impl IPG {
     
     }
 
-    #[pyo3(signature = (parent_id, head, body, foot=None, gen_id=None, close_size=0.0, on_close=None, 
+    #[pyo3(signature = (parent_id, head, body, is_open=true, minmax_id=None, foot=None, 
+                        gen_id=None, close_size=20.0, on_close=None, 
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_width=f32::INFINITY, max_height=f32::INFINITY, 
                         padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
-                        show=true, style=None, user_data=None))]
+                        style=None, user_data=None))]
     fn add_card(&mut self,
                 parent_id: String, 
                 head: String,
                 body: String,
                 // above required
+                is_open: bool,
+                minmax_id: Option<usize>,
                 foot: Option<String>,
                 gen_id: Option<usize>,
                 close_size: f32,
@@ -788,7 +794,6 @@ impl IPG {
                 padding_head: Vec<f64>,
                 padding_body: Vec<f64>,
                 padding_foot: Vec<f64>,
-                show: bool,
                 style: Option<PyObject>,
                 user_data: Option<PyObject>, 
                 ) -> PyResult<usize> 
@@ -822,8 +827,9 @@ impl IPG {
 
         state.widgets.insert(id, IpgWidgets::IpgCard(IpgCard::new(
                                                     id,
-                                                    show,
+                                                    is_open,
                                                     user_data,
+                                                    minmax_id,
                                                     width,
                                                     height,
                                                     max_width,
@@ -2450,40 +2456,6 @@ fn add_user_data_to_mutex(id: usize, user_data: Option<PyObject>) {
     drop(cb);
 }
 
-// fn add_radio_to_mutex(id: usize, group_id: String) -> usize {
-//     let mut cb = access_callbacks();
-
-//     let mut found = false;
-//     let mut index = 0;
-
-//     for radio in cb.radios.iter_mut() {
-//         if group_id == radio.0 {
-//             found = true;
-//             radio.1.push(id);
-//             index = radio.1.len();
-//         }
-//     }
-
-//     if !found {
-//         cb.radios.push((group_id, vec![id]));
-//         index = 1;
-//     }
-
-//     drop(cb);
-
-//     index -= 1;
-
-//     if index > RADIO_SIZE {
-//         panic!("The number of radio buttons in a group is currently limited to {RADIO_SIZE}, put in a request for additional ones")
-//     }
-
-//     index
-
-// }
-
-// fn print_type_of<T>(_: &T) {
-//     println!("{}", std::any::type_name::<T>())
-// }
 
 fn find_parent_uid(ipg_ids: &Vec<IpgIds>, parent_id: String) -> usize {
 
@@ -2493,4 +2465,8 @@ fn find_parent_uid(ipg_ids: &Vec<IpgIds>, parent_id: String) -> usize {
         }
     }
     panic!("Parent id {:?} not found in function find_parent_uid()", parent_id)
+}
+
+pub fn delete_item(_id: usize) {
+
 }

@@ -131,10 +131,52 @@ pub fn checkbox_callback(id: usize, message: CHKMessage) {
             wci.on_toggle = Some(on_toggle);
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.event_name = Some("on_toggle".to_string());
+            wco.event_name = "on_toggle".to_string();
             process_callback(wco);
         }
     }
+}
+
+
+fn process_callback(wco: WidgetCallbackOut) 
+{
+    let app_cbs = access_callbacks();
+
+    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+
+    let callback_opt = match callback_present {
+        Some(cb) => cb,
+        None => return,
+    };
+
+    let callback = match callback_opt {
+        Some(cb) => cb,
+        None => panic!("Callback could not be found with id {}", wco.id),
+    };
+             
+    Python::with_gil(|py| {
+            if wco.user_data.is_some() {
+                let user_data = match wco.user_data {
+                    Some(ud) => ud,
+                    None => panic!("Checkbox callback user_Data could not be found"),
+                };
+                callback.call1(py, (
+                                        wco.id.clone(), 
+                                        wco.is_checked, 
+                                        user_data
+                                        )
+                                ).unwrap();
+            } else {
+                callback.call1(py, (
+                                        wco.id.clone(), 
+                                        wco.is_checked 
+                                        )
+                                ).unwrap();
+            } 
+    });
+
+    drop(app_cbs);
+
 }
 
 
@@ -247,46 +289,5 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 
     panic!("Checkbox update item {} could not be found", item)
-
-}
-
-fn process_callback(wco: WidgetCallbackOut) 
-{
-    if !wco.event_name.is_some() {return}
-
-    let evt_name = match wco.event_name {
-        Some(name) => name,
-        None => panic!("event_name not found")
-    };
-
-    let app_cbs = access_callbacks();
-
-    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
-       
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("Callback could not be found with id {}", wco.id),
-    };
-             
-    Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        evt_name.clone(),
-                                        wco.is_checked, 
-                                        wco.user_data
-                                        )
-                                ).unwrap();
-            } else {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        evt_name.clone(),
-                                        wco.is_checked 
-                                        )
-                                ).unwrap();
-            } 
-    });
-
-    drop(app_cbs);
 
 }

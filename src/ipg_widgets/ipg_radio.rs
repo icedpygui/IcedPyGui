@@ -162,47 +162,57 @@ pub fn radio_callback(id: usize, message: RDMessage) {
         None => panic!("Selected_label for radio not found id {}", wco.id),
     };
     wco.id = id;
-    wco.event_name = Some("on_select".to_string());
+    wco.event_name = "on_select".to_string();
     process_callback(wco);
 
 }
 
 
-pub fn process_callback(wco: WidgetCallbackOut) 
+fn process_callback(wco: WidgetCallbackOut) 
 {
-    if !wco.event_name.is_some() {return}
-
-    let evt_name = match wco.event_name {
-        Some(name) => name,
-        None => panic!("event_name not found")
-    };
-
     let app_cbs = access_callbacks();
 
-    let callback_opt = app_cbs.callbacks.get(&(wco.id, evt_name.clone())).unwrap();
-       
+    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+
+    let callback_opt = match callback_present {
+        Some(cb) => cb,
+        None => return,
+    };
+
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Callback could not be found with id {}", wco.id),
+        None => panic!("Radio Callback could not be found with id {}", wco.id),
     };
-                  
+
+    let index = match wco.selected_index {
+        Some(idx) => idx,
+        None => panic!("Rado callback selected_index could not be found"),
+    };
+
+    let label = match wco.selected_label {
+        Some(lb) => lb,
+        None => panic!("Rado callback selected_label could not be found"),
+    };
+
     Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        evt_name.clone(),
-                                        (wco.selected_index, wco.selected_label),
-                                        wco.user_data
-                                        )
-                                ).unwrap();
-            } else {
-                callback.call1(py, (
-                                        wco.id.clone(),
-                                        evt_name.clone(),
-                                        (wco.selected_index, wco.selected_label), 
-                                        )
-                                ).unwrap();
-            } 
+        if wco.user_data.is_some() {
+            let user_data = match wco.user_data {
+                Some(ud) => ud,
+                None => panic!("Radio callback user_data not found."),
+            };
+            callback.call1(py, (
+                                    wco.id.clone(), 
+                                    (index, label),
+                                    user_data
+                                    )
+                            ).unwrap();
+        } else {
+            callback.call1(py, (
+                                    wco.id.clone(),
+                                    (index, label), 
+                                    )
+                            ).unwrap();
+        } 
     });
 
     drop(app_cbs);
