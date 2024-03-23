@@ -561,18 +561,24 @@ fn process_callback(wco: WidgetCallbackOut)
                 Some(ud) => ud,
                 None => panic!("DatePicker user_data in callback not found"),
             };
-            callback.call1(py, (
-                                    wco.id.clone(), 
-                                    wco.selected_date, 
-                                    user_data
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                                wco.id.clone(), 
+                                                                wco.selected_date, 
+                                                                user_data
+                                                                ));
+            match res {
+                Ok(_) => (),
+                Err(_) => panic!("DatePicker: 3 parameters (id, value, user_data) are required or possibly a non-fatal python error in this function."),
+            }
         } else {
-            callback.call1(py, (
-                                    wco.id.clone(),
-                                    wco.selected_date, 
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                                wco.id.clone(),
+                                                                wco.selected_date, 
+                                                                ));
+            match res {
+                Ok(_) => (),
+                Err(_) => panic!("InputText: 2 parameters (id, value) are required or possibly a non-fatal python error in this function."),
+            }
         } 
     });
 

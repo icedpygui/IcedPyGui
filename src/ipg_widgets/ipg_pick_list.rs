@@ -19,7 +19,7 @@ pub struct IpgPickList {
     pub show: bool,
     pub user_data: Option<PyObject>,
 
-    pub options: Vec<String>,
+    pub options: PyObject,
     pub placeholder: Option<String>,
     pub selected: Option<String>,
     pub width: Length,
@@ -38,7 +38,7 @@ impl IpgPickList {
         show: bool,
         user_data: Option<PyObject>,
 
-        options: Vec<String>,
+        options: PyObject,
         placeholder: Option<String>,
         selected: Option<String>,
         width: Length,
@@ -85,7 +85,9 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
         None => 16.0,
     };
 
-    let pl: Element<'_, PLMessage> = PickList::new(pick.options.clone(), 
+    let options =  convert_pyobject_vec_string(pick.options);
+
+    let pl: Element<'_, PLMessage> = PickList::new(options.clone(), 
                                             pick.selected.clone(), 
                                             PLMessage::OnSelect,
                                         )
@@ -108,10 +110,11 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
 
     match message {
         PLMessage::OnSelect(value) => {
-            wci.value_str = Some(value);
+            wci.value_str = Some(value.clone());
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;
             wco.event_name = "on_select".to_string();
+            wco.value_str = Some(value);
             process_callback(wco);
         },
     }
@@ -125,8 +128,8 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
     let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
 
     let callback_opt = match callback_present {
-    Some(cb) => cb,
-    None => return,
+        Some(cb) => cb,
+        None => return,
     };
 
     let callback = match callback_opt {
@@ -135,8 +138,8 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
     };
 
     let value = match wco.value_str {
-    Some(vl) => vl,
-    None => panic!("Picklist selected value could not be found."),
+        Some(vl) => vl,
+        None => panic!("Picklist selected value could not be found."),
     };
                    
     Python::with_gil(|py| {
@@ -145,21 +148,79 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
             Some(ud) => ud,
             None => panic!("PickList callback user_data not found."),
         };
-            callback.call1(py, (
-                                    wco.id.clone(), 
-                                    value, 
-                                    user_data
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                                wco.id.clone(), 
+                                                                value, 
+                                                                user_data
+                                                                ));
+            match res {
+                Ok(_) => (),
+                Err(_) => panic!("PickList: 3 parameters (id, value, user_data) are required or possibly a non-fatal python error in this function."),
+            }
         } else {
-            callback.call1(py, (
-                                    wco.id.clone(), 
-                                    value, 
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                                wco.id.clone(), 
+                                                                value, 
+                                                                ));
+            match res {
+                Ok(_) => (),
+                Err(_) => panic!("InputText: 2 parameters (id, value) are required or possibly a non-fatal python error in this function."),
+            }
         } 
     });
 
     drop(app_cbs); 
+
+ }
+
+
+ fn convert_pyobject_vec_string(options: PyObject) -> Vec<String> {
+
+    let items: Vec<String> = vec![];
+
+    Python::with_gil(|py| {
+
+        let res = options.extract::<Vec<bool>>(py);
+        if !res.is_err() {
+            return match res {
+                Ok(res) => {
+                    res.iter().map(|v| {
+                        if *v {
+                            "True".to_string()
+                        } else {
+                           "False".to_string()
+                        }
+                    }).collect()
+                },
+                Err(_) => panic!("Picklist could not extract List[bool]"),
+            }
+        }
+
+        let res = options.extract::<Vec<String>>(py);
+        if !res.is_err() {
+            return match res {
+                Ok(res) => res,
+                Err(_) => panic!("Picklist could not extract List[String]"),
+            } 
+        }
+
+        let res = options.extract::<Vec<i64>>(py);
+        if !res.is_err() { 
+            return match res {
+                Ok(res) => res.iter().map(|v| v.to_string()).collect(),
+                Err(_) => panic!("Picklist could not extract List[int]"),
+            } 
+        } 
+        
+        let res = options.extract::<Vec<f64>>(py);
+        if !res.is_err() { 
+            return match res {
+                Ok(res) => res.iter().map(|v| v.to_string()).collect(),
+                Err(_) => panic!("Picklist could not extract List[float]"),
+            } 
+        }
+
+        items
+    })
 
  }

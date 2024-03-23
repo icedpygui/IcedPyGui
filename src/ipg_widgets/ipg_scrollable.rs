@@ -106,18 +106,24 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     Some(ud) => ud,
                     None => panic!("Scrollable callback user_data not found."),
                 };
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        wco.scroll_pos.into_py_dict(py), 
-                                        user_data
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(), 
+                                                                    wco.scroll_pos.into_py_dict(py), 
+                                                                    user_data
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("Scrollable: 3 parameters (id, value, user_data) are required or possibly a non-fatal python error in this function."),
+                }
             } else {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        wco.scroll_pos.into_py_dict(py), 
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(), 
+                                                                    wco.scroll_pos.into_py_dict(py), 
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("Scrollable: 2 parameters (id, value,) are required or possibly a non-fatal python error in this function."),
+                }
             } 
     });
 

@@ -124,18 +124,24 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 Some(ud) => ud,
                 None => panic!("Slider callback user_data not found."),
             };
-            callback.call1(py, (
-                                    wco.id.clone(), 
-                                    value, 
-                                    user_data
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                                wco.id.clone(), 
+                                                                value, 
+                                                                user_data
+                                                                ));
+            match res {
+                Ok(_) => (),
+                Err(_) => panic!("Slider: 3 parameters (id, value, user_data) are required or possibly a non-fatal python error in this function."),
+            }
         } else {
-            callback.call1(py, (
-                                    wco.id.clone(), 
-                                    value, 
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                                wco.id.clone(), 
+                                                                value, 
+                                                                ));
+            match res {
+                Ok(_) => (),
+                Err(_) => panic!("InputText: 2 parameters (id, value) are required or possibly a non-fatal python error in this function."),
+            }
         } 
     });
 

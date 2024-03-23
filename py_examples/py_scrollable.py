@@ -130,13 +130,15 @@ class DemoScrollable:
 
         # The data in this case in a dictionary, check the docs or print data to 
         # determine the key, value of the data.
-    def on_scroll_v(self, id, name, data):
+    def on_scroll_v(self, id, data):
+        text = "\n".join("{}: {}".format(k, v) for k, v in data.items())
         self.ipg.update_item(self.cb_text_v, "content", 
-                             value=f"scrollable id = {id}\ncb name = {name}\ndata = {data}")
+                             value=f"scrollable id = {id}\n{text}")
     
-    def on_scroll_h(self, id, name, data):
+    def on_scroll_h(self, id, data):
+        text = "\n".join("{}: {}".format(k, v) for k, v in data.items())
         self.ipg.update_item(self.cb_text_h, "content", 
-                             value=f"scrollable id = {id}\ncb name = {name}\ndata = {data}")
+                             value=f"scrollable id = {id}\n{text}")
 
 
 ds = DemoScrollable()

@@ -195,7 +195,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     return wco
                 },
                 IpgWidgets::IpgPickList(pl) => {
-                    pl.selected = wci.selected;
+                    pl.selected = wci.value_str;
                     let mut wco = WidgetCallbackOut::default();
                     wco.user_data = pl.user_data.clone();
                     drop(state);

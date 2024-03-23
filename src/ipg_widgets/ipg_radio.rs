@@ -200,18 +200,25 @@ fn process_callback(wco: WidgetCallbackOut)
                 Some(ud) => ud,
                 None => panic!("Radio callback user_data not found."),
             };
-            callback.call1(py, (
-                                    wco.id.clone(), 
-                                    (index, label),
-                                    user_data
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                                wco.id.clone(), 
+                                                                (index, label),
+                                                                user_data
+                                                                ));
+            match res {
+                Ok(_) => (),
+                Err(_) => panic!("Radio: 3 parameters (id, value, user_data) are required or possibly a non-fatal python error in this function."),
+            }
         } else {
-            callback.call1(py, (
+            let res = callback.call1(py, (
                                     wco.id.clone(),
                                     (index, label), 
                                     )
-                            ).unwrap();
+                            );
+            match res {
+                Ok(_) => (),
+                Err(_) => panic!("Radio: 2 parameters (id, value) are required or possibly a non-fatal python error in this function."),
+            }
         } 
     });
 

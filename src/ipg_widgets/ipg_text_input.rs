@@ -99,24 +99,27 @@ pub fn text_input_callback(id: usize, message: TIMessage) {
            
     match message {
         TIMessage::OnInput(value) => {
-            wci.value_str = Some(value);
+            wci.value_str = Some(value.clone());
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
             wco.event_name = "on_input".to_string();
+            wco.value_str = Some(value);
             process_callback(wco);
         },
         TIMessage::OnSubmit(value) => {
-            wci.value_str = Some(value);
+            // wci.value_str = Some(value.clone());
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
             wco.event_name = "on_submit".to_string();
+            wco.value_str = Some(value);
             process_callback(wco);
         }
         TIMessage::OnPast(value) => {
-            wci.value_str = Some(value);
+            wci.value_str = Some(value.clone());
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
             wco.event_name = "on_paste".to_string();
+            wco.value_str = Some(value);
             process_callback(wco);
         }
             
@@ -150,18 +153,24 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 Some(ud) => ud,
                 None => panic!("TextInput callback user_data not found."),
             };
-            callback.call1(py, (
-                                    wco.id.clone(), 
-                                    value, 
-                                    user_data
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                            wco.id.clone(), 
+                                                            value, 
+                                                            user_data
+                                                            ));
+            match res {
+                Ok(_) => (),
+                Err(_) => panic!("InputText: 3 parameters (id, value, user_data) are required or possibly a non-fatal python error in this function."),
+            }
         } else {
-            callback.call1(py, (
-                                    wco.id.clone(), 
-                                    value, 
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                                wco.id.clone(), 
+                                                                value, 
+                                                                ));
+            match res {
+                Ok(_) => (),
+                Err(_) => panic!("InputText: 2 parameters (id, value) are required or possibly a non-fatal python error in this function."),
+            }
         } 
     });
 

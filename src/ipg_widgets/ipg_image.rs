@@ -171,7 +171,7 @@ fn process_callback(wco: WidgetCallbackOut)
         Some(cb) => cb,
         None => panic!("Image Callback could not be found with id {}", wco.id),
     };
-                  
+              
     if wco.event_name == "on_move".to_string() {
 
         let points = match wco.points {
@@ -185,18 +185,24 @@ fn process_callback(wco: WidgetCallbackOut)
                     Some(ud) => ud,
                     None => panic!("Image callback user_data not found."),
                 };
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        points.into_py_dict(py), 
-                                        user_data
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(), 
+                                                                    points.into_py_dict(py), 
+                                                                    user_data
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("Image: 3 parameter (id, points, user_data) are required or possibly a non-fatal python error in this function."),
+                }
             } else {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        points.into_py_dict(py), 
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(), 
+                                                                    points.into_py_dict(py), 
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("Image: 2 parameter (id, points) are required or possibly a non-fatal python error in this function."),
+                }
             } 
         });
 
@@ -207,16 +213,22 @@ fn process_callback(wco: WidgetCallbackOut)
                     Some(ud) => ud,
                     None => panic!("Image callback user_data not found."),
                 };
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        user_data
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(), 
+                                                                    user_data
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("Image: 2 parameter (id, user_data) are required or possibly a non-fatal python error in this function."),
+                }
             } else {
-                callback.call1(py, (
-                                        wco.id.clone(),  
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),  
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("Image: Only 1 parameter (id) is required or possibly a non-fatal python error in this function."),
+                }
             } 
         });
     }

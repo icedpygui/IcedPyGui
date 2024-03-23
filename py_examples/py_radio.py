@@ -4,14 +4,14 @@ from icedpygui.icedpygui import IPG
 ipg = IPG()
 
 
-def selected_radio_1(id, name, data, user_data):
+def selected_radio_1(id, data, user_data):
     ipg.update_item(rd_text_id_1, "content", 
-        f"Radio callback id = {id}, \n name = {name}, \n index = {data[0]}, label = {data[1]} \n user_data = {user_data}")
+        f"Radio callback id = {id}, \n index = {data[0]}, label = {data[1]} \n user_data = {user_data}")
 
 
-def selected_radio_2(id, name, data, user_data):
+def selected_radio_2(id, data, user_data):
     ipg.update_item(rd_text_id_2, "content", 
-        f"Radio callback id = {id}, \n name = {name}, \n index = {data[0]}, label = {data[1]} \n user_data = {user_data}")
+        f"Radio callback id = {id}, \n index = {data[0]}, label = {data[1]} \n user_data = {user_data}")
 
 
 

@@ -160,18 +160,24 @@ fn process_callback(wco: WidgetCallbackOut)
                     Some(ud) => ud,
                     None => panic!("Checkbox callback user_Data could not be found"),
                 };
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        wco.is_checked, 
-                                        user_data
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(), 
+                                                                    wco.is_checked, 
+                                                                    user_data
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("Checkbox: 3 parameters (id, value, user_data) are required or possibly a non-fatal python error in this function."),
+                }
             } else {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        wco.is_checked 
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(), 
+                                                                    wco.is_checked 
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("Checkbox: 2 parameters (id, value) are required or possibly a non-fatal python error in this function."),
+                }
             } 
     });
 

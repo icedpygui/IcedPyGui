@@ -185,7 +185,8 @@ fn process_callback(wco: WidgetCallbackOut)
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = 
+                                app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -203,26 +204,32 @@ fn process_callback(wco: WidgetCallbackOut)
             Some(pts) => pts,
             None => panic!("Points not found"),
         };
-
         Python::with_gil(|py| {
 
             if wco.user_data.is_some() {
                 let user_data = match wco.user_data {
                     Some(dt) => dt,
-                    None => panic!("SelectableText user_data not found"),
+                    None => panic!("SelectableText: user_data not found"),
                 };
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        points.into_py_dict(py), 
-                                        user_data
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(), 
+                                                                    points.into_py_dict(py), 
+                                                                    user_data
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("SelectableText: 3 parameters (id, points, user_data) are required or possibly a non-fatal python error in this function."),
+                }
             } else {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        points.into_py_dict(py), 
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(), 
+                                                                    points.into_py_dict(py), 
+                                                                    )
+                                                                    );
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("SelectableText 2 parameters (id, points) are required or possibly a non-fatal python error in this function."),
+                }
             } 
         });
 
@@ -233,17 +240,24 @@ fn process_callback(wco: WidgetCallbackOut)
                     Some(dt) => dt,
                     None => panic!("SelectableText user_data not found"),
                 };
-                callback.call1(py, (
-                                        wco.id.clone(),
-                                        user_data
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),
+                                                                    user_data
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("SelectableText: 2 parameters (id, user_data) are required or possibly a non-fatal python error in this function."),
+                }                                                
             } else {
-                callback.call1(py, (
-                                        wco.id.clone(), 
-                                        )
-                                ).unwrap();
-            } 
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),  
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("SelectableText: Only 1 parameter (id) is required or possibly a non-fatal python error in this function."),
+                }
+            }
+            
         });
     }
     

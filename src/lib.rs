@@ -1161,7 +1161,7 @@ fn add_image(&mut self,
                         ))]
     fn add_pick_list(&mut self,
                         parent_id: String,
-                        options: Vec<String>,
+                        options: PyObject,
                         // **above required
                         gen_id: Option<usize>,
                         on_select: Option<PyObject>,

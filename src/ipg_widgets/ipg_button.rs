@@ -180,16 +180,22 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     Some(ud) => ud,
                     None => panic!("User Data could not be found in Button callback"),
                 };
-                callback.call1(py, (
-                                        wco.id.clone(),  
-                                        user_data
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),  
+                                                                    user_data
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("Button: 2 parameters (id, user_data) are required or possibly a non-fatal python error in this function."),
+                }
             } else {
-                callback.call1(py, (
-                                        wco.id.clone(),  
-                                        )
-                                ).unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),  
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(_) => panic!("Button: 1 parameter (id) is required or possibly a non-fatal python error in this function."),
+                }
             } 
     });
     

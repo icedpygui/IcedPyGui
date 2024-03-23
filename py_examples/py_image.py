@@ -4,19 +4,19 @@ from icedpygui.icedpygui import IPG
 ipg = IPG()
 
 
-def image_selected(id, name):
+def image_selected(id):
     index = image_ids.index(id)
     ipg.update_item(text_ids[index], "content", "You Pressed Me!")
 
 
-def on_mouse_move(id, name, point):
+def on_mouse_move(id, point):
     index = image_ids.index(id)
     x = '{:{}.{}}'.format(point.get('x'), 10, 4)
     y = '{:{}.{}}'.format(point.get('y'), 10, 4)
     ipg.update_item(text_points[index], "content", f"x={x}\ny={y}\n")
 
 
-def on_mouse_exit(id, name):
+def on_mouse_exit(id):
     index = image_ids.index(id)
     ipg.update_item(text_points[index], "content", "Point")
 
