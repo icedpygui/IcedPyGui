@@ -1,5 +1,6 @@
 from icedpygui import IPG, IpgButtonStyles
-from icedpygui import IpgButtonArrows
+from icedpygui import IpgButtonArrows, IpgButtonUpdate
+from icedpygui import IpgTextUpdate
 
 
 class ButtonDemo:
@@ -146,9 +147,9 @@ class ButtonDemo:
         # some of the issure with mixed list are not seen.
         #  The list of all the ids were stored and each button can be changed based on their id.
         for id in user_data:
-            self.ipg.update_item(id, "corner_radius", float(value))
+            self.ipg.update_item(id, IpgButtonUpdate.CornerRadius, float(value))
 
-        self.ipg.update_item(self.text_id, "content", f"Slider Value {value}")
+        self.ipg.update_item(self.text_id, IpgTextUpdate.Content, f"Slider Value {value}")
 
     def button_pressed(self, id, user_data):
         # This is a callback that occurs when the button is pressed
@@ -157,10 +158,7 @@ class ButtonDemo:
         #  THe user_data_str is a list of any string that the user wants to use.
         #  In this case, it was just the name of the button style used in the value_str below.
 
-        self.ipg.update_item(self.btn_info, "content", f"Last button pressed was {user_data}")
-
-    def arrow_selected(self, id, name):
-        print("UpArrow")
+        self.ipg.update_item(self.btn_info, IpgTextUpdate.Content, f"Last button pressed was {user_data}")
 
 
 demo = ButtonDemo()

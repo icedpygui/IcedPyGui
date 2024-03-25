@@ -312,7 +312,6 @@ pub fn try_extract_button_update(update_obj: PyObject) -> IpgButtonUpdate {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgButtonUpdate>(py);
-
         match res {
             Ok(update) => update,
             Err(_) => panic!("Button update extraction failed"),

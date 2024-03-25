@@ -42,7 +42,7 @@ use ipg_widgets::ipg_selectable_text::IpgSelectableText;
 use ipg_widgets::ipg_slider::IpgSlider;
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_table::IpgTable;
-use ipg_widgets::ipg_text::{text_item_update, IpgText};
+use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextUpdate};
 use ipg_widgets::ipg_text_editor::IpgTextEditor;
 use ipg_widgets::ipg_text_input::IpgTextInput;
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
@@ -915,7 +915,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, label="Set Color".to_string(), 
-                        id=None, on_submit=None, show=false, 
+                        id=None, on_submit=None, show=true, 
                         start_up_color=[0.5, 0.2, 0.7, 1.0], 
                         width=None, height=None, width_fill=false, height_fill=false,
                         padding=vec![10.0], corner_radius=0.0, 
@@ -1989,8 +1989,8 @@ fn add_image(&mut self,
                 drop(state);
             },
             IpgWidgets::IpgColorPicker(cp) => {
-                // color_picker_item_update(cp, item, value);
-                // drop(state);
+                color_picker_item_update(cp, item, value);
+                drop(state);
             },
             IpgWidgets::IpgDatePicker(dp) => {
                 // date_picker_item_update(dp, item, value);
@@ -2010,8 +2010,8 @@ fn add_image(&mut self,
             IpgWidgets::IpgSpace(_wid) => (),
             IpgWidgets::IpgTable(_wid) => (),
             IpgWidgets::IpgText(txt) => {
-                // text_item_update(txt, item, value);
-                // drop(state);
+                text_item_update(txt, item, value);
+                drop(state);
             },
             IpgWidgets::IpgTextEditor(_wid) => (),
             IpgWidgets::IpgTextInput(_wid) => (),
@@ -2150,6 +2150,7 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IpgCardStyles>()?;
     m.add_class::<IpgCardUpdate>()?;
     m.add_class::<IpgCheckboxUpdate>()?;
+    m.add_class::<IpgTextUpdate>()?;
     Ok(())
 }
 

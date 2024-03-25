@@ -6,7 +6,7 @@ use super::callbacks::{WidgetCallbackIn,
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 
-use iced::widget::{Button, Row, Text};
+use iced::widget::{Button, Row, Space, Text};
 use iced::{Alignment, Color, Element, Length, Padding, theme,};
 
 use iced_aw::ColorPicker;
@@ -71,7 +71,9 @@ pub enum ColPikMessage {
 
 pub fn construct_color_picker(cp: IpgColorPicker) -> Element<'static, Message> {
 
-    // let btn_label: Element<Message> = Text::new("Set Color").into();
+   if !cp.show {
+        return Space::new(0.0, 0.0).into()
+   }
 
     let style = get_button_style_from_str(cp.style.clone());
     
@@ -184,7 +186,7 @@ fn process_callback(wco: WidgetCallbackOut)
 
 
 pub fn color_picker_item_update(_cp: &mut IpgColorPicker,
-                                _item: String,
+                                _item: PyObject,
                                 _items: PyObject,
                                 ) 
 {

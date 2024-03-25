@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgCheckboxUpdate
+from icedpygui import IPG, IpgCheckboxUpdate, IpgTextUpdate
 
 
 class CheckboxDemo:
@@ -83,9 +83,10 @@ class CheckboxDemo:
             # the id of the callback is the id to use for updating.
             self.ipg.update_item(self.chk_main, IpgCheckboxUpdate.Label, "Check Me Again!!!")
 
-            self.ipg.update_item(self.text_id, "content", 
+            self.ipg.update_item(self.text_id, IpgTextUpdate.Content, 
                                             f"is_checked = {is_checked}")
-            self.ipg.update_item(self.text_user_data_id, "content", value=f"user data = {user_data}")
+            self.ipg.update_item(self.text_user_data_id, IpgTextUpdate.Content, 
+                                            value=f"user data = {user_data}")
 
             # changing the icon to a x
             self.ipg.update_item(self.checked_id, IpgCheckboxUpdate.IconX, True)
@@ -125,15 +126,18 @@ class CheckboxDemo:
 
             # Hide the checkbox
             self.ipg.update_item(self.show_id, IpgCheckboxUpdate.Show, False)
-            self.ipg.update_item(self.hide_text, "content", "The checkbox above above me is hidden")
+            self.ipg.update_item(self.hide_text, IpgTextUpdate.Content, 
+                                 "The checkbox above above me is hidden")
 
         if not is_checked:
 
             self.ipg.update_item(self.chk_main, IpgCheckboxUpdate.Label, "Check Me!!!")
         
-            self.ipg.update_item(self.text_id, "content", "The callback name is show here")
+            self.ipg.update_item(self.text_id, IpgTextUpdate.Content, 
+                                                    "The callback name is show here")
             
-            self.ipg.update_item(self.text_user_data_id, "content", value="The callback user data will show here")
+            self.ipg.update_item(self.text_user_data_id, IpgTextUpdate.Content, 
+                                        value="The callback user data will show here")
 
             # changing the icon to a check
             self.ipg.update_item(self.checked_id, IpgCheckboxUpdate.IconX, False)
@@ -168,10 +172,9 @@ class CheckboxDemo:
 
             # TODO Changing the style
             
-
             # Hide the checkbox
             self.ipg.update_item(self.show_id, IpgCheckboxUpdate.Show, True)
-            self.ipg.update_item(self.hide_text, "content", "")
+            self.ipg.update_item(self.hide_text, IpgTextUpdate.Content, "")
 
 demo = CheckboxDemo()
 demo.setup_gui()
