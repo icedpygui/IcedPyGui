@@ -366,6 +366,7 @@ class IPG:
                     head, 
                     body, 
                     foot: str=None,
+                    id: int=None,
                     is_open: bool=True, 
                     close_size: float=0.0, 
                     on_close=None,
@@ -1109,7 +1110,7 @@ class IpgButtonUpdate:
     Height=0,
     HeightFill=0,
     Label=0,
-    Padding = 0,
+    Padding=0,
     Show=0,
     Style=0,
     Width=0,
@@ -1133,7 +1134,22 @@ class IpgCardUpdate:
     Foot=0,
     Head=0,
     IsOpen=0,
-    Style=0, 
+    Style=0,
+
+class IpgCheckboxUpdate:
+    IconSize=0,
+    IconX=0,
+    IsChecked=0,
+    Label=0,
+    Show=0,
+    Size=0,
+    Spacing=0,
+    Style=0,
+    TextLineHeight=0,
+    TextShaping=0,
+    TextSize=0,
+    Width=0,
+    WidthFill=0,
 
 class IpgButtonArrows:
     ArrowBarLeft=0

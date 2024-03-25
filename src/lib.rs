@@ -23,7 +23,7 @@ use crate::iced_widgets::scrollable::Direction;
 
 use ipg_widgets::ipg_button::{button_item_update, try_extract_button_arrow, try_extract_button_style, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonUpdate};
 use ipg_widgets::ipg_card::{card_item_update, try_extract_card_style, IpgCard, IpgCardStyles, IpgCardUpdate};
-use ipg_widgets::ipg_checkbox::{IpgCheckBox, checkbox_item_update};
+use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxUpdate};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::IpgColumn;
 use ipg_widgets::ipg_container::IpgContainer;
@@ -1985,9 +1985,8 @@ fn add_image(&mut self,
                 drop(state);
             },
             IpgWidgets::IpgCheckBox(chk) => {
-                // checkbox_item_update(chk, item, value);
-                // drop(state);
-                return
+                checkbox_item_update(chk, item, value);
+                drop(state);
             },
             IpgWidgets::IpgColorPicker(cp) => {
                 // color_picker_item_update(cp, item, value);
@@ -2150,6 +2149,7 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IpgButtonUpdate>()?;
     m.add_class::<IpgCardStyles>()?;
     m.add_class::<IpgCardUpdate>()?;
+    m.add_class::<IpgCheckboxUpdate>()?;
     Ok(())
 }
 

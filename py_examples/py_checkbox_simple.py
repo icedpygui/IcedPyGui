@@ -1,13 +1,13 @@
-from icedpygui import IPG
+from icedpygui import IPG, IpgCheckboxUpdate
 
 
 ipg = IPG()
 
 x_id = ipg.generate_id()
-cont_id = ipg.generate_id()
+
 
 def on_toggle(id, data, user_data):
-    ipg.update_item(x_id, "icon_x",  data)
+    ipg.update_item(x_id, IpgCheckboxUpdate.IconX,  data)
 
 
 
@@ -25,7 +25,7 @@ ipg.add_checkbox(parent_id="col", label="Check Me!!!",
                                                 on_toggle=on_toggle,
                                                 user_data="Some string data")
 
-ipg.add_checkbox(parent_id="col", gen_id=x_id, label="Check Me!!!", is_checked=True)
+ipg.add_checkbox(parent_id="col", id=x_id, label="Check Me!!!", is_checked=True)
 
 
 ipg.start_session()
