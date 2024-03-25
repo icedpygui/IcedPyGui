@@ -1996,7 +1996,10 @@ fn add_image(&mut self,
                 date_picker_item_update(dp, item, value);
                 drop(state);
             },
-            IpgWidgets::IpgImage(_img) => (),
+            IpgWidgets::IpgImage(_img) => {
+                image_item_update(img, item, value);
+                drop(state);
+            },
             IpgWidgets::IpgMenuBar(_wid) => (),
             IpgWidgets::IpgMenuItem(_wid) => (),
             IpgWidgets::IpgPickList(_wid) => (),

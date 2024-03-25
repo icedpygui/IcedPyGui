@@ -236,3 +236,40 @@ fn process_callback(wco: WidgetCallbackOut)
     drop(app_cbs);   
 
 }
+
+
+pub enum IpgImageUpdate {
+    Height,
+    HeightFill,
+    ImagePath,
+    Padding,
+    Show,
+    Width,
+    WidthFill,
+}
+
+pub fn image_item_update((img: &mut IpgImage,
+                            item: PyObject,
+                            value: PyObject,
+                            )) 
+{
+
+    let update = try_extract_button_update(item);
+
+    match update {
+        IpgImageUpdate::Height -> {
+            img.
+        }
+    }
+}
+
+pub fn try_extract_button_update(update_obj: PyObject) -> IpgImageUpdate {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgImageUpdate>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Image update extraction failed"),
+        }
+    })
+}
