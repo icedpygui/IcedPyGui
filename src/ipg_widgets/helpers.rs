@@ -5,8 +5,9 @@ use iced::window;
 use iced::{Alignment, alignment::{Horizontal, Vertical}, Length, Padding};
 use iced::widget::text::{Shaping, LineHeight};
 
-
 use crate::iced_widgets::scrollable::{Direction, Properties};
+
+use pyo3::{PyObject, Python};
 
 pub fn check_for_dup_container_ids(id: usize, container_id: Option<String>) {
 
@@ -244,4 +245,44 @@ fn convert_to_len_two(value: usize) -> String {
     } else {
         value.to_string()
     }
+}
+
+pub fn try_extract_f64(value: PyObject) -> f64 {
+    Python::with_gil(|py| {
+        let res = value.extract::<f64>(py);
+        match res {
+            Ok(val) => return val,
+            Err(_) => panic!("Unable to extract python float"),
+        }
+    })  
+}
+
+pub fn try_extract_vec_f64(value: PyObject) -> Vec<f64> {
+    Python::with_gil(|py| {
+        let res = value.extract::<Vec<f64>>(py);
+        match res {
+            Ok(val) => return val,
+            Err(_) => panic!("Unable to extract python list[float]"),
+        }
+    })  
+}
+
+pub fn try_extract_string(value: PyObject) -> String {
+    Python::with_gil(|py| {
+        let res = value.extract::<String>(py);
+        match res {
+            Ok(val) => return val,
+            Err(_) => panic!("Unable to extract python str"),
+        }
+    })  
+}
+
+pub fn try_extract_boolean(value: PyObject) -> bool {
+    Python::with_gil(|py| {
+        let res = value.extract::<bool>(py);
+        match res {
+            Ok(val) => return val,
+            Err(_) => panic!("Unable to extract python bool"),
+        }
+    })  
 }

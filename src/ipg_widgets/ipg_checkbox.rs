@@ -1,6 +1,7 @@
 #![allow(unused_imports)]
 
-use crate::{access_callbacks, UpdateItems};
+use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_f64, try_extract_string};
+use crate::access_callbacks;
 use crate::app;
 use super::helpers::{get_width, get_shaping};
 use super::callbacks::{WidgetCallbackIn, 
@@ -188,62 +189,41 @@ fn process_callback(wco: WidgetCallbackOut)
 
 pub fn checkbox_item_update(chk: &mut IpgCheckBox,
                             item: String,
-                            items: UpdateItems,
+                            value: PyObject,
                             )
 {
     if item == "icon_size".to_string() {
-        chk.icon_size = match items.value_f64 {
-            Some(size) => size as f32,
-            None => panic!("A float value is required to update icon_size for the checkbox.")
-        };
+        chk.icon_size = try_extract_f64(value) as f32;
         return
     }
 
     if item == "icon_x".to_string() {
-        chk.icon_x = match items.value_bool {
-            Some(x) => x,
-            None => panic!("A bool value is required to update icon_x for the checkbox.")
-        };
+        chk.icon_x = try_extract_boolean(value);
         return
     }
 
     if item == "is_checked".to_string() {
-        chk.is_checked = match items.value_bool {
-            Some(checked) => checked,
-            None => panic!("A bool value is required to update is_checked for the checkbox.")
-        };
+        chk.is_checked = try_extract_boolean(value);
         return
     }
 
     if item == "label".to_string() {
-        chk.label = match items.value_str {
-            Some(str) => str,
-            None => panic!("A string value is needed to update the button label.")
-        };
+        chk.label = try_extract_string(value);
         return
     }
 
     if item == "show".to_string() {
-        chk.show = match items.value_bool {
-            Some(sh) => sh,
-            None => panic!("Show value must be either True or False.")
-        };
+        chk.show = try_extract_boolean(value);
         return
     }
 
     if item == "size".to_string() {
-        chk.size = match items.value_f64 {
-            Some(sz) => sz as f32,
-            None => panic!("A float is needed to update the size for the checkbox.")
-        };
+        chk.size = try_extract_f64(value) as f32;
         return
     }
 
     if item == "spacing".to_string() {
-        chk.spacing = match items.value_f64 {
-            Some(sp) => sp as f32,
-            None => panic!("A float is needed to update the spacing for the checkbox")
-        };
+        chk.spacing = try_extract_f64(value) as f32;
         return
     }
 
@@ -255,42 +235,31 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     // }
 
     if item == "text_line_height".to_string() {
-        chk.text_line_height = match items.value_f64 {
-            Some(tlh) => LineHeight::Relative(tlh as f32),
-            None => panic!("A float is needed to update the text_line_height for the checkbox")
-        };
+        let tlh = try_extract_f64(value);
+        chk.text_line_height =  LineHeight::Relative(tlh as f32);
         return
     }
 
     if item == "text_shaping".to_string() {
-        chk.text_shaping = match items.value_str {
-            Some(ts) => get_shaping(ts),
-            None => panic!("A string = 'basic' or 'advanced' is needed for text_shaping for the checkbox")
-        };
+        let ts =try_extract_string(value);
+        chk.text_shaping = get_shaping(ts); 
         return
     }
 
     if item == "text_size".to_string() {
-        chk.text_size = match items.value_f64 {
-            Some(ts) => ts as f32,
-            None => panic!("A float is needed to update the text_size for the checkbox")
-        };
+        chk.text_size = try_extract_f64(value) as f32;
         return
     }
 
     if item == "width".to_string() {
-        chk.width = match items.value_f64 {
-            Some(wd) => get_width(Some(wd as f32), false),
-            None => Length::Shrink,
-        };
+        let wd = try_extract_f64(value);
+        chk.width =  get_width(Some(wd as f32), false);
         return
     }
 
     if item == "width_fill".to_string() {
-        chk.width = match items.value_bool {
-            Some(wd) => get_width(None, wd),
-            None => panic!("A boolean is needed to update the button width_fill.")
-        };
+        let wd = try_extract_boolean(value);
+        chk.width =  get_width(None, wd);
         return
     }
 

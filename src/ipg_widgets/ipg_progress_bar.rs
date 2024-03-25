@@ -1,7 +1,10 @@
 
 use iced::{Element, Length};
 use iced::widget::ProgressBar;
-use crate::{app, UpdateItems};
+use pyo3::PyObject;
+use crate::app;
+
+use super::helpers::try_extract_f64;
 
 
 #[derive(Debug, Clone)]
@@ -59,15 +62,12 @@ pub fn construct_progress_bar(bar: &IpgProgressBar) -> Element<'static, app::Mes
 
 pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
                                 item: String,
-                                items: UpdateItems,
+                                value: PyObject,
                                 )
 {
 
     if item == "value".to_string() {
-        pb.value = match items.value_f64 {
-            Some(val) => val as f32,
-            None => panic!("A float value is needed to update the progress bar"),
-        };
+        pb.value = try_extract_f64(value) as f32;
     }
     
 }

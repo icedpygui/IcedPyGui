@@ -42,7 +42,7 @@ use ipg_widgets::ipg_selectable_text::IpgSelectableText;
 use ipg_widgets::ipg_slider::IpgSlider;
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_table::IpgTable;
-use ipg_widgets::ipg_text::IpgText;
+use ipg_widgets::ipg_text::{text_item_update, IpgText};
 use ipg_widgets::ipg_text_editor::IpgTextEditor;
 use ipg_widgets::ipg_text_input::IpgTextInput;
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
@@ -702,17 +702,17 @@ impl IPG {
 
     }
     
-    #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
+    #[pyo3(signature = (parent_id, label, id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
                         height_fill=false, padding=vec![10.0], corner_radius=15.0, 
-                        style=None, arrow_type=None, user_data=None, 
+                        style=None, arrow_style=None, user_data=None, 
                         show=true, 
                         ))]
     fn add_button(&mut self,
                         parent_id: String,
                         label: String,
                         // ** above required
-                        gen_id: Option<usize>,
+                        id: Option<usize>,
                         on_press: Option<PyObject>,
                         width: Option<f32>,
                         height: Option<f32>,
@@ -721,12 +721,12 @@ impl IPG {
                         padding: Vec<f64>,
                         corner_radius: f32,
                         style: Option<PyObject>,
-                        arrow_type: Option<PyObject>,
+                        arrow_style: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         if on_press.is_some() {
             add_callback_to_mutex(id, "on_press".to_string(), on_press);
@@ -737,22 +737,22 @@ impl IPG {
 
         let padding = get_padding(padding);
 
-        let mut style_opt: Option<String> = None;
+        // iced button style has to be converted to a string
+        // because in can't be put into the mutex.
+        let style_opt = match style {
+            Some(st) => try_extract_button_style(st),
+            None => None,
+        };
 
-        let mut arrow_opt: Option<String> = None;
+        let mut arrow = None;
+        if arrow_style.is_some() {
+            arrow = match arrow_style {
+                Some(ar) => try_extract_button_arrow(ar),
+                None => panic!("Button: Construct - Could not extract arrow_style."),
+            }
 
-        Python::with_gil(|py| {
-            
-            style_opt = match style {
-                Some(st) => try_extract_button_style(st, py),
-                None => None,
-            };
-
-            arrow_opt = match arrow_type {
-                Some(ar) => try_extract_button_arrow(ar, py),
-                None => None,
-            };
-        });
+        }
+ 
         
         set_state_of_widget(id, parent_id);
 
@@ -768,7 +768,7 @@ impl IPG {
                                                 padding,
                                                 corner_radius,
                                                 style_opt,
-                                                arrow_type,                              
+                                                arrow,                              
                                                 )));
         
         Ok(id)
@@ -776,7 +776,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, head, body, is_open=true, minmax_id=None, foot=None, 
-                        gen_id=None, close_size=20.0, on_close=None, 
+                        id=None, close_size=20.0, on_close=None, 
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_width=f32::INFINITY, max_height=f32::INFINITY, 
                         padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
@@ -789,7 +789,7 @@ impl IPG {
                 is_open: bool,
                 minmax_id: Option<usize>,
                 foot: Option<String>,
-                gen_id: Option<usize>,
+                id: Option<usize>,
                 close_size: f32,
                 on_close: Option<PyObject>,
                 width: Option<f32>,
@@ -805,7 +805,7 @@ impl IPG {
                 user_data: Option<PyObject>, 
                 ) -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         if on_close.is_some() {
             add_callback_to_mutex(id, "on_close".to_string(), on_close);
@@ -855,7 +855,7 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (parent_id, gen_id=None, on_toggle=None, is_checked=false, 
+    #[pyo3(signature = (parent_id, id=None, on_toggle=None, is_checked=false, 
                         label="".to_string(), width=None, width_fill=false, 
                         size=16.0, spacing=20.0, text_line_height=1.3, 
                         text_shaping="basic".to_string(),text_size=16.0, icon_x=false, 
@@ -864,7 +864,7 @@ impl IPG {
     fn add_checkbox(&mut self,
                         parent_id: String,
                         // ** above required
-                        gen_id: Option<usize>,
+                        id: Option<usize>,
                         on_toggle: Option<PyObject>,
                         is_checked: bool,
                         label: String,
@@ -882,7 +882,7 @@ impl IPG {
                         style: Option<String>,
                         ) -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         if on_toggle.is_some() {
             add_callback_to_mutex(id, "on_toggle".to_string(), on_toggle);
@@ -920,7 +920,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, label="Set Color".to_string(), 
-                        gen_id=None, on_submit=None, show=false, 
+                        id=None, on_submit=None, show=false, 
                         start_up_color=[0.5, 0.2, 0.7, 1.0], 
                         width=None, height=None, width_fill=false, height_fill=false,
                         padding=vec![10.0], corner_radius=0.0, 
@@ -931,7 +931,7 @@ impl IPG {
                     parent_id: String,
                     // ** above required
                     label: String,
-                    gen_id: Option<usize>,
+                    id: Option<usize>,
                     on_submit: Option<PyObject>,
                     show: bool,
                     start_up_color: [f32; 4],
@@ -945,7 +945,7 @@ impl IPG {
                     user_data: Option<PyObject>,
                     ) -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         if on_submit.is_some() {
             add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
@@ -983,7 +983,7 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (parent_id, label="Calendar".to_string(), gen_id=None,
+    #[pyo3(signature = (parent_id, label="Calendar".to_string(), id=None,
                         size_factor=1.0, padding=vec![5.0], on_submit=None, 
                         user_data=None, show=false,
                         ))]
@@ -991,7 +991,7 @@ impl IPG {
                         parent_id: String,
                         // ** above required
                         label: String,
-                        gen_id: Option<usize>,
+                        id: Option<usize>,
                         size_factor: f32,
                         padding: Vec<f64>,
                         on_submit: Option<PyObject>,
@@ -999,7 +999,7 @@ impl IPG {
                         show: bool,
                         ) -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         if size_factor < 1.0 {
             panic!("Size factor for date picker must be > 1.0")
@@ -1026,7 +1026,7 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, image_path, gen_id=None, 
+    #[pyo3(signature = (parent_id, image_path, id=None, 
                         width=None, width_fill=false, 
                         height=None, height_fill=false, 
                         padding=vec![5.0], on_press=None, on_release=None,
@@ -1039,7 +1039,7 @@ fn add_image(&mut self,
                     parent_id: String,
                     image_path: String,
                     // above required
-                    gen_id: Option<usize>,
+                    id: Option<usize>,
                     width: Option<f32>,
                     width_fill: bool,
                     height: Option<f32>,
@@ -1058,7 +1058,7 @@ fn add_image(&mut self,
                     show: bool,
                     ) -> PyResult<usize>
 {
-    let id = self.get_id(gen_id);
+    let id = self.get_id(id);
 
     if on_press.is_some() {
         add_callback_to_mutex(id, "on_press".to_string(), on_press);
@@ -1118,14 +1118,14 @@ fn add_image(&mut self,
     Ok(id)
 }
 
-    #[pyo3(signature = (parent_id, items, gen_id=None))]
+    #[pyo3(signature = (parent_id, items, id=None))]
     fn add_menu_bar(&mut self, 
                             parent_id: String, 
                             items: Vec<String>,
-                            gen_id: Option<usize> 
+                            id: Option<usize> 
                         ) -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         set_state_of_widget(id, parent_id);
 
@@ -1139,14 +1139,14 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, item, gen_id=None))]
+    #[pyo3(signature = (parent_id, item, id=None))]
     fn add_menu_item(&mut self,
                             parent_id: String, 
                             item: String, 
-                            gen_id: Option<usize>
+                            id: Option<usize>
                         ) -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         set_state_of_widget(id, parent_id);
 
@@ -1160,7 +1160,7 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, options, gen_id=None, on_select=None, 
+    #[pyo3(signature = (parent_id, options, id=None, on_select=None, 
                         width=None, width_fill=false, padding=vec![5.0],  
                         placeholder=None, selected=None, text_size=None, 
                         text_line_height=1.3, text_shaping="basic".to_string(), 
@@ -1170,7 +1170,7 @@ fn add_image(&mut self,
                         parent_id: String,
                         options: PyObject,
                         // **above required
-                        gen_id: Option<usize>,
+                        id: Option<usize>,
                         on_select: Option<PyObject>,
                         width: Option<f32>,
                         width_fill: bool,
@@ -1185,7 +1185,7 @@ fn add_image(&mut self,
                     ) -> PyResult<usize>
     {
 
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         if on_select.is_some() {
             add_callback_to_mutex(id, "on_select".to_string(), on_select);
@@ -1221,7 +1221,7 @@ fn add_image(&mut self,
     }
 
     #[pyo3(signature = (parent_id, min, max, value,
-                        gen_id=None, width=None, height=Some(16.0), 
+                        id=None, width=None, height=Some(16.0), 
                         width_fill=true, height_fill=false,
                         show=true, 
                         ))]
@@ -1231,7 +1231,7 @@ fn add_image(&mut self,
                             max: f32,
                             value: f32,
                             // **above required
-                            gen_id: Option<usize>,
+                            id: Option<usize>,
                             width: Option<f32>,
                             height: Option<f32>,
                             width_fill: bool,
@@ -1240,7 +1240,7 @@ fn add_image(&mut self,
                             ) -> PyResult<usize> 
     {
 
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         let width = get_width(width, width_fill);
         let height: Length = get_height(height, height_fill);
@@ -1263,7 +1263,7 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (parent_id, labels, gen_id=None,
+    #[pyo3(signature = (parent_id, labels, id=None,
                         direction="vertical".to_string(), 
                         spacing= 10.0, padding=DEFAULT_PADDING.to_vec(), 
                         width=None, width_fill=false,
@@ -1276,7 +1276,7 @@ fn add_image(&mut self,
                     parent_id: String,
                     labels: Vec<String>,
                     //**above required
-                    gen_id: Option<usize>,
+                    id: Option<usize>,
                     direction: String,
                     spacing: f32,
                     padding: Vec<f64>,
@@ -1294,7 +1294,7 @@ fn add_image(&mut self,
                     ) -> PyResult<usize>
     {
 
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         let direction = match direction.as_str() {
             "horizontal" => RadioDirection::Horizontal,
@@ -1350,7 +1350,7 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (parent_id, text, gen_id=None, on_press=None, on_release=None, 
+    #[pyo3(signature = (parent_id, text, id=None, on_press=None, on_release=None, 
                         on_right_press=None, on_right_release=None, on_middle_press=None, 
                         on_middle_release=None, on_move=None, on_enter=None, on_exit=None, 
                         width=None, height=None, width_fill=false, height_fill=false, 
@@ -1362,7 +1362,7 @@ fn add_image(&mut self,
                             parent_id: String,
                             text: String,
                             // ** above required
-                            gen_id: Option<usize>,
+                            id: Option<usize>,
                             on_press: Option<PyObject>,
                             on_release: Option<PyObject>,
                             on_right_press: Option<PyObject>,
@@ -1386,7 +1386,7 @@ fn add_image(&mut self,
                             ) -> PyResult<usize> 
     {
     
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         let content = text.clone();
 
@@ -1460,7 +1460,7 @@ fn add_image(&mut self,
     }
 
     #[pyo3(signature = (parent_id, min, max, step, value, 
-                        gen_id=None, width=None, height=None, 
+                        id=None, width=None, height=None, 
                         width_fill=false, on_change=None, 
                         on_release=None, user_data=None, show=true, 
                         ))]
@@ -1470,7 +1470,7 @@ fn add_image(&mut self,
                         max: f32,
                         step: f32,
                         value: f32,
-                        gen_id: Option<usize>,
+                        id: Option<usize>,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
@@ -1481,7 +1481,7 @@ fn add_image(&mut self,
                         ) -> PyResult<usize> 
         {
 
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         if on_change.is_some() {
             add_callback_to_mutex(id, "on_change".to_string(), on_change);
@@ -1515,11 +1515,11 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, gen_id=None, width=None, height=None, 
+    #[pyo3(signature = (parent_id, id=None, width=None, height=None, 
                         width_fill=false, height_fill=false))]
     fn add_space(&mut self,
                         parent_id: String,
-                        gen_id: Option<usize>,
+                        id: Option<usize>,
                         width: Option<f32>, 
                         height: Option<f32>,
                         width_fill: bool,
@@ -1527,7 +1527,7 @@ fn add_image(&mut self,
                     ) -> PyResult<usize>
     {
 
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
@@ -1546,7 +1546,7 @@ fn add_image(&mut self,
     } 
 
     #[pyo3(signature = (parent_id, title, data, width, height,
-                        gen_id=None, callback=None, column_widths=vec![], 
+                        id=None, callback=None, column_widths=vec![], 
                         show=true, user_data=None))]
     fn add_table(&mut self,
                     parent_id: String,
@@ -1555,7 +1555,7 @@ fn add_image(&mut self,
                     width: f32,
                     height: f32,
                     // **above required
-                    gen_id: Option<usize>,
+                    id: Option<usize>,
                     callback: Option<PyObject>,
                     column_widths: Vec<f32>,
                     show: bool,
@@ -1563,7 +1563,7 @@ fn add_image(&mut self,
                 ) -> PyResult<usize> 
     {
 
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         if callback.is_some() {
             add_callback_to_mutex(id, "table".to_string(), callback);
@@ -1588,7 +1588,7 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (parent_id, content, gen_id=None, width=None, 
+    #[pyo3(signature = (parent_id, content, id=None, width=None, 
                         height=None, width_fill=false, height_fill=false, 
                         h_align="left".to_string(), v_align="top".to_string(),
                         line_height=1.3, size=16.0, 
@@ -1598,7 +1598,7 @@ fn add_image(&mut self,
                     parent_id: String,
                     content: String,
                     // ** above required
-                    gen_id: Option<usize>,
+                    id: Option<usize>,
                     width: Option<f32>,
                     height: Option<f32>,
                     width_fill: bool,
@@ -1612,7 +1612,7 @@ fn add_image(&mut self,
                     ) -> PyResult<usize> 
     {
     
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
@@ -1648,14 +1648,14 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (parent_id, file_name, gen_id=None))]
+    #[pyo3(signature = (parent_id, file_name, id=None))]
     fn add_text_editor(&mut self,
                             parent_id: String,
                             file_name: String,
-                            gen_id: Option<usize>,
+                            id: Option<usize>,
                         )  -> PyResult<usize>
     {
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         set_state_of_widget(id, parent_id);
 
@@ -1669,7 +1669,7 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, placeholder, gen_id=None,
+    #[pyo3(signature = (parent_id, placeholder, id=None,
                         on_input=None, on_submit=None, 
                         on_paste=None, width=None, width_fill=false, 
                         padding=DEFAULT_PADDING.to_vec(), 
@@ -1680,7 +1680,7 @@ fn add_image(&mut self,
                             parent_id: String,
                             placeholder: String,
                             // **above required
-                            gen_id: Option<usize>,
+                            id: Option<usize>,
                             on_input: Option<PyObject>,
                             on_submit: Option<PyObject>,
                             on_paste: Option<PyObject>,
@@ -1695,7 +1695,7 @@ fn add_image(&mut self,
                         ) -> PyResult<usize> 
     {
 
-        let id = self.get_id(gen_id);
+        let id = self.get_id(id);
 
         if on_input.is_some() {
             add_callback_to_mutex(id, "on_input".to_string(), on_input);
@@ -1970,99 +1970,7 @@ fn add_image(&mut self,
 
     #[pyo3(signature = (id, item, value))]
     fn update_item(&self, id: usize, item: String, value: PyObject) {
-        // This update function extracts the PyObject then
-        // then the widget is called to determine which item
-        // was indicated for that particular widget. 
-        // The extracted value are put into a structure with all 
-        // optional values and sent to the widget where selected
-        // optional values are used in the widget update. 
         
-        let mut items = UpdateItems::default();
-        
-        Python::with_gil(|py| {
-
-            let res = value.extract::<String>(py);
-            if !res.is_err() {
-                items.value_str = match res {
-                    Ok(res) => Some(res),
-                    Err(_) => None,
-                } 
-            }
-
-            let res = value.extract::<bool>(py);
-            if !res.is_err() {
-                items.value_bool = match res {
-                    Ok(res) => Some(res),
-                    Err(_) => None,
-                } 
-            }
-
-            let res = value.extract::<i64>(py);
-            if !res.is_err() { 
-                items.value_i64 = match res {
-                    Ok(res) => Some(res),
-                    Err(_) => None,
-                } 
-            } 
-            
-            let res = value.extract::<f64>(py);
-            if !res.is_err() { 
-                items.value_f64 = match res {
-                    Ok(res) => Some(res),
-                    Err(_) => None,
-                } 
-            }
-
-            let res = value.extract::<(String, i64)>(py);
-            if !res.is_err() { 
-                items.value_tup_str_i64 = match res {
-                    Ok(res) => Some(res),
-                    Err(_) => None,
-                } 
-            }
-
-            let res = value.extract::<(String, f64)>(py);
-            if !res.is_err() { 
-                items.value_tup_str_f64 = match res {
-                    Ok(res) => Some(res),
-                    Err(_) => None,
-                } 
-            }
-
-            let res = value.extract::<Vec<f64>>(py);
-            if !res.is_err() { 
-                items.value_vec_f64 = match res {
-                    Ok(res) => Some(res),
-                    Err(_) => None,
-                } 
-            }
-
-            let res = try_extract_button_style(value.clone(), py);
-            if res.is_some() {
-                items.value_str = match res {
-                    Some(r) => Some(r),
-                    None => None,
-                };
-            }
-
-            let res = try_extract_button_arrow(value.clone(), py);
-            if res.is_some() {
-                items.value_str = match res {
-                    Some(r) => Some(r),
-                    None => None,
-                };
-            }
-            
-            let res = try_extract_card_style(value.clone(), py);
-            if res.is_some() {
-                items.value_str = match res {
-                    Some(r) => Some(r),
-                    None => None,
-                };
-            }
-
-        });
-
         let mut state = access_state();
 
         let widget_opt = state.widgets.get_mut(&id);
@@ -2074,43 +1982,27 @@ fn add_image(&mut self,
         
         match widget {
             IpgWidgets::IpgButton(btn) => {
-                button_item_update(btn,
-                                    item,
-                                    items,
-                                    );
+                button_item_update(btn, item, value);
                 drop(state);
                 return
             },
             IpgWidgets::IpgCard(crd) => {
-                card_item_update(
-                                    crd,
-                                    item,
-                                    items,
-                                );
+                card_item_update(crd, item, value);
                 drop(state);
                 return
             },
             IpgWidgets::IpgCheckBox(chk) => {
-                checkbox_item_update(chk,
-                                    item,
-                                    items,
-                                    );
+                checkbox_item_update(chk, item, value);
                 drop(state);
                 return
             },
             IpgWidgets::IpgColorPicker(cp) => {
-                color_picker_item_update(cp,
-                                    item,
-                                    items,
-                                    );
+                color_picker_item_update(cp, item, value);
                 drop(state);
                 return
             },
             IpgWidgets::IpgDatePicker(dp) => {
-                date_picker_item_update(dp,
-                                    item,
-                                    items,
-                                    );
+                date_picker_item_update(dp, item, value);
                 drop(state);
                 return
             },
@@ -2119,10 +2011,7 @@ fn add_image(&mut self,
             IpgWidgets::IpgMenuItem(_wid) => (),
             IpgWidgets::IpgPickList(_wid) => (),
             IpgWidgets::IpgProgressBar(pb) => {
-                progress_bar_item_update(pb,
-                                    item,
-                                    items,
-                                    );
+                progress_bar_item_update(pb, item, value);
                 drop(state);
                 return
             },
@@ -2131,19 +2020,8 @@ fn add_image(&mut self,
             IpgWidgets::IpgSlider(_wid) => (),
             IpgWidgets::IpgSpace(_wid) => (),
             IpgWidgets::IpgTable(_wid) => (),
-            IpgWidgets::IpgText(wid) => {
-                if item == "content".to_string() {
-                    wid.content = match items.value_str {
-                        Some(str) => str,
-                        None => panic!("A string value is needed to update text"),
-                    };
-                } 
-                if item == "show".to_string() {
-                    wid.show = match items.value_bool {
-                        Some(bl) => bl,
-                        None => panic!("The show parameter must be of type bool")
-                    };
-                }
+            IpgWidgets::IpgText(txt) => {
+                text_item_update(txt, item, value);
                 drop(state);
                 return
             },
@@ -2254,12 +2132,16 @@ fn add_image(&mut self,
 
     fn get_id(&mut self, gen_id: Option<usize>) -> usize
     {
+        // When an id is generated, it is put into the self.gen_ids.
+        // The below checks that if the user is using the id field for the
+        // widget, then it must be in the gen_id vec otherwise, the user must 
+        // have used his own integer for the id parameter.
         match gen_id {
             Some(id) => {
                 if self.gen_ids.contains(&id) {
                     id
                 } else {
-                    panic!("The generated id {id} is not in the widget ids")
+                    panic!("The id parameter for widgets must use a generate id.  This id {id} was not found in the gen_id list.")
                 }
             }
             None => {
@@ -2280,21 +2162,6 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
-#[derive(Default, Debug)]
-pub struct UpdateItems {
-    value_str: Option<String>,
-    value_bool: Option<bool>,
-    value_i64: Option<i64>,
-    value_f64: Option<f64>,
-    value_tup_str_i64: Option<(String, i64)>,
-    value_tup_str_f64: Option<(String, f64)>,
-    value_vec_f64: Option<Vec<f64>>,
-    value_button_styles: Option<IpgButtonStyles>,
-    value_button_arrows: Option<IpgButtonArrows>,
-
-}
-
-impl UpdateItems {}
 
 fn set_state_of_container(
                             id: usize, 

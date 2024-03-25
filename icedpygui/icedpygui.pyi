@@ -307,6 +307,7 @@ class IPG:
                     parent_id: str,
                     label: str,
                     *,
+                    id: int=None,
                     on_press: Callable=None,
                     width: float=None,
                     height: float=None,
@@ -834,24 +835,37 @@ class IPG:
         """
         Adds a text widget to the gui.
 
-        Args:
-            parent_id (str, required): id of another container or window.
-            content (str, required): text to use.
-            width (float, optional): default=None, width of the widget.
-            height (float, optional): default=None, height of the widget.   
-            width_fill (bool, optional): default=False, Fill available width.
-            height_fill (bool, optional): default=False, Fill available height.
-            h_align (str, optional): "Left"(default), "Center", or "Right"
-            v_align (str, optional): default="top", aligns items vertically.
-            line_height (float, optional): defalt=1.0, sets the line height of the text.
-            size (f32, optional): default=16.0, text size.
-            shaping (str, optional): default="Basic", other value is "Advanced", requires adding fonts.
-            text_size (f32, optional): default=16.0, size of the text.
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.
-            show (bool, optional): default=True, shows or hides widget.
+        Parameters
+        ----------
+            parent_id: str
+                id of another container or window to place the widget in.
+            content: str
+                Sets the text of the widget.
+            width: float, optional)
+                Sets the width of the widget.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            height: float
+                Sets the height of the widget.   
+            height_fill: bool
+                Sets the heigth to fill the available space, overrides height.
+            h_align: str
+                Aligns text horizontally "Left", "Center", or "Right", width needs to be larger than text.
+            v_align: str
+                Aligns text vertically "Left", "Center", or "Right", height needs to be larger than text.
+            line_height: float
+                Sets the line height of the text.
+            size: float
+                Sets the text size.
+            shaping: str
+                Sets the shape of the text using added fonts, uUse "Basic"(None) or "Advanced".
+            show:
+                shows or hides widget.
         
-        Return: 
-            int: internal id of widget and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
 
         """
 
@@ -861,6 +875,18 @@ class IPG:
                         ) -> int:
         """
         Adds a text editor widget to the gui.
+
+        Parameters
+        ----------
+            parent_id: str
+                id of another container or window to place the widget in.
+            file_name: str
+                Path to the file to be used.
+        
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
         """
 
     def add_text_input(self,
@@ -884,25 +910,40 @@ class IPG:
         required for the widget to work.  Using a long lived variable, value = self.value,
         as the text is entered, the value will be updated and displayed via a callback.
 
-        Args:
-            parent_id (str, required): id of another container or window.
-            placeholder (str, required): dimmed text used for instructions.
-            on_submit (Callable, required): callback that responds on pressing enter.
-            on_input (Callable, required): callback that responds for each typed letter.
-            on_paste (Callable, optional): default=None, callback that responds on a paste.
-            line_height (float, optional): defalt=1.0, sets the line height of the text.
-            width (float, optional): default=None, width of the widget.   
-            width_fill (bool, optional): default=False, Fill available width.
-            padding ([float], optional): default=[10.0], Padding for container.
-                                        use [float] for all sides,
-                                        use [float, float] for [top&bottom, left&right]
-                                        use [float, float, float, float] for [top, right, bottom, left]
-            size (f32, optional): default=16.0, text size.
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.
-            is_secure (bool, optional): hides the text as typed, for passwords, etc.
+        Parameters
+        ----------
+            parent_id: str
+                id of another container or window to place the widget in.
+            placeholder: str
+                text used for instructions in the input box.
+            on_submit: Callable
+                Calls a function when the enter key is pressed, submitting the text.
+            on_input: Callable
+                Calls a function each time a letter is enter into the text box.
+            on_paste: Callable
+                Calls a function when the text is pasted into the text box, pressing enter will also submit.
+            line_height: float
+                Sets the line height of the text.
+            width: float
+                Sets the width of the text box..   
+            width_fill: bool
+                Sets the width to fill available space, overrides width.
+            padding: List[float]
+                Sets the padding for widget.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+            size: float
+                Sets the text size.
+            user_data: Any
+                Any data that might be needed in the callback function.
+            is_secure: bool
+                Hides the entered text, for passwords, etc.
             
-        Return:
-            int: internal id of widget and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
         """
     
     # *******************************events*************************************************************
@@ -914,7 +955,23 @@ class IPG:
                             user_data=None, 
                            ) -> int:
         """
-        Add a keyborad event handler to process keyboard actions.
+        Add a keyboard event handler to process keyboard actions.
+
+        Parameters
+        ----------
+        enabled: bool
+            Enables the event
+        on_key_press: Callable
+            Calls a function when a key is pressed.
+        on_key_release: Callable
+            Calls a function when a key is released.
+        user_data: Any
+            Any data that might be needed in the callback function.
+
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
         """
 
     def add_event_mouse(self,
@@ -931,7 +988,35 @@ class IPG:
                             user_data=None,
                           ) ->int:
         """
-        Add a mouse handler to process mouse actions.
+        Add a mouse button handlers to process mouse actions.
+
+        Parameters
+        ----------
+        enabled: bool
+            Enables the event
+        on_move: Callable
+            Calls a function when the mouse is moved.
+        on_left_press: Callable
+            Calls a function when the left mouse button is pressed.
+        on_left_release: Callable
+            Calls a function when the left mouse button is released.
+        on_middle_press: Callable
+            Calls a function when the middle mouse button is pressed.
+        on_middle_release: Callable
+            Calls a function when the middle mouse button is released.
+        on_right_press: Callable
+            Calls a function when the right mouse button is pressed.
+        on_right_release: Callable
+            Calls a function when the right mouse button is released.
+        on_middle_scroll: Callable
+            Calls a function when the middle mouse scroll is scrolled.
+        user_data: Any
+            Any data that might be needed in the callback function.
+        
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
         """
 
     def add_event_window(self,
@@ -944,10 +1029,32 @@ class IPG:
                         user_data=None,
                          ) -> int:
         """
-        Add a window event to process window actions such as resize, move, etc.
+        Adds event to the window other than those in the add_window method.
+
+        Parameters
+        ----------
+        enabled: bool
+            Enables the event
+        on_open: Callable
+            Calls a function when window is opened.
+        on_close: Callable
+            Calls a function when the window is closed.
+        on_moved: Callable
+            Calls a function when the window is moved.
+        on_resized: Callable
+            Calls a function when the window id resized.
+        user_data: Any
+            Any data that might be needed in the callback function.
+        
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
         """
-    
+
+
     # *******************************all item ops**************************************
+        
     def delete_item(self, id: int):
         """
         Deletes an item using the int id
@@ -964,25 +1071,6 @@ class IPG:
         Update a widget by supplying the id, the parameter to update and values as a str or number
         """
 
-    def button_style(self, Primary: bool=False, Secondary: bool=False, Positive: bool=False, 
-                        Destructive: bool=False, Text: bool=False):
-        """
-        Gets the button style.  Set any style to True to active.
-        If you activate more than one, the first item will be chosen.
-        Define this first by equating to a variable them put in the button style parameter.
-        ALternately, put the function directly in the style parameter.
-        """
-
-    def card_style(self, Primary: bool=False, Secondary: bool=False, Success: bool=False, 
-                        Danger: bool=False, warning: bool=False, info: bool=False, light: bool=False, 
-                        dark: bool=False, white: bool=False, default: bool=False):
-        """
-        Gets the card style.  Set any style to True to active.
-        If you activate more than one, the first item will be chosen.
-        Define this first by equating to a variable them put in the card style parameter.
-        ALternately, put the function directly in the style parameter.
-        """
-
     def window_theme(self, Light=False, Dark=False, Dracula=False, Nord=False,SolarizedLight=False,
                         SolarizedDark=False, GruvboxLight=False,GruvboxDark=False,CatppuccinLatte=False,
                         CatppuccinFrappe=False, CatppuccinMacchiato=False, CatppuccinMocha=False,
@@ -997,27 +1085,93 @@ class IPG:
 
 
 class IpgButtonStyles:
-    Primary = "Primary"
-    Secondary = "Secondary"
-    Positive = "Positive"
-    Destructive = "Destructive"
-    Text = "Text"
+    Primary=0
+    Secondary=0
+    Positive=0
+    Destructive=0
+    Text=0
 
-class IpgButtonArrrows:
-    UpArrow = "UpArrow"
-    RightArrow = "RightArrow"
-    DownArrow = "DownArrow"
-    LeftArrow = "LeftArrow"
 
 class IpgCardStyles: 
-    Primary = "Primary"
-    Secondary = "Secondary"
-    Success = "Success"
-    Danger = "Danger"
-    Warning = "Warning"
-    Info = "Info"
-    Light = "Light"
-    Dark = "Dark"
-    White = "White"
-    Default = "Default"
+    Primary=0
+    Secondary=0
+    Success=0
+    Danger=0
+    Warning=0
+    Info=0
+    Light=0
+    Dark=0
+    White=0
+    Default=0
 
+class IpgButtonArrows:
+    ArrowBarLeft=0
+    ArrowBarRight=0
+    ArrowBarUp=0
+    ArrowClockwise=0
+    ArrowCounterclockwise=0
+    ArrowDown=0
+    ArrowDownCircle=0
+    ArrowDownCircleFill=0
+    ArrowDownLeft=0
+    ArrowDownLeftCircle=0
+    ArrowDownLeftCircleFill=0
+    ArrowDownLeftSquare=0
+    ArrowDownLeftSquareFill=0
+    ArrowDownRight=0
+    ArrowDownRightCircle=0
+    ArrowDownRightCircleFill=0
+    ArrowDownRightSquare=0
+    ArrowDownRightSquareFill=0
+    ArrowDownShort=0
+    ArrowDownSquare=0
+    ArrowDownSquareFill=0
+    ArrowDownUp=0
+    ArrowLeft=0
+    ArrowLeftCircle=0
+    ArrowLeftCircleFill=0
+    ArrowLeftRight=0
+    ArrowLeftShort=0
+    ArrowLeftSquare=0
+    ArrowLeftSquareFill=0
+    ArrowNinezerodegDown=0
+    ArrowNinezerodegLeft=0
+    ArrowNinezerodegRight=0
+    ArrowNinezerodegUp=0
+    ArrowRepeat=0
+    ArrowReturnLeft=0
+    ArrowReturnRight=0
+    ArrowRight=0
+    ArrowRightCircle=0
+    ArrowRightCircleFill=0
+    ArrowRightShort=0
+    ArrowRightSquare=0
+    ArrowRightSquareFill=0
+    ArrowThroughHeart=0
+    ArrowThroughHeartFill=0
+    ArrowUp=0
+    ArrowUpCircle=0
+    ArrowUpCircleFill=0
+    ArrowUpLeft=0
+    ArrowUpLeftCircle=0
+    ArrowUpLeftCircleFill=0
+    ArrowUpLeftSquare=0
+    ArrowUpLeftSquareFill=0
+    ArrowUpRight=0
+    ArrowUpRightCircle=0
+    ArrowUpRightCircleFill=0
+    ArrowUpRightSquare=0
+    ArrowUpRightSquareFill=0
+    ArrowUpShort=0
+    ArrowUpSquare=0
+    ArrowUpSquareFill=0
+    Arrows=0
+    ArrowsAngleContract=0
+    ArrowsAngleExpand=0
+    ArrowsCollapse=0
+    ArrowsCollapseVertical=0
+    ArrowsExpand=0
+    ArrowsExpandVertical=0
+    ArrowsFullscreen=0
+    ArrowsMove=0
+    ArrowsVertical=0

@@ -1,6 +1,5 @@
 
-
-use crate::{access_callbacks, UpdateItems};
+use crate::access_callbacks;
 use crate::app::Message;
 use super::ipg_button::{ButtonStyleRadius, get_button_style_from_str};
 use super::callbacks::{WidgetCallbackIn, 
@@ -186,7 +185,7 @@ fn process_callback(wco: WidgetCallbackOut)
 
 pub fn color_picker_item_update(_cp: &mut IpgColorPicker,
                                 _item: String,
-                                _items: UpdateItems,
+                                _items: PyObject,
                                 ) 
 {
 

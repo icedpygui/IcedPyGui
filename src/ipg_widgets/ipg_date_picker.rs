@@ -1,13 +1,13 @@
 
 
 use crate::app::{Message, self};
-use crate::{access_callbacks, UpdateItems};
+use crate::access_callbacks;
 use super::ipg_modal::IpgModal;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 use crate::ICON_FONT_BOOT;
-use super::helpers::{get_padding, MONTH_NAMES, DATE_FORMATS, DAYS, WEEKDAYS};
+use super::helpers::{get_padding, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_vec_f64, DATE_FORMATS, DAYS, MONTH_NAMES, WEEKDAYS};
 
 use iced::advanced::graphics::core::Element;
 use iced::{Length, Padding, Renderer, Theme, theme};
@@ -589,38 +589,27 @@ fn process_callback(wco: WidgetCallbackOut)
 
 pub fn date_picker_item_update(dp: &mut IpgDatePicker,
                                 item: String,
-                                items: UpdateItems,
+                                value: PyObject,
                                 )
 {
     
     if item == "label".to_string() {
-        dp.label = match items.value_str {
-            Some(lb) => lb,
-            None => panic!("A string value is required to update label for the calendar.")
-        };
+        dp.label = try_extract_string(value);
         return
     }
 
     if item == "size_factor".to_string() {
-        dp.size_factor = match items.value_f64 {
-            Some(sf) => sf as f32,
-            None => panic!("A float value is required to update size_factor for the calendar.")
-        };
+        dp.size_factor = try_extract_f64(value) as f32;
         return
     }
 
     if item == "padding".to_string() {
-        dp.padding = match items.value_vec_f64 {
-            Some(pad) => get_padding(pad),
-            None => panic!("Padding must have a List of length 1, 2, or 4.")
-        };
+        let pd = try_extract_vec_f64(value);
+        dp.padding = get_padding(pd);
         return
     }
 
     if item == "show".to_string() {
-        dp.show = match items.value_bool {
-            Some(sh) => sh,
-            None => panic!("Show value must be either True or False.")
-        };
+        dp.show = try_extract_boolean(value);
     }
 }

@@ -1,2 +1,2 @@
-from icedpygui.icedpygui import IPG
-from icedpygui.icedpygui import IpgButtonStyles, IpgCardStyles
+from .icedpygui import IPG, IpgButtonStyles, IpgButtonArrows, IpgCardStyles
+

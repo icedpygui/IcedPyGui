@@ -1,7 +1,9 @@
 #![allow(dead_code)]
 
-use crate::{access_callbacks, app, UpdateItems};
-use super::helpers::{get_padding, get_width, get_height};
+use crate::{access_callbacks, app};
+use super::helpers::{get_height, get_padding, get_width, 
+                    try_extract_f64, try_extract_string, 
+                    try_extract_boolean, try_extract_vec_f64};
 use super::callbacks::{
     WidgetCallbackIn, WidgetCallbackOut, 
     get_set_widget_callback_data
@@ -14,7 +16,9 @@ use iced::{Border, Color, Element, Length, Padding, theme, Theme, };
 
 use iced::widget::button::{self, Appearance, StyleSheet};
 
-// use iced_aw::BOOTSTRAP_FONT;
+use iced_aw::BootstrapIcon;
+use iced_aw::BOOTSTRAP_FONT;
+use iced_aw::graphics::icons::icon_to_string;
 
 
 #[derive(Debug, Clone)]
@@ -29,7 +33,7 @@ pub struct IpgButton {
     pub padding: Padding,
     pub corner_radius: f32,
     pub style: Option<String>,
-    pub arrow_type: Option<String>,
+    pub arrow_style: Option<String>,
 }
 
 impl IpgButton {
@@ -44,7 +48,7 @@ impl IpgButton {
         padding: Padding,
         corner_radius: f32,
         style: Option<String>,
-        arrow_type: Option<String>,
+        arrow_style: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -56,7 +60,7 @@ impl IpgButton {
             padding,
             corner_radius,
             style,
-            arrow_type,
+            arrow_style,
         }
     }
 }
@@ -85,15 +89,83 @@ pub enum IpgButtonStyles {
     Secondary,
     Positive,
     Destructive,
-    Text
+    Text,
 }
 
-// pub enum IpgButtonArrrows {
-//     UpArrow,
-//     RightArrow,
-//     DownArrow,
-//     LwftArrow,
-// }
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgButtonArrows {
+    ArrowBarLeft,
+    ArrowBarRight,
+    ArrowBarUp,
+    ArrowClockwise,
+    ArrowCounterclockwise,
+    ArrowDown,
+    ArrowDownCircle,
+    ArrowDownCircleFill,
+    ArrowDownLeft,
+    ArrowDownLeftCircle,
+    ArrowDownLeftCircleFill,
+    ArrowDownLeftSquare,
+    ArrowDownLeftSquareFill,
+    ArrowDownRight,
+    ArrowDownRightCircle,
+    ArrowDownRightCircleFill,
+    ArrowDownRightSquare,
+    ArrowDownRightSquareFill,
+    ArrowDownShort,
+    ArrowDownSquare,
+    ArrowDownSquareFill,
+    ArrowDownUp,
+    ArrowLeft,
+    ArrowLeftCircle,
+    ArrowLeftCircleFill,
+    ArrowLeftRight,
+    ArrowLeftShort,
+    ArrowLeftSquare,
+    ArrowLeftSquareFill,
+    ArrowNinezerodegDown,
+    ArrowNinezerodegLeft,
+    ArrowNinezerodegRight,
+    ArrowNinezerodegUp,
+    ArrowRepeat,
+    ArrowReturnLeft,
+    ArrowReturnRight,
+    ArrowRight,
+    ArrowRightCircle,
+    ArrowRightCircleFill,
+    ArrowRightShort,
+    ArrowRightSquare,
+    ArrowRightSquareFill,
+    ArrowThroughHeart,
+    ArrowThroughHeartFill,
+    ArrowUp,
+    ArrowUpCircle,
+    ArrowUpCircleFill,
+    ArrowUpLeft,
+    ArrowUpLeftCircle,
+    ArrowUpLeftCircleFill,
+    ArrowUpLeftSquare,
+    ArrowUpLeftSquareFill,
+    ArrowUpRight,
+    ArrowUpRightCircle,
+    ArrowUpRightCircleFill,
+    ArrowUpRightSquare,
+    ArrowUpRightSquareFill,
+    ArrowUpShort,
+    ArrowUpSquare,
+    ArrowUpSquareFill,
+    Arrows,
+    ArrowsAngleContract,
+    ArrowsAngleExpand,
+    ArrowsCollapse,
+    ArrowsCollapseVertical,
+    ArrowsExpand,
+    ArrowsExpandVertical,
+    ArrowsFullscreen,
+    ArrowsMove,
+    ArrowsVertical,
+}
 
 
 pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
@@ -101,10 +173,19 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
     if !btn.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
     }
+
+    let mut label = Text::new(btn.label.clone());
+
+    if btn.arrow_style.is_some() {
+        label = match btn.arrow_style {
+            Some(ar) => Text::new(ar).font(BOOTSTRAP_FONT),
+            None => panic!("Button: Could not get Option(arrow_style)")
+        };
+    }
     
     let style = get_button_style_from_str(btn.style);
     
-    let ipg_btn: Element<BTNMessage> = Button::new(Text::new(btn.label.clone()))
+    let ipg_btn: Element<BTNMessage> = Button::new(label)
                                 .height(btn.height)
                                 .padding(btn.padding)
                                 .width(btn.width)
@@ -116,30 +197,6 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
     ipg_btn.map(move |message| app::Message::Button(btn.id, message))
 }
 
-// fn icon(unicode: char) -> Text<'static> {
-//     Text::new(unicode.to_string())
-//         .font(BOOTSTRAP_FONT)
-//         .size(10)
-//         .width(10)
-//         .horizontal_alignment(alignment::Horizontal::Center)
-//         .vertical_alignment(alignment::Vertical::Center)
-// }
-
-// fn left_arrow_icon() -> Text<'static> {
-//     icon('\u{f12c}')
-// }
-
-// fn right_arrow_icon() -> Text<'static> {
-//     icon('\u{f135}')
-// }
-
-// fn up_arrow_icon() -> Text<'static> {
-//     icon('\u{f12c}')
-// }
-
-// fn down_arrow_icon() -> Text<'static> {
-//     icon('\u{f12c}')
-// }
 
 pub fn button_callback(id: usize, message: BTNMessage) {
 
@@ -206,78 +263,67 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
 pub fn button_item_update(btn: &mut IpgButton,
                             item: String,
-                            items: UpdateItems,
+                            value: PyObject,
                             )
 {
+    if item == "arrow_style".to_string() {
+        let arrow = try_extract_button_arrow(value);
+        if arrow == Some("Custom".to_string()) {
+            btn.arrow_style = Some(btn.label.clone());
+            btn.label = "".to_string();
+        } else {
+            btn.arrow_style = arrow;
+        }
+        return
+    }
+
     if item == "corner_radius".to_string() {
-        btn.corner_radius = match items.value_f64 {
-            Some(flt) => flt as f32,
-            None => panic!("Button update corner_radius must be a float."),
-        };
+        btn.corner_radius = try_extract_f64(value) as f32;
         return
     }
 
     if item == "label".to_string() {
-        btn.label = match items.value_str {
-            Some(str) => str,
-            None => panic!("Button update label must be a string.")
-        };
+        btn.label = try_extract_string(value);
         return
     }
 
     if item == "width".to_string() {
-        btn.width = match items.value_f64 {
-            Some(wd) => get_width(Some(wd as f32), false),
-            None => panic!("Button update width must be a float.")
-        };
+        let val = try_extract_f64(value);
+        btn.width = get_width(Some(val as f32), false);
         return
     }
 
     if item == "width_fill".to_string() {
-        btn.width = match items.value_bool {
-            Some(wd) => get_width(None, wd),
-            None => panic!("Button update width_fill must be a  boolean.")
-        };
+        let val = try_extract_boolean(value);
+        btn.width = get_width(None, val);
         return
     }
 
     if item == "height".to_string() {
-        btn.height = match items.value_f64 {
-            Some(ht) => get_height(Some(ht as f32), false),
-            None => panic!("Button update height must be a float.")
-        };
+        let val = try_extract_f64(value);
+        btn.height = get_height(Some(val as f32), false);
         return
     }
 
     if item == "height_fill".to_string() {
-        btn.height = match items.value_bool {
-            Some(ht) => get_height(None, ht),
-            None => panic!("Button update height_fill must be a boolean.")
-        };
+        let val = try_extract_boolean(value);
+        btn.height = get_height(None, val);
         return
     }
 
     if item == "padding".to_string() {
-        btn.padding = match items.value_vec_f64 {
-            Some(pad) => get_padding(pad),
-            None => panic!("Button update padding must be a List of length 1, 2, or 4.")
-        };
+        let val = try_extract_vec_f64(value);
+        btn.padding =  get_padding(val);
         return
     }
 
     if item == "show".to_string() {
-        btn.show = match items.value_bool {
-            Some(sh) => sh,
-            None => panic!("Button update show value must be a boolean.")
-        };
+        btn.show = try_extract_boolean(value);
         return
     }
 
     if item == "style".to_string() {
-        btn.style = match items.value_str {
-            Some(st) => Some(st),
-            None => panic!("Button update style must be of string.")
-        };
+        btn.style = try_extract_button_style(value);
         return
     }
 
@@ -314,46 +360,106 @@ pub fn get_button_str_from_style(style: IpgButtonStyles) -> Option<String> {
     }
 }
 
-pub fn try_extract_button_style(style_obj: PyObject, py: Python<'_>) -> Option<String> {
-
-    let mut style: Option<String> = None;
-
-    let res = style_obj.extract::<IpgButtonStyles>(py);
-            if !res.is_err() {
-                style = match res {
-                    Ok(st) => get_button_str_from_style(st),
-                    Err(_) => None,
-                }
-            }
-
-    style
+pub fn try_extract_button_style(style_obj: PyObject) -> Option<String> {
+    Python::with_gil(|py| {
+        let res = style_obj.extract::<IpgButtonStyles>(py);
+            
+        match res {
+            Ok(st) => return get_button_str_from_style(st),
+            Err(_) => None,
+        }
+    })  
 }
 
-// fn get_button_arrows(arrow_opt: Option<PyObject>) {
+pub fn try_extract_button_arrow(arrow_obj: PyObject) -> Option<String> {
 
-//     Python::with_gil(|py| {
+    Python::with_gil(|py| {
+        let res = arrow_obj.extract::<IpgButtonArrows>(py);
 
-//         let arrow: Option<String> = None;
+        match res {
+            Ok(ar) => return Some(get_boot_arrow(ar)),
+            Err(_) => panic!("Button arrow extraction failed"),
+        }
+        
+    })
+}
 
-//         if arrow_opt.is_some() {
-//             arrow 
-//         }
-//         let res = value.extract::<IpgButtonStyles>(py);
-//             if !res.is_err() {
-//                 items.value_str = match res {
-//                     Ok(style) => get_button_str_from_style(style),
-//                     Err(_) => None,
-//                 }
-//             }
-//     });
-    
-//     match arrow {
-//         IpgButtonArrows::UpArrow => todo!(),
-//         IpgButtonArrows::RightArrow => todo!(),
-//         IpgButtonArrows::DownArrow => todo!(),
-//         IpgButtonArrows::LwftArrow => todo!(),
-//     }
-// }
+
+fn get_boot_arrow(arrow: IpgButtonArrows) -> String {
+    match arrow {
+        IpgButtonArrows::ArrowBarLeft => icon_to_string(BootstrapIcon::ArrowBarLeft),
+        IpgButtonArrows::ArrowBarRight => icon_to_string(BootstrapIcon::ArrowBarRight),
+        IpgButtonArrows::ArrowBarUp => icon_to_string(BootstrapIcon::ArrowBarUp),
+        IpgButtonArrows::ArrowClockwise => icon_to_string(BootstrapIcon::ArrowClockwise),
+        IpgButtonArrows::ArrowCounterclockwise => icon_to_string(BootstrapIcon::ArrowCounterclockwise),
+        IpgButtonArrows::ArrowDown => icon_to_string(BootstrapIcon::ArrowDown),
+        IpgButtonArrows::ArrowDownCircle => icon_to_string(BootstrapIcon::ArrowDownCircle),
+        IpgButtonArrows::ArrowDownCircleFill => icon_to_string(BootstrapIcon::ArrowDownCircleFill),
+        IpgButtonArrows::ArrowDownLeft => icon_to_string(BootstrapIcon::ArrowDownLeft),
+        IpgButtonArrows::ArrowDownLeftCircle => icon_to_string(BootstrapIcon::ArrowDownLeftCircle),
+        IpgButtonArrows::ArrowDownLeftCircleFill => icon_to_string(BootstrapIcon::ArrowDownLeftCircleFill),
+        IpgButtonArrows::ArrowDownLeftSquare => icon_to_string(BootstrapIcon::ArrowDownLeftSquare),
+        IpgButtonArrows::ArrowDownLeftSquareFill => icon_to_string(BootstrapIcon::ArrowDownLeftSquareFill),
+        IpgButtonArrows::ArrowDownRight => icon_to_string(BootstrapIcon::ArrowDownRight),
+        IpgButtonArrows::ArrowDownRightCircle => icon_to_string(BootstrapIcon::ArrowDownRightCircle),
+        IpgButtonArrows::ArrowDownRightCircleFill => icon_to_string(BootstrapIcon::ArrowDownRightCircleFill),
+        IpgButtonArrows::ArrowDownRightSquare => icon_to_string(BootstrapIcon::ArrowDownRightSquare),
+        IpgButtonArrows::ArrowDownRightSquareFill => icon_to_string(BootstrapIcon::ArrowDownRightSquareFill),
+        IpgButtonArrows::ArrowDownShort => icon_to_string(BootstrapIcon::ArrowDownShort),
+        IpgButtonArrows::ArrowDownSquare => icon_to_string(BootstrapIcon::ArrowDownSquare),
+        IpgButtonArrows::ArrowDownSquareFill => icon_to_string(BootstrapIcon::ArrowDownSquareFill),
+        IpgButtonArrows::ArrowDownUp => icon_to_string(BootstrapIcon::ArrowDownUp),
+        IpgButtonArrows::ArrowLeft => icon_to_string(BootstrapIcon::ArrowLeft),
+        IpgButtonArrows::ArrowLeftCircle => icon_to_string(BootstrapIcon::ArrowLeftCircle),
+        IpgButtonArrows::ArrowLeftCircleFill => icon_to_string(BootstrapIcon::ArrowLeftCircleFill),
+        IpgButtonArrows::ArrowLeftRight => icon_to_string(BootstrapIcon::ArrowLeftRight),
+        IpgButtonArrows::ArrowLeftShort => icon_to_string(BootstrapIcon::ArrowLeftShort),
+        IpgButtonArrows::ArrowLeftSquare => icon_to_string(BootstrapIcon::ArrowLeftSquare),
+        IpgButtonArrows::ArrowLeftSquareFill => icon_to_string(BootstrapIcon::ArrowLeftSquareFill),
+        IpgButtonArrows::ArrowNinezerodegDown => icon_to_string(BootstrapIcon::ArrowNinezerodegDown),
+        IpgButtonArrows::ArrowNinezerodegLeft => icon_to_string(BootstrapIcon::ArrowNinezerodegLeft),
+        IpgButtonArrows::ArrowNinezerodegRight => icon_to_string(BootstrapIcon::ArrowNinezerodegRight),
+        IpgButtonArrows::ArrowNinezerodegUp => icon_to_string(BootstrapIcon::ArrowNinezerodegUp),
+        IpgButtonArrows::ArrowRepeat => icon_to_string(BootstrapIcon::ArrowRepeat),
+        IpgButtonArrows::ArrowReturnLeft => icon_to_string(BootstrapIcon::ArrowReturnLeft),
+        IpgButtonArrows::ArrowReturnRight => icon_to_string(BootstrapIcon::ArrowReturnRight),
+        IpgButtonArrows::ArrowRight => icon_to_string(BootstrapIcon::ArrowRight),
+        IpgButtonArrows::ArrowRightCircle => icon_to_string(BootstrapIcon::ArrowRightCircle),
+        IpgButtonArrows::ArrowRightCircleFill => icon_to_string(BootstrapIcon::ArrowRightCircleFill),
+        IpgButtonArrows::ArrowRightShort => icon_to_string(BootstrapIcon::ArrowRightShort),
+        IpgButtonArrows::ArrowRightSquare => icon_to_string(BootstrapIcon::ArrowRightSquare),
+        IpgButtonArrows::ArrowRightSquareFill => icon_to_string(BootstrapIcon::ArrowRightSquareFill),
+        IpgButtonArrows::ArrowThroughHeart => icon_to_string(BootstrapIcon::ArrowThroughHeart),
+        IpgButtonArrows::ArrowThroughHeartFill => icon_to_string(BootstrapIcon::ArrowThroughHeartFill),
+        IpgButtonArrows::ArrowUp => icon_to_string(BootstrapIcon::ArrowUp),
+        IpgButtonArrows::ArrowUpCircle => icon_to_string(BootstrapIcon::ArrowUpCircle),
+        IpgButtonArrows::ArrowUpCircleFill => icon_to_string(BootstrapIcon::ArrowUpCircleFill),
+        IpgButtonArrows::ArrowUpLeft => icon_to_string(BootstrapIcon::ArrowUpLeft),
+        IpgButtonArrows::ArrowUpLeftCircle => icon_to_string(BootstrapIcon::ArrowUpLeftCircle),
+        IpgButtonArrows::ArrowUpLeftCircleFill => icon_to_string(BootstrapIcon::ArrowUpLeftCircleFill),
+        IpgButtonArrows::ArrowUpLeftSquare => icon_to_string(BootstrapIcon::ArrowUpLeftSquare),
+        IpgButtonArrows::ArrowUpLeftSquareFill => icon_to_string(BootstrapIcon::ArrowUpLeftSquareFill),
+        IpgButtonArrows::ArrowUpRight => icon_to_string(BootstrapIcon::ArrowUpRight),
+        IpgButtonArrows::ArrowUpRightCircle => icon_to_string(BootstrapIcon::ArrowUpRightCircle),
+        IpgButtonArrows::ArrowUpRightCircleFill => icon_to_string(BootstrapIcon::ArrowUpRightCircleFill),
+        IpgButtonArrows::ArrowUpRightSquare => icon_to_string(BootstrapIcon::ArrowUpRightSquare),
+        IpgButtonArrows::ArrowUpRightSquareFill => icon_to_string(BootstrapIcon::ArrowUpRightSquareFill),
+        IpgButtonArrows::ArrowUpShort => icon_to_string(BootstrapIcon::ArrowUpShort),
+        IpgButtonArrows::ArrowUpSquare => icon_to_string(BootstrapIcon::ArrowUpSquare),
+        IpgButtonArrows::ArrowUpSquareFill => icon_to_string(BootstrapIcon::ArrowUpSquareFill),
+        IpgButtonArrows::Arrows => icon_to_string(BootstrapIcon::Arrows),
+        IpgButtonArrows::ArrowsAngleContract => icon_to_string(BootstrapIcon::ArrowsAngleContract),
+        IpgButtonArrows::ArrowsAngleExpand => icon_to_string(BootstrapIcon::ArrowsAngleExpand),
+        IpgButtonArrows::ArrowsCollapse => icon_to_string(BootstrapIcon::ArrowsCollapse),
+        IpgButtonArrows::ArrowsCollapseVertical => icon_to_string(BootstrapIcon::ArrowsCollapseVertical),
+        IpgButtonArrows::ArrowsExpand => icon_to_string(BootstrapIcon::ArrowsExpand),
+        IpgButtonArrows::ArrowsExpandVertical => icon_to_string(BootstrapIcon::ArrowsExpandVertical),
+        IpgButtonArrows::ArrowsFullscreen => icon_to_string(BootstrapIcon::ArrowsFullscreen),
+        IpgButtonArrows::ArrowsMove => icon_to_string(BootstrapIcon::ArrowsMove),
+        IpgButtonArrows::ArrowsVertical => icon_to_string(BootstrapIcon::ArrowsVertical),
+    }
+}
+
 
 pub struct ButtonStyleRadius {
     theme: theme::Button,

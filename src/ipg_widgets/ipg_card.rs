@@ -1,7 +1,8 @@
 #![allow(unused_imports)]
 
 use crate::app::Message;
-use crate::{access_callbacks, UpdateItems, delete_item};
+use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_string};
+use crate::{access_callbacks, delete_item};
 use super::callbacks::{WidgetCallbackIn, 
 WidgetCallbackOut, get_set_widget_callback_data,
 };
@@ -220,46 +221,31 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
 pub fn card_item_update(crd: &mut IpgCard,
                             item: String,
-                            items: UpdateItems,
+                            value: PyObject,
                             )
 {
     if item == "head".to_string() {
-        crd.head = match items.value_str {
-            Some(head) => head,
-            None => panic!("A string value is needed to update Card head."),
-        };
+        crd.head = try_extract_string(value);
         return
     }
 
     if item == "body".to_string() {
-        crd.body = match items.value_str {
-            Some(body) => body,
-            None => panic!("A string value is needed to update Card body."),
-        };
+        crd.body = try_extract_string(value);
         return
     }
 
     if item == "foot".to_string() {
-        crd.foot = match items.value_str {
-            Some(foot) => Some(foot),
-            None => panic!("A string value is needed to update Card foot."),
-        };
+        crd.foot = Some(try_extract_string(value));
         return
     }
 
     if item == "is_open".to_string() {
-        crd.is_open = match items.value_bool {
-            Some(open) => open,
-            None => panic!("A boolean value is needed to update card is_open"),
-        };
+        crd.is_open = try_extract_boolean(value);
         return
     }
 
     if item == "style".to_string() {
-        crd.style = match items.value_str {
-            Some(st) => Some(st),
-            None => panic!("Style must be of type string.")
-        };
+        crd.style = Some(try_extract_string(value));
         return
     }
 

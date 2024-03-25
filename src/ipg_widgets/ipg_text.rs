@@ -5,6 +5,10 @@ use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{Space, Text};
 use crate::app::Message;
 
+use pyo3::PyObject;
+
+use super::helpers::{try_extract_boolean, try_extract_string};
+
 #[derive(Debug, Clone)]
 pub struct IpgText {
     pub id: usize,
@@ -72,4 +76,17 @@ pub fn construct_text(text: &IpgText) -> Element<'static, Message> {
                         // style: Style,
                         .into() 
     
+}
+
+
+pub fn text_item_update(txt: &mut IpgText, item: String, value: PyObject) {
+    if item == "content".to_string() {
+        txt.content = try_extract_string(value);
+        return
+    }
+
+    if item == "show".to_string() {
+        txt.show = try_extract_boolean(value);
+        return
+    }
 }

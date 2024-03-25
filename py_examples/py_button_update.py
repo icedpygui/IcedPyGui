@@ -1,4 +1,4 @@
-from icedpygui.icedpygui import IPG, IpgButtonStyles
+from icedpygui import IPG, IpgButtonStyles
 
 
 ipg = IPG()
