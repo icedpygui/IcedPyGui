@@ -1190,6 +1190,12 @@ class IpgTextUpdate:
     Width=0,
     WidthFill=0,
 
+class IpgDatePickerUpdate:
+    Label=0,
+    Padding=0,
+    SizeFactor=0,
+    Show=0,
+
 class IpgButtonArrows:
     ArrowBarLeft=0
     ArrowBarRight=0

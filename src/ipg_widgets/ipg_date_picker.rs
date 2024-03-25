@@ -15,7 +15,7 @@ use iced::alignment::{self, Alignment};
 use iced::widget::{Button, Column, Container, PickList, Row, Space, Text};
 
 use chrono::prelude::*;
-use pyo3::{PyObject, Python};
+use pyo3::{pyclass, PyObject, Python};
 
 
 
@@ -587,29 +587,46 @@ fn process_callback(wco: WidgetCallbackOut)
 }      
 
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgDatePickerUpdate {
+    Label,
+    Padding,
+    SizeFactor,
+    Show,
+}
+
 pub fn date_picker_item_update(dp: &mut IpgDatePicker,
-                                item: String,
+                                item: PyObject,
                                 value: PyObject,
                                 )
 {
-    
-    if item == "label".to_string() {
-        dp.label = try_extract_string(value);
-        return
-    }
+    let update = try_extract_date_picker_update(item);
 
-    if item == "size_factor".to_string() {
-        dp.size_factor = try_extract_f64(value) as f32;
-        return
+    match update {
+        IpgDatePickerUpdate::Label => {
+            dp.label = try_extract_string(value);
+        },
+        IpgDatePickerUpdate::Padding => {
+            let pd = try_extract_vec_f64(value);
+            dp.padding = get_padding(pd);
+        },
+        IpgDatePickerUpdate::SizeFactor => {
+                dp.size_factor = try_extract_f64(value) as f32;
+        },
+        IpgDatePickerUpdate::Show => {
+            dp.show = try_extract_boolean(value);
+        },
     }
+}
 
-    if item == "padding".to_string() {
-        let pd = try_extract_vec_f64(value);
-        dp.padding = get_padding(pd);
-        return
-    }
+pub fn try_extract_date_picker_update(update_obj: PyObject) -> IpgDatePickerUpdate {
 
-    if item == "show".to_string() {
-        dp.show = try_extract_boolean(value);
-    }
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgDatePickerUpdate>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("DatePicker update extraction failed"),
+        }
+    })
 }

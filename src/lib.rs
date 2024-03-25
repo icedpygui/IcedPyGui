@@ -27,7 +27,7 @@ use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxUp
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::IpgColumn;
 use ipg_widgets::ipg_container::IpgContainer;
-use ipg_widgets::ipg_date_picker::{IpgDatePicker, date_picker_item_update};
+use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerUpdate};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, 
                                 IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::IpgImage;
@@ -1993,8 +1993,8 @@ fn add_image(&mut self,
                 drop(state);
             },
             IpgWidgets::IpgDatePicker(dp) => {
-                // date_picker_item_update(dp, item, value);
-                // drop(state);
+                date_picker_item_update(dp, item, value);
+                drop(state);
             },
             IpgWidgets::IpgImage(_img) => (),
             IpgWidgets::IpgMenuBar(_wid) => (),
@@ -2151,6 +2151,7 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IpgCardUpdate>()?;
     m.add_class::<IpgCheckboxUpdate>()?;
     m.add_class::<IpgTextUpdate>()?;
+    m.add_class::<IpgDatePickerUpdate>()?;
     Ok(())
 }
 
