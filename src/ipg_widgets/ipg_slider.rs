@@ -140,7 +140,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                                                                 ));
             match res {
                 Ok(_) => (),
-                Err(_) => panic!("InputText: 2 parameters (id, value) are required or possibly a non-fatal python error in this function."),
+                Err(_) => panic!("Slider: 2 parameters (id, value) are required or possibly a non-fatal python error in this function."),
             }
         } 
     });

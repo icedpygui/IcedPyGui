@@ -21,7 +21,7 @@ mod iced_widgets;
 
 use crate::iced_widgets::scrollable::Direction;
 
-use ipg_widgets::ipg_button::{button_item_update, try_extract_button_style, IpgButton, IpgButtonStyles};
+use ipg_widgets::ipg_button::{button_item_update, try_extract_button_arrow, try_extract_button_style, IpgButton, IpgButtonArrows, IpgButtonStyles};
 use ipg_widgets::ipg_card::{card_item_update, try_extract_card_style, IpgCard, IpgCardStyles};
 use ipg_widgets::ipg_checkbox::{IpgCheckBox, checkbox_item_update};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
@@ -721,7 +721,7 @@ impl IPG {
                         padding: Vec<f64>,
                         corner_radius: f32,
                         style: Option<PyObject>,
-                        arrow_type: Option<String>,
+                        arrow_type: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
@@ -739,10 +739,17 @@ impl IPG {
 
         let mut style_opt: Option<String> = None;
 
+        let mut arrow_opt: Option<String> = None;
+
         Python::with_gil(|py| {
             
             style_opt = match style {
                 Some(st) => try_extract_button_style(st, py),
+                None => None,
+            };
+
+            arrow_opt = match arrow_type {
+                Some(ar) => try_extract_button_arrow(ar, py),
                 None => None,
             };
         });
@@ -1963,7 +1970,13 @@ fn add_image(&mut self,
 
     #[pyo3(signature = (id, item, value))]
     fn update_item(&self, id: usize, item: String, value: PyObject) {
-
+        // This update function extracts the PyObject then
+        // then the widget is called to determine which item
+        // was indicated for that particular widget. 
+        // The extracted value are put into a structure with all 
+        // optional values and sent to the widget where selected
+        // optional values are used in the widget update. 
+        
         let mut items = UpdateItems::default();
         
         Python::with_gil(|py| {
@@ -2025,6 +2038,14 @@ fn add_image(&mut self,
             }
 
             let res = try_extract_button_style(value.clone(), py);
+            if res.is_some() {
+                items.value_str = match res {
+                    Some(r) => Some(r),
+                    None => None,
+                };
+            }
+
+            let res = try_extract_button_arrow(value.clone(), py);
             if res.is_some() {
                 items.value_str = match res {
                     Some(r) => Some(r),
@@ -2175,72 +2196,7 @@ fn add_image(&mut self,
         
     }
 
-    // #[pyo3(signature = (Primary=false, Secondary=false, Positive=false, 
-    //                     Destructive=false, Text=false))]
-    // fn button_style(&mut self,
-    //                     Primary: bool,
-    //                     Secondary: bool,
-    //                     Positive: bool,
-    //                     Destructive: bool,
-    //                     Text: bool,
-    //                     ) -> String 
-    // {
-    //     if Primary {return "Primary".to_string()}
-    //     if Secondary {return "Secondary".to_string()}
-    //     if Positive {return "Positive".to_string()}
-    //     if Destructive { return "Destructive".to_string()}
-    //     if Text { return "Text".to_string()}
-
-    //     panic!("The button style must be one of the types listed in the docs.")
-    // }
-
-    // #[pyo3(signature = (UpArrow=false, RightArrow=false, DownArrow=false, 
-    //                     LeftArrow=false))]
-    // fn button_arrow(&mut self,
-    //                 UpArrow: bool,
-    //                 RightArrow: bool,
-    //                 DownArrow: bool,
-    //                 LeftArrow: bool,
-    //                 ) -> String
-    // {
-    //     if UpArrow { return "UpArrow".to_string()}
-    //     if RightArrow { return "RightArrow".to_string()}
-    //     if DownArrow { return "DownArrow".to_string()}
-    //     if LeftArrow { return "LeftArrow".to_string()}
-
-    //     panic!("The button arrow must be one of those listed in the docs.")
-    // }
-
-    // #[pyo3(signature = (Primary=false, Secondary=false, Success=false, Danger=false, 
-    //                     Warning=false, Info=false, Light=false, Dark=false, White=false,
-    //                     Default=false))]
-    // fn card_style(&mut self,
-    //                     Primary: bool,
-    //                     Secondary: bool,
-    //                     Success: bool, 
-    //                     Danger: bool, 
-    //                     Warning: bool,
-    //                     Info: bool, 
-    //                     Light: bool,
-    //                     Dark: bool,
-    //                     White: bool,
-    //                     Default: bool,
-    //                     ) -> String
-    // {
-    //     if Primary {return "Primary".to_string()}
-    //     if Secondary {return "Secondary".to_string()}
-    //     if Success {return "Success".to_string()}
-    //     if Danger { return "Danger".to_string()}
-    //     if Warning { return "Warning".to_string()}
-    //     if Info { return "Info".to_string()}
-    //     if Light { return "Light".to_string()}
-    //     if Dark { return "Dark".to_string()}
-    //     if White { return "White".to_string()}
-    //     if Default { return "Default".to_string()}
-        
-    //     panic!("The Card style must be one of those listed in the docs.")
-    // }
-
+    
     #[pyo3(signature = (Light=false, Dark=false, Dracula=false, Nord=false,SolarizedLight=false,
                         SolarizedDark=false, GruvboxLight=false,GruvboxDark=false,CatppuccinLatte=false,
                         CatppuccinFrappe=false, CatppuccinMacchiato=false, CatppuccinMocha=false,
@@ -2319,11 +2275,12 @@ fn add_image(&mut self,
 fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IPG>()?;
     m.add_class::<IpgButtonStyles>()?;
+    m.add_class::<IpgButtonArrows>()?;
     m.add_class::<IpgCardStyles>()?;
     Ok(())
 }
 
-#[derive(Default, Debug, PartialEq)]
+#[derive(Default, Debug)]
 pub struct UpdateItems {
     value_str: Option<String>,
     value_bool: Option<bool>,
@@ -2332,6 +2289,9 @@ pub struct UpdateItems {
     value_tup_str_i64: Option<(String, i64)>,
     value_tup_str_f64: Option<(String, f64)>,
     value_vec_f64: Option<Vec<f64>>,
+    value_button_styles: Option<IpgButtonStyles>,
+    value_button_arrows: Option<IpgButtonArrows>,
+
 }
 
 impl UpdateItems {}
