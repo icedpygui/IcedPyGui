@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgButtonStyles
+from icedpygui import IPG, IpgButtonStyles, IpgButtonArrows, IpgButtonUpdate
 
 
 ipg = IPG()
@@ -12,32 +12,35 @@ text_id = 0
 # starting with update_
 def update_button(id):
     # changing the radius using a float
-    ipg.update_item(radius_btn, "corner_radius", 5.0)
-    ipg.update_item(radius_btn, "label", "Corner Radius Changed")
+    ipg.update_item(radius_btn, IpgButtonUpdate.CornerRadius, 5.0)
+    ipg.update_item(radius_btn, IpgButtonUpdate.Label, "Corner Radius Changed")
     # changing the label
-    ipg.update_item(label_btn, "label", "Label Changed")
+    ipg.update_item(label_btn, IpgButtonUpdate.Label, "Label Changed")
     # Changing the width
-    ipg.update_item(width_btn, "width", 300.0)
-    ipg.update_item(width_btn, "label", "Width Changed")
+    ipg.update_item(width_btn, IpgButtonUpdate.Width, 300.0)
+    ipg.update_item(width_btn, IpgButtonUpdate.Label, "Width Changed")
 
     # Changing the heigth
-    ipg.update_item(height_btn, "height", 100.0)
-    ipg.update_item(height_btn, "label", "Heigth Changed")
+    ipg.update_item(height_btn, IpgButtonUpdate.Height, 100.0)
+    ipg.update_item(height_btn, IpgButtonUpdate.Label, "Heigth Changed")
 
     # Changing the padding around the label
-    ipg.update_item(padding_btn, "padding", [30.0])
-    ipg.update_item(padding_btn, "label", "Padding Changed")
+    ipg.update_item(padding_btn, IpgButtonUpdate.Padding, [30.0])
+    ipg.update_item(padding_btn, IpgButtonUpdate.Label, "Padding Changed")
 
     # Changing the style
-    ipg.update_item(style_btn, "style", IpgButtonStyles.Secondary)
-    ipg.update_item(style_btn, "label", "Styling Changed")
+    ipg.update_item(style_btn, IpgButtonUpdate.Style, IpgButtonStyles.Secondary)
+    ipg.update_item(style_btn, IpgButtonUpdate.Label, "Styling Changed")
+
+    # Changing the Arrow
+    ipg.update_item(arrow_btn, IpgButtonUpdate.ArrowStyle, IpgButtonArrows.ArrowDown)
 
     # Hide the button
-    ipg.update_item(show_btn, "show", False)
+    ipg.update_item(show_btn, IpgButtonUpdate.Show, False)
 
 
 
-ipg.add_window("main", "Button Update", width=500, height=600, 
+ipg.add_window("main", "Button Update", width=500, height=700, 
                                     pos_centered=True)
 
 ipg.add_container("main", "cont", align_x="center", align_y="center", width_fill=True)
@@ -57,6 +60,8 @@ height_btn = ipg.add_button("col", "Heigth Will Change")
 padding_btn = ipg.add_button("col", "Padding Will Change")
 
 style_btn = ipg.add_button("col", "Styling Will Change")
+
+arrow_btn = ipg.add_button("col", "", corner_radius=0.0, arrow_style=IpgButtonArrows.ArrowUp)
 
 show_btn = ipg.add_button("col", "This button will disappear")
 

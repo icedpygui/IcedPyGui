@@ -21,7 +21,7 @@ mod iced_widgets;
 
 use crate::iced_widgets::scrollable::Direction;
 
-use ipg_widgets::ipg_button::{button_item_update, try_extract_button_arrow, try_extract_button_style, IpgButton, IpgButtonArrows, IpgButtonStyles};
+use ipg_widgets::ipg_button::{button_item_update, try_extract_button_arrow, try_extract_button_style, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonUpdate};
 use ipg_widgets::ipg_card::{card_item_update, try_extract_card_style, IpgCard, IpgCardStyles};
 use ipg_widgets::ipg_checkbox::{IpgCheckBox, checkbox_item_update};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
@@ -748,7 +748,7 @@ impl IPG {
         if arrow_style.is_some() {
             arrow = match arrow_style {
                 Some(ar) => try_extract_button_arrow(ar),
-                None => panic!("Button: Construct - Could not extract arrow_style."),
+                None => None,
             }
 
         }
@@ -1969,7 +1969,7 @@ fn add_image(&mut self,
 
 
     #[pyo3(signature = (id, item, value))]
-    fn update_item(&self, id: usize, item: String, value: PyObject) {
+    fn update_item(&self, id: usize, item: PyObject, value: PyObject) {
         
         let mut state = access_state();
 
@@ -1987,23 +1987,23 @@ fn add_image(&mut self,
                 return
             },
             IpgWidgets::IpgCard(crd) => {
-                card_item_update(crd, item, value);
-                drop(state);
+                // card_item_update(crd, item, value);
+                // drop(state);
                 return
             },
             IpgWidgets::IpgCheckBox(chk) => {
-                checkbox_item_update(chk, item, value);
-                drop(state);
+                // checkbox_item_update(chk, item, value);
+                // drop(state);
                 return
             },
             IpgWidgets::IpgColorPicker(cp) => {
-                color_picker_item_update(cp, item, value);
-                drop(state);
+                // color_picker_item_update(cp, item, value);
+                // drop(state);
                 return
             },
             IpgWidgets::IpgDatePicker(dp) => {
-                date_picker_item_update(dp, item, value);
-                drop(state);
+                // date_picker_item_update(dp, item, value);
+                // drop(state);
                 return
             },
             IpgWidgets::IpgImage(_img) => (),
@@ -2011,8 +2011,8 @@ fn add_image(&mut self,
             IpgWidgets::IpgMenuItem(_wid) => (),
             IpgWidgets::IpgPickList(_wid) => (),
             IpgWidgets::IpgProgressBar(pb) => {
-                progress_bar_item_update(pb, item, value);
-                drop(state);
+                // progress_bar_item_update(pb, item, value);
+                // drop(state);
                 return
             },
             IpgWidgets::IpgRadio(_wid) => (),
@@ -2021,8 +2021,8 @@ fn add_image(&mut self,
             IpgWidgets::IpgSpace(_wid) => (),
             IpgWidgets::IpgTable(_wid) => (),
             IpgWidgets::IpgText(txt) => {
-                text_item_update(txt, item, value);
-                drop(state);
+                // text_item_update(txt, item, value);
+                // drop(state);
                 return
             },
             IpgWidgets::IpgTextEditor(_wid) => (),
@@ -2158,6 +2158,7 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IPG>()?;
     m.add_class::<IpgButtonStyles>()?;
     m.add_class::<IpgButtonArrows>()?;
+    m.add_class::<IpgButtonUpdate>()?;
     m.add_class::<IpgCardStyles>()?;
     Ok(())
 }

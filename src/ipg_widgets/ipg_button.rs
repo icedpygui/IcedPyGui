@@ -92,81 +92,6 @@ pub enum IpgButtonStyles {
     Text,
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgButtonArrows {
-    ArrowBarLeft,
-    ArrowBarRight,
-    ArrowBarUp,
-    ArrowClockwise,
-    ArrowCounterclockwise,
-    ArrowDown,
-    ArrowDownCircle,
-    ArrowDownCircleFill,
-    ArrowDownLeft,
-    ArrowDownLeftCircle,
-    ArrowDownLeftCircleFill,
-    ArrowDownLeftSquare,
-    ArrowDownLeftSquareFill,
-    ArrowDownRight,
-    ArrowDownRightCircle,
-    ArrowDownRightCircleFill,
-    ArrowDownRightSquare,
-    ArrowDownRightSquareFill,
-    ArrowDownShort,
-    ArrowDownSquare,
-    ArrowDownSquareFill,
-    ArrowDownUp,
-    ArrowLeft,
-    ArrowLeftCircle,
-    ArrowLeftCircleFill,
-    ArrowLeftRight,
-    ArrowLeftShort,
-    ArrowLeftSquare,
-    ArrowLeftSquareFill,
-    ArrowNinezerodegDown,
-    ArrowNinezerodegLeft,
-    ArrowNinezerodegRight,
-    ArrowNinezerodegUp,
-    ArrowRepeat,
-    ArrowReturnLeft,
-    ArrowReturnRight,
-    ArrowRight,
-    ArrowRightCircle,
-    ArrowRightCircleFill,
-    ArrowRightShort,
-    ArrowRightSquare,
-    ArrowRightSquareFill,
-    ArrowThroughHeart,
-    ArrowThroughHeartFill,
-    ArrowUp,
-    ArrowUpCircle,
-    ArrowUpCircleFill,
-    ArrowUpLeft,
-    ArrowUpLeftCircle,
-    ArrowUpLeftCircleFill,
-    ArrowUpLeftSquare,
-    ArrowUpLeftSquareFill,
-    ArrowUpRight,
-    ArrowUpRightCircle,
-    ArrowUpRightCircleFill,
-    ArrowUpRightSquare,
-    ArrowUpRightSquareFill,
-    ArrowUpShort,
-    ArrowUpSquare,
-    ArrowUpSquareFill,
-    Arrows,
-    ArrowsAngleContract,
-    ArrowsAngleExpand,
-    ArrowsCollapse,
-    ArrowsCollapseVertical,
-    ArrowsExpand,
-    ArrowsExpandVertical,
-    ArrowsFullscreen,
-    ArrowsMove,
-    ArrowsVertical,
-}
-
 
 pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
 
@@ -261,73 +186,73 @@ pub fn process_callback(wco: WidgetCallbackOut)
 }
 
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgButtonUpdate {
+    ArrowStyle,
+    CornerRadius,
+    Height,
+    HeightFill,
+    Label,
+    Padding,
+    Show,
+    Style,
+    Width,
+    WidthFill,
+}
+
+
 pub fn button_item_update(btn: &mut IpgButton,
-                            item: String,
+                            item: PyObject,
                             value: PyObject,
                             )
 {
-    if item == "arrow_style".to_string() {
-        let arrow = try_extract_button_arrow(value);
-        if arrow == Some("Custom".to_string()) {
-            btn.arrow_style = Some(btn.label.clone());
-            btn.label = "".to_string();
-        } else {
-            btn.arrow_style = arrow;
-        }
-        return
-    }
 
-    if item == "corner_radius".to_string() {
-        btn.corner_radius = try_extract_f64(value) as f32;
-        return
-    }
+    let update = try_extract_button_update(item);
 
-    if item == "label".to_string() {
-        btn.label = try_extract_string(value);
-        return
+    match update {
+       IpgButtonUpdate::ArrowStyle => {
+            let arrow = try_extract_button_arrow(value);
+            if arrow == Some("Custom".to_string()) {
+                btn.arrow_style = Some(btn.label.clone());
+                btn.label = "".to_string();
+            } else {
+                btn.arrow_style = arrow;
+            }
+        },
+        IpgButtonUpdate::CornerRadius => {
+            btn.corner_radius = try_extract_f64(value) as f32;
+        },
+        IpgButtonUpdate::Label => {
+            btn.label = try_extract_string(value);
+        },
+        IpgButtonUpdate::Height => {
+            let val = try_extract_f64(value);
+            btn.height = get_height(Some(val as f32), false);
+        },
+        IpgButtonUpdate::HeightFill => {
+            let val = try_extract_boolean(value);
+            btn.height = get_height(None, val);
+        },
+        IpgButtonUpdate::Padding => {
+            let val = try_extract_vec_f64(value);
+            btn.padding =  get_padding(val);
+        },
+        IpgButtonUpdate::Show => {
+            btn.show = try_extract_boolean(value);
+        },
+        IpgButtonUpdate::Style => {
+            btn.style = try_extract_button_style(value);
+        },
+        IpgButtonUpdate::Width => {
+            let val = try_extract_f64(value);
+            btn.width = get_width(Some(val as f32), false);
+        },
+        IpgButtonUpdate::WidthFill => {
+            let val = try_extract_boolean(value);
+            btn.width = get_width(None, val);
+        },
     }
-
-    if item == "width".to_string() {
-        let val = try_extract_f64(value);
-        btn.width = get_width(Some(val as f32), false);
-        return
-    }
-
-    if item == "width_fill".to_string() {
-        let val = try_extract_boolean(value);
-        btn.width = get_width(None, val);
-        return
-    }
-
-    if item == "height".to_string() {
-        let val = try_extract_f64(value);
-        btn.height = get_height(Some(val as f32), false);
-        return
-    }
-
-    if item == "height_fill".to_string() {
-        let val = try_extract_boolean(value);
-        btn.height = get_height(None, val);
-        return
-    }
-
-    if item == "padding".to_string() {
-        let val = try_extract_vec_f64(value);
-        btn.padding =  get_padding(val);
-        return
-    }
-
-    if item == "show".to_string() {
-        btn.show = try_extract_boolean(value);
-        return
-    }
-
-    if item == "style".to_string() {
-        btn.style = try_extract_button_style(value);
-        return
-    }
-
-    panic!("Button update item {} could not be found", item)
 
 }
 
@@ -380,8 +305,96 @@ pub fn try_extract_button_arrow(arrow_obj: PyObject) -> Option<String> {
             Ok(ar) => return Some(get_boot_arrow(ar)),
             Err(_) => panic!("Button arrow extraction failed"),
         }
-        
     })
+}
+
+
+pub fn try_extract_button_update(update_obj: PyObject) -> IpgButtonUpdate {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgButtonUpdate>(py);
+
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Button update extraction failed"),
+        }
+    })
+}
+
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgButtonArrows {
+    ArrowBarLeft,
+    ArrowBarRight,
+    ArrowBarUp,
+    ArrowClockwise,
+    ArrowCounterclockwise,
+    ArrowDown,
+    ArrowDownCircle,
+    ArrowDownCircleFill,
+    ArrowDownLeft,
+    ArrowDownLeftCircle,
+    ArrowDownLeftCircleFill,
+    ArrowDownLeftSquare,
+    ArrowDownLeftSquareFill,
+    ArrowDownRight,
+    ArrowDownRightCircle,
+    ArrowDownRightCircleFill,
+    ArrowDownRightSquare,
+    ArrowDownRightSquareFill,
+    ArrowDownShort,
+    ArrowDownSquare,
+    ArrowDownSquareFill,
+    ArrowDownUp,
+    ArrowLeft,
+    ArrowLeftCircle,
+    ArrowLeftCircleFill,
+    ArrowLeftRight,
+    ArrowLeftShort,
+    ArrowLeftSquare,
+    ArrowLeftSquareFill,
+    ArrowNinezerodegDown,
+    ArrowNinezerodegLeft,
+    ArrowNinezerodegRight,
+    ArrowNinezerodegUp,
+    ArrowRepeat,
+    ArrowReturnLeft,
+    ArrowReturnRight,
+    ArrowRight,
+    ArrowRightCircle,
+    ArrowRightCircleFill,
+    ArrowRightShort,
+    ArrowRightSquare,
+    ArrowRightSquareFill,
+    ArrowThroughHeart,
+    ArrowThroughHeartFill,
+    ArrowUp,
+    ArrowUpCircle,
+    ArrowUpCircleFill,
+    ArrowUpLeft,
+    ArrowUpLeftCircle,
+    ArrowUpLeftCircleFill,
+    ArrowUpLeftSquare,
+    ArrowUpLeftSquareFill,
+    ArrowUpRight,
+    ArrowUpRightCircle,
+    ArrowUpRightCircleFill,
+    ArrowUpRightSquare,
+    ArrowUpRightSquareFill,
+    ArrowUpShort,
+    ArrowUpSquare,
+    ArrowUpSquareFill,
+    Arrows,
+    ArrowsAngleContract,
+    ArrowsAngleExpand,
+    ArrowsCollapse,
+    ArrowsCollapseVertical,
+    ArrowsExpand,
+    ArrowsExpandVertical,
+    ArrowsFullscreen,
+    ArrowsMove,
+    ArrowsVertical,
 }
 
 
