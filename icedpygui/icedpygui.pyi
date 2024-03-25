@@ -1128,6 +1128,13 @@ class IpgCardStyles:
     White=0
     Default=0
 
+class IpgCardUpdate:
+    Body=0,
+    Foot=0,
+    Head=0,
+    IsOpen=0,
+    Style=0, 
+
 class IpgButtonArrows:
     ArrowBarLeft=0
     ArrowBarRight=0

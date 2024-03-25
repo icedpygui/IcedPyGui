@@ -1,22 +1,22 @@
-from icedpygui.icedpygui import IPG, IpgButtonStyles, IpgCardStyles
+from icedpygui import IPG, IpgButtonStyles, IpgCardStyles, IpgCardUpdate
 
 
 ipg = IPG()
 
 
 def update_card(id):
-    ipg.update_item(card_id, "head", "This is a new head with Danger style")
-    ipg.update_item(card_id, "body", "This is a new body.")
-    ipg.update_item(card_id, "foot", "This is a new foot")
-    ipg.update_item(card_id, "style", IpgCardStyles.Danger)
+    ipg.update_item(card_id, IpgCardUpdate.Head, "This is a new head with Danger style")
+    ipg.update_item(card_id, IpgCardUpdate.Body, "This is a new body.")
+    ipg.update_item(card_id, IpgCardUpdate.Foot, "This is a new foot")
+    ipg.update_item(card_id, IpgCardUpdate.Style, IpgCardStyles.Danger)
 
 
 def minimize_card(id):
-    ipg.update_item(id, "is_open", False)
+    ipg.update_item(id, IpgCardUpdate.IsOpen, False)
 
 
 def maximize_card(id):
-    ipg.update_item(card_id, "is_open", True)
+    ipg.update_item(card_id, IpgCardUpdate.IsOpen, True)
 
 
 wnd_height = 800
@@ -27,7 +27,7 @@ ipg.add_window(window_id="main", title="Card Demo", width=800, height=wnd_height
 ipg.add_container(window_id="main", container_id="btn_cont", align_x="center", 
                   align_y="center", width_fill=True)
 
-ipg.add_button("btn_cont", label="Pressing this will change the updatable items in first card",
+ipg.add_button("btn_cont", label="Pressing this will change the updatable items in the first card\n if you close card 1, restore it by pressing on the bottom button.",
                                     on_press=update_card)
 
 ipg.add_container(window_id="main", container_id="cont", align_x="center", 

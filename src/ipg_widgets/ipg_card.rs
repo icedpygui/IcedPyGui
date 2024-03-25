@@ -219,38 +219,41 @@ pub fn process_callback(wco: WidgetCallbackOut)
 }
 
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgCardUpdate {
+    Head,
+    Body,
+    Foot,
+    IsOpen,
+    Style,
+}
+
+
 pub fn card_item_update(crd: &mut IpgCard,
-                            item: String,
+                            item: PyObject,
                             value: PyObject,
                             )
 {
-    if item == "head".to_string() {
-        crd.head = try_extract_string(value);
-        return
+    let update = try_extract_card_update(item);
+
+    match update {
+        IpgCardUpdate::Body => {
+            crd.body = try_extract_string(value);
+        },
+        IpgCardUpdate::Foot => {
+            crd.foot = Some(try_extract_string(value));
+        },
+        IpgCardUpdate::Head => {
+            crd.head = try_extract_string(value);
+        },
+        IpgCardUpdate::IsOpen => {
+            crd.is_open = try_extract_boolean(value);
+        },
+        IpgCardUpdate::Style => {
+            crd.style = try_extract_card_style(value);
+        },
     }
-
-    if item == "body".to_string() {
-        crd.body = try_extract_string(value);
-        return
-    }
-
-    if item == "foot".to_string() {
-        crd.foot = Some(try_extract_string(value));
-        return
-    }
-
-    if item == "is_open".to_string() {
-        crd.is_open = try_extract_boolean(value);
-        return
-    }
-
-    if item == "style".to_string() {
-        crd.style = Some(try_extract_string(value));
-        return
-    }
-
-    panic!("Card update item >{}< could not be found", item)
-
 }
 
 
@@ -291,18 +294,23 @@ pub fn get_card_str_from_style(style: IpgCardStyles) -> Option<String> {
         }
 }
 
-pub fn try_extract_card_style(style_obj: PyObject, py: Python<'_>) -> Option<String> {
-
-    let mut style: Option<String> = None;
-
-    let res = style_obj.extract::<IpgCardStyles>(py);
-            if !res.is_err() {
-                style = match res {
-                    Ok(st) => get_card_str_from_style(st),
-                    Err(_) => None,
-                }
-            }
-
-    style
+pub fn try_extract_card_style(style_obj: PyObject) -> Option<String> {
+    Python::with_gil(|py| {
+        let res = style_obj.extract::<IpgCardStyles>(py);
+        match res {
+            Ok(st) => get_card_str_from_style(st),
+            Err(_) => None,
+        }
+    })
 }
 
+
+pub fn try_extract_card_update(update_obj: PyObject) -> IpgCardUpdate {
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgCardUpdate>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Card update extraction failed."),
+        }
+    })
+}

@@ -207,7 +207,6 @@ pub fn button_item_update(btn: &mut IpgButton,
                             value: PyObject,
                             )
 {
-
     let update = try_extract_button_update(item);
 
     match update {
