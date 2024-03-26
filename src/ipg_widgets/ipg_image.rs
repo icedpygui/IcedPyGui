@@ -258,6 +258,7 @@ pub enum IpgImageUpdate {
     WidthFill,
 }
 
+
 pub fn image_item_update(img: &mut IpgImage,
                             item: PyObject,
                             value: PyObject,

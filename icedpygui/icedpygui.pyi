@@ -1175,6 +1175,24 @@ class IpgCheckboxUpdate:
     Width=0,
     WidthFill=0,
 
+
+class IpgDatePickerUpdate:
+    Label=0,
+    Padding=0,
+    SizeFactor=0,
+    Show=0,
+
+
+class IpgImageUpdate:
+    Height=0,
+    HeightFill=0,
+    ImagePath=0,
+    Padding=0,
+    Show=0,
+    Width=0,
+    WidthFill=0,
+
+
 class IpgTextUpdate:
     Content=0,
     Height=0,
@@ -1190,11 +1208,6 @@ class IpgTextUpdate:
     Width=0,
     WidthFill=0,
 
-class IpgDatePickerUpdate:
-    Label=0,
-    Padding=0,
-    SizeFactor=0,
-    Show=0,
 
 class IpgButtonArrows:
     ArrowBarLeft=0
