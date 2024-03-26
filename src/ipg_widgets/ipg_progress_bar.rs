@@ -1,10 +1,10 @@
 
 use iced::{Element, Length};
-use iced::widget::ProgressBar;
-use pyo3::PyObject;
+use iced::widget::{ProgressBar, Space};
+use pyo3::{pyclass, PyObject, Python};
 use crate::app;
 
-use super::helpers::try_extract_f64;
+use super::helpers::{get_height, get_width, try_extract_boolean, try_extract_f64};
 
 
 #[derive(Debug, Clone)]
@@ -46,6 +46,10 @@ impl IpgProgressBar {
 
 pub fn construct_progress_bar(bar: &IpgProgressBar) -> Element<'static, app::Message> {
     
+    if !bar.show {
+        return Space::new(0.0, 0.0).into();
+    }
+
     ProgressBar::new(bar.min..=bar.max, bar.value)
                             .width(bar.width)
                             .height(bar.height)
@@ -60,14 +64,62 @@ pub fn construct_progress_bar(bar: &IpgProgressBar) -> Element<'static, app::Mes
 //     }
 // }
 
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgProgressBarUpdate {
+    Height,
+    Min,
+    Max,
+    Show,
+    Value,
+    Width,
+    WidthFill,
+}
+
 pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
-                                item: String,
+                                item: PyObject,
                                 value: PyObject,
                                 )
 {
+    let update = try_extract_progress_bar_update(item);
 
-    if item == "value".to_string() {
-        pb.value = try_extract_f64(value) as f32;
+    match update {
+        IpgProgressBarUpdate::Height => {
+            let val = try_extract_f64(value);
+            pb.height = get_height(Some(val as f32), false);
+        },
+        IpgProgressBarUpdate::Min => {
+            pb.min = try_extract_f64(value) as f32;
+        },
+        IpgProgressBarUpdate::Max => {
+            pb.max = try_extract_f64(value) as f32;
+        },
+        IpgProgressBarUpdate::Show => {
+            pb.show = try_extract_boolean(value);
+        },
+        IpgProgressBarUpdate::Value => {
+            pb.value = try_extract_f64(value) as f32;
+        },
+        IpgProgressBarUpdate::Width => {
+            let val = try_extract_f64(value);
+            pb.width = get_width(Some(val as f32), false);
+        },
+        IpgProgressBarUpdate::WidthFill => {
+            let val = try_extract_boolean(value);
+            pb.width = get_width(None, val);
+        },
     }
-    
+}
+
+
+pub fn try_extract_progress_bar_update(update_obj: PyObject) -> IpgProgressBarUpdate {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgProgressBarUpdate>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("ProgressBar update extraction failed"),
+        }
+    })
 }

@@ -1203,6 +1203,16 @@ class IpgPickListUpdate:
     Width=0,
 
 
+class IpgProgressBarUpdate:
+    Height=0,
+    Min=0,
+    Max=0,
+    Show=0,
+    Value=0,
+    Width=0,
+    WidthFill=0,
+
+
 class IpgTextUpdate:
     Content=0,
     Height=0,

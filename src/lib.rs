@@ -34,7 +34,7 @@ use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageUpdate};
 use ipg_widgets::ipg_menu::{IpgMenuBar, IpgMenuItem};
 use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListUpdate};
-use ipg_widgets::ipg_progress_bar::{IpgProgressBar, progress_bar_item_update};
+use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarUpdate};
 use ipg_widgets::ipg_radio::{RadioDirection, IpgRadio};
 use ipg_widgets::ipg_row::IpgRow;
 use ipg_widgets::ipg_scrollable::IpgScrollable;
@@ -2007,8 +2007,8 @@ fn add_image(&mut self,
                 drop(state);
             },
             IpgWidgets::IpgProgressBar(pb) => {
-                // progress_bar_item_update(pb, item, value);
-                // drop(state);
+                progress_bar_item_update(pb, item, value);
+                drop(state);
             },
             IpgWidgets::IpgRadio(_wid) => (),
             IpgWidgets::IpgSelectableText(_wid) => (),
@@ -2159,6 +2159,7 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IpgDatePickerUpdate>()?;
     m.add_class::<IpgImageUpdate>()?;
     m.add_class::<IpgPickListUpdate>()?;
+    m.add_class::<IpgProgressBarUpdate>()?;
     m.add_class::<IpgTextUpdate>()?;
     Ok(())
 }
