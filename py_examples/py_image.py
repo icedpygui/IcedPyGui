@@ -1,4 +1,4 @@
-from icedpygui.icedpygui import IPG
+from icedpygui import IPG, IpgTextUpdate, IpgImageUpdate
 
 
 ipg = IPG()
@@ -6,19 +6,19 @@ ipg = IPG()
 
 def image_selected(id):
     index = image_ids.index(id)
-    ipg.update_item(text_ids[index], "content", "You Pressed Me!")
+    ipg.update_item(text_ids[index], IpgTextUpdate.Content, "You Pressed Me!")
 
 
 def on_mouse_move(id, point):
     index = image_ids.index(id)
     x = '{:{}.{}}'.format(point.get('x'), 10, 4)
     y = '{:{}.{}}'.format(point.get('y'), 10, 4)
-    ipg.update_item(text_points[index], "content", f"x={x}\ny={y}\n")
+    ipg.update_item(text_points[index], IpgTextUpdate.Content, f"x={x}\ny={y}\n")
 
 
 def on_mouse_exit(id):
     index = image_ids.index(id)
-    ipg.update_item(text_points[index], "content", "Point")
+    ipg.update_item(text_points[index], IpgTextUpdate.Content, "Point")
 
 ipg.add_window(window_id="main", title="Date Picker Demo", width=800, height=800, 
                                     pos_x=500, pos_y=100)
@@ -31,7 +31,7 @@ ipg.add_container(window_id="main", container_id="cont", align_x="center",
 # and move back to center.  So to reduce this movement, height was set.
 ipg.add_column(window_id="main", container_id="col1", parent_id="cont", height=400.0)
 
-path = "/home/charles/Documents/rust/icedpygui_project/IcedPyGui/resources/ferris.png"
+path = "/home/charles/Documents/icedpygui_project/IcedPyGui/resources/ferris.png"
 
 ipg.add_row(window_id="main", container_id="row1", parent_id="col1")
 

@@ -4,11 +4,19 @@ use crate::access_callbacks;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
+use super::helpers::get_height;
+use super::helpers::get_padding;
+use super::helpers::get_width;
+use super::helpers::try_extract_boolean;
+use super::helpers::try_extract_f64;
+use super::helpers::try_extract_string;
+use super::helpers::try_extract_vec_f64;
 use iced::{Length, Element, Padding, Point};
 use iced::widget::{Container, Image, MouseArea};
 use iced::mouse::Interaction;
 use iced::advanced::image;
 
+use pyo3::pyclass;
 use pyo3::types::IntoPyDict;
 use pyo3::{PyObject, Python};
 
@@ -238,6 +246,8 @@ fn process_callback(wco: WidgetCallbackOut)
 }
 
 
+#[derive(Debug, Clone)]
+#[pyclass]
 pub enum IpgImageUpdate {
     Height,
     HeightFill,
@@ -248,18 +258,41 @@ pub enum IpgImageUpdate {
     WidthFill,
 }
 
-pub fn image_item_update((img: &mut IpgImage,
+pub fn image_item_update(img: &mut IpgImage,
                             item: PyObject,
                             value: PyObject,
-                            )) 
+                            )
 {
 
     let update = try_extract_button_update(item);
 
     match update {
-        IpgImageUpdate::Height -> {
-            img.
-        }
+        IpgImageUpdate::Height => {
+            let val = try_extract_f64(value);
+            img.height = get_height(Some(val as f32), false);
+        },
+        IpgImageUpdate::HeightFill => {
+            let val = try_extract_boolean(value);
+            img.height = get_height(None, val);
+        },
+        IpgImageUpdate::ImagePath => {
+            img.image_path = try_extract_string(value);
+        },
+        IpgImageUpdate::Padding => {
+            let val = try_extract_vec_f64(value);
+            img.padding =  get_padding(val);
+        },
+        IpgImageUpdate::Show => {
+            img.show = try_extract_boolean(value);
+        },
+        IpgImageUpdate::Width => {
+            let val = try_extract_f64(value);
+            img.width = get_width(Some(val as f32), false);
+        },
+        IpgImageUpdate::WidthFill => {
+            let val = try_extract_boolean(value);
+            img.width = get_width(None, val);
+        },
     }
 }
 
