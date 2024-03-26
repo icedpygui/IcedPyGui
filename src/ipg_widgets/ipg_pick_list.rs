@@ -5,11 +5,18 @@ use crate::app;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
+use super::helpers::get_padding;
+use super::helpers::get_width;
+use super::helpers::try_extract_boolean;
+use super::helpers::try_extract_f64;
+use super::helpers::try_extract_string;
+use super::helpers::try_extract_vec_f64;
 
 use iced::{Padding, Length, Element};
-use iced::widget::PickList;
+use iced::widget::{PickList, Space};
 use iced::widget::text::{LineHeight, Shaping};
 
+use pyo3::pyclass;
 use pyo3::{PyObject, Python};
 
 
@@ -75,6 +82,10 @@ pub enum PLMessage {
 }
 
 pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
+
+    if!pick.show {
+        return Space::new(0.0, 0.0).into()
+    }
 
     let placeholder = match pick.placeholder.clone() {
         Some(holder) => holder,
@@ -224,3 +235,73 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
     })
 
  }
+
+
+ #[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgPickListUpdate {
+    Options,
+    Placeholder,
+    Padding,
+    Show,
+    TextSize,
+    TextLineHeight,
+    Width,
+    // WidthFill,  see comment below
+}
+
+
+pub fn pick_list_item_update(pl: &mut IpgPickList,
+                            item: PyObject,
+                            value: PyObject,
+                            )
+{
+    let update = try_extract_pick_list_update(item);
+
+    match update {
+        IpgPickListUpdate::Options => {
+            pl.options = value;
+            pl.selected = None;
+        },
+        IpgPickListUpdate::Placeholder => {
+            pl.placeholder = Some(try_extract_string(value));
+            pl.selected = None;
+        },
+        IpgPickListUpdate::Padding => {
+            let val = try_extract_vec_f64(value);
+            pl.padding =  get_padding(val);
+        },
+        IpgPickListUpdate::Show => {
+            pl.show = try_extract_boolean(value);
+        },
+        IpgPickListUpdate::TextSize => {
+            let size = try_extract_f64(value);
+            pl.text_size = Some(size as f32);
+        },
+        IpgPickListUpdate::TextLineHeight => {
+            let val = try_extract_f64(value) as f32;
+            pl.text_line_height = LineHeight::Relative(val);
+        },
+        IpgPickListUpdate::Width => {
+            let val = try_extract_f64(value);
+            pl.width = get_width(Some(val as f32), false);
+        },
+         // TODO: Doesn't work, shrink the box but still displaces the text.
+        // IpgPickListUpdate::WidthFill => {
+        //     let val = try_extract_boolean(value);
+        //     pl.width = get_width(None, val);
+        // },
+    }
+
+}
+
+pub fn try_extract_pick_list_update(update_obj: PyObject) -> IpgPickListUpdate {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgPickListUpdate>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("PickList update extraction failed"),
+        }
+    })
+}

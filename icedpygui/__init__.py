@@ -4,4 +4,5 @@ from .icedpygui import IpgCardStyles, IpgCardUpdate
 from .icedpygui import IpgCheckboxUpdate
 from .icedpygui import IpgDatePickerUpdate
 from .icedpygui import IpgImageUpdate
+from .icedpygui import IpgPickListUpdate
 from .icedpygui import IpgTextUpdate

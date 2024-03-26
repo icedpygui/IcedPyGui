@@ -1193,6 +1193,16 @@ class IpgImageUpdate:
     WidthFill=0,
 
 
+class IpgPickListUpdate:
+    Options=0,
+    Placeholder=0,
+    Padding=0,
+    Show=0,
+    TextSize=0,
+    TextLineHeight=0,
+    Width=0,
+
+
 class IpgTextUpdate:
     Content=0,
     Height=0,
