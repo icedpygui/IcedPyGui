@@ -1212,6 +1212,26 @@ class IpgProgressBarUpdate:
     Width=0,
     WidthFill=0,
 
+class RadioDirection:
+    Horizontal=0,
+    Vertical=0,
+
+
+class RadioParams:
+    Direction=0,
+    Labels=0,
+    Padding=0,
+    SelectedIndex=0,
+    Show=0,
+    Size=0,
+    Spacing=0,
+    TextSpacing=0,
+    TextSize=0,
+    TextLineHeight=0,
+    UserData=0,
+    Width=0,
+    WidthFill=0,
+
 
 class IpgTextUpdate:
     Content=0,

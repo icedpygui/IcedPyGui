@@ -35,7 +35,7 @@ use ipg_widgets::ipg_menu::{IpgMenuBar, IpgMenuItem};
 use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListUpdate};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarUpdate};
-use ipg_widgets::ipg_radio::{RadioDirection, IpgRadio};
+use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, RadioDirection, RadioParams};
 use ipg_widgets::ipg_row::IpgRow;
 use ipg_widgets::ipg_scrollable::IpgScrollable;
 use ipg_widgets::ipg_selectable_text::IpgSelectableText;
@@ -154,6 +154,7 @@ pub struct IPG {
     id: usize,
     window_id: usize,
     gen_ids: Vec<usize>,
+    group_index: usize,
     // card_style: Option<String>,
 }
 
@@ -165,6 +166,7 @@ impl IPG {
             id: 0,
             window_id: 0,
             gen_ids: vec![],
+            group_index: 0,
             // card_style: None,
         }
     }
@@ -1258,8 +1260,8 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (parent_id, labels, id=None,
-                        direction="vertical".to_string(), 
+    #[pyo3(signature = (parent_id, labels, group, id=None,
+                        direction=RadioDirection::Vertical, 
                         spacing= 10.0, padding=DEFAULT_PADDING.to_vec(), 
                         width=None, width_fill=false,
                         on_select=None, selected_index=None, 
@@ -1270,9 +1272,10 @@ fn add_image(&mut self,
     fn add_radio(&mut self,
                     parent_id: String,
                     labels: Vec<String>,
+                    group: String,
                     //**above required
                     id: Option<usize>,
-                    direction: String,
+                    direction: RadioDirection,
                     spacing: f32,
                     padding: Vec<f64>,
                     width: Option<f32>,
@@ -1290,12 +1293,6 @@ fn add_image(&mut self,
     {
 
         let id = self.get_id(id);
-
-        let direction = match direction.as_str() {
-            "horizontal" => RadioDirection::Horizontal,
-            "vertical" => RadioDirection::Vertical,
-            _ => panic!("Radio direction must be either 'horizontal' or 'vertical'.")
-        };
 
         let is_selected: Option<usize> = match selected_index {
             Some(index) => {
@@ -1327,6 +1324,7 @@ fn add_image(&mut self,
         state.widgets.insert(id, IpgWidgets::IpgRadio(IpgRadio::new( 
                                         id,
                                         labels,
+                                        group,
                                         direction,
                                         spacing,
                                         padding,
@@ -1339,8 +1337,9 @@ fn add_image(&mut self,
                                         text_size,
                                         text_line_height,
                                         text_shaping,
+                                        self.group_index,
                                     )));
-                                              
+        self.group_index += 1;                                      
         Ok(id)
 
     }
@@ -2010,7 +2009,10 @@ fn add_image(&mut self,
                 progress_bar_item_update(pb, item, value);
                 drop(state);
             },
-            IpgWidgets::IpgRadio(_wid) => (),
+            IpgWidgets::IpgRadio(rd) => {
+                radio_item_update(rd, item, value);
+                drop(state);
+            },
             IpgWidgets::IpgSelectableText(_wid) => (),
             IpgWidgets::IpgSlider(_wid) => (),
             IpgWidgets::IpgSpace(_wid) => (),
@@ -2160,6 +2162,8 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IpgImageUpdate>()?;
     m.add_class::<IpgPickListUpdate>()?;
     m.add_class::<IpgProgressBarUpdate>()?;
+    m.add_class::<RadioDirection>()?;
+    m.add_class::<RadioParams>()?;
     m.add_class::<IpgTextUpdate>()?;
     Ok(())
 }

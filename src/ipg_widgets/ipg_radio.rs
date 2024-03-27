@@ -1,7 +1,9 @@
 #![allow(unused)]
 
+use crate::ipg_widgets::helpers::try_extract_boolean;
 use crate::{access_state, access_callbacks};
 use crate::app;
+use super::helpers::{try_extract_i64, try_extract_i64_option, try_extract_string, try_extract_vec_str};
 use super::ipg_enums::IpgWidgets;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
@@ -9,15 +11,16 @@ use super::callbacks::{WidgetCallbackIn,
 
 use iced::{Length, Element, Padding};
 use iced::widget::text::{LineHeight, Shaping};
-use iced::widget::{Column, Radio, Row};
+use iced::widget::{Column, Radio, Row, Space};
 
-use pyo3::{PyObject, Python};
+use pyo3::{pyclass, PyObject, Python};
 
 
 #[derive(Debug, Clone)]
 pub struct IpgRadio {
     pub id: usize,
     pub labels: Vec<String>,
+    pub group: String,
     pub direction: RadioDirection,
     pub spacing: f32,
     pub padding: Padding,
@@ -34,12 +37,14 @@ pub struct IpgRadio {
     pub text_shaping: Shaping,
     // pub font: Option<Font>,
     // pub style: <Renderer::Theme as StyleSheet>::Style,
+    pub group_index: usize,
 }
 
 impl IpgRadio {
     pub fn new( 
         id: usize,
         labels: Vec<String>,
+        group: String,
         direction: RadioDirection,
         spacing: f32,
         padding: Padding,
@@ -55,10 +60,12 @@ impl IpgRadio {
         text_shaping: Shaping,
         // font: Option<Font>,
         // style: <Renderer::Theme as StyleSheet>::Style,
+        radio_index: usize,
         ) -> Self {
         Self {
             id,
             labels,
+            group,
             direction,
             spacing,
             padding,
@@ -74,71 +81,63 @@ impl IpgRadio {
             text_shaping,
             // font: None,
             // style: Default::default(),
+            group_index: radio_index,
         }
     }
 }
 
+
 #[derive(Debug, Clone)]
+#[pyclass]
 pub enum RadioDirection {
     Horizontal,
     Vertical,
 }
+
 
 #[derive(Debug, Clone)]
 pub enum RDMessage {
     RadioSelected(Choice),
 }
 
-// The number of radio buttons per group is based on the number of Choices.
-// Therefore, they are currently limited to 26 per group, but can easily be extended
-// to a greater number.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Choice {
-    A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
-}
-
-impl Choice {
-    pub fn into_iter() -> core::array::IntoIter<Choice, 26> {
-        [Choice::A, Choice::B, Choice::C, Choice::B, Choice::E, Choice::F, Choice::G, Choice::H, Choice::I, 
-        Choice::J, Choice::K, Choice::L, Choice::M, Choice::N, Choice::O, Choice::P, Choice::Q, Choice::R, 
-        Choice::S, Choice::T, Choice::U, Choice::V, Choice::W, Choice::X, Choice::Y, Choice::Z,
-        ]
-        .into_iter()
-    }
-}
 
 
 pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
 
-        let mut radio_elements = vec![];
+    if !radio.show {
+        return Space::new(0.0, 0.0).into()
+    }
 
-        for (i, choice) in  Choice::into_iter().enumerate() {
-            if i > radio.labels.len()-1 {break}
-                radio_elements.push(Radio::new(radio.labels[i].clone(), 
-                                                choice,
-                                                radio.selected,
-                                                RDMessage::RadioSelected
-                                            )
-                                            .width(radio.width)
-                                            .size(radio.size)
-                                            .spacing(radio.text_spacing)
-                                            .text_size(radio.text_size)
-                                            .text_line_height(radio.text_line_height)
-                                            .text_shaping(radio.text_shaping)
-                                            .into());
-        }
+    let mut radio_elements = vec![];
 
-        let rd: Element<RDMessage> = match radio.direction {
-                    RadioDirection::Horizontal => Row::with_children(radio_elements)
-                                                            .spacing(radio.spacing)
-                                                            .padding(radio.padding)
-                                                            .into(),
-                    RadioDirection::Vertical => Column::with_children(radio_elements)
-                                                            .spacing(radio.spacing)
-                                                            .padding(radio.padding)
-                                                            .into(),
-        };
+    let choice_group = get_choice(radio.group_index);
 
+    for (i, choice) in  Choice::into_iter().enumerate() {
+        if i > radio.labels.len()-1 {break}
+            radio_elements.push(Radio::new(radio.labels[i].clone(), 
+                                            choice,
+                                            radio.selected,
+                                            RDMessage::RadioSelected
+                                        )
+                                        .width(radio.width)
+                                        .size(radio.size)
+                                        .spacing(radio.text_spacing)
+                                        .text_size(radio.text_size)
+                                        .text_line_height(radio.text_line_height)
+                                        .text_shaping(radio.text_shaping)
+                                        .into());
+    }
+
+    let rd: Element<RDMessage> = match radio.direction {
+                RadioDirection::Horizontal => Row::with_children(radio_elements)
+                                                        .spacing(radio.spacing)
+                                                        .padding(radio.padding)
+                                                        .into(),
+                RadioDirection::Vertical => Column::with_children(radio_elements)
+                                                        .spacing(radio.spacing)
+                                                        .padding(radio.padding)
+                                                        .into(),
+    };
 
     rd.map(move |message| app::Message::Radio(radio.id, message))
 
@@ -186,12 +185,12 @@ fn process_callback(wco: WidgetCallbackOut)
 
     let index = match wco.selected_index {
         Some(idx) => idx,
-        None => panic!("Rado callback selected_index could not be found"),
+        None => panic!("Radio callback selected_index could not be found"),
     };
 
     let label = match wco.selected_label {
         Some(lb) => lb,
-        None => panic!("Rado callback selected_label could not be found"),
+        None => panic!("Radio callback selected_label could not be found"),
     };
 
     Python::with_gil(|py| {
@@ -225,3 +224,217 @@ fn process_callback(wco: WidgetCallbackOut)
     drop(app_cbs);
 
 }
+
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum RadioParams {
+    Direction,
+    Labels,
+    Padding,
+    SelectedIndex,
+    Show,
+    Size,
+    Spacing,
+    TextSpacing,
+    TextSize,
+    TextLineHeight,
+    UserData,
+    Width,
+    WidthFill,
+}
+
+
+pub fn radio_item_update(rd: &mut IpgRadio,
+                            item: PyObject,
+                            value: PyObject,
+                            )
+{
+    let update = try_extract_radio_update(item);
+
+    match update {
+        RadioParams::Direction => {
+            rd.direction = try_extract_radio_direction(value);
+        },
+        RadioParams::Labels => {
+            rd.labels = try_extract_vec_str(value);
+        },
+        RadioParams::Padding => {
+
+        },
+        RadioParams::SelectedIndex => {
+
+            let index_opt = try_extract_i64_option(value);
+
+            let selected_index = match index_opt {
+                Some(index)  => index as usize,
+                None => {
+                    rd.selected = None;
+                    return
+                },
+            };
+            
+            if selected_index > rd.labels.len()-1 {
+                panic!("Radio selected_index is greater than the size of the labels")
+            } else {
+                for (i, choice) in Choice::into_iter().enumerate() {
+                    if i == selected_index {
+                        rd.selected = Some(choice);
+                        break;
+                    }
+                }
+            }
+        },
+        RadioParams::Show => {
+
+        },
+        RadioParams::Size => {
+
+        },
+        RadioParams::Spacing => {
+
+        },
+        RadioParams::TextSpacing => {
+
+        },
+        RadioParams::TextSize => {
+
+        },
+        RadioParams::TextLineHeight => {
+
+        },
+        RadioParams::UserData => {
+
+        },
+        RadioParams::Width => {
+
+        },
+        RadioParams::WidthFill => {
+
+        },
+    }
+
+}
+
+
+pub fn try_extract_radio_update(update_obj: PyObject) -> RadioParams {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<RadioParams>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Radio update extraction failed"),
+        }
+    })
+}
+
+
+pub fn try_extract_radio_direction(direct_obj: PyObject) -> RadioDirection {
+    Python::with_gil(|py| {
+        let res = direct_obj.extract::<RadioDirection>(py);
+            
+        match res {
+            Ok(direction) => direction,
+            Err(_) => panic!("RadioDirection failed to extract."),
+        }
+    })  
+}
+
+
+fn get_choice(index: usize) -> Choice {
+    match usize {
+        0 => Choice::Choice0,
+        1 => Choice::Choice0,
+    }
+}
+ 
+// The number of radio buttons per group is based on the number of Choices.
+// Therefore, they are currently limited to 26 per group, but can easily be extended
+// to a greater number.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Choice {
+    Choice0(Choice0),
+    Choice1(Choice1),
+    Choice2(Choice2),
+    Choice3(Choice3),
+    Choice4(Choice4),
+    Choice5(Choice5),
+    Choice6(Choice6),
+    Choice7(Choice7),
+    Choice8(Choice8),
+    Choice9(Choice9),
+    Choice10(Choice10),
+    Choice11(Choice11),
+    Choice12(Choice12),
+    Choice13(Choice13),
+    Choice14(Choice14),
+    Choice15(Choice15),
+    Choice16(Choice16),
+    Choice17(Choice17),
+    Choice18(Choice18),
+    Choice19(Choice19),
+    Choice20(Choice20),
+    Choice21(Choice21),
+    Choice22(Choice22),
+    Choice23(Choice23),
+    Choice24(Choice24),
+}
+
+
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice0 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice1 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice2 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice3 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice4 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice5 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice6 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice7 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice8 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice9 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice10 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice11 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice12 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice13 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice14 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice15 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice16 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice17 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice18 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice19 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice20 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice21 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice22 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice23 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice24 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
+
+static CHOICE0: Vec<Choice0> = vec![Choice0::A, Choice0::B, Choice0::C, Choice0::D, Choice0::E, Choice0::F, 
+                                    Choice0::G, Choice0::H, Choice0::I, Choice0::J, Choice0::K, Choice0::L, 
+                                    Choice0::M, Choice0::N, Choice0::O, Choice0::P, Choice0::Q, Choice0::R, 
+                                    Choice0::S, Choice0::T, Choice0::U, Choice0::V, Choice0::W, Choice0::X, 
+                                    Choice0::Y, Choice0::Z];

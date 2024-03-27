@@ -251,7 +251,7 @@ pub fn try_extract_f64(value: PyObject) -> f64 {
     Python::with_gil(|py| {
         let res = value.extract::<f64>(py);
         match res {
-            Ok(val) => return val,
+            Ok(val) => val,
             Err(_) => panic!("Unable to extract python float"),
         }
     })  
@@ -261,8 +261,38 @@ pub fn try_extract_vec_f64(value: PyObject) -> Vec<f64> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<f64>>(py);
         match res {
-            Ok(val) => return val,
+            Ok(val) => val,
             Err(_) => panic!("Unable to extract python list[float]"),
+        }
+    })  
+}
+
+pub fn try_extract_vec_str(value: PyObject) -> Vec<String> {
+    Python::with_gil(|py| {
+        let res = value.extract::<Vec<String>>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python list[str]"),
+        }
+    })  
+}
+
+pub fn try_extract_i64(value: PyObject) -> i64 {
+    Python::with_gil(|py| {
+        let res = value.extract::<i64>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python integer"),
+        }
+    })  
+}
+
+pub fn try_extract_i64_option(value: PyObject) -> Option<i64> {
+    Python::with_gil(|py| {
+        let res = value.extract::<i64>(py);
+        match res {
+            Ok(val) => Some(val),
+            Err(_) => None,
         }
     })  
 }
@@ -271,8 +301,18 @@ pub fn try_extract_string(value: PyObject) -> String {
     Python::with_gil(|py| {
         let res = value.extract::<String>(py);
         match res {
-            Ok(val) => return val,
+            Ok(val) => val,
             Err(_) => panic!("Unable to extract python str"),
+        }
+    })  
+}
+
+pub fn try_extract_vec_str_option(value: PyObject) -> Option<Vec<String>> {
+    Python::with_gil(|py| {
+        let res = value.extract::<Vec<String>>(py);
+        match res {
+            Ok(val) => Some(val),
+            Err(_) => None,
         }
     })  
 }
@@ -281,7 +321,7 @@ pub fn try_extract_boolean(value: PyObject) -> bool {
     Python::with_gil(|py| {
         let res = value.extract::<bool>(py);
         match res {
-            Ok(val) => return val,
+            Ok(val) => val,
             Err(_) => panic!("Unable to extract python bool"),
         }
     })  
