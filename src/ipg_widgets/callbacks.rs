@@ -12,12 +12,14 @@ use pyo3::PyObject;
 pub struct WidgetCallbackIn {
     pub id: usize,
     pub choice: Option<Choice>,
+    pub choice_index: Option<usize>,
     pub color: Option<Vec<f64>>,
     pub index: Option<usize>,
     pub is_submitted: Option<bool>,
     pub on_toggle: Option<bool>,
     pub point: Option<Point>,
     pub selected: Option<String>,
+    pub selected_index: Option<usize>,
     pub selected_day: Option<usize>,
     pub selected_date: Option<String>,
     pub selected_month: Option<String>,
@@ -206,7 +208,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     return wco
                 },
                 IpgWidgets::IpgRadio(radio) => {
-                    let mut selected_index = 0;
+                    
                     for (i, choice) in  Choice::into_iter().enumerate() {
                         if Some(choice) == wci.choice {
                             selected_index = i;

@@ -149,21 +149,117 @@ pub fn radio_callback(id: usize, message: RDMessage) {
     wci.id = id;
 
     match message {
-        RDMessage::RadioSelected(selected) => {
-            wci.choice = Some(selected);
+        RDMessage::RadioSelected(choice) => {
+            match choice {
+                Choice::Choice0(ch) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice1(ch) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice2(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice3(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice4(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice5(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice6(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice7(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice8(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice9(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice10(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice11(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice12(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice13(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice14(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice15(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice16(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice17(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice18(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice19(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice20(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice21(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice22(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice23(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+                Choice::Choice24(_) => {
+                    wci.selected_index = Some(ch as usize);
+                    wci.choice_index = Some(0);
+                },
+            }
         },
     }
-    
-    let mut wco = get_set_widget_callback_data(wci);
 
-    let selected_label = match wco.selected_label {
-        Some(ref lb) => lb,
-        None => panic!("Selected_label for radio not found id {}", wco.id),
-    };
+    let mut wco = get_set_widget_callback_data(wci);
     wco.id = id;
     wco.event_name = "on_select".to_string();
     process_callback(wco);
-
+    
 }
 
 
@@ -340,13 +436,6 @@ pub fn try_extract_radio_direction(direct_obj: PyObject) -> RadioDirection {
     })  
 }
 
-
-fn get_choice(index: usize) -> Choice {
-    match usize {
-        0 => Choice::Choice0,
-        1 => Choice::Choice0,
-    }
-}
  
 // The number of radio buttons per group is based on the number of Choices.
 // Therefore, they are currently limited to 26 per group, but can easily be extended
@@ -381,60 +470,90 @@ pub enum Choice {
 }
 
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice0 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+            P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice1 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+            P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice2 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+            P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice3 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+            P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice4 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+            P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice5 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+            P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice6 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice7 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice8 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice9 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice10 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice11 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice12 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice13 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice14 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice15 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice16 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice17 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice18 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice19 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice20 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice21 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice22 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice23 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Choice24 {A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, 
+    P=15, Q=16, R=17, S=18, T=19, U=20, V=21, W=22, X=23, Y=24, Z=25,}
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice0 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice1 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice2 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice3 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice4 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice5 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice6 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice7 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice8 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice9 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice10 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice11 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice12 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice13 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice14 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice15 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice16 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice17 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice18 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice19 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice20 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice21 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice22 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice23 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Choice24 {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,}
 
 static CHOICE0: Vec<Choice0> = vec![Choice0::A, Choice0::B, Choice0::C, Choice0::D, Choice0::E, Choice0::F, 
                                     Choice0::G, Choice0::H, Choice0::I, Choice0::J, Choice0::K, Choice0::L, 
                                     Choice0::M, Choice0::N, Choice0::O, Choice0::P, Choice0::Q, Choice0::R, 
                                     Choice0::S, Choice0::T, Choice0::U, Choice0::V, Choice0::W, Choice0::X, 
                                     Choice0::Y, Choice0::Z];
+static CHOICE1: Vec<Choice1> = vec![Choice1::A, Choice1::B, Choice1::C, Choice1::D, Choice1::E, Choice1::F, 
+                                    Choice1::G, Choice1::H, Choice1::I, Choice1::J, Choice1::K, Choice1::L, 
+                                    Choice1::M, Choice1::N, Choice1::O, Choice1::P, Choice1::Q, Choice1::R, 
+                                    Choice1::S, Choice1::T, Choice1::U, Choice1::V, Choice1::W, Choice1::X, 
+                                    Choice1::Y, Choice1::Z];
