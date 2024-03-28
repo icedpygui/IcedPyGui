@@ -10,31 +10,33 @@ path_orig = cwd + "/resources/rustacean-orig-noshadow.png"
 
 image_ids = []
 
-# Note: Since user_data is being user, it needs to be added
+# Note: Since user_data is being used, it needs to be added
 # to all callback methods.  However, points are only generated for
 # the mouse move so there is no need to include that in all callbacks.
-def image_selected(id, user_data):
+def image_selected(id):
     index = image_ids.index(id)
     ipg.update_item(text_ids[index], IpgTextParams.Content, "You Pressed Me!")
 
 
-def on_mouse_move(id, point, user_data):
+def on_mouse_move(id, point):
     index = image_ids.index(id)
     x = '{:{}.{}}'.format(point.get('x'), 10, 4)
     y = '{:{}.{}}'.format(point.get('y'), 10, 4)
     ipg.update_item(text_points[index], IpgTextParams.Content, f"x={x}\ny={y}\n")
 
 
-def on_mouse_exit(id, user_data):
+def on_mouse_exit(id):
     index = image_ids.index(id)
     ipg.update_item(text_points[index], IpgTextParams.Content, "Point")
 
 # On right_press, original shows
-def show_original(id, index):
-    ipg.update_item(image_ids[index], IpgTextParams.ImagePath, path_orig)
+def show_original(id):
+    index = image_ids.index(id)
+    ipg.update_item(image_ids[index], IpgImageParams.ImagePath, path_orig)
 
 # On middle press, happy shows
-def show_happy(id, index):
+def show_happy(id):
+    index = image_ids.index(id)
     ipg.update_item(image_ids[index], IpgImageParams.ImagePath, path_happy)
 
 
@@ -63,7 +65,7 @@ for i in range(0, 5):
                                    on_exit=on_mouse_exit,
                                    on_right_press=show_original,
                                    on_middle_press=show_happy,
-                                   user_data=i))
+                                   ))
 
 # add a row for the information
 ipg.add_row(window_id="main", container_id="row2", parent_id="col")
