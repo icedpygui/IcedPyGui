@@ -1,10 +1,10 @@
 from .icedpygui import IPG  
-from .icedpygui import IpgButtonStyles, IpgButtonArrows, IpgButtonUpdate
-from .icedpygui import IpgCardStyles, IpgCardUpdate
-from .icedpygui import IpgCheckboxUpdate
-from .icedpygui import IpgDatePickerUpdate
-from .icedpygui import IpgImageUpdate
-from .icedpygui import IpgPickListUpdate
-from .icedpygui import IpgProgressBarUpdate
+from .icedpygui import IpgButtonStyles, IpgButtonArrows, IpgButtonParams
+from .icedpygui import IpgCardStyles, IpgCardParams
+from .icedpygui import IpgCheckboxParams
+from .icedpygui import IpgDatePickerParams
+from .icedpygui import IpgImageParams
+from .icedpygui import IpgPickListParams
+from .icedpygui import IpgProgressBarParams
 from .icedpygui import RadioParams, RadioDirection
-from .icedpygui import IpgTextUpdate
+from .icedpygui import IpgTextParams

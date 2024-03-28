@@ -1,15 +1,15 @@
-from icedpygui.icedpygui import IPG
+from icedpygui import IPG, IpgTextParams
 
 
 ipg = IPG()
 
 
 def key_pressed(id, name, key, user_data):
-    ipg.update_item(text_pressed, "content", f"{name}: {key.get('modifier')} {key.get('key')}")
-    ipg.update_item(text_user_data, "content", f"user data is {user_data}")
+    ipg.update_item(text_pressed, IpgTextParams.Content, f"{name}: {key.get('modifier')} {key.get('key')}")
+    ipg.update_item(text_user_data, IpgTextParams.Content, f"user data is {user_data}")
 
 def key_released(id, name, key, user_data):
-    ipg.update_item(text_released, "content", f"{name}: {key.get('modifier')} {key.get('key')}")
+    ipg.update_item(text_released, IpgTextParams.Content, f"{name}: {key.get('modifier')} {key.get('key')}")
 
 
 ipg.add_event_keyboard(enabled=True, on_key_press=key_pressed, on_key_release=key_released, user_data=[25])

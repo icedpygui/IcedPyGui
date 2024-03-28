@@ -1,22 +1,22 @@
-from icedpygui import IPG, IpgButtonStyles, IpgCardStyles, IpgCardUpdate
+from icedpygui import IPG, IpgButtonStyles, IpgCardStyles, IpgCardParams
 
 
 ipg = IPG()
 
 
 def update_card(id):
-    ipg.update_item(card_id, IpgCardUpdate.Head, "This is a new head with Danger style")
-    ipg.update_item(card_id, IpgCardUpdate.Body, "This is a new body.")
-    ipg.update_item(card_id, IpgCardUpdate.Foot, "This is a new foot")
-    ipg.update_item(card_id, IpgCardUpdate.Style, IpgCardStyles.Danger)
+    ipg.update_item(card_id, IpgCardParams.Head, "This is a new head with Danger style")
+    ipg.update_item(card_id, IpgCardParams.Body, "This is a new body.")
+    ipg.update_item(card_id, IpgCardParams.Foot, "This is a new foot")
+    ipg.update_item(card_id, IpgCardParams.Style, IpgCardStyles.Danger)
 
 
 def minimize_card(id):
-    ipg.update_item(id, IpgCardUpdate.IsOpen, False)
+    ipg.update_item(id, IpgCardParams.IsOpen, False)
 
 
 def maximize_card(id):
-    ipg.update_item(card_id, IpgCardUpdate.IsOpen, True)
+    ipg.update_item(card_id, IpgCardParams.IsOpen, True)
 
 
 wnd_height = 800

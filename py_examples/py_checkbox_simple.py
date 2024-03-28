@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgCheckboxUpdate
+from icedpygui import IPG, IpgCheckboxParams
 
 
 ipg = IPG()
@@ -7,7 +7,7 @@ x_id = ipg.generate_id()
 
 
 def on_toggle(id, data, user_data):
-    ipg.update_item(x_id, IpgCheckboxUpdate.IconX,  data)
+    ipg.update_item(x_id, IpgCheckboxParams.IconX,  data)
 
 
 

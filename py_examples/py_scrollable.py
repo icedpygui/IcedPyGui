@@ -1,4 +1,4 @@
-from icedpygui.icedpygui import IPG
+from icedpygui import IPG
 
 
 # To reduce typing errors when using the ids, I like to 
@@ -60,7 +60,7 @@ class DemoScrollable:
 
         self.ipg.add_window(self.wnd_v, "Scollable - Vertical", 
                                 self.wnd_width, self.wnd_height, 
-                                200, 100, theme="dark")
+                                pos_centered=True)
 
         # The header is just a title of sorts.
         self.ipg.add_container(window_id=self.wnd_v, container_id=self.cont_v_top, 

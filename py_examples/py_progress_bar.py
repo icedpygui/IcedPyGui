@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgProgressBarUpdate, IpgTextUpdate
+from icedpygui import IPG, IpgProgressBarParams, IpgTextParams
 
 
 ipg = IPG()
@@ -8,38 +8,38 @@ value = 75.0
 def change_value_plus(btn_id, pg_id):
     global value
     value += 1
-    ipg.update_item(pg_id, IpgProgressBarUpdate.Value, value)
+    ipg.update_item(pg_id, IpgProgressBarParams.Value, value)
 
 
 def change_value_minus(btn_id, pg_id):
     global value
     value -= 1
-    ipg.update_item(pg_id, IpgProgressBarUpdate.Value, value)
+    ipg.update_item(pg_id, IpgProgressBarParams.Value, value)
 
 
 def change_min(btn_id, min, pg_id):
     min_float = float(min)
-    ipg.update_item(pg_id, IpgProgressBarUpdate.Min, min_float)
-    ipg.update_item(min_text, IpgTextUpdate.Content, min)
+    ipg.update_item(pg_id, IpgProgressBarParams.Min, min_float)
+    ipg.update_item(min_text, IpgTextParams.Content, min)
 
 
 def change_max(btn_id, max, pg_id):
     max_float = float(max)
-    ipg.update_item(pg_id, IpgProgressBarUpdate.Max, max_float)
-    ipg.update_item(max_text, IpgTextUpdate.Content, max)
+    ipg.update_item(pg_id, IpgProgressBarParams.Max, max_float)
+    ipg.update_item(max_text, IpgTextParams.Content, max)
 
 
 def change_height(btn_id, pg_id):
-    ipg.update_item(pg_id, IpgProgressBarUpdate.Height, 30.0)
+    ipg.update_item(pg_id, IpgProgressBarParams.Height, 30.0)
 
 def change_width(btn_id, pg_id):
-    ipg.update_item(pg_id, IpgProgressBarUpdate.Width, 300.0)
+    ipg.update_item(pg_id, IpgProgressBarParams.Width, 300.0)
 
 def change_width_to_fill(btn_id, pg_id):
-    ipg.update_item(pg_id, IpgProgressBarUpdate.WidthFill, True)
+    ipg.update_item(pg_id, IpgProgressBarParams.WidthFill, True)
 
 def hide_bar(btn_id, pg_id):
-    ipg.update_item(pg_id, IpgProgressBarUpdate.Show, False)
+    ipg.update_item(pg_id, IpgProgressBarParams.Show, False)
 
 
 

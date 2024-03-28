@@ -248,7 +248,7 @@ fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgImageUpdate {
+pub enum IpgImageParams {
     Height,
     HeightFill,
     ImagePath,
@@ -268,39 +268,39 @@ pub fn image_item_update(img: &mut IpgImage,
     let update = try_extract_button_update(item);
 
     match update {
-        IpgImageUpdate::Height => {
+        IpgImageParams::Height => {
             let val = try_extract_f64(value);
             img.height = get_height(Some(val as f32), false);
         },
-        IpgImageUpdate::HeightFill => {
+        IpgImageParams::HeightFill => {
             let val = try_extract_boolean(value);
             img.height = get_height(None, val);
         },
-        IpgImageUpdate::ImagePath => {
+        IpgImageParams::ImagePath => {
             img.image_path = try_extract_string(value);
         },
-        IpgImageUpdate::Padding => {
+        IpgImageParams::Padding => {
             let val = try_extract_vec_f64(value);
             img.padding =  get_padding(val);
         },
-        IpgImageUpdate::Show => {
+        IpgImageParams::Show => {
             img.show = try_extract_boolean(value);
         },
-        IpgImageUpdate::Width => {
+        IpgImageParams::Width => {
             let val = try_extract_f64(value);
             img.width = get_width(Some(val as f32), false);
         },
-        IpgImageUpdate::WidthFill => {
+        IpgImageParams::WidthFill => {
             let val = try_extract_boolean(value);
             img.width = get_width(None, val);
         },
     }
 }
 
-pub fn try_extract_button_update(update_obj: PyObject) -> IpgImageUpdate {
+pub fn try_extract_button_update(update_obj: PyObject) -> IpgImageParams {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgImageUpdate>(py);
+        let res = update_obj.extract::<IpgImageParams>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Image update extraction failed"),

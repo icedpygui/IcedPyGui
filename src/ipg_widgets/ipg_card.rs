@@ -221,7 +221,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgCardUpdate {
+pub enum IpgCardParams {
     Head,
     Body,
     Foot,
@@ -238,19 +238,19 @@ pub fn card_item_update(crd: &mut IpgCard,
     let update = try_extract_card_update(item);
 
     match update {
-        IpgCardUpdate::Body => {
+        IpgCardParams::Body => {
             crd.body = try_extract_string(value);
         },
-        IpgCardUpdate::Foot => {
+        IpgCardParams::Foot => {
             crd.foot = Some(try_extract_string(value));
         },
-        IpgCardUpdate::Head => {
+        IpgCardParams::Head => {
             crd.head = try_extract_string(value);
         },
-        IpgCardUpdate::IsOpen => {
+        IpgCardParams::IsOpen => {
             crd.is_open = try_extract_boolean(value);
         },
-        IpgCardUpdate::Style => {
+        IpgCardParams::Style => {
             crd.style = try_extract_card_style(value);
         },
     }
@@ -305,9 +305,9 @@ pub fn try_extract_card_style(style_obj: PyObject) -> Option<String> {
 }
 
 
-pub fn try_extract_card_update(update_obj: PyObject) -> IpgCardUpdate {
+pub fn try_extract_card_update(update_obj: PyObject) -> IpgCardParams {
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgCardUpdate>(py);
+        let res = update_obj.extract::<IpgCardParams>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Card update extraction failed."),

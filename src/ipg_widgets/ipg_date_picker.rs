@@ -589,7 +589,7 @@ fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgDatePickerUpdate {
+pub enum IpgDatePickerParams {
     Label,
     Padding,
     SizeFactor,
@@ -604,26 +604,26 @@ pub fn date_picker_item_update(dp: &mut IpgDatePicker,
     let update = try_extract_date_picker_update(item);
 
     match update {
-        IpgDatePickerUpdate::Label => {
+        IpgDatePickerParams::Label => {
             dp.label = try_extract_string(value);
         },
-        IpgDatePickerUpdate::Padding => {
+        IpgDatePickerParams::Padding => {
             let pd = try_extract_vec_f64(value);
             dp.padding = get_padding(pd);
         },
-        IpgDatePickerUpdate::SizeFactor => {
+        IpgDatePickerParams::SizeFactor => {
                 dp.size_factor = try_extract_f64(value) as f32;
         },
-        IpgDatePickerUpdate::Show => {
+        IpgDatePickerParams::Show => {
             dp.show = try_extract_boolean(value);
         },
     }
 }
 
-pub fn try_extract_date_picker_update(update_obj: PyObject) -> IpgDatePickerUpdate {
+pub fn try_extract_date_picker_update(update_obj: PyObject) -> IpgDatePickerParams {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgDatePickerUpdate>(py);
+        let res = update_obj.extract::<IpgDatePickerParams>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("DatePicker update extraction failed"),

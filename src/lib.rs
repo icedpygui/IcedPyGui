@@ -21,20 +21,20 @@ mod iced_widgets;
 
 use crate::iced_widgets::scrollable::Direction;
 
-use ipg_widgets::ipg_button::{button_item_update, try_extract_button_arrow, try_extract_button_style, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonUpdate};
-use ipg_widgets::ipg_card::{card_item_update, try_extract_card_style, IpgCard, IpgCardStyles, IpgCardUpdate};
-use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxUpdate};
+use ipg_widgets::ipg_button::{button_item_update, try_extract_button_arrow, try_extract_button_style, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
+use ipg_widgets::ipg_card::{card_item_update, try_extract_card_style, IpgCard, IpgCardStyles, IpgCardParams};
+use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::IpgColumn;
 use ipg_widgets::ipg_container::IpgContainer;
-use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerUpdate};
+use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, 
                                 IpgMouseEvent, IpgWindowEvent};
-use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageUpdate};
+use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
 use ipg_widgets::ipg_menu::{IpgMenuBar, IpgMenuItem};
 use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
-use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListUpdate};
-use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarUpdate};
+use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
+use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, RadioDirection, RadioParams};
 use ipg_widgets::ipg_row::IpgRow;
 use ipg_widgets::ipg_scrollable::IpgScrollable;
@@ -42,7 +42,7 @@ use ipg_widgets::ipg_selectable_text::IpgSelectableText;
 use ipg_widgets::ipg_slider::IpgSlider;
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_table::IpgTable;
-use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextUpdate};
+use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
 use ipg_widgets::ipg_text_editor::IpgTextEditor;
 use ipg_widgets::ipg_text_input::IpgTextInput;
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
@@ -2156,17 +2156,17 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IPG>()?;
     m.add_class::<IpgButtonStyles>()?;
     m.add_class::<IpgButtonArrows>()?;
-    m.add_class::<IpgButtonUpdate>()?;
+    m.add_class::<IpgButtonParams>()?;
     m.add_class::<IpgCardStyles>()?;
-    m.add_class::<IpgCardUpdate>()?;
-    m.add_class::<IpgCheckboxUpdate>()?;
-    m.add_class::<IpgDatePickerUpdate>()?;
-    m.add_class::<IpgImageUpdate>()?;
-    m.add_class::<IpgPickListUpdate>()?;
-    m.add_class::<IpgProgressBarUpdate>()?;
+    m.add_class::<IpgCardParams>()?;
+    m.add_class::<IpgCheckboxParams>()?;
+    m.add_class::<IpgDatePickerParams>()?;
+    m.add_class::<IpgImageParams>()?;
+    m.add_class::<IpgPickListParams>()?;
+    m.add_class::<IpgProgressBarParams>()?;
     m.add_class::<RadioDirection>()?;
     m.add_class::<RadioParams>()?;
-    m.add_class::<IpgTextUpdate>()?;
+    m.add_class::<IpgTextParams>()?;
     Ok(())
 }
 

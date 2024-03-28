@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgButtonStyles, IpgButtonArrows, IpgButtonUpdate
+from icedpygui import IPG, IpgButtonStyles, IpgButtonArrows, IpgButtonParams
 
 
 ipg = IPG()
@@ -12,31 +12,31 @@ text_id = 0
 # starting with update_
 def update_button(id):
     # changing the radius using a float
-    ipg.update_item(radius_btn, IpgButtonUpdate.CornerRadius, 5.0)
-    ipg.update_item(radius_btn, IpgButtonUpdate.Label, "Corner Radius Changed")
+    ipg.update_item(radius_btn, IpgButtonParams.CornerRadius, 5.0)
+    ipg.update_item(radius_btn, IpgButtonParams.Label, "Corner Radius Changed")
     # changing the label
-    ipg.update_item(label_btn, IpgButtonUpdate.Label, "Label Changed")
+    ipg.update_item(label_btn, IpgButtonParams.Label, "Label Changed")
     # Changing the width
-    ipg.update_item(width_btn, IpgButtonUpdate.Width, 300.0)
-    ipg.update_item(width_btn, IpgButtonUpdate.Label, "Width Changed")
+    ipg.update_item(width_btn, IpgButtonParams.Width, 300.0)
+    ipg.update_item(width_btn, IpgButtonParams.Label, "Width Changed")
 
     # Changing the heigth
-    ipg.update_item(height_btn, IpgButtonUpdate.Height, 100.0)
-    ipg.update_item(height_btn, IpgButtonUpdate.Label, "Heigth Changed")
+    ipg.update_item(height_btn, IpgButtonParams.Height, 100.0)
+    ipg.update_item(height_btn, IpgButtonParams.Label, "Heigth Changed")
 
     # Changing the padding around the label
-    ipg.update_item(padding_btn, IpgButtonUpdate.Padding, [30.0])
-    ipg.update_item(padding_btn, IpgButtonUpdate.Label, "Padding Changed")
+    ipg.update_item(padding_btn, IpgButtonParams.Padding, [30.0])
+    ipg.update_item(padding_btn, IpgButtonParams.Label, "Padding Changed")
 
     # Changing the style
-    ipg.update_item(style_btn, IpgButtonUpdate.Style, IpgButtonStyles.Secondary)
-    ipg.update_item(style_btn, IpgButtonUpdate.Label, "Styling Changed")
+    ipg.update_item(style_btn, IpgButtonParams.Style, IpgButtonStyles.Secondary)
+    ipg.update_item(style_btn, IpgButtonParams.Label, "Styling Changed")
 
     # Changing the Arrow
-    ipg.update_item(arrow_btn, IpgButtonUpdate.ArrowStyle, IpgButtonArrows.ArrowDown)
+    ipg.update_item(arrow_btn, IpgButtonParams.ArrowStyle, IpgButtonArrows.ArrowDown)
 
     # Hide the button
-    ipg.update_item(show_btn, IpgButtonUpdate.Show, False)
+    ipg.update_item(show_btn, IpgButtonParams.Show, False)
 
 
 

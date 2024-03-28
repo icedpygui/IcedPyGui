@@ -1,4 +1,4 @@
-from icedpygui.icedpygui import IPG
+from icedpygui import IPG, IpgButtonParams, IpgTextParams
 
 ipg = IPG()
 
@@ -22,33 +22,33 @@ middle_button_rcount = 0
 def on_press(id):
     global left_button_pcount
     left_button_pcount += 1
-    ipg.update_item(left_pressed_id, "content", f"Left button pressed {left_button_pcount} times")
+    ipg.update_item(left_pressed_id, IpgTextParams.Content, f"Left button pressed {left_button_pcount} times")
     
 def on_release(id):
     global left_button_rcount
     left_button_rcount += 1
-    ipg.update_item(left_released_id, "content", f"Left button pressed {left_button_rcount} times")
+    ipg.update_item(left_released_id, IpgTextParams.Content, f"Left button pressed {left_button_rcount} times")
 
 def on_right_press(id):
     global right_button_pcount
     right_button_pcount += 1
-    ipg.update_item(right_pressed_id, "content", f"Right button pressed {right_button_pcount} times")
+    ipg.update_item(right_pressed_id, IpgTextParams.Content, f"Right button pressed {right_button_pcount} times")
     
 def on_right_release(id):
     global right_button_rcount
     right_button_rcount += 1
-    ipg.update_item(right_released_id, "content", f"Right button pressed {right_button_rcount} times")
+    ipg.update_item(right_released_id, IpgTextParams.Content, f"Right button pressed {right_button_rcount} times")
 
 
 def on_middle_press(id):
     global middle_button_pcount
     middle_button_pcount += 1
-    ipg.update_item(middle_pressed_id, "content", f"Middle button pressed {middle_button_pcount} times")
+    ipg.update_item(middle_pressed_id, IpgTextParams.Content, f"Middle button pressed {middle_button_pcount} times")
     
 def on_middle_release(id):
     global middle_button_rcount
     middle_button_rcount += 1
-    ipg.update_item(middle_released_id, "content", f"Middle button pressed {middle_button_rcount} times")
+    ipg.update_item(middle_released_id, IpgTextParams.Content, f"Middle button pressed {middle_button_rcount} times")
 
 
 # Add window must be the first widget. Other windows can be added

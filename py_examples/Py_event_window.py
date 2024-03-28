@@ -1,4 +1,4 @@
-from icedpygui.icedpygui import IPG
+from icedpygui import IPG, IpgTextParams
 
 
 ipg = IPG()
@@ -19,28 +19,28 @@ ipg = IPG()
 def on_open(id, name, data, user_data):
     # The same text widget was used for of the events
     if "0" in name:
-        ipg.update_item(user_data[0], "content", value=f"Window 0 position {data}")
+        ipg.update_item(user_data[0], IpgTextParams.Content, value=f"Window 0 position {data}")
     else:
-        ipg.update_item(user_data[1], "content", value=f"Window 1 position {data}")
+        ipg.update_item(user_data[1], IpgTextParams.Content, value=f"Window 1 position {data}")
 
 # The on_close event only works for other windows, not window 0.  Closing window 0 shuts
 # down the system so no callback cn be performed.  If needed, maybe a special on_close event
 #  would do a calback and then shut the window down. 
 def on_close(id, name, user_data):
-    ipg.update_item(user_data[0], "content", value=f"Window 1 was closed")
+    ipg.update_item(user_data[0], IpgTextParams.Content, value=f"Window 1 was closed")
 
 def on_moved(id, name, data, user_data):
     if "0" in name:
-        ipg.update_item(user_data[0], "content", value=f"Window 0 position {data}")
+        ipg.update_item(user_data[0], IpgTextParams.Content, value=f"Window 0 position {data}")
     else:
-        ipg.update_item(user_data[1], "content", value=f"Window 1 position {data}")
+        ipg.update_item(user_data[1], IpgTextParams.Content, value=f"Window 1 position {data}")
 
 # Resizable defaults to True so to disable this event, set it to False.
 def on_resized(id, name, data, user_data):
     if "0" in name:
-        ipg.update_item(user_data[0], "content", value=f"Window 0 size {data}")
+        ipg.update_item(user_data[0], IpgTextParams.Content, value=f"Window 0 size {data}")
     else:
-        ipg.update_item(user_data[1], "content", value=f"Window 1 size {data}")
+        ipg.update_item(user_data[1], IpgTextParams.Content, value=f"Window 1 size {data}")
 
 # *******************Window 0*****************************************************
 # Add the first window, 

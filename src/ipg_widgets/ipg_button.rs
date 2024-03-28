@@ -188,7 +188,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgButtonUpdate {
+pub enum IpgButtonParams {
     ArrowStyle,
     CornerRadius,
     Height,
@@ -210,7 +210,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     let update = try_extract_button_update(item);
 
     match update {
-       IpgButtonUpdate::ArrowStyle => {
+       IpgButtonParams::ArrowStyle => {
             let arrow = try_extract_button_arrow(value);
             if arrow == Some("Custom".to_string()) {
                 btn.arrow_style = Some(btn.label.clone());
@@ -219,35 +219,35 @@ pub fn button_item_update(btn: &mut IpgButton,
                 btn.arrow_style = arrow;
             }
         },
-        IpgButtonUpdate::CornerRadius => {
+        IpgButtonParams::CornerRadius => {
             btn.corner_radius = try_extract_f64(value) as f32;
         },
-        IpgButtonUpdate::Label => {
+        IpgButtonParams::Label => {
             btn.label = try_extract_string(value);
         },
-        IpgButtonUpdate::Height => {
+        IpgButtonParams::Height => {
             let val = try_extract_f64(value);
             btn.height = get_height(Some(val as f32), false);
         },
-        IpgButtonUpdate::HeightFill => {
+        IpgButtonParams::HeightFill => {
             let val = try_extract_boolean(value);
             btn.height = get_height(None, val);
         },
-        IpgButtonUpdate::Padding => {
+        IpgButtonParams::Padding => {
             let val = try_extract_vec_f64(value);
             btn.padding =  get_padding(val);
         },
-        IpgButtonUpdate::Show => {
+        IpgButtonParams::Show => {
             btn.show = try_extract_boolean(value);
         },
-        IpgButtonUpdate::Style => {
+        IpgButtonParams::Style => {
             btn.style = try_extract_button_style(value);
         },
-        IpgButtonUpdate::Width => {
+        IpgButtonParams::Width => {
             let val = try_extract_f64(value);
             btn.width = get_width(Some(val as f32), false);
         },
-        IpgButtonUpdate::WidthFill => {
+        IpgButtonParams::WidthFill => {
             let val = try_extract_boolean(value);
             btn.width = get_width(None, val);
         },
@@ -308,10 +308,10 @@ pub fn try_extract_button_arrow(arrow_obj: PyObject) -> Option<String> {
 }
 
 
-pub fn try_extract_button_update(update_obj: PyObject) -> IpgButtonUpdate {
+pub fn try_extract_button_update(update_obj: PyObject) -> IpgButtonParams {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgButtonUpdate>(py);
+        let res = update_obj.extract::<IpgButtonParams>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Button update extraction failed"),

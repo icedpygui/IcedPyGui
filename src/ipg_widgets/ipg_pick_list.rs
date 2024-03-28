@@ -239,7 +239,7 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
 
  #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgPickListUpdate {
+pub enum IpgPickListParams {
     Options,
     Placeholder,
     Padding,
@@ -259,30 +259,30 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
     let update = try_extract_pick_list_update(item);
 
     match update {
-        IpgPickListUpdate::Options => {
+        IpgPickListParams::Options => {
             pl.options = value;
             pl.selected = None;
         },
-        IpgPickListUpdate::Placeholder => {
+        IpgPickListParams::Placeholder => {
             pl.placeholder = Some(try_extract_string(value));
             pl.selected = None;
         },
-        IpgPickListUpdate::Padding => {
+        IpgPickListParams::Padding => {
             let val = try_extract_vec_f64(value);
             pl.padding =  get_padding(val);
         },
-        IpgPickListUpdate::Show => {
+        IpgPickListParams::Show => {
             pl.show = try_extract_boolean(value);
         },
-        IpgPickListUpdate::TextSize => {
+        IpgPickListParams::TextSize => {
             let size = try_extract_f64(value);
             pl.text_size = Some(size as f32);
         },
-        IpgPickListUpdate::TextLineHeight => {
+        IpgPickListParams::TextLineHeight => {
             let val = try_extract_f64(value) as f32;
             pl.text_line_height = LineHeight::Relative(val);
         },
-        IpgPickListUpdate::Width => {
+        IpgPickListParams::Width => {
             let val = try_extract_f64(value);
             pl.width = get_width(Some(val as f32), false);
         },
@@ -295,10 +295,10 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
 
 }
 
-pub fn try_extract_pick_list_update(update_obj: PyObject) -> IpgPickListUpdate {
+pub fn try_extract_pick_list_update(update_obj: PyObject) -> IpgPickListParams {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgPickListUpdate>(py);
+        let res = update_obj.extract::<IpgPickListParams>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("PickList update extraction failed"),

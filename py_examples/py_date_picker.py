@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgTextUpdate, IpgButtonUpdate, IpgDatePickerUpdate
+from icedpygui import IPG, IpgTextParams, IpgButtonParams, IpgDatePickerParams
 
 
 ipg = IPG()
@@ -10,21 +10,21 @@ selected_date = "No selection"
 # the id of whatever widget you want to update using a class or for small projects, a global var.
 # dataclass is not supported at this time.
 def date_selected(id, date):
-    ipg.update_item(selected_date_id, IpgTextUpdate.Content, f"You submitted {date}")
+    ipg.update_item(selected_date_id, IpgTextParams.Content, f"You submitted {date}")
 
 
 # Another callback with some user data
 def date_selected_with_ud(id, date, user_data):
-    ipg.update_item(selected_with_ud_id, IpgTextUpdate.Content, 
+    ipg.update_item(selected_with_ud_id, IpgTextParams.Content, 
                     f"You submitted {date} with user_data = {user_data}")
     
-    ipg.update_item(btn_id, IpgButtonUpdate.Show, True)
+    ipg.update_item(btn_id, IpgButtonParams.Show, True)
 
 # callback for the date picker.  The id is the date_picker id so you have to get
 # the id of whatever widget you want to update using a class or for small projects, a global var.
 # dataclass is not supported at this time.
 def date_resize(id):
-    ipg.update_item(dp2_id, IpgDatePickerUpdate.SizeFactor, 1.5)
+    ipg.update_item(dp2_id, IpgDatePickerParams.SizeFactor, 1.5)
 
 ipg.add_window("main", "Date Picker Demo", 800, 800, 
                                     500, 100)

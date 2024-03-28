@@ -1,15 +1,14 @@
-from icedpygui.icedpygui import IPG
+from icedpygui.icedpygui import IPG, IpgProgressBarParams, IpgTextParams
 
 ipg = IPG()
 
 
-def slider_on_change(id, name, data):
-    print(data)
-    ipg.update_item(on_change_id, "content", f"On Change value is {data}")
-    ipg.update_item(bar_id, "value", data)
+def slider_on_change(id, data):
+    ipg.update_item(on_change_id, IpgTextParams.Content, f"On Change value is {data}")
+    ipg.update_item(bar_id, IpgProgressBarParams.Value, data)
 
-def slider_on_release(id, name, data):
-    ipg.update_item(on_release_id, "content", f"On Release value is {data}")  
+def slider_on_release(id, data):
+    ipg.update_item(on_release_id, IpgTextParams.Content, f"On Release value is {data}")  
 
 
 ipg.add_window("main", "Slider Demo", 800, 800, 

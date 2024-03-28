@@ -1,22 +1,22 @@
-from icedpygui.icedpygui import IPG
+from icedpygui import IPG, IpgTextParams
 
 
-def button_pressed(id, name):
-    print(id, name)
+def button_pressed(id):
+    print(id)
 
 
-def checked(id, name, checked, user_data):
+def checked(id, checked, user_data):
     if checked:
         ipg.update_item(checked_text_id, 
-                        "content", 
+                        IpgTextParams.Content, 
                         "I'm checked")
 
     else:
         ipg.update_item(checked_text_id, 
-                        "content", 
+                        IpgTextParams.Content, 
                         "I'm not checked")
 
-    ipg.update_item(user_data_text_id, "content", user_data)
+    ipg.update_item(user_data_text_id, IpgTextParams.Content, user_data)
 
 
     
@@ -35,7 +35,7 @@ ipg.add_column(window_id="main", container_id="col", parent_id="cont")
 ipg.add_button(parent_id="col", label="Press Me!", on_press=button_pressed)
 
 ipg.add_checkbox(parent_id="col", label="Check Me!!!", 
-                                    on_checked=checked,
+                                    on_toggle=checked,
                                     user_data="Some string data")
 
 checked_text_id = ipg.add_text(parent_id="col", 

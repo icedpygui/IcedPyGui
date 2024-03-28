@@ -1128,7 +1128,7 @@ class IpgButtonStyles:
     Destructive=0
     Text=0
 
-class IpgButtonUpdate:
+class IpgButtonParams:
     ArrowStyle=0,
     CornerRadius=0,
     Height=0,
@@ -1153,14 +1153,14 @@ class IpgCardStyles:
     White=0
     Default=0
 
-class IpgCardUpdate:
+class IpgCardParams:
     Body=0,
     Foot=0,
     Head=0,
     IsOpen=0,
     Style=0,
 
-class IpgCheckboxUpdate:
+class IpgCheckboxParams:
     IconSize=0,
     IconX=0,
     IsChecked=0,
@@ -1176,14 +1176,14 @@ class IpgCheckboxUpdate:
     WidthFill=0,
 
 
-class IpgDatePickerUpdate:
+class IpgDatePickerParams:
     Label=0,
     Padding=0,
     SizeFactor=0,
     Show=0,
 
 
-class IpgImageUpdate:
+class IpgImageParams:
     Height=0,
     HeightFill=0,
     ImagePath=0,
@@ -1193,7 +1193,7 @@ class IpgImageUpdate:
     WidthFill=0,
 
 
-class IpgPickListUpdate:
+class IpgPickListParams:
     Options=0,
     Placeholder=0,
     Padding=0,
@@ -1203,7 +1203,7 @@ class IpgPickListUpdate:
     Width=0,
 
 
-class IpgProgressBarUpdate:
+class IpgProgressBarParams:
     Height=0,
     Min=0,
     Max=0,
@@ -1235,7 +1235,7 @@ class RadioParams:
     HeightFill=0,
 
 
-class IpgTextUpdate:
+class IpgTextParams:
     Content=0,
     Height=0,
     HeightFill=0,

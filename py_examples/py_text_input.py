@@ -1,17 +1,17 @@
-from icedpygui.icedpygui import IPG
+from icedpygui import IPG, IpgTextParams
 
 ipg = IPG()
 
 
 def on_input(id, data):
-    ipg.update_item(text_on_input_id, "content", value=data)
+    ipg.update_item(text_on_input_id, IpgTextParams.Content, value=data)
 
 
 def on_submit(id, data):
-    ipg.update_item(text_on_submit_id, "content", value=data)
+    ipg.update_item(text_on_submit_id, IpgTextParams.Content, value=data)
 
 def on_paste(id, data):
-    ipg.update_item(text_on_paste_id, "content", value=data)
+    ipg.update_item(text_on_paste_id, IpgTextParams.Content, value=data)
 
 ipg.add_window("main", "Text Input Demo", 800, 800, 
                                 pos_centered=True)

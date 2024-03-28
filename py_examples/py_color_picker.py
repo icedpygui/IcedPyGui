@@ -1,11 +1,11 @@
-from icedpygui.icedpygui import IPG, IpgTextUpdate
+from icedpygui import IPG, IpgTextParams
 
 
 ipg = IPG()
 
 def color_submitted(id, color):
     value= f"Color selected = {color}"
-    ipg.update_item(color_id, IpgTextUpdate.Content, value=value)
+    ipg.update_item(color_id, IpgTextParams.Content, value=value)
 
 
 ipg.add_window(window_id="main", title="ColorPicker Demo", width=800, height=800, 

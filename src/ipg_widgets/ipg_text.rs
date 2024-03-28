@@ -80,7 +80,7 @@ pub fn construct_text(text: &IpgText) -> Element<'static, Message> {
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgTextUpdate {
+pub enum IpgTextParams {
     Content,
     // Font,
     Height,
@@ -105,50 +105,50 @@ pub fn text_item_update(txt: &mut IpgText, item: PyObject, value: PyObject) {
     let update = try_extract_text_update(item);
 
     match update {
-        IpgTextUpdate::Content => {
+        IpgTextParams::Content => {
             txt.content = try_extract_string(value);
         },
-        IpgTextUpdate::Height => {
+        IpgTextParams::Height => {
             let val = try_extract_f64(value);
             txt.height = get_height(Some(val as f32), false); 
         },
-        IpgTextUpdate::HeightFill => {
+        IpgTextParams::HeightFill => {
             let val = try_extract_boolean(value);
             txt.height = get_height(None, val);
         },
-        IpgTextUpdate::HzAlignLeft => {
+        IpgTextParams::HzAlignLeft => {
             txt.horizontal_alignment = Horizontal::Left;
         },
-        IpgTextUpdate::HzAlignCenter => {
+        IpgTextParams::HzAlignCenter => {
             txt.horizontal_alignment = Horizontal::Center;
         },
-        IpgTextUpdate::HzAlignRight => {
+        IpgTextParams::HzAlignRight => {
             txt.horizontal_alignment = Horizontal::Right;
         },
-        IpgTextUpdate::LineHeight => {
+        IpgTextParams::LineHeight => {
             let val = try_extract_f64(value) as f32;
             txt.line_height = LineHeight::Relative(val);
         },
-        IpgTextUpdate::Show => {
+        IpgTextParams::Show => {
             txt.show = try_extract_boolean(value);
         },
-        IpgTextUpdate::Size => {
+        IpgTextParams::Size => {
             txt.size = try_extract_f64(value) as f32;
         },
-        IpgTextUpdate::VtAlignTop => {
+        IpgTextParams::VtAlignTop => {
             txt.vertical_alignment = Vertical::Top;
         },
-        IpgTextUpdate::VtAlignCenter => {
+        IpgTextParams::VtAlignCenter => {
             txt.vertical_alignment = Vertical::Center;
         },
-        IpgTextUpdate::VtAlignBottom => {
+        IpgTextParams::VtAlignBottom => {
             txt.vertical_alignment = Vertical::Bottom;
         },
-        IpgTextUpdate::Width => {
+        IpgTextParams::Width => {
             let val = try_extract_f64(value);
             txt.width = get_width(Some(val as f32), false);
         },
-        IpgTextUpdate::WidthFill => {
+        IpgTextParams::WidthFill => {
             let val = try_extract_boolean(value);
             txt.width = get_width(None, val);
         },
@@ -156,10 +156,10 @@ pub fn text_item_update(txt: &mut IpgText, item: PyObject, value: PyObject) {
 }
 
 
-fn try_extract_text_update(update_obj: PyObject) -> IpgTextUpdate {
+fn try_extract_text_update(update_obj: PyObject) -> IpgTextParams {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgTextUpdate>(py);
+        let res = update_obj.extract::<IpgTextParams>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Text update extraction failed"),

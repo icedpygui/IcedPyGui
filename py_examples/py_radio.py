@@ -1,4 +1,4 @@
-from icedpygui import IPG, RadioParams, RadioDirection, IpgTextUpdate
+from icedpygui import IPG, RadioParams, RadioDirection, IpgTextParams
 
 
 # The radio widget has a count limitation unlike the other widgets due to the way
@@ -11,12 +11,12 @@ ipg = IPG()
 
 
 def selected_radio_1(rd_id, data, user_data):
-    ipg.update_item(rd_text_id_1, IpgTextUpdate.Content, 
+    ipg.update_item(rd_text_id_1, IpgTextParams.Content, 
         f"Radio callback id = {rd_id}, \n index = {data[0]}, \nlabel = {data[1]} \n user_data = {user_data}")
 
 
 def selected_radio_2(rd_id, data, user_data):
-    ipg.update_item(rd_text_id_2, IpgTextUpdate.Content, 
+    ipg.update_item(rd_text_id_2, IpgTextParams.Content, 
         f"Radio callback id = {rd_id}, \n index = {data[0]}, \nlabel = {data[1]} \n user_data = {user_data}")
 
 

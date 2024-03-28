@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgImageUpdate, IpgTextUpdate
+from icedpygui import IPG, IpgImageParams, IpgTextParams
 import os
 
 ipg = IPG()
@@ -15,27 +15,27 @@ image_ids = []
 # the mouse move so there is no need to include that in all callbacks.
 def image_selected(id, user_data):
     index = image_ids.index(id)
-    ipg.update_item(text_ids[index], IpgTextUpdate.Content, "You Pressed Me!")
+    ipg.update_item(text_ids[index], IpgTextParams.Content, "You Pressed Me!")
 
 
 def on_mouse_move(id, point, user_data):
     index = image_ids.index(id)
     x = '{:{}.{}}'.format(point.get('x'), 10, 4)
     y = '{:{}.{}}'.format(point.get('y'), 10, 4)
-    ipg.update_item(text_points[index], IpgTextUpdate.Content, f"x={x}\ny={y}\n")
+    ipg.update_item(text_points[index], IpgTextParams.Content, f"x={x}\ny={y}\n")
 
 
 def on_mouse_exit(id, user_data):
     index = image_ids.index(id)
-    ipg.update_item(text_points[index], IpgTextUpdate.Content, "Point")
+    ipg.update_item(text_points[index], IpgTextParams.Content, "Point")
 
 # On right_press, original shows
 def show_original(id, index):
-    ipg.update_item(image_ids[index], IpgImageUpdate.ImagePath, path_orig)
+    ipg.update_item(image_ids[index], IpgTextParams.ImagePath, path_orig)
 
 # On middle press, happy shows
 def show_happy(id, index):
-    ipg.update_item(image_ids[index], IpgImageUpdate.ImagePath, path_happy)
+    ipg.update_item(image_ids[index], IpgImageParams.ImagePath, path_happy)
 
 
 ipg.add_window(window_id="main", title="Date Picker Demo", width=800, height=800, 

@@ -67,7 +67,7 @@ pub fn construct_progress_bar(bar: &IpgProgressBar) -> Element<'static, app::Mes
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgProgressBarUpdate {
+pub enum IpgProgressBarParams {
     Height,
     Min,
     Max,
@@ -85,27 +85,27 @@ pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
     let update = try_extract_progress_bar_update(item);
 
     match update {
-        IpgProgressBarUpdate::Height => {
+        IpgProgressBarParams::Height => {
             let val = try_extract_f64(value);
             pb.height = get_height(Some(val as f32), false);
         },
-        IpgProgressBarUpdate::Min => {
+        IpgProgressBarParams::Min => {
             pb.min = try_extract_f64(value) as f32;
         },
-        IpgProgressBarUpdate::Max => {
+        IpgProgressBarParams::Max => {
             pb.max = try_extract_f64(value) as f32;
         },
-        IpgProgressBarUpdate::Show => {
+        IpgProgressBarParams::Show => {
             pb.show = try_extract_boolean(value);
         },
-        IpgProgressBarUpdate::Value => {
+        IpgProgressBarParams::Value => {
             pb.value = try_extract_f64(value) as f32;
         },
-        IpgProgressBarUpdate::Width => {
+        IpgProgressBarParams::Width => {
             let val = try_extract_f64(value);
             pb.width = get_width(Some(val as f32), false);
         },
-        IpgProgressBarUpdate::WidthFill => {
+        IpgProgressBarParams::WidthFill => {
             let val = try_extract_boolean(value);
             pb.width = get_width(None, val);
         },
@@ -113,10 +113,10 @@ pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
 }
 
 
-pub fn try_extract_progress_bar_update(update_obj: PyObject) -> IpgProgressBarUpdate {
+pub fn try_extract_progress_bar_update(update_obj: PyObject) -> IpgProgressBarParams {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgProgressBarUpdate>(py);
+        let res = update_obj.extract::<IpgProgressBarParams>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("ProgressBar update extraction failed"),
