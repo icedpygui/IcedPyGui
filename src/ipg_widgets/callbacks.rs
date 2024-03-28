@@ -67,7 +67,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     let mut wco = WidgetCallbackOut::default();
                     wco.user_data = btn.user_data.clone();
                     drop(state);
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgCard(crd) => {
                     let is_open = match wci.value_bool {
@@ -78,7 +78,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     let mut wco = WidgetCallbackOut::default();
                     wco.user_data = crd.user_data.clone();
                     drop(state);
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgCheckBox(cbox) => {
                     cbox.is_checked = match wci.on_toggle {
@@ -89,7 +89,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco.is_checked = Some(cbox.is_checked);
                     wco.user_data = cbox.user_data.clone();
                     drop(state);
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgColorPicker(cp) => {
                     cp.show = match wci.show {
@@ -109,7 +109,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     }
                     wco.user_data = cp.user_data.clone();
                     drop(state);
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgDatePicker(dp) => {
                     
@@ -168,7 +168,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco.selected_date = Some(dp.selected_date.clone());
                     wco.user_data = dp.user_data.clone();
                     drop(state);
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgImage(img) => {
                     let mut points: Vec<(String, f32)> = vec![];
@@ -186,48 +186,34 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco.points = Some(points);
                     wco.user_data = img.user_data.clone();
                     drop(state);
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgMenuBar(_) => {
                     let wco = WidgetCallbackOut::default();
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgMenuItem(_) => {
                     let wco = WidgetCallbackOut::default();
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgPickList(pl) => {
                     pl.selected = wci.value_str;
                     let mut wco = WidgetCallbackOut::default();
                     wco.user_data = pl.user_data.clone();
                     drop(state);
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgProgressBar(_) => {
-                    let wco = WidgetCallbackOut::default();
-                    return wco
+                    WidgetCallbackOut::default()
                 },
-                IpgWidgets::IpgRadio(radio) => {
-                    
-                    for (i, choice) in  Choice::into_iter().enumerate() {
-                        if Some(choice) == wci.choice {
-                            selected_index = i;
-                            break;
-                        }
-                    }
-                    radio.selected = wci.choice;
-                    let mut wco = WidgetCallbackOut::default();
-                    wco.user_data = radio.user_data.clone();
-                    wco.selected_label = Some(radio.labels[selected_index].clone());
-                    wco.selected_index = Some(selected_index);
-                    drop(state);
-                    return wco
+                IpgWidgets::IpgRadio(_) => {
+                    WidgetCallbackOut::default()
                 },
                 IpgWidgets::IpgSelectableText(st) => {
                     let mut wco = WidgetCallbackOut::default();
                     wco.user_data = st.user_data.clone();
                     drop(state);
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgSlider(slider) => {
                     // Do on_change if something
@@ -241,23 +227,23 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco.value_float = Some(slider.value.clone() as f64);
                     wco.user_data = slider.user_data.clone();
                     drop(state);
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgSpace(_) => {
                     let wco = WidgetCallbackOut::default();
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgTable(_) => {
                     let wco = WidgetCallbackOut::default();
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgText(_) => {
                     let wco = WidgetCallbackOut::default();
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgTextEditor(_) => {
                     let wco = WidgetCallbackOut::default();
-                    return wco
+                    wco
                 },
                 IpgWidgets::IpgTextInput(input) => {
                     // During the input, the widget is assigned the value so that it shows
@@ -273,7 +259,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     }
                     wco.user_data = input.user_data.clone();
                     drop(state);
-                    return wco
+                    wco
                 },
             },
     

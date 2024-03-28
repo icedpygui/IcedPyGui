@@ -77,7 +77,7 @@ pub fn convert_vecs<T, U>(vector: Vec<T>) -> Vec<U>
 }
 
 pub fn get_width(width: Option<f32>, width_fill: bool)-> Length {
-    
+    // width overrides width_fill
     match width 
             {
                 Some(wd) => Length::Fixed(wd),
@@ -93,7 +93,7 @@ pub fn get_width(width: Option<f32>, width_fill: bool)-> Length {
 }
 
 pub fn get_height(height: Option<f32>, height_fill: bool)-> Length {
-    
+    // height overrides height_fill
     match height 
             {
                 Some(ht) => Length::Fixed(ht),
@@ -182,7 +182,7 @@ pub fn get_shaping(shape: String) -> Shaping {
     }
 }
 
-// Nedd to figure out pixel vs f32.
+// TODO: Need to figure out pixel vs f32, just using f32 for now.
 pub fn get_line_height(line_height: (String, f32)) -> LineHeight {
     match line_height.0.as_str() {
         "default" => LineHeight::default(),
@@ -253,6 +253,16 @@ pub fn try_extract_f64(value: PyObject) -> f64 {
         match res {
             Ok(val) => val,
             Err(_) => panic!("Unable to extract python float"),
+        }
+    })  
+}
+
+pub fn try_extract_f64_option(value: PyObject) -> Option<f64> {
+    Python::with_gil(|py| {
+        let res = value.extract::<f64>(py);
+        match res {
+            Ok(val) => Some(val),
+            Err(_) => None,
         }
     })  
 }

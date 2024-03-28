@@ -1260,10 +1260,10 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (parent_id, labels, group, id=None,
+    #[pyo3(signature = (parent_id, labels, id=None,
                         direction=RadioDirection::Vertical, 
                         spacing= 10.0, padding=DEFAULT_PADDING.to_vec(), 
-                        width=None, width_fill=false,
+                        width=None, width_fill=false, height=None, height_fill=false,
                         on_select=None, selected_index=None, 
                         size=20.0, text_spacing=15.0, text_size=16.0,
                         text_line_height=1.3, text_shaping="basic".to_string(), 
@@ -1272,7 +1272,6 @@ fn add_image(&mut self,
     fn add_radio(&mut self,
                     parent_id: String,
                     labels: Vec<String>,
-                    group: String,
                     //**above required
                     id: Option<usize>,
                     direction: RadioDirection,
@@ -1280,6 +1279,8 @@ fn add_image(&mut self,
                     padding: Vec<f64>,
                     width: Option<f32>,
                     width_fill: bool,
+                    height: Option<f32>,
+                    height_fill: bool,
                     on_select: Option<PyObject>,
                     selected_index: Option<usize>,
                     size: f32,
@@ -1316,6 +1317,7 @@ fn add_image(&mut self,
         let text_shaping = get_shaping(text_shaping);
 
         let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
 
         set_state_of_widget(id, parent_id);
 
@@ -1324,7 +1326,6 @@ fn add_image(&mut self,
         state.widgets.insert(id, IpgWidgets::IpgRadio(IpgRadio::new( 
                                         id,
                                         labels,
-                                        group,
                                         direction,
                                         spacing,
                                         padding,
@@ -1332,6 +1333,7 @@ fn add_image(&mut self,
                                         user_data,
                                         is_selected,
                                         width,
+                                        height,
                                         size,
                                         text_spacing,
                                         text_size,

@@ -1231,6 +1231,8 @@ class RadioParams:
     UserData=0,
     Width=0,
     WidthFill=0,
+    Height=0,
+    HeightFill=0,
 
 
 class IpgTextUpdate:
