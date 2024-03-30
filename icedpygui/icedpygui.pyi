@@ -1212,12 +1212,12 @@ class IpgProgressBarParams:
     Width=0,
     WidthFill=0,
 
-class RadioDirection:
+class IpgRadioDirection:
     Horizontal=0,
     Vertical=0,
 
 
-class RadioParams:
+class IpgRadioParams:
     Direction=0,
     Labels=0,
     Padding=0,

@@ -35,7 +35,7 @@ use ipg_widgets::ipg_menu::{IpgMenuBar, IpgMenuItem};
 use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
-use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, RadioDirection, RadioParams};
+use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams};
 use ipg_widgets::ipg_row::IpgRow;
 use ipg_widgets::ipg_scrollable::IpgScrollable;
 use ipg_widgets::ipg_selectable_text::IpgSelectableText;
@@ -1261,7 +1261,7 @@ fn add_image(&mut self,
     }
 
     #[pyo3(signature = (parent_id, labels, id=None,
-                        direction=RadioDirection::Vertical, 
+                        direction=IpgRadioDirection::Vertical, 
                         spacing= 10.0, padding=DEFAULT_PADDING.to_vec(), 
                         width=None, width_fill=false, height=None, height_fill=false,
                         on_select=None, selected_index=None, 
@@ -1274,7 +1274,7 @@ fn add_image(&mut self,
                     labels: Vec<String>,
                     //**above required
                     id: Option<usize>,
-                    direction: RadioDirection,
+                    direction: IpgRadioDirection,
                     spacing: f32,
                     padding: Vec<f64>,
                     width: Option<f32>,
@@ -2164,8 +2164,8 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IpgImageParams>()?;
     m.add_class::<IpgPickListParams>()?;
     m.add_class::<IpgProgressBarParams>()?;
-    m.add_class::<RadioDirection>()?;
-    m.add_class::<RadioParams>()?;
+    m.add_class::<IpgRadioDirection>()?;
+    m.add_class::<IpgRadioParams>()?;
     m.add_class::<IpgTextParams>()?;
     Ok(())
 }

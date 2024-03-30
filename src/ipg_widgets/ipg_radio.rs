@@ -20,7 +20,7 @@ use pyo3::{pyclass, PyObject, Python};
 pub struct IpgRadio {
     pub id: usize,
     pub labels: Vec<String>,
-    pub direction: RadioDirection,
+    pub direction: IpgRadioDirection,
     pub spacing: f32,
     pub padding: Padding,
     pub show: bool,
@@ -44,7 +44,7 @@ impl IpgRadio {
     pub fn new( 
         id: usize,
         labels: Vec<String>,
-        direction: RadioDirection,
+        direction: IpgRadioDirection,
         spacing: f32,
         padding: Padding,
         show: bool,
@@ -89,7 +89,7 @@ impl IpgRadio {
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum RadioDirection {
+pub enum IpgRadioDirection {
     Horizontal,
     Vertical,
 }
@@ -130,13 +130,13 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
     }
 
     let rd: Element<RDMessage> = match radio.direction {
-            RadioDirection::Horizontal => Row::with_children(radio_elements)
+            IpgRadioDirection::Horizontal => Row::with_children(radio_elements)
                                                     .spacing(radio.spacing)
                                                     .padding(radio.padding)
                                                     .width(radio.width)
                                                     .height(radio.height)
                                                     .into(),
-            RadioDirection::Vertical => Column::with_children(radio_elements)
+            IpgRadioDirection::Vertical => Column::with_children(radio_elements)
                                                     .spacing(radio.spacing)
                                                     .padding(radio.padding)
                                                     .width(radio.width)
@@ -345,7 +345,7 @@ fn match_widgets (widget: &mut IpgWidgets) -> &mut IpgRadio {
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum RadioParams {
+pub enum IpgRadioParams {
     Direction,
     Labels,
     Padding,
@@ -372,17 +372,17 @@ pub fn radio_item_update(rd: &mut IpgRadio,
     let update = try_extract_radio_update(item);
 
     match update {
-        RadioParams::Direction => {
+        IpgRadioParams::Direction => {
             rd.direction = try_extract_radio_direction(value);
         },
-        RadioParams::Labels => {
+        IpgRadioParams::Labels => {
             rd.labels = try_extract_vec_str(value);
         },
-        RadioParams::Padding => {
+        IpgRadioParams::Padding => {
             let val = try_extract_vec_f64(value);
             rd.padding =  get_padding(val);
         },
-        RadioParams::SelectedIndex => {
+        IpgRadioParams::SelectedIndex => {
             let index_opt = try_extract_i64_option(value);
 
             let selected_index = match index_opt {
@@ -399,35 +399,35 @@ pub fn radio_item_update(rd: &mut IpgRadio,
                 rd.is_selected = Some(selected_index);
             }
         },
-        RadioParams::Show => {
+        IpgRadioParams::Show => {
             rd.show = try_extract_boolean(value);
         },
-        RadioParams::Size => {
+        IpgRadioParams::Size => {
             rd.size = try_extract_f64(value) as f32;
         },
-        RadioParams::Spacing => {
+        IpgRadioParams::Spacing => {
             rd.spacing = try_extract_f64(value) as f32;
         },
-        RadioParams::TextSpacing => {
+        IpgRadioParams::TextSpacing => {
             rd.text_spacing = try_extract_f64(value) as f32;
         },
-        RadioParams::TextSize => {
+        IpgRadioParams::TextSize => {
             rd.text_size = try_extract_f64(value) as f32;
         },
-        RadioParams::TextLineHeight => {
+        IpgRadioParams::TextLineHeight => {
             let tlh = try_extract_f64(value) as f32;
             rd.text_line_height = get_line_height(("relative".to_string(), tlh));
         },
-        RadioParams::UserData => {
+        IpgRadioParams::UserData => {
             rd.user_data = Some(value);
         },
-        RadioParams::Width => {
+        IpgRadioParams::Width => {
             match try_extract_f64_option(value) {
                 Some(val) => rd.width = get_width(Some(val as f32), false),
                 None => rd.width = Length::Shrink,
             }
         },
-        RadioParams::WidthFill => {
+        IpgRadioParams::WidthFill => {
             let val = try_extract_boolean(value);
             if val {
                 rd.width = get_width(None, val);
@@ -435,13 +435,13 @@ pub fn radio_item_update(rd: &mut IpgRadio,
                 rd.width = Length::Shrink;
             }
         },
-        RadioParams::Height => {
+        IpgRadioParams::Height => {
             match try_extract_f64_option(value) {
                 Some(val) => rd.height = get_height(Some(val as f32), false),
                 None => rd.height = Length::Shrink,
             }
         },
-        RadioParams::HeightFill => {
+        IpgRadioParams::HeightFill => {
             let val = try_extract_boolean(value);
             if val {
                 rd.height = get_height(None, val);
@@ -454,10 +454,10 @@ pub fn radio_item_update(rd: &mut IpgRadio,
 }
 
 
-pub fn try_extract_radio_update(update_obj: PyObject) -> RadioParams {
+pub fn try_extract_radio_update(update_obj: PyObject) -> IpgRadioParams {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<RadioParams>(py);
+        let res = update_obj.extract::<IpgRadioParams>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Radio update extraction failed"),
@@ -466,9 +466,9 @@ pub fn try_extract_radio_update(update_obj: PyObject) -> RadioParams {
 }
 
 
-pub fn try_extract_radio_direction(direct_obj: PyObject) -> RadioDirection {
+pub fn try_extract_radio_direction(direct_obj: PyObject) -> IpgRadioDirection {
     Python::with_gil(|py| {
-        let res = direct_obj.extract::<RadioDirection>(py);
+        let res = direct_obj.extract::<IpgRadioDirection>(py);
             
         match res {
             Ok(direction) => direction,

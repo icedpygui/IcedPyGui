@@ -6,5 +6,5 @@ from .icedpygui import IpgDatePickerParams
 from .icedpygui import IpgImageParams
 from .icedpygui import IpgPickListParams
 from .icedpygui import IpgProgressBarParams
-from .icedpygui import RadioParams, RadioDirection
+from .icedpygui import IpgRadioParams, IpgRadioDirection
 from .icedpygui import IpgTextParams
