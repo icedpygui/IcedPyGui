@@ -11,6 +11,7 @@ use iced::Color;
 use std::collections::HashMap;
 
 use crate::ipg_widgets;
+use crate::ipg_widgets::ipg_text_editor::construct_text_editor;
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
@@ -476,9 +477,8 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgText(text) => {
                     return construct_text(text)
                 },
-                IpgWidgets::IpgTextEditor(_te) => {
-                    return Column::new().into()
-                    // return construct_text_editor_controls(te) 
+                IpgWidgets::IpgTextEditor(te) => {
+                    return construct_text_editor(te) 
                 },
                 IpgWidgets::IpgTextInput(input) => {
                     return construct_text_input(input.clone())           

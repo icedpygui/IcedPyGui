@@ -61,19 +61,11 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
-// const ICON_FONT: Font = Font::with_name("icons");
-// const RADIO_SIZE: usize = 26;
 
 use std::sync::{Mutex, MutexGuard};
 use once_cell::sync::Lazy;
 
 
-// #[derive(Debug, Clone)]
-// pub struct CallBack {
-//     id: usize,
-//     cb: Option<PyObject>,
-//     event_name: String,
-// }
 
 #[derive(Debug, Clone)]
 pub struct CallBackEvent {
@@ -111,7 +103,9 @@ pub struct State {
     pub window_debug: Lazy<HashMap<window::Id, bool>>,
     pub events: Vec<IpgEvents>,
     pub kb_modifiers: Lazy<HashMap<String, bool>>,
+    pub text_buffer: Lazy<[u8; 1_000_000]>,
 }
+
 
 pub static STATE: Mutex<State> = Mutex::new(
     State {
@@ -131,6 +125,7 @@ pub static STATE: Mutex<State> = Mutex::new(
                                                 ("alt".to_string(), false),
                                                 ("logo".to_string(), false),
                                             ])),
+        text_buffer: Lazy::new(||[0_u8; 1_000_000]),
     }
 );
 
@@ -155,7 +150,6 @@ pub struct IPG {
     window_id: usize,
     gen_ids: Vec<usize>,
     group_index: usize,
-    // card_style: Option<String>,
 }
 
 #[pymethods]
@@ -167,7 +161,6 @@ impl IPG {
             window_id: 0,
             gen_ids: vec![],
             group_index: 0,
-            // card_style: None,
         }
     }
 
