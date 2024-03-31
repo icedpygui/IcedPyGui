@@ -1,7 +1,7 @@
 
 use crate::access_callbacks;
 use crate::app::Message;
-use super::ipg_button::{ButtonStyleRadius, get_button_style_from_str};
+use super::ipg_button::{ButtonStyleRadius, get_button_style_from_obj};
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
@@ -27,7 +27,7 @@ pub struct IpgColorPicker {
     pub height: Length,
     pub padding: Padding,
     pub corner_radius: f32,
-    pub style: Option<String>,
+    pub style: Option<PyObject>,
 }
 
 impl IpgColorPicker {
@@ -42,7 +42,7 @@ impl IpgColorPicker {
         height: Length,
         padding: Padding,
         corner_radius: f32,
-        style: Option<String>,
+        style: Option<PyObject>,
         ) -> Self {
         Self {
             id,
@@ -75,7 +75,7 @@ pub fn construct_color_picker(cp: IpgColorPicker) -> Element<'static, Message> {
         return Space::new(0.0, 0.0).into()
    }
 
-    let style = get_button_style_from_str(cp.style.clone());
+    let style = get_button_style_from_obj(cp.style.clone());
     
     let btn: Element<ColPikMessage> = Button::new(Text::new(cp.label.clone()))
                                 .height(cp.height)

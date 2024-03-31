@@ -21,7 +21,7 @@ mod iced_widgets;
 
 use crate::iced_widgets::scrollable::Direction;
 
-use ipg_widgets::ipg_button::{button_item_update, try_extract_button_arrow, try_extract_button_style, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
+use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
 use ipg_widgets::ipg_card::{card_item_update, try_extract_card_style, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
@@ -713,21 +713,13 @@ impl IPG {
 
         let padding = get_padding(padding);
 
-        // iced button style has to be converted to a string
-        // because in can't be put into the mutex.
-        let style_opt = match style {
-            Some(st) => try_extract_button_style(st),
-            None => None,
-        };
+        // // iced button style has to be converted to a string
+        // // because in can't be put into the mutex.
+        // let style_opt = match style {
+        //     Some(st) => try_extract_button_style(st),
+        //     None => None,
+        // };
 
-        let mut arrow = None;
-        if arrow_style.is_some() {
-            arrow = match arrow_style {
-                Some(ar) => try_extract_button_arrow(ar),
-                None => None,
-            }
-        }
-        
         set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
@@ -741,8 +733,8 @@ impl IPG {
                                                 height,
                                                 padding,
                                                 corner_radius,
-                                                style_opt,
-                                                arrow,                              
+                                                style,
+                                                arrow_style,                              
                                                 )));
         
         Ok(id)
@@ -910,7 +902,7 @@ impl IPG {
                     height_fill: bool,
                     padding: Vec<f64>,
                     corner_radius: f32,
-                    style: Option<String>,
+                    style: Option<PyObject>,
                     user_data: Option<PyObject>,
                     ) -> PyResult<usize> 
     {

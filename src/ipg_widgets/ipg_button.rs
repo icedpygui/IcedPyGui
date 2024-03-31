@@ -32,8 +32,8 @@ pub struct IpgButton {
     pub height: Length,
     pub padding: Padding,
     pub corner_radius: f32,
-    pub style: Option<String>,
-    pub arrow_style: Option<String>,
+    pub style: Option<PyObject>,
+    pub arrow_style: Option<PyObject>,
 }
 
 impl IpgButton {
@@ -47,8 +47,8 @@ impl IpgButton {
         height: Length,
         padding: Padding,
         corner_radius: f32,
-        style: Option<String>,
-        arrow_style: Option<String>,
+        style: Option<PyObject>,
+        arrow_style: Option<PyObject>,
         ) -> Self {
         Self {
             id,
@@ -102,13 +102,14 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
     let mut label = Text::new(btn.label.clone());
 
     if btn.arrow_style.is_some() {
-        label = match btn.arrow_style {
+        let arrow_style = try_extract_button_arrow(btn.arrow_style);
+        label = match arrow_style {
             Some(ar) => Text::new(ar).font(BOOTSTRAP_FONT),
             None => panic!("Button: Could not get Option(arrow_style)")
         };
     }
     
-    let style = get_button_style_from_str(btn.style);
+    let style = get_button_style_from_obj(btn.style);
     
     let ipg_btn: Element<BTNMessage> = Button::new(label)
                                 .height(btn.height)
@@ -211,13 +212,7 @@ pub fn button_item_update(btn: &mut IpgButton,
 
     match update {
        IpgButtonParams::ArrowStyle => {
-            let arrow = try_extract_button_arrow(value);
-            if arrow == Some("Custom".to_string()) {
-                btn.arrow_style = Some(btn.label.clone());
-                btn.label = "".to_string();
-            } else {
-                btn.arrow_style = arrow;
-            }
+            btn.arrow_style = Some(value);
         },
         IpgButtonParams::CornerRadius => {
             btn.corner_radius = try_extract_f64(value) as f32;
@@ -241,7 +236,7 @@ pub fn button_item_update(btn: &mut IpgButton,
             btn.show = try_extract_boolean(value);
         },
         IpgButtonParams::Style => {
-            btn.style = try_extract_button_style(value);
+            btn.style = Some(value);
         },
         IpgButtonParams::Width => {
             let val = try_extract_f64(value);
@@ -256,52 +251,49 @@ pub fn button_item_update(btn: &mut IpgButton,
 }
 
 
-pub fn get_button_style_from_str(style_opt: Option<String>) -> theme::Button {
+pub fn get_button_style_from_obj(style_opt: Option<PyObject>) -> theme::Button {
 
-    let style_str = match style_opt {
+    let style_obj = match style_opt {
         Some(st) => st,
         None => return theme::Button::Primary,
     };
 
-    match style_str.as_str() {
-        "Primary" => theme::Button::Primary,
-        "Secondary" => theme::Button::Secondary,
-        "Positive" => theme::Button::Positive,
-        "Destructive" => theme::Button::Destructive,
-        "Text" => theme::Button::Text,
-        _ => theme::Button::Primary,
+    let ipg_btn_style = try_extract_button_style(style_obj);
+
+    match ipg_btn_style {
+        IpgButtonStyles::Primary => theme::Button::Primary,
+        IpgButtonStyles::Secondary => theme::Button::Secondary,
+        IpgButtonStyles::Positive => theme::Button::Positive,
+        IpgButtonStyles::Destructive => theme::Button::Destructive,
+        IpgButtonStyles::Text => theme::Button::Text,
     }
 }
 
 
-pub fn get_button_str_from_style(style: IpgButtonStyles) -> Option<String> {
-    match style {
-        IpgButtonStyles::Primary => Some("Primary".to_string()),
-        IpgButtonStyles::Secondary => Some("Secondary".to_string()),
-        IpgButtonStyles::Positive => Some("Positive".to_string()),
-        IpgButtonStyles::Destructive => Some("Destructive".to_string()),
-        IpgButtonStyles::Text => Some("Text".to_string()),
-    }
-}
+pub fn try_extract_button_style(style_obj: PyObject) -> IpgButtonStyles {
 
-pub fn try_extract_button_style(style_obj: PyObject) -> Option<String> {
     Python::with_gil(|py| {
         let res = style_obj.extract::<IpgButtonStyles>(py);
             
         match res {
-            Ok(st) => return get_button_str_from_style(st),
-            Err(_) => None,
+            Ok(st) => st,
+            Err(_) => panic!("Button style extraction failed."),
         }
     })  
 }
 
-pub fn try_extract_button_arrow(arrow_obj: PyObject) -> Option<String> {
+pub fn try_extract_button_arrow(arrow_opt: Option<PyObject>) -> Option<String> {
+
+    let arrow_obj = match arrow_opt {
+        Some(ar) => ar,
+        None => return None,
+    };
 
     Python::with_gil(|py| {
         let res = arrow_obj.extract::<IpgButtonArrows>(py);
 
         match res {
-            Ok(ar) => return Some(get_boot_arrow(ar)),
+            Ok(ar) => return Some(get_bootstrap_arrow(ar)),
             Err(_) => panic!("Button arrow extraction failed"),
         }
     })
@@ -396,7 +388,7 @@ pub enum IpgButtonArrows {
 }
 
 
-fn get_boot_arrow(arrow: IpgButtonArrows) -> String {
+fn get_bootstrap_arrow(arrow: IpgButtonArrows) -> String {
     match arrow {
         IpgButtonArrows::ArrowBarLeft => icon_to_string(BootstrapIcon::ArrowBarLeft),
         IpgButtonArrows::ArrowBarRight => icon_to_string(BootstrapIcon::ArrowBarRight),
@@ -472,6 +464,7 @@ fn get_boot_arrow(arrow: IpgButtonArrows) -> String {
 }
 
 
+
 pub struct ButtonStyleRadius {
     theme: theme::Button,
     radius: f32,
@@ -484,7 +477,7 @@ impl ButtonStyleRadius {
             radius,
          }
     }
-    fn radius(&mut self, radius: f32) {
+    pub fn radius(&mut self, radius: f32) {
         self.radius = radius
     }
 }
