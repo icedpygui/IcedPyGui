@@ -37,7 +37,7 @@ pub struct IpgCheckBox {
     // font: Option<Font>,
     pub icon_x: bool,
     pub icon_size: f32,
-    pub style: Option<String>,
+    pub style: Option<PyObject>,
 }
 
 impl IpgCheckBox {
@@ -56,7 +56,7 @@ impl IpgCheckBox {
         text_shaping: Shaping,
         icon_x: bool,
         icon_size: f32,
-        style: Option<String>,
+        style: Option<PyObject>,
         ) -> Self {
             Self {
                 id,

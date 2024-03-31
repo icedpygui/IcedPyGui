@@ -835,7 +835,7 @@ impl IPG {
                         icon_size: f32,
                         user_data: Option<PyObject>,
                         show: bool,
-                        style: Option<String>,
+                        style: Option<PyObject>,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(id);
