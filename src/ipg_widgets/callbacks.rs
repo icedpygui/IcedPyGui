@@ -92,9 +92,9 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco
                 },
                 IpgWidgets::IpgColorPicker(cp) => {
-                    cp.show = match wci.show {
+                    cp.open = match wci.value_bool {
                         Some(s) => s,
-                        None => panic!("The show value for color_picker could not be found"),
+                        None => panic!("The open value for color_picker could not be found"),
                     };
 
                     let mut wco = WidgetCallbackOut::default();

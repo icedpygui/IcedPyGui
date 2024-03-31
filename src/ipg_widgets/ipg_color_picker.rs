@@ -6,8 +6,8 @@ use super::callbacks::{WidgetCallbackIn,
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 
-use iced::widget::{Button, Row, Space, Text};
-use iced::{Alignment, Color, Element, Length, Padding, theme,};
+use iced::widget::{Button, Space, Text};
+use iced::{Color, Element, Length, Padding, theme,};
 
 use iced_aw::ColorPicker;
 
@@ -28,6 +28,7 @@ pub struct IpgColorPicker {
     pub padding: Padding,
     pub corner_radius: f32,
     pub style: Option<PyObject>,
+    pub open: bool,
 }
 
 impl IpgColorPicker {
@@ -56,6 +57,7 @@ impl IpgColorPicker {
             padding,
             corner_radius,
             style,
+            open: false,
         }
     }
 }
@@ -76,16 +78,22 @@ pub fn construct_color_picker(cp: IpgColorPicker) -> Element<'static, Message> {
    }
 
     let style = get_button_style_from_obj(cp.style.clone());
-    
-    let btn: Element<ColPikMessage> = Button::new(Text::new(cp.label.clone()))
-                                .height(cp.height)
-                                .padding(cp.padding)
-                                .width(cp.width)
-                                .on_press(ColPikMessage::ChooseColor)
-                                .style(theme::Button::Custom(Box::new(
-                                    ButtonStyleRadius::new(style, cp.corner_radius))))
-                                .into();
 
+    let btn: Element<ColPikMessage> = Button::new(Text::new(cp.label.clone()))
+                                    .height(cp.height)
+                                    .padding(cp.padding)
+                                    .width(cp.width)
+                                    .on_press(ColPikMessage::ChooseColor)
+                                    .style(theme::Button::Custom(Box::new(
+                                        ButtonStyleRadius::new(style, cp.corner_radius))))
+                                    .into();
+
+    if !cp.open {
+        
+        let mapped_cp: Element<Message> = btn.map(move |message| Message::ColorPicker(cp.id, message));
+        return mapped_cp
+    }
+    
     let color_picker: Element<ColPikMessage> = ColorPicker::new(
                                     cp.show,
                                     cp.color,
@@ -96,12 +104,8 @@ pub fn construct_color_picker(cp: IpgColorPicker) -> Element<'static, Message> {
 
     let mapped_cp: Element<Message> = color_picker.map(move |message| Message::ColorPicker(cp.id, message));
 
-    let row: Element<Message> = Row::new()
-                                .align_items(Alignment::Center)
-                                .spacing(10)
-                                .push(mapped_cp)
-                                .into();
-    row
+    mapped_cp
+    
 }
 
 
@@ -112,20 +116,20 @@ pub fn color_picker_update(id: usize, message: ColPikMessage) {
             // Non callback just setting the show value.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
-            wci.show = Some(true);
+            wci.value_bool = Some(true);
             let _ = get_set_widget_callback_data(wci);
         },
         ColPikMessage::OnCancel => {
             // Non callback just setting the show value.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
-            wci.show = Some(false);
+            wci.value_bool = Some(false);
             let _ = get_set_widget_callback_data(wci);
         },
         ColPikMessage::OnSubmit(color) => {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
-            wci.show = Some(false);
+            wci.value_bool = Some(false);
             wci.color = Some(convert_color_to_list(color));
             let mut wco = get_set_widget_callback_data(wci);
             wco.id = id;

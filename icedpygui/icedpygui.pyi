@@ -26,8 +26,8 @@ class IPG:
                     pos_x: float=None,
                     pos_y: float=None,
                     pos_centered: bool=False,
-                    resizable:str="primary",
-                    theme: str="dark",
+                    resizable: bool=True,
+                    theme: any=Union[None | IpgWindowThemes],
                     debug: bool=False,
                     show: bool=True,
                     ) -> None:
@@ -45,7 +45,7 @@ class IPG:
             pos_y (float, optional): y position of window
             pos_centered (bool, optional): default=False; Centered position of window.
             resizable (bool, optional): default=True; Whether the window can be resized.
-            theme (str, optioonal): default=dark; Optional=white. More to come later.
+            theme (IpgWindowThemes, optional): default=IpgWindowThemes.Dark.
             show (bool, optional): default=True; First window always true, others can be set.
             debug (bool, optional): default=False; Draws a box around widgets to see layout.
         """
@@ -1110,7 +1110,7 @@ class IPG:
 
 
 
-class IpgWindowTheme:
+class IpgWindowThemes:
     Dark=0
     Light=0
     CatppuccinLatte=0
