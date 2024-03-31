@@ -33,7 +33,7 @@ pub struct IpgCard {
     pub head: String,
     pub body: String,
     pub foot: Option<String>,
-    pub style: Option<String>,
+    pub style: Option<PyObject>,
 }
 
 impl IpgCard {
@@ -53,7 +53,7 @@ impl IpgCard {
         head: String,
         body: String,
         foot: Option<String>,
-        style: Option<String>,
+        style: Option<PyObject>,
         ) -> Self {
         Self {
             id,
@@ -81,18 +81,6 @@ pub enum CardMessage {
     OnClose,
 }
 
-// The style enums below are different than iced_aw CardStyles enums though they have the
-// same members.  The reason is that the iced_aw CardStyles don't have a Clone method 
-// and the python styles are defined as IpgCardStyles. Therefore
-// one has to send a Option<String> representing the style, using an IpgCardStyles enum.
-// Steps are different based on the intitial contruction and the updating routine.
-// 
-// Construction phase: 
-// lib.add_card() ==> PyObject ==> String ==> construct_card() ==> iced_aw style
-// 
-// Update phase: 
-// lib.update_item() ==> PyObject ==> try_extract (method below) ==> Option<String> returned to update_item
-// lib.update_item() => iced update => construction phase.
 
 #[derive(Debug, Clone)]
 #[pyclass]
@@ -117,7 +105,7 @@ pub fn construct_card (crd: IpgCard) -> Element<'static, Message> {
         return sp_mapped
     }
 
-    let style = get_card_style_from_str(crd.style);
+    let style = get_card_style_from_obj(crd.style);
 
     let head: Element<CardMessage> = Text::new(crd.head.clone())
                                                 .width(Length::Fill)
@@ -251,55 +239,43 @@ pub fn card_item_update(crd: &mut IpgCard,
             crd.is_open = try_extract_boolean(value);
         },
         IpgCardParams::Style => {
-            crd.style = try_extract_card_style(value);
+            crd.style = Some(value);
         },
     }
 }
 
 
-pub fn get_card_style_from_str(style_opt: Option<String>) -> CardStyles {
+pub fn get_card_style_from_obj(style_opt: Option<PyObject>) -> CardStyles {
 
-    let style_str = match style_opt {
+    let style_obj = match style_opt {
         Some(st) => st,
         None => return CardStyles::Primary,
     };
 
-    match style_str.as_str() {
-        "Primary" => CardStyles::Primary,
-        "Secondary" => CardStyles::Secondary, 
-        "Success" => CardStyles::Success, 
-        "Danger" => CardStyles::Danger, 
-        "Warning" => CardStyles::Warning,
-        "Info" => CardStyles::Info, 
-        "Light" => CardStyles::Light, 
-        "Dark" => CardStyles::Dark, 
-        "White" => CardStyles::White, 
-        "Default" => CardStyles::Default,
-        _ => CardStyles::Default,
+    let ipg_card_style = try_extract_card_style(style_obj);
+
+    match ipg_card_style {
+        IpgCardStyles::Primary => CardStyles::Primary,
+        IpgCardStyles::Secondary => CardStyles::Secondary, 
+        IpgCardStyles::Success => CardStyles::Success, 
+        IpgCardStyles::Danger => CardStyles::Danger, 
+        IpgCardStyles::Warning => CardStyles::Warning,
+        IpgCardStyles::Info => CardStyles::Info, 
+        IpgCardStyles::Light => CardStyles::Light, 
+        IpgCardStyles::Dark => CardStyles::Dark, 
+        IpgCardStyles::White => CardStyles::White, 
+        IpgCardStyles::Default => CardStyles::Default,
     }
 }
 
-pub fn get_card_str_from_style(style: IpgCardStyles) -> Option<String> {
-        match style {
-            IpgCardStyles::Primary => Some("Primary".to_string()),
-            IpgCardStyles::Secondary => Some("Secondary".to_string()), 
-            IpgCardStyles::Success => Some("Success".to_string()), 
-            IpgCardStyles::Danger => Some("Danger".to_string()), 
-            IpgCardStyles::Warning => Some("Warning".to_string()),
-            IpgCardStyles::Info => Some("Info".to_string()), 
-            IpgCardStyles::Light => Some("Light".to_string()), 
-            IpgCardStyles::Dark => Some("Dark".to_string()), 
-            IpgCardStyles::White => Some("White".to_string()), 
-            IpgCardStyles::Default => Some("Default".to_string()),
-        }
-}
 
-pub fn try_extract_card_style(style_obj: PyObject) -> Option<String> {
+pub fn try_extract_card_style(style_obj: PyObject) -> IpgCardStyles {
+
     Python::with_gil(|py| {
         let res = style_obj.extract::<IpgCardStyles>(py);
         match res {
-            Ok(st) => get_card_str_from_style(st),
-            Err(_) => None,
+            Ok(st) => st,
+            Err(_) => panic!("Card style failed to extract."),
         }
     })
 }

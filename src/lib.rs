@@ -22,7 +22,7 @@ mod iced_widgets;
 use crate::iced_widgets::scrollable::Direction;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
-use ipg_widgets::ipg_card::{card_item_update, try_extract_card_style, IpgCard, IpgCardStyles, IpgCardParams};
+use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::IpgColumn;
@@ -784,11 +784,6 @@ impl IPG {
         let padding_body = get_padding(padding_body);
         let padding_foot = get_padding(padding_foot);
 
-        let style_opt = match style {
-            Some(st) => try_extract_card_style(st),
-            None => None,
-        };
-
         set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
@@ -809,7 +804,7 @@ impl IPG {
                                                     head,
                                                     body,
                                                     foot,
-                                                    style_opt,
+                                                    style,
                                                 )));
 
         Ok(id)
