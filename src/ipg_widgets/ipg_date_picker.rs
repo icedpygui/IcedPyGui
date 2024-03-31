@@ -173,13 +173,6 @@ fn right_arrow_icon(size: f32) -> Text<'static> {
     icon('\u{f135}', size)
 }
 
-// fn edit_icon() -> Text<'static> {
-//     icon('\u{F303}')
-// }
-
-// fn delete_icon() -> Text<'static> {
-//     icon('\u{F1F8}')
-// }
 
 fn get_days_of_month(year: i32, month: u32) -> i64 {
 
