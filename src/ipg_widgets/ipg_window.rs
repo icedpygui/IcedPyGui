@@ -8,7 +8,7 @@ use iced::window;
 use iced::{Command, Element, Theme, Size};
 use iced::widget::Column;
 
-use pyo3::{PyObject, Python};
+use pyo3::{pyclass, PyObject, Python};
 
 use super::callbacks::WidgetCallbackOut;
 
@@ -21,7 +21,8 @@ pub struct IpgWindow {
     pub title: String,
     pub width: f32,
     pub height: f32,
-    pub theme: Theme,
+    pub theme_py: Option<PyObject>,
+    pub theme: Option<Theme>,
     pub position: window::Position,
     pub exit_on_close_request: bool,
     pub resizable: bool,
@@ -40,7 +41,7 @@ impl IpgWindow {
         height: f32,
         position: window::Position,
         exit_on_close_request: bool,
-        theme: Theme,
+        theme_py: Option<PyObject>,
         resizable: bool,
         visible: bool,
         debug: bool,
@@ -55,7 +56,8 @@ impl IpgWindow {
             height,
             position,
             exit_on_close_request,
-            theme,
+            theme_py,
+            theme: None,
             resizable,
             visible,
             debug,
@@ -74,6 +76,13 @@ pub enum WndMessage {
 }
 
 pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Command<app::Message>>) {
+
+    let mut state = access_state();
+
+    for ipg_window in state.windows.iter_mut() {
+        ipg_window.theme = get_theme(ipg_window.theme_py.clone());
+    }
+    drop(state);
 
     let state = access_state();
 
@@ -98,7 +107,6 @@ pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Command<app::Messag
             windows.insert(id, ipg_window.clone());
 
         }
-        
     }
     drop(state);
     (windows, spawn_window)
@@ -174,4 +182,78 @@ fn process_callback(wco: WidgetCallbackOut)
 
     drop(app_cbs);
 
+}
+
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgWindowThemes {
+    Dark,
+    Light,
+    CatppuccinLatte,
+    CatppuccinFrappe,
+    CatppuccinMacchiato,
+    CatppuccinMocha,
+    Dracula,
+    GruvboxLight,
+    GruvboxDark,
+    KanagawaWave,
+    KanagawaDragon,
+    KanagawaLotus,
+    Moonfly,
+    Nightfly,
+    Nord,
+    Oxocarbon,
+    SolarizedLight,
+    SolarizedDark,
+    TokyoNight,
+    TokyoNightStorm,
+    TokyoNightLight,
+}
+
+
+fn extract_theme(theme_opt: Option<PyObject>) -> IpgWindowThemes {
+
+    let theme = match theme_opt {
+        Some(th) => th,
+        None => return IpgWindowThemes::Dark,
+    };
+
+    Python::with_gil(|py| {
+        let res = theme.extract::<IpgWindowThemes>(py);
+            
+        match res {
+            Ok(theme) => theme,
+            Err(_) => panic!("Window theme extraction failed."),
+        }
+    }) 
+}
+
+fn get_theme(theme_obj: Option<PyObject>) -> Option<Theme> {
+
+    let theme = extract_theme(theme_obj);
+    
+    match theme {
+        IpgWindowThemes::Dark => Some(Theme::Dark),
+        IpgWindowThemes::Light => Some(Theme::Light),
+        IpgWindowThemes::CatppuccinLatte => Some(Theme::CatppuccinLatte),
+        IpgWindowThemes::CatppuccinFrappe => Some(Theme::CatppuccinFrappe),
+        IpgWindowThemes::CatppuccinMacchiato => Some(Theme::CatppuccinMacchiato),
+        IpgWindowThemes::CatppuccinMocha => Some(Theme::CatppuccinMocha),
+        IpgWindowThemes::Dracula => Some(Theme::Dracula),
+        IpgWindowThemes::GruvboxLight => Some(Theme::GruvboxLight),
+        IpgWindowThemes::GruvboxDark => Some(Theme::GruvboxDark),
+        IpgWindowThemes::KanagawaWave => Some(Theme::KanagawaWave),
+        IpgWindowThemes::KanagawaDragon => Some(Theme::KanagawaDragon),
+        IpgWindowThemes::KanagawaLotus => Some(Theme::KanagawaLotus),
+        IpgWindowThemes::Moonfly => Some(Theme::Moonfly),
+        IpgWindowThemes::Nightfly => Some(Theme::Nightfly),
+        IpgWindowThemes::Nord => Some(Theme::Nord),
+        IpgWindowThemes::Oxocarbon => Some(Theme::Oxocarbon),
+        IpgWindowThemes::SolarizedDark => Some(Theme::SolarizedDark),
+        IpgWindowThemes::SolarizedLight => Some(Theme::SolarizedLight),
+        IpgWindowThemes::TokyoNight => Some(Theme::TokyoNight),
+        IpgWindowThemes::TokyoNightLight => Some(Theme::TokyoNightLight),
+        IpgWindowThemes::TokyoNightStorm => Some(Theme::TokyoNightStorm),
+    }
 }

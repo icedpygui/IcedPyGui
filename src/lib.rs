@@ -6,7 +6,7 @@ use pyo3::PyObject;
 
 use iced::multi_window::Application;
 use iced::window::{self, Position};
-use iced::{Color, Font, Length, Point, Settings, Size, Theme};
+use iced::{Color, Font, Length, Point, Settings, Size};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
@@ -46,7 +46,7 @@ use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
 use ipg_widgets::ipg_text_editor::IpgTextEditor;
 use ipg_widgets::ipg_text_input::IpgTextInput;
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
-use ipg_widgets::ipg_window::IpgWindow;
+use ipg_widgets::ipg_window::{IpgWindow, IpgWindowThemes};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 
 use ipg_widgets::helpers::{check_for_dup_container_ids,  
@@ -231,7 +231,7 @@ impl IPG {
 
     #[pyo3(signature = (window_id, title, width, height, pos_x=None, pos_y=None,
                         pos_centered=false, resizable=true, 
-                        theme="Dark".to_string(), exit_on_close=true, on_resize=None, 
+                        theme=None, exit_on_close=true, on_resize=None, 
                         show=true, debug=false, user_data=None))]
     fn add_window(&mut self,
                         window_id: String, 
@@ -242,7 +242,7 @@ impl IPG {
                         pos_y: Option<f32>,
                         pos_centered: bool,
                         resizable: bool,
-                        theme: String,
+                        theme: Option<PyObject>,
                         exit_on_close: bool,
                         on_resize: Option<PyObject>,
                         show: bool,
@@ -251,32 +251,6 @@ impl IPG {
                     ) -> PyResult<usize>
     {
         self.id += 1;
-
-        // TODO: add custom
-        let window_theme = match theme.as_str() {
-            "Light" => Theme::Light,
-            "Dark" => Theme::Dark,
-            "Dracula" => Theme::Dracula,
-            "Nord" => Theme::Nord,
-            "SolarizedLight" => Theme::SolarizedLight,
-            "SolarizedDark" => Theme::SolarizedDark,
-            "GruvboxLight" => Theme::GruvboxLight,
-            "GruvboxDark" => Theme::GruvboxDark,
-            "CatppuccinLatte" => Theme::CatppuccinLatte,
-            "CatppuccinFrappe" => Theme::CatppuccinFrappe,
-            "CatppuccinMacchiato" => Theme::CatppuccinMacchiato,
-            "CatppuccinMocha" => Theme::CatppuccinMocha,
-            "TokyoNight" => Theme::TokyoNight,
-            "TokyoNightStorm" => Theme::TokyoNightStorm,
-            "TokyoNightLight" => Theme::TokyoNightLight,
-            "KanagawaWave" => Theme::KanagawaWave,
-            "KanagawaDragon" => Theme::KanagawaDragon,
-            "KanagawaLotus" => Theme::KanagawaLotus,
-            "Moonfly" => Theme::Moonfly,
-            "Nightfly" => Theme::Nightfly,
-            "Oxocarbon" => Theme::Oxocarbon,
-            _ => Theme::Dark,
-        };
 
         let mut window_position = Position::Default;
 
@@ -307,7 +281,7 @@ impl IPG {
         if on_resize.is_some() {
             add_callback_to_mutex(self.id, "on_resize".to_string(), on_resize);
         }
-        
+
         state.windows_str_ids.insert(window_id.clone(), self.window_id);
 
         state.ids.insert(self.window_id, vec![IpgIds{id: self.id, parent_uid: 0, container_id: Some(window_id.clone()),
@@ -324,7 +298,7 @@ impl IPG {
                                             height, 
                                             window_position,
                                             exit_on_close,
-                                            window_theme.clone(), 
+                                            theme.clone(), 
                                             resizable,
                                             visible,
                                             debug,
@@ -340,7 +314,7 @@ impl IPG {
                                         height, 
                                         window_position,
                                         exit_on_close,
-                                        window_theme, 
+                                        theme, 
                                         resizable,
                                         show,
                                         debug,
@@ -752,9 +726,7 @@ impl IPG {
                 Some(ar) => try_extract_button_arrow(ar),
                 None => None,
             }
-
         }
- 
         
         set_state_of_widget(id, parent_id);
 
@@ -2072,62 +2044,6 @@ fn add_image(&mut self,
         
     }
 
-    
-    #[pyo3(signature = (Light=false, Dark=false, Dracula=false, Nord=false,SolarizedLight=false,
-                        SolarizedDark=false, GruvboxLight=false,GruvboxDark=false,CatppuccinLatte=false,
-                        CatppuccinFrappe=false, CatppuccinMacchiato=false, CatppuccinMocha=false,
-                        TokyoNight=false,TokyoNightStorm=false, TokyoNightLight=false, KanagawaWave=false,
-                        KanagawaDragon=false, KanagawaLotus=false, Moonfly=false,Nightfly=false,Oxocarbon=false))]
-    fn window_theme(&mut self,
-                            Light: bool,
-                            Dark: bool,
-                            Dracula: bool,
-                            Nord: bool,
-                            SolarizedLight: bool,
-                            SolarizedDark: bool,
-                            GruvboxLight: bool,
-                            GruvboxDark: bool,
-                            CatppuccinLatte: bool,
-                            CatppuccinFrappe: bool,
-                            CatppuccinMacchiato: bool,
-                            CatppuccinMocha: bool,
-                            TokyoNight: bool,
-                            TokyoNightStorm: bool,
-                            TokyoNightLight: bool,
-                            KanagawaWave: bool,
-                            KanagawaDragon: bool,
-                            KanagawaLotus: bool,
-                            Moonfly: bool,
-                            Nightfly: bool,
-                            Oxocarbon: bool,
-                        ) -> String
-    {
-        if Light {return "Light".to_string()}
-        if Dark {return "Dark".to_string()}
-        if Dracula {return "Dracula".to_string()}
-        if Nord {return "Nord".to_string()}
-        if SolarizedLight {return "SolarizedLight".to_string()}
-        if SolarizedDark {return "SolarizedDark".to_string()}
-        if GruvboxLight {return "GruvboxLight".to_string()}
-        if GruvboxDark {return "GruvboxDark".to_string()}
-        if CatppuccinLatte {return "CatppuccinLatte".to_string()}
-        if CatppuccinFrappe {return "CatppuccinFrappe".to_string()}
-        if CatppuccinMacchiato {return "CatppuccinMacchiato".to_string()}
-        if CatppuccinMocha {return "CatppuccinMocha".to_string()}
-        if TokyoNight {return "TokyoNight".to_string()}
-        if TokyoNightStorm {return "TokyoNightStorm".to_string()}
-        if TokyoNightLight {return "TokyoNightLight".to_string()}
-        if KanagawaWave {return "KanagawaWave".to_string()}
-        if KanagawaDragon {return "KanagawaDragon".to_string()}
-        if KanagawaLotus {return "KanagawaLotus".to_string()}
-        if Moonfly {return "Moonfly".to_string()}
-        if Nightfly {return "Nightfly".to_string()}
-        if Oxocarbon {return "Oxocarbon".to_string()}
-
-        panic!("The window style must be one of those listed in the docs.")
-
-    }
-
     fn get_id(&mut self, gen_id: Option<usize>) -> usize
     {
         // When an id is generated, it is put into the self.gen_ids.
@@ -2167,6 +2083,7 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IpgRadioDirection>()?;
     m.add_class::<IpgRadioParams>()?;
     m.add_class::<IpgTextParams>()?;
+    m.add_class::<IpgWindowThemes>()?;
     Ok(())
 }
 

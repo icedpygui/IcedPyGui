@@ -1108,19 +1108,32 @@ class IPG:
         Update a widget by supplying the id, the parameter to update and values as a str or number
         """
 
-    def window_theme(self, Light=False, Dark=False, Dracula=False, Nord=False,SolarizedLight=False,
-                        SolarizedDark=False, GruvboxLight=False,GruvboxDark=False,CatppuccinLatte=False,
-                        CatppuccinFrappe=False, CatppuccinMacchiato=False, CatppuccinMocha=False,
-                        TokyoNight=False,TokyoNightStorm=False, TokyoNightLight=False, KanagawaWave=False,
-                        KanagawaDragon=False, KanagawaLotus=False, Moonfly=False,Nightfly=False,Oxocarbon=False):
-        """
-        Gets the window them.  Set any theme to True to active.  
-        If you activate more than one, the first item will be chosen.
-        Define this first by equating to a variable them put in the window theme parameter.
-        ALternately, put the function directly in the style parameter.
-        """
 
 
+class IpgWindowTheme:
+    Dark=0
+    Light=0
+    CatppuccinLatte=0
+    CatppuccinFrappe=0
+    CatppuccinMacchiato=0
+    CatppuccinMocha=0
+    Dracula=0
+    GruvboxLight=0
+    GruvboxDark=0
+    KanagawaWave=0
+    KanagawaDragon=0
+    KanagawaLotus=0
+    Moonfly=0
+    Nightfly=0
+    Nord=0
+    Oxocarbon=0
+    SolarizedLight=0
+    SolarizedDark=0
+    TokyoNight=0
+    TokyoNightStorm=0
+    TokyoNightLight=0
+    
+    
 class IpgButtonStyles:
     Primary=0
     Secondary=0

@@ -235,7 +235,7 @@ impl multi_window::Application for App {
                                 .unwrap();
 
         if debug {
-            let color = match_theme(theme);
+            let color = match_theme_with_color(theme);
                 content.explain(color)  
         } else {
             content
@@ -269,7 +269,10 @@ impl multi_window::Application for App {
     }
 
     fn theme(&self, window: window::Id) -> Theme {
-        self.windows.get(&window).unwrap().theme.clone()
+        match self.windows.get(&window).unwrap().theme.clone() {
+            Some(th) => th,
+            None => Theme::Dark,
+        }
     }
 }
 
@@ -485,7 +488,12 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
     }
 }
 
-fn match_theme(theme: Theme) -> Color {
+fn match_theme_with_color(theme_opt: Option<Theme>) -> Color {
+
+    let theme = match theme_opt {
+        Some(th) => th,
+        None => Theme::Dark,
+    };
 
     match theme {
         Theme::Light => Color::BLACK,
