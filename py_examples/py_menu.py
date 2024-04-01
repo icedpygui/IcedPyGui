@@ -1,4 +1,4 @@
-from icedpygui import IPG
+from icedpygui import IPG, IpgMenuSepTypes
 
 ipg = IPG()
 
@@ -17,7 +17,8 @@ items = {"Menu1": ["item1-1", "item1-2", "item1-3"],
 
 labels = list(items.keys())
 
-ipg.add_menu("col", labels, items, on_select=menu_pressed)
+ipg.add_menu("col", labels, items, separator=(1, 1),
+             sep_type=IpgMenuSepTypes.Line, on_select=menu_pressed)
 
 
 

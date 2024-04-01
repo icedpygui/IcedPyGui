@@ -1,15 +1,16 @@
 #![allow(unused)]
 use std::collections::HashMap;
 
-use iced::widget::{Button, button, Container, Text, text};
-use iced::{alignment, Border, Color, Element, Length};
+use iced::widget::{button, row, text, Button, Container, Text};
+use iced::{alignment, Border, Color, Element, Length, Theme};
 
 use iced_aw::graphics::icons::{BootstrapIcon, BOOTSTRAP_FONT, BOOTSTRAP_FONT_BYTES};
 use iced_aw::menu::{self, Item, Menu, MenuBar, StyleSheet};
+use iced_aw::native::InnerBounds;
 use iced_aw::style::MenuBarStyle;
-use iced_aw::{menu_bar, menu_items};
+use iced_aw::{menu_bar, menu_items, quad};
 use pyo3::types::PyDict;
-use pyo3::{PyObject, Python};
+use pyo3::{pyclass, PyObject, Python};
 
 use crate::{access_callbacks, app};
 
@@ -21,6 +22,9 @@ pub struct IpgMenu {
     pub id: usize,
     pub labels: Vec<String>,
     pub items: PyObject,
+    pub separator: Option<(usize, usize)>,
+    pub sep_type: IpgMenuSepTypes,
+    pub label_sep_name: Option<String>,
     pub user_data: Option<PyObject>,
 }
 
@@ -29,12 +33,18 @@ impl IpgMenu {
         id: usize,
         labels: Vec<String>,
         items: PyObject,
+        separator: Option<(usize, usize)>,
+        sep_type: IpgMenuSepTypes,
+        label_sep_name: Option<String>,
         user_data: Option<PyObject>,
     ) -> Self {
         Self {
             id,
             labels,
             items,
+            separator,
+            sep_type,
+            label_sep_name,
             user_data, 
         }
     }    
@@ -55,16 +65,33 @@ pub fn construct_menu(mn: IpgMenu) -> Element<'static, app::Message> {
 
     let mut menu_bar_items = vec![];
 
-    for label in mn.labels {
+    for (bar_index, label) in mn.labels.iter().enumerate() {
         menu_bar_items = vec![];
-        let item_labels = items.get(&label);
+        let item_labels = items.get(label);
         let list = match item_labels {
             Some(list) => list,
             None => panic!("Menu label does not match items dictionary key")
         };
-        for item in list {
+        for (index, item) in list.iter() .enumerate(){
+
             menu_bar_items.push(Item::new(menu_button(item.clone())));
+
+            match mn.separator {
+                Some((bar_idx, menu_idx)) => {
+                    if bar_idx == bar_index && menu_idx == index {
+                        match mn.sep_type {
+                            IpgMenuSepTypes::Line => menu_bar_items.push(Item::new(separator())),
+                            IpgMenuSepTypes::Dot => menu_bar_items.push(Item::new(
+                                                    dot_separator(&Theme::Dark))),
+                            IpgMenuSepTypes::Label => menu_bar_items.push(Item::new(
+                                                    labeled_separator(mn.label_sep_name.clone()))),
+                        }
+                    }
+                },
+                None => ()
+            }
         }
+
         menu_bar.push(Item::with_menu(
                         menu_bar_button(label.clone()),
                         Menu::new(menu_bar_items)
@@ -227,3 +254,79 @@ impl button::StyleSheet for ButtonStyle {
     }
 }
 
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgMenuSepTypes {
+    Line,
+    Dot,
+    Label,
+}
+
+
+fn separator() -> quad::Quad {
+    quad::Quad {
+        quad_color: Color::from([0.5; 3]).into(),
+        quad_border: Border {
+            radius: [4.0; 4].into(),
+            ..Default::default()
+        },
+        inner_bounds: InnerBounds::Ratio(0.98, 0.2),
+        height: Length::Fixed(20.0),
+        ..Default::default()
+    }
+}
+
+fn dot_separator(theme: &iced::Theme) -> Element<'static, MenuMessage, iced::Theme, iced::Renderer> {
+    row((0..20).map(|_| {
+        quad::Quad {
+            quad_color: theme.extended_palette().background.base.text.into(),
+            inner_bounds: InnerBounds::Square(4.0),
+            ..separator()
+        }
+        .into()
+    }))
+    .height(20.0)
+    .into()
+}
+
+fn labeled_separator(label_opt: Option<String>) -> Element<'static, MenuMessage, iced::Theme, iced::Renderer> {
+    let label = match label_opt {
+        Some(lbl) => lbl,
+        None => "None".to_string(),
+    };
+
+    let q_1 = quad::Quad {
+        height: Length::Fill,
+        ..separator()
+    };
+    let q_2 = quad::Quad {
+        height: Length::Fill,
+        ..separator()
+    };
+
+    row![
+        q_1,
+        text(label)
+            .height(Length::Fill)
+            .vertical_alignment(alignment::Vertical::Center),
+        q_2,
+    ]
+    .height(20.0)
+    .into()
+}
+
+fn circle(color: Color) -> quad::Quad {
+    let radius = 10.0;
+
+    quad::Quad {
+        quad_color: color.into(),
+        inner_bounds: InnerBounds::Square(radius * 2.0),
+        quad_border: Border {
+            radius: [radius; 4].into(),
+            ..Default::default()
+        },
+        height: Length::Fixed(20.0),
+        ..Default::default()
+    }
+}

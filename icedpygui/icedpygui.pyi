@@ -1,4 +1,5 @@
 from types import Callable, Union, List
+from typing import Tuple
 
 
 class IPG:
@@ -575,7 +576,15 @@ class IPG:
             int: internal id of widget and can be used by user if equated.
         """
 
-    def add_menu(self, parent_id: str, labels: list, items: list, on_select: Callable, id: None) -> int:
+    def add_menu(self, 
+                 parent_id: str, 
+                 labels: list, 
+                 items: list,
+                 separator: Tuple=None,
+                 sep_type: any=IpgMenuSepTypes.Line, 
+                 on_select: Callable=None, 
+                 id: int=None
+                 ) -> int:
         """
         Add a menu dropdown list to the gui.
         """
@@ -1233,6 +1242,10 @@ class IpgRadioDirection:
     Horizontal=0,
     Vertical=0,
 
+class IpgMenuSepTypes:
+    Line=0,
+    Dot=0,
+    Label=0,
 
 class IpgRadioParams:
     Direction=0,

@@ -31,7 +31,7 @@ use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDa
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, 
                                 IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
-use ipg_widgets::ipg_menu::IpgMenu;
+use ipg_widgets::ipg_menu::{IpgMenu, IpgMenuSepTypes};
 use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
@@ -1067,14 +1067,19 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, labels, items, id=None, on_select=None, user_data=None))]
+    #[pyo3(signature = (parent_id, labels, items, on_select=None, 
+                        separator=None, sep_type=IpgMenuSepTypes::Line, 
+                        label_sep_name=None, user_data=None, id=None))]
     fn add_menu(&mut self, 
                     parent_id: String,
                     labels: Vec<String>, 
                     items: PyObject,
-                    id: Option<usize>,
                     on_select: Option<PyObject>,
+                    separator: Option<(usize, usize)>,
+                    sep_type: IpgMenuSepTypes,
+                    label_sep_name: Option<String>,
                     user_data: Option<PyObject>,
+                    id: Option<usize>,
                 ) -> PyResult<usize> 
     {
         let id = self.get_id(id);
@@ -1091,6 +1096,9 @@ fn add_image(&mut self,
                                                                 id,
                                                                 labels,
                                                                 items,
+                                                                separator,
+                                                                sep_type,
+                                                                label_sep_name,
                                                                 user_data,
                                                                 )));
 
@@ -2045,6 +2053,7 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IpgCheckboxParams>()?;
     m.add_class::<IpgDatePickerParams>()?;
     m.add_class::<IpgImageParams>()?;
+    m.add_class::<IpgMenuSepTypes>()?;
     m.add_class::<IpgPickListParams>()?;
     m.add_class::<IpgProgressBarParams>()?;
     m.add_class::<IpgRadioDirection>()?;
