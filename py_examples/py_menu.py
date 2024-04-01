@@ -1,17 +1,25 @@
-from icedpygui.icedpygui import IPG
+from icedpygui import IPG
 
 ipg = IPG()
 
 
-def menu_1_pressed(id, data, user_data_str, user_data_flt, user_data_int):
-   print(id)
+def menu_pressed(id, data):
+   print(id, data)
 
-ipg.add_column("main", align_items="center")
+   
+ipg.add_window("main", "Menu", 500, 500, pos_centered=True)
 
-ipg.add_menu_bar(parent_id="main", items=["Menu1", "Menu2", "Menu3"])
-ipg.add_menu_item("Menu1", item="Menu1", callback=menu_1_pressed)
+ipg.add_column("main", container_id="col", align_items="start")
 
-ipg.main_window("Python Wrapper of Rust Iced", 800, 800, 
-                                    (500, 100), True, debug=False)
+items = {"Menu1": ["item1-1", "item1-2", "item1-3"],
+         "Menu2": ["item2-1", "item2-2", "item2-3"],
+         "Menu3": ["item3-1", "item3-2", "item3-3"]}
 
+labels = list(items.keys())
+
+ipg.add_menu("col", labels, items, on_select=menu_pressed)
+
+
+
+ipg.start_session()
 

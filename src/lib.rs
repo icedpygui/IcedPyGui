@@ -31,7 +31,7 @@ use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDa
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, 
                                 IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
-use ipg_widgets::ipg_menu::{IpgMenuBar, IpgMenuItem};
+use ipg_widgets::ipg_menu::IpgMenu;
 use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
@@ -1064,46 +1064,34 @@ fn add_image(&mut self,
                                                 user_data,
                                             )));
 
-    Ok(id)
-}
-
-    #[pyo3(signature = (parent_id, items, id=None))]
-    fn add_menu_bar(&mut self, 
-                            parent_id: String, 
-                            items: Vec<String>,
-                            id: Option<usize> 
-                        ) -> PyResult<usize> 
-    {
-        let id = self.get_id(id);
-
-        set_state_of_widget(id, parent_id);
-
-        let mut state = access_state();
-
-        state.widgets.insert(id, IpgWidgets::IpgMenuBar(IpgMenuBar::new(
-                                                                id,
-                                                                items,
-                                                                )));
-
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, item, id=None))]
-    fn add_menu_item(&mut self,
-                            parent_id: String, 
-                            item: String, 
-                            id: Option<usize>
-                        ) -> PyResult<usize> 
+    #[pyo3(signature = (parent_id, labels, items, id=None, on_select=None, user_data=None))]
+    fn add_menu(&mut self, 
+                    parent_id: String,
+                    labels: Vec<String>, 
+                    items: PyObject,
+                    id: Option<usize>,
+                    on_select: Option<PyObject>,
+                    user_data: Option<PyObject>,
+                ) -> PyResult<usize> 
     {
         let id = self.get_id(id);
+
+        if on_select.is_some() {
+            add_callback_to_mutex(id, "on_select".to_string(), on_select);
+        }
 
         set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgMenuItem(IpgMenuItem::new(
+        state.widgets.insert(id, IpgWidgets::IpgMenu(IpgMenu::new(
                                                                 id,
-                                                                item,
+                                                                labels,
+                                                                items,
+                                                                user_data,
                                                                 )));
 
         Ok(id)
@@ -1953,8 +1941,7 @@ fn add_image(&mut self,
                 image_item_update(img, item, value);
                 drop(state);
             },
-            IpgWidgets::IpgMenuBar(_wid) => (),
-            IpgWidgets::IpgMenuItem(_wid) => (),
+            IpgWidgets::IpgMenu(_wid) => (),
             IpgWidgets::IpgPickList(pl) => {
                 pick_list_item_update(pl, item, value);
                 drop(state);

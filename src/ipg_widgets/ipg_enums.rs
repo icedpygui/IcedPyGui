@@ -11,7 +11,7 @@ use super::ipg_container::IpgContainer;
 use super::ipg_column::IpgColumn;
 use super::ipg_date_picker::IpgDatePicker;
 use super::ipg_image::IpgImage;
-use super::ipg_menu::{IpgMenuBar, IpgMenuItem};
+use super::ipg_menu::IpgMenu;
 use super::ipg_pane_grid::{IpgPaneGrid, IpgPane};
 use super::ipg_pick_list::IpgPickList;
 use super::ipg_progress_bar::IpgProgressBar;
@@ -54,8 +54,7 @@ pub enum IpgWidgets {
     IpgColorPicker(IpgColorPicker),
     IpgDatePicker(IpgDatePicker),
     IpgImage(IpgImage),
-    IpgMenuBar(IpgMenuBar),
-    IpgMenuItem(IpgMenuItem),
+    IpgMenu(IpgMenu),
     IpgPickList(IpgPickList),
     IpgProgressBar(IpgProgressBar),
     IpgRadio(IpgRadio),

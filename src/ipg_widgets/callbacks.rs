@@ -188,11 +188,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     drop(state);
                     wco
                 },
-                IpgWidgets::IpgMenuBar(_) => {
-                    let wco = WidgetCallbackOut::default();
-                    wco
-                },
-                IpgWidgets::IpgMenuItem(_) => {
+                IpgWidgets::IpgMenu(_) => {
                     let wco = WidgetCallbackOut::default();
                     wco
                 },

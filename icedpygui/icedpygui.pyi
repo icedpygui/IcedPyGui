@@ -32,8 +32,7 @@ class IPG:
                     show: bool=True,
                     ) -> None:
         """
-        Calls the rust lib main window function which starts the iced gui.
-        This function needs to be placed at the end of the python program.
+        Adds a window to the gui.
 
         Args:
             window_id (str, required): Window id used to place widget or container into.
@@ -574,6 +573,11 @@ class IPG:
             user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.   
         Return: 
             int: internal id of widget and can be used by user if equated.
+        """
+
+    def add_menu(self, parent_id: str, labels: list, items: list, on_select: Callable, id: None) -> int:
+        """
+        Add a menu dropdown list to the gui.
         """
 
     def add_pick_list(self,

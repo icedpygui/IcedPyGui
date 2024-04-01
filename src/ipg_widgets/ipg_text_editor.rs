@@ -30,7 +30,7 @@ use std::sync::Arc;
 
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IpgTextEditor {
     pub id: usize,
     pub file_name: String,
@@ -68,7 +68,7 @@ pub enum TEMessage {
     FileSaved(Result<PathBuf, Error>),
 }
 
-pub fn construct_text_editor(te: &IpgTextEditor) -> Element<'static, app::Message> {
+pub fn construct_text_editor(te: IpgTextEditor) -> Element<'static, app::Message> {
 
     // let new_icon: String = icon_to_string(BootstrapIcon::FileEarmark);
     // let open_icon: String = icon_to_string(BootstrapIcon::FoldertwoOpen);

@@ -22,8 +22,7 @@ use ipg_widgets::ipg_date_picker::{DPMessage, construct_date_picker, date_picker
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 use ipg_widgets::ipg_events::process_events;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
-use ipg_widgets::ipg_menu::{MenuMessage, construct_menu_bar, menu_bar_update, 
-                                         construct_menu_item, menu_item_update};
+use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
 use ipg_widgets::ipg_pane_grid::{PGMessage, construct_pane_grid, pane_grid_update, 
                                  construct_pane, pane_update};
 use ipg_widgets::ipg_pick_list::{PLMessage, construct_picklist, pick_list_callback};
@@ -57,8 +56,7 @@ pub enum Message {
     ColorPicker(usize, ColPikMessage),
     DatePicker(usize, DPMessage),
     Image(usize, ImageMessage),
-    MenuBar(MenuMessage),
-    MenuItem(MenuMessage),
+    Menu(usize, MenuMessage),
     Pane(PGMessage),
     PaneGrid(PGMessage),
     PickList(usize, PLMessage),
@@ -167,12 +165,8 @@ impl multi_window::Application for App {
                 image_callback(id, message);
                 Command::none()
             },
-            Message::MenuBar(mn) => {
-                menu_bar_update(mn);
-                Command::none()
-            },
-            Message::MenuItem(mi) => {
-                menu_item_update(mi);
+            Message::Menu(id, message) => {
+                menu_callback(id, message);
                 Command::none()
             },
             Message::Pane(pn) => {
@@ -444,11 +438,8 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgImage(img) => {
                     return construct_image(img.clone())
                 }
-                IpgWidgets::IpgMenuBar(mn) => {
-                    return construct_menu_bar(mn)
-                }
-                IpgWidgets::IpgMenuItem(mi) => {
-                    return construct_menu_item(mi)
+                IpgWidgets::IpgMenu(mn) => {
+                    return construct_menu(mn.clone())
                 }
                 IpgWidgets::IpgDatePicker(dp) => {
                     return construct_date_picker(dp.clone())
@@ -478,7 +469,7 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                     return construct_text(text)
                 },
                 IpgWidgets::IpgTextEditor(te) => {
-                    return construct_text_editor(te) 
+                    return construct_text_editor(te.clone()) 
                 },
                 IpgWidgets::IpgTextInput(input) => {
                     return construct_text_input(input.clone())           
