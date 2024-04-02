@@ -1,8 +1,8 @@
 #![allow(unused)]
 use std::collections::HashMap;
 
-use iced::widget::{button, row, text, Button, Container, Text};
-use iced::{alignment, Border, Color, Element, Length, Theme};
+use iced::widget::{button, row, text, Button, Container, Row, Text};
+use iced::{alignment, Border, Color, Element, Length, Renderer, Theme};
 
 use iced_aw::graphics::icons::{BootstrapIcon, BOOTSTRAP_FONT, BOOTSTRAP_FONT_BYTES};
 use iced_aw::menu::{self, Item, Menu, MenuBar, StyleSheet};
@@ -22,9 +22,10 @@ pub struct IpgMenu {
     pub id: usize,
     pub labels: Vec<String>,
     pub items: PyObject,
-    pub separator: Option<(usize, usize)>,
-    pub sep_type: IpgMenuSepTypes,
-    pub label_sep_name: Option<String>,
+    pub widths: Vec<f32>,
+    pub separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
+    pub sep_types: Option<Vec<IpgMenuSepTypes>>,
+    pub sep_label_names: Option<Vec<String>>,
     pub user_data: Option<PyObject>,
 }
 
@@ -33,18 +34,20 @@ impl IpgMenu {
         id: usize,
         labels: Vec<String>,
         items: PyObject,
-        separator: Option<(usize, usize)>,
-        sep_type: IpgMenuSepTypes,
-        label_sep_name: Option<String>,
+        widths: Vec<f32>,
+        separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
+        sep_types: Option<Vec<IpgMenuSepTypes>>,
+        sep_label_names: Option<Vec<String>>,
         user_data: Option<PyObject>,
     ) -> Self {
         Self {
             id,
             labels,
             items,
-            separator,
-            sep_type,
-            label_sep_name,
+            widths,
+            separators,
+            sep_types,
+            sep_label_names,
             user_data, 
         }
     }    
@@ -63,6 +66,9 @@ pub fn construct_menu(mn: IpgMenu) -> Element<'static, app::Message> {
     // let menu_layer_1 = |items| Menu::new(items).max_width(180.0).offset(15.0).spacing(5.0);
     let mut menu_bar = vec![];
 
+    if items.len() != mn.labels.len() { panic!("Menu: Labels and the Menu dictionary must be of the same width") }
+    if items.len() != mn.widths.len() { panic!("Menu: Widths and the Menu dictionary must be of the same width") }
+
     let mut menu_bar_items = vec![];
 
     for (bar_index, label) in mn.labels.iter().enumerate() {
@@ -72,30 +78,31 @@ pub fn construct_menu(mn: IpgMenu) -> Element<'static, app::Message> {
             Some(list) => list,
             None => panic!("Menu label does not match items dictionary key")
         };
-        for (index, item) in list.iter() .enumerate(){
+        for (menu_index, item) in list.iter() .enumerate(){
 
             menu_bar_items.push(Item::new(menu_button(item.clone())));
 
-            match mn.separator {
-                Some((bar_idx, menu_idx)) => {
-                    if bar_idx == bar_index && menu_idx == index {
-                        match mn.sep_type {
-                            IpgMenuSepTypes::Line => menu_bar_items.push(Item::new(separator())),
-                            IpgMenuSepTypes::Dot => menu_bar_items.push(Item::new(
-                                                    dot_separator(&Theme::Dark))),
-                            IpgMenuSepTypes::Label => menu_bar_items.push(Item::new(
-                                                    labeled_separator(mn.label_sep_name.clone()))),
+            if mn.separators.is_some() {
+                match &mn.separators {
+                    Some(separators) => {
+                        let separator = get_separator(bar_index, 
+                                                            menu_index, 
+                                                            separators,  
+                                                            &mn.sep_label_names);
+                        match separator {
+                            Some(sep) => menu_bar_items.push(sep),
+                            None => (),
                         }
-                    }
-                },
-                None => ()
+                    },
+                    None => (),
+                }
             }
         }
 
         menu_bar.push(Item::with_menu(
-                        menu_bar_button(label.clone()),
+                        menu_bar_button(label.clone(), mn.widths[bar_index]),
                         Menu::new(menu_bar_items)
-                                        .width(Length::Fixed(100.0))
+                                        .width(Length::Fixed(mn.widths[bar_index]))
                                         .spacing(5.0) 
                         ));
     }
@@ -196,12 +203,25 @@ fn try_extract_dict(items: PyObject) -> HashMap<String, Vec<String>> {
             Err(_) => panic!("Unable to extract python dict"),
         }
     })
+}
 
+fn try_extract_separator_types(s_types: PyObject) -> Vec<IpgMenuSepTypes> {
+    Python::with_gil(|py| {
+
+        let res = s_types.extract::<Vec<IpgMenuSepTypes>>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract IpgMenuSepTypes"),
+        }
+    })
 }
 
 fn menu_button(label: String) -> Element<'static, MenuMessage> {
     
-    let label_txt: Element<MenuMessage> = Text::new(label.clone()).into();
+    let label_txt: Element<MenuMessage> = Text::new(label.clone())
+                                                    .horizontal_alignment(alignment::Horizontal::Center)
+                                                    .width(Length::Fill)
+                                                    .into();
 
     let btn: Element<MenuMessage> = Button::new(label_txt)
                                     .on_press(MenuMessage::ItemPress(label))
@@ -211,19 +231,72 @@ fn menu_button(label: String) -> Element<'static, MenuMessage> {
     btn
 }
 
-fn menu_bar_button(label: String) -> Element<'static, MenuMessage> {
+fn menu_bar_button(label: String, width: f32) -> Element<'static, MenuMessage> {
     
     let label_txt: Element<MenuMessage> = Text::new(label.clone())
                                             .vertical_alignment(alignment::Vertical::Center)
+                                            .horizontal_alignment(alignment::Horizontal::Center)
+                                            .width(Length::Fill)
                                             .into();
 
     let btn: Element<MenuMessage> = Button::new(label_txt)
                                     .on_press(MenuMessage::ItemPress(label))
-                                    .width(Length::Shrink)
+                                    .width(Length::Fixed(width))
                                     .style(iced::theme::Button::Custom(Box::new(ButtonStyle {})))
                                     .into();
     btn
 }
+
+
+fn get_separator(bar_index: usize, 
+                menu_index: usize, 
+                separators: &Vec<(usize, usize, IpgMenuSepTypes)>, 
+                sep_label_names: &Option<Vec<String>>) -> Option<Item<'static, MenuMessage, Theme, Renderer>> {
+
+    // Check to see if a label type is present then check that the
+    // sep_lable_names is not None.
+    for st in separators {
+        match st.2 {
+            IpgMenuSepTypes::Line => (),
+            IpgMenuSepTypes::Dot => (),
+            IpgMenuSepTypes::Label => {
+                if sep_label_names.is_none() {
+                    panic!("Menu:  Since you are using IpgMenuSepTypes::Label, them you must supply a sep_label_names item in a list")
+                }
+            },
+        }
+    }
+
+    let sln = match sep_label_names {
+        Some(sln) => sln,
+        None => panic!("Menu: Unable to match sep_label_names"),
+    };
+    // This keeps track of the label index since there is not a requirement to
+    // match the size of the list for the labels.  So long as the label type match the
+    // munber of labels it is OK.  A check is put in to check this before the index is used.
+    let mut sln_index = 0;
+
+    for (b_idx, m_idx, s_type) in separators.iter() {
+
+        if b_idx == &bar_index && m_idx == &menu_index {
+            match *s_type {
+                IpgMenuSepTypes::Line => return Item::new(line_separator()).into(),
+                IpgMenuSepTypes::Dot => return Item::new(
+                                        dot_separator(Theme::Dark)).into(),
+                IpgMenuSepTypes::Label => {
+                    if sln_index > sln.len() { panic!("Menu: The number of label type exceeds the number of labels.")}
+                   
+                    let item = Item::new(
+                                                    labeled_separator(sln[sln_index].clone()));
+                    sln_index += 1;
+                    return item.into()
+                },
+            }
+        }
+    }
+    None
+}
+
 
 
 struct ButtonStyle;
@@ -255,7 +328,7 @@ impl button::StyleSheet for ButtonStyle {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 #[pyclass]
 pub enum IpgMenuSepTypes {
     Line,
@@ -264,7 +337,7 @@ pub enum IpgMenuSepTypes {
 }
 
 
-fn separator() -> quad::Quad {
+fn line_separator() -> quad::Quad {
     quad::Quad {
         quad_color: Color::from([0.5; 3]).into(),
         quad_border: Border {
@@ -272,48 +345,43 @@ fn separator() -> quad::Quad {
             ..Default::default()
         },
         inner_bounds: InnerBounds::Ratio(0.98, 0.2),
-        height: Length::Fixed(20.0),
+        height: Length::Fixed(15.0),
         ..Default::default()
     }
 }
 
-fn dot_separator(theme: &iced::Theme) -> Element<'static, MenuMessage, iced::Theme, iced::Renderer> {
+fn dot_separator(theme: iced::Theme) -> Element<'static, MenuMessage, iced::Theme, iced::Renderer> {
     row((0..20).map(|_| {
         quad::Quad {
             quad_color: theme.extended_palette().background.base.text.into(),
             inner_bounds: InnerBounds::Square(4.0),
-            ..separator()
+            ..line_separator()
         }
         .into()
     }))
-    .height(20.0)
+    .height(15.0)
     .into()
 }
 
-fn labeled_separator(label_opt: Option<String>) -> Element<'static, MenuMessage, iced::Theme, iced::Renderer> {
-    let label = match label_opt {
-        Some(lbl) => lbl,
-        None => "None".to_string(),
-    };
+fn labeled_separator(label: String) -> Element<'static, MenuMessage, iced::Theme, iced::Renderer> {
+    
+    let q_1: Element<MenuMessage> = quad::Quad {
+        width: Length::Fixed(20.0),
+        ..line_separator()
+    }.into();
+    let q_2: Element<MenuMessage> = quad::Quad {
+        width: Length::Fixed(20.0),
+        ..line_separator()
+    }.into();
 
-    let q_1 = quad::Quad {
-        height: Length::Fill,
-        ..separator()
-    };
-    let q_2 = quad::Quad {
-        height: Length::Fill,
-        ..separator()
-    };
 
-    row![
-        q_1,
-        text(label)
-            .height(Length::Fill)
-            .vertical_alignment(alignment::Vertical::Center),
-        q_2,
-    ]
-    .height(20.0)
-    .into()
+    Row::with_children(vec![
+                            q_1, 
+                            Text::new(label).into(),
+                            q_2,
+                            ])
+                            .into()
+    
 }
 
 fn circle(color: Color) -> quad::Quad {

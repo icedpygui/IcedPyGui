@@ -580,8 +580,10 @@ class IPG:
                  parent_id: str, 
                  labels: list, 
                  items: list,
-                 separator: Tuple=None,
-                 sep_type: any=IpgMenuSepTypes.Line, 
+                 widths: list,
+                 separators: List[Tuple]=None,
+                 sep_types: any=List[IpgMenuSepTypes.Line],
+                 sep_label_names: List[str]=None, 
                  on_select: Callable=None, 
                  id: int=None
                  ) -> int:
@@ -1219,6 +1221,12 @@ class IpgImageParams:
     WidthFill=0,
 
 
+class IpgMenuSepTypes:
+    Line=0,
+    Dot=0,
+    Label=0,
+
+
 class IpgPickListParams:
     Options=0,
     Placeholder=0,
@@ -1238,14 +1246,11 @@ class IpgProgressBarParams:
     Width=0,
     WidthFill=0,
 
+
 class IpgRadioDirection:
     Horizontal=0,
     Vertical=0,
 
-class IpgMenuSepTypes:
-    Line=0,
-    Dot=0,
-    Label=0,
 
 class IpgRadioParams:
     Direction=0,

@@ -1067,17 +1067,18 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, labels, items, on_select=None, 
-                        separator=None, sep_type=IpgMenuSepTypes::Line, 
-                        label_sep_name=None, user_data=None, id=None))]
+    #[pyo3(signature = (parent_id, labels, items, widths, on_select=None, 
+                        separators=None, sep_types=None, 
+                        sep_label_names=None, user_data=None, id=None))]
     fn add_menu(&mut self, 
                     parent_id: String,
                     labels: Vec<String>, 
                     items: PyObject,
+                    widths: Vec<f32>,
                     on_select: Option<PyObject>,
-                    separator: Option<(usize, usize)>,
-                    sep_type: IpgMenuSepTypes,
-                    label_sep_name: Option<String>,
+                    separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
+                    sep_types: Option<Vec<IpgMenuSepTypes>>,
+                    sep_label_names: Option<Vec<String>>,
                     user_data: Option<PyObject>,
                     id: Option<usize>,
                 ) -> PyResult<usize> 
@@ -1096,9 +1097,10 @@ fn add_image(&mut self,
                                                                 id,
                                                                 labels,
                                                                 items,
-                                                                separator,
-                                                                sep_type,
-                                                                label_sep_name,
+                                                                widths,
+                                                                separators,
+                                                                sep_types,
+                                                                sep_label_names,
                                                                 user_data,
                                                                 )));
 
