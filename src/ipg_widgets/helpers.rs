@@ -1,5 +1,7 @@
 #![allow(unused)]
 
+use std::collections::{BTreeMap, HashMap};
+
 use crate::access_state;
 use iced::window;
 use iced::{Alignment, alignment::{Horizontal, Vertical}, Length, Padding};
@@ -277,6 +279,18 @@ pub fn try_extract_vec_f64(value: PyObject) -> Vec<f64> {
     })  
 }
 
+
+pub fn try_extract_vec_f32(value: PyObject) -> Vec<f32> {
+    Python::with_gil(|py| {
+        let res = value.extract::<Vec<f32>>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python list[float]"),
+        }
+    })  
+}
+
+
 pub fn try_extract_vec_str(value: PyObject) -> Vec<String> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<String>>(py);
@@ -335,4 +349,16 @@ pub fn try_extract_boolean(value: PyObject) -> bool {
             Err(_) => panic!("Unable to extract python bool"),
         }
     })  
+}
+
+
+pub fn try_extract_dict(items: PyObject) -> BTreeMap<String, Vec<String>> {
+    Python::with_gil(|py| {
+
+        let res = items.extract::<BTreeMap<String, Vec<String>>>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python dict"),
+        }
+    })
 }

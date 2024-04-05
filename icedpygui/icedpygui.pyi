@@ -1,3 +1,4 @@
+from tkinter.ttk import Separator
 from types import Callable, Union, List
 from typing import Tuple
 
@@ -577,15 +578,16 @@ class IPG:
         """
 
     def add_menu(self, 
-                 parent_id: str, 
-                 labels: list, 
+                 parent_id: str,  
                  items: list,
                  widths: list,
+                 spacing: list,
                  separators: List[Tuple]=None,
                  sep_types: any=List[IpgMenuSepTypes.Line],
                  sep_label_names: List[str]=None, 
                  on_select: Callable=None, 
-                 id: int=None
+                 id: int=None,
+                 user_data=None,
                  ) -> int:
         """
         Add a menu dropdown list to the gui.
@@ -1221,6 +1223,13 @@ class IpgImageParams:
     WidthFill=0,
 
 
+class IpgMenuParams:
+    MenuUpdate=0,
+    Separators=0,
+    Spacing=0,
+    Widths=0,
+
+
 class IpgMenuSepTypes:
     Line=0,
     Dot=0,
@@ -1235,6 +1244,7 @@ class IpgPickListParams:
     TextSize=0,
     TextLineHeight=0,
     Width=0,
+    Delete=0,
 
 
 class IpgProgressBarParams:

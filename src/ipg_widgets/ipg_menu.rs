@@ -1,5 +1,5 @@
 #![allow(unused)]
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use iced::widget::{button, row, text, Button, Container, Row, Text};
 use iced::{alignment, Border, Color, Element, Length, Renderer, Theme};
@@ -15,26 +15,29 @@ use pyo3::{pyclass, PyObject, Python};
 use crate::{access_callbacks, app};
 
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
-
+use super::helpers::{convert_vecs, try_extract_dict, try_extract_vec_f32, try_extract_vec_f64, try_extract_vec_str};
 
 #[derive(Debug, Clone)]
 pub struct IpgMenu {
     pub id: usize,
-    pub labels: Vec<String>,
     pub items: PyObject,
     pub widths: Vec<f32>,
+    pub spacing: Vec<f32>,
     pub separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
     pub sep_types: Option<Vec<IpgMenuSepTypes>>,
     pub sep_label_names: Option<Vec<String>>,
     pub user_data: Option<PyObject>,
+    menu_width: usize,
+    new_menu: bool, 
+    updating_separators: bool,
 }
 
 impl IpgMenu {
     pub fn new(
         id: usize,
-        labels: Vec<String>,
         items: PyObject,
         widths: Vec<f32>,
+        spacing: Vec<f32>,
         separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
         sep_types: Option<Vec<IpgMenuSepTypes>>,
         sep_label_names: Option<Vec<String>>,
@@ -42,13 +45,16 @@ impl IpgMenu {
     ) -> Self {
         Self {
             id,
-            labels,
             items,
             widths,
+            spacing,
             separators,
             sep_types,
             sep_label_names,
-            user_data, 
+            user_data,
+            menu_width: 0,
+            new_menu: false,
+            updating_separators: false,
         }
     }    
 }
@@ -59,19 +65,39 @@ pub enum MenuMessage {
     ItemPress(String),
 }
 
-pub fn construct_menu(mn: IpgMenu) -> Element<'static, app::Message> {
+pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message> {
 
     let items = try_extract_dict(mn.items);
 
+    let labels: Vec<String> = items.clone().into_keys().collect();
+
+    mn.menu_width = labels.len();
+
+    // default the spacing and widths if new menu.
+    if mn.new_menu {
+        mn.spacing = vec![5.0; mn.menu_width];
+        mn.widths = vec![100.0; mn.menu_width];
+        mn.new_menu = false;
+    }
+    
     // let menu_layer_1 = |items| Menu::new(items).max_width(180.0).offset(15.0).spacing(5.0);
     let mut menu_bar = vec![];
 
-    if items.len() != mn.labels.len() { panic!("Menu: Labels and the Menu dictionary must be of the same width") }
-    if items.len() != mn.widths.len() { panic!("Menu: Widths and the Menu dictionary must be of the same width") }
+    // Since spacing and widths can have a vector of 1 value then after testing, they are expanded.
+    if mn.spacing.len() != 1 && mn.menu_width != mn.spacing.len() {
+        panic!("Menu: Spaces and the Menu dictionary must be of the same width")
+    } else if mn.spacing.len() == 1 {
+        mn.spacing = vec![mn.spacing[0]; mn.menu_width];
+    }
+    if mn.widths.len() != 1 && mn.menu_width != mn.widths.len() {
+        panic!("Menu: Widths and the Menu dictionary must be of the same width")
+    } else if mn.widths.len() == 1 {
+        mn.widths = vec![mn.widths[0]; mn.menu_width];
+    }
 
     let mut menu_bar_items = vec![];
 
-    for (bar_index, label) in mn.labels.iter().enumerate() {
+    for (bar_index, label) in labels.iter().enumerate() {
         menu_bar_items = vec![];
         let item_labels = items.get(label);
         let list = match item_labels {
@@ -103,22 +129,22 @@ pub fn construct_menu(mn: IpgMenu) -> Element<'static, app::Message> {
                         menu_bar_button(label.clone(), mn.widths[bar_index]),
                         Menu::new(menu_bar_items)
                                         .width(Length::Fixed(mn.widths[bar_index]))
-                                        .spacing(5.0) 
+                                        .spacing(mn.spacing[bar_index]) 
                         ));
     }
 
 
     let mb = MenuBar::new(
-        menu_bar
-    )
-    .draw_path(menu::DrawPath::Backdrop)
-    .style(|theme:&iced::Theme| menu::Appearance{
-        path_border: Border{
-            radius: [6.0; 4].into(),
-            ..Default::default()
-        },
-        ..theme.appearance(&MenuBarStyle::Default)
-    });
+                    menu_bar
+                )
+                .draw_path(menu::DrawPath::Backdrop)
+                .style(|theme:&iced::Theme| menu::Appearance{
+                    path_border: Border{
+                        radius: [6.0; 4].into(),
+                        ..Default::default()
+                    },
+                    ..theme.appearance(&MenuBarStyle::Default)
+                });
 
     let ipg_menu: Element<MenuMessage> = Container::new(mb).into();
 
@@ -194,21 +220,10 @@ pub fn process_callback(wco: WidgetCallbackOut)
 }
 
 
-fn try_extract_dict(items: PyObject) -> HashMap<String, Vec<String>> {
+fn try_extract_separators(seps: PyObject) -> Vec<(usize, usize, IpgMenuSepTypes)> {
     Python::with_gil(|py| {
 
-        let res = items.extract::<HashMap<String, Vec<String>>>(py);
-        match res {
-            Ok(val) => val,
-            Err(_) => panic!("Unable to extract python dict"),
-        }
-    })
-}
-
-fn try_extract_separator_types(s_types: PyObject) -> Vec<IpgMenuSepTypes> {
-    Python::with_gil(|py| {
-
-        let res = s_types.extract::<Vec<IpgMenuSepTypes>>(py);
+        let res = seps.extract::<Vec<(usize, usize, IpgMenuSepTypes)>>(py);
         match res {
             Ok(val) => val,
             Err(_) => panic!("Unable to extract IpgMenuSepTypes"),
@@ -251,26 +266,21 @@ fn menu_bar_button(label: String, width: f32) -> Element<'static, MenuMessage> {
 fn get_separator(bar_index: usize, 
                 menu_index: usize, 
                 separators: &Vec<(usize, usize, IpgMenuSepTypes)>, 
-                sep_label_names: &Option<Vec<String>>) -> Option<Item<'static, MenuMessage, Theme, Renderer>> {
+                sep_label_names: &Option<Vec<String>>) 
+                -> Option<Item<'static, MenuMessage, Theme, Renderer>> {
 
-    // Check to see if a label type is present then check that the
-    // sep_lable_names is not None.
-    for st in separators {
-        match st.2 {
-            IpgMenuSepTypes::Line => (),
-            IpgMenuSepTypes::Dot => (),
-            IpgMenuSepTypes::Label => {
-                if sep_label_names.is_none() {
-                    panic!("Menu:  Since you are using IpgMenuSepTypes::Label, them you must supply a sep_label_names item in a list")
-                }
-            },
-        }
+    // false if all label parameters don't match
+    let (checked, message) = check_label_separators(separators, sep_label_names);
+    if !checked {
+        panic!("{}", message)
     }
 
-    let sln = match sep_label_names {
-        Some(sln) => sln,
-        None => panic!("Menu: Unable to match sep_label_names"),
+    let sln = match sep_label_names.clone() {
+        Some(labels) => labels,
+        None => vec![], // since a check was done, this won't be used
     };
+
+
     // This keeps track of the label index since there is not a requirement to
     // match the size of the list for the labels.  So long as the label type match the
     // munber of labels it is OK.  A check is put in to check this before the index is used.
@@ -291,12 +301,183 @@ fn get_separator(bar_index: usize,
                     sln_index += 1;
                     return item.into()
                 },
+                IpgMenuSepTypes::Delete => (),
             }
         }
     }
     None
 }
 
+
+fn check_label_separators(separators: &Vec<(usize, usize, IpgMenuSepTypes)>, 
+                            sep_label_names: &Option<Vec<String>>) -> (bool, String) {
+
+    // Check to see if a label type is present then check that the
+    // sep_label_names is not None or equals count.
+    let message = "".to_string();
+    let mut checked = (true, message);
+    let mut label_count = 0;
+    for st in separators {
+        match st.2 {
+            IpgMenuSepTypes::Line => (),
+            IpgMenuSepTypes::Dot => (),
+            IpgMenuSepTypes::Label => {
+                label_count += 1;
+                if sep_label_names.is_none() {
+                    checked = (false, "Menu:  Since you are using IpgMenuSepTypes::Label, them you must supply a sep_label_names item in a list".to_string())
+                }
+            },
+            IpgMenuSepTypes::Delete => (),
+        }
+    }
+
+    match sep_label_names {
+        Some(sln) => {
+            if sln.len() != label_count { 
+                checked =(false, "Menu: Separations label count must equal IpgMenuSepTypes::Label count".to_string());
+            }
+        },
+        None => {
+                if label_count != 0 {
+                    checked = (false, "Menu: Unable to match sep_label_names".to_string());
+                } else {
+                    ()
+                }
+            }
+    }
+
+    checked
+    
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgMenuParams {
+    MenuUpdate,
+    Separators,
+    Spacing,
+    Widths,
+}
+
+pub fn menu_item_update(mn: &mut IpgMenu,
+                            item: PyObject,
+                            value: PyObject,
+                            )
+{
+    let update = try_extract_menu_update(item);
+
+    match update {
+        IpgMenuParams::MenuUpdate => {
+            mn.items = value;
+            // Need to default the following items after a new menu is added
+            mn.separators = None;
+            mn.sep_label_names = None;
+            mn.sep_types = None;
+
+            mn.new_menu = true;
+        },
+        IpgMenuParams::Separators => {
+            let extracted_seps = try_extract_separators(value);
+            // If never set, equate and return
+            let mut menu_seps = match mn.separators.clone() {
+                Some(seps) => seps,
+                None => {
+                    mn.separators = Some(extracted_seps);
+                    mn.updating_separators = false;
+                    return
+                }
+            };
+            mn.separators = Some(delete_insert_separators(&extracted_seps, menu_seps.clone()));
+        }
+        IpgMenuParams::Spacing => {
+            mn.spacing = try_extract_vec_f32(value);
+        },
+        IpgMenuParams::Widths => {
+            mn.widths = try_extract_vec_f32(value);
+        },
+    }
+}
+
+
+fn delete_insert_separators(extracted_seps: &Vec<(usize, usize, IpgMenuSepTypes)>, 
+                            mut menu_seps: Vec<(usize, usize, IpgMenuSepTypes)>) 
+                            -> Vec<(usize, usize, IpgMenuSepTypes)> {
+
+    // Since the seps can be in any order, need to iterate through 
+    // figure out what needs to be done and based on actions perform
+    // the actions based on the index and finally delete any.
+    // action 0=delete, 1=insert, 2=replace
+    // actions = [(mn_idx, es_idx, action)]
+    let mut actions: Vec<(usize, usize, usize)> = vec![];
+    let mut deleted = false;
+    let mut replaced = false;
+    for (es_idx, (es_br_idx, es_it_idx, es_tp)) in extracted_seps.iter().enumerate() {
+        for (mn_idx, (mn_br_idx, mn_it_idx, mn_tp)) in menu_seps.iter().enumerate() {
+            if mn_br_idx == es_br_idx && mn_it_idx == es_it_idx {
+                match es_tp {
+                    IpgMenuSepTypes::Line => {
+                        actions.push((mn_idx, es_idx, 2));
+                        replaced = true;
+                    },
+                    IpgMenuSepTypes::Dot => {
+                        actions.push((mn_idx, es_idx, 2));
+                        replaced = true;
+                    },
+                    IpgMenuSepTypes::Label => {
+                        actions.push((mn_idx, es_idx, 2));
+                        replaced = true;
+                    },
+                    IpgMenuSepTypes::Delete => {
+                        deleted = true;
+                        actions.push((mn_idx, es_idx, 0));
+                    },
+                }
+            } 
+        }
+        if !replaced && !deleted {
+            // 0 arbitray number because not used for inserts
+            actions.push((0, es_idx, 1));
+        }
+        replaced = false;
+        deleted = false;
+    }
+    // sort the deletes so that the end ones are deleted first
+    // thereby not changing the index of the earlier ones.
+    // Then go in reverse order to select the end ones first.
+    let mut deletes: Vec<usize> = vec![];
+
+    for (mn_idx, es_idx, act) in actions {
+        if act == 0 {
+            deletes.push(mn_idx);
+        }
+        if act == 1 {
+            menu_seps.push(extracted_seps[es_idx]);
+        }
+        if act == 2 {
+            menu_seps[mn_idx] = extracted_seps[es_idx];
+        }
+    }
+
+    if deletes.len() > 0 {
+        for idx in deletes.iter().rev() {
+            menu_seps.remove(*idx);
+        }
+    }
+
+    menu_seps
+
+}
+
+pub fn try_extract_menu_update(update_obj: PyObject) -> IpgMenuParams {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgMenuParams>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Menu update extraction failed"),
+        }
+    })
+}
 
 
 struct ButtonStyle;
@@ -328,12 +509,13 @@ impl button::StyleSheet for ButtonStyle {
 }
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[pyclass]
 pub enum IpgMenuSepTypes {
     Line,
     Dot,
     Label,
+    Delete,
 }
 
 
@@ -397,4 +579,95 @@ fn circle(color: Color) -> quad::Quad {
         height: Length::Fixed(20.0),
         ..Default::default()
     }
+}
+
+
+
+#[test]
+fn test_check_label_separators() {
+
+    let menu_separators: Vec<(usize, usize, IpgMenuSepTypes)> =
+                            vec![   (0, 0, IpgMenuSepTypes::Dot), 
+                                    (1, 1, IpgMenuSepTypes::Line), 
+                                    (2, 0, IpgMenuSepTypes::Label)
+                                ];
+
+    // testing 1 label and label vec with 1 label, expect true
+    let sep_label_names: Option<Vec<String>> = Some(vec!["label".to_string()]);
+    let result = check_label_separators(&menu_separators, &sep_label_names);
+
+    assert_eq!(true, result.0);
+
+    // testing 1 label and label vec with 0 label, expect false
+    let sep_label_names: Option<Vec<String>> = None;
+    let result = check_label_separators(&menu_separators, &sep_label_names);
+    assert_eq!(false, result.0);
+
+    // testing 1 label and label vec with 2 labels, expect false
+    let sep_label_names: Option<Vec<String>> = Some(vec!["label".to_string(); 2]);
+    let result = check_label_separators(&menu_separators, &sep_label_names);
+    assert_eq!(false, result.0);
+
+    let menu_separators: Vec<(usize, usize, IpgMenuSepTypes)> =
+                                vec![   (0, 0, IpgMenuSepTypes::Dot), 
+                                        (1, 1, IpgMenuSepTypes::Line), 
+                                    ];
+    // testing 0 label and label vec with 0 label, expect true
+    let sep_label_names: Option<Vec<String>> = None;
+    let result = check_label_separators(&menu_separators, &sep_label_names);
+    assert_eq!(true, result.0);
+
+    // testing 0 label and label vec with 1 label, expect false
+    let sep_label_names: Option<Vec<String>> = Some(vec!["label".to_string()]);
+    let result = check_label_separators(&menu_separators, &sep_label_names);
+    assert_eq!(false, result.0);
+
+}
+
+
+
+
+
+#[test]
+fn test_delete_insert_separators() {
+    
+    let menu_separators: Vec<(usize, usize, IpgMenuSepTypes)> =
+                            vec![   (0, 0, IpgMenuSepTypes::Dot), 
+                                    (1, 1, IpgMenuSepTypes::Line), 
+                                    (2, 0, IpgMenuSepTypes::Label)
+                                ];
+    
+    let extracted_separators: Vec<(usize, usize, IpgMenuSepTypes)> = 
+                                vec![(0, 0, IpgMenuSepTypes::Line)];
+    
+    let menu_seps = delete_insert_separators(&extracted_separators, 
+                                                                                menu_separators.clone());
+
+    // Test replace
+    assert_eq!(vec![(0, 0, IpgMenuSepTypes::Line), 
+                    (1, 1, IpgMenuSepTypes::Line), 
+                    (2, 0, IpgMenuSepTypes::Label)], menu_seps);
+                                          
+    let extracted_separators: Vec<(usize, usize, IpgMenuSepTypes)> = 
+                                vec![(1, 1, IpgMenuSepTypes::Delete)];
+    
+    let menu_seps = delete_insert_separators(&extracted_separators, 
+                                                                                menu_separators.clone());
+
+    // Test delete
+    assert_eq!(vec![(0, 0, IpgMenuSepTypes::Dot), 
+                    (2, 0, IpgMenuSepTypes::Label)], menu_seps);
+
+    let extracted_separators: Vec<(usize, usize, IpgMenuSepTypes)> = 
+    vec![(1, 0, IpgMenuSepTypes::Dot)];
+
+    let menu_seps = delete_insert_separators(&extracted_separators, 
+                                                                        menu_separators);
+
+    // Test insert
+    assert_eq!(vec![(0, 0, IpgMenuSepTypes::Dot), 
+                    (1, 1, IpgMenuSepTypes::Line), 
+                    (2, 0, IpgMenuSepTypes::Label),
+                    (1, 0, IpgMenuSepTypes::Dot)], menu_seps);
+
 }

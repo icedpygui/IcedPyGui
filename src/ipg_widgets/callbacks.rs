@@ -188,8 +188,9 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     drop(state);
                     wco
                 },
-                IpgWidgets::IpgMenu(_) => {
-                    let wco = WidgetCallbackOut::default();
+                IpgWidgets::IpgMenu(menu) => {
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.user_data = menu.user_data.clone();
                     wco
                 },
                 IpgWidgets::IpgPickList(pl) => {
