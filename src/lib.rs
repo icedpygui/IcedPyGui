@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use ipg_widgets::ipg_rule::IpgRule;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyList, PyModule};
 use pyo3::PyObject;
@@ -1296,6 +1297,62 @@ fn add_image(&mut self,
 
     }
 
+    #[pyo3(signature = (parent_id, width=None, width_fill=true))]
+    fn add_rule_horizontal(&mut self, 
+                            parent_id: String,
+                            width: Option<f32>,
+                            width_fill: bool, 
+                            ) -> PyResult<usize> 
+    {
+        let id: Option<usize> = None;
+        let id = self.get_id(id);
+
+        let width = get_width(width, width_fill);
+        let height: Length = get_height(None, false);  // not used
+        let rule_type = "h".to_string();
+
+        set_state_of_widget(id, parent_id);
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgRule(IpgRule::new(
+                                                        id,
+                                                        width,
+                                                        height,
+                                                        rule_type,
+                                                        )));
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (parent_id, height=None, height_fill=true))]
+    fn add_rule_vertical(&mut self, 
+                            parent_id: String, 
+                            height: Option<f32>,
+                            height_fill: bool,
+                            ) -> PyResult<usize> 
+    {
+        let id: Option<usize> = None;
+        let id = self.get_id(id);
+
+        let width = get_width(None, false);  //Not used
+        let height: Length = get_height(height, height_fill);
+        let rule_type = "v".to_string();
+
+        set_state_of_widget(id, parent_id);
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgRule(IpgRule::new(
+                                                        id,
+                                                        width,
+                                                        height,
+                                                        rule_type,
+                                                        )));
+
+        Ok(id)
+    }
+
     #[pyo3(signature = (parent_id, text, id=None, on_press=None, on_release=None, 
                         on_right_press=None, on_right_release=None, on_middle_press=None, 
                         on_middle_release=None, on_move=None, on_enter=None, on_exit=None, 
@@ -1967,6 +2024,7 @@ fn add_image(&mut self,
                 radio_item_update(rd, item, value);
                 drop(state);
             },
+            IpgWidgets::IpgRule(_) => (),
             IpgWidgets::IpgSelectableText(_wid) => (),
             IpgWidgets::IpgSlider(_wid) => (),
             IpgWidgets::IpgSpace(_wid) => (),

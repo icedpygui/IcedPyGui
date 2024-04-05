@@ -206,6 +206,9 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                 IpgWidgets::IpgRadio(_) => {
                     WidgetCallbackOut::default()
                 },
+                IpgWidgets::IpgRule(_) => {
+                    WidgetCallbackOut::default()
+                },
                 IpgWidgets::IpgSelectableText(st) => {
                     let mut wco = WidgetCallbackOut::default();
                     wco.user_data = st.user_data.clone();

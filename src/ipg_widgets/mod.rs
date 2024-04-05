@@ -19,6 +19,7 @@ pub mod ipg_pick_list;
 pub mod ipg_progress_bar;
 pub mod ipg_radio;
 pub mod ipg_row;
+pub mod ipg_rule;
 pub mod ipg_scrollable;
 pub mod ipg_selectable_text;
 pub mod ipg_slider;

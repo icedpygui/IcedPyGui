@@ -29,6 +29,7 @@ use ipg_widgets::ipg_pick_list::{PLMessage, construct_picklist, pick_list_callba
 use ipg_widgets::ipg_progress_bar::construct_progress_bar;
 use ipg_widgets::ipg_radio::{RDMessage, construct_radio, radio_callback};
 use ipg_widgets::ipg_row::construct_row;
+use ipg_widgets::ipg_rule::construct_rule;
 use ipg_widgets::ipg_scrollable::{construct_scrollable, scrollable_callback};
 use ipg_widgets::ipg_selectable_text::{SLTXTMessage, construct_selectable_text, selectable_text_callback};
 use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_callback};
@@ -455,6 +456,9 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 },
                 IpgWidgets::IpgRadio(radio) => {
                     return construct_radio(radio.clone()) 
+                },
+                IpgWidgets::IpgRule(rule) => {
+                    return construct_rule(rule.clone()) 
                 },
                 IpgWidgets::IpgSlider(slider) => {
                     return construct_slider(slider.clone())

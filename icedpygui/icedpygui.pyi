@@ -713,6 +713,16 @@ class IPG:
             int: internal id of widget and can be used by user if equated.
         """
 
+    def add_rule_horizontal(self, parent_id, width=None, width_fill=True) -> int:
+        """
+        Add a horizontal divider
+        """
+
+    def add_rule_vertical(self, parent_id, height=None, height_fill=True) -> int:
+        """
+        Add a vertical divider
+        """
+
     def add_selectable_text(self, 
                             parent_id, 
                             text,
