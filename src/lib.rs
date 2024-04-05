@@ -46,6 +46,7 @@ use ipg_widgets::ipg_table::IpgTable;
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
 use ipg_widgets::ipg_text_editor::IpgTextEditor;
 use ipg_widgets::ipg_text_input::IpgTextInput;
+use ipg_widgets::ipg_toggle::{IpgToggler, IpgTogglerParams};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
 use ipg_widgets::ipg_window::{IpgWindow, IpgWindowThemes};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
@@ -1737,6 +1738,46 @@ fn add_image(&mut self,
         Ok(id)
     }
 
+    #[pyo3(signature = (parent_id, label=None, id=None, toggled=None, 
+                        width=None, width_fill=false, 
+                        user_data=None, show=true, 
+                        ))]
+    fn add_toggler(&mut self,
+                        parent_id: String,
+                        // ** above required
+                        label: Option<String>,
+                        id: Option<usize>,
+                        toggled: Option<PyObject>,
+                        width: Option<f32>,
+                        width_fill: bool,
+                        user_data: Option<PyObject>,
+                        show: bool,
+                        ) -> PyResult<usize> 
+    {
+        let id = self.get_id(id);
+
+        if toggled.is_some() {
+            add_callback_to_mutex(id, "toggled".to_string(), toggled);
+        }
+
+        let width = get_width(width, width_fill);
+
+        set_state_of_widget(id, parent_id);
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgToggler(IpgToggler::new(
+                                                id,
+                                                show,
+                                                user_data,
+                                                label,
+                                                width,                           
+                                                )));
+        
+        Ok(id)
+    
+    }
+
     #[pyo3(signature = (enabled=false, on_key_press=None, on_key_release=None,
                         user_data=None))]
     fn add_event_keyboard(&mut self, 
@@ -2035,6 +2076,7 @@ fn add_image(&mut self,
             },
             IpgWidgets::IpgTextEditor(_wid) => (),
             IpgWidgets::IpgTextInput(_wid) => (),
+            IpgWidgets::IpgToggler(_wid) => (),
         }
 
     }
@@ -2123,6 +2165,7 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IpgRadioDirection>()?;
     m.add_class::<IpgRadioParams>()?;
     m.add_class::<IpgTextParams>()?;
+    m.add_class::<IpgTogglerParams>()?;
     m.add_class::<IpgWindowThemes>()?;
     Ok(())
 }

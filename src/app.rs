@@ -12,6 +12,7 @@ use std::collections::HashMap;
 
 use crate::ipg_widgets;
 use crate::ipg_widgets::ipg_text_editor::construct_text_editor;
+use crate::ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
@@ -67,6 +68,7 @@ pub enum Message {
     Slider(usize, SLMessage),
     TextEditor(TEMessage),
     TextInput(usize, TIMessage),
+    Toggler(usize, TOGMessage),
     Tick,
     FontLoaded(Result<(), font::Error>),
     UpdateText,
@@ -204,6 +206,10 @@ impl multi_window::Application for App {
             },
             Message::TextInput(id, message) => {
                 text_input_callback(id, message);
+                Command::none()
+            },
+            Message::Toggler(id, message) => {
+                toggle_callback(id, message);
                 Command::none()
             },
             Message::UpdateText => {
@@ -477,6 +483,9 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 },
                 IpgWidgets::IpgTextInput(input) => {
                     return construct_text_input(input.clone())           
+                },
+                IpgWidgets::IpgToggler(tog) => {
+                    return construct_toggler(tog.clone())           
                 },
             },
         None => panic!("Widget not found in fn get_widget")

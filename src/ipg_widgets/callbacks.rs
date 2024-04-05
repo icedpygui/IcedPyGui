@@ -16,6 +16,7 @@ pub struct WidgetCallbackIn {
     pub color: Option<Vec<f64>>,
     pub index: Option<usize>,
     pub is_submitted: Option<bool>,
+    pub is_toggled: Option<bool>,
     pub on_toggle: Option<bool>,
     pub point: Option<Point>,
     pub selected: Option<String>,
@@ -40,6 +41,7 @@ pub struct WidgetCallbackOut {
     pub color: Option<Vec<f64>>,
     pub event_name: String,
     pub is_checked: Option<bool>,
+    pub is_toggled: Option<bool>,
     pub points: Option<Vec<(String, f32)>>,
     pub scroll_pos: Vec<(String, f32)>, 
     pub selected_index: Option<usize>,
@@ -258,6 +260,16 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                         wco.value_str = wci.submit_str;
                     }
                     wco.user_data = input.user_data.clone();
+                    drop(state);
+                    wco
+                },
+                IpgWidgets::IpgToggler(tog) => {
+                    match wci.is_toggled {
+                        Some(tg) => tog.is_toggled = tg,
+                        None => (),
+                    }
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.user_data = tog.user_data.clone();
                     drop(state);
                     wco
                 },
