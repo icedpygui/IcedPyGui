@@ -582,7 +582,6 @@ fn circle(color: Color) -> quad::Quad {
 }
 
 
-
 #[test]
 fn test_check_label_separators() {
 
@@ -623,9 +622,6 @@ fn test_check_label_separators() {
     assert_eq!(false, result.0);
 
 }
-
-
-
 
 
 #[test]

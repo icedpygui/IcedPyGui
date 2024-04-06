@@ -593,7 +593,7 @@ fn process_callback(id: usize,
                 } else {
                     match hmap_s_f {
                         Some(sf) => {
-                            let dict = sf.into_py_dict(py);
+                            let dict = sf.into_py_dict_bound(py);
                             match user_data {
                                 Some(user_data) => {
                                     cb.call1(py, (id, event_name, dict, user_data)).unwrap()
@@ -606,7 +606,7 @@ fn process_callback(id: usize,
                         None => {
                             match hmap_s_s {
                                 Some(ss) => {
-                                    let dict = ss.into_py_dict(py);
+                                    let dict = ss.into_py_dict_bound(py);
                                     match user_data {
                                         Some(user_data) => {
                                             cb.call1(py, (id, event_name, dict, user_data)).unwrap()

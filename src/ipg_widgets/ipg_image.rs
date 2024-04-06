@@ -195,7 +195,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 };
                 let res = callback.call1(py, (
                                                                     wco.id.clone(), 
-                                                                    points.into_py_dict(py), 
+                                                                    points.into_py_dict_bound(py), 
                                                                     user_data
                                                                     ));
                 match res {
@@ -205,7 +205,7 @@ fn process_callback(wco: WidgetCallbackOut)
             } else {
                 let res = callback.call1(py, (
                                                                     wco.id.clone(), 
-                                                                    points.into_py_dict(py), 
+                                                                    points.into_py_dict_bound(py), 
                                                                     ));
                 match res {
                     Ok(_) => (),

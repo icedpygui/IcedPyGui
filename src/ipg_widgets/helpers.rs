@@ -240,6 +240,7 @@ pub fn format_date(format: String, year: i32, month: usize, day: usize) -> Strin
     }
 }
 
+
 fn convert_to_len_two(value: usize) -> String {
 
     if value < 10 {
@@ -248,6 +249,18 @@ fn convert_to_len_two(value: usize) -> String {
         value.to_string()
     }
 }
+
+
+pub fn try_extract_i64(value: PyObject) -> i64 {
+    Python::with_gil(|py| {
+        let res = value.extract::<i64>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python integer"),
+        }
+    })  
+}
+
 
 pub fn try_extract_f64(value: PyObject) -> f64 {
     Python::with_gil(|py| {
@@ -259,6 +272,18 @@ pub fn try_extract_f64(value: PyObject) -> f64 {
     })  
 }
 
+
+pub fn try_extract_i64_option(value: PyObject) -> Option<i64> {
+    Python::with_gil(|py| {
+        let res = value.extract::<i64>(py);
+        match res {
+            Ok(val) => Some(val),
+            Err(_) => None,
+        }
+    })  
+}
+
+
 pub fn try_extract_f64_option(value: PyObject) -> Option<f64> {
     Python::with_gil(|py| {
         let res = value.extract::<f64>(py);
@@ -268,6 +293,7 @@ pub fn try_extract_f64_option(value: PyObject) -> Option<f64> {
         }
     })  
 }
+
 
 pub fn try_extract_vec_f64(value: PyObject) -> Vec<f64> {
     Python::with_gil(|py| {
@@ -291,6 +317,17 @@ pub fn try_extract_vec_f32(value: PyObject) -> Vec<f32> {
 }
 
 
+pub fn try_extract_string(value: PyObject) -> String {
+    Python::with_gil(|py| {
+        let res = value.extract::<String>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python str"),
+        }
+    })  
+}
+
+
 pub fn try_extract_vec_str(value: PyObject) -> Vec<String> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<String>>(py);
@@ -301,35 +338,6 @@ pub fn try_extract_vec_str(value: PyObject) -> Vec<String> {
     })  
 }
 
-pub fn try_extract_i64(value: PyObject) -> i64 {
-    Python::with_gil(|py| {
-        let res = value.extract::<i64>(py);
-        match res {
-            Ok(val) => val,
-            Err(_) => panic!("Unable to extract python integer"),
-        }
-    })  
-}
-
-pub fn try_extract_i64_option(value: PyObject) -> Option<i64> {
-    Python::with_gil(|py| {
-        let res = value.extract::<i64>(py);
-        match res {
-            Ok(val) => Some(val),
-            Err(_) => None,
-        }
-    })  
-}
-
-pub fn try_extract_string(value: PyObject) -> String {
-    Python::with_gil(|py| {
-        let res = value.extract::<String>(py);
-        match res {
-            Ok(val) => val,
-            Err(_) => panic!("Unable to extract python str"),
-        }
-    })  
-}
 
 pub fn try_extract_vec_str_option(value: PyObject) -> Option<Vec<String>> {
     Python::with_gil(|py| {
@@ -373,3 +381,4 @@ pub fn try_extract_ipg_alignment(value: PyObject) -> IpgAlignment {
         }
     })
 }
+

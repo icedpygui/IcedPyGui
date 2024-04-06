@@ -70,17 +70,6 @@ pub enum BTNMessage {
     OnPress,
 }
 
-// The style enums below are different than iced ButtonStyles enums though they have the
-// same members.  The reason is that the python styles are defined as IpgButtonStyles. Therefore
-// one has to send a Option<String> representing the style, using an IpgButtonStyles enum.
-// Steps are different based on the intitial contruction and the updating routine.
-// 
-// Construction phase: 
-// lib.add_button() ==> PyObject ==> String ==> construct_button() ==> iced style
-// 
-// Update phase: 
-// lib.update_item() ==> PyObject ==> try_extract (method below) ==> Option<String> returned to update_item
-// lib.update_item() => iced update => construction phase.
 
 #[derive(Debug, Clone)]
 #[pyclass]
@@ -105,7 +94,7 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
         let arrow_style = try_extract_button_arrow(btn.arrow_style);
         label = match arrow_style {
             Some(ar) => Text::new(ar).font(BOOTSTRAP_FONT),
-            None => panic!("Button: Could not get Option(arrow_style)")
+            None => panic!("Button: Could not get extract arrow_style")
         };
     }
     
@@ -121,6 +110,7 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
                                 .into();
 
     ipg_btn.map(move |message| app::Message::Button(btn.id, message))
+    
 }
 
 

@@ -108,7 +108,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 };
                 let res = callback.call1(py, (
                                                                     wco.id.clone(), 
-                                                                    wco.scroll_pos.into_py_dict(py), 
+                                                                    wco.scroll_pos.into_py_dict_bound(py), 
                                                                     user_data
                                                                     ));
                 match res {
@@ -118,7 +118,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
             } else {
                 let res = callback.call1(py, (
                                                                     wco.id.clone(), 
-                                                                    wco.scroll_pos.into_py_dict(py), 
+                                                                    wco.scroll_pos.into_py_dict_bound(py), 
                                                                     ));
                 match res {
                     Ok(_) => (),

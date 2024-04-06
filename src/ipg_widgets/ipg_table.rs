@@ -269,3 +269,61 @@ fn set_row_theme(index: usize, widget: Element<'static, Message>) -> Element<'st
             .into()
 }
 
+// pub fn table_callback(id: usize, message: TBLMessage) {
+
+//     let mut wci = WidgetCallbackIn::default();
+//     wci.id = id;
+
+//     match message {
+//         BTNMessage::OnPress => {
+//             // getting only
+//             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+//             wco.id = id;
+//             wco.event_name = "on_press".to_string();
+//             process_callback(wco);
+//         }
+//     }
+// }
+
+
+// fn table_item_update( 
+//                         id: Option<usize>,
+//                         title: Option<String>,
+//                         headers: Option<Vec<String>>,
+//                         data: Option<&Bound<PyList>>,
+//                         user_id: Option<String>,
+//                         on_update: Option<PyObject>,
+//                 ) 
+// {
+    
+//     let id: usize = match id {
+//         Some(id) => id,
+//         None => 0
+//     };
+
+//     let user_id = match user_id {
+//         Some(id) => id,
+//         None => "".to_string()
+//     };
+    
+//     if &id == &0 && &user_id == &"".to_string() {
+//         panic!("You must supply either an id or user_id to update the table.")
+//     }
+
+//     let _title = match title {
+//         Some(title) => title,
+//         None => "".to_string(),
+//     };
+
+//     let _headers = match headers {
+//         Some(hd) => hd,
+//         None => vec![],
+//     };
+    
+//     let _data = py_extract_list(data);
+    
+//     if on_update.is_some() {
+//         add_callback_to_mutex(id, "on_update".to_string(), on_update);
+//     }
+    
+// }

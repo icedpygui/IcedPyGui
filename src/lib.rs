@@ -2,7 +2,7 @@
 
 use ipg_widgets::ipg_rule::IpgRule;
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyList, PyModule};
+use pyo3::types::PyModule;
 use pyo3::PyObject;
 
 use iced::multi_window::Application;
@@ -2089,49 +2089,7 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (id, title=None, headers=None, data=None, user_id=None, on_update=None))]
-    fn update_table(&self, 
-                            id: Option<usize>,
-                            title: Option<String>,
-                            headers: Option<Vec<String>>,
-                            data: Option<&PyList>,
-                            user_id: Option<String>,
-                            on_update: Option<PyObject>,
-                    ) 
-    {
-        
-        let id: usize = match id {
-            Some(id) => id,
-            None => 0
-        };
-
-        let user_id = match user_id {
-            Some(id) => id,
-            None => "".to_string()
-        };
-        
-        if &id == &0 && &user_id == &"".to_string() {
-            panic!("You must supply either an id or user_id to update the table.")
-        }
-
-        let _title = match title {
-            Some(title) => title,
-            None => "".to_string(),
-        };
-
-        let _headers = match headers {
-            Some(hd) => hd,
-            None => vec![],
-        };
-        
-        let _data = py_extract_list(data);
-        
-        if on_update.is_some() {
-            add_callback_to_mutex(id, "on_update".to_string(), on_update);
-        }
-        
-    }
-
+    
     fn get_id(&mut self, gen_id: Option<usize>) -> usize
     {
         // When an id is generated, it is put into the self.gen_ids.
@@ -2156,7 +2114,7 @@ fn add_image(&mut self,
 
 
 #[pymodule]
-fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
+fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IPG>()?;
     m.add_class::<IpgAlignment>()?;
     m.add_class::<IpgButtonStyles>()?;
@@ -2253,35 +2211,7 @@ fn set_state_of_widget(
     drop(state);
 }
 
-pub fn py_extract_list(list_opt: Option<&PyList>) -> Vec<Vec<String>> {
 
-    match list_opt {
-        Some(list) => {
-            
-            let mut data_str: Vec<Vec<String>> = vec![];  
-            pyo3::prepare_freethreaded_python();
-            let _ = Python::with_gil(|_py| -> PyResult<()> {
-                
-                for lst in list {
-                    let dat: PyResult<Vec<String>> = lst
-                        .iter()?
-                        .map(|i| i.and_then(PyAny::extract::<String>))
-                        .collect();
-                    
-                    let data = match dat {
-                        Ok(dat) => dat,
-                        Err(_E) => panic!("Could not extract list")
-                    };
-                    data_str.push(data);
-                }
-                Ok(())
-            });
-            return data_str
-            },
-
-            None => return vec![vec![]],
-        };
-}
 
 
 fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>) {
