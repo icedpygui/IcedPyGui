@@ -1,4 +1,5 @@
-from .icedpygui import IPG  
+from .icedpygui import IPG
+from .icedpygui import IpgAlignment 
 from .icedpygui import IpgButtonStyles, IpgButtonArrows, IpgButtonParams
 from .icedpygui import IpgCardStyles, IpgCardParams
 from .icedpygui import IpgCheckboxParams
@@ -9,4 +10,5 @@ from .icedpygui import IpgPickListParams
 from .icedpygui import IpgProgressBarParams
 from .icedpygui import IpgRadioParams, IpgRadioDirection
 from .icedpygui import IpgTextParams
+from .icedpygui import IpgTogglerParams
 from .icedpygui import IpgWindowThemes

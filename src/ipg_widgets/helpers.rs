@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use crate::access_state;
+use crate::{access_state, IpgAlignment};
 use iced::window;
 use iced::{Alignment, alignment::{Horizontal, Vertical}, Length, Padding};
 use iced::widget::text::{Shaping, LineHeight};
@@ -359,6 +359,17 @@ pub fn try_extract_dict(items: PyObject) -> BTreeMap<String, Vec<String>> {
         match res {
             Ok(val) => val,
             Err(_) => panic!("Unable to extract python dict"),
+        }
+    })
+}
+
+pub fn try_extract_ipg_alignment(value: PyObject) -> IpgAlignment {
+    Python::with_gil(|py| {
+
+        let res = value.extract::<IpgAlignment>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python object for Alignment"),
         }
     })
 }

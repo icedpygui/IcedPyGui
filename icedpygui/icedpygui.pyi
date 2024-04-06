@@ -1176,6 +1176,11 @@ class IPG:
         """
 
 
+class IpgAlignment:
+    Left=0,
+    Center=0,
+    Right=0,
+
 
 class IpgWindowThemes:
     Dark=0
@@ -1342,6 +1347,17 @@ class IpgTextParams:
     VtAlignTop=0,
     VtAlignCenter=0,
     VtAlignBottom=0,
+    Width=0,
+    WidthFill=0,
+
+
+class IpgTogglerParams:
+    Alignment=0,
+    Label=0,
+    LineHeight=0,
+    Show=0,
+    Size=0,
+    TextSize=0,
     Width=0,
     WidthFill=0,
 

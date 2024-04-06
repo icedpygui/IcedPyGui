@@ -46,7 +46,7 @@ use ipg_widgets::ipg_table::IpgTable;
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
 use ipg_widgets::ipg_text_editor::IpgTextEditor;
 use ipg_widgets::ipg_text_input::IpgTextInput;
-use ipg_widgets::ipg_toggle::{IpgToggler, IpgTogglerParams};
+use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParams};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
 use ipg_widgets::ipg_window::{IpgWindow, IpgWindowThemes};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
@@ -707,13 +707,6 @@ impl IPG {
         let height = get_height(height, height_fill);
 
         let padding = get_padding(padding);
-
-        // // iced button style has to be converted to a string
-        // // because in can't be put into the mutex.
-        // let style_opt = match style {
-        //     Some(st) => try_extract_button_style(st),
-        //     None => None,
-        // };
 
         set_state_of_widget(id, parent_id);
 
@@ -1739,8 +1732,9 @@ fn add_image(&mut self,
     }
 
     #[pyo3(signature = (parent_id, label=None, id=None, toggled=None, 
-                        width=None, width_fill=false, 
-                        user_data=None, show=true, 
+                        width=None, width_fill=false, size=20.0, text_size=16.0,
+                        text_line_height=1.3, text_alignment=IpgAlignment::Center, 
+                        spacing=10.0, user_data=None, show=true, 
                         ))]
     fn add_toggler(&mut self,
                         parent_id: String,
@@ -1750,6 +1744,11 @@ fn add_image(&mut self,
                         toggled: Option<PyObject>,
                         width: Option<f32>,
                         width_fill: bool,
+                        size: f32,
+                        text_size: f32,
+                        text_line_height: f32,
+                        text_alignment: IpgAlignment,
+                        spacing: f32,
                         user_data: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
@@ -1759,6 +1758,8 @@ fn add_image(&mut self,
         if toggled.is_some() {
             add_callback_to_mutex(id, "toggled".to_string(), toggled);
         }
+
+        let text_line_height = LineHeight::Relative(text_line_height);
 
         let width = get_width(width, width_fill);
 
@@ -1771,7 +1772,12 @@ fn add_image(&mut self,
                                                 show,
                                                 user_data,
                                                 label,
-                                                width,                           
+                                                width,
+                                                size,
+                                                text_size,
+                                                text_line_height,
+                                                text_alignment,
+                                                spacing,                           
                                                 )));
         
         Ok(id)
@@ -2066,17 +2072,19 @@ fn add_image(&mut self,
                 drop(state);
             },
             IpgWidgets::IpgRule(_) => (),
-            IpgWidgets::IpgSelectableText(_wid) => (),
-            IpgWidgets::IpgSlider(_wid) => (),
-            IpgWidgets::IpgSpace(_wid) => (),
-            IpgWidgets::IpgTable(_wid) => (),
+            IpgWidgets::IpgSelectableText(_) => (),
+            IpgWidgets::IpgSlider(_) => (),
+            IpgWidgets::IpgSpace(_) => (),
+            IpgWidgets::IpgTable(_) => (),
             IpgWidgets::IpgText(txt) => {
                 text_item_update(txt, item, value);
                 drop(state);
             },
-            IpgWidgets::IpgTextEditor(_wid) => (),
-            IpgWidgets::IpgTextInput(_wid) => (),
-            IpgWidgets::IpgToggler(_wid) => (),
+            IpgWidgets::IpgTextEditor(_) => (),
+            IpgWidgets::IpgTextInput(_) => (),
+            IpgWidgets::IpgToggler(tog) => {
+                toggler_item_update(tog, item, value)
+            },
         }
 
     }
@@ -2150,6 +2158,7 @@ fn add_image(&mut self,
 #[pymodule]
 fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<IPG>()?;
+    m.add_class::<IpgAlignment>()?;
     m.add_class::<IpgButtonStyles>()?;
     m.add_class::<IpgButtonArrows>()?;
     m.add_class::<IpgButtonParams>()?;
@@ -2170,6 +2179,14 @@ fn icedpygui(_py: Python, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
+
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass]
+pub enum IpgAlignment {
+    Left,
+    Center, 
+    Right,
+}
 
 fn set_state_of_container(
                             id: usize, 

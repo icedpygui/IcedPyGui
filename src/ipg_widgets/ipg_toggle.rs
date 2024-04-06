@@ -1,18 +1,19 @@
-#![allow(dead_code)]
 
-use crate::{access_callbacks, app};
-use super::helpers::{get_width, 
-                    try_extract_f64, try_extract_string, 
-                    try_extract_boolean};
+
+use crate::{access_callbacks, app, IpgAlignment};
+use super::helpers::{get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_alignment, try_extract_string};
 use super::callbacks::{
     WidgetCallbackIn, WidgetCallbackOut, 
     get_set_widget_callback_data
 };
 
+
+use iced::widget::text::LineHeight;
 use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{Space, Toggler};
-use iced::{Element, Length};
+use iced::{alignment, Element, Length};
+
 
 
 #[derive(Debug, Clone)]
@@ -24,6 +25,11 @@ pub struct IpgToggler {
     pub is_toggled: bool,
     pub label: Option<String>,
     pub width: Length,
+    pub size: f32,
+    pub text_size: f32,
+    pub text_line_height: LineHeight,
+    pub text_alignment: IpgAlignment,
+    pub spacing: f32,
 }
 
 impl IpgToggler {
@@ -34,6 +40,11 @@ impl IpgToggler {
 
         label: Option<String>,
         width: Length,
+        size: f32,
+        text_size: f32,
+        text_line_height: LineHeight,
+        text_alignment: IpgAlignment,
+        spacing: f32,
         ) -> Self {
         Self {
             id,
@@ -42,6 +53,11 @@ impl IpgToggler {
             is_toggled: false,
             label,
             width,
+            size,
+            text_size,
+            text_line_height,
+            text_alignment,
+            spacing,
         }
     }
 }
@@ -58,8 +74,15 @@ pub fn construct_toggler(tog: IpgToggler) -> Element<'static, app::Message> {
         return Space::new(Length::Shrink, Length::Shrink).into()
     }
 
+    let text_alignment = get_text_alignment(tog.text_alignment);
+
     let ipg_tog: Element<TOGMessage> = Toggler::new(tog.label, tog.is_toggled, TOGMessage::Toggled)
+                                                    .size(tog.size)
                                                     .width(tog.width)
+                                                    .text_size(tog.text_size)
+                                                    .text_line_height(tog.text_line_height)
+                                                    .text_alignment(text_alignment)
+                                                    .spacing(tog.spacing)
                                                     .into();
 
     ipg_tog.map(move |message| app::Message::Toggler(tog.id, message))
@@ -132,23 +155,27 @@ pub fn process_callback(wco: WidgetCallbackOut)
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[pyclass]
 pub enum IpgTogglerParams {
+    Alignment,
     Label,
+    LineHeight,
     Show,
+    Size,
+    TextSize,
     Width,
     WidthFill,
 }
 
 
-pub fn button_item_update(tog: &mut IpgToggler,
+pub fn toggler_item_update(tog: &mut IpgToggler,
                             item: PyObject,
                             value: PyObject,
                             )
 {
-    let update = try_extract_toggle_update(item);
-
+    let update = try_extract_toggler_update(item);
+  
     match update {
         IpgTogglerParams::Label => {
             tog.label = Some(try_extract_string(value));
@@ -164,12 +191,28 @@ pub fn button_item_update(tog: &mut IpgToggler,
             let val = try_extract_boolean(value);
             tog.width = get_width(None, val);
         },
+        IpgTogglerParams::Alignment => {
+            let val: IpgAlignment = try_extract_ipg_alignment(value);
+            tog.text_alignment = val;
+        },
+        IpgTogglerParams::LineHeight => {
+            let val = try_extract_f64(value) as f32; 
+            tog.text_line_height = LineHeight::Relative(val);
+        },
+        IpgTogglerParams::Size => {
+            let val = try_extract_f64(value) as f32;
+            tog.size = val;
+        },
+        IpgTogglerParams::TextSize => {
+            let val = try_extract_f64(value) as f32;
+            tog.text_size = val;
+        },
     }
 
 }
 
 
-pub fn try_extract_toggle_update(update_obj: PyObject) -> IpgTogglerParams {
+pub fn try_extract_toggler_update(update_obj: PyObject) -> IpgTogglerParams {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgTogglerParams>(py);
@@ -178,4 +221,12 @@ pub fn try_extract_toggle_update(update_obj: PyObject) -> IpgTogglerParams {
             Err(_) => panic!("Toggler update extraction failed"),
         }
     })
+}
+
+fn get_text_alignment(ta: IpgAlignment) -> alignment::Horizontal {
+    match ta {
+        IpgAlignment::Left => alignment::Horizontal::Left,
+        IpgAlignment::Center => alignment::Horizontal::Center,
+        IpgAlignment::Right => alignment::Horizontal::Right,
+    }
 }
