@@ -1982,8 +1982,8 @@ fn add_image(&mut self,
         Ok(self.id)
     }
 
-    #[pyo3(signature = (window_id, id))]
-    fn delete_item(&self, window_id: String, id: usize) 
+    #[pyo3(signature = (window_id, wid))]
+    fn delete_item(&self, window_id: String, wid: usize) 
     {
 
         let mut state = access_state();
@@ -2001,33 +2001,33 @@ fn add_image(&mut self,
         let mut index: i32 = -1;
 
         for (i, ipg_id) in ipg_ids.iter().enumerate() {
-            if ipg_id.id == id {
+            if ipg_id.id == wid {
                 index = i as i32;
                 break;
             }
         }
 
         if index == -1 {
-            panic!("item with id {id} could not be found to delete")
+            panic!("item with id {wid} could not be found to delete")
         }
 
         ipg_ids.remove(index as usize);
 
-        state.widgets.remove(&id);
+        state.widgets.remove(&wid);
 
     }
 
 
-    #[pyo3(signature = (id, item, value))]
-    fn update_item(&self, id: usize, item: PyObject, value: PyObject) {
+    #[pyo3(signature = (wid, item, value))]
+    fn update_item(&self, wid: usize, item: PyObject, value: PyObject) {
         
         let mut state = access_state();
 
-        let widget_opt = state.widgets.get_mut(&id);
+        let widget_opt = state.widgets.get_mut(&wid);
 
         let widget = match widget_opt {
             Some(w) => w,
-            None => panic!("Widget with id {id} could not be updated"),
+            None => panic!("Widget with id {wid} could not be updated"),
         };
         
         match widget {

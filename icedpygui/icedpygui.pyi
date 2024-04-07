@@ -15,7 +15,7 @@ class IPG:
         Starts the gui session.  Must be the last called.
         """
 
-    def generate_id(self) -> None:
+    def generate_id(self) -> int:
         """
         Generates an id for some future widget
         """
@@ -32,7 +32,7 @@ class IPG:
                     theme: any=Union[None | IpgWindowThemes],
                     debug: bool=False,
                     show: bool=True,
-                    ) -> None:
+                    ) -> int:
         """
         Adds a window to the gui.
 
@@ -1159,7 +1159,7 @@ class IPG:
 
     # *******************************all item ops**************************************
         
-    def delete_item(self, id: int):
+    def delete_item(self, wid: int):
         """
         Deletes an item using the int id
         Example: btn_id = add_button("Button")
@@ -1168,11 +1168,11 @@ class IPG:
         """
 
     def update_item(self, 
-                    id: int, 
+                    wid: int, 
                     param: str, 
                     value):
         """
-        Update a widget by supplying the id, the parameter to update and values as a str or number
+        Update a widget by supplying the widget id, wid, the parameter to update and values as a str or number
         """
 
 
