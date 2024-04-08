@@ -673,7 +673,7 @@ impl IPG {
 
     }
     
-    #[pyo3(signature = (parent_id, label, id=None, on_press=None, 
+    #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
                         height_fill=false, padding=vec![10.0], corner_radius=15.0, 
                         style=None, arrow_style=None, user_data=None, 
@@ -683,7 +683,7 @@ impl IPG {
                         parent_id: String,
                         label: String,
                         // ** above required
-                        id: Option<usize>,
+                        gen_id: Option<usize>,
                         on_press: Option<PyObject>,
                         width: Option<f32>,
                         height: Option<f32>,
@@ -697,7 +697,7 @@ impl IPG {
                         show: bool,
                         ) -> PyResult<usize> 
     {
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if on_press.is_some() {
             add_callback_to_mutex(id, "on_press".to_string(), on_press);
@@ -730,7 +730,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, head, body, is_open=true, minmax_id=None, foot=None, 
-                        id=None, close_size=20.0, on_close=None, 
+                        gen_id=None, close_size=20.0, on_close=None, 
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_width=f32::INFINITY, max_height=f32::INFINITY, 
                         padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
@@ -743,7 +743,7 @@ impl IPG {
                 is_open: bool,
                 minmax_id: Option<usize>,
                 foot: Option<String>,
-                id: Option<usize>,
+                gen_id: Option<usize>,
                 close_size: f32,
                 on_close: Option<PyObject>,
                 width: Option<f32>,
@@ -759,7 +759,7 @@ impl IPG {
                 user_data: Option<PyObject>, 
                 ) -> PyResult<usize> 
     {
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if on_close.is_some() {
             add_callback_to_mutex(id, "on_close".to_string(), on_close);
@@ -799,7 +799,7 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (parent_id, id=None, on_toggle=None, is_checked=false, 
+    #[pyo3(signature = (parent_id, gen_id=None, on_toggle=None, is_checked=false, 
                         label="".to_string(), width=None, width_fill=false, 
                         size=16.0, spacing=20.0, text_line_height=1.3, 
                         text_shaping="basic".to_string(),text_size=16.0, icon_x=false, 
@@ -808,7 +808,7 @@ impl IPG {
     fn add_checkbox(&mut self,
                         parent_id: String,
                         // ** above required
-                        id: Option<usize>,
+                        gen_id: Option<usize>,
                         on_toggle: Option<PyObject>,
                         is_checked: bool,
                         label: String,
@@ -826,7 +826,7 @@ impl IPG {
                         style: Option<PyObject>,
                         ) -> PyResult<usize> 
     {
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if on_toggle.is_some() {
             add_callback_to_mutex(id, "on_toggle".to_string(), on_toggle);
@@ -864,7 +864,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, label="Set Color".to_string(), 
-                        id=None, on_submit=None, show=true, 
+                        gen_id=None, on_submit=None, show=true, 
                         start_up_color=[0.5, 0.2, 0.7, 1.0], 
                         width=None, height=None, width_fill=false, height_fill=false,
                         padding=vec![10.0], corner_radius=0.0, 
@@ -875,7 +875,7 @@ impl IPG {
                     parent_id: String,
                     // ** above required
                     label: String,
-                    id: Option<usize>,
+                    gen_id: Option<usize>,
                     on_submit: Option<PyObject>,
                     show: bool,
                     start_up_color: [f32; 4],
@@ -889,7 +889,7 @@ impl IPG {
                     user_data: Option<PyObject>,
                     ) -> PyResult<usize> 
     {
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if on_submit.is_some() {
             add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
@@ -927,7 +927,7 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (parent_id, label="Calendar".to_string(), id=None,
+    #[pyo3(signature = (parent_id, label="Calendar".to_string(), gen_id=None,
                         size_factor=1.0, padding=vec![5.0], on_submit=None, 
                         user_data=None, show=false,
                         ))]
@@ -935,7 +935,7 @@ impl IPG {
                         parent_id: String,
                         // ** above required
                         label: String,
-                        id: Option<usize>,
+                        gen_id: Option<usize>,
                         size_factor: f32,
                         padding: Vec<f64>,
                         on_submit: Option<PyObject>,
@@ -943,7 +943,7 @@ impl IPG {
                         show: bool,
                         ) -> PyResult<usize> 
     {
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if size_factor < 1.0 {
             panic!("Size factor for date picker must be > 1.0")
@@ -970,7 +970,7 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, image_path, id=None, 
+    #[pyo3(signature = (parent_id, image_path, gen_id=None, 
                         width=None, width_fill=false, 
                         height=None, height_fill=false, 
                         padding=vec![5.0], on_press=None, on_release=None,
@@ -983,7 +983,7 @@ fn add_image(&mut self,
                     parent_id: String,
                     image_path: String,
                     // above required
-                    id: Option<usize>,
+                    gen_id: Option<usize>,
                     width: Option<f32>,
                     width_fill: bool,
                     height: Option<f32>,
@@ -1002,7 +1002,7 @@ fn add_image(&mut self,
                     show: bool,
                     ) -> PyResult<usize>
 {
-    let id = self.get_id(id);
+    let id = self.get_id(gen_id);
 
     if on_press.is_some() {
         add_callback_to_mutex(id, "on_press".to_string(), on_press);
@@ -1064,7 +1064,7 @@ fn add_image(&mut self,
 
     #[pyo3(signature = (parent_id, items, widths, spacing, 
                         on_select=None, separators=None, sep_types=None, 
-                        sep_label_names=None, user_data=None, id=None))]
+                        sep_label_names=None, user_data=None, gen_id=None))]
     fn add_menu(&mut self, 
                     parent_id: String, 
                     items: PyObject,
@@ -1075,10 +1075,10 @@ fn add_image(&mut self,
                     sep_types: Option<Vec<IpgMenuSepTypes>>,
                     sep_label_names: Option<Vec<String>>,
                     user_data: Option<PyObject>,
-                    id: Option<usize>,
+                    gen_id: Option<usize>,
                 ) -> PyResult<usize> 
     {
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if on_select.is_some() {
             add_callback_to_mutex(id, "on_select".to_string(), on_select);
@@ -1102,7 +1102,7 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, options, id=None, on_select=None, 
+    #[pyo3(signature = (parent_id, options, gen_id=None, on_select=None, 
                         width=None, width_fill=false, padding=vec![5.0],  
                         placeholder=None, selected=None, text_size=None, 
                         text_line_height=1.3, text_shaping="basic".to_string(), 
@@ -1112,7 +1112,7 @@ fn add_image(&mut self,
                         parent_id: String,
                         options: PyObject,
                         // **above required
-                        id: Option<usize>,
+                        gen_id: Option<usize>,
                         on_select: Option<PyObject>,
                         width: Option<f32>,
                         width_fill: bool,
@@ -1127,7 +1127,7 @@ fn add_image(&mut self,
                     ) -> PyResult<usize>
     {
 
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if on_select.is_some() {
             add_callback_to_mutex(id, "on_select".to_string(), on_select);
@@ -1163,7 +1163,7 @@ fn add_image(&mut self,
     }
 
     #[pyo3(signature = (parent_id, min, max, value,
-                        id=None, width=None, height=Some(16.0), 
+                        gen_id=None, width=None, height=Some(16.0), 
                         width_fill=true, height_fill=false,
                         show=true, 
                         ))]
@@ -1173,7 +1173,7 @@ fn add_image(&mut self,
                             max: f32,
                             value: f32,
                             // **above required
-                            id: Option<usize>,
+                            gen_id: Option<usize>,
                             width: Option<f32>,
                             height: Option<f32>,
                             width_fill: bool,
@@ -1182,7 +1182,7 @@ fn add_image(&mut self,
                             ) -> PyResult<usize> 
     {
 
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         let width = get_width(width, width_fill);
         let height: Length = get_height(height, height_fill);
@@ -1205,7 +1205,7 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (parent_id, labels, id=None,
+    #[pyo3(signature = (parent_id, labels, gen_id=None,
                         direction=IpgRadioDirection::Vertical, 
                         spacing= 10.0, padding=DEFAULT_PADDING.to_vec(), 
                         width=None, width_fill=false, height=None, height_fill=false,
@@ -1218,7 +1218,7 @@ fn add_image(&mut self,
                     parent_id: String,
                     labels: Vec<String>,
                     //**above required
-                    id: Option<usize>,
+                    gen_id: Option<usize>,
                     direction: IpgRadioDirection,
                     spacing: f32,
                     padding: Vec<f64>,
@@ -1238,7 +1238,7 @@ fn add_image(&mut self,
                     ) -> PyResult<usize>
     {
 
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         let is_selected: Option<usize> = match selected_index {
             Some(index) => {
@@ -1298,8 +1298,8 @@ fn add_image(&mut self,
                             width_fill: bool, 
                             ) -> PyResult<usize> 
     {
-        let id: Option<usize> = None;
-        let id = self.get_id(id);
+        let gen_id: Option<usize> = None;
+        let id = self.get_id(gen_id);
 
         let width = get_width(width, width_fill);
         let height: Length = get_height(None, false);  // not used
@@ -1326,8 +1326,8 @@ fn add_image(&mut self,
                             height_fill: bool,
                             ) -> PyResult<usize> 
     {
-        let id: Option<usize> = None;
-        let id = self.get_id(id);
+        let gen_id: Option<usize> = None;
+        let id = self.get_id(gen_id);
 
         let width = get_width(None, false);  //Not used
         let height: Length = get_height(height, height_fill);
@@ -1347,7 +1347,7 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, text, id=None, on_press=None, on_release=None, 
+    #[pyo3(signature = (parent_id, text, gen_id=None, on_press=None, on_release=None, 
                         on_right_press=None, on_right_release=None, on_middle_press=None, 
                         on_middle_release=None, on_move=None, on_enter=None, on_exit=None, 
                         width=None, height=None, width_fill=false, height_fill=false, 
@@ -1359,7 +1359,7 @@ fn add_image(&mut self,
                             parent_id: String,
                             text: String,
                             // ** above required
-                            id: Option<usize>,
+                            gen_id: Option<usize>,
                             on_press: Option<PyObject>,
                             on_release: Option<PyObject>,
                             on_right_press: Option<PyObject>,
@@ -1383,7 +1383,7 @@ fn add_image(&mut self,
                             ) -> PyResult<usize> 
     {
     
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         let content = text.clone();
 
@@ -1457,7 +1457,7 @@ fn add_image(&mut self,
     }
 
     #[pyo3(signature = (parent_id, min, max, step, value, 
-                        id=None, width=None, height=None, 
+                        gen_id=None, width=None, height=None, 
                         width_fill=false, on_change=None, 
                         on_release=None, user_data=None, show=true, 
                         ))]
@@ -1467,7 +1467,7 @@ fn add_image(&mut self,
                         max: f32,
                         step: f32,
                         value: f32,
-                        id: Option<usize>,
+                        gen_id: Option<usize>,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
@@ -1478,7 +1478,7 @@ fn add_image(&mut self,
                         ) -> PyResult<usize> 
         {
 
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if on_change.is_some() {
             add_callback_to_mutex(id, "on_change".to_string(), on_change);
@@ -1512,11 +1512,11 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, id=None, width=None, height=None, 
+    #[pyo3(signature = (parent_id, gen_id=None, width=None, height=None, 
                         width_fill=false, height_fill=false))]
     fn add_space(&mut self,
                         parent_id: String,
-                        id: Option<usize>,
+                        gen_id: Option<usize>,
                         width: Option<f32>, 
                         height: Option<f32>,
                         width_fill: bool,
@@ -1524,7 +1524,7 @@ fn add_image(&mut self,
                     ) -> PyResult<usize>
     {
 
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
@@ -1543,7 +1543,7 @@ fn add_image(&mut self,
     } 
 
     #[pyo3(signature = (parent_id, title, data, width, height,
-                        id=None, callback=None, column_widths=vec![], 
+                        gen_id=None, callback=None, column_widths=vec![], 
                         show=true, user_data=None))]
     fn add_table(&mut self,
                     parent_id: String,
@@ -1552,7 +1552,7 @@ fn add_image(&mut self,
                     width: f32,
                     height: f32,
                     // **above required
-                    id: Option<usize>,
+                    gen_id: Option<usize>,
                     callback: Option<PyObject>,
                     column_widths: Vec<f32>,
                     show: bool,
@@ -1560,7 +1560,7 @@ fn add_image(&mut self,
                 ) -> PyResult<usize> 
     {
 
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if callback.is_some() {
             add_callback_to_mutex(id, "table".to_string(), callback);
@@ -1585,7 +1585,7 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (parent_id, content, id=None, width=None, 
+    #[pyo3(signature = (parent_id, content, gen_id=None, width=None, 
                         height=None, width_fill=false, height_fill=false, 
                         h_align="left".to_string(), v_align="top".to_string(),
                         line_height=1.3, size=16.0, 
@@ -1595,7 +1595,7 @@ fn add_image(&mut self,
                     parent_id: String,
                     content: String,
                     // ** above required
-                    id: Option<usize>,
+                    gen_id: Option<usize>,
                     width: Option<f32>,
                     height: Option<f32>,
                     width_fill: bool,
@@ -1609,7 +1609,7 @@ fn add_image(&mut self,
                     ) -> PyResult<usize> 
     {
     
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
@@ -1645,14 +1645,14 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (parent_id, file_name, id=None))]
+    #[pyo3(signature = (parent_id, file_name, gen_id=None))]
     fn add_text_editor(&mut self,
                             parent_id: String,
                             file_name: String,
-                            id: Option<usize>,
+                            gen_id: Option<usize>,
                         )  -> PyResult<usize>
     {
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         set_state_of_widget(id, parent_id);
 
@@ -1666,7 +1666,7 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, placeholder, id=None,
+    #[pyo3(signature = (parent_id, placeholder, gen_id=None,
                         on_input=None, on_submit=None, 
                         on_paste=None, width=None, width_fill=false, 
                         padding=DEFAULT_PADDING.to_vec(), 
@@ -1677,7 +1677,7 @@ fn add_image(&mut self,
                             parent_id: String,
                             placeholder: String,
                             // **above required
-                            id: Option<usize>,
+                            gen_id: Option<usize>,
                             on_input: Option<PyObject>,
                             on_submit: Option<PyObject>,
                             on_paste: Option<PyObject>,
@@ -1692,7 +1692,7 @@ fn add_image(&mut self,
                         ) -> PyResult<usize> 
     {
 
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if on_input.is_some() {
             add_callback_to_mutex(id, "on_input".to_string(), on_input);
@@ -1731,7 +1731,7 @@ fn add_image(&mut self,
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, label=None, id=None, toggled=None, 
+    #[pyo3(signature = (parent_id, label=None, gen_id=None, toggled=None, 
                         width=None, width_fill=false, size=20.0, text_size=16.0,
                         text_line_height=1.3, text_alignment=IpgAlignment::Center, 
                         spacing=10.0, user_data=None, show=true, 
@@ -1740,7 +1740,7 @@ fn add_image(&mut self,
                         parent_id: String,
                         // ** above required
                         label: Option<String>,
-                        id: Option<usize>,
+                        gen_id: Option<usize>,
                         toggled: Option<PyObject>,
                         width: Option<f32>,
                         width_fill: bool,
@@ -1753,7 +1753,7 @@ fn add_image(&mut self,
                         show: bool,
                         ) -> PyResult<usize> 
     {
-        let id = self.get_id(id);
+        let id = self.get_id(gen_id);
 
         if toggled.is_some() {
             add_callback_to_mutex(id, "toggled".to_string(), toggled);
