@@ -22,26 +22,16 @@ use pyo3::types::IntoPyDict;
 pub struct IpgKeyBoardEvent {
     pub id: usize,
     pub enabled: bool,
-
-    // pub user_data_str: Vec<String>,
-    // pub user_data_flt: Vec<f64>,
-    // pub user_data_int: Vec<i64>,
 }
 
 impl IpgKeyBoardEvent {
     pub fn new(
         id: usize,
         enabled: bool,
-        // user_data_str: Vec<String>,
-        // user_data_flt: Vec<f64>,
-        // user_data_int: Vec<i64>,
         ) -> Self {
         Self {
             id,
             enabled,
-            // user_data_str,
-            // user_data_flt,
-            // user_data_int,
         }
     }
 }
@@ -50,26 +40,16 @@ impl IpgKeyBoardEvent {
 pub struct IpgMouseEvent {
     pub id: usize,
     pub enabled: bool,
-
-    // pub user_data_str: Vec<String>,
-    // pub user_data_flt: Vec<f64>,
-    // pub user_data_int: Vec<i64>,
 }
 
 impl IpgMouseEvent {
     pub fn new( 
         id: usize,
         enabled: bool,
-        // user_data_str: Vec<String>,
-        // user_data_flt: Vec<f64>,
-        // user_data_int: Vec<i64>,
         ) -> Self {
         Self {
             id,
             enabled,
-            // user_data_str,
-            // user_data_flt,
-            // user_data_int,
         }
     }
 }
@@ -78,66 +58,25 @@ impl IpgMouseEvent {
 pub struct IpgWindowEvent {
     pub id: usize,
     pub enabled: bool,
-
-    // pub user_data_str: Vec<String>,
-    // pub user_data_flt: Vec<f64>,
-    // pub user_data_int: Vec<i64>,
 }
 
 impl IpgWindowEvent {
     pub fn new(
         id: usize,
         enabled: bool,
-        // user_data_str: Vec<String>,
-        // user_data_flt: Vec<f64>,
-        // user_data_int: Vec<i64>,
         ) -> Self {
         Self {
             id,
             enabled,
-            // user_data_str,
-            // user_data_flt,
-            // user_data_int,
         }
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct IpgTimerEvent {
-    pub id: usize,
-    pub enabled: bool,
-    pub duration: u64,
-
-    // pub user_data_str: Vec<String>,
-    // pub user_data_flt: Vec<f64>,
-    // pub user_data_int: Vec<i64>,
-}
-
-impl IpgTimerEvent {
-    pub fn new(
-        id: usize,
-        enabled: bool,
-        duration: u64,
-        // user_data_str: Vec<String>,
-        // user_data_flt: Vec<f64>,
-        // user_data_int: Vec<i64>,
-        ) -> Self {
-        Self {
-            id,
-            enabled,
-            duration,
-            // user_data_str,
-            // user_data_flt,
-            // user_data_int,
-        }
-    }
-}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum IpgEvents {
     Keyboard(IpgKeyBoardEvent),
     Mouse(IpgMouseEvent),
-    Timer(IpgTimerEvent),
     Window(IpgWindowEvent),
 }
 
@@ -171,7 +110,7 @@ pub enum IpgEventCallbacks {
 
 pub fn process_events(ipg_event: Event, 
                         key_enabled: (usize, bool), 
-                        mouse_enabled: (usize, bool), 
+                        mouse_enabled: (usize, bool),
                         wnd_enabled: (usize, bool),
                         touch_enabled: (usize, bool)) 
     {   
@@ -182,7 +121,7 @@ pub fn process_events(ipg_event: Event,
                                         text: _ }) => {
                 if key_enabled.1 {
 
-                    let user_data = get_key_user_data(key_enabled.0);
+                    let user_data = get_event_user_data(key_enabled.0);
                     
                     let key_str: String = process_key(key.as_ref());
                     
@@ -207,7 +146,7 @@ pub fn process_events(ipg_event: Event,
                                             }) => {
                 if key_enabled.1 {
 
-                    let user_data = get_key_user_data(key_enabled.0);
+                    let user_data = get_event_user_data(key_enabled.0);
                     
                     let key_str: String = process_key(key.as_ref());
 
@@ -336,7 +275,7 @@ pub fn process_events(ipg_event: Event,
                             },
                     }
 
-                    let user_data = get_key_user_data(mouse_enabled.0);
+                    let user_data = get_event_user_data(mouse_enabled.0);
 
                     process_callback(mouse_enabled.0, 
                                         event_name,
@@ -351,7 +290,7 @@ pub fn process_events(ipg_event: Event,
 
                     let mut event_name = "".to_string();
                     let mut hmap_s_f: Option<HashMap<String, f32>>  = None;
-                    let user_data: Option<PyObject> = get_key_user_data(wnd_enabled.0);
+                    let user_data: Option<PyObject> = get_event_user_data(wnd_enabled.0);
                     let mut cb_name: IpgEventCallbacks = IpgEventCallbacks::None;
 
                     match wnd_event {
@@ -435,7 +374,7 @@ pub fn process_events(ipg_event: Event,
         }
 }
 
-fn get_key_user_data(id: usize) -> Option<PyObject> {
+pub fn get_event_user_data(id: usize) -> Option<PyObject> {
 
     let state = access_state();
     let cb = access_callbacks();
@@ -464,14 +403,6 @@ fn get_key_user_data(id: usize) -> Option<PyObject> {
                     }
                 }
             },
-            IpgEvents::Timer(_tm) => {
-                for data in cb.user_data.iter() {
-                    if data.0 == id {
-                        return data.1.clone()
-                    }
-                }
-            },
-            
         }
     }
 

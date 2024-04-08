@@ -339,6 +339,7 @@ fn match_widgets (widget: &mut IpgWidgets) -> &mut IpgRadio {
         IpgWidgets::IpgText(_) => panic!(),
         IpgWidgets::IpgTextEditor(_) => panic!(),
         IpgWidgets::IpgTextInput(_) => panic!(),
+        IpgWidgets::IpgTimer(_) => panic!(),
         IpgWidgets::IpgToggler(_) => panic!(),
     }
     panic!("Radio unable to find radio in IpgWidgets")

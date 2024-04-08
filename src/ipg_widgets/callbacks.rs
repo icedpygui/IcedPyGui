@@ -14,6 +14,7 @@ pub struct WidgetCallbackIn {
     pub choice: Option<Choice>,
     pub choice_index: Option<usize>,
     pub color: Option<Vec<f64>>,
+    pub counter: Option<u64>,
     pub index: Option<usize>,
     pub is_submitted: Option<bool>,
     pub is_toggled: Option<bool>,
@@ -25,6 +26,8 @@ pub struct WidgetCallbackIn {
     pub selected_date: Option<String>,
     pub selected_month: Option<String>,
     pub selected_year: Option<i32>,
+    pub started: Option<bool>,
+    pub ticking: Option<bool>,
     pub date_format: Option<String>,
     pub show: Option<bool>,
     pub submit_str: Option<String>,
@@ -39,6 +42,8 @@ impl WidgetCallbackIn{}
 pub struct WidgetCallbackOut {
     pub id: usize,
     pub color: Option<Vec<f64>>,
+    pub duration: Option<u64>,
+    pub counter: Option<u64>,
     pub event_name: String,
     pub is_checked: Option<bool>,
     pub is_toggled: Option<bool>,
@@ -263,6 +268,28 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     drop(state);
                     wco
                 },
+                IpgWidgets::IpgTimer(tim) => {
+                    match wci.started {
+                        Some(st) => tim.started = st,
+                        None => (),
+                    }
+                    match wci.counter {
+                        Some(ct) => {
+                            if ct == 0 {
+                                tim.counter = 0;
+                            } else {
+                                tim.counter += ct
+                            }
+                        },
+                        None => (),
+                    }
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.user_data = tim.user_data.clone();
+                    wco.counter = Some(tim.counter);
+                    wco.duration = Some(tim.duration_ms);
+                    drop(state);
+                    wco
+                }
                 IpgWidgets::IpgToggler(tog) => {
                     match wci.is_toggled {
                         Some(tg) => tog.is_toggled = tg,

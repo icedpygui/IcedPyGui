@@ -11,8 +11,7 @@ use iced::Color;
 use std::collections::HashMap;
 
 use crate::ipg_widgets;
-use crate::ipg_widgets::ipg_text_editor::construct_text_editor;
-use crate::ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
+use crate::ipg_widgets::ipg_timer::tick_callback;
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
@@ -37,8 +36,10 @@ use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_callback};
 use ipg_widgets::ipg_space::construct_space;
 use ipg_widgets::ipg_table::contruct_table;
 use ipg_widgets::ipg_text::construct_text;
-use ipg_widgets::ipg_text_editor::TEMessage;
+use ipg_widgets::ipg_text_editor::{TEMessage, construct_text_editor};
 use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_callback};
+use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage};
+use crate::ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
 use ipg_widgets::ipg_tool_tip::construct_tool_tip;
 use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_window, window_update};
 
@@ -70,6 +71,7 @@ pub enum Message {
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
     Tick,
+    Timer(usize, TIMMessage),
     FontLoaded(Result<(), font::Error>),
     UpdateText,
     Window(WndMessage),
@@ -141,9 +143,6 @@ impl multi_window::Application for App {
                                             self.timer_event_enabled);
                 Command::none()
             },
-            Message::Tick => {
-                Command::none()
-            },
             Message::Button(id, message) => {
                 button_callback(id, message);
                 Command::none()
@@ -208,6 +207,22 @@ impl multi_window::Application for App {
                 text_input_callback(id, message);
                 Command::none()
             },
+            Message::Tick => {
+                tick_callback(self.timer_event_enabled.0);
+                Command::none()
+            }
+            Message::Timer(id, message) => {
+                match message {
+                    TIMMessage::OnStart => {
+                        self.timer_event_enabled.0 = id;
+                        self.timer_event_enabled.1 = true;
+                    },
+                    TIMMessage::OnStop => self.timer_event_enabled.1 = false,
+                    TIMMessage::OnTick => (),
+                }
+                self.timer_duration = timer_callback(id, message);
+                Command::none()
+            },
             Message::Toggler(id, message) => {
                 toggle_callback(id, message);
                 Command::none()
@@ -252,13 +267,13 @@ impl multi_window::Application for App {
                                         self.window_event_enabled.1) {
 
             let event = iced::event::listen().map(Message::EventOccurred);
-            let timer = time::every(iced::time::Duration::from_millis(1000))
+            let timer = time::every(iced::time::Duration::from_millis(self.timer_duration))
                                                                     .map(|_| Message::Tick);
             Subscription::batch(vec![event, timer])
             
         } else if self.timer_event_enabled.1 {
 
-            time::every(iced::time::Duration::from_millis(1000)).map(|_| Message::Tick)
+            time::every(iced::time::Duration::from_millis(self.timer_duration)).map(|_| Message::Tick)
 
         } else if self.keyboard_event_enabled.1 || self.mouse_event_enabled.1 || self.window_event_enabled.1 {
 
@@ -278,15 +293,6 @@ impl multi_window::Application for App {
     }
 }
 
-
-
-fn usize_to_bool(v: usize)->bool{
-    match v{
-       0 => false,
-       1 => true,
-       _ => panic!("Invalid bool in usize {}", v),
-    }
-}
 
 fn create_content(iced_id: window::Id) -> Element<'static, Message> {
     
@@ -484,6 +490,9 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgTextInput(input) => {
                     return construct_text_input(input.clone())           
                 },
+                IpgWidgets::IpgTimer(tim) => {
+                    return construct_timer(tim.clone());
+                },
                 IpgWidgets::IpgToggler(tog) => {
                     return construct_toggler(tog.clone())           
                 },
@@ -524,128 +533,3 @@ fn match_theme_with_color(theme_opt: Option<Theme>) -> Color {
         Theme::Custom(_) => Color::WHITE,
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use crate::{IpgIds, access_state};
-//     use crate::app::{ get_combine_parents_and_children, ParentChildIds};
-
-//     fn setup_ids() -> Vec<IpgIds> {
-//         return vec![
-//             IpgIds {
-//                 id: 1,
-//                 parent_uid: 0,
-//                 container_id: Some("col0".to_string()),
-//                 parent_id: None,
-//                 user_id: None,
-//                 is_container: true,
-//             },
-//             IpgIds {
-//                 id: 2,
-//                 parent_uid: 1,
-//                 container_id: None,
-//                 parent_id: Some("col0".to_string()),
-//                 user_id: None,
-//                 is_container: false,
-//             },
-//             IpgIds {
-//                 id: 3,
-//                 parent_uid: 1,
-//                 container_id: Some("row0".to_string()),
-//                 parent_id: Some("col0".to_string()),
-//                 user_id: None,
-//                 is_container: true,
-//             },
-//             IpgIds {
-//                 id: 4,
-//                 parent_uid: 3,
-//                 container_id: Some("col1".to_string()),
-//                 parent_id: Some("row0".to_string()),
-//                 user_id: None,
-//                 is_container: true,
-//             },
-//             IpgIds {
-//                 id: 5,
-//                 parent_uid: 4,
-//                 container_id: None,
-//                 parent_id: Some("col1".to_string()),
-//                 user_id: None,
-//                 is_container: false,
-//             },
-//             IpgIds {
-//                 id: 6,
-//                 parent_uid: 3,
-//                 container_id: Some("row1".to_string()),
-//                 parent_id: Some("row0".to_string()),
-//                 user_id: None,
-//                 is_container: true,
-//             },
-//             IpgIds {
-//                 id: 7,
-//                 parent_uid: 6,
-//                 container_id: None,
-//                 parent_id: Some("col1".to_string()),
-//                 user_id: None,
-//                 is_container: false,
-//             },
-//             IpgIds {
-//                 id: 8,
-//                 parent_uid: 6,
-//                 container_id: None,
-//                 parent_id: Some("row0".to_string()),
-//                 user_id: None,
-//                 is_container: false,
-//             },
-//         ];
-//     }
-
-//     fn setup_all_parent_ids() -> Vec<ParentChildIds> {
-//         return vec![
-//             ParentChildIds {
-//                 parent_id: 0,
-//                 child_ids: vec![1],
-//             },
-//             ParentChildIds {
-//                 parent_id: 1,
-//                 child_ids: vec![2, 3],
-//             },
-//             ParentChildIds {
-//                 parent_id: 3,
-//                 child_ids: vec![4, 6],
-//             },
-//             ParentChildIds {
-//                 parent_id: 4,
-//                 child_ids: vec![5],
-//             },
-//             ParentChildIds {
-//                 parent_id: 6,
-//                 child_ids: vec![7, 8],
-//             },
-//         ]
-//     }
-
-//     #[test]
-//     fn test_get_unique_parents() {
-
-//         // let ids = setup_ids();
-
-//         // let expected_unique_parent_ids = vec![0, 1, 3, 4, 6];
-//         // let unique_parent_ids = get_unique_parents(&ids);
-//         // assert_eq!(expected_unique_parent_ids, unique_parent_ids);
-//     }
-
-//     #[test]
-//     fn test_get_combine_parents_and_children() {
-
-//         let unique_parent_ids = vec![0, 1, 3, 4, 6];
-//         let state = access_state();
-//         dbg!(&state.ids);
-//         let all_parent_ids = get_combine_parents_and_children(
-//             &unique_parent_ids, &state.ids);
-
-//         let expect_all_parent_ids = setup_all_parent_ids();
-
-//         assert_eq!(expect_all_parent_ids, all_parent_ids);
-//     }
-
-// }

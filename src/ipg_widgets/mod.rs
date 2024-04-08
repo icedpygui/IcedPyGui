@@ -28,6 +28,7 @@ pub mod ipg_table;
 pub mod ipg_text;
 pub mod ipg_text_editor;
 pub mod ipg_text_input;
+pub mod ipg_timer;
 pub mod ipg_toggle;
 pub mod ipg_tool_tip;
 pub mod ipg_window;

@@ -29,8 +29,7 @@ use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::IpgColumn;
 use ipg_widgets::ipg_container::IpgContainer;
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
-use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, 
-                                IpgMouseEvent, IpgWindowEvent};
+use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParams, IpgMenuSepTypes};
 use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
@@ -46,6 +45,7 @@ use ipg_widgets::ipg_table::IpgTable;
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
 use ipg_widgets::ipg_text_editor::IpgTextEditor;
 use ipg_widgets::ipg_text_input::IpgTextInput;
+use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParams};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
 use ipg_widgets::ipg_window::{IpgWindow, IpgWindowThemes};
@@ -189,10 +189,6 @@ impl IPG {
                 },
                 IpgEvents::Mouse(mouse)=> {
                     flags.mouse_event_enabled = (mouse.id, mouse.enabled)
-                },
-                IpgEvents::Timer(timer) => {
-                    flags.timer_event_enabled = (timer.id, timer.enabled);
-                    flags.timer_duration = timer.duration;
                 },
                 IpgEvents::Window(wnd) => {
                     flags.window_event_enabled = (wnd.id, wnd.enabled);
@@ -871,23 +867,23 @@ impl IPG {
                         style=None, user_data=None, 
                         ))]
     fn add_color_picker(
-                    &mut self,
-                    parent_id: String,
-                    // ** above required
-                    label: String,
-                    gen_id: Option<usize>,
-                    on_submit: Option<PyObject>,
-                    show: bool,
-                    start_up_color: [f32; 4],
-                    width: Option<f32>,
-                    height: Option<f32>,
-                    width_fill: bool,
-                    height_fill: bool,
-                    padding: Vec<f64>,
-                    corner_radius: f32,
-                    style: Option<PyObject>,
-                    user_data: Option<PyObject>,
-                    ) -> PyResult<usize> 
+                        &mut self,
+                        parent_id: String,
+                        // ** above required
+                        label: String,
+                        gen_id: Option<usize>,
+                        on_submit: Option<PyObject>,
+                        show: bool,
+                        start_up_color: [f32; 4],
+                        width: Option<f32>,
+                        height: Option<f32>,
+                        width_fill: bool,
+                        height_fill: bool,
+                        padding: Vec<f64>,
+                        corner_radius: f32,
+                        style: Option<PyObject>,
+                        user_data: Option<PyObject>,
+                        ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
 
@@ -911,17 +907,17 @@ impl IPG {
 
         state.widgets.insert(id, IpgWidgets::IpgColorPicker(
                             IpgColorPicker::new(
-                                            id,
-                                            show,
-                                            color,
-                                            user_data,
-                                            label,
-                                            width,
-                                            height,
-                                            padding,
-                                            corner_radius,
-                                            style,                              
-                                        )));
+                                                id,
+                                                show,
+                                                color,
+                                                user_data,
+                                                label,
+                                                width,
+                                                height,
+                                                padding,
+                                                corner_radius,
+                                                style,                              
+                                                )));
 
         Ok(id)
 
@@ -960,13 +956,13 @@ impl IPG {
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgDatePicker(IpgDatePicker::new(
-                                            id,
-                                            label,
-                                            size_factor,
-                                            padding,
-                                            show,
-                                            user_data,                            
-                                        )));
+                                                    id,
+                                                    label,
+                                                    size_factor,
+                                                    padding,
+                                                    show,
+                                                    user_data,                            
+                                                    )));
         Ok(id)
     }
 
@@ -1439,18 +1435,18 @@ fn add_image(&mut self,
         let mut state = access_state();
         
         state.widgets.insert(id, IpgWidgets::IpgSelectableText(IpgSelectableText::new(
-                                        id,
-                                        content,
-                                        width,
-                                        height,
-                                        horizontal_alignment,
-                                        vertical_alignment,
-                                        line_height,
-                                        size,
-                                        show,
-                                        shaping,
-                                        user_data,
-                                    )));
+                                                    id,
+                                                    content,
+                                                    width,
+                                                    height,
+                                                    horizontal_alignment,
+                                                    vertical_alignment,
+                                                    line_height,
+                                                    size,
+                                                    show,
+                                                    shaping,
+                                                    user_data,
+                                                    )));
             
         Ok(id)
 
@@ -1498,16 +1494,16 @@ fn add_image(&mut self,
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgSlider(IpgSlider::new( 
-                                            id,
-                                            show,
-                                            user_data,
-                                            min,
-                                            max,
-                                            step,
-                                            value,
-                                            width,
-                                            height,
-                                        )));
+                                                id,
+                                                show,
+                                                user_data,
+                                                min,
+                                                max,
+                                                step,
+                                                value,
+                                                width,
+                                                height,
+                                                )));
 
         Ok(id)
     }
@@ -1729,6 +1725,69 @@ fn add_image(&mut self,
                                                                 )));
 
         Ok(id)
+    }
+
+    #[pyo3(signature = (parent_id, duration_ms, on_start=None, on_tick=None, on_stop=None, 
+                        start_label="Start Timer".to_string(), 
+                        stop_label="Stop Timer".to_string(), width=None, height=None, 
+                        width_fill=false, height_fill=false, padding=vec![10.0], 
+                        corner_radius=15.0, style=None, arrow_style=None, user_data=None))]
+    fn add_timer(&mut self,
+                        parent_id: String,
+                        duration_ms: u64,
+                        on_start: Option<PyObject>,
+                        on_tick: Option<PyObject>,
+                        on_stop: Option<PyObject>,
+                        start_label: String,
+                        stop_label: String,
+                        width: Option<f32>,
+                        height: Option<f32>,
+                        width_fill: bool,
+                        height_fill: bool,
+                        padding: Vec<f64>,
+                        corner_radius: f32,
+                        style: Option<PyObject>,
+                        arrow_style: Option<PyObject>,
+                        user_data: Option<PyObject>
+                    ) -> PyResult<usize>
+    {
+        self.id += 1;
+
+        if on_start.is_some() {
+            add_callback_to_mutex(self.id, "on_start".to_string(), on_start);
+        }
+        if on_tick.is_some() {
+            add_callback_to_mutex(self.id, "on_tick".to_string(), on_tick);
+        }
+
+        if on_stop.is_some() {
+            add_callback_to_mutex(self.id, "on_stop".to_string(), on_stop);
+        }
+
+        let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
+
+        let padding = get_padding(padding);
+
+        set_state_of_widget(self.id, parent_id);
+        
+        let mut state = access_state();
+
+        state.widgets.insert(self.id, IpgWidgets::IpgTimer(IpgTimer::new(
+                                                            self.id,
+                                                            duration_ms,
+                                                            start_label,
+                                                            stop_label,
+                                                            width,
+                                                            height,
+                                                            padding,
+                                                            corner_radius,
+                                                            style,
+                                                            arrow_style,
+                                                            user_data, 
+                                                            )));
+
+        Ok(self.id)
     }
 
     #[pyo3(signature = (parent_id, label=None, gen_id=None, toggled=None, 
@@ -2082,6 +2141,9 @@ fn add_image(&mut self,
             },
             IpgWidgets::IpgTextEditor(_) => (),
             IpgWidgets::IpgTextInput(_) => (),
+            IpgWidgets::IpgTimer(tim) => {
+                timer_item_update(tim, item, value);
+            },
             IpgWidgets::IpgToggler(tog) => {
                 toggler_item_update(tog, item, value)
             },
@@ -2132,6 +2194,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgRadioDirection>()?;
     m.add_class::<IpgRadioParams>()?;
     m.add_class::<IpgTextParams>()?;
+    m.add_class::<IpgTimerParams>()?;
     m.add_class::<IpgTogglerParams>()?;
     m.add_class::<IpgWindowThemes>()?;
     Ok(())

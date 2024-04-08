@@ -1161,6 +1161,18 @@ class IPG:
             The id of the event which can be used to modify the event through update_item.
         """
 
+    def add_timer(self,
+                        parent_id: str,
+                        duration_ms: int,
+                        on_start: Callable=None,
+                        on_stop: Callable=None,
+                        on_tick: Callable=None,
+                        user_data=None,
+                        ) -> int:
+        """
+        adds a timer event in millisecond duration
+        """
+
     def add_event_window(self,
                          enabled: bool,
                          *,

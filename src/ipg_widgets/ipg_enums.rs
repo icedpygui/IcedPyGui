@@ -26,6 +26,7 @@ use super::ipg_table::IpgTable;
 use super::ipg_text::IpgText;
 use super::ipg_text_editor::IpgTextEditor;
 use super::ipg_text_input::IpgTextInput;
+use super::ipg_timer::IpgTimer;
 use super::ipg_toggle::IpgToggler;
 use super::ipg_tool_tip::IpgToolTip;
 use super::ipg_window::IpgWindow;
@@ -68,5 +69,6 @@ pub enum IpgWidgets {
     IpgText(IpgText),
     IpgTextEditor(IpgTextEditor),
     IpgTextInput(IpgTextInput),
+    IpgTimer(IpgTimer),
     IpgToggler(IpgToggler),
 }
