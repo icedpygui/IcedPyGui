@@ -8,7 +8,7 @@ use crate::{access_state, access_callbacks};
 use iced::event::Event;
 
 use iced::keyboard::Event::{KeyPressed, KeyReleased, ModifiersChanged};
-use iced::keyboard::{Key, Modifiers};
+use iced::keyboard::{Key, Location, Modifiers};
 use iced::mouse::Event::{ButtonPressed, ButtonReleased, CursorEntered, 
                         CursorLeft, CursorMoved, WheelScrolled};
 use iced::mouse::Button::{Left, Right, Middle, Back, Forward, Other,};
@@ -116,20 +116,23 @@ pub fn process_events(ipg_event: Event,
     {   
         match ipg_event {
             Event::Keyboard(KeyPressed { key, 
-                                        location: _, 
-                                        modifiers: _, 
+                                        location, 
+                                        modifiers, 
                                         text: _ }) => {
                 if key_enabled.1 {
-
+                    // dbg!("Pressed", &key, &location, &modifiers, &text);
                     let user_data = get_event_user_data(key_enabled.0);
                     
                     let key_str: String = process_key(key.as_ref());
                     
-                    let mod_key = get_key_modifier();
+                    let mod_key = process_modifier(modifiers);
+
+                    let location_str: String = process_location(location);
 
                     let hmap_s_s: Option<HashMap<String, String>> = Some(HashMap::from([
                                                                             ("key".to_string(), key_str),
                                                                             ("modifier".to_string(), mod_key),
+                                                                            ("location".to_string(), location_str)
                                                                         ]));
 
                     process_callback(key_enabled.0, 
@@ -141,20 +144,23 @@ pub fn process_events(ipg_event: Event,
                 }
             },
             Event::Keyboard(KeyReleased { key, 
-                                            location: _, 
-                                            modifiers: _, 
+                                            location, 
+                                            modifiers, 
                                             }) => {
                 if key_enabled.1 {
-
+                    // dbg!("Released", &key, location, modifiers);
                     let user_data = get_event_user_data(key_enabled.0);
                     
                     let key_str: String = process_key(key.as_ref());
 
-                    let mod_key = get_key_modifier();
+                    let mod_key = process_modifier(modifiers);
+
+                    let location_str: String = process_location(location);
 
                     let hmap_s_s: Option<HashMap<String, String>> = Some(HashMap::from([
                         ("key".to_string(), key_str),
                         ("modifier".to_string(), mod_key),
+                        ("location".to_string(), location_str)
                     ]));
 
                     process_callback(key_enabled.0, 
@@ -165,11 +171,9 @@ pub fn process_events(ipg_event: Event,
                                     IpgEventCallbacks::OnKeyRelease);
                                     }
                                 },
-            Event::Keyboard(ModifiersChanged(mods)) => {
-                if key_enabled.1 {
-                    set_key_modifier(mods);
-                }
-            },
+            // This event occurs when command keys are pressed but these 
+            // also show up under key pressed and release so not sure any advantage on using this.
+            Event::Keyboard(ModifiersChanged(_)) => (), 
             Event::Mouse(m_event) => {
 
                     let mut event_name = "".to_string();
@@ -414,79 +418,41 @@ fn process_key(key: Key<&str>) -> String {
    
     match key {
         Key::Named(named) => {
-            let name = format!("{:?}", named);
-            if ["Shift", "Control", "Alt", "Logo"].contains(&name.as_str()) {
-                "".to_string()
-            } else {
-                name
-            }
+            format!("{:?}", named)
         }
         Key::Character(chr) => {
             chr.to_string()
         },
         Key::Unidentified => {
-            panic!("unidentified key was pressed")
+            "unidentified key".to_string()
         },
     }
 }
 
-fn set_key_modifier(mods: Modifiers) {
 
-    let mut state = access_state();
-
-    if let Some(x) = state.kb_modifiers.get_mut(&"shift".to_string()) {
-        *x = mods.shift();
-    };
-    if let Some(x) = state.kb_modifiers.get_mut(&"control".to_string()) {
-        *x = mods.control();
-    };
-    if let Some(x) = state.kb_modifiers.get_mut(&"alt".to_string()) {
-        *x = mods.alt();
-    };
-    if let Some(x) = state.kb_modifiers.get_mut(&"logo".to_string()) {
-        *x = mods.logo();
-    };
-
-    drop(state);
-
+fn process_modifier(modifier: Modifiers) -> String {
+    if modifier.control() {
+        return "Control".to_string()
+    }
+    if modifier.alt() {
+        return "Alt".to_string()
+    }
+    if modifier.shift() {
+        return "Shift".to_string()
+    }
+    if modifier.logo() {
+        return "Logo".to_string()
+    }
+    "None".to_string()
 }
 
-fn get_key_modifier() -> String {
-
-    let mut state = access_state();
-
-    let mut shift = false;
-    let mut control = false;
-    let mut alt = false;
-    let mut logo = false;
-
-    if let Some(bl) = state.kb_modifiers.get_mut(&"shift".to_string()) {
-        shift = *bl;
-    };
-
-    if let Some(bl) = state.kb_modifiers.get_mut(&"control".to_string()) {
-        control = *bl;
-    };
-
-    if let Some(bl) = state.kb_modifiers.get_mut(&"alt".to_string()) {
-        alt = *bl;
-    };
-
-    if let Some(bl) = state.kb_modifiers.get_mut(&"logo".to_string()) {
-        logo = *bl;
-    };
-
-    drop(state);
-
-    let mut modifier: String = "".to_string();
-
-    if shift {modifier += "shift, "};
-    if control {modifier += "control, "};
-    if alt {modifier += "alt, "};
-    if logo {modifier += "logo, "};
-
-    modifier
-
+fn process_location(location: Location) -> String {
+    match location {
+        Location::Left => "left".to_string(),
+        Location::Numpad => "numpad".to_string(),
+        Location::Right => "right".to_string(),
+        Location::Standard => "standard".to_string(),
+    }
 }
 
 fn process_callback(id: usize, 

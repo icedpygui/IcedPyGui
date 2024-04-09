@@ -1,12 +1,21 @@
+from turtle import clear
 from icedpygui import IPG, IpgTextParams
 
 
 ipg = IPG()
 
-
+# When ctrl, alt, logo, or shift are processed, they are keys.  Therefore modifier is "None".
+# When a key follows the command key, then modifier is the command key and key is the key.
+# So to reduce confusion with the text widget values, when the command key is first pressed,
+# the modifier is set to "" versus print out a "None".
 def key_pressed(id, name, key, user_data):
-    ipg.update_item(text_pressed, IpgTextParams.Content, f"{name}: {key.get('modifier')} {key.get('key')}")
+    modifier = key.get("modifier")
+    if key.get("modifier") == "None":
+        modifier = ""
+    
+    ipg.update_item(text_pressed, IpgTextParams.Content, f"{name}: {modifier} {key.get('key')}")
     ipg.update_item(text_user_data, IpgTextParams.Content, f"user data is {user_data}")
+
 
 def key_released(id, name, key, user_data):
     ipg.update_item(text_released, IpgTextParams.Content, f"{name}: {key.get('modifier')} {key.get('key')}")
@@ -30,3 +39,4 @@ ipg.add_space(parent_id="col", height=50.0)
 text_user_data = ipg.add_text(parent_id="col", content="Some user data will be diplayed here")
 
 ipg.start_session()
+clear()
