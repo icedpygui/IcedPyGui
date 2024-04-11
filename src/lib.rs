@@ -21,6 +21,7 @@ mod ipg_widgets;
 mod iced_widgets;
 
 use crate::iced_widgets::scrollable::Direction;
+use crate::ipg_widgets::ipg_column::IpgColumnAlignment;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
@@ -380,7 +381,7 @@ impl IPG {
 
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
-                        align_items="start", width=None, height=None,
+                        align_items=None, width=None, height=None,
                         width_fill=false, height_fill=false,
                         max_width=f32::INFINITY, padding=DEFAULT_PADDING.to_vec(), 
                         spacing=20.0, show=true,
@@ -390,7 +391,7 @@ impl IPG {
                         container_id: String,
                         // **above required
                         parent_id: Option<String>,
-                        align_items: &str,
+                        align_items: Option<PyObject>,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
@@ -404,7 +405,7 @@ impl IPG {
 
         self.id += 1;
         
-        let align_items = get_alignment(align_items);
+        // let align_items = get_alignment(align_items);
 
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
@@ -2184,6 +2185,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgButtonParams>()?;
     m.add_class::<IpgCardStyles>()?;
     m.add_class::<IpgCardParams>()?;
+    m.add_class::<IpgColumnAlignment>()?;
     m.add_class::<IpgCheckboxParams>()?;
     m.add_class::<IpgDatePickerParams>()?;
     m.add_class::<IpgImageParams>()?;

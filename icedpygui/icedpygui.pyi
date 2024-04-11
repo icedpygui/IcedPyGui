@@ -1,5 +1,5 @@
 from types import Callable, Union, List
-from typing import OrderedDict, Tuple
+from typing import Optional, OrderedDict, Tuple
 
 
 
@@ -25,11 +25,11 @@ class IPG:
                     title: str,
                     width: int,
                     height: int,
-                    pos_x: float=None,
-                    pos_y: float=None,
+                    pos_x: Union[None | float]=None,
+                    pos_y: Union[None | float]=None,
                     pos_centered: bool=False,
                     resizable: bool=True,
-                    theme: any=Union[None | IpgWindowThemes],
+                    theme: IpgWindowThemes=IpgWindowThemes.Dark,
                     debug: bool=False,
                     show: bool=True,
                     ) -> int:
@@ -55,9 +55,9 @@ class IPG:
                         window_id: str,
                         container_id: str,
                         *,
-                        parent_id: str=None,
-                        width: float=None,
-                        height: float=None,
+                        parent_id: Union[None | str]=None,
+                        width: Union[None | float]=None,
+                        height: Union[None | float]=None,
                         width_fill: bool=False,
                         height_fill: bool=False,
                         max_height: float=float('inf'),
@@ -102,10 +102,10 @@ class IPG:
                     window_id: str,
                     container_id: str,
                     *,
-                    parent_id: str=None,
-                    align_items: str="start",
-                    width: float=None,
-                    height: float=None,
+                    parent_id: Union[None | str]=None,
+                    align_items: IpgColumnAlignment=IpgColumnAlignment.Start,
+                    width: Union[None | float]=None,
+                    height: Union[None | float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False,
                     max_width: float=float('inf'),
@@ -146,10 +146,10 @@ class IPG:
                 window_id: str,
                 container_id: str,
                 *,
-                parent_id: str=None,
+                parent_id: Union[None | str]=None,
                 align_items: str= "Start",
-                width: float=None,
-                height: float=None,
+                width: Union[None | float]=None,
+                height: Union[None | float]=None,
                 width_fill: bool=False,
                 height_fill: bool=False,
                 padding: List=[10.0], 
@@ -245,12 +245,12 @@ class IPG:
                         container_id: str,
                         *,
                         parent_id: str=None,
-                        width: float=None,
-                        height: float=None,
+                        width: Union[None | float]=None,
+                        height: Union[None | float]=None,
                         width_fill: bool=False,
                         height_fill: bool=False,
                         direction: str="vertical",
-                        on_scroll: Callable=None,
+                        on_scroll: Union[None | Callable]=None,
                         ) -> int:
         """
         Wraps a scrollable widget around a container.
@@ -287,7 +287,7 @@ class IPG:
                         position: str,
                         text_to_display: str,
                         *,
-                        parent_id: str=None,
+                        parent_id: Union[None | str]=None,
                         gap: int=10,
                         style: str="box",
                      ) -> int:
@@ -308,17 +308,17 @@ class IPG:
                     parent_id: str,
                     label: str,
                     *,
-                    gen_id: int=None,
-                    on_press: Callable=None,
-                    width: float=None,
-                    height: float=None,
+                    gen_id: Union[None | int]=None,
+                    on_press: Union[None | Callable]=None,
+                    width: Union[None | float]=None,
+                    height: Union[None | float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False,
                     padding: List=[10.0],
                     corner_radius: float=15.0,
-                    style: any=Union[None | IpgButtonStyles.Primary],
+                    style: IpgButtonStyles=IpgButtonStyles.Primary,
                     arrow_style: any=Union[None | IpgButtonArrows],
-                    user_data: any=None,
+                    user_data: Union[None | any]=None,
                     show: bool=True, 
                     ) -> int:
         """
@@ -367,21 +367,21 @@ class IPG:
                     parent_id, 
                     head, 
                     body, 
-                    foot: str=None,
-                    gen_id: int=None,
+                    foot: Union[None | str]=None,
+                    gen_id: Union[None | int]=None,
                     is_open: bool=True, 
                     close_size: float=0.0, 
-                    on_close=None,
-                    width: float=None, 
-                    height: float=None, 
+                    on_close: Union[None | Callable]=None,
+                    width: Union[None | float]=None, 
+                    height: Union[None | float]=None, 
                     max_width: float="inf",
                     max_height: float="inf", 
                     padding_head: float=5.0, 
                     padding_body: float=5.0, 
                     padding_foot: float=5.0,
                     show: bool=True,
-                    style: str=IPG.card_style(primary=1), 
-                    user_data: any=None, 
+                    style: IpgCardStyles=IpgCardStyles.Primary, 
+                    user_data: Union[None | any]=None, 
                 ) -> int:
         """
         Adds a card to hold text strings
@@ -403,11 +403,11 @@ class IPG:
     def add_checkbox(self,
                      parent_id: str,
                      *,
-                     on_toggle: Callable = None,
+                     on_toggle: Union[None | Callable] = None,
                      is_checked: bool=False,
-                     label: str=None,
-                     gen_id: int=None,
-                     width: float=None,
+                     label: Union[None | str]=None,
+                     gen_id: Union[None | int]=None,
+                     width: Union[None | float]=None,
                      width_fill: bool=False,
                      size: float=16.0,
                      spacing: float = 15.0,
@@ -416,7 +416,7 @@ class IPG:
                      text_size: float=16.0,
                      icon_x: bool=False,
                      icon_size: float=25.0,
-                     user_data: any=None,
+                     user_data: Union[None | any]=None,
                      show: bool=True,
                      ) -> int:
         """
@@ -467,16 +467,16 @@ class IPG:
                         parent_id: str,
                         *,
                         label: str="Set Color",
-                        gen_id: int=None,
-                        on_submit: Callable=None,
-                        width: float=None,
-                        height: float=None,
+                        gen_id: Union[None | int]=None,
+                        on_submit: Union[None | Callable]=None,
+                        width: Union[None | float]=None,
+                        height: Union[None | float]=None,
                         width_fill: bool=False,
                         height_fill: bool=False,
                         padding: List=[10.0],
                         corner_radius: float=0.0,
                         style: str="primary",
-                        user_data: any=None,
+                        user_data: Union[None | any]=None,
                         show: bool=True, 
                         ) -> int:
         """
@@ -510,11 +510,11 @@ class IPG:
                         parent_id: str,
                         *,
                         label: str="Calendar",
-                        gen_id: int=None,
+                        gen_id: Union[None | int]=None,
                         size_factor: float=1.0,
                         padding: List=[5.0],
-                        on_submit: Callable=None,
-                        user_data: any=None,
+                        on_submit: Union[None | Callable]=None,
+                        user_data: Union[None | any]=None,
                         show=False, 
                         )  -> int:
         
@@ -545,21 +545,21 @@ class IPG:
                     image_path: str,
                     *,
                     gen_id: int=None, 
-                    on_press: Callable=None, 
-                    on_release: Callable=None, 
-                    on_right_press: Callable=None, 
-                    on_right_release: Callable=None, 
-                    on_middle_press: Callable=None, 
-                    on_middle_release: Callable=None,
-                    on_enter: Callable=None,
-                    on_move: Callable=None,
-                    on_exit: Callable=None, 
-                    width: float=None,
-                    height: float=None,
+                    on_press: Union[None | Callable]=None, 
+                    on_release: Union[None | Callable]=None, 
+                    on_right_press: Union[None | Callable]=None, 
+                    on_right_release: Union[None | Callable]=None, 
+                    on_middle_press: Union[None | Callable]=None, 
+                    on_middle_release: Union[None | Callable]=None,
+                    on_enter: Union[None | Callable]=None,
+                    on_move: Union[None | Callable]=None,
+                    on_exit: Union[None | Callable]=None, 
+                    width: Union[None | float]=None,
+                    height: Union[None | float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False, 
                     show: bool=True,  
-                    user_data: any=None,
+                    user_data: Union[None | any]=None,
                     ) -> int:
         """
         Adds an image widget.  The image is selectable using callbcks for all 3 mouse buttons.
@@ -593,12 +593,12 @@ class IPG:
                  items: OrderedDict[str, list[str]],
                  widths: list,
                  spacing: list,
-                 separators: List[Tuple]=None,
-                 sep_types: any=List[IpgMenuSepTypes.Line],
-                 sep_label_names: List[str]=None, 
-                 on_select: Callable=None, 
-                 gen_id: int=None,
-                 user_data=None,
+                 separators: Union[None | List[Tuple(int, int, IpgMenuSepTypes)]]=None,
+                 sep_types: Union[None | List[IpgMenuSepTypes]]=None,
+                 sep_label_names: Union[None | List[str]]=None, 
+                 on_select: Union[None | Callable]=None, 
+                 gen_id: Union[None | int]=None,
+                 user_data: Union[None | any]=None,
                  ) -> int:
         """
         Add a menu dropdown list to the gui.
@@ -608,17 +608,17 @@ class IPG:
                         parent_id: str,
                         options: List=[str],
                         *,
-                        gen_id: int=None,
-                        on_select: Callable=None,
-                        width: float=None,
+                        gen_id: Union[None | int]=None,
+                        on_select: Union[None | Callable]=None,
+                        width: Union[None | float]=None,
                         width_fill: bool=False,
                         padding: List=[5.0],
-                        placeholder: str=None,
-                        selected: str=None,
+                        placeholder: Union[None | str]=None,
+                        selected: Union[None | str]=None,
                         text_size: float=15.0,
                         text_line_height: float="default",
                         text_shaping: str="basic",
-                        user_data: any=None,
+                        user_data: Union[None | any]=None,
                         show: bool=True,
                       ) -> int:
         """
@@ -653,13 +653,13 @@ class IPG:
                          parent_id: str,
                          min: float,
                          max: float,
-                         value: float=0.0,
                          *,
-                         gen_id: int=None,
-                         width: float=None,
+                         value: float=0.0,
+                         gen_id: Union[None | int]=None,
+                         width: Union[None | float]=None,
                          width_fill: bool=False,
                          height: float=1.0,
-                         user_data: any=None,
+                         user_data: Union[None, any]=None,
                          show: bool=True,
                          ) -> int:
         """
@@ -685,20 +685,20 @@ class IPG:
                     parent_id: str,
                     labels: List=[str],
                     *,
-                    gen_id: int=None,
-                    direction: str="vertical",
+                    gen_id: Union[None | int]=None,
+                    direction: IpgRadioDirection=IpgRadioDirection.Vertical,
                     spacing: float=10.0,
                     padding: List=[10.0],
-                    width: float=None,
+                    width: Union[None | float]=None,
                     width_fill: bool=False,
-                    on_select: Callable=None,
-                    selected_index: int=None,
+                    on_select: Union[None | Callable]=None,
+                    selected_index: Union[None | int]=None,
                     size: float=20.0,
                     text_spacing: float=15.0,
                     text_size: float=16.0,
                     text_line_height: float=1.3,
                     text_shaping: str="basic",
-                    user_data=None,
+                    user_data: Union[None, any]=None,
                     show: bool=True,
                   ) -> int:
         """
@@ -735,17 +735,19 @@ class IPG:
 
     def add_rule_horizontal(self, 
                             parent_id, 
-                            width=None, 
-                            width_fill=True
+                            *,
+                            width: Union[None | float]=None, 
+                            width_fill: bool=True
                             ) -> int:
         """
         Add a horizontal divider
         """
 
     def add_rule_vertical(self, 
-                          parent_id, 
-                          height=None, 
-                          height_fill=True
+                          parent_id,
+                          *, 
+                          height: Union[None | float]=None, 
+                          height_fill: bool=True
                           ) -> int:
         """
         Add a vertical divider
@@ -755,18 +757,18 @@ class IPG:
                             parent_id, 
                             text,
                             *,
-                            gen_id: int=None, 
-                            on_press: Callable=None, 
-                            on_release: Callable=None, 
-                            on_right_press: Callable=None, 
-                            on_right_release: Callable=None, 
-                            on_middle_press: Callable=None, 
-                            on_middle_release: Callable=None,
-                            on_enter: Callable=None,
-                            on_move: Callable=None,
-                            on_exit: Callable=None, 
-                            width: float=None,
-                            height: float=None,
+                            gen_id: Union[None | int]=None, 
+                            on_press: Union[None | Callable]=None, 
+                            on_release: Union[None | Callable]=None, 
+                            on_right_press: Union[None | Callable]=None, 
+                            on_right_release: Union[None | Callable]=None, 
+                            on_middle_press: Union[None | Callable]=None, 
+                            on_middle_release: Union[None | Callable]=None,
+                            on_enter: Union[None | Callable]=None,
+                            on_move: Union[None | Callable]=None,
+                            on_exit: Union[None | Callable]=None, 
+                            width: Union[None | float]=None,
+                            height: Union[None | float]=None,
                             width_fill: bool=False,
                             height_fill: bool=False, 
                             h_align: str="left",
@@ -775,7 +777,7 @@ class IPG:
                             shaping: str="basic",
                             size: float=16.0, 
                             show: bool=True,  
-                            user_data: any=None,
+                            user_data: Union[None | any]=None,
                             ) -> int:
         """
         Adds a selectable text widget.  This selectable text allows more mouse interaction than
@@ -817,12 +819,11 @@ class IPG:
                    step: float, 
                    value: float,
                    *,
-                   gen_id: int=None, 
-                   connect_progress_bar: int=None, 
+                   gen_id: Union[None | int]=None, 
                    show: bool=True, 
-                   on_change: Callable=None, 
-                   on_release: Callable=None, 
-                   user_data=None, 
+                   on_change: Union[None | Callable]=None, 
+                   on_release: Union[None | Callable]=None, 
+                   user_data: Union[None | any]=None, 
                    width: float=100.0,
                    width_fill: bool=False,
                    height: float=20.0
@@ -856,9 +857,9 @@ class IPG:
     def add_space(self,
                   parent_id: str,
                   *,
-                  gen_id: int=None,
-                  width: float=None,
-                  height: float=None,
+                  gen_id: Union[None | int]=None,
+                  width: Union[None | float]=None,
+                  height: Union[None | float]=None,
                   width_fill: bool=False,
                   height_fill: bool=False,
                   ) -> int:
@@ -882,11 +883,11 @@ class IPG:
                   width: float,
                   height: float,
                   *,
-                  gen_id: int=None,
-                  callback: Callable=None,
-                  column_widths: List=[float, ...],
+                  gen_id: Union[None | int]=None,
+                  callback: Union[None | Callable]=None,
+                  column_widths: List=[20.0],
                   show: bool=True, 
-                  user_data=None,
+                  user_data: Union[None | any]=None,
                   ) -> int:
 
         """
@@ -914,9 +915,9 @@ class IPG:
                  parent_id: str,
                  content: str,
                  *,
-                 gen_id: int=None,
-                 width: float=None,
-                 height: float=None,
+                 gen_id: Union[None | int]=None,
+                 width: Union[None | float]=None,
+                 height: Union[None | float]=None,
                  width_fill: bool=False,
                  height_fill: bool=False,
                  h_align: str="Left",
@@ -968,7 +969,7 @@ class IPG:
     def add_text_editor(self,
                         parent_id: str,
                         file_name: str,
-                        gen_id: int=None,
+                        gen_id: Union[None | str]=None,
                         ) -> int:
         """
         Adds a text editor widget to the gui.
@@ -993,16 +994,15 @@ class IPG:
                        placeholder: str,
                        width: float,
                        *,
-                       gen_id: int=None,
-                       on_submit: Callable=None,
-                       on_input: Callable=None,
-                       on_paste: Callable=None,
+                       gen_id: Union[None | int]=None,
+                       on_submit: Union[None | Callable]=None,
+                       on_input: Union[None | Callable]=None,
+                       on_paste: Union[None | Callable]=None,
                        line_height: str="default",
-                       
                        width_fill: bool=False,
                        padding: List=[10.0],
-                       size: Union[float, None]=None,
-                       user_data=None,
+                       size: Union[None, float],
+                       user_data: Union[None | any]=None,
                        is_secure: bool=False,
                        ) -> int:
         """
@@ -1048,15 +1048,39 @@ class IPG:
             The id of the event which can be used to modify the event through update_item.
         """
 
+    def add_timer(self,
+                        parent_id: str,
+                        duration_ms: int,
+                        *,
+                        on_start: Union[None | Callable]=None,
+                        on_stop: Union[None | Callable]=None,
+                        on_tick: Union[None | Callable]=None,
+                        start_label: str="Start Timer",
+                        stop_label: str="Stop Timer",
+                        width: Union[None | float]=None,
+                        height: Union[None | float]=None,
+                        width_fill: bool=False,
+                        height_fill: bool=False,
+                        padding: list=[10.0],
+                        corner_radius: float=15.0,
+                        style: IpgButtonStyles=IpgButtonStyles.Primary,
+                        arrow_style: Union[None | IpgButtonArrows],
+                        user_data: any=None,
+                        ) -> int:
+        """
+        adds a timer event in millisecond duration
+        """
+
+
     def add_toggler(self,
                     parent_id: str,
                     *,
-                    label: str=None,
-                    gen_id: int=None,
-                    toggled: Callable=None,
-                    width: float=None,
+                    label: Union[None | str]=None,
+                    gen_id: Union[None | str]=None,
+                    toggled: Union[None | Callable]=None,
+                    width: Union[None | float]=None,
                     width_fill: bool=False,
-                    user_data: any=None,
+                    user_data: Union[None | any]=None,
                     show: bool=True, 
                     ) -> int:
         """
@@ -1092,9 +1116,9 @@ class IPG:
     def add_event_keyboard(self,
                             enabled: bool,
                             *,
-                            on_key_press: Callable=None,
-                            on_key_release: Callable=None,
-                            user_data=None, 
+                            on_key_press: Union[None | Callable]=None,
+                            on_key_release: Union[None | Callable]=None,
+                            user_data: Union[None | any]=None, 
                            ) -> int:
         """
         Add a keyboard event handler to process keyboard actions.
@@ -1119,15 +1143,15 @@ class IPG:
     def add_event_mouse(self,
                             enabled: bool,
                             *,
-                            on_move: Callable=None,
-                            on_left_press: Callable=None,
-                            on_left_release: Callable=None,
-                            on_middle_press: Callable=None,
-                            on_middle_release: Callable=None,
-                            on_right_press: Callable=None,
-                            on_right_release: Callable=None,
-                            on_middle_scroll: Callable=None,
-                            user_data=None,
+                            on_move: Union[None | Callable]=None,
+                            on_left_press: Union[None | Callable]=None,
+                            on_left_release: Union[None | Callable]=None,
+                            on_middle_press: Union[None | Callable]=None,
+                            on_middle_release: Union[None | Callable]=None,
+                            on_right_press: Union[None | Callable]=None,
+                            on_right_release: Union[None | Callable]=None,
+                            on_middle_scroll: Union[None | Callable]=None,
+                            user_data: Union[None | any]=None,
                           ) ->int:
         """
         Add a mouse button handlers to process mouse actions.
@@ -1161,26 +1185,14 @@ class IPG:
             The id of the event which can be used to modify the event through update_item.
         """
 
-    def add_timer(self,
-                        parent_id: str,
-                        duration_ms: int,
-                        on_start: Callable=None,
-                        on_stop: Callable=None,
-                        on_tick: Callable=None,
-                        user_data=None,
-                        ) -> int:
-        """
-        adds a timer event in millisecond duration
-        """
-
     def add_event_window(self,
                          enabled: bool,
                          *,
-                        on_open: Callable=None,
-                        on_close: Callable=None,
-                        on_moved: Callable=None,
-                        on_resized: Callable=None,
-                        user_data=None,
+                        on_open: Union[None | Callable]=None,
+                        on_close: Union[None | Callable]=None,
+                        on_moved: Union[None | Callable]=None,
+                        on_resized: Union[None | Callable]=None,
+                        user_data: Union[None | any]=None,
                          ) -> int:
         """
         Adds event to the window other than those in the add_window method.
@@ -1220,7 +1232,8 @@ class IPG:
     def update_item(self, 
                     wid: int, 
                     param: str, 
-                    value):
+                    value: any,
+                    ):
         """
         Update a widget by supplying the widget id, wid, the parameter to update and values as a str or number
         """
@@ -1311,6 +1324,12 @@ class IpgCheckboxParams:
     WidthFill=0,
 
 
+class IpgColumnAlignment:
+    Start=0,
+    Center=0,
+    End=0
+
+
 class IpgDatePickerParams:
     Label=0,
     Padding=0,
@@ -1399,6 +1418,7 @@ class IpgTextParams:
     VtAlignBottom=0,
     Width=0,
     WidthFill=0,
+    Show=0,
 
 
 class IpgTogglerParams:

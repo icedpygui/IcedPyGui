@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgCheckboxParams
+from icedpygui import IPG, IpgCheckboxParams, IpgColumnAlignment
 
 
 ipg = IPG()
@@ -12,20 +12,20 @@ def on_toggle(id, data, user_data):
 
 
 ipg.add_window("main", "CheckBox Demo",
-                                800, 800, 500, 100)
+                800, 800, 500, 100, debug=True)
         
 ipg.add_container(window_id="main", container_id="cont", width_fill=True,
                         height_fill=True, align_x="center", align_y="center")
 
 ipg.add_column(window_id="main", container_id="col", parent_id="cont",
-                    width=400.0, height=500.0)
+                    width=400.0, height=500.0, align_items=IpgColumnAlignment.Center)
 
 
 ipg.add_checkbox(parent_id="col", label="Check Me!!!",
                                                 on_toggle=on_toggle,
                                                 user_data="Some string data")
 
-ipg.add_checkbox(parent_id="col", id=x_id, label="Check Me!!!", is_checked=True)
+ipg.add_checkbox(parent_id="col", gen_id=x_id, label="Check Me!!!", is_checked=True)
 
 
 ipg.start_session()
