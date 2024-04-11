@@ -1,6 +1,6 @@
-from tkinter.ttk import Separator
 from types import Callable, Union, List
-from typing import Tuple
+from typing import OrderedDict, Tuple
+
 
 
 class IPG:
@@ -590,7 +590,7 @@ class IPG:
 
     def add_menu(self, 
                  parent_id: str,  
-                 items: list,
+                 items: OrderedDict[str, list[str]],
                  widths: list,
                  spacing: list,
                  separators: List[Tuple]=None,

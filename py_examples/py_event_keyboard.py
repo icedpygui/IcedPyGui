@@ -1,4 +1,3 @@
-from turtle import clear
 from icedpygui import IPG, IpgTextParams
 
 
@@ -39,4 +38,3 @@ ipg.add_space(parent_id="col", height=50.0)
 text_user_data = ipg.add_text(parent_id="col", content="Some user data will be diplayed here")
 
 ipg.start_session()
-clear()
