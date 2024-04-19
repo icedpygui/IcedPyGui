@@ -13,11 +13,20 @@ class IPG:
     def start_session(self) -> None:
         """
         Starts the gui session.  Must be the last called.
+
+        Returns
+        -------
+        None
         """
 
     def generate_id(self) -> int:
         """
         Generates an id for some future widget
+
+        Returns
+        -------
+        id: int
+            Pre-generated id to use for a widget with parameter gen_id.
         """
 
     def add_window(self,
@@ -36,19 +45,37 @@ class IPG:
         """
         Adds a window to the gui.
 
-        Args:
-            window_id (str, required): Window id used to place widget or container into.
-            title (str, required): Title placed in the top bar of the main window.
-            width (int, required): Width of the main window.
-            height (int, required): Height of the main window.
-            ** The window position will be defaulted to a system default unless position is set.
-            pos_x (float, optional): x position of window
-            pos_y (float, optional): y position of window
-            pos_centered (bool, optional): default=False; Centered position of window.
-            resizable (bool, optional): default=True; Whether the window can be resized.
-            theme (IpgWindowThemes, optional): default=IpgWindowThemes.Dark.
-            show (bool, optional): default=True; First window always true, others can be set.
-            debug (bool, optional): default=False; Draws a box around widgets to see layout.
+        Parameters
+        ----------
+            window_id: str
+                Id of the window to place container in.
+            title: str
+                Sets the title placed in the top bar of the window.
+            width: int
+                Sets the width of the window.
+            height: int
+                Sets the height of the window.
+            pos_x: float
+                Sets the x position of window.  The window position will be defaulted to 
+                a system default unless position is set.
+            pos_y: float
+                Sets the y position of window.  The window position will be defaulted to 
+                a system default unless position is set.
+            pos_centered: bool
+                Sets the position of window to be centered.
+            resizable: bool
+                Sets whether the window can be resized.
+            theme: IpgWindowThemes
+                Sets the style of the window.
+            show: bool
+                Sets whether the window is showm or hides, the first window is always shown.
+            debug: bool
+                If set, draws a box around widgets to see the layout.
+        
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_container(self,
@@ -69,33 +96,48 @@ class IPG:
                         ) -> int:
         """
         Adds a generic container to the gui
-        **Note: A container unlike a row or column can only have 1 child.
-                The container is used to help with widget alignments.
-                You can align 1 widget or many if you add a row or column to the
-                container and use the horizontal and vertical alignments.
-        Args:
-            window_id (str, required): Id of the window to place container in.
-            container_id (str, required): id used by widgets for placement must be unique.
-            parent_id (str, optional): If parent_id == window_id then not required, 
-                                        if another container then required.
-            width (int, optional): defailt=None; Width of the widget.
-            height (int, optional): default=None; Height of the widget.
-            width_fill (bool, optional): default=Shrink; Fills the parent container 
-                                            or shrinks to wrap the child widgets.
-            height_fill (bool, optional): default=Shrink; Fills the parent container 
-                                            or shrinks to wrap the child widgets.
-            max_width (float, optional): default=inf; Sets a max width.
-            max_height (float, optional): default=inf; Sets a max height.
-            align_x (str, optional): default="left"; "center", or "right"
-            align_y (str, optional): default="top"; "center", or "bottom"
-            padding ([float], optional): default=[10.0], Padding for container.
-                                        use [float] for all sides,
-                                        use [float, float] for [top&bottom, left&right]
-                                        use [float, float, float, float] for [top, right, bottom, left]
-            show (bool, Optional): default=True, Shows or hides container and all of its contents.
+        Note: A container unlike a row or column can only have 1 child.
+            The container is used to help with widget alignments.
+            You can align 1 widget or many if you add a row or column to the
+            container and use the horizontal and vertical alignments.
+
+        Parameters
+        ----------
+            window_id: str
+                Id of the window to place container in.
+            container_id: str
+                The id of the container.
+            parent_id: str
+                If parent_id == window_id then not required, 
+                If another container then required.
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            height: float
+                Sets the height of the widget.   
+            height_fill: bool
+                Sets the heigth to fill the available space, overrides height.
+            max_width: float
+                Sets the maximum width the container is allowed to be.
+            max_height: float
+                Sets a maximum height the container is allowed to be.
+            align_x: str
+                "left"; "center", or "right"
+            align_y: str
+                "top"; "center", or "bottom"
+            padding: List[float]
+                Sets the padding for container.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+            show: bool
+                Shows or hides container and all of its contents.
             
-        Return: 
-            int: internal id of container and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_column(self,
@@ -114,32 +156,44 @@ class IPG:
                     show: bool=True,
                     ) -> int:
 
-        """ Adds a Column which is a container that distributes its contents vertically
+        """ 
+        Adds a Column which is a container that distributes its contents vertically
         
-        Args:
-            window_id (str, required): Id of the window to place container in.
-            container_id (str, required): id used by widgets for placement must be unique.
-            parent_id (str, optional): If parent_id == window_id then not required, 
-                                        if another container then required.
-            align_items (str, optional): "start"(default), "center", or "end".
-            width (int, optional): defailt=None; Width of the widget.
-            height (int, optional): default=None; Height of the widget.
-            width_fill (bool, optional): default=Shrink; Fills the parent container 
-                                            or shrinks to wrap the child widgets.
-            height_fill (bool, optional): default=Shrink; Fills the parent container 
-                                            or shrinks to wrap the child widgets.
-            max_width (float, optional): default=float('inf'), Container used all of the available width.
-            padding ([float], optional): default=[10.0], Padding for container.
-                                        use [float] for all sides,
-                                        use [float, float] for [top&bottom, left&right]
-                                        use [float, float, float, float] for [top, right, bottom, left]
-            spacing (float, optional): default=20.0, spacing between items in column.
-                        user_id (str, optional): literal used to identify container instead of using the 
-                                     returned integer, if variable is inconvenient.
-            show (bool, Optional): default=True, Shows or hides container and all of its contents.
+        Parameters
+        ----------
+            window_id: str
+                Id of the window to place container in.
+            container_id: str
+                The id of the container.
+            parent_id: str
+                If parent_id == window_id then not required, 
+                If another container then required.
+            align_items: IpgColumnAlignment
+                Sets the alignment of the items in the column.
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            height: float
+                Sets the height of the widget.   
+            height_fill: bool
+                Sets the heigth to fill the available space, overrides height.
+            max_width: float
+                Sets the maximum width the container is allowed to be.
+            padding: List[float]
+                Sets the padding for container.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+            spacing: float
+                Sets the spacing between items in column.
+            show: bool
+                Shows or hides widget.
             
-        Return: 
-            int: internal id of container and can be used by user if equated
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_row(self,
@@ -160,85 +214,40 @@ class IPG:
         """
         Adds a row container to the gui.  Aligns widget horizontally.
         
-        Args:
-            window_id (str, required): Id of the window to place container in.
-            container_id (str, required): id used by widgets for placement must be unique.
-            parent_id (str, optional): If parent_id == window_id then not required, 
-                                        if another container then required.
-            align_items (str, optional): "Start"(default), "Center", or "End".
-            width (int, optional): defailt=None; Width of the widget.
-            height (int, optional): default=None; Height of the widget.
-            width_fill (bool, optional): default=Shrink; Fills the parent container 
-                                            or shrinks to wrap the child widgets.
-            height_fill (bool, optional): default=Shrink; Fills the parent container 
-                                            or shrinks to wrap the child widgets.
-            padding ([float], optional): default=[10.0], Padding for container.
-                                        use [float] for all sides,
-                                        use [float, float] for [top&bottom, left&right]
-                                        use [float, float, float, float] for [top, right, bottom, left]
+        Parameters
+        ----------
+            window_id: str
+                Id of the window to place container in.
+            container_id: str
+                The id of the container.
+            parent_id: str
+                If parent_id == window_id then not required, 
+                If another container then required.
+            align_items: str
+                "Start"(default), "Center", or "End".
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            height: float
+                Sets the height of the widget.   
+            height_fill: bool
+                Sets the heigth to fill the available space, overrides height.
+            padding: List[float]
+                Sets the padding for container.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+            spacing: float
+                Sets the spacing between items in row.
+            show: bool
+                Shows or hides widget.
             
-            spacing (float, optional): default=20.0, spacing between items in column.
-            user_id (str, optional): literal used to identify container instead of using the
-                                     returned integer, if variable is inconvenient.
-            width (tuple, optional): 
-                                    ("fill", 0): Fills container space.
-                                    ("fillportion", int): 1-> fills all, 2-> fills half, etc.
-                                    ("shrink", 0): Fills the least amount of space.
-                                    ("fixed", float): Fixed amount of space.
-            show (bool, Optional): default=True, Shows or hides container and all of its contents.
-            
-        Return: 
-            int: internal id of container and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
-
-    # def add_pane_grid(self,
-    #                     window_id: str,
-    #                     container_id: str,
-    #                     *,
-    #                     parent_id: str=None,
-    #                     width: tuple=("shrink", 0),
-    #                     height: tuple=("shrink", 0),
-    #                     spacing: float=20.0,
-    #                     padding: List=[10.0],
-    #                     show: bool=True,
-    #                   ) -> int:
-    #     """
-    #     Adds a pane grid to the gui.
-        
-    #     Args:
-    #         window_id (str, required): Id of the window to place container in.
-    #         container_id: str,
-    #         parent_id (str, optional): if parent_id == window_id then not required, 
-    #                                     if another container then required.
-    #         *,
-    #         width (int, optional): defailt=None; Width of the widget.
-    #         height (int, optional): default=None; Height of the widget.
-    #         width_fill (bool, optional): default=Shrink; Fills the parent container 
-    #                                         or shrinks to wrap the child widgets.
-    #         height_fill (bool, optional): default=Shrink; Fills the parent container 
-    #                                         or shrinks to wrap the child widgets.
-    #         spacing: float=20.0,
-    #         padding: List=[10.0],
-    #         show: bool=True,
-    #     """
-
-    # def add_pane(self,
-    #             window_id: str,
-    #             container_id: str,
-    #             parent_id: str, 
-    #             add_direction: str,
-    #             ratio: float,
-    #              ) -> int:
-    #     """
-    #     Adds a pane into the pane grid of the gui.
-
-    #     Args:
-    #         window_id (str, required): Id of the window to place container in.
-    #         container_id: str,
-    #         parent_id (str, required): id of another container or window. 
-    #         add_direction: (required: "first", "right", or "below")
-    #         ratio: float,
-    #     """
 
     def add_scrollable(self,
                         window_id: str,
@@ -255,30 +264,36 @@ class IPG:
         """
         Wraps a scrollable widget around a container.
 
-        Args:
-            window_id (str, required): Id of the window to place container in.
-            container_id (str, required): id used by widgets for placement must be unique.
-            parent_id (str, optional): If parent_id == window_id then not required, 
-                                        if another container then required.
-            width (int, optional): defailt=None; Width of the widget.
-            height (int, optional): default=None; Height of the widget.
-            width_fill (bool, optional): default=Shrink; Fills the parent container 
-                                            or shrinks to wrap the child widgets.
-            height_fill (bool, optional): default=Shrink; Fills the parent container 
-                                            or shrinks to wrap the child widgets.
-            direction (str, optional): default="vertical"; Other "horizontal".
-            on_scroll )Callable, optional): default=None; Callback function.
-            user_id (str, optional): literal used to identify container instead of using the
-                                     returned integer, if variable is inconvenient.
-            width (tuple, optional): 
-                                    ("fill", 0): Fills container space.
-                                    ("fillportion", int): 1-> fills all, 2-> fills half, etc.
-                                    ("shrink", 0): Fills the least amount of space.
-                                    ("fixed", float): Fixed amount of space.
-            show (bool, Optional): default=True, Shows or hides container and all of its contents.
+        Parameters
+        ----------
+            window_id: str
+                Id of the window to place container in.
+            container_id: str
+                The id of the scrollable.
+            parent_id: str
+                If parent_id == window_id then not required, 
+                If another container then required.
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            height: float
+                Sets the height of the widget.   
+            height_fill: bool
+                Sets the heigth to fill the available space, overrides height.
+            direction: str
+                Sets the direction of the scrollable.
+            on_scroll: Callable
+                The callback function that is called when scrolling occurs
+            user_data: Any 
+                Any data in any form needed by user to be passed through as a callback. 
+            show: bool
+                Shows or hides widget.
     
-        Return: 
-            int: internal id of container and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_tool_tip(self,
@@ -293,15 +308,29 @@ class IPG:
                      ) -> int:
     
         """
-        Adds a tooltip to the widget
-        Args:
-            window_id (str, required): Id of the window to place container in.
-            container_id: (str, required): id of the tooltip.
-            position: (str, required): position of the tooltip, bottom, top, left, right, or float.
-            text_to_display: (str, required): What the tooltip message is.
-            parent_id: (str, optional): default=window+id of parent.
-            gap: (int, Optional): defaults=10, Distance from widget.
-            style: (str, optional): default=box, Optional="transparent".
+        Adds a tooltip container to the widget.
+
+        Parameters
+        ----------
+            window_id: str
+                Id of the window to place container in.
+            container_id: str
+                The id of the tooltip.
+            position: str
+                The position of the tooltip, bottom, top, left, right, or float.
+            text_to_display: str
+                Sets the tooltip message.
+            parent_id: str
+                Id of another container, if not placing in a window.
+            gap: int
+                Sets the distance away from the widget.
+            style: str
+                Sets the style of the tooltip.
+
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_button(self,
@@ -334,7 +363,7 @@ class IPG:
                 The only allowable entry for this id is the one generated by ipg.generate_id().
             on_press: Callable
                 The function called when the button is pressed.
-           width: float, optional)
+            width: float
                 Sets the width of the widget.
             width_fill: bool
                 Sets the width to fill the available space, overrides width.
@@ -358,9 +387,10 @@ class IPG:
             show: bool
                 Shows or hides widget.
             
-        Return:
-        ------- 
-            int: internal id of widget and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_card(self,
@@ -384,20 +414,51 @@ class IPG:
                     user_data: Union[None | any]=None, 
                 ) -> int:
         """
-        Adds a card to hold text strings
+        Adds a card to hold text strings.  No widgets can be added at this time.
 
         Parameters
         ----------
+            parent_id: str
+                id of another container or window.
+            head: str
+                Sets the text in the header of the card.
+            body: str
+                Sets the text in the body of the card.
+            foot: str
+                Sets the text in the footer of the card.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            parent_id (str, required): id of another container or window.
-            head (str, required): Text in the header of the card.
-            body (str, required): Text in the body of the card.
-            foot (str, optional): Text in the footer of the card.
+            is_open: bool
+                Determines if the card is opened or minimized.
+            close_size: float
+                The size of the close icon.
+            on_close: Union[None | Callable]
+                The callback function called when the card is minimized.
+            width: Union[None | float]
+                Sets the width of the card 
+            height: Union[None | float]
+                Sets the height of the card.
+            max_width: float
+                Sets the maximum width of the card.
+            max_height: float
+                Sets the maximum height of the card.
+            padding_head: float
+                Sets the padding around the head. 
+            padding_body: float
+                Sets the padding around the body. 
+            padding_foot: float
+                Sets the padding around the footer.
+            show: bool
+                Shows or hides the card.
+            style: IpgCardStyles
+                Sets the style of the card. 
+            user_data: Any 
+                Any data in any form needed by user to be passed through as a callback. 
 
-        Return
-        ------
-            int: internal id of widget and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_checkbox(self,
@@ -457,9 +518,10 @@ class IPG:
             show: bool
                 Shows or hides widget.
            
-        Return
-        ------- 
-            internal id of widget and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
     
     def add_color_picker(
@@ -480,30 +542,45 @@ class IPG:
                         show: bool=True, 
                         ) -> int:
         """
-        Add a color picker.  The args just style the intial button.
+        Adds a color picker.  The args for style and such are for the activation button.
         No styling for the Date Picker itself is available at this time.
         
-        Args:
-            parent_id (str, required): id of another container or window.
-            label (str, required): label of button.
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            label: str
+                The label for the button which activates the picker.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            callback (Callable, optional):  executed when button pressed.
-            width (float, optional): default=None, width of the widget.
-            height (float, optional): default=None, height of the widget.   
-            width_fill (bool, optional): default=False, Fill available width.
-            height_fill (bool, optional): default=False, Fill available height.
-            padding ([float], optional): default=[10.0], Padding for container.
-                                        use [float] for all sides,
-                                        use [float, float] for [top&bottom, left&right]
-                                        use [float, float, float, float] for [top, right, bottom, left]
-            corner_radius (float, optional): default=15.0, How rounded the corner is, effective range 0 to ~25.
-            style (str, optional): default="primary", others "secondary", "positive", "destructive", "text"
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback. 
-            show (bool, optional): default=True, Shows or hides widget.
+            on_submit: Callable
+                The function that executs when the submit button is pressed.
+            width: float
+                Sets the width of the button.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            height: float
+                Sets the height of the button.   
+            height_fill: bool
+                Sets the heigth to fill the available space, overrides height.
+            padding: List[float]
+                Sets the padding for the widget.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+            corner_radius: float
+                Sets the roundness of the corners of the button.
+            style: str
+                Sets the style of the button.
+            show: bool
+                To show the widget or not.
+            user_data: Any
+                Any data that might be needed in the callback function.
             
-        Return: 
-            int: internal id of widget and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_date_picker(self,
@@ -521,23 +598,32 @@ class IPG:
         """
         Adds a date_picker widget.
 
-        Args:
-            parent_id (str, required): id of another container or window.
-            label (str, optional): label to the right of the checkbox.
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            label: str
+                The label name of the button that activates the date picker.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            size_factor (float, optional): default=1.0; Smallest size available.
-                                            Can only be > 1,0.
-            padding ([float], optional): default=[5.0], Padding for container.
-                                        use [float] for all sides,
-                                        use [float, float] for [top&bottom, left&right]
-                                        use [float, float, float, float] for [top, right, bottom, left]
-            on_submit (Callable, optional): Callback function date selected is submitted.
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.
-            show (bool, optional): default=True, Shows or hides widget.
-            
-        Return 
-            internal id of widget and can be used by user if equated.
+            size_factor: float
+                The size of the displayed calendar, must be > 1.0.
+            padding: List[float]
+                The padding around the calendar.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+            on_submit: Callable
+                Callback function selected date is submitted.
+            show: bool
+                To show the widget or not.
+            user_data: Any
+                Any data that might be needed in the callback function.
+
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
     
     def add_image(self, 
@@ -562,30 +648,51 @@ class IPG:
                     user_data: Union[None | any]=None,
                     ) -> int:
         """
-        Adds an image widget.  The image is selectable using callbcks for all 3 mouse buttons.
+        Adds an image widget.  The image is selectable using callbacks for all 3 mouse buttons.
 
-        Args:
-            parent_id (str, required): id of another container or window. 
-            image_path (str, required): A full path of where the image is located.
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            image_path: str
+                Path to where the image is.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            on_press (Callable, optional): default=None, function to call after left mouse button pressed. 
-            on_release (Callable, optional): default=None, function to call after left mouse button released. 
-            on_right_press (Callable, optional): default=None, function to call after right mouse button pressed. 
-            on_right_release (Callable, optional): default=None, function to call after right mouse button released.  
-            on_middle_press (Callable, optional): default=None, function to call after middle mouse button pressed. 
-            on_middle_release (Callable, optional): default=None, function to call after middle mouse button released.
-            on_enter (Callable, optional): default=None, function to call after mouse enters image.
-            on_move (Callable, optional): default=None, function to call after mouse moves in image.
-            on_exit (Callable, optional): default=None, function to call after mouse exits image.
-            width (float, optional): default=None, width of the widget.
-            height (float, optional): default=None, height of the widget.   
-            width_fill (bool, optional): default=False, Fill available width.
-            height_fill (bool, optional): default=False, Fill available height.
-            show (bool, optional) default=True, To show the widget or not.
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.   
-        Return: 
-            int: internal id of widget and can be used by user if equated.
+            on_press: Callable
+                Function to call for left mouse button pressed. 
+            on_release: Callable
+                Function to call for left mouse button released. 
+            on_right_press: Callable
+                Function to call for right mouse button pressed. 
+            on_right_release: Callable
+                Function to call for right mouse button released.  
+            on_middle_press: Callable
+                Function to call for middle mouse button pressed. 
+            on_middle_release: Callable
+                Function to call for middle mouse button released.
+            on_enter: Callable
+                Function to call for mouse enters in text area.
+            on_move: Callable
+                Function to call for mouse moves in text area.
+            on_exit: Callable
+                Function to call for mouse exits text area.
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            height: float
+                Sets the height of the widget.   
+            height_fill: bool
+                Sets the heigth to fill the available space, overrides height.
+            show: bool
+                To show the widget or not.
+            user_data: Any
+                Any data that might be needed in the callback function.
+
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_menu(self, 
@@ -602,6 +709,35 @@ class IPG:
                  ) -> int:
         """
         Add a menu dropdown list to the gui.
+
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            items: OrderedDict[str, list[str]]
+                Sets the menu items with the key being the bar item and values the menu items.
+            widths: list[float]
+                The widths of the bar items.
+            spacing: list[float]
+                The spacing between the menu items in each bar item.
+            separators: Union[None | List[Tuple(int, int, IpgMenuSepTypes)]]
+                A list of tuples [(bar_index, menu_index, separator type)].  The separator is added
+                after the menu index.
+            sep_types: Union[None | List[IpgMenuSepTypes]]
+                Sets the type of separator line, dot, or label.
+            sep_label_names: Union[None | List[str]]
+                Sets the separators label names, if type label is used.
+            on_select: Union[None | Callable]
+                The cllback for when the menu item is selected.
+            gen_id: int
+                The only allowable entry for this id is that generated by ipg.generate_id().
+            user_data: Any
+                Any data in any form needed by user to be passed through as a callback.
+
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_pick_list(self,
@@ -624,29 +760,44 @@ class IPG:
         """
         Adds a pick list to the gui.
 
-        Args:
-            parent_id (str, required): id of another container or window.
-            options: (List, required): List of items to select from.
-            *
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            options: List
+                List of items to select from.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            on_select (Callable, optional): function executed when item selected.
-            width (float, optional): default=None, width of the widget.
-            width_fill (bool, optional): default=False, Fill available width.
-            padding ([float], optional): default=[10.0], Padding for container.
-                                        use [float] for all sides,
-                                        use [float, float] for [top&bottom, left&right]
-                                        use [float, float, float, float] for [top, right, bottom, left]
-            placeholder: (str, optional): default=None, Instructions to user, i.e. Select Name.
-            selected: (str, optional): default=None, Any preselected item.
-            
-            text_size: (float, optional): defalyt=15.0, Size of text.
-            text_line_height: (float, optional): default=default, shrinks to text height as default.
-            text_shaping: (str, optional): default="basic,
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.
-            show: (bool, optional) default=True, Show or hides the widget.
+            on_select: Callable
+                Function executed when item selected.
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                If set, the widget fills the available space.
+            padding: List[float]
+                Sets the padding for widget.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+            placeholder: str
+                Sets the dimmed text in the box for user info.
+            selected: str
+                Sets any preselected item.
+            text_size: float
+                Sets the size of text.
+            text_line_height: float
+                Sets the height of the box around the text.
+            text_shaping: str
+                Sets the shape of the text.
+            user_data: Any
+                Any data in any form needed by user to be passed through as a callback.
+            show: bool
+                Shows or hides the widget.
     
-        return: id of the widget
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_progress_bar(self,
@@ -663,22 +814,35 @@ class IPG:
                          show: bool=True,
                          ) -> int:
         """
-        Adds a progress bar to the gui
+        Adds a progress bar to the gui.
         
-        Args:
-            parent_id (str, required): id of another container or window.
-            min (float, required): minimum value of bar.
-            max (float, required): maximum value of bar.
-            value (float, required): starting value of bar.
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            min: float
+                Sets the minimum value of bar.
+            max: float
+                Sets the maximum value of bar.
+            value: float 
+                Sets the starting value of bar.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            width (float, optional): default=None, width of the widget.
-            width_fill (bool, optional): default=False, Fill available width.
-            height (float, optional ): default=1.0, height of bar
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.
-            show: (bool, optional) default=True, Show or hides the widget.
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                If set, the widget fills the available space.
+            height: float
+                Sets the height of the bar.
+            user_data: Any
+                Any data in any form needed by user to be passed through as a callback.
+            show: bool
+                Shows or hides the widget.
             
-        return: id of the widget
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_radio(self,
@@ -704,33 +868,52 @@ class IPG:
         """
         Adds a radio button to the gui
         
-        Args:
-            parent_id (str, required): id of another container or window.
-            labels (List[str], required): labels of radio buttons, use List[label] for only one radio.
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            labels: List[str]
+                A list of labels for the radio buttons.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            direction (str, optional): default="vertical" or "horizontal", direction for the radio group.
-            spacing (float, optional): default=20.0, spacing between items in column.
-            padding ([float], optional): default=[10.0], Padding for container.
-                                        use [float] for all sides,
-                                        use [float, float] for [top&bottom, left&right]
-                                        use [float, float, float, float] for [top, right, bottom, left]
-            width (float, optional): default=None, width of the widget.
-            width_fill (bool, optional): default=False, Fill available width.
-            on_select (Callable, optional): default=None, function executed when radio pressed.
-            selected_index (int, optional): default=None, Any pre-selected label index.
-            line_height (float, optional): defalt=1.0, sets the line height of the radio.
-            selected (bool, optional): default=False, initial state of the radio.
-            show (bool, optional): default=True, shows or hides widget.
-            size (f32, optional): size of the round radio.
-            spacing (f32, optional): default=15.0, spacing around the radio.
-            text_shaping (str, optional): default="Basic", other value is "Advanced", requires adding fonts.
-            text_size (f32, optional): default=15.0, size of the text.
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.
-            show: (bool, optional) default=True, Show or hides the widget.
+            direction: IpgRadioDirection
+                Sets the direction for the radio group.
+            spacing: float
+                Sets spacing between the radio buttons in the group.
+            padding: List[float]
+                Sets the padding around the radio group..
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            on_select: Callable
+                Function executed when radio button selected.
+            selected_index: int
+                A pre-selected label index to be selected.
+            line_height:float
+                Sets the line height for the box around the radio labels.
+            show: bool
+                Shows or hides the widget.
+            size: float,
+                Radius of the round radio button.
+            spacing: float
+                Spacing between the radio buttons.
+            text_shaping: str
+                Sets the text shape.
+            text_size: float
+                Sets the size of the text.
+            user_data: Any
+                Any data that might be needed in the callback function.
+            show: bool
+                Shows or hides the widget.
     
-        Return: 
-            int: internal id of widget and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_rule_horizontal(self, 
@@ -740,7 +923,21 @@ class IPG:
                             width_fill: bool=True
                             ) -> int:
         """
-        Add a horizontal divider
+        Add a horizontal line divider.
+
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            width: Union[None | float]
+                Defines the horizontal length of the dividing line.
+            width_fill: bool
+                If set, fills the available space for the horizontal length, overides width.
+
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_rule_vertical(self, 
@@ -750,7 +947,21 @@ class IPG:
                           height_fill: bool=True
                           ) -> int:
         """
-        Add a vertical divider
+        Add a vertical line divider.
+
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            height: Union[None | float]
+                Defines the vertical length of the dividing line.
+            height_fill: bool
+                If set, fills the available space for the vertical length, overides height.
+
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_selectable_text(self, 
@@ -783,33 +994,59 @@ class IPG:
         Adds a selectable text widget.  This selectable text allows more mouse interaction than
         a button with a style of text only.
 
-        Args:
-            parent_id (str, required): id of another container or window. 
-            text (str, required): The text as wanted.
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            text: str 
+                The text needed.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            on_press (Callable, optional): default=None, function to call for left mouse button pressed. 
-            on_release (Callable, optional): default=None, function to call for left mouse button released. 
-            on_right_press (Callable, optional): default=None, function to call for right mouse button pressed. 
-            on_right_release (Callable, optional): default=None, function to call for right mouse button released.  
-            on_middle_press (Callable, optional): default=None, function to call for middle mouse button pressed. 
-            on_middle_release (Callable, optional): default=None, function to call for middle mouse button released.
-            on_enter (Callable, optional): default=None, function to call for mouse enters in text area.
-            on_move (Callable, optional): default=None, function to call for mouse moves in text area.
-            on_exit (Callable, optional): default=None, function to call for mouse exits text area.
-            width (float, optional): default=None, width of the widget.
-            height (float, optional): default=None, height of the widget.   
-            width_fill (bool, optional): default=False, Fill available width.
-            height_fill (bool, optional): default=False, Fill available height.
-            h_align (str, optional): default="left", Horizontal alignment, left, center, right.
-            v_align (str, optional): default="top", vertical alignment, top, center, bottom.
-            line_height (float, optional): default=1.3, size of the box the text is in.
-            shaping (str, optional): shaping of text.
-            size (float, optional) default=16.0, text size.
-            show (bool, optional) default=True, To show the widget or not.
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.   
-        Return: 
-            int: internal id of widget and can be used by user if equated.
+            on_press: Callable
+                Function to call for left mouse button pressed. 
+            on_release: Callable
+                Function to call for left mouse button released. 
+            on_right_press: Callable
+                Function to call for right mouse button pressed. 
+            on_right_release: Callable
+                Function to call for right mouse button released.  
+            on_middle_press: Callable
+                Function to call for middle mouse button pressed. 
+            on_middle_release: Callable
+                Function to call for middle mouse button released.
+            on_enter: Callable
+                Function to call for mouse enters in text area.
+            on_move: Callable
+                Function to call for mouse moves in text area.
+            on_exit: Callable
+                Function to call for mouse exits text area.
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            height: float
+                Sets the height of the widget.   
+            height_fill: bool
+                Sets the heigth to fill the available space, overrides height.
+            h_align: str
+                Horizontal alignment, left, center, right.
+            v_align: str
+                Vertical alignment, top, center, bottom.
+            line_height: float
+                The size of the box the text is in.
+            shaping: str
+                Shaping of text.
+            size: float
+                The text size.
+            show: bool
+                To show the widget or not.
+            user_data: Any
+                Any data that might be needed in the callback function.
+
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_slider(self, 
@@ -834,24 +1071,38 @@ class IPG:
         If on_change is used, then the callback is called many times, but only once for the on_release.
         If one wants to connect to a progress bar, then give the connect_progress_bar the id of the pg bar.
 
-        Args:
-            parent_id (str, required): id of another container or window. 
-            min (float, required): The minimum value wanted.
-            max (float, required): The maximum value wanted.
-            step (float, required): The step size. 
-            value (float, required): The starting value. 
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            min: float
+                The minimum value wanted.
+            max: float
+                The maximum value wanted.
+            step: float 
+                The step size. 
+            value: float
+                The starting value. 
             gen_id: int
-                The only allowable entry for this id is that generated by ipg.generate_id().
-            connect_progress_bar (int, optional): default=None, If connected then the pg_bar's id. 
-            show (bool, optional) default=True, Tos show or not.
-            on_change (Callable, optional): default=None, If set, will use callback with each change. 
-            on_release (Callable, optional): default=None, If set, will use callback when released. 
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.
-            width (float, optional): default=100.0   
-            width_fill (bool, optional): default=False;  Fill overides width when set to True.
-            height (float, optional): default=20.0; The height of the slider.
-        Return: 
-            int: internal id of widget and can be used by user if equated.
+                The only allowable entry for this id is that generated by ipg.generate_id(). 
+            show:
+                shows or hides the widget.
+            on_change: Callable
+                If set, will use callback with each change. 
+            on_release: Callable
+                If set, will use callback when released. 
+            user_data: Any
+                Any data that might be needed in the callback function.
+            width: float
+                Width of the widget.
+            height: float
+                Height of the widget.
+            width_fill: bool 
+                Fills the available space horizontally.
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_space(self,
@@ -864,16 +1115,27 @@ class IPG:
                   height_fill: bool=False,
                   ) -> int:
         """
-        Add a space between elements for alignment and aesthetics.
+        Adda a space between elements for alignment and aesthetics.
 
-        Args:
-            parent_id (str, required): id of another container or window.
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            width (float, optional): default= None, Horizontal size of the sapce.
-            height (float, optional): default=None, Vertical size of the space.
-            width_fill (bool, optional): default=False, Fill the available space horizontally.
-            height_fill (bool, optional): default=False, Fill the available space vertically.
+            width: float
+                Width of the widget.
+            height: float
+                Height of the widget.
+            width_fill: bool 
+                Fills the available space horizontally.
+            height_fill: bool
+                Fills the available space vertically.
+
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_table(self,
@@ -893,21 +1155,34 @@ class IPG:
         """
         Adds a table to the gui.
 
-        Args:
-            parent_id (str, required): id of another container or window.
-            title (str, required): Title used for table.
-            data (List[Dict], required): A list of dictionaries.
-            width (float, required): Width of the table.
-            height (float, required): Height of the table.
+        Parameters
+        ----------
+            parent_id: str
+                Id of another container to place the widget in.
+            title: str
+                Title used for table.
+            data: List[Dict]
+                A list of dictionaries, each dictionary contains only one type.
+            width: float
+                Width of the table.
+            height: float
+                Height of the table.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            callback (Callable, optional): defalut=None, callback used when actions on table are intiated.
-            column_widths (List[float], optional): If only one value is supplied [20.0], thats the default.
-            user_data (Any, optional): Any data in any form needed by user to be passed through as a callback.
-            show (bool, optional): default=show, whether to show the widget or not.
+            callback: Callable
+                Callback used when actions on table are initiated.
+            column_widths: List[float]
+                A list of value for the column widths, if only one value is supplied then it will 
+                be the default for all columns.
+            user_data: Any
+                Any data that might be needed in the callback function.
+            show:
+                shows or hides the widget.
             
-        Return: 
-            int: internal id of widget and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
 
@@ -933,7 +1208,7 @@ class IPG:
         Parameters
         ----------
             parent_id: str
-                id of another container or window to place the widget in.
+                id of another container to place the widget in.
             content: str
                 Sets the text of the widget.
             gen_id: int
@@ -957,7 +1232,7 @@ class IPG:
             shaping: str
                 Sets the shape of the text using added fonts, uUse "Basic"(None) or "Advanced".
             show:
-                shows or hides widget.
+                shows or hides the widget.
         
         Returns
         -------
@@ -977,7 +1252,7 @@ class IPG:
         Parameters
         ----------
             parent_id: str
-                id of another container or window to place the widget in.
+                id of another container to place the widget in.
             file_name: str
                 Path to the file to be used.
             gen_id: int
@@ -1013,7 +1288,7 @@ class IPG:
         Parameters
         ----------
             parent_id: str
-                id of another container or window to place the widget in.
+                id of another container to place the widget in.
             placeholder: str
                 text used for instructions in the input box.
            gen_id: int
@@ -1064,11 +1339,53 @@ class IPG:
                         padding: list=[10.0],
                         corner_radius: float=15.0,
                         style: IpgButtonStyles=IpgButtonStyles.Primary,
-                        arrow_style: Union[None | IpgButtonArrows],
+                        arrow_style: Union[None | IpgButtonArrows]=None,
                         user_data: any=None,
                         ) -> int:
         """
-        adds a timer event in millisecond duration
+        Adds a timer event in millisecond duration.
+
+        Parameters
+        ----------
+        parent_id: str
+            Id of another container.
+        duration_ms: int
+            The time when the on_tick function fires.
+        on_start: Union[None | Callable]
+            The optional function that execute when the timer starts.
+        on_stop: Union[None | Callable]
+            The optional function that executes when the timer stops.
+        on_tick: Union[None | Callable]
+            The optional function that executes on every timer tick as indicated by duration_ms.
+        start_label: str="Start Timer"
+            The default start label of the timer button.
+        stop_label: str="Stop Timer"
+            The default stop label of the timer button.
+        width: Union[None | float]
+            Width of the button, the default is the size of the label.
+        height: Union[None | float]
+            Height of the button, the default is the size of the label.
+        width_fill: bool
+            Sets the width to fill the container, overrides width.
+        height_fill: bool
+            Sets the heigth to fill the container, overrides height.
+        padding: list
+            Sets the padding for widget.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+        corner_radius: float
+            The rounding of the button corners.
+        style: IpgButtonStyles
+            The button style, defaults to Primary.
+        arrow_style: Union[None | IpgButtonArrows]
+            Determines if the button is an arrow.
+        user_data: any
+            Any data the user may need during a callback.
+
+        Return:
+        ------- 
+            int: internal id of widget and can be used by user if equated.
         """
 
 
@@ -1089,7 +1406,7 @@ class IPG:
         Parameters
         ----------
             parent_id: str
-                id of another container.
+                Id of another container.
             label: str
                 label of toggler.
             gen_id: int
@@ -1223,10 +1540,18 @@ class IPG:
         
     def delete_item(self, wid: int):
         """
-        Deletes an item using the int id
+        Deletes an item using the widgets id.
         Example: btn_id = add_button("Button")
                  delete_item(btn_id)
 
+        Parameters
+        ----------
+        wid: int
+            The widget id of the widget to be update.
+
+        Returns
+        -------
+        None
         """
 
     def update_item(self, 
@@ -1235,7 +1560,22 @@ class IPG:
                     value: any,
                     ):
         """
-        Update a widget by supplying the widget id, wid, the parameter to update and values as a str or number
+        Update a widget by supplying the widget id, wid, the parameter to update, 
+        a class property value, and a value based on the type of value used by the widget.
+        
+        Parameters
+        ----------
+        wid: int
+            The widget id of the widget to be update.
+        param: class property
+            Example: a button has a style class IpgButtonParams with properties of Primary, ...
+        value: any 
+            Any value which matches that used by the widget.  For example, to set a checkbox to true,
+            param=IpgCheckboxParams.IsChecked, value=True  
+
+        Returns
+        -------
+        None
         """
 
 
