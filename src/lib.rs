@@ -21,14 +21,13 @@ mod ipg_widgets;
 mod iced_widgets;
 
 use crate::iced_widgets::scrollable::Direction;
-use crate::ipg_widgets::ipg_column::IpgColumnAlignment;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
-use ipg_widgets::ipg_column::IpgColumn;
-use ipg_widgets::ipg_container::IpgContainer;
+use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
+use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
@@ -323,7 +322,7 @@ impl IPG {
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_height=f32::INFINITY, max_width=f32::INFINITY,
-                        align_x="left", align_y="top",
+                        align_x=IpgContainerAlignment::Center, align_y=IpgContainerAlignment::Center,
                         padding=DEFAULT_PADDING.to_vec(), show=true,
                        ))]
     fn add_container(&mut self,
@@ -337,17 +336,14 @@ impl IPG {
                         height_fill: bool,
                         max_height: f32,
                         max_width: f32,
-                        align_x: &str,
-                        align_y: &str, 
+                        align_x: IpgContainerAlignment,
+                        align_y: IpgContainerAlignment, 
                         padding: Vec<f64>, 
                         show: bool,
                         ) -> PyResult<usize>
     {
         self.id += 1;
 
-        let align_x = get_horizontal_alignment(align_x); 
-        let align_y = get_vertical_alignment(align_y);
-        
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
         let padding = get_padding(padding);
@@ -2186,6 +2182,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgCardStyles>()?;
     m.add_class::<IpgCardParams>()?;
     m.add_class::<IpgColumnAlignment>()?;
+    m.add_class::<IpgContainerAlignment>()?;
     m.add_class::<IpgCheckboxParams>()?;
     m.add_class::<IpgDatePickerParams>()?;
     m.add_class::<IpgImageParams>()?;

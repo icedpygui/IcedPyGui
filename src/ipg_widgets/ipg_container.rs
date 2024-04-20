@@ -2,6 +2,7 @@
 use iced::{Padding, Length, Element};
 use iced::alignment;
 use iced::widget::{Column, Container};
+use pyo3::pyclass;
 use crate::app::Message;
 
 
@@ -15,8 +16,8 @@ pub struct IpgContainer {
     pub height: Length,
     pub max_width: f32,
     pub max_height: f32,
-    pub align_x: alignment::Horizontal,
-    pub align_y: alignment::Vertical,
+    pub align_x: IpgContainerAlignment,
+    pub align_y: IpgContainerAlignment,
     // style: <Renderer::Theme as StyleSheet>::Style,
 }
 
@@ -30,8 +31,8 @@ impl IpgContainer {
         height: Length,
         max_width: f32,
         max_height: f32,
-        align_x: alignment::Horizontal,
-        align_y: alignment::Vertical,
+        align_x: IpgContainerAlignment,
+        align_y: IpgContainerAlignment,
         // style: <Renderer::Theme as StyleSheet>::Style,
     ) -> Self {
         Self {
@@ -57,11 +58,42 @@ pub fn construct_container(con: &IpgContainer, content: Vec<Element<'static, Mes
                                                                         .height(Length::Shrink)
                                                                         .into();
 
+    let align_x = get_horizontal(con.align_x.clone());
+    let align_y = get_vertical(con.align_y.clone());
+
     Container::new(col_content)
             .padding(10)
             .width(con.width)
             .height(con.height)
-            .align_x(con.align_x)
-            .align_y(con.align_y)
+            .align_x(align_x)
+            .align_y(align_y)
             .into()
+}
+
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgContainerAlignment{
+    Start,
+    Center,
+    End,
+}
+
+
+fn get_horizontal(x_align: IpgContainerAlignment) -> alignment::Horizontal {
+
+    match x_align {
+        IpgContainerAlignment::Start => alignment::Horizontal::Left,
+        IpgContainerAlignment::Center => alignment::Horizontal::Center,
+        IpgContainerAlignment::End => alignment::Horizontal::Right,
+    }
+}
+
+fn get_vertical(y_align: IpgContainerAlignment) -> alignment::Vertical {
+    
+    match y_align {
+        IpgContainerAlignment::Start => alignment::Vertical::Top,
+        IpgContainerAlignment::Center => alignment::Vertical::Center,
+        IpgContainerAlignment::End => alignment::Vertical::Bottom,
+    }
 }

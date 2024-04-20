@@ -1616,6 +1616,7 @@ class IpgButtonStyles:
     Destructive=0
     Text=0
 
+
 class IpgButtonParams:
     ArrowStyle=0,
     CornerRadius=0,
@@ -1641,12 +1642,14 @@ class IpgCardStyles:
     White=0
     Default=0
 
+
 class IpgCardParams:
     Body=0,
     Foot=0,
     Head=0,
     IsOpen=0,
     Style=0,
+
 
 class IpgCheckboxParams:
     IconSize=0,
@@ -1665,6 +1668,12 @@ class IpgCheckboxParams:
 
 
 class IpgColumnAlignment:
+    Start=0,
+    Center=0,
+    End=0
+
+
+class IpgContainerAlignment:
     Start=0,
     Center=0,
     End=0
