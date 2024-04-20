@@ -1,10 +1,9 @@
-#![allow(unused)]
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use crate::{access_state, IpgAlignment};
 use iced::window;
-use iced::{Alignment, alignment::{Horizontal, Vertical}, Length, Padding};
+use iced::{alignment::{Horizontal, Vertical}, Length, Padding};
 use iced::widget::text::{Shaping, LineHeight};
 
 use crate::iced_widgets::scrollable::{Direction, Properties};
@@ -110,21 +109,6 @@ pub fn get_height(height: Option<f32>, height_fill: bool)-> Length {
             }
 }
 
-pub fn get_length(length: Option<f32>, length_fill: bool)-> Length {
-    
-    match length 
-            {
-                Some(wd) => Length::Fixed(wd),
-                None => {
-                    let wd = 
-                        match length_fill {
-                            true => Length::Fill,
-                            false => Length::Shrink,
-                        };
-                    wd
-                },
-            }
-}
 
 pub fn get_padding(padding: Vec<f64>)-> Padding {
     let len = padding.len();
@@ -148,15 +132,6 @@ fn vec_to_array4(arr: &[f64]) -> [f32; 4] {
     [arr[0] as f32, arr[1] as f32, arr[2] as f32, arr[3] as f32]
 }
 
-
-pub fn get_alignment (align: &str)-> Alignment {
-    match align {
-        "start" => Alignment::Start,
-        "center" => Alignment::Center,
-        "end" => Alignment::End,
-        _ => panic!("Incorrect alignment found")
-        }
-}
 
 pub fn get_horizontal_alignment(align: &str) -> Horizontal {
     match align {
@@ -339,15 +314,15 @@ pub fn try_extract_vec_str(value: PyObject) -> Vec<String> {
 }
 
 
-pub fn try_extract_vec_str_option(value: PyObject) -> Option<Vec<String>> {
-    Python::with_gil(|py| {
-        let res = value.extract::<Vec<String>>(py);
-        match res {
-            Ok(val) => Some(val),
-            Err(_) => None,
-        }
-    })  
-}
+// pub fn try_extract_vec_str_option(value: PyObject) -> Option<Vec<String>> {
+//     Python::with_gil(|py| {
+//         let res = value.extract::<Vec<String>>(py);
+//         match res {
+//             Ok(val) => Some(val),
+//             Err(_) => None,
+//         }
+//     })  
+// }
 
 pub fn try_extract_boolean(value: PyObject) -> bool {
     Python::with_gil(|py| {

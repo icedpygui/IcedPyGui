@@ -65,15 +65,6 @@ pub fn construct_column(col: &IpgColumn, content: Vec<Element<'static, Message>>
 }
 
 
-// pub fn column_item_update(col: &mut IpgColumn,
-//                             item: PyObject,
-//                             value: PyObject,
-//                             )
-// {
-    
-// }
-
-
 fn try_extract_alignment(align_opt: Option<PyObject>) -> Alignment {
 
     let align_obj = match align_opt {

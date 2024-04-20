@@ -32,11 +32,10 @@ use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDa
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParams, IpgMenuSepTypes};
-use ipg_widgets::ipg_pane_grid::{IpgPane, IpgPaneGrid};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams};
-use ipg_widgets::ipg_row::IpgRow;
+use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
 use ipg_widgets::ipg_scrollable::IpgScrollable;
 use ipg_widgets::ipg_selectable_text::IpgSelectableText;
 use ipg_widgets::ipg_slider::IpgSlider;
@@ -53,7 +52,6 @@ use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 
 use ipg_widgets::helpers::{check_for_dup_container_ids,  
                             get_width, get_height,
-                            get_alignment,
                             get_horizontal_alignment,
                             get_vertical_alignment,
                             get_line_height,
@@ -401,8 +399,6 @@ impl IPG {
 
         self.id += 1;
         
-        // let align_items = get_alignment(align_items);
-
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
 
@@ -432,90 +428,8 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (window_id, container_id, add_direction, ratio, parent_id=None))]
-    fn add_pane(&mut self,
-                    window_id: String, 
-                    container_id: String,
-                    add_direction: String,
-                    ratio: f32,
-                    parent_id: Option<String>, 
-                    ) -> PyResult<usize> 
-    {
-        self.id += 1;
-
-        if !["first", "right", "below"].contains(&add_direction.as_str()) {
-            panic!("add_direction must be one of the following strings 'first', 'right', or 'below'");
-        }
-
-        let prt_id = match parent_id {
-            Some(id) => id,
-            None => window_id.clone(),
-        };
-
-        set_state_of_container(self.id, window_id, Some(container_id), prt_id);
-
-        let mut state = access_state();
-
-        state.containers.insert(self.id, IpgContainers::IpgPane(IpgPane::new(
-                                                            self.id,
-                                                            add_direction,
-                                                            ratio,
-                                                            )));
-
-        Ok(self.id)
-    }
-
-    #[pyo3(signature = (window_id, container_id, parent_id=None, 
-                        width=None, height=None, width_fill=false, height_fill=false,
-                        spacing=10.0, padding=DEFAULT_PADDING.to_vec(), 
-                        show=true,
-                        ))]
-    fn add_pane_grid(&mut self,
-                        window_id: String,
-                        container_id: String,
-                        // above required
-                        parent_id: Option<String>,
-                        width: Option<f32>,
-                        height: Option<f32>,
-                        width_fill: bool,
-                        height_fill: bool,
-                        spacing: f32,
-                        padding: Vec<f64>,
-                        show: bool,
-                        ) -> PyResult<usize> 
-    {
-
-        self.id += 1;
-
-        let width = get_width(width, width_fill);
-        let height = get_height(height, height_fill);
-
-        let padding = get_padding(padding);
-
-        let prt_id = match parent_id {
-            Some(id) => id,
-            None => window_id.clone(),
-        };
-
-        set_state_of_container(self.id, window_id, Some(container_id), prt_id);
-
-        let mut state = access_state();
-
-        state.containers.insert(self.id, IpgContainers::IpgPaneGrid(IpgPaneGrid::new(
-                                        self.id,
-                                        width, 
-                                        height,
-                                        spacing, 
-                                        padding, 
-                                        show,
-                                    )));
-
-    Ok(self.id)
-
-    }
-    
     #[pyo3(signature = (window_id, container_id, parent_id=None,
-                        align_items="start", width=None, height=None, 
+                        align_items=IpgRowAlignment::Start, width=None, height=None, 
                         width_fill=false, height_fill=false,
                         padding=DEFAULT_PADDING.to_vec(), spacing=20.0, 
                         show=true,
@@ -525,7 +439,7 @@ impl IPG {
                     container_id: String,
                     // required above
                     parent_id: Option<String>,
-                    align_items: &str,
+                    align_items: IpgRowAlignment,
                     width: Option<f32>,
                     height: Option<f32>,
                     width_fill: bool,
@@ -537,8 +451,6 @@ impl IPG {
     {
 
         self.id += 1;
-
-        let align_items = get_alignment(align_items);
 
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
@@ -2192,6 +2104,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgProgressBarParams>()?;
     m.add_class::<IpgRadioDirection>()?;
     m.add_class::<IpgRadioParams>()?;
+    m.add_class::<IpgRowAlignment>()?;
     m.add_class::<IpgTextParams>()?;
     m.add_class::<IpgTimerParams>()?;
     m.add_class::<IpgTogglerParams>()?;

@@ -89,8 +89,8 @@ class IPG:
                         height_fill: bool=False,
                         max_height: float=float('inf'),
                         max_width: float=float('inf'),
-                        align_x: str="Left",
-                        align_y: str="Top",
+                        align_x: IpgContainerAlignment=IpgContainerAlignment.Center,
+                        align_y: IpgContainerAlignment=IpgContainerAlignment.Center,
                         padding: List=[10.0], 
                         show: bool=True,
                         ) -> int:
@@ -122,10 +122,10 @@ class IPG:
                 Sets the maximum width the container is allowed to be.
             max_height: float
                 Sets a maximum height the container is allowed to be.
-            align_x: str
-                "left"; "center", or "right"
-            align_y: str
-                "top"; "center", or "bottom"
+            align_x: IpgContainerAlignment
+                Aligns the container horizontally; Start, Center, End
+            align_y: IpgContainerAlignment
+                Aligns the container vertically; Start, Center, End
             padding: List[float]
                 Sets the padding for container.
                 use [float] for all sides,
@@ -169,7 +169,7 @@ class IPG:
                 If parent_id == window_id then not required, 
                 If another container then required.
             align_items: IpgColumnAlignment
-                Sets the alignment of the items in the column.
+                Sets the vertical alignment of the items in the column; Start, Center, End.
             width: float
                 Sets the width of the widget.
             width_fill: bool
@@ -201,7 +201,7 @@ class IPG:
                 container_id: str,
                 *,
                 parent_id: Union[None | str]=None,
-                align_items: str= "Start",
+                align_items: IpgRowAlignment=IpgRowAlignment.Start,
                 width: Union[None | float]=None,
                 height: Union[None | float]=None,
                 width_fill: bool=False,
@@ -1751,6 +1751,12 @@ class IpgRadioParams:
     WidthFill=0,
     Height=0,
     HeightFill=0,
+
+
+class IpgRowAlignment:
+    Start=0,
+    Center=0,
+    End=0
 
 
 class IpgTextParams:

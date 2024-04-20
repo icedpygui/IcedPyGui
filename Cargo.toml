@@ -1,4 +1,3 @@
-workspace = { members = ["enums"] }
 [package]
 authors = ["Charles Ray <icedpygui@gmail.com>"]
 name = "IcedPyGui"
