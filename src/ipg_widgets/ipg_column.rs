@@ -2,7 +2,7 @@
 use iced::{Element, Length, Padding};
 use iced::alignment::Alignment;
 use iced::widget::Column;
-use pyo3::{pyclass, PyObject, Python};
+use pyo3::pyclass;
 use crate::app::Message;
 // use crate::iced_widgets::column::Column;
 
@@ -15,7 +15,7 @@ pub struct IpgColumn {
     pub width: Length,
     pub height: Length,
     pub max_width: f32,
-    pub align_items: Option<PyObject>,
+    pub align_items: IpgColumnAlignment,
 }
 
 impl IpgColumn {
@@ -27,7 +27,7 @@ impl IpgColumn {
         width: Length,
         height: Length,
         max_width: f32,
-        align_items: Option<PyObject>,
+        align_items: IpgColumnAlignment,
     ) -> Self {
         Self {
             id,
@@ -53,36 +53,23 @@ pub enum IpgColumnAlignment {
 
 pub fn construct_column(col: &IpgColumn, content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
 
-    let align_items = try_extract_alignment(col.align_items.clone());
+    let align_items = get_alignment(col.align_items.clone());
 
     Column::with_children(content)
                         .align_items(align_items)
                         .height(col.height)
-                        .padding(10)
+                        .padding(col.padding)
                         .spacing(col.spacing)
                         .width(col.width)
                         .into()
 }
 
 
-fn try_extract_alignment(align_opt: Option<PyObject>) -> Alignment {
+fn get_alignment(align: IpgColumnAlignment) -> Alignment {
 
-    let align_obj = match align_opt {
-        Some(obj) => obj,
-        None => return Alignment::Start,
-    };
-
-    Python::with_gil(|py| {
-        let res = align_obj.extract::<IpgColumnAlignment>(py);
-        match res {
-            Ok(align) => {
-                match align {
-                    IpgColumnAlignment::Start => Alignment::Start,
-                    IpgColumnAlignment::Center => Alignment::Center,
-                    IpgColumnAlignment::End => Alignment::End,
-                }
-            },
-            Err(_) => panic!("Column alingment extraction failed"),
-        }
-    })
+    match align {
+        IpgColumnAlignment::Start => Alignment::Start,
+        IpgColumnAlignment::Center => Alignment::Center,
+        IpgColumnAlignment::End => Alignment::End,
+    }
 }

@@ -375,7 +375,7 @@ impl IPG {
 
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
-                        align_items=None, width=None, height=None,
+                        align_items=IpgColumnAlignment::Start, width=None, height=None,
                         width_fill=false, height_fill=false,
                         max_width=f32::INFINITY, padding=DEFAULT_PADDING.to_vec(), 
                         spacing=20.0, show=true,
@@ -385,7 +385,7 @@ impl IPG {
                         container_id: String,
                         // **above required
                         parent_id: Option<String>,
-                        align_items: Option<PyObject>,
+                        align_items: IpgColumnAlignment,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
