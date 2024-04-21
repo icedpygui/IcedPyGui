@@ -6,8 +6,6 @@ use iced::window;
 use iced::{alignment::{Horizontal, Vertical}, Length, Padding};
 use iced::widget::text::{Shaping, LineHeight};
 
-use crate::iced_widgets::scrollable::{Direction, Properties};
-
 use pyo3::{PyObject, Python};
 
 pub fn check_for_dup_container_ids(id: usize, container_id: Option<String>) {
@@ -168,20 +166,6 @@ pub fn get_line_height(line_height: (String, f32)) -> LineHeight {
     }
 }
 
-pub fn get_scroll_direction(direction_str: Option<String>) -> Direction {
-
-    let scroll = match direction_str {
-        Some(direction_str) => match direction_str.as_str() {
-                                            "vertical" => Direction::Vertical(Properties::default()),
-                                            "horizontal" => Direction::Horizontal(Properties::default()),
-                                            "both" => Direction::Both { vertical: Properties::default(), horizontal: Properties::default() },
-                                            _ => panic!("Scroll direction must be either vertical, horizontal, or both")
-                                        },
-        None => Direction::default(),
-    };
-
-    scroll
-}
 
 pub const MONTH_NAMES: [&'static str; 13] = ["", "January", "Feburary", "March", 
                                         "April", "May", "June", "July", 

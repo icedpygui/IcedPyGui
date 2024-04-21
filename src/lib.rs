@@ -20,7 +20,6 @@ use app::{App, Flags};
 mod ipg_widgets;
 mod iced_widgets;
 
-use crate::iced_widgets::scrollable::Direction;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
@@ -36,7 +35,7 @@ use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickList
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams};
 use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
-use ipg_widgets::ipg_scrollable::IpgScrollable;
+use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, IpgScrollableDirection};
 use ipg_widgets::ipg_selectable_text::IpgSelectableText;
 use ipg_widgets::ipg_slider::IpgSlider;
 use ipg_widgets::ipg_space::IpgSpace;
@@ -56,7 +55,6 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
                             get_vertical_alignment,
                             get_line_height,
                             get_padding,
-                            get_scroll_direction,
                             get_shaping,};
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
@@ -64,6 +62,8 @@ const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
 
 use std::sync::{Mutex, MutexGuard};
 use once_cell::sync::Lazy;
+
+use crate::ipg_widgets::ipg_scrollable::IpgScrollableParams;
 
 
 
@@ -482,8 +482,12 @@ impl IPG {
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         width=None, height=None, width_fill=false, height_fill=false, 
-                        direction="vertical".to_string(), on_scroll=None, 
-                        user_data=None,
+                        direction=IpgScrollableDirection::Vertical, h_bar_width=10.0, 
+                        h_bar_margin=0.0, h_scroller_width=10.0, 
+                        h_bar_alignment=IpgScrollableAlignment::Start,
+                        v_bar_width=10.0, v_bar_margin=0.0, v_scroller_width=10.0, 
+                        v_bar_alignment=IpgScrollableAlignment::Start,
+                        on_scroll=None, user_data=None,
                         ))]
     fn add_scrollable(&mut self,
                             window_id: String,
@@ -494,7 +498,15 @@ impl IPG {
                             mut height: Option<f32>,
                             width_fill: bool,
                             height_fill: bool,
-                            direction: String,
+                            direction: IpgScrollableDirection,
+                            h_bar_width: f32,
+                            h_bar_margin: f32,
+                            h_scroller_width: f32,
+                            h_bar_alignment: IpgScrollableAlignment,
+                            v_bar_width: f32,
+                            v_bar_margin: f32,
+                            v_scroller_width: f32,
+                            v_bar_alignment: IpgScrollableAlignment,
                             on_scroll: Option<PyObject>,
                             user_data: Option<PyObject>,
                             ) -> PyResult<usize>
@@ -511,8 +523,6 @@ impl IPG {
         let width = get_width(width, false);
         let height = get_height(height, false);
 
-        let direction: Direction = get_scroll_direction(Some(direction));
-
         let prt_id = match parent_id {
             Some(id) => id,
             None => window_id.clone(),
@@ -527,6 +537,14 @@ impl IPG {
                                                     width,
                                                     height,
                                                     direction,
+                                                    h_bar_width,
+                                                    h_bar_margin,
+                                                    h_scroller_width,
+                                                    h_bar_alignment,
+                                                    v_bar_width,
+                                                    v_bar_margin,
+                                                    v_scroller_width,
+                                                    v_bar_alignment,
                                                     user_data,
                                                     // style,
                                                     )));
@@ -1993,71 +2011,21 @@ fn add_image(&mut self,
 
         let widget_opt = state.widgets.get_mut(&wid);
 
-        let widget = match widget_opt {
-            Some(w) => w,
-            None => panic!("Widget with id {wid} could not be updated"),
+        match widget_opt {
+            Some(w) => {
+                match_widget(w, item, value);
+                drop(state);
+            },
+            None => {
+                match state.containers.get_mut(&wid) {
+                    Some(w) => {
+                        match_container(w, item, value);
+                        drop(state);
+                    },
+                    None => panic!("Item_update: Widget or container wiht id {wid} not found.")
+                }
+            },
         };
-        
-        match widget {
-            IpgWidgets::IpgButton(btn) => {
-                button_item_update(btn, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgCard(crd) => {
-                card_item_update(crd, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgCheckBox(chk) => {
-                checkbox_item_update(chk, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgColorPicker(cp) => {
-                color_picker_item_update(cp, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgDatePicker(dp) => {
-                date_picker_item_update(dp, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgImage(img) => {
-                image_item_update(img, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgMenu(menu) => {
-                menu_item_update(menu, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgPickList(pl) => {
-                pick_list_item_update(pl, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgProgressBar(pb) => {
-                progress_bar_item_update(pb, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgRadio(rd) => {
-                radio_item_update(rd, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgRule(_) => (),
-            IpgWidgets::IpgSelectableText(_) => (),
-            IpgWidgets::IpgSlider(_) => (),
-            IpgWidgets::IpgSpace(_) => (),
-            IpgWidgets::IpgTable(_) => (),
-            IpgWidgets::IpgText(txt) => {
-                text_item_update(txt, item, value);
-                drop(state);
-            },
-            IpgWidgets::IpgTextEditor(_) => (),
-            IpgWidgets::IpgTextInput(_) => (),
-            IpgWidgets::IpgTimer(tim) => {
-                timer_item_update(tim, item, value);
-            },
-            IpgWidgets::IpgToggler(tog) => {
-                toggler_item_update(tog, item, value)
-            },
-        }
-
     }
 
     
@@ -2083,6 +2051,72 @@ fn add_image(&mut self,
     }
 }
 
+fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
+    match widget {
+        IpgWidgets::IpgButton(btn) => {
+            button_item_update(btn, item, value);
+        },
+        IpgWidgets::IpgCard(crd) => {
+            card_item_update(crd, item, value);
+        },
+        IpgWidgets::IpgCheckBox(chk) => {
+            checkbox_item_update(chk, item, value);
+        },
+        IpgWidgets::IpgColorPicker(cp) => {
+            color_picker_item_update(cp, item, value);
+        },
+        IpgWidgets::IpgDatePicker(dp) => {
+            date_picker_item_update(dp, item, value);
+        },
+        IpgWidgets::IpgImage(img) => {
+            image_item_update(img, item, value);
+        },
+        IpgWidgets::IpgMenu(menu) => {
+            menu_item_update(menu, item, value);
+        },
+        IpgWidgets::IpgPickList(pl) => {
+            pick_list_item_update(pl, item, value);
+        },
+        IpgWidgets::IpgProgressBar(pb) => {
+            progress_bar_item_update(pb, item, value);
+        },
+        IpgWidgets::IpgRadio(rd) => {
+            radio_item_update(rd, item, value);
+        },
+        IpgWidgets::IpgRule(_) => (),
+        IpgWidgets::IpgSelectableText(_) => (),
+        IpgWidgets::IpgSlider(_) => (),
+        IpgWidgets::IpgSpace(_) => (),
+        IpgWidgets::IpgTable(_) => (),
+        IpgWidgets::IpgText(txt) => {
+            text_item_update(txt, item, value);
+        },
+        IpgWidgets::IpgTextEditor(_) => (),
+        IpgWidgets::IpgTextInput(_) => (),
+        IpgWidgets::IpgTimer(tim) => {
+            timer_item_update(tim, item, value);
+        },
+        IpgWidgets::IpgToggler(tog) => {
+            toggler_item_update(tog, item, value);
+        },
+    }
+}
+
+fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject) {
+    match container {
+        IpgContainers::IpgColumn(_) => todo!(),
+        IpgContainers::IpgContainer(_) => todo!(),
+        IpgContainers::IpgPaneGrid(_) => todo!(),
+        IpgContainers::IpgPane(_) => todo!(),
+        IpgContainers::IpgRow(_) => todo!(),
+        IpgContainers::IpgScrollable(scroll) => {
+            scrollable_item_update(scroll, item, value)
+        },
+        IpgContainers::IpgToolTip(_) => todo!(),
+        IpgContainers::IpgWindow(_) => todo!(),
+    }
+}
+
 
 #[pymodule]
 fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
@@ -2105,6 +2139,9 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgRadioDirection>()?;
     m.add_class::<IpgRadioParams>()?;
     m.add_class::<IpgRowAlignment>()?;
+    m.add_class::<IpgScrollableAlignment>()?;
+    m.add_class::<IpgScrollableDirection>()?;
+    m.add_class::<IpgScrollableParams>()?;
     m.add_class::<IpgTextParams>()?;
     m.add_class::<IpgTimerParams>()?;
     m.add_class::<IpgTogglerParams>()?;

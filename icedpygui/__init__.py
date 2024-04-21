@@ -12,6 +12,7 @@ from .icedpygui import IpgPickListParams
 from .icedpygui import IpgProgressBarParams
 from .icedpygui import IpgRadioParams, IpgRadioDirection
 from .icedpygui import IpgRowAlignment
+from .icedpygui import IpgScrollableDirection, IpgScrollableAlignment, IpgScrollableParams
 from .icedpygui import IpgTextParams
 from .icedpygui import IpgTogglerParams
 from .icedpygui import IpgWindowThemes

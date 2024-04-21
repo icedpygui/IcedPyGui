@@ -223,8 +223,8 @@ class IPG:
             parent_id: str
                 If parent_id == window_id then not required, 
                 If another container then required.
-            align_items: str
-                "Start"(default), "Center", or "End".
+            align_items: IpgRowAlignment
+                Sets the alignment Start, Center, or End.
             width: float
                 Sets the width of the widget.
             width_fill: bool
@@ -258,7 +258,15 @@ class IPG:
                         height: Union[None | float]=None,
                         width_fill: bool=False,
                         height_fill: bool=False,
-                        direction: str="vertical",
+                        direction: IpgScrollableDirection=IpgScrollableDirection.Vertical,
+                        h_bar_width: float=10.0,
+                        h_bar_margin: float=0.0,
+                        h_scroller_width: float=10.0,
+                        h_bar_alignment: IpgScrollableAlignment=IpgScrollableAlignment.Start,
+                        v_bar_width: float=10.0,
+                        v_bar_margin: float=0.0,
+                        v_scroller_width: float=10.0,
+                        v_bar_alignment: IpgScrollableAlignment=IpgScrollableAlignment.Start,
                         on_scroll: Union[None | Callable]=None,
                         ) -> int:
         """
@@ -281,11 +289,27 @@ class IPG:
                 Sets the height of the widget.   
             height_fill: bool
                 Sets the heigth to fill the available space, overrides height.
-            direction: str
-                Sets the direction of the scrollable.
+            direction: IpgScrollableDirection
+                Sets the direction of the scrollable, Vertical, Horizontal, Both.
+            h_bar_width: float
+                Sets the horizontal bar width.
+            h_bar_margin: float
+                Sets the horizontal bar margin.
+            h_scroller_width: float
+                Sets the horizontal scroller bar width
+            h_bar_alignment: IpgScrollableAlignment
+                Sets the horizontal bar alignment Start or End
+            v_bar_width: float
+                Sets the vertical bar width.
+            v_bar_margin: float
+                Sets the vertical bar margin.
+            v_scroller_width: float
+                Sets the vertical scroller bar width
+            v_bar_alignment: IpgScrollableAlignment
+                Sets the vertical bar alignment Start or End
             on_scroll: Callable
                 The callback function that is called when scrolling occurs
-            user_data: Any 
+            user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
             show: bool
                 Shows or hides widget.
@@ -382,7 +406,7 @@ class IPG:
                 Primary, Secondary, Positive, Destructive, Text,
             arrow_style: IpgButtonArrows
                 See dropdown list when IpgButtonArrow. is typed in when period is typed.
-            user_data: Any 
+            user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
             show: bool
                 Shows or hides widget.
@@ -452,7 +476,7 @@ class IPG:
                 Shows or hides the card.
             style: IpgCardStyles
                 Sets the style of the card. 
-            user_data: Any 
+            user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
 
         Returns
@@ -513,7 +537,7 @@ class IPG:
                 If true, uses the x versus the checkmark icon.
             icon_size: float
                 Sets the size of either the check or x icon.
-            user_data: Any 
+            user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
             show: bool
                 Shows or hides widget.
@@ -574,7 +598,7 @@ class IPG:
                 Sets the style of the button.
             show: bool
                 To show the widget or not.
-            user_data: Any
+            user_data: any
                 Any data that might be needed in the callback function.
             
         Returns
@@ -617,7 +641,7 @@ class IPG:
                 Callback function selected date is submitted.
             show: bool
                 To show the widget or not.
-            user_data: Any
+            user_data: any
                 Any data that might be needed in the callback function.
 
         Returns
@@ -686,7 +710,7 @@ class IPG:
                 Sets the heigth to fill the available space, overrides height.
             show: bool
                 To show the widget or not.
-            user_data: Any
+            user_data: any
                 Any data that might be needed in the callback function.
 
         Returns
@@ -731,7 +755,7 @@ class IPG:
                 The cllback for when the menu item is selected.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            user_data: Any
+            user_data: any
                 Any data in any form needed by user to be passed through as a callback.
 
         Returns
@@ -789,7 +813,7 @@ class IPG:
                 Sets the height of the box around the text.
             text_shaping: str
                 Sets the shape of the text.
-            user_data: Any
+            user_data: any
                 Any data in any form needed by user to be passed through as a callback.
             show: bool
                 Shows or hides the widget.
@@ -834,7 +858,7 @@ class IPG:
                 If set, the widget fills the available space.
             height: float
                 Sets the height of the bar.
-            user_data: Any
+            user_data: any
                 Any data in any form needed by user to be passed through as a callback.
             show: bool
                 Shows or hides the widget.
@@ -905,7 +929,7 @@ class IPG:
                 Sets the text shape.
             text_size: float
                 Sets the size of the text.
-            user_data: Any
+            user_data: any
                 Any data that might be needed in the callback function.
             show: bool
                 Shows or hides the widget.
@@ -1040,7 +1064,7 @@ class IPG:
                 The text size.
             show: bool
                 To show the widget or not.
-            user_data: Any
+            user_data: any
                 Any data that might be needed in the callback function.
 
         Returns
@@ -1091,7 +1115,7 @@ class IPG:
                 If set, will use callback with each change. 
             on_release: Callable
                 If set, will use callback when released. 
-            user_data: Any
+            user_data: any
                 Any data that might be needed in the callback function.
             width: float
                 Width of the widget.
@@ -1157,7 +1181,7 @@ class IPG:
 
         Parameters
         ----------
-            parent_id: str
+            parent_id: : Anystr
                 Id of another container to place the widget in.
             title: str
                 Title used for table.
@@ -1174,9 +1198,9 @@ class IPG:
             column_widths: List[float]
                 A list of value for the column widths, if only one value is supplied then it will 
                 be the default for all columns.
-            user_data: Any
+            user_data: any
                 Any data that might be needed in the callback function.
-            show:
+            show:: Any
                 shows or hides the widget.
             
         Returns
@@ -1312,7 +1336,7 @@ class IPG:
                 use [float, float, float, float] for [top, right, bottom, left]
             size: float
                 Sets the text size.
-            user_data: Any
+            user_data: any
                 Any data that might be needed in the callback function.
             is_secure: bool
                 Hides the entered text, for passwords, etc.
@@ -1419,7 +1443,7 @@ class IPG:
                 Sets the width to fill the available space, overrides width.
             height: float
                 Sets the height of the widget.   
-            user_data: Any 
+            user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
             show: bool
                 Shows or hides widget.
@@ -1448,7 +1472,7 @@ class IPG:
             Calls a function when a key is pressed.
         on_key_release: Callable
             Calls a function when a key is released.
-        user_data: Any
+        user_data: any
             Any data that might be needed in the callback function.
 
         Returns
@@ -1493,7 +1517,7 @@ class IPG:
             Calls a function when the right mouse button is released.
         on_middle_scroll: Callable
             Calls a function when the middle mouse scroll is scrolled.
-        user_data: Any
+        user_data: any
             Any data that might be needed in the callback function.
         
         Returns
@@ -1526,7 +1550,7 @@ class IPG:
             Calls a function when the window is moved.
         on_resized: Callable
             Calls a function when the window id resized.
-        user_data: Any
+        user_data: any
             Any data that might be needed in the callback function.
         
         Returns
@@ -1547,7 +1571,7 @@ class IPG:
         Parameters
         ----------
         wid: int
-            The widget id of the widget to be update.
+            The widget id of the widget to be updated.
 
         Returns
         -------
@@ -1566,7 +1590,7 @@ class IPG:
         Parameters
         ----------
         wid: int
-            The widget id of the widget to be update.
+            The widget id of the widget to be updated.
         param: class property
             Example: a button has a style class IpgButtonParams with properties of Primary, ...
         value: any 
@@ -1580,9 +1604,9 @@ class IPG:
 
 
 class IpgAlignment:
-    Left=0,
-    Center=0,
-    Right=0,
+    Left=0
+    Center=0
+    Right=0
 
 
 class IpgWindowThemes:
@@ -1618,15 +1642,15 @@ class IpgButtonStyles:
 
 
 class IpgButtonParams:
-    ArrowStyle=0,
-    CornerRadius=0,
-    Height=0,
-    HeightFill=0,
-    Label=0,
-    Padding=0,
-    Show=0,
-    Style=0,
-    Width=0,
+    ArrowStyle=0
+    CornerRadius=0
+    Height=0
+    HeightFill=0
+    Label=0
+    Padding=0
+    Show=0
+    Style=0
+    Width=0
     WidthFill=0
 
 
@@ -1644,147 +1668,171 @@ class IpgCardStyles:
 
 
 class IpgCardParams:
-    Body=0,
-    Foot=0,
-    Head=0,
-    IsOpen=0,
-    Style=0,
+    Body=0
+    Foot=0
+    Head=0
+    IsOpen=0
+    Style=0
 
 
 class IpgCheckboxParams:
-    IconSize=0,
-    IconX=0,
-    IsChecked=0,
-    Label=0,
-    Show=0,
-    Size=0,
-    Spacing=0,
-    Style=0,
-    TextLineHeight=0,
-    TextShaping=0,
-    TextSize=0,
-    Width=0,
-    WidthFill=0,
+    IconSize=0
+    IconX=0
+    IsChecked=0
+    Label=0
+    Show=0
+    Size=0
+    Spacing=0
+    Style=0
+    TextLineHeight=0
+    TextShaping=0
+    TextSize=0
+    Width=0
+    WidthFill=0
 
 
 class IpgColumnAlignment:
-    Start=0,
-    Center=0,
+    Start=0
+    Center=0
     End=0
 
 
 class IpgContainerAlignment:
-    Start=0,
-    Center=0,
+    Start=0
+    Center=0
     End=0
 
 
 class IpgDatePickerParams:
-    Label=0,
-    Padding=0,
-    SizeFactor=0,
-    Show=0,
+    Label=0
+    Padding=0
+    SizeFactor=0
+    Show=0
 
 
 class IpgImageParams:
-    Height=0,
-    HeightFill=0,
-    ImagePath=0,
-    Padding=0,
-    Show=0,
-    Width=0,
-    WidthFill=0,
+    Height=0
+    HeightFill=0
+    ImagePath=0
+    Padding=0
+    Show=0
+    Width=0
+    WidthFill=0
 
 
 class IpgMenuParams:
-    MenuUpdate=0,
-    Separators=0,
-    Spacing=0,
-    Widths=0,
+    MenuUpdate=0
+    Separators=0
+    Spacing=0
+    Widths=0
 
 
 class IpgMenuSepTypes:
-    Line=0,
-    Dot=0,
-    Label=0,
+    Line=0
+    Dot=0
+    Label=0
 
 
 class IpgPickListParams:
-    Options=0,
-    Placeholder=0,
-    Padding=0,
-    Show=0,
-    TextSize=0,
-    TextLineHeight=0,
-    Width=0,
-    Delete=0,
+    Options=0
+    Placeholder=0
+    Padding=0
+    Show=0
+    TextSize=0
+    TextLineHeight=0
+    Width=0
+    Delete=0
 
 
 class IpgProgressBarParams:
-    Height=0,
-    Min=0,
-    Max=0,
-    Show=0,
-    Value=0,
-    Width=0,
-    WidthFill=0,
+    Height=0
+    Min=0
+    Max=0
+    Show=0
+    Value=0
+    Width=0
+    WidthFill=0
 
 
 class IpgRadioDirection:
-    Horizontal=0,
-    Vertical=0,
+    Horizontal=0
+    Vertical=0
 
 
 class IpgRadioParams:
-    Direction=0,
-    Labels=0,
-    Padding=0,
-    SelectedIndex=0,
-    Show=0,
-    Size=0,
-    Spacing=0,
-    TextSpacing=0,
-    TextSize=0,
-    TextLineHeight=0,
-    UserData=0,
-    Width=0,
-    WidthFill=0,
-    Height=0,
-    HeightFill=0,
+    Direction=0
+    Labels=0
+    Padding=0
+    SelectedIndex=0
+    Show=0
+    Size=0
+    Spacing=0
+    TextSpacing=0
+    TextSize=0
+    TextLineHeight=0
+    UserData=0
+    Width=0
+    WidthFill=0
+    Height=0
+    HeightFill=0
 
 
 class IpgRowAlignment:
-    Start=0,
-    Center=0,
+    Start=0
+    Center=0
     End=0
 
 
+class IpgScrollableDirection:
+    Vertical=0
+    Horizontal=0
+    Both=0
+
+
+class IpgScrollableAlignment:
+    Start=0
+    End=0
+
+
+class IpgScrollableParams:
+    Width=0
+    Height=0
+    HBarWidth=0
+    HBarMargin=0
+    HScrollerWidth=0
+    HBarAlignment=0
+    VBarWidth=0
+    VBarMargin=0
+    VScrollerWidth=0
+    VBarAlignment=0
+
+
 class IpgTextParams:
-    Content=0,
-    Height=0,
-    HeightFill=0,
-    HzAlignLeft=0,
-    HzAlignCenter=0,
-    HzAlignRight=0,
-    LineHeight=0,
-    Size=0,
-    VtAlignTop=0,
-    VtAlignCenter=0,
-    VtAlignBottom=0,
-    Width=0,
-    WidthFill=0,
-    Show=0,
+    Content=0
+    Height=0
+    HeightFill=0
+    HzAlignLeft=0
+    HzAlignCenter=0
+    HzAlignRight=0
+    LineHeight=0
+    Size=0
+    VtAlignTop=0
+    VtAlignCenter=0
+    VtAlignBottom=0
+    Width=0
+    WidthFill=0
+    Show=0
 
 
 class IpgTogglerParams:
-    Alignment=0,
-    Label=0,
-    LineHeight=0,
-    Show=0,
-    Size=0,
-    TextSize=0,
-    Width=0,
-    WidthFill=0,
+    Alignment=0
+    Label=0
+    LineHeight=0
+    Show=0
+    Size=0
+    TextSize=0
+    Width=0
+    WidthFill=0
 
 
 class IpgButtonArrows:
