@@ -6,9 +6,14 @@ use super::callbacks::{WidgetCallbackIn,
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 
-use iced::{Length, Element, Theme};
-use iced::widget::Slider;
+use super::helpers::get_width;
+use super::helpers::try_extract_boolean;
+use super::helpers::try_extract_f64;
 
+use iced::{Length, Element, Theme};
+use iced::widget::{Slider, Space};
+
+use pyo3::pyclass;
 use pyo3::{PyObject, Python};
 
 
@@ -60,6 +65,10 @@ pub enum SLMessage {
 }
 
 pub fn construct_slider(slider: IpgSlider) -> Element<'static, app::Message> {
+
+    if !slider.show {
+        return Space::new(0.0, 0.0).into()
+    }
 
     let sld: Element<SLMessage, Theme> = Slider::new(slider.min..=slider.max, 
                                                     slider.value, 
@@ -147,4 +156,63 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
     drop(app_cbs); 
 
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgSliderParams {
+    Min,
+    Max,
+    Step,
+    Value,
+    Width,
+    WidthFill,
+    Height,
+    Show,
+}
+
+pub fn slider_item_update(sldr: &mut IpgSlider, item: PyObject, value: PyObject) {
+
+    let update = try_extract_slider_update(item);
+
+    match update {
+        IpgSliderParams::Min => {
+            sldr.min = try_extract_f64(value) as f32;
+        },
+        IpgSliderParams::Max => {
+            sldr.max = try_extract_f64(value) as f32;
+        },
+        IpgSliderParams::Step => {
+            sldr.step = try_extract_f64(value) as f32;
+        },
+        IpgSliderParams::Value => {
+            sldr.value = try_extract_f64(value) as f32;
+        },
+        IpgSliderParams::Width => {
+            let val = try_extract_f64(value);
+            sldr.width = get_width(Some(val as f32), false);
+        },
+        IpgSliderParams::WidthFill => {
+            let val = try_extract_boolean(value);
+            sldr.width = get_width(None, val);
+        },
+        IpgSliderParams::Height => {
+            sldr.height = try_extract_f64(value) as f32;
+        },
+        IpgSliderParams::Show => {
+            sldr.show = try_extract_boolean(value);
+        },
+    }
+}
+
+
+fn try_extract_slider_update(update_obj: PyObject) -> IpgSliderParams {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgSliderParams>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Slider update extraction failed"),
+        }
+    })
 }

@@ -37,7 +37,7 @@ use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, Ipg
 use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
 use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, IpgScrollableDirection};
 use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText};
-use ipg_widgets::ipg_slider::IpgSlider;
+use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_table::IpgTable;
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
@@ -65,6 +65,7 @@ use once_cell::sync::Lazy;
 
 use crate::ipg_widgets::ipg_scrollable::IpgScrollableParams;
 use crate::ipg_widgets::ipg_selectable_text::{IpgSelectableTextHorAlign, IpgSelectableTextParams, IpgSelectableTextVertAlign};
+use crate::ipg_widgets::ipg_slider::IpgSliderParams;
 use crate::ipg_widgets::ipg_window::IpgWindowParams;
 
 
@@ -2086,7 +2087,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgSelectableText(st) => {
             selectable_text_item_update(st, item, value);
         },
-        IpgWidgets::IpgSlider(_) => (),
+        IpgWidgets::IpgSlider(sldr) => {
+            slider_item_update(sldr, item, value)
+        },
         IpgWidgets::IpgSpace(_) => (),
         IpgWidgets::IpgTable(_) => (),
         IpgWidgets::IpgText(txt) => {
@@ -2151,6 +2154,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgSelectableTextParams>()?;
     m.add_class::<IpgSelectableTextHorAlign>()?;
     m.add_class::<IpgSelectableTextVertAlign>()?;
+    m.add_class::<IpgSliderParams>()?;
     m.add_class::<IpgTextParams>()?;
     m.add_class::<IpgTimerParams>()?;
     m.add_class::<IpgTogglerParams>()?;

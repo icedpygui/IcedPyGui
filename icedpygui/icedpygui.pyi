@@ -1832,6 +1832,16 @@ class IpgSelectableTextVertAlign:
     Bottom=0
 
 
+class IpgSliderParams:
+    Min=0
+    Max=0
+    Step=0
+    Value=0
+    Width=0
+    WidthFill=0
+    Height=0
+    Show=0
+
 class IpgTextParams:
     Content=0
     Height=0
