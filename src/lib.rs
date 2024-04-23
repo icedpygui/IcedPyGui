@@ -7,7 +7,7 @@ use pyo3::PyObject;
 
 use iced::multi_window::Application;
 use iced::window::{self, Position};
-use iced::{Color, Font, Length, Point, Settings, Size};
+use iced::{Color, Font, Length, Point, Settings, Size, Theme};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
@@ -36,7 +36,7 @@ use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, Ip
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams};
 use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
 use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, IpgScrollableDirection};
-use ipg_widgets::ipg_selectable_text::IpgSelectableText;
+use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText};
 use ipg_widgets::ipg_slider::IpgSlider;
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_table::IpgTable;
@@ -46,7 +46,7 @@ use ipg_widgets::ipg_text_input::IpgTextInput;
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParams};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
-use ipg_widgets::ipg_window::{IpgWindow, IpgWindowThemes};
+use ipg_widgets::ipg_window::{get_iced_window_theme, window_cnt_item_update, window_item_update, IpgWindow, IpgWindowThemes};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 
 use ipg_widgets::helpers::{check_for_dup_container_ids,  
@@ -64,6 +64,8 @@ use std::sync::{Mutex, MutexGuard};
 use once_cell::sync::Lazy;
 
 use crate::ipg_widgets::ipg_scrollable::IpgScrollableParams;
+use crate::ipg_widgets::ipg_selectable_text::{IpgSelectableTextHorAlign, IpgSelectableTextParams, IpgSelectableTextVertAlign};
+use crate::ipg_widgets::ipg_window::IpgWindowParams;
 
 
 
@@ -100,9 +102,9 @@ pub struct State {
     pub windows: Vec<IpgWindow>,
     pub windows_str_ids: Lazy<HashMap<String, usize>>,  // <window_id=str, window_id=usize>
     pub container_wnd_str_ids: Lazy<HashMap<String, String>>, // <container_id=string, window_id-usize>
-    pub window_debug: Lazy<HashMap<window::Id, bool>>,
+    pub window_debug: Lazy<HashMap<window::Id, (usize, bool)>>, // (usize, bool) = (wid, debug)
+    pub window_theme: Lazy<HashMap<window::Id, (usize, Theme)>>, //(usize, Theme) = (wid, window Theme)
     pub events: Vec<IpgEvents>,
-    pub kb_modifiers: Lazy<HashMap<String, bool>>,
     pub text_buffer: Lazy<[u8; 1_000_000]>,
 }
 
@@ -118,13 +120,8 @@ pub static STATE: Mutex<State> = Mutex::new(
         windows_str_ids: Lazy::new(||HashMap::new()),
         container_wnd_str_ids: Lazy::new(||HashMap::new()),
         window_debug: Lazy::new(||HashMap::new()),
+        window_theme: Lazy::new(||HashMap::new()),
         events: vec![],
-        kb_modifiers: Lazy::new(||HashMap::from([
-                                                ("shift".to_string(), false),
-                                                ("control".to_string(), false),
-                                                ("alt".to_string(), false),
-                                                ("logo".to_string(), false),
-                                            ])),
         text_buffer: Lazy::new(||[0_u8; 1_000_000]),
     }
 );
@@ -220,7 +217,7 @@ impl IPG {
 
     #[pyo3(signature = (window_id, title, width, height, pos_x=None, pos_y=None,
                         pos_centered=false, resizable=true, 
-                        theme=None, exit_on_close=true, on_resize=None, 
+                        theme=IpgWindowThemes::Dark, exit_on_close=true, on_resize=None, 
                         show=true, debug=false, user_data=None))]
     fn add_window(&mut self,
                         window_id: String, 
@@ -231,7 +228,7 @@ impl IPG {
                         pos_y: Option<f32>,
                         pos_centered: bool,
                         resizable: bool,
-                        theme: Option<PyObject>,
+                        theme: IpgWindowThemes,
                         exit_on_close: bool,
                         on_resize: Option<PyObject>,
                         show: bool,
@@ -261,6 +258,8 @@ impl IPG {
 
         let visible = show;
 
+        let iced_theme = get_iced_window_theme(theme);
+
         let mut state = access_state();
 
         if state.windows_str_ids.get(&window_id).is_some() {
@@ -277,7 +276,9 @@ impl IPG {
                                                 parent_id: "".to_string(), is_container: true}]);
 
         state.container_ids.insert(self.window_id, vec![self.id]);
-
+        // TODO: A windows container is probably not needed but some suttle issues arise when not used.
+        // Will need to work through it in the near future.  At the onset, used only one window then
+        // iced made multiwindow so sort of patch it to work but need to revisit it.
         state.containers.insert(self.id, IpgContainers::IpgWindow(IpgWindow::new(
                                             self.id,
                                             self.window_id,
@@ -287,13 +288,13 @@ impl IPG {
                                             height, 
                                             window_position,
                                             exit_on_close,
-                                            theme.clone(), 
+                                            iced_theme.clone(), 
                                             resizable,
                                             visible,
                                             debug,
                                             user_data.clone(),
                                             )));
-
+        
         state.windows.push(IpgWindow::new(
                                         self.id,
                                         self.window_id,
@@ -303,7 +304,7 @@ impl IPG {
                                         height, 
                                         window_position,
                                         exit_on_close,
-                                        theme, 
+                                        iced_theme, 
                                         resizable,
                                         show,
                                         debug,
@@ -1274,7 +1275,7 @@ fn add_image(&mut self,
                         on_right_press=None, on_right_release=None, on_middle_press=None, 
                         on_middle_release=None, on_move=None, on_enter=None, on_exit=None, 
                         width=None, height=None, width_fill=false, height_fill=false, 
-                        h_align="left".to_string(), v_align="top".to_string(), 
+                        h_align=IpgSelectableTextHorAlign::Left, v_align=IpgSelectableTextVertAlign::Top, 
                         line_height=1.3, size=16.0, show=true, 
                         shaping="basic".to_string(), user_data=None
                         ))]
@@ -1296,8 +1297,8 @@ fn add_image(&mut self,
                             height: Option<f32>,
                             width_fill: bool,
                             height_fill: bool,
-                            h_align: String,
-                            v_align: String,
+                            h_align: IpgSelectableTextHorAlign,
+                            v_align: IpgSelectableTextVertAlign,
                             line_height: f32,
                             size: f32,
                             show: bool,
@@ -1349,13 +1350,9 @@ fn add_image(&mut self,
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
 
-        let horizontal_alignment = get_horizontal_alignment(&h_align);
-
         let line_height = LineHeight::Relative(line_height);
 
         let shaping = get_shaping(shaping);
-
-        let vertical_alignment = get_vertical_alignment(&v_align);
 
         set_state_of_widget(id, parent_id);
 
@@ -1366,8 +1363,8 @@ fn add_image(&mut self,
                                                     content,
                                                     width,
                                                     height,
-                                                    horizontal_alignment,
-                                                    vertical_alignment,
+                                                    h_align,
+                                                    v_align,
                                                     line_height,
                                                     size,
                                                     show,
@@ -2018,17 +2015,19 @@ fn add_image(&mut self,
             },
             None => {
                 match state.containers.get_mut(&wid) {
-                    Some(w) => {
-                        match_container(w, item, value);
+                    Some(wnd) => {
+                        let wid = match_container(wnd, item.clone(), value.clone());
                         drop(state);
+                        // Check to see if window if so update it also.
+                        window_item_update(wid, item, value)
                     },
-                    None => panic!("Item_update: Widget or container wiht id {wid} not found.")
+                    None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
                 }
             },
         };
     }
 
-    
+
     fn get_id(&mut self, gen_id: Option<usize>) -> usize
     {
         // When an id is generated, it is put into the self.gen_ids.
@@ -2084,7 +2083,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
             radio_item_update(rd, item, value);
         },
         IpgWidgets::IpgRule(_) => (),
-        IpgWidgets::IpgSelectableText(_) => (),
+        IpgWidgets::IpgSelectableText(st) => {
+            selectable_text_item_update(st, item, value);
+        },
         IpgWidgets::IpgSlider(_) => (),
         IpgWidgets::IpgSpace(_) => (),
         IpgWidgets::IpgTable(_) => (),
@@ -2102,7 +2103,8 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
     }
 }
 
-fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject) {
+fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject) -> usize {
+    
     match container {
         IpgContainers::IpgColumn(_) => todo!(),
         IpgContainers::IpgContainer(_) => todo!(),
@@ -2110,10 +2112,14 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
         IpgContainers::IpgPane(_) => todo!(),
         IpgContainers::IpgRow(_) => todo!(),
         IpgContainers::IpgScrollable(scroll) => {
-            scrollable_item_update(scroll, item, value)
+            scrollable_item_update(scroll, item, value);
+            scroll.id
         },
         IpgContainers::IpgToolTip(_) => todo!(),
-        IpgContainers::IpgWindow(_) => todo!(),
+        IpgContainers::IpgWindow(wnd_cnt) => {
+            window_cnt_item_update(wnd_cnt, item, value);
+            wnd_cnt.id
+        },
     }
 }
 
@@ -2142,9 +2148,13 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgScrollableAlignment>()?;
     m.add_class::<IpgScrollableDirection>()?;
     m.add_class::<IpgScrollableParams>()?;
+    m.add_class::<IpgSelectableTextParams>()?;
+    m.add_class::<IpgSelectableTextHorAlign>()?;
+    m.add_class::<IpgSelectableTextVertAlign>()?;
     m.add_class::<IpgTextParams>()?;
     m.add_class::<IpgTimerParams>()?;
     m.add_class::<IpgTogglerParams>()?;
+    m.add_class::<IpgWindowParams>()?;
     m.add_class::<IpgWindowThemes>()?;
     Ok(())
 }

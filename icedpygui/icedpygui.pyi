@@ -1807,6 +1807,31 @@ class IpgScrollableParams:
     VBarAlignment=0
 
 
+class IpgSelectableTextParams:
+    Text=0
+    Width=0
+    WidthFill=0
+    Height=0
+    HeightFill=0
+    HorizontalAlign=0
+    VerticalAlign=0
+    LineHeight=0
+    Size=0
+    Show=0
+
+
+class IpgSelectableTextHorAlign:
+    Left=0
+    Center=0
+    Right=0
+
+
+class IpgSelectableTextVertAlign:
+    Top=0
+    Center=0
+    Bottom=0
+
+
 class IpgTextParams:
     Content=0
     Height=0
@@ -1833,6 +1858,11 @@ class IpgTogglerParams:
     TextSize=0
     Width=0
     WidthFill=0
+
+
+class IpgWindowParams:
+    Debug=0
+    Theme=0
 
 
 class IpgButtonArrows:

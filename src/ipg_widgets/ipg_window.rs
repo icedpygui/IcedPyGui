@@ -11,6 +11,7 @@ use iced::widget::Column;
 use pyo3::{pyclass, PyObject, Python};
 
 use super::callbacks::WidgetCallbackOut;
+use super::helpers::try_extract_boolean;
 
 
 #[derive(Debug, Clone)]
@@ -21,8 +22,7 @@ pub struct IpgWindow {
     pub title: String,
     pub width: f32,
     pub height: f32,
-    pub theme_py: Option<PyObject>,
-    pub theme: Option<Theme>,
+    pub theme: Theme,
     pub position: window::Position,
     pub exit_on_close_request: bool,
     pub resizable: bool,
@@ -41,7 +41,7 @@ impl IpgWindow {
         height: f32,
         position: window::Position,
         exit_on_close_request: bool,
-        theme_py: Option<PyObject>,
+        theme: Theme,
         resizable: bool,
         visible: bool,
         debug: bool,
@@ -56,8 +56,7 @@ impl IpgWindow {
             height,
             position,
             exit_on_close_request,
-            theme_py,
-            theme: None,
+            theme,
             resizable,
             visible,
             debug,
@@ -77,20 +76,13 @@ pub enum WndMessage {
 
 pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Command<app::Message>>) {
 
-    let mut state = access_state();
-
-    for ipg_window in state.windows.iter_mut() {
-        ipg_window.theme = get_theme(ipg_window.theme_py.clone());
-    }
-    drop(state);
-
     let state = access_state();
 
     let mut windows = HashMap::from([(window::Id::MAIN, state.windows[0].clone())]);
 
     let mut spawn_window: Vec<Command<app::Message>> = vec![];
 
-    for (i, ipg_window) in state.windows.iter().enumerate() {
+    for i in 0..state.windows.len() {
         // The first window i=0 is handled differently
         if i > 0 {
             let (id, spawn) = window::spawn(window::Settings {
@@ -104,11 +96,19 @@ pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Command<app::Messag
 
             spawn_window.push(spawn);
 
-            windows.insert(id, ipg_window.clone());
-
+            windows.insert(id, state.windows[i].clone());
         }
     }
     drop(state);
+
+    // Set the state of the window debug to be used in the views
+    let mut state = access_state();
+    for (id, window) in windows.iter() {
+        state.window_debug.insert(id.clone(), (window.id, window.debug.clone()));
+        state.window_theme.insert(id.clone(), (window.id, window.theme.clone()));
+    }
+
+
     (windows, spawn_window)
 
 }
@@ -117,7 +117,7 @@ pub fn construct_window(content: Vec<Element<'static, app::Message>>) -> Element
     Column::with_children(content).into()
 }
 
-pub fn window_update(message:WndMessage) -> Command<app::Message> {
+pub fn window_callback(message:WndMessage) -> Command<app::Message> {
     
     let mut _state = access_state();
 
@@ -229,31 +229,115 @@ fn extract_theme(theme_opt: Option<PyObject>) -> IpgWindowThemes {
     }) 
 }
 
-fn get_theme(theme_obj: Option<PyObject>) -> Option<Theme> {
+pub fn get_iced_window_theme(theme: IpgWindowThemes) -> Theme {
 
-    let theme = extract_theme(theme_obj);
-    
     match theme {
-        IpgWindowThemes::Dark => Some(Theme::Dark),
-        IpgWindowThemes::Light => Some(Theme::Light),
-        IpgWindowThemes::CatppuccinLatte => Some(Theme::CatppuccinLatte),
-        IpgWindowThemes::CatppuccinFrappe => Some(Theme::CatppuccinFrappe),
-        IpgWindowThemes::CatppuccinMacchiato => Some(Theme::CatppuccinMacchiato),
-        IpgWindowThemes::CatppuccinMocha => Some(Theme::CatppuccinMocha),
-        IpgWindowThemes::Dracula => Some(Theme::Dracula),
-        IpgWindowThemes::GruvboxLight => Some(Theme::GruvboxLight),
-        IpgWindowThemes::GruvboxDark => Some(Theme::GruvboxDark),
-        IpgWindowThemes::KanagawaWave => Some(Theme::KanagawaWave),
-        IpgWindowThemes::KanagawaDragon => Some(Theme::KanagawaDragon),
-        IpgWindowThemes::KanagawaLotus => Some(Theme::KanagawaLotus),
-        IpgWindowThemes::Moonfly => Some(Theme::Moonfly),
-        IpgWindowThemes::Nightfly => Some(Theme::Nightfly),
-        IpgWindowThemes::Nord => Some(Theme::Nord),
-        IpgWindowThemes::Oxocarbon => Some(Theme::Oxocarbon),
-        IpgWindowThemes::SolarizedDark => Some(Theme::SolarizedDark),
-        IpgWindowThemes::SolarizedLight => Some(Theme::SolarizedLight),
-        IpgWindowThemes::TokyoNight => Some(Theme::TokyoNight),
-        IpgWindowThemes::TokyoNightLight => Some(Theme::TokyoNightLight),
-        IpgWindowThemes::TokyoNightStorm => Some(Theme::TokyoNightStorm),
+        IpgWindowThemes::Dark => Theme::Dark,
+        IpgWindowThemes::Light => Theme::Light,
+        IpgWindowThemes::CatppuccinLatte => Theme::CatppuccinLatte,
+        IpgWindowThemes::CatppuccinFrappe => Theme::CatppuccinFrappe,
+        IpgWindowThemes::CatppuccinMacchiato => Theme::CatppuccinMacchiato,
+        IpgWindowThemes::CatppuccinMocha => Theme::CatppuccinMocha,
+        IpgWindowThemes::Dracula => Theme::Dracula,
+        IpgWindowThemes::GruvboxLight => Theme::GruvboxLight,
+        IpgWindowThemes::GruvboxDark => Theme::GruvboxDark,
+        IpgWindowThemes::KanagawaWave => Theme::KanagawaWave,
+        IpgWindowThemes::KanagawaDragon => Theme::KanagawaDragon,
+        IpgWindowThemes::KanagawaLotus => Theme::KanagawaLotus,
+        IpgWindowThemes::Moonfly => Theme::Moonfly,
+        IpgWindowThemes::Nightfly => Theme::Nightfly,
+        IpgWindowThemes::Nord => Theme::Nord,
+        IpgWindowThemes::Oxocarbon => Theme::Oxocarbon,
+        IpgWindowThemes::SolarizedDark => Theme::SolarizedDark,
+        IpgWindowThemes::SolarizedLight => Theme::SolarizedLight,
+        IpgWindowThemes::TokyoNight => Theme::TokyoNight,
+        IpgWindowThemes::TokyoNightLight => Theme::TokyoNightLight,
+        IpgWindowThemes::TokyoNightStorm => Theme::TokyoNightStorm,
     }
+}
+
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgWindowParams {
+    Debug,
+    Theme,
+}
+
+pub fn window_cnt_item_update(wnd_cnt: &mut IpgWindow,
+                                item: PyObject,
+                                value: PyObject
+                            )
+{
+    let update = try_extract_window_update(item);
+
+    match update {
+        IpgWindowParams::Debug => {
+            wnd_cnt.debug = try_extract_boolean(value);
+        },
+        IpgWindowParams::Theme => {
+            // Do nothing
+        },
+    }
+}
+
+pub fn window_item_update(wid: usize,
+                            item: PyObject,
+                            value: PyObject
+                            )
+{
+    let update = try_extract_window_update(item);
+
+    let mut state = access_state();
+
+    match update {
+        IpgWindowParams::Debug => {
+            let val = try_extract_boolean(value);
+
+            for (wnd_id, (id, _debug)) in state.window_debug.iter_mut() {
+                if wid == *id {
+                    let wnd_id = wnd_id.clone();
+                    state.window_debug.entry(wnd_id).and_modify(|e| { e.1 = val });
+                    break;
+                }
+            }
+            drop(state);
+        },
+        IpgWindowParams::Theme => {
+            let ipg_theme = try_extract_ipg_theme(value);
+            let iced_theme = get_iced_window_theme(ipg_theme);
+
+            for (wnd_id, (id, _theme)) in state.window_theme.iter_mut() {
+                if wid == *id {
+                    let wnd_id = wnd_id.clone();
+                    state.window_theme.entry(wnd_id).and_modify(|e| { e.1 = iced_theme });
+                    break;
+                }
+            }
+            drop(state);
+        },
+    }
+}
+
+
+fn try_extract_window_update(update_obj: PyObject) -> IpgWindowParams {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgWindowParams>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Window update extraction failed"),
+        }
+    })
+}
+
+fn try_extract_ipg_theme(theme: PyObject) -> IpgWindowThemes {
+
+    Python::with_gil(|py| {
+        let res = theme.extract::<IpgWindowThemes>(py);
+        match res {
+            Ok(theme) => theme,
+            Err(_) => panic!("Window theme extraction failed"),
+        }
+    })
 }

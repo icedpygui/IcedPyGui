@@ -41,7 +41,7 @@ use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_ca
 use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage};
 use crate::ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
 use ipg_widgets::ipg_tool_tip::construct_tool_tip;
-use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_window, window_update};
+use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_window, window_callback};
 
 
 use ipg_widgets::helpers::get_usize_of_id;
@@ -231,7 +231,7 @@ impl multi_window::Application for App {
                 Command::none()
             },
             Message::Window(message) => {
-                window_update(message)
+                window_callback(message)
             },
         }
         
@@ -241,15 +241,18 @@ impl multi_window::Application for App {
 
         let content = create_content(window);
 
-        let debug = self.windows
+        let wnd_state = access_state();
+        
+        let debug = wnd_state.window_debug
                             .get(&window)
-                            .map(|window| window.debug)
+                            .map(|window| window.1.clone())
                             .unwrap_or(false);
-
-        let theme = self.windows
-                                .get(&window)
-                                .map(|window|window.theme.clone())
-                                .unwrap();
+        
+        let theme = wnd_state.window_theme
+                            .get(&window)
+                            .map(|window|window.1.clone())
+                            .unwrap();
+        drop(wnd_state);
 
         if debug {
             let color = match_theme_with_color(theme);
@@ -286,11 +289,15 @@ impl multi_window::Application for App {
     }
 
     fn theme(&self, window: window::Id) -> Theme {
-        match self.windows.get(&window).unwrap().theme.clone() {
-            Some(th) => th,
-            None => Theme::Dark,
-        }
+        let wnd_state = access_state();
+        let theme = wnd_state.window_theme
+                    .get(&window)
+                    .map(|window|window.1.clone())
+                    .unwrap();
+        drop(wnd_state);
+        theme
     }
+    
 }
 
 
@@ -501,12 +508,7 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
     }
 }
 
-fn match_theme_with_color(theme_opt: Option<Theme>) -> Color {
-
-    let theme = match theme_opt {
-        Some(th) => th,
-        None => Theme::Dark,
-    };
+fn match_theme_with_color(theme: Theme) -> Color {
 
     match theme {
         Theme::Light => Color::BLACK,
