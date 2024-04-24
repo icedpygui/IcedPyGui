@@ -1842,6 +1842,17 @@ class IpgSliderParams:
     Height=0
     Show=0
 
+
+class IpgTextInputParams:
+    Placeholder=0
+    Value=0
+    IsSecure=0
+    Width=0
+    Padding=0
+    Size=0
+    LineHeight=0
+
+
 class IpgTextParams:
     Content=0
     Height=0

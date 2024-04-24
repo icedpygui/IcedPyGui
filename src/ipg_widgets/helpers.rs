@@ -158,11 +158,10 @@ pub fn get_shaping(shape: String) -> Shaping {
 }
 
 // TODO: Need to figure out pixel vs f32, just using f32 for now.
-pub fn get_line_height(line_height: (String, f32)) -> LineHeight {
-    match line_height.0.as_str() {
-        "default" => LineHeight::default(),
-        "relative" => LineHeight::Relative(line_height.1),
-        _ => panic!("Line_height of {:?} is not correct, check the docs", line_height)
+pub fn get_line_height(line_height: Option<f32>) -> LineHeight {
+    match line_height {
+        Some(lh) => LineHeight::Relative(lh),
+        None => LineHeight::default(),
     }
 }
 

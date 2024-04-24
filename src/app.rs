@@ -1,3 +1,4 @@
+//! Main Iced app.
 #![allow(dead_code)]
 
 use iced::multi_window;
@@ -297,7 +298,7 @@ impl multi_window::Application for App {
         drop(wnd_state);
         theme
     }
-    
+
 }
 
 

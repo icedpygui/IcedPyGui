@@ -1,3 +1,4 @@
+//!lib for all of the python callable functions using pyo3
 #![allow(non_snake_case)]
 
 use ipg_widgets::ipg_rule::IpgRule;
@@ -35,18 +36,21 @@ use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickList
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams};
 use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
-use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, IpgScrollableDirection};
-use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText};
-use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider};
+use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, 
+                                    IpgScrollableDirection, IpgScrollableParams};
+use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText, IpgSelectableTextHorAlign, 
+                                        IpgSelectableTextParams, IpgSelectableTextVertAlign};
+use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParams};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_table::IpgTable;
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
 use ipg_widgets::ipg_text_editor::IpgTextEditor;
-use ipg_widgets::ipg_text_input::IpgTextInput;
+use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInput, IpgTextInputParams};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParams};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
-use ipg_widgets::ipg_window::{get_iced_window_theme, window_cnt_item_update, window_item_update, IpgWindow, IpgWindowThemes};
+use ipg_widgets::ipg_window::{get_iced_window_theme, window_cnt_item_update, window_item_update, 
+                                IpgWindow, IpgWindowThemes, IpgWindowParams};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 
 use ipg_widgets::helpers::{check_for_dup_container_ids,  
@@ -62,12 +66,6 @@ const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
 
 use std::sync::{Mutex, MutexGuard};
 use once_cell::sync::Lazy;
-
-use crate::ipg_widgets::ipg_scrollable::IpgScrollableParams;
-use crate::ipg_widgets::ipg_selectable_text::{IpgSelectableTextHorAlign, IpgSelectableTextParams, IpgSelectableTextVertAlign};
-use crate::ipg_widgets::ipg_slider::IpgSliderParams;
-use crate::ipg_widgets::ipg_window::IpgWindowParams;
-
 
 
 #[derive(Debug, Clone)]
@@ -106,7 +104,6 @@ pub struct State {
     pub window_debug: Lazy<HashMap<window::Id, (usize, bool)>>, // (usize, bool) = (wid, debug)
     pub window_theme: Lazy<HashMap<window::Id, (usize, Theme)>>, //(usize, Theme) = (wid, window Theme)
     pub events: Vec<IpgEvents>,
-    pub text_buffer: Lazy<[u8; 1_000_000]>,
 }
 
 
@@ -123,7 +120,6 @@ pub static STATE: Mutex<State> = Mutex::new(
         window_debug: Lazy::new(||HashMap::new()),
         window_theme: Lazy::new(||HashMap::new()),
         events: vec![],
-        text_buffer: Lazy::new(||[0_u8; 1_000_000]),
     }
 );
 
@@ -1591,7 +1587,7 @@ fn add_image(&mut self,
                         on_input=None, on_submit=None, 
                         on_paste=None, width=None, width_fill=false, 
                         padding=DEFAULT_PADDING.to_vec(), 
-                        size=20.0, line_height=("default".to_string(), 0.0), 
+                        size=20.0, line_height=None, 
                         user_data=None, is_secure=false, show=true,
                         ))]
     fn add_text_input(&mut self,
@@ -1606,7 +1602,7 @@ fn add_image(&mut self,
                             width_fill: bool,
                             padding: Vec<f64>,
                             size: f32,
-                            line_height: (String, f32),
+                            line_height: Option<f32>,
                             user_data: Option<PyObject>,
                             is_secure: bool,
                             show: bool,
@@ -2096,7 +2092,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
             text_item_update(txt, item, value);
         },
         IpgWidgets::IpgTextEditor(_) => (),
-        IpgWidgets::IpgTextInput(_) => (),
+        IpgWidgets::IpgTextInput(ti) => {
+            text_input_item_update(ti, item, value);
+        },
         IpgWidgets::IpgTimer(tim) => {
             timer_item_update(tim, item, value);
         },
@@ -2155,6 +2153,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgSelectableTextHorAlign>()?;
     m.add_class::<IpgSelectableTextVertAlign>()?;
     m.add_class::<IpgSliderParams>()?;
+    m.add_class::<IpgTextInputParams>()?;
     m.add_class::<IpgTextParams>()?;
     m.add_class::<IpgTimerParams>()?;
     m.add_class::<IpgTogglerParams>()?;

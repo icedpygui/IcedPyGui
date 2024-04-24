@@ -4,11 +4,18 @@ use crate::app;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
+use super::helpers::get_padding;
+use super::helpers::get_width;
+use super::helpers::try_extract_boolean;
+use super::helpers::try_extract_f64;
+use super::helpers::try_extract_string;
+use super::helpers::try_extract_vec_f64;
 
 use iced::widget::text::LineHeight;
 use iced::{Padding, Length, Element};
 use iced::widget::{TextInput, Space};
 
+use pyo3::pyclass;
 use pyo3::{PyObject, Python};
 
 
@@ -81,6 +88,7 @@ pub fn construct_text_input(input: IpgTextInput) -> Element<'static, app::Messag
                                             .on_input(TIMessage::OnInput)
                                             .on_submit(TIMessage::OnSubmit(input.value))
                                             .on_paste(TIMessage::OnPast)
+                                            .secure(input.is_secure)
                                             .width(input.width)
                                             .padding(input.padding)
                                             .size(input.size)
@@ -176,4 +184,64 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
     drop(app_cbs); 
 
-}                   
+}
+
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgTextInputParams {
+    Placeholder,
+    Value,
+    IsSecure,
+    Width,
+    Padding,
+    Size,
+    LineHeight,
+}
+
+pub fn text_input_item_update(ti: &mut IpgTextInput,
+                                item: PyObject,
+                                value: PyObject,
+                                )
+{
+    let update = try_extract_text_input_update(item);
+
+    match update {
+        IpgTextInputParams::Placeholder => {
+            ti.placeholder = try_extract_string(value);
+        },
+        IpgTextInputParams::Value => {
+            ti.value = try_extract_string(value);
+        },
+        IpgTextInputParams::IsSecure => {
+            ti.is_secure = try_extract_boolean(value);
+        },
+        IpgTextInputParams::Width => {
+            let val = try_extract_f64(value);
+            ti.width = get_width(Some(val as f32), false);
+        },
+        IpgTextInputParams::Padding => {
+            let val = try_extract_vec_f64(value);
+            ti.padding =  get_padding(val);
+        },
+        IpgTextInputParams::Size => {
+            ti.size = try_extract_f64(value) as f32;
+        },
+        IpgTextInputParams::LineHeight => {
+            let val = try_extract_f64(value) as f32;
+            ti.line_height = LineHeight::Relative(val);
+        },
+    }
+}
+
+
+fn try_extract_text_input_update(update_obj: PyObject) -> IpgTextInputParams {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgTextInputParams>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("TextInput update extraction failed"),
+        }
+    })
+}

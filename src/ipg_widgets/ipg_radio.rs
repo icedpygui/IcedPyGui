@@ -418,7 +418,7 @@ pub fn radio_item_update(rd: &mut IpgRadio,
         },
         IpgRadioParams::TextLineHeight => {
             let tlh = try_extract_f64(value) as f32;
-            rd.text_line_height = get_line_height(("relative".to_string(), tlh));
+            rd.text_line_height = get_line_height(Some(tlh));
         },
         IpgRadioParams::UserData => {
             rd.user_data = Some(value);
