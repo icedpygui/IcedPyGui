@@ -13,7 +13,6 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/8d03f5e9-2586-4fe2-8b48-
 
 ## Features
 
-* Examples for all of the currently supported widgets
 * Supported Iced widgets
     * Button 
     * Checkbox 
@@ -43,7 +42,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/8d03f5e9-2586-4fe2-8b48-
     * TextInput
     * Text
     * Toggler
-    * Tooltip - Only widget now, container abiltiy future
+    * Tooltip - Only widget now, container ability future
     * Windows multiple
 * Iced_aw widgets
     * Card
@@ -52,7 +51,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/8d03f5e9-2586-4fe2-8b48-
 * IPG widgets
     * DatePicker - compact and resizable
     * SelectableText - all mouse buttons supported
-    * Table - Currently simple with easily loaded with a list of dictionaries
+    * Table - Currently simple, easily loaded with a list of dictionaries
 
 * More to come in the near future
 
