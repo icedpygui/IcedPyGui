@@ -70,6 +70,10 @@ pip install icedpygui
 * Clone the repository and open in your favorite IDE
 * Create and activate a virtual environment
 * Install maturin and compile the rust code
+* Use maturin develop (~30 sec compile time, store in local venv)
+* maturin build (~40 sec compile time store in target/wheels)
+* maturin build --release (~4 min compile time stored in target/wheels)
+* Copy over one of the python examples or used the below code
 ```python
 pip install maturin
 maturin develop
