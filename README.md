@@ -3,8 +3,6 @@ Python wrapper for Rust Iced Gui
 
 <div align="center">
 
-<img src="docs/python_iced.png" width="200px" />
-
 # Iced + Python == IcedPyGui (IPG)
 
 https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-320e9a5d8c5d
