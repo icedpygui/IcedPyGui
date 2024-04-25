@@ -265,10 +265,10 @@ Hopefully you were able to run the program successfully.  If not, try one of the
 The examples are found in a separate repositiory as indicated above and here 
 https://github.com/icedpygui/IcedPyGui-Python-Examples
 
-## Contributing / Feedback
+## Issues / Questions / Feedback / Contributing
 
-Contributions are greatly appreciated! If you want to contribute, please
-read our [contributing guidelines] for more details.
+Feedback/Discussions/Questions are welcomed! You can come chat in the [Discord server](https://discord.com/channels/1233081452447666270/1233085181448032458).
 
-Feedback is also welcome! You can create a new topic in [our Discourse forum] or
-come chat to [our Discord server].
+If you have errors not cleared up in questions, click on the issues tab and create a new one.  Follow the template.
+
+
