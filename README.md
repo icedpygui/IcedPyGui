@@ -271,4 +271,4 @@ Feedback/Discussions/Questions are welcomed! You can come chat in the [Discord s
 
 If you have errors not cleared up in questions, click on the issues tab and create a new one.  Follow the template.
 
-
+Code contributions are welcomed.  See [guidelines](https://github.com/icedpygui/IcedPyGui/blob/main/CONTRIBUTING.md)
