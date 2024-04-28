@@ -1,5 +1,6 @@
-//! Main Iced app.
-#![allow(dead_code)]
+//! Main IPG app.
+#![allow(unused)]
+use std::collections::HashMap;
 
 use iced::multi_window;
 use iced::{font, window};
@@ -9,7 +10,7 @@ use iced::executor;
 use iced::widget::Column;
 use iced::time;
 use iced::Color;
-use std::collections::HashMap;
+
 
 use crate::ipg_widgets;
 use crate::ipg_widgets::ipg_timer::tick_callback;
@@ -24,8 +25,8 @@ use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 use ipg_widgets::ipg_events::process_events;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
 use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
-use ipg_widgets::ipg_pane_grid::{PGMessage, construct_pane_grid, pane_grid_update, 
-                                 construct_pane, pane_update};
+// use ipg_widgets::ipg_pane_grid::{PGMessage, construct_pane_grid, pane_grid_update, 
+//                                  construct_pane, pane_update};
 use ipg_widgets::ipg_pick_list::{PLMessage, construct_picklist, pick_list_callback};
 use ipg_widgets::ipg_progress_bar::construct_progress_bar;
 use ipg_widgets::ipg_radio::{RDMessage, construct_radio, radio_callback};
@@ -37,14 +38,12 @@ use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_callback};
 use ipg_widgets::ipg_space::construct_space;
 use ipg_widgets::ipg_table::contruct_table;
 use ipg_widgets::ipg_text::construct_text;
-use ipg_widgets::ipg_text_editor::{TEMessage, construct_text_editor};
+// use ipg_widgets::ipg_text_editor::{TEMessage, construct_text_editor};
 use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_callback};
 use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage};
-use crate::ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
+use ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
 use ipg_widgets::ipg_tool_tip::construct_tool_tip;
 use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_window, window_callback};
-
-
 use ipg_widgets::helpers::get_usize_of_id;
 use crate::{access_state, IpgIds};
 
@@ -61,20 +60,19 @@ pub enum Message {
     DatePicker(usize, DPMessage),
     Image(usize, ImageMessage),
     Menu(usize, MenuMessage),
-    Pane(PGMessage),
-    PaneGrid(PGMessage),
+    // Pane(PGMessage),
+    // PaneGrid(PGMessage),
     PickList(usize, PLMessage),
     Radio(usize, RDMessage),
     Scrolled(usize, scrollable::Viewport),
     SelectableText(usize, SLTXTMessage),
     Slider(usize, SLMessage),
-    TextEditor(TEMessage),
+    // TextEditor(TEMessage),
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
     Tick,
     Timer(usize, TIMMessage),
     FontLoaded(Result<(), font::Error>),
-    UpdateText,
     Window(WndMessage),
 }
 
@@ -172,14 +170,14 @@ impl multi_window::Application for App {
                 menu_callback(id, message);
                 Command::none()
             },
-            Message::Pane(pn) => {
-                pane_update(pn);
-                Command::none()
-            },
-            Message::PaneGrid(pg) => {
-                pane_grid_update(pg);
-                Command::none()
-            },
+            // Message::Pane(pn) => {
+            //     pane_update(pn);
+            //     Command::none()
+            // },
+            // Message::PaneGrid(pg) => {
+            //     pane_grid_update(pg);
+            //     Command::none()
+            // },
             Message::PickList(id, message) => {
                 pick_list_callback(id, message);
                 Command::none()
@@ -200,10 +198,10 @@ impl multi_window::Application for App {
                 slider_callback(id, message);
                 Command::none()
             },
-            Message::TextEditor(_message) => {
-                // text_editor_update(message);
-                Command::none()
-            },
+            // Message::TextEditor(_message) => {
+            //     // text_editor_update(message);
+            //     Command::none()
+            // },
             Message::TextInput(id, message) => {
                 text_input_callback(id, message);
                 Command::none()
@@ -226,9 +224,6 @@ impl multi_window::Application for App {
             },
             Message::Toggler(id, message) => {
                 toggle_callback(id, message);
-                Command::none()
-            },
-            Message::UpdateText => {
                 Command::none()
             },
             Message::Window(message) => {
@@ -302,16 +297,21 @@ impl multi_window::Application for App {
 }
 
 
+// Central method to get the structures stored in the mutex and then the children 
 fn create_content(iced_id: window::Id) -> Element<'static, Message> {
-    
-    let id_usize = get_usize_of_id(iced_id);
+    // The window structures and other data are store in HashMaps where the key is id of usize type.
+    // Since multiwindows was added to Iced recently, I had to patch the code to implement many windows
+    // The current concept will be changed soon to better use the Iced window id.
+    let window_id = get_usize_of_id(iced_id);
 
     let state = access_state();
 
-    let unique_parent_ids = get_unique_parents(state.container_ids.get(&id_usize));
+    // First we find the unique containers in the window
+    let unique_parent_ids = get_unique_parents(state.container_ids.get(&window_id));
 
+    // The unique parent containers are combined with all the children ids held in a vec.
     let all_parent_ids = get_combine_parents_and_children(
-                            &unique_parent_ids, state.ids.get(&id_usize));
+                            &unique_parent_ids, state.ids.get(&window_id));
     
     drop(state);
 
@@ -340,26 +340,26 @@ struct ParentChildIds {
     child_ids: Vec<usize>,
 }
 
-fn get_combine_parents_and_children(unique_ids: &Vec<usize>, ids_opt: Option<&Vec<IpgIds>>) -> Vec<ParentChildIds> {
+fn get_combine_parents_and_children(parent_ids: &Vec<usize>, ids_opt: Option<&Vec<IpgIds>>) -> Vec<ParentChildIds> {
 
     let mut parent_child_ids: Vec<ParentChildIds> = vec![];
 
     let ids = match ids_opt {
         Some(ids) => ids,
-        None => panic!("ids in get _and_combine_parents_and_children not found")
+        None => panic!("ids in get_and_combine_parents_and_children not found")
     };
 
-    for id in unique_ids {
+    for par_id in parent_ids {
 
         let mut child_ids: Vec<usize> = vec![];
 
         for ids in ids {
-            if id == &ids.parent_uid {
+            if par_id == &ids.parent_uid {
                 child_ids.push(ids.id);
             }  
         }
         
-        parent_child_ids.push(ParentChildIds { parent_id: id.clone(), child_ids })
+        parent_child_ids.push(ParentChildIds { parent_id: par_id.clone(), child_ids })
     }
 
     parent_child_ids
@@ -409,12 +409,12 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                     }
                     return construct_container(con, content)
                 },
-                IpgContainers::IpgPane(pane) => {
-                    return construct_pane(pane, content)
-                },
-                IpgContainers::IpgPaneGrid(pngd) => {
-                    return construct_pane_grid(pngd, content)
-                },
+                // IpgContainers::IpgPane(pane) => {
+                //     return construct_pane(pane, content)
+                // },
+                // IpgContainers::IpgPaneGrid(pngd) => {
+                //     return construct_pane_grid(pngd, content)
+                // },
                 IpgContainers::IpgRow(row) => {
                     return construct_row(row, content)
                 },
@@ -492,9 +492,9 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgText(text) => {
                     return construct_text(text)
                 },
-                IpgWidgets::IpgTextEditor(te) => {
-                    return construct_text_editor(te.clone()) 
-                },
+                // IpgWidgets::IpgTextEditor(te) => {
+                //     return construct_text_editor(te.clone()) 
+                // },
                 IpgWidgets::IpgTextInput(input) => {
                     return construct_text_input(input.clone())           
                 },

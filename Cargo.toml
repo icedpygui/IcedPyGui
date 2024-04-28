@@ -8,20 +8,15 @@ edition = "2021"
 name = "icedpygui"
 crate-type = ["cdylib"]
 
-[dependencies.pyo3]
-pyo3 = { version = "0.21.1", features = ["abi3"]}
-
-[features]
-extension-module = ["pyo3/extension-module"]
-default = ["extension-module"]
 
 [dependencies]
+pyo3 = { version = "0.21.2", features = ["extension-module"] }
 iced = { version = "0.12.1", features = ["advanced", "debug", "highlighter", "image", 
                                         "lazy", "smol", "svg", "tokio", "multi-window"] }
-tokio.features = ["fs"]
+
+tokio = { version = "1.0", features = ["fs"]}
 iced_aw = { version = "0.8.0", features = ["card", "color_picker", "icons", "quad",]}
 rfd = "0.13"
 once_cell = "1.19.0"
 chrono = "0.4.31"
-num-traits = "0.2"
 unicode-segmentation = "1.9.0"

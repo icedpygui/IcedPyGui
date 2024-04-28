@@ -44,7 +44,7 @@ use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParams};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_table::IpgTable;
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
-use ipg_widgets::ipg_text_editor::IpgTextEditor;
+// use ipg_widgets::ipg_text_editor::IpgTextEditor;
 use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInput, IpgTextInputParams};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParams};
@@ -1562,26 +1562,26 @@ fn add_image(&mut self,
 
     }
 
-    #[pyo3(signature = (parent_id, file_name, gen_id=None))]
-    fn add_text_editor(&mut self,
-                            parent_id: String,
-                            file_name: String,
-                            gen_id: Option<usize>,
-                        )  -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
+    // #[pyo3(signature = (parent_id, file_name, gen_id=None))]
+    // fn add_text_editor(&mut self,
+    //                         parent_id: String,
+    //                         file_name: String,
+    //                         gen_id: Option<usize>,
+    //                     )  -> PyResult<usize>
+    // {
+    //     let id = self.get_id(gen_id);
 
-        set_state_of_widget(id, parent_id);
+    //     set_state_of_widget(id, parent_id);
 
-        let mut state = access_state();
+    //     let mut state = access_state();
         
-        state.widgets.insert(id, IpgWidgets::IpgTextEditor(IpgTextEditor::new(
-                                                        id,
-                                                        file_name,
-                                                        )));
+    //     state.widgets.insert(id, IpgWidgets::IpgTextEditor(IpgTextEditor::new(
+    //                                                     id,
+    //                                                     file_name,
+    //                                                     )));
 
-        Ok(id)
-    }
+    //     Ok(id)
+    // }
 
     #[pyo3(signature = (parent_id, placeholder, gen_id=None,
                         on_input=None, on_submit=None, 
@@ -2091,7 +2091,7 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgText(txt) => {
             text_item_update(txt, item, value);
         },
-        IpgWidgets::IpgTextEditor(_) => (),
+        // IpgWidgets::IpgTextEditor(_) => (),
         IpgWidgets::IpgTextInput(ti) => {
             text_input_item_update(ti, item, value);
         },
@@ -2109,8 +2109,8 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
     match container {
         IpgContainers::IpgColumn(_) => todo!(),
         IpgContainers::IpgContainer(_) => todo!(),
-        IpgContainers::IpgPaneGrid(_) => todo!(),
-        IpgContainers::IpgPane(_) => todo!(),
+        // IpgContainers::IpgPaneGrid(_) => todo!(),
+        // IpgContainers::IpgPane(_) => todo!(),
         IpgContainers::IpgRow(_) => todo!(),
         IpgContainers::IpgScrollable(scroll) => {
             scrollable_item_update(scroll, item, value);

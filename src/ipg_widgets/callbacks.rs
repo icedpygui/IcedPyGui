@@ -248,10 +248,10 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     let wco = WidgetCallbackOut::default();
                     wco
                 },
-                IpgWidgets::IpgTextEditor(_) => {
-                    let wco = WidgetCallbackOut::default();
-                    wco
-                },
+                // IpgWidgets::IpgTextEditor(_) => {
+                //     let wco = WidgetCallbackOut::default();
+                //     wco
+                // },
                 IpgWidgets::IpgTextInput(input) => {
                     // During the input, the widget is assigned the value so that it shows
                     // during typing.  On submit, the text box is cleared, so no value.
@@ -327,14 +327,14 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
             let wco = WidgetCallbackOut::default();
             return wco
         },
-        IpgContainers::IpgPaneGrid(_) => {
-            let wco = WidgetCallbackOut::default();
-            return wco
-        },
-        IpgContainers::IpgPane(_) => {
-            let wco = WidgetCallbackOut::default();
-            return wco
-        },
+        // IpgContainers::IpgPaneGrid(_) => {
+        //     let wco = WidgetCallbackOut::default();
+        //     return wco
+        // },
+        // IpgContainers::IpgPane(_) => {
+        //     let wco = WidgetCallbackOut::default();
+        //     return wco
+        // },
         IpgContainers::IpgRow(_) => {
             let wco = WidgetCallbackOut::default();
             return wco
