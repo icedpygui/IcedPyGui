@@ -75,6 +75,7 @@ pub fn convert_vecs<T, U>(vector: Vec<T>) -> Vec<U>
 		.collect()
 }
 
+// Standard method for Length using Width
 pub fn get_width(width: Option<f32>, width_fill: bool)-> Length {
     // width overrides width_fill
     match width 
@@ -91,6 +92,7 @@ pub fn get_width(width: Option<f32>, width_fill: bool)-> Length {
             }
 }
 
+// Standard method for Length using Height
 pub fn get_height(height: Option<f32>, height_fill: bool)-> Length {
     // height overrides height_fill
     match height 
@@ -107,7 +109,7 @@ pub fn get_height(height: Option<f32>, height_fill: bool)-> Length {
             }
 }
 
-
+// Standard method for padding
 pub fn get_padding(padding: Vec<f64>)-> Padding {
     let len = padding.len();
     match len {

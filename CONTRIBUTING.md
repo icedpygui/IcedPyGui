@@ -1,6 +1,6 @@
 # Contributing to IcedPyGui
 
-Thanks for taking the time to contribute! We appreciate all contributions, from reporting bugs to implementing new features.
+Thanks for taking the time to contribute! All contributions are appreciated, from reporting bugs to implementing new features.
 
 If you're unclear on how to proceed after reading this guide, please contact us on [Discord](https://discord.com/channels/1233081452447666270/1233085181448032458).
 
@@ -9,15 +9,12 @@ If you're unclear on how to proceed after reading this guide, please contact us 
 - [Reporting bugs](#reporting-bugs)
 - [Suggesting enhancements](#suggesting-enhancements)
 - [Contributing to the codebase](#contributing-to-the-codebase)
-- [Contributing to documentation](#contributing-to-documentation)
-- [Release flow](#release-flow)
-- [License](#license)
 
 ## Reporting bugs
 
 Before creating a bug report, please check that your bug has not already been reported, and that your bug exists on the latest version of IcedPyGui.
-Also, go to the [Discord](https://discord.com/channels/1233081452447666270/1233085181448032458) and ask a question title: Bug?: My bug. Explain the issue.
-We use [GitHub issues](https://github.com/icedpygui/IcedPyGui/issues) to track bugs and suggested enhancements.
+Also, go to the [Discord](https://discord.com/channels/1233081452447666270/1233085181448032458) and ask a question first.
+[GitHub issues](https://github.com/icedpygui/IcedPyGui/issues) are used track bugs and suggested enhancements after the Disord forum is used.
 You can report a bug by opening a [new issue](https://github.com/icedpygui/IcedPyGui/issues/new).
 
 If you find a closed issue that seems to report the same bug you're experiencing, open a new issue and include a link to the original issue in your issue description.
@@ -26,6 +23,7 @@ Please include as many details as possible in your bug report. The information h
 
 ## Suggesting enhancements
 
+Go to the [Discord-New-Features](https://discord.com/channels/1233081452447666270/1234893749830680646).
 Please describe the behavior you want and why.
 
 ## Contributing to the codebase
@@ -43,139 +41,135 @@ You may use the issue to discuss possible solutions.
 
 ### Working on your issue
 
-IcedPyGui development flow relies on both Rust and Python and being a GUI, the main way to debug is by looking at the displayed screen and seeing if it behaves as you like.
+IcedPyGui development flow relies on both Rust and Python.  The most common issues or enhancements are going to be:
+* adding widgets developed in rust and already working in iced.
+* issues with adding more pyo3 enhancements to how rust/python interact.
+* modifying widgets that cannot directly be added to icedpygui due to some issue.  These mostly seem to be the iced messaging system where an id is needed and having no lifetime restrictions due to the use of the Mutex storage system.
 
-If you are adding a widget, it's best to first getting it working in the pure Rust Iced environment using the currently support release.  Once this is done, then add it to IcedPyGui.
+If you are adding a widget, it's best to first get it working in the pure Rust Iced environment using the currently supported release.  Once this is done, then add it to IcedPyGui.
 
 Create a new git branch from the `main` branch in your local repository, and start coding!
 
-The Rust code is located in the `src` directory, while the Python codebase is located in the `py-polars` directory.
-Both directories contain a `Makefile` with helpful commands. Most notably:
+The Rust code is located in the `src` directory, while the Python codebase is located in the `icedpygui` directory.  There is only one python file used for linting purposes and documentation.
 
-- `make test` to run the test suite (see the [test suite docs](/py-polars/tests/README.md) for more info)
-- `make pre-commit` to run autoformatting and linting
+#### Adding a widget
+To add a widget, make a new folder under `ipg_widgets`, ipg_mywidget.rs.  If this is a modified Iced or Iced_aw widget, create the file under the folder iced_widgets.  
 
-Note that your work cannot be merged if these checks fail!
-Run `make help` to get a list of other helpful commands.
+Take a look at the ipg_button to see the ipg and pyo3 imports used.  These will be typically used by all widgets.  Also use the types specified for the id, show, and user_data.
 
-Two other things to keep in mind:
+All widgets and such start with Ipg so as not to get confused or cause a conflict with the corresponding iced and iced_aw widgets.
 
-- If you add code that should be tested, add tests.
-- If you change the public API, [update the documentation](#api-reference).
+##### Create and implement IpgMyNewWidget
+
+The structure members will always include the id and show.  Containers don't need the user_data but widgets will, if they have a callback.  The remaining members are determined by your widget.  All members need to be initialized, by the calling function or by your own defaults.  
+
+If you are using an Iced or Iced_aw widget, look through the code/docs and determine the defaulting values.  However, sometimes those defaults might not be the behavior you want so change accordingly.  
+
+Some parameters like width, height, and padding have a specific way they are handled.  In the cases of width and height, they come over as 2 parameters (i.e. width: <f32>, width_fill: bool), a f32 and a bool for each.  These are converted to Length with a helper file.  The padding comes over as a Vec<f32> and is converted to a Padding using a helper file.  See the button or another file for an example.
+
+Parameters that require a python class/rust enum equivalent come over as an Option<PyObject>.  This type is converted to their Iced equivalent in the your module.  The reason there seems to be duplication is that a python class that is used for linting needs to have a corresponding enum in rust that is defined by pyo3.  Therefore, a conversion routines needed for all widgets that use these python classes.
+
+##### Add any messaging
+Messages for each widget are added in your widget's module.  A single entry will be added in the app module later.  This keeps the app module from growing out of hand and keeps the widget code mostly confined to one module.  The widget will be wrapped with an id so the message in the app module will be MyWidget(usize, any other parameter).  Therefore the typical naming will be MyWidgetMessage.  If the name seems long, abbreviate the MyWidget part.
+
+##### Add Construct method
+The widget is constructed using the construct method and should follow the below format.  The IpgMyWidget is the structure that was strored in the mutex which is retrieved after the start_session command is issued in python.
+```rust
+fn construct_mywidget(mywid: IpgMyWidget) -> Element<'static, app::Message> {
+    // your stuff
+    let mywidget = MyIpgWidget::new(...) 
+    //wrap with id
+    mywidget.map(move |message| app::Message::IcedWidget(mywid.id, message))
+}
+```
+
+##### Adding the callback method
+The callback method uses 2 structures containing some generic and specific members.  These are WidgetCallbackIn and WidgetCallbackOut.  The reason for this is that a single function serves to obtain/update all of the widget's data and so a single type was needed to be carried in and out of the callback method.  The callback methods are located in ipg_widgets/callbacks.rs.
+
+In many cases, the generic or a suitable member can be used but if you need more clarity, feel free to add members as needed.
+
+The general usage is to instantiate the structure, add any data to the wci and call the get_set method in the matched message and return any needed data for the callback.
+```rust
+pub fn mywidget_callback(id: usize, message: MyWidgetMessage) {
+    // instantiate the structure
+    let mut wci = WidgetCallbackIn::default();
+    // id must be used
+    wci.id = id;
+    // match the message
+    match message {
+        MyWidgetMessage::OnSomething(something: bool) => {
+            // add to wci
+            wci.boolean = something
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = "on_something".to_string();
+            process_callback(wco);
+        }
+    }
+}
+```
+##### Processing the callback
+
+The ipg_button is a typical example of a callback so see that code.  The general flow is:
+* Obtain the MutexGuard of the callbacks HashMap type
+* Check to see if it exits using the id and event_name
+* Get and match the the callback since it's an Option<PyObject>
+* Using the Python gil and matching all the variations of possible data (1-3), call the python method.
+
+##### Add any parameter enums
+All widgets should be designed so that all parameters can be updated.  Some parameters or widgets might only rarely be updated and some may be updated routinely, like the text widget.  For completeness, it was decided to add the ability to update all parameters.  This updating is also a good way to show the users how the parameters work and typically, if the updating works, the widgets works properly and it's like a testing of the widget.
+
+As you see in ipg_button, an enum was added including all of the ipg_button parameters.  If you look in /icedpygui/icedpygui.pyi, you'll see a corresponding python class for the IpgButtonParams.  
+
+So add the pub enum IpgMyWidgetParams and the class IpgMyWidgetParams.  Also add reference to the class to the __init__.py file too.
+
+Now add you update method and complete as done in the ipg_button method.  If your widget return some data like, checkbox does, then look at the ipg_checkbox callback to see how all the possbile permutations are handled when 3 parameters are possible.  
+
+You'll also need to determine the form of your data that is returned.  With a single type, you would just return it as a String, boolean, ...  However, if its multiple values thaen you might need a vector or a hasmap that is converted to  a dictionary for python.  Checkout the existed widgets for how this is done.
+```rust
+pub fn mywidget_item_update(mywid: &mut IpgMyWidget,
+                            item: PyObject,
+                            value: PyObject,
+                            )
+{
+    // your code
+}
+```
+Note that there are a number of generic extraction methods in the helpers file but you may have to add any special ones in your module that pertains only to your widget.  They all follow the same format.
+
+##### Adding to libs.rs
+At this point, you need to add the add_mywidget() method to the IPG structure.  The containers and widgets are added alphabetically in their own section.  A widget that can also be a container is added in the container section.  The methods are very similar so use them as examples for you widget.  Note, when you are using the Mutex, try and make sure to drop it a soon as possible.  If you test your widget and find that the program freezes, you probably forgot to drop the Mutex someplace in your code.  Also, you can't have any parameters in a Mutex that have a lifetime.  So don't use &str but String values only.  
+
+Add your widget or container to the match_widget or match_container methods.
+
+Add you enums to the icedpugui pymodule.
+
+##### Adding to the app
+In most cases, you only need to add to the message enum and the update method in the app.
+You may still have a couple of errors about incomplete matches because some widgets had to be handled differently.  Simply add your widget in and that should pretty much be it.
+
+##### Make the example python file
+All of the python examples are found at https://github.com/icedpygui/IcedPyGui-Python-Examples.  You probably have already made an example file so add it to the `python_demo` folder and it will be moved over to the examples repository once the your code is excepted.  Make sure and put enough comments in the file so that a new user understands how to use the widget.
 
 ### Pull requests
 
-When you have resolved your issue, [open a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork) in the Polars repository.
+When you have resolved your issue or made a new feature, [open a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork) in the IcedPyGui repository.
 Please adhere to the following guidelines:
 
-- Start your pull request title with a [conventional commit](https://www.conventionalcommits.org/) tag. This helps us add your contribution to the right section of the changelog. We use the [Angular convention](https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#type). Scope can be `rust` and/or `python`, depending on your contribution.
-- Use a descriptive title. This text will end up in the [changelog](https://github.com/pola-rs/polars/releases).
+- Start your pull request title with a issue number.
+- Use a descriptive title.
 - In the pull request description, [link](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue) to the issue you were working on.
 - Add any relevant information to the description that you think may help the maintainers review your code.
 - Make sure your branch is [rebased](https://docs.github.com/en/get-started/using-git/about-git-rebase) against the latest version of the `main` branch.
-- Make sure all [GitHub Actions checks](/.github/workflows/README.md) pass.
 
 After you have opened your pull request, a maintainer will review it and possibly leave some comments.
-Once all issues are resolved, the maintainer will merge your pull request, and your work will be part of the next Polars release!
+Once all issues are resolved, the maintainer will merge your pull request, and your work will be part of the next IcedPyGui release!
 
 Keep in mind that your work does not have to be perfect right away!
 If you are stuck or unsure about your solution, feel free to open a draft pull request and ask for help.
 
+If you are creating a new widget, a highly commented python example file must also be submitted.
+
 ## Contributing to documentation
 
-The most important components of Polars documentation are the [user guide](https://pola-rs.github.io/polars-book/user-guide/), the API references, and the database of questions on [StackOverflow](https://stackoverflow.com/).
-
-### User guide
-
-The user guide is maintained in the [polars-book](https://github.com/pola-rs/polars-book) repository.
-For contributing to the user guide, please refer to the [contributing guide](https://github.com/pola-rs/polars-book/blob/master/CONTRIBUTING.md) in that repository.
-
-### API reference
-
-Polars has separate API references for [Rust](https://pola-rs.github.io/polars/docs/rust/dev/polars/) and [Python](https://pola-rs.github.io/polars/docs/python/dev/reference/index.html).
-These are generated directly from the codebase, so in order to contribute, you will have to follow the steps outlined in [this section](#contributing-to-the-codebase) above.
-
-#### Rust
-
-Rust Polars uses `cargo doc` to build its documentation. Contributions to improve or clarify the API reference are welcome.
-
-#### Python
-
-For the Python API reference, we always welcome good docstring examples.
-There are still parts of the API that do not have any code examples.
-This is a great way to start contributing to Polars!
-
-Note that we follow the [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) convention.
-Docstring examples should also follow the [Black](https://black.readthedocs.io/) codestyle.
-From the `py-polars` directory, run `make fmt` to make sure your additions pass the linter, and run `make doctest` to make sure your docstring examples are valid.
-
-Polars uses Sphinx to build the API reference.
-This means docstrings in general should follow the [reST](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) format.
-If you want to build the API reference locally, go to the `py-polars/docs` directory and run `make html SPHINXOPTS=-W`.
-The resulting HTML files will be in `py-polars/docs/build/html`.
-
-New additions to the API should be added manually to the API reference by adding an entry to the correct `.rst` file in the `py-polars/docs/source/reference` directory.
-
-#### Node.js
-
-For contributions to Node.js Polars, please refer to the official [Node.js Polars repository](https://github.com/pola-rs/nodejs-polars).
-
-### StackOverflow
-
-We use StackOverflow to create a database of high quality questions and answers that is searchable and remains up-to-date.
-There is a separate tag for each language:
-
-- [Python Polars](https://stackoverflow.com/questions/tagged/python-polars)
-- [Rust Polars](https://stackoverflow.com/questions/tagged/rust-polars)
-- [Node.js Polars](https://stackoverflow.com/questions/tagged/nodejs-polars)
-
-Contributions in the form of well-formulated questions or answers are always welcome!
-If you add a new question, please notify us by adding a [matching issue](https://github.com/pola-rs/polars/issues/new?&labels=question&template=question.yml) to our GitHub issue tracker.
-
-## Release flow
-
-_This section is intended for Polars maintainers._
-
-Polars releases Rust crates to [crates.io](https://crates.io/crates/polars) and Python packages to [PyPI](https://pypi.org/project/polars/).
-
-New releases are marked by an official [GitHub release](https://github.com/pola-rs/polars/releases) and an associated git tag. We utilize [Release Drafter](https://github.com/release-drafter/release-drafter) to automatically draft GitHub releases with release notes.
-
-### Steps
-
-The steps for releasing a new Rust or Python version are similar. The release process is mostly automated through GitHub Actions, but some manual steps are required. Follow the steps below to release a new version.
-
-Start by bumping the version number in the source code:
-
-1. Check the [releases page](https://github.com/pola-rs/polars/releases) on GitHub and find the appropriate draft release. Note the version number associated with this release.
-2. Make sure your fork is up-to-date with the latest version of the main Polars repository, and create a new branch.
-3. Bump the version number.
-
-- _Rust:_ Update the version number in all `Cargo.toml` files in the `polars` directory and subdirectories. You'll probably want to use some search/replace strategy, as there are quite a few crates that need to be updated.
-- _Python:_ Update the version number in [`py-polars/Cargo.toml`](https://github.com/pola-rs/polars/blob/main/py-polars/Cargo.toml#L3) to match the version of the draft release.
-
-4. From the `py-polars` directory, run `make build` to generate a new `Cargo.lock` file.
-5. Create a new commit with all files added. The name of the commit should follow the format `release(<language>): <Language> Polars <version-number>`. For example: `release(python): Python Polars 0.16.1`
-6. Push your branch and open a new pull request to the `main` branch of the main Polars repository.
-7. Wait for the GitHub Actions checks to pass, then squash and merge your pull request.
-
-Directly after merging your pull request, release the new version:
-
-8. Go back to the [releases page](https://github.com/pola-rs/polars/releases) and click _Edit_ on the appropriate draft release.
-9. On the draft release page, click _Publish release_. This will create a new release and a new tag, which will trigger the GitHub Actions release workflow ([Python](https://github.com/pola-rs/polars/actions/workflows/release-python.yml) / [Rust](https://github.com/pola-rs/polars/actions/workflows/release-rust.yml)).
-10. Wait for all release jobs to finish, then check [crates.io](https://crates.io/crates/polars)/[PyPI](https://pypi.org/project/polars/) to verify that the new Polars release is now available.
-
-### Troubleshooting
-
-It may happen that one or multiple release jobs fail. If so, you should first try to simply re-run the failed jobs from the GitHub Actions UI.
-
-If that doesn't help, you will have to figure out what's wrong and commit a fix. Once your fix has made it to the `main` branch, re-trigger the release workflow by updating the git tag associated with the release. Note the commit hash of your fix, and run the following command:
-
-```shell
-git tag -f <version-number> <commit-hash> && git push -f origin <version-number>
-```
-
-This will update the tag to point to the commit of your fix. The release workflows will re-trigger and hopefully succeed this time!
-
-## License
-
-Any contributions you make to this project will fall under the [MIT License](LICENSE) that covers the Polars project.
+To be determined.
