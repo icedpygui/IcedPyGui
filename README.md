@@ -51,16 +51,18 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     * SelectableText - all mouse buttons supported
     * Table - Currently simple, easily loaded with a list of dictionaries
 
-* More to come in the near future
-
+* Python issues to be addressed
+    * Need to incorporate using with statement in python.  Using with would allow one to not have to supply the window or parent id if those follow closely.  For example:
+    ``` python
+        with window(...):
+            with container(...):
+                add_widget(...)
+    ```
+    * @dataclass needs to be supported (support soon)
 
 ## Installation (PiPy)
 
-* Open one of the example using your favorite IDE.
-* Create and activate a virtual environment
- ```python
-pip install icedpygui
- ```
+* Go to the examples repository https://github.com/icedpygui/IcedPyGui-Python-Examples
 
 ## Installation (Rust)
 * Install Rust
@@ -70,7 +72,7 @@ pip install icedpygui
 * Use maturin develop (~30 sec compile time, store in local venv)
 * maturin build (~40 sec compile time store in target/wheels)
 * maturin build --release (~4 min compile time stored in target/wheels)
-* Copy over one of the python examples or used the below code
+* Copy over one of the python examples (link above), use the below code, or the demo in the [demo folder](https://github.com/icedpygui/IcedPyGui/tree/main/python_demo).
 ```python
 pip install maturin
 maturin develop
@@ -79,13 +81,13 @@ maturin develop
 
 ## Overview
 
-* IcedPyGui is based on Rust Iced https://github.com/iced-rs/iced.
-* Widgets for Iced_aw are used too https://github.com/iced-rs/iced_aw.
-* Pyo3 is used as the python wrapper https://github.com/pyo3/pyo3.
-* Maturin is used to build and publish the module https://github.com/PyO3/maturin.
-* The syntax and the design of the callbacks were inspired by the python wrapper of Dear ImGui, DearPyGui(DPG) https://github.com/hoffstadt/DearPyGui.
-* The icon above was a merge of Python and Iced icons by Deep Dream Generator https://deepdreamgenerator.com/
-* Python Examples located at https://github.com/icedpygui/IcedPyGui-Python-Examples
+* IcedPyGui is based on [Rust Iced](https://github.com/iced-rs/iced).
+* Widgets for [Iced_aw](https://github.com/iced-rs/iced_aw) are used too .
+* [Pyo3](https://github.com/pyo3/pyo3) is used as the python wrapper.
+* [Maturin](https://github.com/PyO3/maturin) is used to build and publish the module .
+* The syntax and the design of the callbacks were inspired by the python wrapper of Dear ImGui, [DearPyGui(DPG)](https://github.com/hoffstadt/DearPyGui).
+* The icon above was a merge of Python and Iced icons by [Deep Dream Generator](https://deepdreamgenerator.com)
+* [Python Examples are here](https://github.com/icedpygui/IcedPyGui-Python-Examples).
 
 ## Intro 
 Iced is a great GUI for Rust but it's still early in the development cycle, more good things will follow.  
