@@ -264,22 +264,6 @@ pub enum IpgWindowParams {
     Theme,
 }
 
-pub fn window_cnt_item_update(wnd_cnt: &mut IpgWindow,
-                                item: PyObject,
-                                value: PyObject
-                            )
-{
-    let update = try_extract_window_update(item);
-
-    match update {
-        IpgWindowParams::Debug => {
-            wnd_cnt.debug = try_extract_boolean(value);
-        },
-        IpgWindowParams::Theme => {
-            // Do nothing
-        },
-    }
-}
 
 pub fn window_item_update(wid: usize,
                             item: PyObject,
@@ -298,7 +282,8 @@ pub fn window_item_update(wid: usize,
                 if wid == *id {
                     let wnd_id = wnd_id.clone();
                     state.window_debug.entry(wnd_id).and_modify(|e| { e.1 = val });
-                    break;
+                    drop(state);
+                    return;
                 }
             }
             drop(state);
@@ -311,12 +296,14 @@ pub fn window_item_update(wid: usize,
                 if wid == *id {
                     let wnd_id = wnd_id.clone();
                     state.window_theme.entry(wnd_id).and_modify(|e| { e.1 = iced_theme });
-                    break;
+                    drop(state);
+                    return;
                 }
             }
             drop(state);
         },
     }
+
 }
 
 

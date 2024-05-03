@@ -3,6 +3,9 @@ authors = ["Charles Ray <icedpygui@gmail.com>"]
 name = "IcedPyGui"
 version = "0.1.0"
 edition = "2021"
+license = "GNU"
+description = "Python wrapper for Rust Iced"
+readme = "README.md"
 
 [lib]
 name = "icedpygui"
@@ -20,3 +23,12 @@ rfd = "0.13"
 once_cell = "1.19.0"
 chrono = "0.4.31"
 unicode-segmentation = "1.9.0"
+
+[build-dependencies]
+pyo3-build-config = { version = "0.21.2", features = ["resolve-config"] }
+
+[profile.release]
+strip = true
+lto = "fat"
+codegen-units = 1
+opt-level = 3

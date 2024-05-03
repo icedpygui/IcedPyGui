@@ -60,9 +60,12 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     ```
     * @dataclass needs to be supported (support soon)
 
+## Pyo3 Enhancements
+There are a number of future possible enhancements related to parrallism and async.
+
 ## Installation (PiPy)
 
-* Go to the examples repository https://github.com/icedpygui/IcedPyGui-Python-Examples
+* Go to the examples repository https://github.com/icedpygui/IcedPyGui-Python-Examples and follow the readme instructions.
 
 ## Installation (Rust)
 * Install Rust

@@ -49,8 +49,7 @@ use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInput, IpgTextI
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParams};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
-use ipg_widgets::ipg_window::{get_iced_window_theme, window_cnt_item_update, window_item_update, 
-                                IpgWindow, IpgWindowThemes, IpgWindowParams};
+use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, IpgWindowParams, IpgWindowThemes};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 
 use ipg_widgets::helpers::{check_for_dup_container_ids,  
@@ -2000,7 +1999,7 @@ fn add_image(&mut self,
 
     #[pyo3(signature = (wid, item, value))]
     fn update_item(&self, wid: usize, item: PyObject, value: PyObject) {
-        
+
         let mut state = access_state();
 
         let widget_opt = state.widgets.get_mut(&wid);
@@ -2012,11 +2011,22 @@ fn add_image(&mut self,
             },
             None => {
                 match state.containers.get_mut(&wid) {
-                    Some(wnd) => {
-                        let wid = match_container(wnd, item.clone(), value.clone());
-                        drop(state);
-                        // Check to see if window if so update it also.
-                        window_item_update(wid, item, value)
+                    // Since multi windows implementation, the window container
+                    // is no longer used except for obtaining the id (usize type)
+                    // which in turn allows one to get the Id type.  The state needs 
+                    // to be dropped here before calling the window_update since it 
+                    // opened again.
+                    // The window methods will be refactored later.
+                    
+                    Some(cnt) => {
+                        let wnd_id = check_if_window(cnt);
+                        if wnd_id != 0 {
+                            drop(state);
+                            window_item_update(wnd_id, item, value);
+                        } else {
+                            match_container(cnt, item.clone(), value.clone());
+                            drop(state);
+                        }
                     },
                     None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
                 }
@@ -2104,34 +2114,30 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
     }
 }
 
-fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject) -> usize {
-    
+fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject) {
+    // TODO: Update containers
     match container {
-        IpgContainers::IpgColumn(_) => {
-            0
-        },
-        IpgContainers::IpgContainer(_) => {
-            0
-        },
-        // IpgContainers::IpgPaneGrid(_) => todo!(),
-        // IpgContainers::IpgPane(_) => todo!(),
-        IpgContainers::IpgRow(_) => {
-            0
-        },
+        IpgContainers::IpgColumn(_) => {},
+        IpgContainers::IpgContainer(_) => {},
+        IpgContainers::IpgRow(_) => {},
         IpgContainers::IpgScrollable(scroll) => {
             scrollable_item_update(scroll, item, value);
-            scroll.id
         },
-        IpgContainers::IpgToolTip(_) => {
-            0
-        },
-        IpgContainers::IpgWindow(wnd_cnt) => {
-            window_cnt_item_update(wnd_cnt, item, value);
-            wnd_cnt.id
-        },
+        IpgContainers::IpgToolTip(_) => {},
+        IpgContainers::IpgWindow(_) => {},
     }
 }
 
+fn check_if_window(container: &mut IpgContainers) -> usize {
+    match container {
+        IpgContainers::IpgColumn(_) => 0,
+        IpgContainers::IpgContainer(_) => 0,
+        IpgContainers::IpgRow(_) => 0,
+        IpgContainers::IpgScrollable(_) => 0,
+        IpgContainers::IpgToolTip(_) => 0,
+        IpgContainers::IpgWindow(wnd_cnt) => wnd_cnt.id.clone(),
+    }
+}
 
 #[pymodule]
 fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
