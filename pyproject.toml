@@ -8,7 +8,9 @@ description = "Python wrapper for Rust Iced"
 authors = [
     {name = 'Charles Ray', email = 'icedpygui@gmail.com'}
 ]
-requires-python = ">=3.9"
+# PyO3 doesn't support python 3.13 yet.
+requires-python = ">=3.9, < 3.13"
+keywords = ["iced", "iced_aw", "gui", "rust", "python"]
 
 classifiers = [
     "Programming Language :: Rust",

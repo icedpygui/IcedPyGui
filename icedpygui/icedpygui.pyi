@@ -1,5 +1,5 @@
 from types import Callable, Union, List
-from typing import Optional, OrderedDict, Tuple
+from typing import OrderedDict, Tuple
 
 
 
