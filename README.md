@@ -14,7 +14,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
 * Supported Iced widgets
     * Button 
     * Checkbox 
-    * Canvas - Future
+    * Canvas - Coming next release
     * Column - container
     * ComboBox - Needs modification to work in IPG, but PicKList good substitute
     * Container - container
@@ -22,7 +22,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     * Fonts - Future
     * Image
     * Modal
-    * MouseArea - Future
+    * MouseArea - Coming next release
     * PaneGrid - Future
     * PickList 
     * ProgressBar
@@ -35,7 +35,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     * Shader
     * Space
     * Styling - Some widget styling, more to come
-    * SVG - Future
+    * SVG - Coming next release
     * TextEditor - Future, needs modification to work in IPG
     * TextInput
     * Text
