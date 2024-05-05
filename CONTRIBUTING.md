@@ -140,12 +140,12 @@ Note that there are a number of generic extraction methods in the helpers file b
 ##### Adding to libs.rs
 At this point, you need to add the add_mywidget() method to the IPG structure.  The containers and widgets are added alphabetically in their own section.  A widget that can also be a container is added in the container section.  The methods are very similar so use them as examples for you widget.  Note, when you are using the Mutex, try and make sure to drop it a soon as possible.  If you test your widget and find that the program freezes, you probably forgot to drop the Mutex someplace in your code.  Also, you can't have any parameters in a Mutex that have a lifetime.  So don't use &str but String values only.  
 
-Add your widget or container to the match_widget or match_container methods.
+Add your widget or container to the match_widget or match_container methods in lib.rs.
 
-Add you enums to the icedpugui pymodule.
+Add you enums to the icedpugui pymodule in lib.rs.
 
-##### Adding to the app
-In most cases, you only need to add to the message enum and the update method in the app.
+##### Adding to the app.rs
+In most cases, you only need to add to the message enum, the update method, get_container, and get_widget methods in the app.rs.
 You may still have a couple of errors about incomplete matches because some widgets had to be handled differently.  Simply add your widget in and that should pretty much be it.
 
 ##### Make the example python file
