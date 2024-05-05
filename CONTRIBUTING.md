@@ -53,7 +53,7 @@ Create a new git branch from the `main` branch in your local repository, and sta
 The Rust code is located in the `src` directory, while the Python codebase is located in the `icedpygui` directory.  There is only one python file used for linting purposes and documentation.
 
 #### Adding a widget
-To add a widget, make a new folder under `ipg_widgets`, ipg_mywidget.rs.  If this is a modified Iced or Iced_aw widget, create the file under the folder iced_widgets.  
+To add a widget, make a new folder under `ipg_widgets`, ipg_mywidget.rs.  Also, if this is a modified Iced or Iced_aw widget, create the modified Iced code file under the folder iced_widgets.  
 
 Take a look at the ipg_button to see the ipg and pyo3 imports used.  These will be typically used by all widgets.  Also use the types specified for the id, show, and user_data.
 
@@ -67,7 +67,7 @@ If you are using an Iced or Iced_aw widget, look through the code/docs and deter
 
 Some parameters like width, height, and padding have a specific way they are handled.  In the cases of width and height, they come over as 2 parameters (i.e. width: <f32>, width_fill: bool), a f32 and a bool for each.  These are converted to Length with a helper file.  The padding comes over as a Vec<f32> and is converted to a Padding using a helper file.  See the button or another file for an example.
 
-Parameters that require a python class/rust enum equivalent come over as an Option<PyObject>.  This type is converted to their Iced equivalent in the your module.  The reason there seems to be duplication is that a python class that is used for linting needs to have a corresponding enum in rust that is defined by pyo3.  Therefore, a conversion routines needed for all widgets that use these python classes.
+Parameters that require a python class/rust enum equivalent come over as an Option<PyObject>.  This type is converted to their Iced equivalent in your module.  The reason there seems to be duplication is that a python class that is used for linting needs to have a corresponding enum in rust that is defined by pyo3.  Therefore, a conversion routines was needed for all widgets that use these python classes.
 
 ##### Add any messaging
 Messages for each widget are added in your widget's module.  A single entry will be added in the app module later.  This keeps the app module from growing out of hand and keeps the widget code mostly confined to one module.  The widget will be wrapped with an id so the message in the app module will be MyWidget(usize, any other parameter).  Therefore the typical naming will be MyWidgetMessage.  If the name seems long, abbreviate the MyWidget part.
@@ -110,10 +110,10 @@ pub fn mywidget_callback(id: usize, message: MyWidgetMessage) {
 ```
 ##### Processing the callback
 
-The ipg_button is a typical example of a callback so see that code.  The general flow is:
+The ipg_button and ipg_checkbox are typical examples of a callback, so see that code.  The general flow is:
 * Obtain the MutexGuard of the callbacks HashMap type
 * Check to see if it exits using the id and event_name
-* Get and match the the callback since it's an Option<PyObject>
+* Get and match to the callback since it's an Option<PyObject>
 * Using the Python gil and matching all the variations of possible data (1-3), call the python method.
 
 ##### Add any parameter enums
@@ -123,9 +123,9 @@ As you see in ipg_button, an enum was added including all of the ipg_button para
 
 So add the pub enum IpgMyWidgetParams and the class IpgMyWidgetParams.  Also add reference to the class to the __init__.py file too.
 
-Now add you update method and complete as done in the ipg_button method.  If your widget return some data like, checkbox does, then look at the ipg_checkbox callback to see how all the possbile permutations are handled when 3 parameters are possible.  
+Now add your update method and complete as done in the ipg_button method.  If your widget returns some data like, checkbox does, then look at the ipg_checkbox callback to see how all the possbile permutations are handled when 3 parameters are possible.  
 
-You'll also need to determine the form of your data that is returned.  With a single type, you would just return it as a String, boolean, ...  However, if its multiple values thaen you might need a vector or a hasmap that is converted to  a dictionary for python.  Checkout the existed widgets for how this is done.
+You'll also need to determine the form of your data that is returned.  With a sinple type, you would just return it as a String, boolean, ...  However, if its multiple values thaen you might need a vector or a HashMap that is converted to a dictionary for python.  Checkout the existing widgets for how this is done.
 ```rust
 pub fn mywidget_item_update(mywid: &mut IpgMyWidget,
                             item: PyObject,
