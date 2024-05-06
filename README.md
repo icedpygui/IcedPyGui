@@ -84,7 +84,7 @@ maturin develop
 
 ## Overview
 
-* IcedPyGui is based on [Rust Iced](https://github.com/iced-rs/iced).
+* IcedPyGui is based on [Rust Iced](https://github.com/iced-rs/iced) v0.12.1.
 * Widgets for [Iced_aw](https://github.com/iced-rs/iced_aw) are used too .
 * [Pyo3](https://github.com/pyo3/pyo3) is used as the python wrapper.
 * [Maturin](https://github.com/PyO3/maturin) is used to build and publish the module .
