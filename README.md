@@ -72,8 +72,8 @@ There are a number of future possible enhancements related to parrallism and asy
 * Clone the repository and open in your favorite IDE
 * Create and activate a virtual environment
 * Install maturin and compile the rust code
-* Use maturin develop (~30 sec compile time, store in local venv)
-* maturin build (~40 sec compile time store in target/wheels)
+* Use maturin develop (~30 sec compile time, stored in local venv)
+* maturin build (~40 sec compile time stored in target/wheels)
 * maturin build --release (~4 min compile time stored in target/wheels)
 * Copy over one of the python examples (link above), use the below code, or the demo in the [demo folder](https://github.com/icedpygui/IcedPyGui/tree/main/python_demo).
 ```python
