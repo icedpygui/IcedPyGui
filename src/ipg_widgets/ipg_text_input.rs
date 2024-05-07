@@ -168,7 +168,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                                                             ));
             match res {
                 Ok(_) => (),
-                Err(_) => panic!("TextInput: 3 parameters (id, value, user_data) are required or possibly a non-fatal python error in this function."),
+                Err(er) => panic!("TextInput: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
             }
         } else {
             let res = callback.call1(py, (
@@ -177,7 +177,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                                                                 ));
             match res {
                 Ok(_) => (),
-                Err(_) => panic!("TextInput: 2 parameters (id, value) are required or possibly a non-fatal python error in this function."),
+                Err(er) => panic!("TextInput: 2 parameters (id, value) are required or a python error in this function. {er}"),
             }
         } 
     });

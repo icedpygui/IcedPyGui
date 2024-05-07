@@ -200,7 +200,7 @@ fn process_callback(wco: WidgetCallbackOut)
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(_) => panic!("Image: 3 parameter (id, points, user_data) are required or possibly a non-fatal python error in this function."),
+                    Err(er) => panic!("Image: 3 parameter (id, points, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = callback.call1(py, (
@@ -209,7 +209,7 @@ fn process_callback(wco: WidgetCallbackOut)
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(_) => panic!("Image: 2 parameter (id, points) are required or possibly a non-fatal python error in this function."),
+                    Err(er) => panic!("Image: 2 parameter (id, points) are required or a python error in this function. {er}"),
                 }
             } 
         });
@@ -227,7 +227,7 @@ fn process_callback(wco: WidgetCallbackOut)
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(_) => panic!("Image: 2 parameter (id, user_data) are required or possibly a non-fatal python error in this function."),
+                    Err(er) => panic!("Image: 2 parameter (id, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = callback.call1(py, (
@@ -235,7 +235,7 @@ fn process_callback(wco: WidgetCallbackOut)
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(_) => panic!("Image: Only 1 parameter (id) is required or possibly a non-fatal python error in this function."),
+                    Err(er) => panic!("Image: Only 1 parameter (id) is required or a python error in this function. {er}"),
                 }
             } 
         });

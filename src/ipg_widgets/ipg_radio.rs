@@ -299,7 +299,7 @@ fn process_callback(wco: WidgetCallbackOut)
                                                                 ));
             match res {
                 Ok(_) => (),
-                Err(_) => panic!("Radio: 3 parameters (id, value, user_data) are required or possibly a non-fatal python error in this function."),
+                Err(er) => panic!("Radio: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
             }
         } else {
             let res = callback.call1(py, (
@@ -309,7 +309,7 @@ fn process_callback(wco: WidgetCallbackOut)
                             );
             match res {
                 Ok(_) => (),
-                Err(_) => panic!("Radio: 2 parameters (id, value) are required or possibly a non-fatal python error in this function."),
+                Err(er) => panic!("Radio: 2 parameters (id, value) are required or a python error in this function. {er}"),
             }
         } 
     });

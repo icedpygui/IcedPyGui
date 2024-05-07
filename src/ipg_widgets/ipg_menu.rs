@@ -201,7 +201,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(_) => panic!("Menu: 2 parameters (id, user_data) are required or possibly a non-fatal python error in this function."),
+                    Err(er) => panic!("Menu: 2 parameters (id, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = callback.call1(py, (
@@ -210,7 +210,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(_) => panic!("Menu: 1 parameter (id) is required or possibly a non-fatal python error in this function."),
+                    Err(er) => panic!("Menu: 1 parameter (id) is required or a python error in this function. {er}"),
                 }
             } 
     });

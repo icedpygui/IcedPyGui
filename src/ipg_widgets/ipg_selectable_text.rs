@@ -225,7 +225,7 @@ fn process_callback(wco: WidgetCallbackOut)
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(_) => panic!("SelectableText: 3 parameters (id, points, user_data) are required or possibly a non-fatal python error in this function."),
+                    Err(er) => panic!("SelectableText: 3 parameters (id, points, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = callback.call1(py, (
@@ -235,7 +235,7 @@ fn process_callback(wco: WidgetCallbackOut)
                                                                     );
                 match res {
                     Ok(_) => (),
-                    Err(_) => panic!("SelectableText 2 parameters (id, points) are required or possibly a non-fatal python error in this function."),
+                    Err(er) => panic!("SelectableText 2 parameters (id, points) are required or a python error in this function. {er}"),
                 }
             } 
         });

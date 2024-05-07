@@ -165,18 +165,26 @@ fn process_callback(wco: WidgetCallbackOut)
                 Some(ud) => ud,
                 None => panic!("Window callback user_data not found."),
             };
-            callback.call1(py, (
-                                    wco.id.clone(), 
-                                    value, 
-                                    user_data
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                                wco.id.clone(), 
+                                                                value, 
+                                                                user_data
+                                                                )
+                                                                );
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Window: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
+            }
         } else {
-            callback.call1(py, (
-                                    wco.id.clone(), 
-                                    value, 
-                                    )
-                            ).unwrap();
+            let res = callback.call1(py, (
+                                                                wco.id.clone(), 
+                                                                value, 
+                                                                )
+                                                                );
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Window: 2 parameters (id, value) are required or a python error in this function. {er}"),
+            }
         } 
     });
 
