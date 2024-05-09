@@ -22,7 +22,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     * Fonts - Future
     * Image
     * Modal
-    * MouseArea - Coming next release
+    * MouseArea
     * PaneGrid - Future
     * PickList 
     * ProgressBar
