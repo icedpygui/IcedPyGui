@@ -32,6 +32,7 @@ use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDa
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParams, IpgMenuSepTypes};
+use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParams};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams};
@@ -422,6 +423,90 @@ impl IPG {
                                     )));
     
     Ok(self.id)
+
+    }
+
+    #[pyo3(signature = (window_id, container_id, parent_id=None, 
+                        gen_id=None, on_press=None, on_release=None,
+                        on_right_press=None, on_right_release=None,
+                        on_middle_press=None, on_middle_release=None,
+                        on_enter=None, on_move=None, on_exit=None,
+                        show=true, user_data=None))]
+    fn add_mousearea(&mut self,
+                        window_id: String,
+                        container_id: String,
+                        // required above
+                        parent_id: Option<String>,
+                        gen_id: Option<usize>,
+                        on_press: Option<PyObject>,
+                        on_release: Option<PyObject>,
+                        on_right_press: Option<PyObject>,
+                        on_right_release: Option<PyObject>,
+                        on_middle_press: Option<PyObject>,
+                        on_middle_release: Option<PyObject>,
+                        on_enter: Option<PyObject>,
+                        on_move: Option<PyObject>,
+                        on_exit: Option<PyObject>,
+                        show: bool,
+                        user_data: Option<PyObject>,
+                        ) -> PyResult<usize>
+    {
+        self.id += 1;
+
+        let id = self.get_id(gen_id);
+
+        let prt_id = match parent_id {
+            Some(id) => id,
+            None => window_id.clone(),
+        };
+
+        if on_press.is_some() {
+            add_callback_to_mutex(id, "on_press".to_string(), on_press);
+        }
+        
+        if on_release.is_some() {
+            add_callback_to_mutex(id, "on_release".to_string(), on_release);
+        }
+        
+        if on_right_press.is_some() {
+            add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press);
+        }
+        
+        if on_right_release.is_some() {
+            add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release);
+        }
+        
+        if on_middle_press.is_some() {
+            add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press);
+        }
+        
+        if on_middle_release.is_some() {
+            add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release);
+        }
+        
+        if on_enter.is_some() {
+            add_callback_to_mutex(id, "on_enter".to_string(), on_enter);
+        }
+        
+        if on_move.is_some() {
+            add_callback_to_mutex(id, "on_move".to_string(), on_move);
+        }
+        
+        if on_exit.is_some() {
+            add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
+        }
+
+        set_state_of_container(self.id, window_id, Some(container_id), prt_id);
+
+        let mut state = access_state();
+
+        state.containers.insert(self.id, IpgContainers::IpgMouseArea(IpgMouseArea::new(
+                                    self.id,  
+                                    show, 
+                                    user_data
+                                )));
+
+        Ok(self.id)
 
     }
 
@@ -2119,6 +2204,9 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
     match container {
         IpgContainers::IpgColumn(_) => {},
         IpgContainers::IpgContainer(_) => {},
+        IpgContainers::IpgMouseArea(m_area) => {
+            mousearea_item_update(m_area, item, value);
+        },
         IpgContainers::IpgRow(_) => {},
         IpgContainers::IpgScrollable(scroll) => {
             scrollable_item_update(scroll, item, value);
@@ -2132,6 +2220,7 @@ fn check_if_window(container: &mut IpgContainers) -> usize {
     match container {
         IpgContainers::IpgColumn(_) => 0,
         IpgContainers::IpgContainer(_) => 0,
+        IpgContainers::IpgMouseArea(_) => 0,
         IpgContainers::IpgRow(_) => 0,
         IpgContainers::IpgScrollable(_) => 0,
         IpgContainers::IpgToolTip(_) => 0,
@@ -2155,6 +2244,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgImageParams>()?;
     m.add_class::<IpgMenuParams>()?;
     m.add_class::<IpgMenuSepTypes>()?;
+    m.add_class::<IpgMouseAreaParams>()?;
     m.add_class::<IpgPickListParams>()?;
     m.add_class::<IpgProgressBarParams>()?;
     m.add_class::<IpgRadioDirection>()?;

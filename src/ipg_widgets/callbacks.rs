@@ -327,6 +327,12 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
             let wco = WidgetCallbackOut::default();
             return wco
         },
+        IpgContainers::IpgMouseArea(m_area) => {
+            let mut wco = WidgetCallbackOut::default();
+            wco.user_data = m_area.user_data.clone();
+            drop(state);
+            return wco
+        },
         // IpgContainers::IpgPaneGrid(_) => {
         //     let wco = WidgetCallbackOut::default();
         //     return wco
