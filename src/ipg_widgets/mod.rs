@@ -14,6 +14,7 @@ pub mod ipg_events;
 pub mod ipg_image;
 pub mod ipg_menu;
 pub mod ipg_modal;
+pub mod ipg_mousearea;
 // pub mod ipg_pane_grid;
 pub mod ipg_pick_list;
 pub mod ipg_progress_bar;

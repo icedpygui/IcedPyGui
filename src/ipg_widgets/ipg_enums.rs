@@ -12,6 +12,7 @@ use super::ipg_column::IpgColumn;
 use super::ipg_date_picker::IpgDatePicker;
 use super::ipg_image::IpgImage;
 use super::ipg_menu::IpgMenu;
+use super::ipg_mousearea::IpgMouseArea;
 // use super::ipg_pane_grid::{IpgPaneGrid, IpgPane};
 use super::ipg_pick_list::IpgPickList;
 use super::ipg_progress_bar::IpgProgressBar;
@@ -41,6 +42,7 @@ use super::ipg_window::IpgWindow;
 pub enum IpgContainers {
     IpgColumn(IpgColumn),
     IpgContainer(IpgContainer),
+    IpgMouseArea(IpgMouseArea),
     // IpgPaneGrid(IpgPaneGrid),
     // IpgPane(IpgPane),
     IpgRow(IpgRow),

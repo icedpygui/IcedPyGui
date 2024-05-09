@@ -2,7 +2,8 @@
 #![allow(unused)]
 use std::collections::HashMap;
 
-use iced::multi_window;
+
+use iced::{multi_window, Point};
 use iced::{font, window};
 use iced::event::Event;
 use iced::{Command, Element, Subscription, Theme};
@@ -13,7 +14,6 @@ use iced::Color;
 
 
 use crate::ipg_widgets;
-use crate::ipg_widgets::ipg_timer::tick_callback;
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
@@ -25,6 +25,7 @@ use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 use ipg_widgets::ipg_events::process_events;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
 use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
+use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_pointid, construct_mousearea};
 // use ipg_widgets::ipg_pane_grid::{PGMessage, construct_pane_grid, pane_grid_update, 
 //                                  construct_pane, pane_update};
 use ipg_widgets::ipg_pick_list::{PLMessage, construct_picklist, pick_list_callback};
@@ -40,13 +41,14 @@ use ipg_widgets::ipg_table::contruct_table;
 use ipg_widgets::ipg_text::construct_text;
 // use ipg_widgets::ipg_text_editor::{TEMessage, construct_text_editor};
 use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_callback};
-use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage};
+use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage, tick_callback};
 use ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
 use ipg_widgets::ipg_tool_tip::construct_tool_tip;
 use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_window, window_callback};
 use ipg_widgets::helpers::get_usize_of_id;
 use crate::{access_state, IpgIds};
 
+use crate::iced_widgets::mousearea::PointId;
 use crate::iced_widgets::scrollable;
 
 #[derive(Debug, Clone)]
@@ -74,6 +76,16 @@ pub enum Message {
     Timer(usize, TIMMessage),
     FontLoaded(Result<(), font::Error>),
     Window(WndMessage),
+
+    MouseAreaOnPress(usize),
+    MouseAreaOnRelease(usize),
+    MouseAreaOnRightPress(usize),
+    MouseAreaOnRightRelease(usize),
+    MouseAreaOnMiddlePress(usize),
+    MouseAreaOnMiddleRelease(usize),
+    MouseAreaOnEnter(usize),
+    MouseAreaOnMove(PointId),
+    MouseAreaOnExit(usize),
 }
 
 #[derive(Default)]
@@ -168,6 +180,42 @@ impl multi_window::Application for App {
             },
             Message::Menu(id, message) => {
                 menu_callback(id, message);
+                Command::none()
+            },
+            Message::MouseAreaOnPress(id) => {
+                mousearea_callback(id, "on_press".to_string());
+                Command::none()
+            },
+            Message::MouseAreaOnRelease(id) => {
+                mousearea_callback(id, "on_release".to_string());
+                Command::none()
+            },
+            Message::MouseAreaOnRightPress(id) => {
+                mousearea_callback(id, "on_right_press".to_string());
+                Command::none()
+            },
+            Message::MouseAreaOnRightRelease(id) => {
+                mousearea_callback(id, "on_right_release".to_string());
+                Command::none()
+            },
+            Message::MouseAreaOnMiddlePress(id) => {
+                mousearea_callback(id, "on_middle_press".to_string());
+                Command::none()
+            },
+            Message::MouseAreaOnMiddleRelease(id) => {
+                mousearea_callback(id, "on_middle_release".to_string());
+                Command::none()
+            },
+            Message::MouseAreaOnEnter(id) => {
+                mousearea_callback(id, "on_enter".to_string());
+                Command::none()
+            },
+            Message::MouseAreaOnMove(pointid) => {
+                mousearea_callback_pointid(pointid, "on_move".to_string());
+                Command::none()
+            },
+            Message::MouseAreaOnExit(id) => {
+                mousearea_callback(id, "on_exit".to_string());
                 Command::none()
             },
             // Message::Pane(pn) => {
@@ -408,6 +456,9 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                         panic!("A container can have only one widget, place your multiple widgets into  a column or row")
                     }
                     return construct_container(con, content)
+                },
+                IpgContainers::IpgMouseArea(m_area) => {
+                    return construct_mousearea(m_area, content)
                 },
                 // IpgContainers::IpgPane(pane) => {
                 //     return construct_pane(pane, content)
