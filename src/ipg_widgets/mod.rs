@@ -25,6 +25,7 @@ pub mod ipg_scrollable;
 pub mod ipg_selectable_text;
 pub mod ipg_slider;
 pub mod ipg_space;
+pub mod ipg_svg;
 pub mod ipg_table;
 pub mod ipg_text;
 // pub mod ipg_text_editor;

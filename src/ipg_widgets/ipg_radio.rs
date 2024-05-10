@@ -335,6 +335,7 @@ fn match_widgets (widget: &mut IpgWidgets) -> &mut IpgRadio {
         IpgWidgets::IpgSelectableText(_) => (),
         IpgWidgets::IpgSlider(_) => (),
         IpgWidgets::IpgSpace(_) => (),
+        IpgWidgets::IpgSvg(_) => (),
         IpgWidgets::IpgTable(_) => (),
         IpgWidgets::IpgText(_) => (),
         // IpgWidgets::IpgTextEditor(_) => (),

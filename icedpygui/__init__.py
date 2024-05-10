@@ -16,6 +16,7 @@ from .icedpygui import IpgRowAlignment
 from .icedpygui import IpgScrollableDirection, IpgScrollableAlignment, IpgScrollableParams
 from .icedpygui import IpgSelectableTextParams, IpgSelectableTextHorAlign, IpgSelectableTextVertAlign
 from .icedpygui import IpgSliderParams
+from .icedpygui import IpgSvgParams
 from .icedpygui import IpgTextInputParams
 from .icedpygui import IpgTextParams
 from .icedpygui import IpgTogglerParams

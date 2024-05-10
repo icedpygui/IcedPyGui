@@ -240,6 +240,24 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     let wco = WidgetCallbackOut::default();
                     wco
                 },
+                IpgWidgets::IpgSvg(isvg) => {
+                    let mut points: Vec<(String, f32)> = vec![];
+                    if wci.point.is_some() {
+                        match wci.point {
+                            Some(pt) => {
+                            points.push(("x".to_string(), pt.x));
+                            points.push(("y".to_string(), pt.y));
+                        },
+                            None => panic!("Svg Point could not be found")
+                        }
+                    }
+                    
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.points = Some(points);
+                    wco.user_data = isvg.user_data.clone();
+                    drop(state);
+                    wco
+                },
                 IpgWidgets::IpgTable(_) => {
                     let wco = WidgetCallbackOut::default();
                     wco

@@ -1,8 +1,4 @@
 
-
-// use core::panic;
-// use std::collections::HashMap;
-
 use super::ipg_button::IpgButton;
 use super::ipg_card::IpgCard;
 use super::ipg_checkbox::IpgCheckBox;
@@ -23,6 +19,7 @@ use super::ipg_scrollable::IpgScrollable;
 use super::ipg_selectable_text::IpgSelectableText;
 use super::ipg_slider::IpgSlider;
 use super::ipg_space::IpgSpace;
+use super::ipg_svg::IpgSvg;
 use super::ipg_table::IpgTable;
 use super::ipg_text::IpgText;
 // use super::ipg_text_editor::IpgTextEditor;
@@ -31,12 +28,7 @@ use super::ipg_timer::IpgTimer;
 use super::ipg_toggle::IpgToggler;
 use super::ipg_tool_tip::IpgToolTip;
 use super::ipg_window::IpgWindow;
-// use super::helpers::{format_date, MONTH_NAMES};
-// use crate::access_state;
 
-// use iced::{Color, Point};
-
-// use pyo3::PyObject;
 
 #[derive(Debug)]
 pub enum IpgContainers {
@@ -67,6 +59,7 @@ pub enum IpgWidgets {
     IpgSelectableText(IpgSelectableText),
     IpgSlider(IpgSlider),
     IpgSpace(IpgSpace),
+    IpgSvg(IpgSvg),
     IpgTable(IpgTable),
     IpgText(IpgText),
     // IpgTextEditor(IpgTextEditor),

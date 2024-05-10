@@ -43,6 +43,7 @@ use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectabl
                                         IpgSelectableTextParams, IpgSelectableTextVertAlign};
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParams};
 use ipg_widgets::ipg_space::IpgSpace;
+use ipg_widgets::ipg_svg::{IpgSvg, IpgSvgParams, svg_item_update};
 use ipg_widgets::ipg_table::IpgTable;
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
 // use ipg_widgets::ipg_text_editor::IpgTextEditor;
@@ -984,7 +985,7 @@ impl IPG {
                         on_enter=None, on_move=None, on_exit=None, 
                         user_data=None, show=false,
                         ))]
-fn add_image(&mut self,
+    fn add_image(&mut self,
                     parent_id: String,
                     image_path: String,
                     // above required
@@ -1542,6 +1543,94 @@ fn add_image(&mut self,
 
         Ok(id)
     } 
+
+    #[pyo3(signature = (parent_id, svg_path, gen_id=None, 
+                        width=None, width_fill=false, 
+                        height=None, height_fill=false, 
+                        on_press=None, on_release=None,
+                        on_right_press=None, on_right_release=None,
+                        on_middle_press=None, on_middle_release=None,
+                        on_enter=None, on_move=None, on_exit=None, 
+                        user_data=None, show=false,
+                        ))]
+    fn add_svg(&mut self,
+                    parent_id: String,
+                    svg_path: String,
+                    // above required
+                    gen_id: Option<usize>,
+                    width: Option<f32>,
+                    width_fill: bool,
+                    height: Option<f32>,
+                    height_fill: bool,
+                    on_press: Option<PyObject>,
+                    on_release: Option<PyObject>,
+                    on_right_press: Option<PyObject>,
+                    on_right_release: Option<PyObject>,
+                    on_middle_press: Option<PyObject>,
+                    on_middle_release: Option<PyObject>,
+                    on_enter: Option<PyObject>,
+                    on_move: Option<PyObject>,
+                    on_exit: Option<PyObject>,
+                    user_data: Option<PyObject>,
+                    show: bool,
+                    ) -> PyResult<usize>
+{
+    let id = self.get_id(gen_id);
+
+    if on_press.is_some() {
+        add_callback_to_mutex(id, "on_press".to_string(), on_press);
+    }
+    
+    if on_release.is_some() {
+        add_callback_to_mutex(id, "event_name".to_string(), on_release);
+    }
+    
+    if on_right_press.is_some() {
+        add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press);
+    }
+    
+    if on_right_release.is_some() {
+        add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release);
+    }
+    
+    if on_middle_press.is_some() {
+        add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press);
+    }
+    
+    if on_middle_release.is_some() {
+        add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release);
+    }
+    
+    if on_enter.is_some() {
+        add_callback_to_mutex(id, "on_enter".to_string(), on_enter);
+    }
+    
+    if on_move.is_some() {
+        add_callback_to_mutex(id, "on_move".to_string(), on_move);
+    }
+    
+    if on_exit.is_some() {
+        add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
+    }
+    
+    let width = get_width(width, width_fill);
+    let height = get_height(height, height_fill);
+
+    set_state_of_widget(id, parent_id);
+
+    let mut state = access_state();
+
+    state.widgets.insert(id, IpgWidgets::IpgSvg(IpgSvg::new(
+                                                id,
+                                                svg_path,
+                                                width,
+                                                height,
+                                                show,
+                                                user_data,
+                                            )));
+
+        Ok(id)
+    }
 
     #[pyo3(signature = (parent_id, title, data, width, height,
                         gen_id=None, callback=None, column_widths=vec![], 
@@ -2182,6 +2271,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
             slider_item_update(sldr, item, value)
         },
         IpgWidgets::IpgSpace(_) => (),
+        IpgWidgets::IpgSvg(sg) => {
+            svg_item_update(sg, item, value);
+        },
         IpgWidgets::IpgTable(_) => (),
         IpgWidgets::IpgText(txt) => {
             text_item_update(txt, item, value);
@@ -2257,6 +2349,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgSelectableTextHorAlign>()?;
     m.add_class::<IpgSelectableTextVertAlign>()?;
     m.add_class::<IpgSliderParams>()?;
+    m.add_class::<IpgSvgParams>()?;
     m.add_class::<IpgTextInputParams>()?;
     m.add_class::<IpgTextParams>()?;
     m.add_class::<IpgTimerParams>()?;

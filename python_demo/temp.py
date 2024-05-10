@@ -1,6 +1,5 @@
-from icedpygui import IPG
-from icedpygui import IpgColumnAlignment
-
+from icedpygui import IPG, IpgContainerAlignment
+import os
 
 # Since user data is include, it will need to be
 # added to all whether used on or.
@@ -47,23 +46,27 @@ ipg = IPG()
 ipg.add_window(window_id="main", title="Main", width=400, height=400, 
                pos_centered=True, debug=True)
 
-ipg.add_mousearea(window_id="main", container_id="ma",
-                  on_enter=on_enter,
-                  on_exit=on_exit,
-                  on_move=on_move,
-                  on_press=on_press,
-                  on_release=on_release,
-                  on_middle_press=on_middle_press,
-                  on_middle_release=on_middle_release,
-                  on_right_press=on_right_press,
-                  on_right_release=on_right_release,
-                  user_data="Some Data")
+ipg.add_container(window_id="main", container_id="cont", 
+                  width_fill=True, height_fill=True,
+                  align_x=IpgContainerAlignment.Center,
+                  align_y=IpgContainerAlignment.Center)
 
-# A text widget was added here but you can also add containers or other widgets too.
-ipg.add_text("ma", content="my content 1")
+# Setting up the image path
+cwd = os.getcwd()
+svg_path = cwd + "/resources/tiger.svg"
 
-# you will probably rarely add more than one item to a mousearea
-# but the option for more is there.
-ipg.add_text("ma", content="my content 2")
+ipg.add_svg(parent_id="cont",
+            svg_path= svg_path,
+            on_enter=on_enter,
+            on_exit=on_exit,
+            on_move=on_move,
+            on_press=on_press,
+            on_release=on_release,
+            on_middle_press=on_middle_press,
+            on_middle_release=on_middle_release,
+            on_right_press=on_right_press,
+            on_right_release=on_right_release,
+            user_data="Some Data")
+
 
 ipg.start_session()

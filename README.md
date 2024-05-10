@@ -35,7 +35,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     * Shader
     * Space
     * Styling - Some widget styling, more to come
-    * SVG - Coming next release
+    * SVG
     * TextEditor - Future, needs modification to work in IPG
     * TextInput
     * Text
@@ -85,7 +85,7 @@ maturin develop
 ## Overview
 
 * IcedPyGui is based on [Rust Iced](https://github.com/iced-rs/iced) v0.12.1.
-* Widgets for [Iced_aw](https://github.com/iced-rs/iced_aw) are used too .
+* Widgets for [Iced_aw](https://github.com/iced-rs/iced_aw) v0.8.0 are used too .
 * [Pyo3](https://github.com/pyo3/pyo3) is used as the python wrapper.
 * [Maturin](https://github.com/PyO3/maturin) is used to build and publish the module .
 * The syntax and the design of the callbacks were inspired by the python wrapper of Dear ImGui, [DearPyGui(DPG)](https://github.com/hoffstadt/DearPyGui).

@@ -37,6 +37,7 @@ use ipg_widgets::ipg_scrollable::{construct_scrollable, scrollable_callback};
 use ipg_widgets::ipg_selectable_text::{SLTXTMessage, construct_selectable_text, selectable_text_callback};
 use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_callback};
 use ipg_widgets::ipg_space::construct_space;
+use ipg_widgets::ipg_svg::{SvgMessage, construct_svg, svg_callback};
 use ipg_widgets::ipg_table::contruct_table;
 use ipg_widgets::ipg_text::construct_text;
 // use ipg_widgets::ipg_text_editor::{TEMessage, construct_text_editor};
@@ -69,6 +70,7 @@ pub enum Message {
     Scrolled(usize, scrollable::Viewport),
     SelectableText(usize, SLTXTMessage),
     Slider(usize, SLMessage),
+    Svg(usize, SvgMessage),
     // TextEditor(TEMessage),
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
@@ -244,6 +246,10 @@ impl multi_window::Application for App {
             },
             Message::Slider(id, message) => {
                 slider_callback(id, message);
+                Command::none()
+            },
+            Message::Svg(id, message) => {
+                svg_callback(id, message);
                 Command::none()
             },
             // Message::TextEditor(_message) => {
@@ -536,6 +542,9 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 },
                 IpgWidgets::IpgSpace(sp) => {
                     return construct_space(sp)
+                },
+                IpgWidgets::IpgSvg(isvg) => {
+                    return construct_svg(isvg.clone())
                 },
                 IpgWidgets::IpgTable(table) => {
                     return contruct_table(table.clone())
