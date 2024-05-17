@@ -3,7 +3,7 @@ use crate::access_state;
 use super::ipg_enums::IpgContainers;
 use super::{helpers::{format_date, MONTH_NAMES}, ipg_enums::IpgWidgets, ipg_radio::Choice};
 
-use iced::{Color, Point};
+use iced::Point;
 
 use pyo3::PyObject;
 
@@ -34,6 +34,7 @@ pub struct WidgetCallbackIn {
     pub value_float: Option<f64>,
     pub value_str: Option<String>,
     pub value_bool: Option<bool>,
+    pub on_tick_count: f32,
 }
 
 impl WidgetCallbackIn{}
@@ -47,6 +48,7 @@ pub struct WidgetCallbackOut {
     pub event_name: String,
     pub is_checked: Option<bool>,
     pub is_toggled: Option<bool>,
+    pub index: Option<usize>,
     pub points: Option<Vec<(String, f32)>>,
     pub scroll_pos: Vec<(String, f32)>, 
     pub selected_index: Option<usize>,
@@ -76,17 +78,17 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     drop(state);
                     wco
                 },
-                IpgWidgets::IpgCard(crd) => {
-                    let is_open = match wci.value_bool {
-                        Some(open) => open,
-                        None => panic!("Card is_open value not found"),
-                    };
-                    crd.is_open = is_open;
-                    let mut wco = WidgetCallbackOut::default();
-                    wco.user_data = crd.user_data.clone();
-                    drop(state);
-                    wco
-                },
+                // IpgWidgets::IpgCard(crd) => {
+                //     let is_open = match wci.value_bool {
+                //         Some(open) => open,
+                //         None => panic!("Card is_open value not found"),
+                //     };
+                //     crd.is_open = is_open;
+                //     let mut wco = WidgetCallbackOut::default();
+                //     wco.user_data = crd.user_data.clone();
+                //     drop(state);
+                //     wco
+                // },
                 IpgWidgets::IpgCheckBox(cbox) => {
                     cbox.is_checked = match wci.on_toggle {
                         Some(data) => data,
@@ -98,26 +100,26 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     drop(state);
                     wco
                 },
-                IpgWidgets::IpgColorPicker(cp) => {
-                    cp.open = match wci.value_bool {
-                        Some(s) => s,
-                        None => panic!("The open value for color_picker could not be found"),
-                    };
+                // IpgWidgets::IpgColorPicker(cp) => {
+                //     cp.open = match wci.value_bool {
+                //         Some(s) => s,
+                //         None => panic!("The open value for color_picker could not be found"),
+                //     };
 
-                    let mut wco = WidgetCallbackOut::default();
-                    if wci.color.is_some() {
-                        let color = match wci.color {
-                            Some(c) => c,
-                            None => panic!("The color value for color_picker could not be found"),
-                        };
-                        wco.color = Some(color.clone());
-                        cp.color = Color::from_rgba(color[0] as f32, color[1] as f32, 
-                                                color[2] as f32, color[3] as f32);
-                    }
-                    wco.user_data = cp.user_data.clone();
-                    drop(state);
-                    wco
-                },
+                //     let mut wco = WidgetCallbackOut::default();
+                //     if wci.color.is_some() {
+                //         let color = match wci.color {
+                //             Some(c) => c,
+                //             None => panic!("The color value for color_picker could not be found"),
+                //         };
+                //         wco.color = Some(color.clone());
+                //         cp.color = Color::from_rgba(color[0] as f32, color[1] as f32, 
+                //                                 color[2] as f32, color[3] as f32);
+                //     }
+                //     wco.user_data = cp.user_data.clone();
+                //     drop(state);
+                //     wco
+                // },
                 IpgWidgets::IpgDatePicker(dp) => {
                     
                     if wci.selected_day.is_some() {
@@ -195,11 +197,11 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     drop(state);
                     wco
                 },
-                IpgWidgets::IpgMenu(menu) => {
-                    let mut wco = WidgetCallbackOut::default();
-                    wco.user_data = menu.user_data.clone();
-                    wco
-                },
+                // IpgWidgets::IpgMenu(menu) => {
+                //     let mut wco = WidgetCallbackOut::default();
+                //     wco.user_data = menu.user_data.clone();
+                //     wco
+                // },
                 IpgWidgets::IpgPickList(pl) => {
                     pl.selected = wci.value_str;
                     let mut wco = WidgetCallbackOut::default();
@@ -259,7 +261,8 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco
                 },
                 IpgWidgets::IpgTable(_) => {
-                    let wco = WidgetCallbackOut::default();
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.index = wci.index;
                     wco
                 },
                 IpgWidgets::IpgText(_) => {

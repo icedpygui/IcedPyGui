@@ -8,7 +8,7 @@ use pyo3::PyObject;
 
 use iced::multi_window::Application;
 use iced::window::{self, Position};
-use iced::{Color, Font, Length, Point, Settings, Size, Theme};
+use iced::{Font, Length, Point, Settings, Size, Theme};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
@@ -20,18 +20,18 @@ use app::{App, Flags};
 
 mod ipg_widgets;
 mod iced_widgets;
-
+mod graphics;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
-use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
+// use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
-use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
+// use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
-use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment};
+use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment, IpgContainerTheme};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
-use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParams, IpgMenuSepTypes};
+// use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParams, IpgMenuSepTypes};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParams};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
@@ -44,7 +44,7 @@ use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectabl
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParams};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_svg::{IpgSvg, IpgSvgParams, svg_item_update};
-use ipg_widgets::ipg_table::IpgTable;
+use ipg_widgets::ipg_table::{IpgTable, TableRowHighLight, TableWidget};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
 // use ipg_widgets::ipg_text_editor::IpgTextEditor;
 use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInput, IpgTextInputParams};
@@ -94,33 +94,50 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
 }
 
 pub struct State {
+    pub ids: Lazy<HashMap<usize, Vec<IpgIds>>>,  // <window_id=usize, Vec<IpgIds=structure>>
+    
     pub containers: Lazy<HashMap<usize, IpgContainers>>,
     pub container_ids: Lazy<HashMap<usize, Vec<usize>>>,  // <window_id=usize, vec<container_id=usize>>
+    pub container_str_ids: Lazy<HashMap<String, usize>>, // get container usize id based on container string
+    pub container_wnd_str_ids: Lazy<HashMap<String, String>>, // get window string id based on container string id
+    pub container_window_usize_ids: Lazy<HashMap<usize, usize>>, //get window usize id based on container usize id
+
     pub widgets: Lazy<HashMap<usize, IpgWidgets>>,
-    pub ids: Lazy<HashMap<usize, Vec<IpgIds>>>,  // <window_id=usize, Vec<IpgIds=structure>>
-    pub pane_ids: Vec<usize>,
+    pub widget_container_ids: Lazy<HashMap<usize, String>>, //widget_id=usize, container_id=String
+    
     pub windows: Vec<IpgWindow>,
     pub windows_str_ids: Lazy<HashMap<String, usize>>,  // <window_id=str, window_id=usize>
-    pub container_wnd_str_ids: Lazy<HashMap<String, String>>, // <container_id=string, window_id-usize>
     pub window_debug: Lazy<HashMap<window::Id, (usize, bool)>>, // (usize, bool) = (wid, debug)
     pub window_theme: Lazy<HashMap<window::Id, (usize, Theme)>>, //(usize, Theme) = (wid, window Theme)
+    
     pub events: Vec<IpgEvents>,
+    
+    pub pane_ids: Vec<usize>,
 }
 
 
 pub static STATE: Mutex<State> = Mutex::new(
     State {
+        ids: Lazy::new(||HashMap::new()),
+        
         containers: Lazy::new(||HashMap::new()),
         container_ids: Lazy::new(||HashMap::new()),
+        container_str_ids: Lazy::new(||HashMap::new()),
+        container_wnd_str_ids: Lazy::new(||HashMap::new()),
+        container_window_usize_ids: Lazy::new(||HashMap::new()),
+
         widgets: Lazy::new(||HashMap::new()),
-        ids: Lazy::new(||HashMap::new()),
-        pane_ids: vec![],
+        widget_container_ids: Lazy::new(||HashMap::new()),
+
+        
         windows: vec![],
         windows_str_ids: Lazy::new(||HashMap::new()),
-        container_wnd_str_ids: Lazy::new(||HashMap::new()),
         window_debug: Lazy::new(||HashMap::new()),
         window_theme: Lazy::new(||HashMap::new()),
+        
         events: vec![],
+        
+        pane_ids: vec![],
     }
 );
 
@@ -320,7 +337,7 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_height=f32::INFINITY, max_width=f32::INFINITY,
                         align_x=IpgContainerAlignment::Center, align_y=IpgContainerAlignment::Center,
-                        padding=DEFAULT_PADDING.to_vec(), show=true,
+                        padding=DEFAULT_PADDING.to_vec(), show=true, style=None
                        ))]
     fn add_container(&mut self,
                         window_id: String,
@@ -337,6 +354,7 @@ impl IPG {
                         align_y: IpgContainerAlignment, 
                         padding: Vec<f64>, 
                         show: bool,
+                        style: Option<PyObject>,
                         ) -> PyResult<usize>
     {
         self.id += 1;
@@ -350,9 +368,11 @@ impl IPG {
             None => window_id.clone(),
         };
 
-        set_state_of_container(self.id, window_id, Some(container_id), prt_id);
+        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
 
         let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_container".to_string());
 
         state.containers.insert(self.id, IpgContainers::IpgContainer(IpgContainer::new(
                                                 self.id,
@@ -364,6 +384,7 @@ impl IPG {
                                                 max_height,
                                                 align_x,
                                                 align_y,
+                                                style,
                                             )));
 
         drop(state);
@@ -408,9 +429,11 @@ impl IPG {
             None => window_id.clone(),
         };
 
-        set_state_of_container(self.id, window_id, Some(container_id), prt_id);
+        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
 
         let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_column".to_string());
 
         state.containers.insert(self.id, IpgContainers::IpgColumn(IpgColumn::new(
                                         self.id,  
@@ -497,9 +520,11 @@ impl IPG {
             add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
         }
 
-        set_state_of_container(self.id, window_id, Some(container_id), prt_id);
+        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
 
         let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_mousearea".to_string());
 
         state.containers.insert(self.id, IpgContainers::IpgMouseArea(IpgMouseArea::new(
                                     self.id,  
@@ -545,9 +570,11 @@ impl IPG {
             None => window_id.clone(),
         };
 
-        set_state_of_container(self.id, window_id, Some(container_id), prt_id);
+        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
 
         let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_row".to_string());
 
         state.containers.insert(self.id, IpgContainers::IpgRow(IpgRow::new(
                                     self.id,  
@@ -611,9 +638,11 @@ impl IPG {
             None => window_id.clone(),
         };
 
-        set_state_of_container(self.id, window_id, Some(container_id), prt_id);
+        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
 
         let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_scrollable".to_string());
       
         state.containers.insert(self.id, IpgContainers::IpgScrollable(IpgScrollable::new( 
                                                     self.id,
@@ -662,9 +691,11 @@ impl IPG {
             None => window_id.clone(),
         };
 
-        set_state_of_container(self.id, window_id, Some(container_id), prt_id);
+        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
 
         let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_tool_tip".to_string());
 
         state.containers.insert(self.id, IpgContainers::IpgToolTip(IpgToolTip::new( 
                                                             self.id,
@@ -735,75 +766,75 @@ impl IPG {
     
     }
 
-    #[pyo3(signature = (parent_id, head, body, is_open=true, minmax_id=None, foot=None, 
-                        gen_id=None, close_size=20.0, on_close=None, 
-                        width=None, height=None, width_fill=false, height_fill=false, 
-                        max_width=f32::INFINITY, max_height=f32::INFINITY, 
-                        padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
-                        style=None, user_data=None))]
-    fn add_card(&mut self,
-                parent_id: String, 
-                head: String,
-                body: String,
-                // above required
-                is_open: bool,
-                minmax_id: Option<usize>,
-                foot: Option<String>,
-                gen_id: Option<usize>,
-                close_size: f32,
-                on_close: Option<PyObject>,
-                width: Option<f32>,
-                height: Option<f32>,
-                width_fill: bool,
-                height_fill: bool,
-                max_width: f32,
-                max_height: f32,
-                padding_head: Vec<f64>,
-                padding_body: Vec<f64>,
-                padding_foot: Vec<f64>,
-                style: Option<PyObject>,
-                user_data: Option<PyObject>, 
-                ) -> PyResult<usize> 
-    {
-        let id = self.get_id(gen_id);
+    // #[pyo3(signature = (parent_id, head, body, is_open=true, minmax_id=None, foot=None, 
+    //                     gen_id=None, close_size=20.0, on_close=None, 
+    //                     width=None, height=None, width_fill=false, height_fill=false, 
+    //                     max_width=f32::INFINITY, max_height=f32::INFINITY, 
+    //                     padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
+    //                     style=None, user_data=None))]
+    // fn add_card(&mut self,
+    //             parent_id: String, 
+    //             head: String,
+    //             body: String,
+    //             // above required
+    //             is_open: bool,
+    //             minmax_id: Option<usize>,
+    //             foot: Option<String>,
+    //             gen_id: Option<usize>,
+    //             close_size: f32,
+    //             on_close: Option<PyObject>,
+    //             width: Option<f32>,
+    //             height: Option<f32>,
+    //             width_fill: bool,
+    //             height_fill: bool,
+    //             max_width: f32,
+    //             max_height: f32,
+    //             padding_head: Vec<f64>,
+    //             padding_body: Vec<f64>,
+    //             padding_foot: Vec<f64>,
+    //             style: Option<PyObject>,
+    //             user_data: Option<PyObject>, 
+    //             ) -> PyResult<usize> 
+    // {
+    //     let id = self.get_id(gen_id);
 
-        if on_close.is_some() {
-            add_callback_to_mutex(id, "on_close".to_string(), on_close);
-        }
+    //     if on_close.is_some() {
+    //         add_callback_to_mutex(id, "on_close".to_string(), on_close);
+    //     }
 
-        let width = get_width(width, width_fill);
-        let height = get_height(height, height_fill);
+    //     let width = get_width(width, width_fill);
+    //     let height = get_height(height, height_fill);
 
-        let padding_head = get_padding(padding_head);
-        let padding_body = get_padding(padding_body);
-        let padding_foot = get_padding(padding_foot);
+    //     let padding_head = get_padding(padding_head);
+    //     let padding_body = get_padding(padding_body);
+    //     let padding_foot = get_padding(padding_foot);
 
-        set_state_of_widget(id, parent_id);
+    //     set_state_of_widget(id, parent_id);
 
-        let mut state = access_state();
+    //     let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgCard(IpgCard::new(
-                                                    id,
-                                                    is_open,
-                                                    user_data,
-                                                    minmax_id,
-                                                    width,
-                                                    height,
-                                                    max_width,
-                                                    max_height,
-                                                    padding_head,
-                                                    padding_body,
-                                                    padding_foot,
-                                                    close_size,
-                                                    head,
-                                                    body,
-                                                    foot,
-                                                    style,
-                                                )));
+    //     state.widgets.insert(id, IpgWidgets::IpgCard(IpgCard::new(
+    //                                                 id,
+    //                                                 is_open,
+    //                                                 user_data,
+    //                                                 minmax_id,
+    //                                                 width,
+    //                                                 height,
+    //                                                 max_width,
+    //                                                 max_height,
+    //                                                 padding_head,
+    //                                                 padding_body,
+    //                                                 padding_foot,
+    //                                                 close_size,
+    //                                                 head,
+    //                                                 body,
+    //                                                 foot,
+    //                                                 style,
+    //                                             )));
 
-        Ok(id)
+    //     Ok(id)
 
-    }
+    // }
 
     #[pyo3(signature = (parent_id, gen_id=None, on_toggle=None, is_checked=false, 
                         label="".to_string(), width=None, width_fill=false, 
@@ -869,69 +900,69 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (parent_id, label="Set Color".to_string(), 
-                        gen_id=None, on_submit=None, show=true, 
-                        start_up_color=[0.5, 0.2, 0.7, 1.0], 
-                        width=None, height=None, width_fill=false, height_fill=false,
-                        padding=vec![10.0], corner_radius=0.0, 
-                        style=None, user_data=None, 
-                        ))]
-    fn add_color_picker(
-                        &mut self,
-                        parent_id: String,
-                        // ** above required
-                        label: String,
-                        gen_id: Option<usize>,
-                        on_submit: Option<PyObject>,
-                        show: bool,
-                        start_up_color: [f32; 4],
-                        width: Option<f32>,
-                        height: Option<f32>,
-                        width_fill: bool,
-                        height_fill: bool,
-                        padding: Vec<f64>,
-                        corner_radius: f32,
-                        style: Option<PyObject>,
-                        user_data: Option<PyObject>,
-                        ) -> PyResult<usize> 
-    {
-        let id = self.get_id(gen_id);
+    // #[pyo3(signature = (parent_id, label="Set Color".to_string(), 
+    //                     gen_id=None, on_submit=None, show=true, 
+    //                     start_up_color=[0.5, 0.2, 0.7, 1.0], 
+    //                     width=None, height=None, width_fill=false, height_fill=false,
+    //                     padding=vec![10.0], corner_radius=0.0, 
+    //                     style=None, user_data=None, 
+    //                     ))]
+    // fn add_color_picker(
+    //                     &mut self,
+    //                     parent_id: String,
+    //                     // ** above required
+    //                     label: String,
+    //                     gen_id: Option<usize>,
+    //                     on_submit: Option<PyObject>,
+    //                     show: bool,
+    //                     start_up_color: [f32; 4],
+    //                     width: Option<f32>,
+    //                     height: Option<f32>,
+    //                     width_fill: bool,
+    //                     height_fill: bool,
+    //                     padding: Vec<f64>,
+    //                     corner_radius: f32,
+    //                     style: Option<PyObject>,
+    //                     user_data: Option<PyObject>,
+    //                     ) -> PyResult<usize> 
+    // {
+    //     let id = self.get_id(gen_id);
 
-        if on_submit.is_some() {
-            add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
-        }
+    //     if on_submit.is_some() {
+    //         add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
+    //     }
 
-        let color = Color::from_rgba(start_up_color[0], 
-                                            start_up_color[1], 
-                                            start_up_color[2], 
-                                            start_up_color[3]);
+    //     let color = Color::from_rgba(start_up_color[0], 
+    //                                         start_up_color[1], 
+    //                                         start_up_color[2], 
+    //                                         start_up_color[3]);
 
-        let width = get_width(width, width_fill);
-        let height = get_height(height, height_fill);
+    //     let width = get_width(width, width_fill);
+    //     let height = get_height(height, height_fill);
 
-        let padding = get_padding(padding);
+    //     let padding = get_padding(padding);
 
-        set_state_of_widget(id, parent_id);
+    //     set_state_of_widget(id, parent_id);
 
-        let mut state = access_state();
+    //     let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgColorPicker(
-                            IpgColorPicker::new(
-                                                id,
-                                                show,
-                                                color,
-                                                user_data,
-                                                label,
-                                                width,
-                                                height,
-                                                padding,
-                                                corner_radius,
-                                                style,                              
-                                                )));
+    //     state.widgets.insert(id, IpgWidgets::IpgColorPicker(
+    //                         IpgColorPicker::new(
+    //                                             id,
+    //                                             show,
+    //                                             color,
+    //                                             user_data,
+    //                                             label,
+    //                                             width,
+    //                                             height,
+    //                                             padding,
+    //                                             corner_radius,
+    //                                             style,                              
+    //                                             )));
 
-        Ok(id)
+    //     Ok(id)
 
-    }
+    // }
 
     #[pyo3(signature = (parent_id, label="Calendar".to_string(), gen_id=None,
                         size_factor=1.0, padding=vec![5.0], on_submit=None, 
@@ -1068,45 +1099,45 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, items, widths, spacing, 
-                        on_select=None, separators=None, sep_types=None, 
-                        sep_label_names=None, user_data=None, gen_id=None))]
-    fn add_menu(&mut self, 
-                    parent_id: String, 
-                    items: PyObject,
-                    widths: Vec<f32>,
-                    spacing: Vec<f32>,
-                    on_select: Option<PyObject>,
-                    separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
-                    sep_types: Option<Vec<IpgMenuSepTypes>>,
-                    sep_label_names: Option<Vec<String>>,
-                    user_data: Option<PyObject>,
-                    gen_id: Option<usize>,
-                ) -> PyResult<usize> 
-    {
-        let id = self.get_id(gen_id);
+    // #[pyo3(signature = (parent_id, items, widths, spacing, 
+    //                     on_select=None, separators=None, sep_types=None, 
+    //                     sep_label_names=None, user_data=None, gen_id=None))]
+    // fn add_menu(&mut self, 
+    //                 parent_id: String, 
+    //                 items: PyObject,
+    //                 widths: Vec<f32>,
+    //                 spacing: Vec<f32>,
+    //                 on_select: Option<PyObject>,
+    //                 separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
+    //                 sep_types: Option<Vec<IpgMenuSepTypes>>,
+    //                 sep_label_names: Option<Vec<String>>,
+    //                 user_data: Option<PyObject>,
+    //                 gen_id: Option<usize>,
+    //             ) -> PyResult<usize> 
+    // {
+    //     let id = self.get_id(gen_id);
 
-        if on_select.is_some() {
-            add_callback_to_mutex(id, "on_select".to_string(), on_select);
-        }
+    //     if on_select.is_some() {
+    //         add_callback_to_mutex(id, "on_select".to_string(), on_select);
+    //     }
 
-        set_state_of_widget(id, parent_id);
+    //     set_state_of_widget(id, parent_id);
 
-        let mut state = access_state();
+    //     let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgMenu(IpgMenu::new(
-                                                                id,
-                                                                items,
-                                                                widths,
-                                                                spacing,
-                                                                separators,
-                                                                sep_types,
-                                                                sep_label_names,
-                                                                user_data,
-                                                                )));
+    //     state.widgets.insert(id, IpgWidgets::IpgMenu(IpgMenu::new(
+    //                                                             id,
+    //                                                             items,
+    //                                                             widths,
+    //                                                             spacing,
+    //                                                             separators,
+    //                                                             sep_types,
+    //                                                             sep_label_names,
+    //                                                             user_data,
+    //                                                             )));
 
-        Ok(id)
-    }
+    //     Ok(id)
+    // }
 
     #[pyo3(signature = (parent_id, options, gen_id=None, on_select=None, 
                         width=None, width_fill=false, padding=vec![5.0],  
@@ -1633,8 +1664,10 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, title, data, width, height,
-                        gen_id=None, callback=None, column_widths=vec![], 
-                        show=true, user_data=None))]
+                        row_highlight=None, highlight_amount=0.15,
+                        gen_id=None, callback=None, column_widths=vec![],
+                        widget_header=None, widget=None, widget_column=0, 
+                        widget_column_length=0, widget_label=None, show=true, user_data=None))]
     fn add_table(&mut self,
                     parent_id: String,
                     title: String,
@@ -1642,9 +1675,16 @@ impl IPG {
                     width: f32,
                     height: f32,
                     // **above required
+                    row_highlight: Option<TableRowHighLight>,
+                    highlight_amount: f32,
                     gen_id: Option<usize>,
                     callback: Option<PyObject>,
                     column_widths: Vec<f32>,
+                    widget_header: Option<String>,
+                    widget: Option<TableWidget>,
+                    widget_column: usize,
+                    widget_column_length: u32,
+                    widget_label: Option<String>,
                     show: bool,
                     user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
@@ -1652,13 +1692,36 @@ impl IPG {
 
         let id = self.get_id(gen_id);
 
+        let mut widget_ids = vec![];
+
+        if widget.is_some() {
+            for _ in 0..widget_column_length {
+                self.id += 1;
+                widget_ids.push(self.id)
+            }
+        }
+
         if callback.is_some() {
             add_callback_to_mutex(id, "table".to_string(), callback);
         }
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
+
+        let container_id_opt = state.container_str_ids.get(&parent_id);
+
+        let container_id = match container_id_opt {
+            Some(ci) => *ci,
+            None => panic!("add_table: Unable to find container_id")
+        };
+
+        let window_id_opt = state.container_window_usize_ids.get(&container_id);
+
+        let window_id = match window_id_opt {
+            Some(wnd_id) => *wnd_id,
+            None => panic!("add_table: Unable to find window_id")
+        };
 
         state.widgets.insert(id, IpgWidgets::IpgTable(IpgTable::new( 
                                                     id,
@@ -1666,14 +1729,25 @@ impl IPG {
                                                     data,
                                                     width,
                                                     height,
+                                                    row_highlight,
+                                                    highlight_amount,
                                                     column_widths,
+                                                    widget_header,
+                                                    widget,
+                                                    widget_column,
+                                                    widget_label,
+                                                    widget_ids,
                                                     show,
                                                     user_data,
+                                                    container_id,
+                                                    window_id,
                                                     )));
 
         Ok(id)
 
     }
+
+
 
     #[pyo3(signature = (parent_id, content, gen_id=None, width=None, 
                         height=None, width_fill=false, height_fill=false, 
@@ -2236,24 +2310,24 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgButton(btn) => {
             button_item_update(btn, item, value);
         },
-        IpgWidgets::IpgCard(crd) => {
-            card_item_update(crd, item, value);
-        },
+        // IpgWidgets::IpgCard(crd) => {
+        //     card_item_update(crd, item, value);
+        // },
         IpgWidgets::IpgCheckBox(chk) => {
             checkbox_item_update(chk, item, value);
         },
-        IpgWidgets::IpgColorPicker(cp) => {
-            color_picker_item_update(cp, item, value);
-        },
+        // IpgWidgets::IpgColorPicker(cp) => {
+        //     color_picker_item_update(cp, item, value);
+        // },
         IpgWidgets::IpgDatePicker(dp) => {
             date_picker_item_update(dp, item, value);
         },
         IpgWidgets::IpgImage(img) => {
             image_item_update(img, item, value);
         },
-        IpgWidgets::IpgMenu(menu) => {
-            menu_item_update(menu, item, value);
-        },
+        // IpgWidgets::IpgMenu(menu) => {
+        //     menu_item_update(menu, item, value);
+        // },
         IpgWidgets::IpgPickList(pl) => {
             pick_list_item_update(pl, item, value);
         },
@@ -2320,6 +2394,23 @@ fn check_if_window(container: &mut IpgContainers) -> usize {
     }
 }
 
+fn set_state_cont_wnd_ids(state: &mut State, wnd_id: &String, cnt_str_id: String, 
+                            cnt_id: usize, name: String) {
+
+        state.container_str_ids.insert(cnt_str_id.clone(), cnt_id);
+
+        let wnd_id_usize_opt = state.windows_str_ids.get(wnd_id);
+
+        let wnd_id_usize = match wnd_id_usize_opt {
+            Some(id) => *id,
+            None => panic!("{}: could not get window usize id", name),
+        };
+
+        state.container_str_ids.insert(cnt_str_id, cnt_id);
+
+        state.container_window_usize_ids.insert(cnt_id, wnd_id_usize);
+}
+
 #[pymodule]
 fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IPG>()?;
@@ -2327,15 +2418,16 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgButtonStyles>()?;
     m.add_class::<IpgButtonArrows>()?;
     m.add_class::<IpgButtonParams>()?;
-    m.add_class::<IpgCardStyles>()?;
-    m.add_class::<IpgCardParams>()?;
+    // m.add_class::<IpgCardStyles>()?;
+    // m.add_class::<IpgCardParams>()?;
     m.add_class::<IpgColumnAlignment>()?;
     m.add_class::<IpgContainerAlignment>()?;
+    m.add_class::<IpgContainerTheme>()?;
     m.add_class::<IpgCheckboxParams>()?;
     m.add_class::<IpgDatePickerParams>()?;
     m.add_class::<IpgImageParams>()?;
-    m.add_class::<IpgMenuParams>()?;
-    m.add_class::<IpgMenuSepTypes>()?;
+    // m.add_class::<IpgMenuParams>()?;
+    // m.add_class::<IpgMenuSepTypes>()?;
     m.add_class::<IpgMouseAreaParams>()?;
     m.add_class::<IpgPickListParams>()?;
     m.add_class::<IpgProgressBarParams>()?;
@@ -2350,6 +2442,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgSelectableTextVertAlign>()?;
     m.add_class::<IpgSliderParams>()?;
     m.add_class::<IpgSvgParams>()?;
+    m.add_class::<TableRowHighLight>()?;
+    m.add_class::<TableWidget>()?;
     m.add_class::<IpgTextInputParams>()?;
     m.add_class::<IpgTextParams>()?;
     m.add_class::<IpgTimerParams>()?;
@@ -2461,7 +2555,7 @@ fn add_user_data_to_mutex(id: usize, user_data: Option<PyObject>) {
 }
 
 
-fn find_parent_uid(ipg_ids: &Vec<IpgIds>, parent_id: String) -> usize {
+pub fn find_parent_uid(ipg_ids: &Vec<IpgIds>, parent_id: String) -> usize {
 
     for id in ipg_ids.iter() {
         if id.container_id == Some(parent_id.clone()) {

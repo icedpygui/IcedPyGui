@@ -322,12 +322,12 @@ fn process_callback(wco: WidgetCallbackOut)
 fn match_widgets (widget: &mut IpgWidgets) -> &mut IpgRadio {
     match widget {
         IpgWidgets::IpgButton(_) => (),
-        IpgWidgets::IpgCard(_) => (),
+        // IpgWidgets::IpgCard(_) => (),
         IpgWidgets::IpgCheckBox(_) => (),
-        IpgWidgets::IpgColorPicker(_) => (),
+        // IpgWidgets::IpgColorPicker(_) => (),
         IpgWidgets::IpgDatePicker(_) => (),
         IpgWidgets::IpgImage(_) => (),
-        IpgWidgets::IpgMenu(_) => (),
+        // IpgWidgets::IpgMenu(_) => (),
         IpgWidgets::IpgPickList(_) => (),
         IpgWidgets::IpgProgressBar(_) => (),
         IpgWidgets::IpgRadio(radio) => return radio,

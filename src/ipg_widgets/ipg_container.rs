@@ -1,8 +1,13 @@
 
-use iced::{Padding, Length, Element};
+use iced::{Element, Length, Padding, Theme};
 use iced::alignment;
-use iced::widget::{Column, Container};
-use pyo3::pyclass;
+use iced::widget::{Column, Container, container};
+use iced::widget::container::{transparent, Catalog, Style, StyleFn};
+use iced::{Background, Border, Color};
+use palette::rgb::Rgb;
+use palette::{FromColor, Hsl};
+
+use pyo3::{pyclass, PyObject};
 use crate::app::Message;
 
 
@@ -18,7 +23,7 @@ pub struct IpgContainer {
     pub max_height: f32,
     pub align_x: IpgContainerAlignment,
     pub align_y: IpgContainerAlignment,
-    // style: <Renderer::Theme as StyleSheet>::Style,
+    pub style: Option<PyObject>,
 }
 
 impl IpgContainer {
@@ -33,7 +38,7 @@ impl IpgContainer {
         max_height: f32,
         align_x: IpgContainerAlignment,
         align_y: IpgContainerAlignment,
-        // style: <Renderer::Theme as StyleSheet>::Style,
+        style: Option<PyObject>,
     ) -> Self {
         Self {
             id,
@@ -45,7 +50,7 @@ impl IpgContainer {
             max_height,
             align_x,
             align_y,
-            // style,
+            style,
         }
     }
 }
@@ -67,6 +72,7 @@ pub fn construct_container(con: &IpgContainer, content: Vec<Element<'static, Mes
             .height(con.height)
             .align_x(align_x)
             .align_y(align_y)
+            .style(container_body)
             .into()
 }
 
@@ -96,4 +102,107 @@ fn get_vertical(y_align: IpgContainerAlignment) -> alignment::Vertical {
         IpgContainerAlignment::Center => alignment::Vertical::Center,
         IpgContainerAlignment::End => alignment::Vertical::Bottom,
     }
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgContainerTheme {
+    Default,
+    Custom,
+}
+
+impl Catalog for IpgContainerTheme {
+    type Class<'a> = StyleFn<'a, Self>;
+
+    fn default<'a>() -> Self::Class<'a> {
+        Box::new(transparent)
+    }
+
+    fn style(&self, class: &Self::Class<'_>) -> Style {
+        class(self)
+    }
+}
+
+pub fn container_body(_theme: &Theme) -> Style {
+    Style {
+        background: Some(Background::Color(Color::TRANSPARENT)),
+        border: Border {
+            radius: 4.0.into(),
+            width: 1.0,
+            color: Color::TRANSPARENT,
+        },
+        ..Default::default()
+    }
+}
+
+pub fn date_picker_container(_theme: &Theme) -> Style {
+    Style {
+        background: Some(Background::Color(Color::from_rgba(0.7, 0.5, 0.6, 1.0))),
+        border: Border {
+            radius: 4.0.into(),
+            width: 1.0,
+            color: Color::TRANSPARENT,
+        },
+        ..Default::default()
+    }
+}
+
+use super::ipg_table::TableRowHighLight;
+pub fn table_row_theme(theme: &Theme, idx: usize, amount: f32, 
+                        highlighter: Option<TableRowHighLight>) -> container::Style {
+
+    let mut background = get_theme_color(theme);
+
+    if idx % 2 == 0 {
+        background = match highlighter {
+                Some(hl) => match hl {
+                                                TableRowHighLight::Darker => darken(background, amount),
+                                                TableRowHighLight::Lighter => lighten(background, amount),
+                                                },
+                None => background,
+            }
+    }; 
+    
+    container::Style {
+        background: Some(Background::Color(background)),
+        ..Default::default()
+    }
+}
+
+fn get_theme_color(wnd_theme: &Theme) -> Color {
+    let palette = Theme::palette(wnd_theme);
+
+    palette.background
+}
+
+pub fn darken(color: Color, amount: f32) -> Color {
+    let mut hsl = to_hsl(color);
+
+    hsl.lightness = if hsl.lightness - amount < 0.0 {
+        0.0
+    } else {
+        hsl.lightness - amount
+    };
+
+    from_hsl(hsl)
+}
+
+pub fn lighten(color: Color, amount: f32) -> Color {
+    let mut hsl = to_hsl(color);
+
+    hsl.lightness = if hsl.lightness + amount > 1.0 {
+        1.0
+    } else {
+        hsl.lightness + amount
+    };
+
+    from_hsl(hsl)
+}
+
+fn to_hsl(color: Color) -> Hsl {
+    Hsl::from_color(Rgb::from(color))
+}
+
+fn from_hsl(hsl: Hsl) -> Color {
+    Rgb::from_color(hsl).into()
 }

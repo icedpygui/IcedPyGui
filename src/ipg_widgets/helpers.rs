@@ -1,4 +1,4 @@
-
+#![allow(dead_code)]
 use std::collections::BTreeMap;
 
 use crate::{access_state, IpgAlignment};

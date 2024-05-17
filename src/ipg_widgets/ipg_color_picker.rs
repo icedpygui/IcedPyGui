@@ -1,14 +1,13 @@
 
 use crate::access_callbacks;
 use crate::app::Message;
-use super::ipg_button::{ButtonStyleRadius, get_button_style_from_obj};
+use super::ipg_button::get_button_style;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 
 use iced::widget::{Button, Space, Text};
-use iced::{Color, Element, Length, Padding, theme,};
-
+use iced::{Color, Element, Length, Padding, Theme};
 use iced_aw::ColorPicker;
 
 use pyo3::{Python, PyObject};
@@ -77,15 +76,15 @@ pub fn construct_color_picker(cp: IpgColorPicker) -> Element<'static, Message> {
         return Space::new(0.0, 0.0).into()
    }
 
-    let style = get_button_style_from_obj(cp.style.clone());
+   let cp_style = |theme: &Theme, status| {
+    get_button_style(cp.style, theme, status, cp.corner_radius)};
 
     let btn: Element<ColPikMessage> = Button::new(Text::new(cp.label.clone()))
                                     .height(cp.height)
                                     .padding(cp.padding)
                                     .width(cp.width)
                                     .on_press(ColPikMessage::ChooseColor)
-                                    .style(theme::Button::Custom(Box::new(
-                                        ButtonStyleRadius::new(style, cp.corner_radius))))
+                                    .style(cp_style)
                                     .into();
 
     if !cp.open {

@@ -15,16 +15,16 @@ use iced::Color;
 
 use crate::ipg_widgets;
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
-use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
+// use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
-use ipg_widgets::ipg_color_picker::{ColPikMessage, construct_color_picker, color_picker_update};
+// use ipg_widgets::ipg_color_picker::{ColPikMessage, construct_color_picker, color_picker_update};
 use ipg_widgets::ipg_column::construct_column;
 use ipg_widgets::ipg_container::construct_container;
 use ipg_widgets::ipg_date_picker::{DPMessage, construct_date_picker, date_picker_update};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 use ipg_widgets::ipg_events::process_events;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
-use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
+// use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
 use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_pointid, construct_mousearea};
 // use ipg_widgets::ipg_pane_grid::{PGMessage, construct_pane_grid, pane_grid_update, 
 //                                  construct_pane, pane_update};
@@ -38,7 +38,7 @@ use ipg_widgets::ipg_selectable_text::{SLTXTMessage, construct_selectable_text, 
 use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_callback};
 use ipg_widgets::ipg_space::construct_space;
 use ipg_widgets::ipg_svg::{SvgMessage, construct_svg, svg_callback};
-use ipg_widgets::ipg_table::contruct_table;
+use ipg_widgets::ipg_table::{contruct_table, TableMessage, table_callback};
 use ipg_widgets::ipg_text::construct_text;
 // use ipg_widgets::ipg_text_editor::{TEMessage, construct_text_editor};
 use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_callback};
@@ -57,12 +57,12 @@ pub enum Message {
     EventOccurred(Event),
 
     Button(usize, BTNMessage),
-    Card(usize, CardMessage),
+    // Card(usize, CardMessage),
     CheckBox(usize, CHKMessage),
-    ColorPicker(usize, ColPikMessage),
+    // ColorPicker(usize, ColPikMessage),
     DatePicker(usize, DPMessage),
     Image(usize, ImageMessage),
-    Menu(usize, MenuMessage),
+    // Menu(usize, MenuMessage),
     // Pane(PGMessage),
     // PaneGrid(PGMessage),
     PickList(usize, PLMessage),
@@ -71,6 +71,7 @@ pub enum Message {
     SelectableText(usize, SLTXTMessage),
     Slider(usize, SLMessage),
     Svg(usize, SvgMessage),
+    Table(usize, TableMessage),
     // TextEditor(TEMessage),
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
@@ -120,7 +121,7 @@ impl multi_window::Application for App {
     fn new(flags: Flags) -> (Self, Command<Message>) {
         
         let (windows, mut spawn) = add_windows();
-        spawn.push(font::load(iced_aw::graphics::icons::BOOTSTRAP_FONT_BYTES).map(Message::FontLoaded));
+        spawn.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
 
         (
             Self {
@@ -160,18 +161,18 @@ impl multi_window::Application for App {
                 button_callback(id, message);
                 Command::none()
             },
-            Message::Card(id, message) => {
-                card_callback(id, message);
-                 Command::none()
-            },
+            // Message::Card(id, message) => {
+            //     card_callback(id, message);
+            //      Command::none()
+            // },
             Message::CheckBox(id, message) => {
                 checkbox_callback(id, message);
                 Command::none()
             },
-            Message::ColorPicker(id, message) => {
-                color_picker_update(id, message);
-                Command::none()
-            },
+            // Message::ColorPicker(id, message) => {
+            //     color_picker_update(id, message);
+            //     Command::none()
+            // },
             Message::DatePicker(id, message) => {
                 date_picker_update(id, message);
                 Command::none()
@@ -180,10 +181,10 @@ impl multi_window::Application for App {
                 image_callback(id, message);
                 Command::none()
             },
-            Message::Menu(id, message) => {
-                menu_callback(id, message);
-                Command::none()
-            },
+            // Message::Menu(id, message) => {
+            //     menu_callback(id, message);
+            //     Command::none()
+            // },
             Message::MouseAreaOnPress(id) => {
                 mousearea_callback(id, "on_press".to_string());
                 Command::none()
@@ -252,6 +253,10 @@ impl multi_window::Application for App {
                 svg_callback(id, message);
                 Command::none()
             },
+            Message::Table(id, message) => {
+                table_callback(id, message);
+                Command::none()
+            }
             // Message::TextEditor(_message) => {
             //     // text_editor_update(message);
             //     Command::none()
@@ -271,7 +276,6 @@ impl multi_window::Application for App {
                         self.timer_event_enabled.1 = true;
                     },
                     TIMMessage::OnStop => self.timer_event_enabled.1 = false,
-                    TIMMessage::OnTick => (),
                 }
                 self.timer_duration = timer_callback(id, message);
                 Command::none()
@@ -504,21 +508,21 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgButton(btn) => {
                     return construct_button(btn.clone())
                 },
-                IpgWidgets::IpgCard(crd) => {
-                  return construct_card(crd.clone())
-                },
+                // IpgWidgets::IpgCard(crd) => {
+                //   return construct_card(crd.clone())
+                // },
                 IpgWidgets::IpgCheckBox(chk) => {
                     return construct_checkbox(chk.clone())
                 },
-                IpgWidgets::IpgColorPicker(cp) => {
-                    return construct_color_picker(cp.clone())
-                },
+                // IpgWidgets::IpgColorPicker(cp) => {
+                //     return construct_color_picker(cp.clone())
+                // },
                 IpgWidgets::IpgImage(img) => {
                     return construct_image(img.clone())
                 }
-                IpgWidgets::IpgMenu(mn) => {
-                    return construct_menu(mn.clone())
-                }
+                // IpgWidgets::IpgMenu(mn) => {
+                //     return construct_menu(mn.clone())
+                // }
                 IpgWidgets::IpgDatePicker(dp) => {
                     return construct_date_picker(dp.clone())
                 },
@@ -575,6 +579,7 @@ fn match_theme_with_color(theme: Theme) -> Color {
         Theme::Light => Color::BLACK,
         Theme::Dark => Color::WHITE,
         Theme::Dracula => Color::WHITE,
+        Theme::Ferra => Color::WHITE,
         Theme::Nord => Color::WHITE,
         Theme::SolarizedLight => Color::BLACK,
         Theme::SolarizedDark => Color::WHITE,

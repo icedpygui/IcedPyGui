@@ -14,7 +14,6 @@ use iced::{Length, Element, Point};
 use iced::widget::{Svg, MouseArea};
 use iced::mouse::Interaction;
 use iced::advanced::svg;
-use iced::theme;
 
 use pyo3::pyclass;
 use pyo3::types::IntoPyDict;
@@ -68,14 +67,14 @@ pub enum SvgMessage {
 
 pub fn construct_svg(sg: IpgSvg) -> Element<'static, app::Message> {
 
-    let style: theme::Svg = get_style(sg.style);
+    // let style: theme::Svg = get_style(sg.style);
 
     let svg_handle = svg::Handle::from_path(sg.svg_path);
 
     let svg_widget: Element<SvgMessage> = Svg::new(svg_handle)
                                                 .width(sg.width)
                                                 .height(sg.height)
-                                                .style(style)
+                                                // .style(style)
                                                 .into();
 
     let widget: Element<SvgMessage> = 
@@ -311,9 +310,9 @@ pub enum IpgSvgStyle {
     // Custom,
 }
 
-fn get_style(st: IpgSvgStyle) -> theme::Svg {
-    match st {
-        IpgSvgStyle::Default => theme::Svg::Default,
-        // IpgSvgStyle::Custom => todo!(),
-    }
-}
+// fn get_style(st: IpgSvgStyle) -> theme::Svg {
+//     match st {
+//         IpgSvgStyle::Default => theme::Svg::Default,
+//         // IpgSvgStyle::Custom => todo!(),
+//     }
+// }

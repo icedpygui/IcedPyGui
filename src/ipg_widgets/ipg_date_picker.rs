@@ -2,15 +2,17 @@
 
 use crate::app::{Message, self};
 use crate::access_callbacks;
+use super::ipg_container::date_picker_container;
 use super::ipg_modal::IpgModal;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 use crate::ICON_FONT_BOOT;
 use super::helpers::{get_padding, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_vec_f64, DATE_FORMATS, DAYS, MONTH_NAMES, WEEKDAYS};
+use super::ipg_button::{theme_primary, theme_success};
 
 use iced::advanced::graphics::core::Element;
-use iced::{Length, Padding, Renderer, Theme, theme};
+use iced::{Length, Padding, Renderer, Theme};
 use iced::alignment::{self, Alignment};
 use iced::widget::{Button, Column, Container, PickList, Row, Space, Text};
 
@@ -91,7 +93,22 @@ pub enum DPMessage {
 
 pub fn construct_date_picker(dp: IpgDatePicker) -> Element<'static, Message, Theme, Renderer> {
 
-    let content: Element<Message, Theme, Renderer> = calendar_show_button(dp.clone());
+    if !dp.show {
+        return calendar_show_button(dp.clone());
+    }
+    
+    let width = Length::Fixed(dp.show_width * dp.size_factor);
+    let height = Length::Fixed(dp.show_height * dp.size_factor);
+    
+    let content: Element<Message, Theme, Renderer> = 
+                                    Container::new(Space::new(0.0, 0.0))
+                                                .padding(dp.padding)
+                                                .center_x()
+                                                .center_y()
+                                                .width(width)
+                                                .height(height)
+                                                .style(|theme| date_picker_container(theme))
+                                                .into();
     
     if dp.show {
         
@@ -142,7 +159,7 @@ pub fn construct_date_picker(dp: IpgDatePicker) -> Element<'static, Message, The
             .into();
  
         let cont: Element<Message, Theme, Renderer> = Container::new(col_content)
-                                                                    .style(theme::Container::Box)
+                                                                    // .style(theme::Container::Box)
                                                                     .into();
 
         let modal: Element<Message, Theme, Renderer> = 
@@ -196,13 +213,6 @@ fn get_days_of_month(year: i32, month: u32) -> i64 {
 
 fn calendar_show_button(dp: IpgDatePicker) -> Element<'static, Message, Theme, Renderer> {
 
-    let mut height = dp.hide_height;
-    let mut width = dp.hide_width; 
-    if dp.show {
-        height = Length::Fixed(dp.show_height * dp.size_factor);
-        width = Length::Fixed(dp.show_width * dp.size_factor);
-    }
-
     let show_btn: Element<DPMessage, Theme, Renderer> = 
                     Button::new(Text::new(dp.label.clone()))
                                     .on_press(DPMessage::ShowModal)
@@ -217,8 +227,8 @@ fn calendar_show_button(dp: IpgDatePicker) -> Element<'static, Message, Theme, R
                     .padding(dp.padding)
                     .center_x()
                     .center_y()
-                    .width(width)
-                    .height(height)
+                    .width(dp.hide_width)
+                    .height(dp.hide_height)
                     .into()
 
 }
@@ -350,10 +360,6 @@ fn get_calendar_days(id: usize, selected_year: i32,
                 }
             }
             if day <= days as usize && start_weekday {
-                let mut style: theme::Button = theme::Button::Primary;
-                if day == selected_day {
-                    style = theme::Button::Positive;
-                }
                 
                 let btn: Element<DPMessage, Theme, Renderer> = 
                         Button::new(Text::new(day.to_string())
@@ -364,7 +370,13 @@ fn get_calendar_days(id: usize, selected_year: i32,
                                     .height(15.0*size_factor)
                                     .width(15.0*size_factor)
                                     .padding(0)
-                                    .style(style)
+                                    .style(move|theme: &Theme, status| {
+                                            if day == selected_day {
+                                                theme_success(theme, status, 10.0)
+                                            } else {
+                                                theme_primary(theme, status, 10.0)
+                                            }}
+                                        )
                                     .into();
                 row.push(btn.map(move |message| Message::DatePicker(id, message)));
                 

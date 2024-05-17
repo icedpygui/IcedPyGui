@@ -1,5 +1,5 @@
+#![allow(dead_code)]
 //! Bootstrap icons.
-//! Machine generated code. Do not change!
 
 /// Bootstrap icons
 #[derive(Copy, Clone, Debug, Hash)]

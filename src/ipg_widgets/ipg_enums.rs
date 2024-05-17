@@ -1,13 +1,13 @@
 
 use super::ipg_button::IpgButton;
-use super::ipg_card::IpgCard;
+// use super::ipg_card::IpgCard;
 use super::ipg_checkbox::IpgCheckBox;
-use super::ipg_color_picker::IpgColorPicker;
+// use super::ipg_color_picker::IpgColorPicker;
 use super::ipg_container::IpgContainer;
 use super::ipg_column::IpgColumn;
 use super::ipg_date_picker::IpgDatePicker;
 use super::ipg_image::IpgImage;
-use super::ipg_menu::IpgMenu;
+// use super::ipg_menu::IpgMenu;
 use super::ipg_mousearea::IpgMouseArea;
 // use super::ipg_pane_grid::{IpgPaneGrid, IpgPane};
 use super::ipg_pick_list::IpgPickList;
@@ -46,12 +46,12 @@ pub enum IpgContainers {
 #[derive(Debug)]
 pub enum IpgWidgets {
     IpgButton(IpgButton),
-    IpgCard(IpgCard),
+    // IpgCard(IpgCard),
     IpgCheckBox(IpgCheckBox),
-    IpgColorPicker(IpgColorPicker),
+    // IpgColorPicker(IpgColorPicker),
     IpgDatePicker(IpgDatePicker),
     IpgImage(IpgImage),
-    IpgMenu(IpgMenu),
+    // IpgMenu(IpgMenu),
     IpgPickList(IpgPickList),
     IpgProgressBar(IpgProgressBar),
     IpgRadio(IpgRadio),
