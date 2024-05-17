@@ -375,6 +375,7 @@ pub fn process_events(ipg_event: Event,
                 }
                 
             },
+            Event::PlatformSpecific(_) => (),
         }
 }
 

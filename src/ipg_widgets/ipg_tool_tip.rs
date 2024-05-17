@@ -1,5 +1,5 @@
 
-use iced::{Element, theme};
+use iced::Element;
 use iced::widget::{Column, text, Tooltip};
 use iced::widget::tooltip::Position;
 use crate::app::Message;
@@ -39,12 +39,12 @@ impl IpgToolTip {
 }
 
 pub fn construct_tool_tip(tool: &IpgToolTip, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
-        
-        let style = match tool.style.as_str() {
-            "box" => theme::Container::Box,
-            "transparent" => theme::Container::Transparent,
-            _ => panic!("ToolTip must have a style of either box or transparent")
-        };
+        // TODO: tooltip work needed
+        // let style = match tool.style.as_str() {
+        //     "box" => theme::Container::Box,
+        //     "transparent" => theme::Container::Transparent,
+        //     _ => panic!("ToolTip must have a style of either box or transparent")
+        // };
 
         let position: Position = match tool.position.as_str() {
                             "followcursor" => Position::FollowCursor,
@@ -65,7 +65,7 @@ pub fn construct_tool_tip(tool: &IpgToolTip, content: Vec<Element<'static, Messa
                 .gap(tool.gap)
                 .padding(tool.padding)
                 .snap_within_viewport(tool.snap_within_viewport)
-                .style(style)
+                // .style(style)
                 .into()
 
 }

@@ -107,11 +107,10 @@ pub fn construct_scrollable(scroll: &IpgScrollable, content: Vec<Element<'static
                                                     );
 
 
-    Scrollable::new(content)
+    Scrollable::with_direction(content, direction)
                     .ipg_id(scroll.id)
                     .width(scroll.width)
                     .height(scroll.height)
-                    .direction(direction)
                     .on_scroll(app::Message::Scrolled)
                     .into()
     

@@ -9,13 +9,13 @@ use super::callbacks::{WidgetCallbackIn,
                         get_set_widget_callback_data,
                         };
 
-use iced::{Length, Element};
+use crate::graphics::BOOTSTRAP_FONT;
+use crate::graphics::bootstrap_icon::{Icon, icon_to_char};
+
+use iced::{Element, Font, Length, Pixels};
 use iced::widget::text::{self, LineHeight, Shaping};
 use iced::widget::{Checkbox, Space};
-use iced::widget::checkbox::Icon;
-
-use iced_aw::graphics::icons::icon_to_char;
-use iced_aw::{BootstrapIcon, BOOTSTRAP_FONT};
+use iced::widget::checkbox;
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -88,10 +88,6 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
         return Space::new(Length::Shrink, Length::Shrink).into()
     };
     
-    let check = icon_to_char(BootstrapIcon::Check);
-    let x = icon_to_char(BootstrapIcon::X);
-
-
     let ipg_chk: Element<'_, CHKMessage> = Checkbox::new(chk.label.clone(), 
                             chk.is_checked)
                             .on_toggle(CHKMessage::OnToggle)
@@ -103,16 +99,17 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
                             //TODO: .font(BOOTSTRAP_FONT)
                             .width(chk.width)
                             .icon(if chk.icon_x {
-                                        Icon {
-                                        font: BOOTSTRAP_FONT,
-                                        code_point: x,
-                                        size: Some(iced::Pixels(chk.icon_size)),
-                                        line_height: text::LineHeight::Relative(1.0),
-                                        shaping: text::Shaping::Basic}
+                                checkbox::Icon {
+                                    font: BOOTSTRAP_FONT,
+                                    code_point: icon_to_char(Icon::X),
+                                    size: Some(iced::Pixels(chk.icon_size)),
+                                    line_height: text::LineHeight::Relative(1.0),
+                                    shaping: text::Shaping::Basic,
+                                }
                                     } else {
-                                        Icon {
+                                        checkbox::Icon {
                                             font: BOOTSTRAP_FONT,
-                                            code_point: check,
+                                            code_point: icon_to_char(Icon::Check),
                                             size: Some(iced::Pixels(chk.icon_size)),
                                             line_height: text::LineHeight::Relative(1.0),
                                             shaping: text::Shaping::Basic}

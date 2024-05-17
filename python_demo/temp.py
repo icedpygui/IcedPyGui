@@ -1,72 +1,66 @@
-from icedpygui import IPG, IpgContainerAlignment
-import os
-
-# Since user data is include, it will need to be
-# added to all whether used on or.
-def on_press(id, _user_data):
-    print("on press", id)
-
-
-def on_release(id, _user_data):
-    print("on release", id)
-
-
-def on_right_press(id, _user_data):
-    print("on right press, id")
-
-
-def on_right_release(id, _user_data):
-    print("on right release", id)
-
-
-def on_middle_press(id, _user_data):
-    print("on middle press", id)
-
-
-def on_middle_release(id, _user_data):
-    print("on middle release", id)
-
-
-def on_enter(id, user_data):
-    print("entered", id, user_data)    
-
-
-def on_move(id: int, point: dict, _user_data):
-    print("on move", id, point)
-
-
-def on_exit(id, _user_data):
-    print("on exit", id)
-
-
-    
+from icedpygui import IPG, IpgContainerAlignment, TableRowHighLight, TableWidget
+import random
 
 ipg = IPG()
 
-ipg.add_window(window_id="main", title="Main", width=400, height=400, 
-               pos_centered=True, debug=True)
 
-ipg.add_container(window_id="main", container_id="cont", 
+def edit_column(tbl_id: int, wid_index: int):
+    print(tbl_id, wid_index)
+
+
+# Add the window
+ipg.add_window(window_id="main", title="Table Demo", width=500, height=600,
+                pos_x=100, pos_y=25, debug=False)
+
+# Add the container, since the table requires a width and height,
+# the container can shrink(default) to fit.
+ipg.add_container(window_id="main", container_id="cont",
                   width_fill=True, height_fill=True,
                   align_x=IpgContainerAlignment.Center,
                   align_y=IpgContainerAlignment.Center)
 
-# Setting up the image path
-cwd = os.getcwd()
-svg_path = cwd + "/resources/tiger.svg"
+# Initialize the lists.
+col1 = []
+col2 = []
+col3 = []
+col4 = []
 
-ipg.add_svg(parent_id="cont",
-            svg_path= svg_path,
-            on_enter=on_enter,
-            on_exit=on_exit,
-            on_move=on_move,
-            on_press=on_press,
-            on_release=on_release,
-            on_middle_press=on_middle_press,
-            on_middle_release=on_middle_release,
-            on_right_press=on_right_press,
-            on_right_release=on_right_release,
-            user_data="Some Data")
+# Add some random data of different types
+for i in range(0, 10):
+    # make a float random number
+    col1.append(random.randrange(10, 99) + random.randrange(10, 99) / 100)
+    col2.append(random.choice(["one", "two", "three", "four", "five", "six", "seven"]))
+    col3.append(random.randrange(10, 99))
+    col4.append(random.choice([True, False]))
+
+# Create the table, the requirement is a list of dictionaries.
+# Rust does not have dictionaries but a similar type is called a HashMap.
+# The reason for the list of dictionaries is that you cannot extract a
+# mixed dictionary into a Rust HashMap.  The HashMap has to have predefined
+# types.  In this case they are <String, Vec<f64>>, <String, Vec<String>>,
+# <String, Vec<i64>>, and <String, Vec<bool>>.  As one iterates through the list,
+# each type is tested to see if it can be extracted in one of the types above.  If found,
+# the extraction occurs and life is wonderful.  If no existing type is found, then an error occurs.
+# Currently, not every variation is covered but that can be improved in future versions.
+# This probably covers the vast majorities needs.  If you need that mixed column, convert
+# the list to a string.  When the final version is displayed, it's converted to  a string anyway.
+data = [{"Col1": col1},
+        {"Col2": col2},
+        {"Col3": col3},
+        {"Col4": col4}]
+
+# ipg.add_scrollable(window_id="main", container_id="scroll", parent_id="col")
+# The table is added.
+ipg.add_table("cont", "My Table", data, 
+              width=500.0, height=400.0, 
+              row_highlight=TableRowHighLight.Lighter,
+              widget=TableWidget.Button, widget_column=0,
+              widget_header="Edit",
+              widget_column_length=len(col1),
+              widget_label="Edit",
+              callback=edit_column)
 
 
+# Required to be the last widget sent to Iced,  If you start the program
+# and nothing happens, it might mean you forgot to add this command.
 ipg.start_session()

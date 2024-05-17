@@ -1,17 +1,17 @@
-#![allow(dead_code)]
-
+//!ipg_timer
 use crate::{access_callbacks, app};
 
 use iced::widget::{Button, Text};
-use iced::{theme, Element, Length, Padding};
+use iced::{Element, Length, Font, Padding, Theme};
 
-use iced_aw::BOOTSTRAP_FONT;
+// use iced_aw::BOOTSTRAP_FONT;
+const ICON_FONT: Font = Font::with_name("icons");
 
 use pyo3::{pyclass, PyObject, Python};
 
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::try_extract_i64;
-use super::ipg_button::{get_button_style_from_obj, try_extract_button_arrow, ButtonStyleRadius};
+use super::ipg_button::{get_button_style, try_extract_button_arrow};
 
 
 
@@ -71,7 +71,6 @@ impl IpgTimer {
 pub enum TIMMessage {
     OnStart,
     OnStop,
-    OnTick,
 }
 
 
@@ -93,20 +92,18 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
     if tim.arrow_style.is_some() {
         let arrow_style = try_extract_button_arrow(tim.arrow_style);
         label = match arrow_style {
-            Some(ar) => Text::new(ar).font(BOOTSTRAP_FONT),
+            Some(ar) => Text::new(ar).font(ICON_FONT),
             None => panic!("Timer: Could not get extract arrow_style")
         };
     }
     
-    let style = get_button_style_from_obj(tim.style);
-
     let timer_btn: Element<TIMMessage> = Button::new(label)
                                 .height(tim.height)
                                 .padding(tim.padding)
                                 .width(tim.width)
                                 .on_press(on_press)
-                                .style(theme::Button::Custom(Box::new(
-                                    ButtonStyleRadius::new(style, tim.corner_radius))))
+                                .style(move|theme: &Theme, status| {
+                                    get_button_style(tim.style.clone(), theme, status, tim.corner_radius)})
                                 .into();
     
     timer_btn.map(move |message: TIMMessage| app::Message::Timer(tim.id, message))
@@ -140,7 +137,6 @@ pub fn timer_callback(id: usize, message: TIMMessage) -> u64 {
             wco.event_name = "on_stop".to_string();
             process_callback(wco);
         },
-        TIMMessage::OnTick => (),
     }
     duration
 }

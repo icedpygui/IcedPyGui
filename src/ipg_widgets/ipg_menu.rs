@@ -4,11 +4,12 @@ use std::collections::{BTreeMap, HashMap};
 use iced::widget::{button, row, text, Button, Container, Row, Text};
 use iced::{alignment, Border, Color, Element, Length, Renderer, Theme};
 
-use iced_aw::graphics::icons::{BootstrapIcon, BOOTSTRAP_FONT, BOOTSTRAP_FONT_BYTES};
+use iced_aw::widgets::InnerBounds;
+use iced_aw::{BOOTSTRAP_FONT, BOOTSTRAP_FONT_BYTES};
 use iced_aw::menu::{self, Item, Menu, MenuBar, StyleSheet};
-use iced_aw::native::InnerBounds;
 use iced_aw::style::MenuBarStyle;
 use iced_aw::{menu_bar, menu_items, quad};
+
 use pyo3::types::PyDict;
 use pyo3::{pyclass, PyObject, Python};
 
@@ -16,6 +17,7 @@ use crate::{access_callbacks, app};
 
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{convert_vecs, try_extract_dict, try_extract_vec_f32, try_extract_vec_f64, try_extract_vec_str};
+use super::ipg_button;
 
 #[derive(Debug, Clone)]
 pub struct IpgMenu {
@@ -106,12 +108,13 @@ pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message> {
         };
         for (menu_index, item) in list.iter() .enumerate(){
 
-            menu_bar_items.push(Item::new(menu_button(item.clone())));
+            menu_bar_items.push(Item::new(menu_button(item.clone()).into()));
 
             if mn.separators.is_some() {
                 match &mn.separators {
                     Some(separators) => {
-                        let separator = get_separator(bar_index, 
+                        let separator = 
+                                            get_separator(bar_index, 
                                                             menu_index, 
                                                             separators,  
                                                             &mn.sep_label_names);
@@ -126,9 +129,9 @@ pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message> {
         }
 
         menu_bar.push(Item::with_menu(
-                        menu_bar_button(label.clone(), mn.widths[bar_index]),
+                        menu_bar_button(label.clone(), mn.widths[bar_index]).into(),
                         Menu::new(menu_bar_items)
-                                        .width(Length::Fixed(mn.widths[bar_index]))
+                                        .width(Length::Fixed(mn.widths[bar_index]).into())
                                         .spacing(mn.spacing[bar_index]) 
                         ));
     }
@@ -241,7 +244,7 @@ fn menu_button(label: String) -> Element<'static, MenuMessage> {
     let btn: Element<MenuMessage> = Button::new(label_txt)
                                     .on_press(MenuMessage::ItemPress(label))
                                     .width(Length::Fill)
-                                    .style(iced::theme::Button::Custom(Box::new(ButtonStyle {})))
+                                    .style(ipg_button::theme_primary)
                                     .into();
     btn
 }
@@ -257,56 +260,56 @@ fn menu_bar_button(label: String, width: f32) -> Element<'static, MenuMessage> {
     let btn: Element<MenuMessage> = Button::new(label_txt)
                                     .on_press(MenuMessage::ItemPress(label))
                                     .width(Length::Fixed(width))
-                                    .style(iced::theme::Button::Custom(Box::new(ButtonStyle {})))
+                                    // .style(iced::theme::Button::Custom(Box::new(ButtonStyle {})))
                                     .into();
     btn
 }
 
 
-fn get_separator(bar_index: usize, 
-                menu_index: usize, 
-                separators: &Vec<(usize, usize, IpgMenuSepTypes)>, 
-                sep_label_names: &Option<Vec<String>>) 
-                -> Option<Item<'static, MenuMessage, Theme, Renderer>> {
+// fn get_separator(bar_index: usize, 
+//                 menu_index: usize, 
+//                 separators: &Vec<(usize, usize, IpgMenuSepTypes)>, 
+//                 sep_label_names: &Option<Vec<String>>) 
+//                 -> Option<Item<'static, MenuMessage, Theme, Renderer>> {
 
-    // false if all label parameters don't match
-    let (checked, message) = check_label_separators(separators, sep_label_names);
-    if !checked {
-        panic!("{}", message)
-    }
+//     // false if all label parameters don't match
+//     let (checked, message) = check_label_separators(separators, sep_label_names);
+//     if !checked {
+//         panic!("{}", message)
+//     }
 
-    let sln = match sep_label_names.clone() {
-        Some(labels) => labels,
-        None => vec![], // since a check was done, this won't be used
-    };
+//     let sln = match sep_label_names.clone() {
+//         Some(labels) => labels,
+//         None => vec![], // since a check was done, this won't be used
+//     };
 
 
-    // This keeps track of the label index since there is not a requirement to
-    // match the size of the list for the labels.  So long as the label type match the
-    // munber of labels it is OK.  A check is put in to check this before the index is used.
-    let mut sln_index = 0;
+//     // This keeps track of the label index since there is not a requirement to
+//     // match the size of the list for the labels.  So long as the label type match the
+//     // munber of labels it is OK.  A check is put in to check this before the index is used.
+//     let mut sln_index = 0;
 
-    for (b_idx, m_idx, s_type) in separators.iter() {
+//     for (b_idx, m_idx, s_type) in separators.iter() {
 
-        if b_idx == &bar_index && m_idx == &menu_index {
-            match *s_type {
-                IpgMenuSepTypes::Line => return Item::new(line_separator()).into(),
-                IpgMenuSepTypes::Dot => return Item::new(
-                                        dot_separator(Theme::Dark)).into(),
-                IpgMenuSepTypes::Label => {
-                    if sln_index > sln.len() { panic!("Menu: The number of label type exceeds the number of labels.")}
+//         if b_idx == &bar_index && m_idx == &menu_index {
+//             match *s_type {
+//                 IpgMenuSepTypes::Line => return Some(Item::new(line_separator()).into()),
+//                 IpgMenuSepTypes::Dot => return Some(Item::new(
+//                                         dot_separator(Theme::Dark)).into()),
+//                 IpgMenuSepTypes::Label => {
+//                     if sln_index > sln.len() { panic!("Menu: The number of label type exceeds the number of labels.")}
                    
-                    let item = Item::new(
-                                                    labeled_separator(sln[sln_index].clone()));
-                    sln_index += 1;
-                    return item.into()
-                },
-                IpgMenuSepTypes::Delete => (),
-            }
-        }
-    }
-    None
-}
+//                     let item = Item::new(
+//                                                     labeled_separator(sln[sln_index].clone()));
+//                     sln_index += 1;
+//                     return Some(item.into())
+//                 },
+//                 IpgMenuSepTypes::Delete => (),
+//             }
+//         }
+//     }
+//     None
+// }
 
 
 fn check_label_separators(separators: &Vec<(usize, usize, IpgMenuSepTypes)>, 
@@ -478,36 +481,6 @@ pub fn try_extract_menu_update(update_obj: PyObject) -> IpgMenuParams {
         }
     })
 }
-
-
-struct ButtonStyle;
-impl button::StyleSheet for ButtonStyle {
-    type Style = iced::Theme;
-
-    fn active(&self, style: &Self::Style) -> button::Appearance {
-        button::Appearance {
-            text_color: style.extended_palette().background.base.text,
-            background: Some(Color::TRANSPARENT.into()),
-            // background: Some(Color::from([1.0; 3]).into()),
-            border: Border {
-                radius: [6.0; 4].into(),
-                ..Default::default()
-            },
-            ..Default::default()
-        }
-    }
-
-    fn hovered(&self, style: &Self::Style) -> button::Appearance {
-        let plt = style.extended_palette();
-
-        button::Appearance {
-            background: Some(plt.primary.weak.color.into()),
-            text_color: plt.primary.weak.text,
-            ..self.active(style)
-        }
-    }
-}
-
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[pyclass]
