@@ -34,11 +34,9 @@ pub struct IpgTable {
         pub row_highlight: Option<TableRowHighLight>,
         pub highlight_amount: f32,
         pub column_widths: Vec<f32>,
-        pub widget_header: Option<String>,
-        pub widget: Option<TableWidget>,
-        pub widget_column: usize,
-        pub widget_label: Option<String>,
-        pub widget_ids: Vec<usize>,
+        pub table_length: u32,
+        pub widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>, // column#, widget
+        pub widget_ids: Option<HashMap<usize, Vec<usize>>>,
         pub show: bool,
         pub user_data: Option<PyObject>,
         pub container_id: usize,
@@ -55,11 +53,9 @@ impl IpgTable {
         row_highlight: Option<TableRowHighLight>,
         highlight_amount: f32,
         column_widths: Vec<f32>,
-        widget_header: Option<String>,
-        widget: Option<TableWidget>,
-        widget_column: usize,
-        widget_label: Option<String>,
-        widget_ids: Vec<usize>,
+        table_length: u32,
+        widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>,
+        widget_ids: Option<HashMap<usize, Vec<usize>>>,
         show: bool,
         user_data: Option<PyObject>,
         container_id: usize,
@@ -74,10 +70,8 @@ impl IpgTable {
             row_highlight,
             highlight_amount,
             column_widths,
-            widget_header,
-            widget,
-            widget_column,
-            widget_label,
+            table_length,
+            widgets_using_columns,
             widget_ids,
             show,
             user_data,
@@ -133,24 +127,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
         let mut column_index = 0;
 
         // Gets the entire column at each iteration
-        for py_data in table.data {
-
-            if table.widget.is_some() && column_index == table.widget_column {
-                
-                column_elements.push(add_widget_column(table.widget, table.id, 
-                                                table.widget_ids.len(), table.widget_label.clone()));
-                
-                let wh = match table.widget_header.clone() {
-                    Some(header) => header,
-                    None => " ".to_string(),
-                };
-
-                headers.push(text(wh)
-                                        .width(Length::Fill)
-                                        .horizontal_alignment(Horizontal::Center)
-                                        .into())
-            }
-            column_index += 1;
+        for (index, py_data) in table.data.iter().enumerate() {
 
             let data: Result<HashMap<String, Vec<bool>>, _> = py_data.extract::<HashMap<String, Vec<bool>>>(py);
             if !data.is_err() { 
@@ -364,7 +341,7 @@ fn add_scroll(body: Element<'static, Message>, height: f32) -> Element<'static, 
 
 use iced::widget::Button;
 fn add_widget_column(widget_opt: Option<TableWidget>, table_id: usize, 
-                        col_len: usize, label: Option<String>) 
+                        label: String, index: usize) 
                         -> Element<'static, Message, Theme, Renderer> {
 
     let widget = match widget_opt {
@@ -374,23 +351,12 @@ fn add_widget_column(widget_opt: Option<TableWidget>, table_id: usize,
 
     match widget {
         TableWidget::Button => {
-            let mut buttons: Vec<Element<'static, TableMessage, Theme, Renderer>> = vec![];
-            for i in 0..col_len {
-                let lbl = match label.clone() {
-                    Some(lbl) => lbl,
-                    None => " ".to_string(),
-                };
 
-                let txt_label = text(lbl);
-                let button: Element<'static, TableMessage, Theme, Renderer> = Button::new(txt_label)
-                                                            // .height(Length::Fixed(25.0))
-                                                            .on_press(TableMessage::TableButton(i)) 
+            let btn: Element<'static, TableMessage, Theme, Renderer> = Button::new(text(label))
+                                                            .padding(Padding::ZERO)
+                                                            .on_press(TableMessage::TableButton(index)) 
                                                             .into(); 
-                buttons.push(button);
-            }
-            
-            let col: Element<'static, TableMessage, Theme, Renderer> = Column::with_children(buttons).into();
-            col.map(move |message| app::Message::Table(table_id, message))
+            btn.map(move |message| app::Message::Table(table_id, message))
         },
         TableWidget::Checkbox => todo!(),
         TableWidget::Image => todo!(),

@@ -1666,8 +1666,8 @@ impl IPG {
     #[pyo3(signature = (parent_id, title, data, width, height,
                         row_highlight=None, highlight_amount=0.15,
                         gen_id=None, callback=None, column_widths=vec![],
-                        widget_header=None, widget=None, widget_column=0, 
-                        widget_column_length=0, widget_label=None, show=true, user_data=None))]
+                        table_length=0, widgets_using_columns=None, 
+                        show=true, user_data=None))]
     fn add_table(&mut self,
                     parent_id: String,
                     title: String,
@@ -1680,11 +1680,8 @@ impl IPG {
                     gen_id: Option<usize>,
                     callback: Option<PyObject>,
                     column_widths: Vec<f32>,
-                    widget_header: Option<String>,
-                    widget: Option<TableWidget>,
-                    widget_column: usize,
-                    widget_column_length: u32,
-                    widget_label: Option<String>,
+                    table_length: u32,
+                    widgets_using_columns: Option<PyObject>,
                     show: bool,
                     user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
@@ -1692,13 +1689,32 @@ impl IPG {
 
         let id = self.get_id(gen_id);
 
-        let mut widget_ids = vec![];
+        let mut widget_ids: Option<HashMap<usize, Vec<usize>>> = None;
+        let mut widgets: Option<HashMap<usize, Vec<TableWidget>>> = None;
 
-        if widget.is_some() {
-            for _ in 0..widget_column_length {
-                self.id += 1;
-                widget_ids.push(self.id)
+        if widgets_using_columns.is_some() {
+            Python::with_gil(|py| {
+                let wwc = widgets_using_columns.unwrap();
+                let res = wwc.extract::<HashMap<usize, Vec<TableWidget>>>(py);
+                widgets = match res {
+                    Ok(val) => Some(val),
+                    Err(_) => panic!("table: Unable to extract widgets_using_columns"),
+                };
+            });
+        }
+
+        // Need to generate the ids for the widgets
+        if widgets.is_some() {
+            let mut wid_ids: HashMap<usize, Vec<usize>> = HashMap::new();
+            for col_position in widgets.as_ref().unwrap().keys() {
+                let mut ids: Vec<usize> = vec![];
+                for _ in 0..table_length {
+                    self.id += 1;
+                    ids.push(self.id)
+                }
+                wid_ids.insert(*col_position, ids);
             }
+            widget_ids = Some(wid_ids);
         }
 
         if callback.is_some() {
@@ -1732,10 +1748,8 @@ impl IPG {
                                                     row_highlight,
                                                     highlight_amount,
                                                     column_widths,
-                                                    widget_header,
-                                                    widget,
-                                                    widget_column,
-                                                    widget_label,
+                                                    table_length,
+                                                    widgets,
                                                     widget_ids,
                                                     show,
                                                     user_data,
