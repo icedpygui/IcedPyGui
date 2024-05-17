@@ -20,6 +20,7 @@ ipg.add_container(window_id="main", container_id="cont",
                   align_y=IpgContainerAlignment.Center)
 
 # Initialize the lists.
+col0 = []
 col1 = []
 col2 = []
 col3 = []
@@ -27,6 +28,8 @@ col4 = []
 
 # Add some random data of different types
 for i in range(0, 10):
+    # labels for the button widget
+    col0.append("Edit")
     # make a float random number
     col1.append(random.randrange(10, 99) + random.randrange(10, 99) / 100)
     col2.append(random.choice(["one", "two", "three", "four", "five", "six", "seven"]))
@@ -44,21 +47,26 @@ for i in range(0, 10):
 # Currently, not every variation is covered but that can be improved in future versions.
 # This probably covers the vast majorities needs.  If you need that mixed column, convert
 # the list to a string.  When the final version is displayed, it's converted to  a string anyway.
-data = [{"Col1": col1},
+data = [{"Edit": col0},
+        {"Col1": col1},
         {"Col2": col2},
         {"Col3": col3},
         {"Col4": col4}]
 
-# ipg.add_scrollable(window_id="main", container_id="scroll", parent_id="col")
+
+# The column widgets are prepared
+widgets = []
+for _ in len(col0):
+    widgets.append(TableWidget.Button)
+
 # The table is added.
 ipg.add_table("cont", "My Table", data, 
               width=500.0, height=400.0, 
               row_highlight=TableRowHighLight.Lighter,
-              widget=TableWidget.Button, widget_column=0,
-              widget_header="Edit",
-              widget_column_length=len(col1),
-              widget_label="Edit",
-              callback=edit_column)
+              table_length=len(col1),
+              widgets_using_columns= {0, widgets},
+              callback=edit_column
+              )
 
 
 # Required to be the last widget sent to Iced,  If you start the program
