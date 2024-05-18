@@ -8,10 +8,12 @@ use crate::ipg_widgets::ipg_container::{IpgContainerTheme, table_row_theme};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 
+use iced::advanced::graphics::text::cosmic_text::rustybuzz::ttf_parser::Width;
+use iced::widget::shader::wgpu::hal::MAX_VERTEX_BUFFERS;
 use iced::widget::text::Style;
 use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, Theme};
 use iced::alignment::Alignment;
-use iced::widget::{Container, container, text, Column, Row, Scrollable, Text};
+use iced::widget::{container, text, Checkbox, Column, Container, Row, Scrollable, Text};
 use iced::alignment::Horizontal;
 
 use pyo3::{PyObject, Python, pyclass};
@@ -84,6 +86,7 @@ impl IpgTable {
 #[derive(Debug, Clone, Copy)]
 pub enum TableMessage {
     TableButton(usize),
+    CheckBox(bool),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -150,7 +153,9 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
         for (col_index, py_data) in table.data.iter().enumerate() {
 
             let mut widgets = vec![];
+
             if widgets_construct && widget_column_pos.contains(&col_index){
+                
                 let wid_opt = table_widgets.get(&col_index);
                 widgets = match wid_opt {
                     Some(wid) => wid.clone(),
@@ -163,10 +168,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
-                            headers.push(text(key.to_owned())
-                                            .width(Length::Fill)
-                                            .horizontal_alignment(Horizontal::Center)
-                                            .into());                                          
+                            headers.push(add_header_text(key.to_owned()));                                          
                         }
                         
                         //Column values are put into individual columns then columns into  a row.
@@ -176,31 +178,18 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         for value in dt.values() {
                             for (i, v) in value.iter().enumerate() {
 
+                                let mut label = "False".to_string();
+                                    if *v {label = "True".to_string();}
+
                                 let txt: Element<Message> = 
                                 if widget_column_pos.contains(&col_index) {
-                                    let mut label = "False".to_string();
-                                    if *v {label = "True".to_string();}
                                     add_widget(widgets[i], table.id, label, i)
-                                }else if *v {
-                                        Container::new(text("True")
-                                                                .width(Length::Fill)
-                                                                .horizontal_alignment(Horizontal::Center)
-                                                        )
-                                                        .width(Length::Fill)
-                                                        .style(move|theme| table_row_theme(theme, i.clone(), 
-                                                                        table.highlight_amount.clone(),
-                                                                        table.row_highlight))
-                                                        .into()
-                                    } else {
-                                        Container::new(text("False")
-                                                                .width(Length::Fill)
-                                                                .horizontal_alignment(Horizontal::Center)
-                                                        )
-                                                        .width(Length::Fill)
-                                                        .style(move|theme| table_row_theme(theme, i.clone(), 
-                                                                    table.highlight_amount.clone(),
-                                                                    table.row_highlight))
-                                                        .into()
+                                }else {
+                                    let label_text: Element<Message> = add_text_widget(label);
+                                        
+                                    add_row_container(label_text, i, 
+                                                        table.highlight_amount, 
+                                                        table.row_highlight)
                                     };
 
                                 col_values.push(txt);
@@ -218,25 +207,24 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
-                            headers.push(text(key.to_owned())
-                                            .width(Length::Fill)
-                                            .horizontal_alignment(Horizontal::Center)
-                                            .into());  
+                            headers.push(add_header_text(key.to_owned()));  
                         }
 
                         let mut col_values: Vec<Element<Message>> = vec![];
 
                         for value in dt.values() {
                             for (i, v) in value.iter().enumerate() {
-                                let txt: Element<Message> = Container::new(text(v.to_string())
-                                                                        .width(Length::Fill)
-                                                                        .horizontal_alignment(Horizontal::Center)
-                                                                    )
-                                                                    .width(Length::Fill)
-                                                                    .style(move|theme| table_row_theme(theme, i.clone(), 
-                                                                                table.highlight_amount.clone(),
-                                                                                table.row_highlight))
-                                                                    .into();
+                                let label = v.to_string();
+                                let txt: Element<Message> = 
+                                if widget_column_pos.contains(&col_index) {
+                                    add_widget(widgets[i], table.id, label, i)
+                                }else {
+                                    let label_text: Element<Message> = add_text_widget(label);
+
+                                    add_row_container(label_text, i, 
+                                                table.highlight_amount, 
+                                                table.row_highlight)
+                                };
 
                                 col_values.push(txt);
                             }
@@ -253,26 +241,25 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
-                            headers.push(text(key.to_owned())
-                                            .width(Length::Fill)
-                                            .horizontal_alignment(Horizontal::Center)
-                                            .into());  
+                            headers.push(add_header_text(key.to_owned()));  
                         }
 
                         let mut col_values: Vec<Element<Message>> = vec![];
 
                         for value in dt.values() {
                             for (i, v) in value.iter().enumerate() {
-                                let txt: Element<Message> = Container::new(text(v)
-                                                                        .width(Length::Fill)
-                                                                        .horizontal_alignment(Horizontal::Center)
-                                                                    )
-                                                                    .width(Length::Fill)
-                                                                    .style(move|theme| table_row_theme(theme, i.clone(), 
-                                                                                table.highlight_amount.clone(),
-                                                                                table.row_highlight))
-                                                                    .into();
+                                let label = v.to_string();
 
+                                let txt: Element<Message> = 
+                                if widget_column_pos.contains(&col_index) {
+                                    add_widget(widgets[i], table.id, label, i)
+                                }else { 
+                                    let label_text: Element<Message> = add_text_widget(label);
+
+                                    add_row_container(label_text, i, 
+                                                        table.highlight_amount, 
+                                                        table.row_highlight)
+                                };
 
                                 col_values.push(txt);
                             }
@@ -289,26 +276,25 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
-                            headers.push(text(key.to_owned())
-                                            .width(Length::Fill)
-                                            .horizontal_alignment(Horizontal::Center)
-                                            .into());  
+                            headers.push(add_header_text(key.to_owned()));  
                         }
 
                         let mut col_values: Vec<Element<Message>> = vec![];
 
                         for value in dt.values() {
                             for (i, v) in value.iter().enumerate() {
-                                let txt: Element<Message> = Container::new(text(v.clone())
-                                                                        .width(Length::Fill)
-                                                                        .horizontal_alignment(Horizontal::Center)
-                                                                    )
-                                                                    .width(Length::Fill)
-                                                                    .style(move|theme| table_row_theme(theme, i.clone(), 
-                                                                                table.highlight_amount.clone(),
-                                                                                table.row_highlight))
-                                                                    .into();
+                                let label = v.to_string();
+                                  
+                                let txt: Element<Message> = 
+                                if widget_column_pos.contains(&col_index) {
+                                    add_widget(widgets[i], table.id, label, i)
+                                }else { 
+                                    let label_text: Element<Message> = add_text_widget(label);
 
+                                    add_row_container(label_text, i, 
+                                                        table.highlight_amount, 
+                                                        table.row_highlight)
+                                };
 
                                 col_values.push(txt)
                             }
@@ -356,7 +342,6 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
         
 }
 
-
 fn fill_column(col_values: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
     Column::with_children(col_values)
@@ -373,6 +358,35 @@ fn add_scroll(body: Element<'static, Message>, height: f32) -> Element<'static, 
     
 }
 
+fn add_header_text (header: String) -> Element<'static, Message> {
+    let txt : Element<Message> = text(header)
+                                    .width(Length::Fill)
+                                    .horizontal_alignment(Horizontal::Center)
+                                    .into();
+    txt
+}
+
+fn add_text_widget(label: String) -> Element<'static, Message> {
+    let txt: Element<Message> = text(label)
+        .width(Length::Fill)
+        .horizontal_alignment(Horizontal::Center
+        ).into();
+
+    txt
+}
+
+fn add_row_container(label: Element<Message>, row_index: usize,
+                    highlight_amount: f32, row_highlight: Option<TableRowHighLight>) 
+                    -> Element<Message> {
+    // Using container because text has no background 
+    Container::new(label)
+    .width(Length::Fill)
+    .style(move|theme| table_row_theme(theme, row_index.clone(), 
+                highlight_amount.clone(),
+                row_highlight))
+    .into()
+}
+
 use iced::widget::Button;
 fn add_widget(widget: TableWidget, table_id: usize, 
                         label: String, index: usize) 
@@ -380,14 +394,25 @@ fn add_widget(widget: TableWidget, table_id: usize,
 
     match widget {
         TableWidget::Button => {
-
-            let btn: Element<TableMessage> = Button::new(text(label))
+            let txt = Text::new(label)
+                                                            .horizontal_alignment(Horizontal::Center)
+                                                            .width(Length::Fill);
+                                                            
+            let btn: Element<TableMessage> = Button::new(txt)
                                                             .padding(Padding::ZERO)
+                                                            .width(Length::Fill)
                                                             .on_press(TableMessage::TableButton(index)) 
                                                             .into(); 
             btn.map(move |message| app::Message::Table(table_id, message))
         },
-        TableWidget::Checkbox => todo!(),
+        TableWidget::Checkbox => {
+            let chkbx: Element<TableMessage> = Checkbox::new(label, false)
+                                                    .padding(Padding::ZERO)
+                                                    .width(Length::Fill)
+                                                    .on_toggle(TableMessage::TableCheckbox)
+                                                    .into();
+            chk.map(move |message| app::Message::Table(table_id, message))
+        },
         TableWidget::Image => todo!(),
         TableWidget::Svg => todo!(),
     }

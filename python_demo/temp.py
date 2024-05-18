@@ -27,7 +27,7 @@ col3 = []
 col4 = []
 
 # Add some random data of different types
-for i in range(0, 10):
+for i in range(0, 20):
     # labels for the button widget
     col0.append("Edit")
     # make a float random number
