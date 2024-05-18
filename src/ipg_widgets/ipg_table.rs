@@ -121,14 +121,43 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
     let mut headers: Vec<Element<Message>>= vec![];
 
     let mut column_elements: Vec<Element<Message>> = vec![];
+
+    let mut widgets_construct = false;
+
+    let table_widgets: HashMap<usize, Vec<TableWidget>> = if table.widgets_using_columns.is_some() {
+        widgets_construct = true;
+        table.widgets_using_columns.unwrap()
+    } else {
+        HashMap::new()
+    };
+
+     let table_widgets_ids = match table.widget_ids {
+            Some(ids) => ids.clone(),
+            None => HashMap::new()
+        };
     
     Python::with_gil(|py| {
 
         let mut column_index = 0;
 
-        // Gets the entire column at each iteration
-        for (index, py_data) in table.data.iter().enumerate() {
+        let mut widget_column_pos: Vec<usize> = vec![];
+        if widgets_construct {
+            widget_column_pos = table_widgets.keys().into_iter().map(|key| *key).collect();
+            
+        }
 
+        // Gets the entire column at each iteration
+        for (col_index, py_data) in table.data.iter().enumerate() {
+
+            let mut widgets = vec![];
+            if widgets_construct && widget_column_pos.contains(&col_index){
+                let wid_opt = table_widgets.get(&col_index);
+                widgets = match wid_opt {
+                    Some(wid) => wid.clone(),
+                    None => vec![],
+                }
+            }
+            
             let data: Result<HashMap<String, Vec<bool>>, _> = py_data.extract::<HashMap<String, Vec<bool>>>(py);
             if !data.is_err() { 
                 match data {
@@ -143,11 +172,16 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         //Column values are put into individual columns then columns into  a row.
                         let mut col_values: Vec<Element<Message>> = vec![];
 
+                        // dt.values are the columns in the table
                         for value in dt.values() {
                             for (i, v) in value.iter().enumerate() {
 
                                 let txt: Element<Message> = 
-                                    if *v {
+                                if widget_column_pos.contains(&col_index) {
+                                    let mut label = "False".to_string();
+                                    if *v {label = "True".to_string();}
+                                    add_widget(widgets[i], table.id, label, i)
+                                }else if *v {
                                         Container::new(text("True")
                                                                 .width(Length::Fill)
                                                                 .horizontal_alignment(Horizontal::Center)
@@ -340,19 +374,14 @@ fn add_scroll(body: Element<'static, Message>, height: f32) -> Element<'static, 
 }
 
 use iced::widget::Button;
-fn add_widget_column(widget_opt: Option<TableWidget>, table_id: usize, 
+fn add_widget(widget: TableWidget, table_id: usize, 
                         label: String, index: usize) 
-                        -> Element<'static, Message, Theme, Renderer> {
-
-    let widget = match widget_opt {
-        Some(wid) => wid,
-        None => panic!("TableWidget could not be found")
-    };
+                        -> Element<'static, Message> {
 
     match widget {
         TableWidget::Button => {
 
-            let btn: Element<'static, TableMessage, Theme, Renderer> = Button::new(text(label))
+            let btn: Element<TableMessage> = Button::new(text(label))
                                                             .padding(Padding::ZERO)
                                                             .on_press(TableMessage::TableButton(index)) 
                                                             .into(); 

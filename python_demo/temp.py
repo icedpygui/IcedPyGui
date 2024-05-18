@@ -56,7 +56,7 @@ data = [{"Edit": col0},
 
 # The column widgets are prepared
 widgets = []
-for _ in len(col0):
+for _ in range(0, len(col0)):
     widgets.append(TableWidget.Button)
 
 # The table is added.
@@ -64,7 +64,7 @@ ipg.add_table("cont", "My Table", data,
               width=500.0, height=400.0, 
               row_highlight=TableRowHighLight.Lighter,
               table_length=len(col1),
-              widgets_using_columns= {0, widgets},
+              widgets_using_columns= {0: widgets},
               callback=edit_column
               )
 
