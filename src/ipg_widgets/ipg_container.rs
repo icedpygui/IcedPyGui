@@ -155,10 +155,11 @@ pub fn table_row_theme(theme: &Theme, idx: usize, amount: f32,
 
     if idx % 2 == 0 {
         background = match highlighter {
-                Some(hl) => match hl {
-                                                TableRowHighLight::Darker => darken(background, amount),
-                                                TableRowHighLight::Lighter => lighten(background, amount),
-                                                },
+                Some(hl) => 
+                    match hl {
+                        TableRowHighLight::Darker => darken(background, amount),
+                        TableRowHighLight::Lighter => lighten(background, amount),
+                        },
                 None => background,
             }
     }; 

@@ -1,7 +1,7 @@
 
-use iced::{Length, Element};
+use iced::{Element, Length};
 use iced::alignment::{Horizontal, Vertical};
-use iced::widget::text::{LineHeight, Shaping};
+use iced::widget::text::{Catalog, LineHeight, Shaping, Style, StyleFn};
 use iced::widget::{Space, Text};
 use crate::app::Message;
 
@@ -166,3 +166,67 @@ fn try_extract_text_update(update_obj: PyObject) -> IpgTextParams {
         }
     })
 }
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgTextTheme {
+    Default,
+    Custom,
+}
+
+impl Catalog for IpgTextTheme {
+    type Class<'a> = StyleFn<'a, Self>;
+
+    fn default<'a>() -> Self::Class<'a> {
+        Box::new(|_theme| Style::default())
+    }
+
+    fn style(&self, class: &Self::Class<'_>) -> Style {
+        class(self)
+    }
+}
+
+// pub fn text_body(_theme: &Theme, color: Color) -> Style {
+//     Style {
+//         color: Some(color),
+//         ..Default::default()
+//     }
+// }
+
+// fn get_theme_color(wnd_theme: &Theme) -> Color {
+//     let palette = Theme::palette(wnd_theme);
+
+//     palette.background
+// }
+
+// pub fn darken(color: Color, amount: f32) -> Color {
+//     let mut hsl = to_hsl(color);
+
+//     hsl.lightness = if hsl.lightness - amount < 0.0 {
+//         0.0
+//     } else {
+//         hsl.lightness - amount
+//     };
+
+//     from_hsl(hsl)
+// }
+
+// pub fn lighten(color: Color, amount: f32) -> Color {
+//     let mut hsl = to_hsl(color);
+
+//     hsl.lightness = if hsl.lightness + amount > 1.0 {
+//         1.0
+//     } else {
+//         hsl.lightness + amount
+//     };
+
+//     from_hsl(hsl)
+// }
+
+// fn to_hsl(color: Color) -> Hsl {
+//     Hsl::from_color(Rgb::from(color))
+// }
+
+// fn from_hsl(hsl: Hsl) -> Color {
+//     Rgb::from_color(hsl).into()
+// }
