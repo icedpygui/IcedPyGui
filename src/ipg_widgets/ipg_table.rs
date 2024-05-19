@@ -8,8 +8,6 @@ use crate::ipg_widgets::ipg_container::{IpgContainerTheme, table_row_theme};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 
-use iced::advanced::graphics::text::cosmic_text::rustybuzz::ttf_parser::Width;
-use iced::widget::shader::wgpu::hal::MAX_VERTEX_BUFFERS;
 use iced::widget::text::Style;
 use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, Theme};
 use iced::alignment::Alignment;
@@ -37,8 +35,8 @@ pub struct IpgTable {
         pub highlight_amount: f32,
         pub column_widths: Vec<f32>,
         pub table_length: u32,
-        pub widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>, // column#, widget
-        pub widget_ids: Option<HashMap<usize, Vec<usize>>>,
+        pub widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>, // column#, widget type
+        pub widget_ids: Option<HashMap<usize, Vec<usize>>>, // column, ids
         pub show: bool,
         pub user_data: Option<PyObject>,
         pub container_id: usize,
@@ -86,7 +84,7 @@ impl IpgTable {
 #[derive(Debug, Clone, Copy)]
 pub enum TableMessage {
     TableButton(usize),
-    CheckBox(bool),
+    TableCheckbox(bool),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -181,18 +179,22 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                 let mut label = "False".to_string();
                                     if *v {label = "True".to_string();}
 
-                                let txt: Element<Message> = 
+                                let col_element: Element<Message> = 
                                 if widget_column_pos.contains(&col_index) {
-                                    add_widget(widgets[i], table.id, label, i)
+                                    add_widget(widgets[i], 
+                                                table.id, 
+                                                label, i)
                                 }else {
-                                    let label_text: Element<Message> = add_text_widget(label);
-                                        
-                                    add_row_container(label_text, i, 
-                                                        table.highlight_amount, 
-                                                        table.row_highlight)
-                                    };
+                                    add_text_widget(label)
+                                };        
+                                let cnt: Element<Message> = add_row_container(
+                                                                col_element, 
+                                                                i, 
+                                                                table.highlight_amount, 
+                                                                table.row_highlight);
+                                    
 
-                                col_values.push(txt);
+                                col_values.push(cnt);
                             }
                         }
                         column_elements.push(fill_column(col_values));
@@ -215,18 +217,23 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         for value in dt.values() {
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
-                                let txt: Element<Message> = 
-                                if widget_column_pos.contains(&col_index) {
-                                    add_widget(widgets[i], table.id, label, i)
-                                }else {
-                                    let label_text: Element<Message> = add_text_widget(label);
 
-                                    add_row_container(label_text, i, 
-                                                table.highlight_amount, 
-                                                table.row_highlight)
+                                let col_element: Element<Message> = 
+                                if widget_column_pos.contains(&col_index) {
+                                    add_widget(widgets[i], 
+                                                table.id, 
+                                                label, i)
+                                }else {
+                                    add_text_widget(label)
                                 };
 
-                                col_values.push(txt);
+                                let cnt: Element<Message> = add_row_container(
+                                                                col_element, 
+                                                                i, 
+                                                                table.highlight_amount, 
+                                                                table.row_highlight);
+
+                                col_values.push(cnt);
                             }
                         }
                         column_elements.push(fill_column(col_values));
@@ -250,18 +257,22 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
 
-                                let txt: Element<Message> = 
+                                let col_element: Element<Message> = 
                                 if widget_column_pos.contains(&col_index) {
-                                    add_widget(widgets[i], table.id, label, i)
+                                    add_widget(widgets[i], 
+                                                table.id, 
+                                                label, i)
                                 }else { 
-                                    let label_text: Element<Message> = add_text_widget(label);
-
-                                    add_row_container(label_text, i, 
-                                                        table.highlight_amount, 
-                                                        table.row_highlight)
+                                    add_text_widget(label)
                                 };
 
-                                col_values.push(txt);
+                                let cnt: Element<Message> = add_row_container(
+                                                        col_element, 
+                                                        i, 
+                                                        table.highlight_amount, 
+                                                        table.row_highlight);
+
+                                col_values.push(cnt);
                             }
                         }
                         column_elements.push(fill_column(col_values));
@@ -285,18 +296,22 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
                                   
-                                let txt: Element<Message> = 
+                                let col_element: Element<Message> = 
                                 if widget_column_pos.contains(&col_index) {
-                                    add_widget(widgets[i], table.id, label, i)
+                                    add_widget(widgets[i], 
+                                                table.id, 
+                                                label, i)
                                 }else { 
-                                    let label_text: Element<Message> = add_text_widget(label);
-
-                                    add_row_container(label_text, i, 
-                                                        table.highlight_amount, 
-                                                        table.row_highlight)
+                                    add_text_widget(label)
                                 };
 
-                                col_values.push(txt)
+                                let cnt: Element<Message> = add_row_container(
+                                                                col_element, 
+                                                                i, 
+                                                                table.highlight_amount, 
+                                                                table.row_highlight);
+
+                                col_values.push(cnt)
                             }
                         }
                         column_elements.push(fill_column(col_values));
@@ -380,11 +395,13 @@ fn add_row_container(label: Element<Message>, row_index: usize,
                     -> Element<Message> {
     // Using container because text has no background 
     Container::new(label)
-    .width(Length::Fill)
-    .style(move|theme| table_row_theme(theme, row_index.clone(), 
-                highlight_amount.clone(),
-                row_highlight))
-    .into()
+            .width(Length::Fill)
+            .style(move|theme| table_row_theme(theme, row_index.clone(), 
+                        highlight_amount.clone(),
+                        row_highlight))
+            .center_x()
+            
+            .into()
 }
 
 use iced::widget::Button;
@@ -406,9 +423,8 @@ fn add_widget(widget: TableWidget, table_id: usize,
             btn.map(move |message| app::Message::Table(table_id, message))
         },
         TableWidget::Checkbox => {
-            let chkbx: Element<TableMessage> = Checkbox::new(label, false)
-                                                    .padding(Padding::ZERO)
-                                                    .width(Length::Fill)
+            let chk: Element<TableMessage> = Checkbox::new(label, false)
+                                                    .width(Length::Shrink)
                                                     .on_toggle(TableMessage::TableCheckbox)
                                                     .into();
             chk.map(move |message| app::Message::Table(table_id, message))
@@ -428,6 +444,18 @@ pub fn table_callback(id: usize, message: TableMessage) {
     match message {
         TableMessage::TableButton(index) => {
             wci.index = Some(index);
+            wci.value_bool = Some(false);
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = "table".to_string();
+            process_callback(wco);
+        },
+        TableMessage::TableCheckbox(checked) => {
+            // Need the string value to indicate a checkbox that triggers
+            // an index search for the checkbox since it can't be passed
+            // through like the button
+            wci.value_str = Some("checkbox".to_string());
+            wci.value_bool = Some(checked);
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
             wco.event_name = "table".to_string();
