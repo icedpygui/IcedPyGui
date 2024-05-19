@@ -1691,6 +1691,7 @@ impl IPG {
 
         let mut widget_ids: Option<HashMap<usize, Vec<usize>>> = None;
         let mut widgets: Option<HashMap<usize, Vec<TableWidget>>> = None;
+        let mut is_checked: Option<HashMap<usize, Vec<bool>>> = None;
 
         if widgets_using_columns.is_some() {
             Python::with_gil(|py| {
@@ -1703,18 +1704,23 @@ impl IPG {
             });
         }
 
-        // Need to generate the ids for the widgets
+        // Need to generate the ids for the widgets and the is_checked values
         if widgets.is_some() {
             let mut wid_ids: HashMap<usize, Vec<usize>> = HashMap::new();
+            let mut chkbx_checked: HashMap<usize, Vec<bool>> = HashMap::new();
             for col_position in widgets.as_ref().unwrap().keys() {
                 let mut ids: Vec<usize> = vec![];
+                let mut checked: Vec<bool> = vec![];
                 for _ in 0..table_length {
                     self.id += 1;
-                    ids.push(self.id)
+                    ids.push(self.id);
+                    checked.push(false);
                 }
                 wid_ids.insert(*col_position, ids);
+                chkbx_checked.insert(*col_position, checked);
             }
             widget_ids = Some(wid_ids);
+            is_checked = Some(chkbx_checked);
         }
 
         if callback.is_some() {
@@ -1751,6 +1757,7 @@ impl IPG {
                                                     table_length,
                                                     widgets,
                                                     widget_ids,
+                                                    is_checked,
                                                     show,
                                                     user_data,
                                                     container_id,

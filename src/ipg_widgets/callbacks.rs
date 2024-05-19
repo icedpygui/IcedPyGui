@@ -34,6 +34,7 @@ pub struct WidgetCallbackIn {
     pub value_float: Option<f64>,
     pub value_str: Option<String>,
     pub value_bool: Option<bool>,
+    pub value_usize: Option<usize>,
     pub on_tick_count: f32,
 }
 
@@ -49,6 +50,7 @@ pub struct WidgetCallbackOut {
     pub is_checked: Option<bool>,
     pub is_toggled: Option<bool>,
     pub index: Option<usize>,
+    pub index_table: Option<(usize, usize)>,
     pub points: Option<Vec<(String, f32)>>,
     pub scroll_pos: Vec<(String, f32)>, 
     pub selected_index: Option<usize>,
@@ -262,15 +264,22 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco
                 },
                 IpgWidgets::IpgTable(tbl) => {
-                    if wci.value_str == Some("checkbox".to_string()) {
-                        // find the index
-                        // iterate through the widgets_using_column for any checkbox type
-                        // once found text to see if the id equals that in widget_ids for the
-                        // column, then get the positon of the id which is the index.
-                    }
                     let mut wco = WidgetCallbackOut::default();
-                    wco.index = wci.index;
-                    wco.value_bool = wci.value_bool;
+                    if wci.value_str == Some("checkbox".to_string()) {
+                        // iterate through the widgets_ids to find the checkbox id
+                        // with the position being the index in the table.
+                        if tbl.widget_ids.is_some() {
+                            let widgets =  tbl.widget_ids.as_ref().unwrap();
+                            for (column, ids) in widgets.iter() {
+                                let pos = ids.iter().position(|&r| r == wci.id);
+                                if pos.is_some() {
+                                    let found_pos = pos.unwrap();
+                                    wco.index_table = Some((*column, found_pos));
+                                    break;
+                                }
+                            }
+                        }
+                    }
                     wco
                 },
                 IpgWidgets::IpgText(_) => {
