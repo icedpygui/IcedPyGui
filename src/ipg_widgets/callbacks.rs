@@ -55,6 +55,7 @@ pub struct WidgetCallbackOut {
     pub selected_label: Option<String>,
     pub selected_date: Option<String>,
     pub user_data: Option<PyObject>,
+    pub value_bool: Option<bool>,
     pub value_float: Option<f64>,
     pub value_str: Option<String>,
 }
@@ -260,9 +261,16 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     drop(state);
                     wco
                 },
-                IpgWidgets::IpgTable(_) => {
+                IpgWidgets::IpgTable(tbl) => {
+                    if wci.value_str == Some("checkbox".to_string()) {
+                        // find the index
+                        // iterate through the widgets_using_column for any checkbox type
+                        // once found text to see if the id equals that in widget_ids for the
+                        // column, then get the positon of the id which is the index.
+                    }
                     let mut wco = WidgetCallbackOut::default();
                     wco.index = wci.index;
+                    wco.value_bool = wci.value_bool;
                     wco
                 },
                 IpgWidgets::IpgText(_) => {

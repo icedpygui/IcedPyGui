@@ -25,16 +25,19 @@ col1 = []
 col2 = []
 col3 = []
 col4 = []
+col5 = []
 
 # Add some random data of different types
 for i in range(0, 20):
     # labels for the button widget
     col0.append("Edit")
+    # labels for the checkboxes
+    col1.append("")
     # make a float random number
-    col1.append(random.randrange(10, 99) + random.randrange(10, 99) / 100)
-    col2.append(random.choice(["one", "two", "three", "four", "five", "six", "seven"]))
-    col3.append(random.randrange(10, 99))
-    col4.append(random.choice([True, False]))
+    col2.append(random.randrange(10, 99) + random.randrange(10, 99) / 100)
+    col3.append(random.choice(["one", "two", "three", "four", "five", "six", "seven"]))
+    col4.append(random.randrange(10, 99))
+    col5.append(random.choice([True, False]))
 
 # Create the table, the requirement is a list of dictionaries.
 # Rust does not have dictionaries but a similar type is called a HashMap.
@@ -48,23 +51,26 @@ for i in range(0, 20):
 # This probably covers the vast majorities needs.  If you need that mixed column, convert
 # the list to a string.  When the final version is displayed, it's converted to  a string anyway.
 data = [{"Edit": col0},
-        {"Col1": col1},
+        {"Select": col1},
         {"Col2": col2},
         {"Col3": col3},
-        {"Col4": col4}]
+        {"Col4": col4},
+        {"Col4": col5}]
 
 
 # The column widgets are prepared
-widgets = []
+btn_widgets = []
+chkbox_widgets = []
 for _ in range(0, len(col0)):
-    widgets.append(TableWidget.Button)
+    btn_widgets.append(TableWidget.Button)
+    chkbox_widgets.append(TableWidget.Checkbox)
 
 # The table is added.
 ipg.add_table("cont", "My Table", data, 
               width=500.0, height=400.0, 
               row_highlight=TableRowHighLight.Lighter,
               table_length=len(col1),
-              widgets_using_columns= {0: widgets},
+              widgets_using_columns= {0: btn_widgets, 1: chkbox_widgets},
               callback=edit_column
               )
 
