@@ -4,7 +4,7 @@ import random
 ipg = IPG()
 
 
-def edit_column(tbl_id: int, wid_index: int):
+def edit_column(tbl_id: int, wid_index: tuple[int, int]):
     print(tbl_id, wid_index)
 
 
