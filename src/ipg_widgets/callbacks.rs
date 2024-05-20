@@ -16,8 +16,8 @@ pub struct WidgetCallbackIn {
     pub color: Option<Vec<f64>>,
     pub counter: Option<u64>,
     pub index: Option<usize>,
+    pub index_table: Option<(usize, usize)>,
     pub is_submitted: Option<bool>,
-    pub is_toggled: Option<bool>,
     pub on_toggle: Option<bool>,
     pub point: Option<Point>,
     pub selected: Option<String>,
@@ -48,9 +48,9 @@ pub struct WidgetCallbackOut {
     pub counter: Option<u64>,
     pub event_name: String,
     pub is_checked: Option<bool>,
-    pub is_toggled: Option<bool>,
     pub index: Option<usize>,
     pub index_table: Option<(usize, usize)>,
+    pub on_toggle: Option<bool>,
     pub points: Option<Vec<(String, f32)>>,
     pub scroll_pos: Vec<(String, f32)>, 
     pub selected_index: Option<usize>,
@@ -264,22 +264,13 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco
                 },
                 IpgWidgets::IpgTable(tbl) => {
+                    let (col_index, row_index) = wci.index_table.unwrap();
+                    let on_toggles = tbl.on_toggled.as_mut().unwrap();
+                    let on_togged = on_toggles.get_mut(&col_index).unwrap();
+                    on_togged[row_index] = wci.on_toggle.unwrap();
+                    
                     let mut wco = WidgetCallbackOut::default();
-                    if wci.value_str == Some("checkbox".to_string()) {
-                        // iterate through the widgets_ids to find the checkbox id
-                        // with the position being the index in the table.
-                        if tbl.widget_ids.is_some() {
-                            let widgets =  tbl.widget_ids.as_ref().unwrap();
-                            for (column, ids) in widgets.iter() {
-                                let pos = ids.iter().position(|&r| r == wci.id);
-                                if pos.is_some() {
-                                    let found_pos = pos.unwrap();
-                                    wco.index_table = Some((*column, found_pos));
-                                    break;
-                                }
-                            }
-                        }
-                    }
+                    wco.user_data = tbl.user_data.clone();
                     wco
                 },
                 IpgWidgets::IpgText(_) => {
@@ -329,7 +320,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco
                 }
                 IpgWidgets::IpgToggler(tog) => {
-                    match wci.is_toggled {
+                    match wci.on_toggle {
                         Some(tg) => tog.is_toggled = tg,
                         None => (),
                     }

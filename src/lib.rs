@@ -1665,7 +1665,8 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, title, data, width, height,
                         row_highlight=None, highlight_amount=0.15,
-                        gen_id=None, callback=None, column_widths=vec![],
+                        gen_id=None, on_press_button=None, 
+                        on_toggle_checkbox=None, column_widths=vec![],
                         table_length=0, widgets_using_columns=None, 
                         show=true, user_data=None))]
     fn add_table(&mut self,
@@ -1678,7 +1679,8 @@ impl IPG {
                     row_highlight: Option<TableRowHighLight>,
                     highlight_amount: f32,
                     gen_id: Option<usize>,
-                    callback: Option<PyObject>,
+                    on_press_button: Option<PyObject>,
+                    on_toggle_checkbox: Option<PyObject>,
                     column_widths: Vec<f32>,
                     table_length: u32,
                     widgets_using_columns: Option<PyObject>,
@@ -1691,7 +1693,7 @@ impl IPG {
 
         let mut widget_ids: Option<HashMap<usize, Vec<usize>>> = None;
         let mut widgets: Option<HashMap<usize, Vec<TableWidget>>> = None;
-        let mut is_checked: Option<HashMap<usize, Vec<bool>>> = None;
+        let mut on_toggled: Option<HashMap<usize, Vec<bool>>> = None;
 
         if widgets_using_columns.is_some() {
             Python::with_gil(|py| {
@@ -1705,6 +1707,7 @@ impl IPG {
         }
 
         // Need to generate the ids for the widgets and the is_checked values
+        // Keeping the ids organized in a hashmap for now, may need only a vec.
         if widgets.is_some() {
             let mut wid_ids: HashMap<usize, Vec<usize>> = HashMap::new();
             let mut chkbx_checked: HashMap<usize, Vec<bool>> = HashMap::new();
@@ -1720,11 +1723,15 @@ impl IPG {
                 chkbx_checked.insert(*col_position, checked);
             }
             widget_ids = Some(wid_ids);
-            is_checked = Some(chkbx_checked);
+            on_toggled = Some(chkbx_checked);
         }
 
-        if callback.is_some() {
-            add_callback_to_mutex(id, "table".to_string(), callback);
+        if on_press_button.is_some() {
+            add_callback_to_mutex(id, "on_press_button".to_string(), on_press_button);
+        }
+
+        if on_toggle_checkbox.is_some() {
+            add_callback_to_mutex(id, "on_toggle_checkbox".to_string(), on_toggle_checkbox);
         }
 
         set_state_of_widget(id, parent_id.clone());
@@ -1757,7 +1764,7 @@ impl IPG {
                                                     table_length,
                                                     widgets,
                                                     widget_ids,
-                                                    is_checked,
+                                                    on_toggled,
                                                     show,
                                                     user_data,
                                                     container_id,
