@@ -72,7 +72,7 @@ for _ in range(0, len(col0)):
 
 # The table is added.
 ipg.add_table("cont", "My Table", data, 
-              width=500.0, height=400.0, 
+              width=500.0, height=200.0, 
               row_highlight=TableRowHighLight.Lighter,
               table_length=len(col1),
               widgets_using_columns= {0: btn_widgets, 1: chkbox_widgets},
@@ -80,7 +80,19 @@ ipg.add_table("cont", "My Table", data,
               on_toggle_checkbox=widget_checkbox,
               )
 
+data_img = [
+            {"ferris": []}
+            ]
 
+# The table is added for svg and .
+ipg.add_table("cont", "My Table", data, 
+              width=500.0, height=200.0, 
+              row_highlight=TableRowHighLight.Lighter,
+              table_length=len(col1),
+              widgets_using_columns= {0: btn_widgets, 1: chkbox_widgets},
+              on_press_button=widget_button,
+              on_toggle_checkbox=widget_checkbox,
+              )
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.
 ipg.start_session()

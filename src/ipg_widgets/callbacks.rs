@@ -264,10 +264,12 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco
                 },
                 IpgWidgets::IpgTable(tbl) => {
-                    let (col_index, row_index) = wci.index_table.unwrap();
-                    let on_toggles = tbl.on_toggled.as_mut().unwrap();
-                    let on_togged = on_toggles.get_mut(&col_index).unwrap();
-                    on_togged[row_index] = wci.on_toggle.unwrap();
+                    if wci.value_str == Some("checkbox".to_string()) {
+                        let (col_index, row_index) = wci.index_table.unwrap();
+                        let on_toggles = tbl.on_toggled.as_mut().unwrap();
+                        let on_togged = on_toggles.get_mut(&col_index).unwrap();
+                        on_togged[row_index] = wci.on_toggle.unwrap();
+                    }
                     
                     let mut wco = WidgetCallbackOut::default();
                     wco.user_data = tbl.user_data.clone();
