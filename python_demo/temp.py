@@ -4,8 +4,13 @@ import random
 ipg = IPG()
 
 
-def edit_column(tbl_id: int, wid_index: tuple[int, int]):
+
+def widget_button(tbl_id: int, wid_index: tuple[int, int]):
     print(tbl_id, wid_index)
+
+
+def widget_checkbox(tbl_id: int, wid_index: tuple[int, int], is_checked: bool):
+    print(tbl_id, wid_index, is_checked)
 
 
 # Add the window
@@ -71,7 +76,8 @@ ipg.add_table("cont", "My Table", data,
               row_highlight=TableRowHighLight.Lighter,
               table_length=len(col1),
               widgets_using_columns= {0: btn_widgets, 1: chkbox_widgets},
-              callback=edit_column
+              on_press_button=widget_button,
+              on_toggle_checkbox=widget_checkbox,
               )
 
 

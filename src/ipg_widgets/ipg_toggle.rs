@@ -95,11 +95,11 @@ pub fn toggle_callback(id: usize, message: TOGMessage) {
     wci.id = id;
 
     match message {
-        TOGMessage::Toggled(is_toggled) => {
-            wci.is_toggled = Some(is_toggled);
+        TOGMessage::Toggled(on_toggle) => {
+            wci.on_toggle = Some(on_toggle);
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.is_toggled = Some(is_toggled);
+            wco.on_toggle = Some(on_toggle);
             wco.event_name = "toggled".to_string();
             process_callback(wco);
         }
@@ -131,7 +131,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 };
                 let res = callback.call1(py, (
                                                                     wco.id.clone(),
-                                                                    wco.is_toggled,  
+                                                                    wco.on_toggle,  
                                                                     user_data
                                                                     ));
                 match res {
@@ -141,7 +141,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
             } else {
                 let res = callback.call1(py, (
                                                                     wco.id.clone(),
-                                                                    wco.is_toggled,  
+                                                                    wco.on_toggle,  
                                                                     ));
                 match res {
                     Ok(_) => (),

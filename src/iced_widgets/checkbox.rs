@@ -42,9 +42,9 @@ pub struct Checkbox<
     Renderer: iced::advanced::text::Renderer,
     Theme: Catalog,
 {
-    id: usize,
+    index: (usize, usize), // (col, row)
     is_checked: bool,
-    on_toggle: Option<Box<dyn Fn(usize, bool) -> Message + 'a>>,
+    on_toggle: Option<Box<dyn Fn((usize, usize), bool) -> Message + 'a>>,
     label: String,
     width: Length,
     size: f32,
@@ -75,7 +75,7 @@ where
     ///   * a boolean describing whether the [`Checkbox`] is checked or not
     pub fn new(label: impl Into<String>, is_checked: bool) -> Self {
         Checkbox {
-            id: 0,
+            index: (0, 0),
             is_checked,
             on_toggle: None,
             label: label.into(),
@@ -98,8 +98,8 @@ where
     }
 
     /// Sets the id of the [`Checkbox`].
-    fn id(mut self, id: usize) -> Self {
-        self.id = id;
+    pub fn index(mut self, index: (usize, usize)) -> Self {
+        self.index = index;
         self
     }
 
@@ -110,7 +110,7 @@ where
     /// Unless `on_toggle` is called, the [`Checkbox`] will be disabled.
     pub fn on_toggle<F>(mut self, f: F) -> Self
     where
-        F: 'a + Fn(usize, bool) -> Message,
+        F: 'a + Fn((usize, usize), bool) -> Message,
     {
         self.on_toggle = Some(Box::new(f));
         self
@@ -122,7 +122,7 @@ where
     /// If `None`, the checkbox will be disabled.
     pub fn on_toggle_maybe<F>(mut self, f: Option<F>) -> Self
     where
-        F: Fn(usize, bool) -> Message + 'a,
+        F: Fn((usize, usize), bool) -> Message + 'a,
     {
         self.on_toggle = f.map(|f| Box::new(f) as _);
         self
@@ -272,7 +272,7 @@ where
 
                 if mouse_over {
                     if let Some(on_toggle) = &self.on_toggle {
-                        shell.publish((on_toggle)(self.id, !self.is_checked));
+                        shell.publish((on_toggle)(self.index, !self.is_checked));
                         return event::Status::Captured;
                     }
                 }
