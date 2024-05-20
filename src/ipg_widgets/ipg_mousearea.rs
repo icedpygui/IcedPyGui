@@ -41,7 +41,10 @@ impl IpgMouseArea {
 pub fn construct_mousearea(m_area: &IpgMouseArea, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
     let cont: Element<Message> = Column::with_children(content).into();
-
+    // Had to use the Message because the content already has Message.  Typical probablem
+    // with containers that are also like widgets with Message.
+    // TODO: The work around might be to collect the list of ids then construct the elements 
+    // in a central routine using the MouseAreaMessage as an example.
     let ma: Element<Message> = 
                     MouseArea::new(m_area.id, cont)
                     .on_press(Message::MouseAreaOnPress(m_area.id))

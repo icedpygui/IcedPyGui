@@ -8,12 +8,15 @@ use crate::ipg_widgets::ipg_container::{IpgContainerTheme, table_row_theme};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 use crate::iced_widgets::checkbox::Checkbox;
+use crate::iced_widgets::mousearea_table::{MouseArea, PointIdRC};
 
+use iced::mouse::Interaction;
 use iced::widget::text::Style;
 use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, Theme};
 use iced::alignment::Alignment;
-use iced::widget::{container, text, Column, Container, Row, Scrollable, Text};
+use iced::widget::{container, text, Column, Container, Image, Row, Scrollable, Text};
 use iced::alignment::Horizontal;
+use iced::advanced::image::{self, Handle};
 
 use pyo3::{PyObject, Python, pyclass};
 
@@ -85,10 +88,20 @@ impl IpgTable {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum TableMessage {
     TableButton((usize, usize)),
     TableCheckbox((usize, usize), bool),
+
+    MouseAreaOnPress((usize, usize)),
+    MouseAreaOnRelease((usize, usize)),
+    MouseAreaOnRightPress((usize, usize)),
+    MouseAreaOnRightRelease((usize, usize)),
+    MouseAreaOnMiddlePress((usize, usize)),
+    MouseAreaOnMiddleRelease((usize, usize)),
+    MouseAreaOnEnter((usize, usize)),
+    MouseAreaOnMove(PointIdRC),
+    MouseAreaOnExit((usize, usize)),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -449,12 +462,41 @@ fn add_widget(widget: TableWidget, table_id: usize,
                                                     .into();
             chk.map(move |message| app::Message::Table(table_id, message))
         },
-        TableWidget::Image => todo!(),
-        TableWidget::Svg => todo!(),
-    }
+        TableWidget::Image | TableWidget::Svg => {
+            let img: Element<TableMessage> = Image::<Handle>::new(table.image_path).into();
 
+            let cont: Element<TableMessage> = Container::new(img)
+                                                .width(Length::Fill)
+                                                .padding(Padding::ZERO)
+                                                .into();
+
+            add_mousearea(cont, table_id, index, *col_index)
+        },
+    }
 }
 
+
+fn add_mousearea(content: Element<TableMessage>, table_id: usize, row: usize, col: usize) -> Element<Message> {
+    
+    let ma: Element<TableMessage> = 
+                    MouseArea::new(content)
+                    .id(table_id)
+                    .table_pos((row, col))
+                    .on_press(TableMessage::MouseAreaOnPress((row, col)))
+                    .on_release(TableMessage::MouseAreaOnRelease((row, col)))
+                    .on_right_press(TableMessage::MouseAreaOnRightPress((row, col)))
+                    .on_right_release(TableMessage::MouseAreaOnRightRelease((row, col)))
+                    .on_middle_press(TableMessage::MouseAreaOnMiddlePress((row, col)))
+                    .on_middle_release(TableMessage::MouseAreaOnMiddleRelease((row, col)))
+                    .on_enter(TableMessage::MouseAreaOnEnter((row, col)))
+                    .on_move(TableMessage::MouseAreaOnMove)
+                    .on_exit(TableMessage::MouseAreaOnExit((row, col)))
+                    .interaction(Interaction::Pointer)
+                    .into();
+
+    ma.map(move |message| app::Message::Table(table_id, message))
+    
+}
 
 fn get_checked(on_toggled: &Option<HashMap<usize, Vec<bool>>>, col_index: &usize, row_index: usize) -> bool {
     let toggled_hmap = on_toggled.as_ref().unwrap();
@@ -477,6 +519,7 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             process_callback(wco);
         },
         TableMessage::TableCheckbox((col_index, row_index), on_toggle) => {
+            wci.value_str =  Some("checkbox".to_string());
             wci.on_toggle = Some(on_toggle);
             wci.index_table = Some((col_index, row_index));
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
@@ -486,7 +529,18 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             wco.on_toggle = Some(on_toggle);
             wco.index_table = Some((col_index, row_index));
             process_callback(wco);
+        },
+        TableMessage::MouseAreaOnPress((col_index, row_index)) => {
+
         }
+        TableMessage::MouseAreaOnRelease(_) => todo!(),
+        TableMessage::MouseAreaOnRightPress(_) => todo!(),
+        TableMessage::MouseAreaOnRightRelease(_) => todo!(),
+        TableMessage::MouseAreaOnMiddlePress(_) => todo!(),
+        TableMessage::MouseAreaOnMiddleRelease(_) => todo!(),
+        TableMessage::MouseAreaOnEnter(_) => todo!(),
+        TableMessage::MouseAreaOnMove(_) => todo!(),
+        TableMessage::MouseAreaOnExit(_) => todo!(),
     }
 }
 

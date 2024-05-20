@@ -24,6 +24,7 @@ pub struct MouseArea<
     Renderer = iced::Renderer,
 > {
     id: usize,
+    table_pos: (usize, usize),
     content: Element<'a, Message, Theme, Renderer>,
     on_press: Option<Message>,
     on_release: Option<Message>,
@@ -32,12 +33,22 @@ pub struct MouseArea<
     on_middle_press: Option<Message>,
     on_middle_release: Option<Message>,
     on_enter: Option<Message>,
-    on_move: Option<Box<dyn Fn(PointId) -> Message>>,
+    on_move: Option<Box<dyn Fn(PointIdRC) -> Message>>,
     on_exit: Option<Message>,
     interaction: Option<mouse::Interaction>,
 }
 
 impl<'a, Message, Theme, Renderer> MouseArea<'a, Message, Theme, Renderer> {
+    pub fn id(mut self, id: usize) -> Self {
+        self.id = id;
+        self
+    }
+
+    pub fn table_pos(mut self, row_col: (usize, usize)) -> Self {
+        self.table_pos = row_col;
+        self
+    }
+    
     /// The message to emit on a left button press.
     #[must_use]
     pub fn on_press(mut self, message: Message) -> Self {
@@ -91,7 +102,7 @@ impl<'a, Message, Theme, Renderer> MouseArea<'a, Message, Theme, Renderer> {
     #[must_use]
     pub fn on_move<F>(mut self, build_message: F) -> Self
     where
-        F: Fn(PointId) -> Message + 'static,
+        F: Fn(PointIdRC) -> Message + 'static,
     {
         self.on_move = Some(Box::new(build_message));
         self
@@ -121,11 +132,11 @@ struct State {
 impl<'a, Message, Theme, Renderer> MouseArea<'a, Message, Theme, Renderer> {
     /// Creates a [`MouseArea`] with the given content.
     pub fn new(
-        id: usize,
         content: impl Into<Element<'a, Message, Theme, Renderer>>,
     ) -> Self {
         MouseArea {
-            id,
+            id: 0,
+            table_pos: (0, 0),
             content: content.into(),
             on_press: None,
             on_release: None,
@@ -217,7 +228,7 @@ where
             return event::Status::Captured;
         }
 
-        update(self.id, self, tree, event, layout, cursor, shell)
+        update(self.id, self.table_pos, self, tree, event, layout, cursor, shell)
     }
 
     fn mouse_interaction(
@@ -301,6 +312,7 @@ where
 /// accordingly.
 fn update<Message: Clone, Theme, Renderer>(
     id: usize,
+    table_pos: (usize, usize),
     widget: &mut MouseArea<'_, Message, Theme, Renderer>,
     tree: &mut Tree,
     event: Event,
@@ -326,7 +338,7 @@ fn update<Message: Clone, Theme, Renderer>(
             }
             (_, Some(on_move), _) if state.is_hovered => {
                 if let Some(position) = cursor.position_in(layout.bounds()) {
-                    let position_id = PointId{x: position.x, y: position.y, id: id};
+                    let position_id = PointIdRC{x: position.x, y: position.y, id: id, row_col: table_pos};
                     shell.publish(on_move(position_id));
                 }
             }
@@ -410,7 +422,7 @@ fn update<Message: Clone, Theme, Renderer>(
 
 /// A 2D point with id.
 #[derive(Debug, Clone)]
-pub struct PointId {
+pub struct PointIdRC {
     /// The X coordinate.
     pub x: f32,
 
@@ -419,4 +431,7 @@ pub struct PointId {
 
     /// The id of the widget
     pub id: usize,
+
+    /// table row column
+    pub row_col: (usize, usize),
 }

@@ -1613,7 +1613,7 @@ impl IPG {
     }
     
     if on_release.is_some() {
-        add_callback_to_mutex(id, "event_name".to_string(), on_release);
+        add_callback_to_mutex(id, "on_release".to_string(), on_release);
     }
     
     if on_right_press.is_some() {
@@ -1665,9 +1665,15 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, title, data, width, height,
                         row_highlight=None, highlight_amount=0.15,
-                        gen_id=None, on_press_button=None, 
-                        on_toggle_checkbox=None, column_widths=vec![],
-                        table_length=0, widgets_using_columns=None, 
+                        column_widths=vec![], table_length=0, 
+                        widgets_using_columns=None, gen_id=None, 
+                        on_press_button=None, on_toggle_checkbox=None,
+                        image_path=None, image_root_name=None,
+                        image_list_name=None, image_on_press=None,
+                        image_on_release=None, image_on_right_press=None,
+                        image_on_right_release=None, image_on_middle_press=None,
+                        image_on_middle_release=None, image_on_enter=None,
+                        image_on_move=None, image_on_exit=None,
                         show=true, user_data=None))]
     fn add_table(&mut self,
                     parent_id: String,
@@ -1678,12 +1684,24 @@ impl IPG {
                     // **above required
                     row_highlight: Option<TableRowHighLight>,
                     highlight_amount: f32,
-                    gen_id: Option<usize>,
-                    on_press_button: Option<PyObject>,
-                    on_toggle_checkbox: Option<PyObject>,
                     column_widths: Vec<f32>,
                     table_length: u32,
                     widgets_using_columns: Option<PyObject>,
+                    gen_id: Option<usize>,
+                    on_press_button: Option<PyObject>,
+                    on_toggle_checkbox: Option<PyObject>,
+                    image_path: Option<String>,
+                    image_root_name: Option<String>,
+                    image_list_name: Option<Vec<String>>,
+                    image_on_press: Option<PyObject>,
+                    image_on_release: Option<PyObject>,
+                    image_on_right_press: Option<PyObject>,
+                    image_on_right_release: Option<PyObject>,
+                    image_on_middle_press: Option<PyObject>,
+                    image_on_middle_release: Option<PyObject>,
+                    image_on_enter: Option<PyObject>,
+                    image_on_move: Option<PyObject>,
+                    image_on_exit:Option<PyObject>,
                     show: bool,
                     user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
@@ -1734,6 +1752,42 @@ impl IPG {
             add_callback_to_mutex(id, "on_toggle_checkbox".to_string(), on_toggle_checkbox);
         }
 
+        if image_on_press.is_some() {
+            add_callback_to_mutex(id, "image_on_press".to_string(), image_on_press);
+        }
+        
+        if image_on_release.is_some() {
+            add_callback_to_mutex(id, "image_on_release".to_string(), image_on_release);
+        }
+        
+        if image_on_right_press.is_some() {
+            add_callback_to_mutex(id, "image_on_right_press".to_string(), image_on_right_press);
+        }
+        
+        if image_on_right_release.is_some() {
+            add_callback_to_mutex(id, "image_on_right_release".to_string(), image_on_right_release);
+        }
+        
+        if image_on_middle_press.is_some() {
+            add_callback_to_mutex(id, "image_on_middle_press".to_string(), image_on_middle_press);
+        }
+        
+        if image_on_middle_release.is_some() {
+            add_callback_to_mutex(id, "image_on_middle_release".to_string(), image_on_middle_release);
+        }
+        
+        if image_on_enter.is_some() {
+            add_callback_to_mutex(id, "image_on_enter".to_string(), image_on_enter);
+        }
+        
+        if image_on_move.is_some() {
+            add_callback_to_mutex(id, "image_on_move".to_string(), image_on_move);
+        }
+        
+        if image_on_exit.is_some() {
+            add_callback_to_mutex(id, "image_on_exit".to_string(), image_on_exit);
+        }
+        
         set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
