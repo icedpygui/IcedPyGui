@@ -5,7 +5,7 @@ use std::result::Result;
 use crate::app::{self, Message};
 use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_uid};
 use crate::ipg_widgets::ipg_container::{IpgContainerTheme, table_row_theme};
-use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{get_set_container_callback_data, get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 use crate::iced_widgets::checkbox::Checkbox;
 use crate::iced_widgets::mousearea_table::{MouseArea, PointIdRC};
@@ -42,6 +42,10 @@ pub struct IpgTable {
         pub widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>, // column#, widget type
         pub widget_ids: Option<HashMap<usize, Vec<usize>>>, // column, ids
         pub on_toggled: Option<HashMap<usize, Vec<bool>>>,
+        pub image_path: Option<String>,
+        pub image_root_name: Option<String>,
+        pub image_root_pattern: Option<String>,
+        pub image_list_names: Option<Vec<String>>,
         pub show: bool,
         pub user_data: Option<PyObject>,
         pub container_id: usize,
@@ -62,6 +66,10 @@ impl IpgTable {
         widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>,
         widget_ids: Option<HashMap<usize, Vec<usize>>>,
         on_toggled: Option<HashMap<usize, Vec<bool>>>,
+        image_path: Option<String>,
+        image_root_name: Option<String>,
+        image_root_pattern: Option<String>,
+        image_list_names: Option<Vec<String>>,
         show: bool,
         user_data: Option<PyObject>,
         container_id: usize,
@@ -80,6 +88,10 @@ impl IpgTable {
             widgets_using_columns,
             widget_ids,
             on_toggled,
+            image_path,
+            image_root_name,
+            image_root_pattern,
+            image_list_names,
             show,
             user_data,
             container_id,
@@ -202,7 +214,8 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     add_widget(widgets[i], 
                                                 table.id, 
                                                 label, i, 
-                                                &col_index, is_checked)
+                                                &col_index, is_checked,
+                                                table.image_path.clone())
                                 }else {
                                     add_text_widget(label)
                                 };        
@@ -245,7 +258,8 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     add_widget(widgets[i], 
                                                 table.id, 
                                                 label, i, 
-                                                &col_index, is_checked)
+                                                &col_index, is_checked,
+                                                table.image_path.clone())
                                 }else {
                                     add_text_widget(label)
                                 };
@@ -288,7 +302,8 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     add_widget(widgets[i], 
                                                 table.id, 
                                                 label, i, 
-                                                &col_index, is_checked)
+                                                &col_index, is_checked,
+                                                table.image_path.clone())
                                 }else { 
                                     add_text_widget(label)
                                 };
@@ -328,10 +343,11 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     let is_checked = get_checked(&table.on_toggled, 
                                                                         &col_index, 
                                                                         i);
-                                    add_widget(widgets[i], 
+                                    add_widget(widgets[i],
                                                 table.id, 
                                                 label, i, 
-                                                &col_index, is_checked)
+                                                &col_index, is_checked,
+                                                table.image_path.clone())
                                 }else { 
                                     add_text_widget(label)
                                 };
@@ -438,7 +454,8 @@ fn add_row_container(label: Element<Message>, row_index: usize,
 use iced::widget::Button;
 fn add_widget(widget: TableWidget, table_id: usize, 
                         label: String, index: usize, 
-                        col_index: &usize, is_checked: bool) 
+                        col_index: &usize, is_checked: bool,
+                        image_path: Option<String>) 
                         -> Element<'static, Message> {
 
     match widget {
@@ -463,7 +480,11 @@ fn add_widget(widget: TableWidget, table_id: usize,
             chk.map(move |message| app::Message::Table(table_id, message))
         },
         TableWidget::Image | TableWidget::Svg => {
-            let img: Element<TableMessage> = Image::<Handle>::new(table.image_path).into();
+            let path = match image_path {
+                Some(path) => path,
+                None => panic!("Table: An image path must be defined when using images.")
+            };
+            let img: Element<TableMessage> = Image::<Handle>::new(path).into();
 
             let cont: Element<TableMessage> = Container::new(img)
                                                 .width(Length::Fill)
@@ -510,7 +531,6 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
     wci.id = table_id;
 
     match message {
-        // index = (col_index, index)
         TableMessage::TableButton((col_index, row_index)) => {
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = table_id; 
@@ -531,17 +551,65 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             process_callback(wco);
         },
         TableMessage::MouseAreaOnPress((col_index, row_index)) => {
-
-        }
-        TableMessage::MouseAreaOnRelease(_) => todo!(),
-        TableMessage::MouseAreaOnRightPress(_) => todo!(),
-        TableMessage::MouseAreaOnRightRelease(_) => todo!(),
-        TableMessage::MouseAreaOnMiddlePress(_) => todo!(),
-        TableMessage::MouseAreaOnMiddleRelease(_) => todo!(),
-        TableMessage::MouseAreaOnEnter(_) => todo!(),
-        TableMessage::MouseAreaOnMove(_) => todo!(),
-        TableMessage::MouseAreaOnExit(_) => todo!(),
+            mousearea_callback(table_id, col_index, row_index, "on_press".to_string());
+        },
+        TableMessage::MouseAreaOnRelease((col_index, row_index)) => {
+            mousearea_callback(table_id, col_index, row_index, "on_release".to_string());
+        },
+        TableMessage::MouseAreaOnRightPress((col_index, row_index)) => {
+            mousearea_callback(table_id, col_index, row_index, "on_right_press".to_string());
+        },
+        TableMessage::MouseAreaOnRightRelease((col_index, row_index)) => {
+            mousearea_callback(table_id, col_index, row_index, "on_right_release".to_string());
+        },
+        TableMessage::MouseAreaOnMiddlePress((col_index, row_index)) => {
+            mousearea_callback(table_id, col_index, row_index, "on_middle_press".to_string());
+        },
+        TableMessage::MouseAreaOnMiddleRelease((col_index, row_index)) => {
+            mousearea_callback(table_id, col_index, row_index, "on_middle_release".to_string());
+        },
+        TableMessage::MouseAreaOnEnter((col_index, row_index)) => {
+            mousearea_callback(table_id, col_index, row_index, "on_enter".to_string());
+        },
+        TableMessage::MouseAreaOnMove(pointidrc) => {
+            mousearea_callback_pointidrc(pointidrc, "on_move".to_string());
+        },
+        TableMessage::MouseAreaOnExit((col_index, row_index)) => {
+            mousearea_callback(table_id, col_index, row_index, "on_exit".to_string());
+        },
     }
+}
+
+
+pub fn mousearea_callback(table_id: usize, col_index: usize, row_index: usize, event_name: String) {
+    
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+    wci.id = table_id;
+
+    let mut wco = get_set_container_callback_data(wci);
+    wco.id = table_id;
+    wco.event_name = event_name;
+    process_callback(wco);
+
+}
+
+
+fn mousearea_callback_pointidrc(pointid: PointIdRC, event_name: String) {
+
+    let mut points: Vec<(String, f32)> = vec![];
+    points.push(("x".to_string(), pointid.x));
+    points.push(("y".to_string(), pointid.y));
+    let id = pointid.id;
+    
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+    wci.id = id;
+
+    let mut wco = get_set_container_callback_data(wci);
+    wco.id = id;
+    wco.event_name = event_name;
+    wco.points = Some(points);
+    process_callback(wco);
+    
 }
 
 

@@ -1,5 +1,6 @@
 from icedpygui import IPG, IpgContainerAlignment, TableRowHighLight, TableWidget
-import random
+import random, os
+
 
 ipg = IPG()
 
@@ -80,18 +81,31 @@ ipg.add_table("cont", "My Table", data,
               on_toggle_checkbox=widget_checkbox,
               )
 
+# Setting up the image path
+cwd = os.getcwd()
+ferris_path = cwd + "/python_demo/resources/rustacean-flat-happy.png"
+ferris1 = []
+ferris2 = []
+ferris_type = []
+
+for _ in range(0, 5):
+    ferris1.append(ferris_path)
+    ferris2.append(ferris_path)
+    ferris_type.append(TableWidget.Image)
+
 data_img = [
-            {"ferris": []}
+            {"ferris1": ferris1},
+            {"ferris2": ferris2}
             ]
 
 # The table is added for svg and .
-ipg.add_table("cont", "My Table", data, 
+ipg.add_table("cont", "My Table", data_img, 
               width=500.0, height=200.0, 
               row_highlight=TableRowHighLight.Lighter,
-              table_length=len(col1),
-              widgets_using_columns= {0: btn_widgets, 1: chkbox_widgets},
-              on_press_button=widget_button,
-              on_toggle_checkbox=widget_checkbox,
+              table_length=len(ferris1),
+              widgets_using_columns= {0: ferris_type, 1: ferris_type},
+              image_root_name="ferris",
+              image_root_pattern="_#",
               )
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.
