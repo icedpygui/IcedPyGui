@@ -1311,7 +1311,8 @@ class IPG:
                     on_toggle_checkbox: Union[None | Callable]=None,
                     image_path: Union[None | str]=None,
                     image_root_name: Union[None | str]=None,
-                    image_list_name: Union[None | List[str]]=None,
+                    image_root_pattern: Union[None | str]=None,
+                    image_list_names: Union[None | List[str]]=None,
                     image_on_press: Union[None | Callable]=None,
                     image_on_release: Union[None | Callable]=None,
                     image_on_rightPress: Union[None | Callable]=None,
@@ -1352,11 +1353,13 @@ class IPG:
                 Callback when a button is pressed.
             on_toggle_checkbox: Callable
                 Callback when a checkbox is toggled.
-            image_path: str,
+            image_path: str
                 Folder path of the images, svg and/or png.
+            image_root_pattern: str
+                Pattern of the filename, # = number, i.e. "_#" = name_1 or name_100
             image_root_name: str,
                 Root name of the image files.
-            image_list_name: List[str],
+            image_list_names: List[str],
                 List of file names.
             image_on_press: Callable,
                 Callback for when an image is mouse left pressed.

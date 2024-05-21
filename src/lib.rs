@@ -1669,11 +1669,11 @@ impl IPG {
                         widgets_using_columns=None, gen_id=None, 
                         on_press_button=None, on_toggle_checkbox=None,
                         image_path=None, image_root_name=None,
-                        image_list_name=None, image_on_press=None,
-                        image_on_release=None, image_on_right_press=None,
-                        image_on_right_release=None, image_on_middle_press=None,
-                        image_on_middle_release=None, image_on_enter=None,
-                        image_on_move=None, image_on_exit=None,
+                        image_root_pattern=None, image_list_names=None, 
+                        image_on_press=None, image_on_release=None, 
+                        image_on_right_press=None, image_on_right_release=None, 
+                        image_on_middle_press=None, image_on_middle_release=None, 
+                        image_on_enter=None, image_on_move=None, image_on_exit=None,
                         show=true, user_data=None))]
     fn add_table(&mut self,
                     parent_id: String,
@@ -1692,7 +1692,8 @@ impl IPG {
                     on_toggle_checkbox: Option<PyObject>,
                     image_path: Option<String>,
                     image_root_name: Option<String>,
-                    image_list_name: Option<Vec<String>>,
+                    image_root_pattern: Option<String>,
+                    image_list_names: Option<Vec<String>>,
                     image_on_press: Option<PyObject>,
                     image_on_release: Option<PyObject>,
                     image_on_right_press: Option<PyObject>,
@@ -1753,39 +1754,39 @@ impl IPG {
         }
 
         if image_on_press.is_some() {
-            add_callback_to_mutex(id, "image_on_press".to_string(), image_on_press);
+            add_callback_to_mutex(id, "on_press".to_string(), image_on_press);
         }
         
         if image_on_release.is_some() {
-            add_callback_to_mutex(id, "image_on_release".to_string(), image_on_release);
+            add_callback_to_mutex(id, "on_release".to_string(), image_on_release);
         }
         
         if image_on_right_press.is_some() {
-            add_callback_to_mutex(id, "image_on_right_press".to_string(), image_on_right_press);
+            add_callback_to_mutex(id, "on_right_press".to_string(), image_on_right_press);
         }
         
         if image_on_right_release.is_some() {
-            add_callback_to_mutex(id, "image_on_right_release".to_string(), image_on_right_release);
+            add_callback_to_mutex(id, "on_right_release".to_string(), image_on_right_release);
         }
         
         if image_on_middle_press.is_some() {
-            add_callback_to_mutex(id, "image_on_middle_press".to_string(), image_on_middle_press);
+            add_callback_to_mutex(id, "on_middle_press".to_string(), image_on_middle_press);
         }
         
         if image_on_middle_release.is_some() {
-            add_callback_to_mutex(id, "image_on_middle_release".to_string(), image_on_middle_release);
+            add_callback_to_mutex(id, "on_middle_release".to_string(), image_on_middle_release);
         }
         
         if image_on_enter.is_some() {
-            add_callback_to_mutex(id, "image_on_enter".to_string(), image_on_enter);
+            add_callback_to_mutex(id, "on_enter".to_string(), image_on_enter);
         }
         
         if image_on_move.is_some() {
-            add_callback_to_mutex(id, "image_on_move".to_string(), image_on_move);
+            add_callback_to_mutex(id, "on_move".to_string(), image_on_move);
         }
         
         if image_on_exit.is_some() {
-            add_callback_to_mutex(id, "image_on_exit".to_string(), image_on_exit);
+            add_callback_to_mutex(id, "on_exit".to_string(), image_on_exit);
         }
         
         set_state_of_widget(id, parent_id.clone());
@@ -1819,6 +1820,10 @@ impl IPG {
                                                     widgets,
                                                     widget_ids,
                                                     on_toggled,
+                                                    image_path,
+                                                    image_root_name,
+                                                    image_root_pattern,
+                                                    image_list_names,
                                                     show,
                                                     user_data,
                                                     container_id,
