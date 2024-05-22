@@ -5,13 +5,13 @@ use std::result::Result;
 use crate::app::{self, Message};
 use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_uid};
 use crate::ipg_widgets::ipg_container::{IpgContainerTheme, table_row_theme};
-use super::callbacks::{get_set_container_callback_data, get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 use crate::iced_widgets::checkbox::Checkbox;
 use crate::iced_widgets::mousearea_table::{MouseArea, PointIdRC};
 
 use iced::mouse::Interaction;
-use iced::widget::text::Style;
+use iced::widget::text::{LineHeight, Style};
 use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, Theme};
 use iced::alignment::Alignment;
 use iced::widget::{container, text, Column, Container, Image, Row, Scrollable, Text};
@@ -42,10 +42,8 @@ pub struct IpgTable {
         pub widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>, // column#, widget type
         pub widget_ids: Option<HashMap<usize, Vec<usize>>>, // column, ids
         pub on_toggled: Option<HashMap<usize, Vec<bool>>>,
-        pub image_path: Option<String>,
-        pub image_root_name: Option<String>,
-        pub image_root_pattern: Option<String>,
-        pub image_list_names: Option<Vec<String>>,
+        pub image_width: Option<f32>,
+        pub image_height: Option<f32>,
         pub show: bool,
         pub user_data: Option<PyObject>,
         pub container_id: usize,
@@ -66,10 +64,8 @@ impl IpgTable {
         widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>,
         widget_ids: Option<HashMap<usize, Vec<usize>>>,
         on_toggled: Option<HashMap<usize, Vec<bool>>>,
-        image_path: Option<String>,
-        image_root_name: Option<String>,
-        image_root_pattern: Option<String>,
-        image_list_names: Option<Vec<String>>,
+        image_width: Option<f32>,
+        image_height: Option<f32>,
         show: bool,
         user_data: Option<PyObject>,
         container_id: usize,
@@ -88,10 +84,8 @@ impl IpgTable {
             widgets_using_columns,
             widget_ids,
             on_toggled,
-            image_path,
-            image_root_name,
-            image_root_pattern,
-            image_list_names,
+            image_width,
+            image_height,
             show,
             user_data,
             container_id,
@@ -165,14 +159,16 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
             Some(ids) => ids.clone(),
             None => HashMap::new()
         };
-    
-    Python::with_gil(|py| {
 
-        let mut widget_column_pos: Vec<usize> = vec![];
+    let mut widget_column_pos: Vec<usize> = vec![];
         if widgets_construct {
             widget_column_pos = table_widgets.keys().into_iter().map(|key| *key).collect();
             
         }
+
+    let rows: Vec<Element<Message>> = vec![];
+    
+    Python::with_gil(|py| {
 
         // Gets the entire column at each iteration
         for (col_index, py_data) in table.data.iter().enumerate() {
@@ -206,19 +202,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                 let mut label = "False".to_string();
                                     if *v {label = "True".to_string();}
 
-                                let col_element: Element<Message> = 
-                                if widget_column_pos.contains(&col_index) {
-                                    let is_checked = get_checked(&table.on_toggled, 
-                                                                        &col_index, 
-                                                                        i);
-                                    add_widget(widgets[i], 
-                                                table.id, 
-                                                label, i, 
-                                                &col_index, is_checked,
-                                                table.image_path.clone())
-                                }else {
-                                    add_text_widget(label)
-                                };        
+                                let col_element: Element<Message> = add_text_widget(label);        
                                 let cnt: Element<Message> = add_row_container(
                                                                 col_element, 
                                                                 i, 
@@ -250,19 +234,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
 
-                                let col_element: Element<Message> = 
-                                if widget_column_pos.contains(&col_index) {
-                                    let is_checked = get_checked(&table.on_toggled, 
-                                                                        &col_index, 
-                                                                        i);
-                                    add_widget(widgets[i], 
-                                                table.id, 
-                                                label, i, 
-                                                &col_index, is_checked,
-                                                table.image_path.clone())
-                                }else {
-                                    add_text_widget(label)
-                                };
+                                let col_element: Element<Message> = add_text_widget(label);
 
                                 let cnt: Element<Message> = add_row_container(
                                                                 col_element, 
@@ -294,19 +266,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
 
-                                let col_element: Element<Message> = 
-                                if widget_column_pos.contains(&col_index) {
-                                    let is_checked = get_checked(&table.on_toggled, 
-                                                                        &col_index, 
-                                                                        i);
-                                    add_widget(widgets[i], 
-                                                table.id, 
-                                                label, i, 
-                                                &col_index, is_checked,
-                                                table.image_path.clone())
-                                }else { 
-                                    add_text_widget(label)
-                                };
+                                let col_element: Element<Message> = add_text_widget(label);
 
                                 let cnt: Element<Message> = add_row_container(
                                                         col_element, 
@@ -343,11 +303,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     let is_checked = get_checked(&table.on_toggled, 
                                                                         &col_index, 
                                                                         i);
+                                    // label is image_path here.
                                     add_widget(widgets[i],
                                                 table.id, 
                                                 label, i, 
                                                 &col_index, is_checked,
-                                                table.image_path.clone())
+                                                table.image_width, table.image_height)
                                 }else { 
                                     add_text_widget(label)
                                 };
@@ -453,9 +414,9 @@ fn add_row_container(label: Element<Message>, row_index: usize,
 
 use iced::widget::Button;
 fn add_widget(widget: TableWidget, table_id: usize, 
-                        label: String, index: usize, 
+                        label: String, row_index: usize, 
                         col_index: &usize, is_checked: bool,
-                        image_path: Option<String>) 
+                        image_width: Option<f32>, image_height: Option<f32>) 
                         -> Element<'static, Message> {
 
     match widget {
@@ -467,31 +428,34 @@ fn add_widget(widget: TableWidget, table_id: usize,
             let btn: Element<TableMessage> = Button::new(txt)
                                                             .padding(Padding::ZERO)
                                                             .width(Length::Fill)
-                                                            .on_press(TableMessage::TableButton((*col_index, index))) 
+                                                            .on_press(TableMessage::TableButton((*col_index, row_index))) 
                                                             .into(); 
             btn.map(move |message| app::Message::Table(table_id, message))
         },
         TableWidget::Checkbox => {
             let chk: Element<TableMessage> = Checkbox::new(label, is_checked)
-                                                    .index((*col_index, index))
+                                                    .index((*col_index, row_index))
                                                     .width(Length::Shrink)
                                                     .on_toggle(TableMessage::TableCheckbox)
                                                     .into();
             chk.map(move |message| app::Message::Table(table_id, message))
         },
         TableWidget::Image | TableWidget::Svg => {
-            let path = match image_path {
-                Some(path) => path,
-                None => panic!("Table: An image path must be defined when using images.")
+            // Since label is the string in the row, it's also the path if image is selected.
+            let width: Length = match image_width {
+                Some(width) => Length::Fixed(width),
+                None => Length::Shrink,
             };
-            let img: Element<TableMessage> = Image::<Handle>::new(path).into();
-
-            let cont: Element<TableMessage> = Container::new(img)
-                                                .width(Length::Fill)
-                                                .padding(Padding::ZERO)
-                                                .into();
-
-            add_mousearea(cont, table_id, index, *col_index)
+            let height: Length = match image_height {
+                Some(width) => Length::Fixed(width),
+                None => Length::Shrink,
+            };
+            let img: Element<TableMessage> = Image::<Handle>::new(label)
+                                                                .width(width)
+                                                                .height(height)
+                                                                .into();
+            
+            add_mousearea(img, table_id, row_index, *col_index)
         },
     }
 }
@@ -586,7 +550,7 @@ pub fn mousearea_callback(table_id: usize, col_index: usize, row_index: usize, e
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = table_id;
 
-    let mut wco = get_set_container_callback_data(wci);
+    let mut wco = get_set_widget_callback_data(wci);
     wco.id = table_id;
     wco.event_name = event_name;
     process_callback(wco);
@@ -604,7 +568,7 @@ fn mousearea_callback_pointidrc(pointid: PointIdRC, event_name: String) {
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
 
-    let mut wco = get_set_container_callback_data(wci);
+    let mut wco = get_set_widget_callback_data(wci);
     wco.id = id;
     wco.event_name = event_name;
     wco.points = Some(points);

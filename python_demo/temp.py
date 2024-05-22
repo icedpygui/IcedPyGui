@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgContainerAlignment, TableRowHighLight, TableWidget
+from icedpygui import IPG, IpgColumnAlignment, TableRowHighLight, TableWidget
 import random, os
 
 
@@ -20,10 +20,10 @@ ipg.add_window(window_id="main", title="Table Demo", width=500, height=600,
 
 # Add the container, since the table requires a width and height,
 # the container can shrink(default) to fit.
-ipg.add_container(window_id="main", container_id="cont",
+ipg.add_column(window_id="main", container_id="col",
                   width_fill=True, height_fill=True,
-                  align_x=IpgContainerAlignment.Center,
-                  align_y=IpgContainerAlignment.Center)
+                  align_items=IpgColumnAlignment.Center,
+                  spacing=30)
 
 # Initialize the lists.
 col0 = []
@@ -72,7 +72,7 @@ for _ in range(0, len(col0)):
     chkbox_widgets.append(TableWidget.Checkbox)
 
 # The table is added.
-ipg.add_table("cont", "My Table", data, 
+ipg.add_table("col", "My Table", data, 
               width=500.0, height=200.0, 
               row_highlight=TableRowHighLight.Lighter,
               table_length=len(col1),
@@ -81,16 +81,19 @@ ipg.add_table("cont", "My Table", data,
               on_toggle_checkbox=widget_checkbox,
               )
 
+
+
 # Setting up the image path
 cwd = os.getcwd()
-ferris_path = cwd + "/python_demo/resources/rustacean-flat-happy.png"
+ferris_root_path = cwd + "/python_demo/resources/ferris"
 ferris1 = []
 ferris2 = []
 ferris_type = []
+data = []
 
-for _ in range(0, 5):
-    ferris1.append(ferris_path)
-    ferris2.append(ferris_path)
+for i in range(0, 10):
+    ferris1.append(f"{ferris_root_path}_{i}.png")
+    ferris2.append(f"{ferris_root_path}_{i}.png")
     ferris_type.append(TableWidget.Image)
 
 data_img = [
@@ -99,14 +102,14 @@ data_img = [
             ]
 
 # The table is added for svg and .
-ipg.add_table("cont", "My Table", data_img, 
-              width=500.0, height=200.0, 
+ipg.add_table("col", "My Images", data_img, 
+              width=500.0, height=300.0, 
               row_highlight=TableRowHighLight.Lighter,
               table_length=len(ferris1),
               widgets_using_columns= {0: ferris_type, 1: ferris_type},
-              image_root_name="ferris",
-              image_root_pattern="_#",
+              image_width=100.0, image_height=100.0
               )
+
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.
 ipg.start_session()

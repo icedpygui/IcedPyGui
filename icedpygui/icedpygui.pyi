@@ -1309,7 +1309,7 @@ class IPG:
                     gen_id: Union[None | int]=None,
                     on_press_button: Union[None | Callable]=None,
                     on_toggle_checkbox: Union[None | Callable]=None,
-                    image_path: Union[None | str]=None,
+                    image_folder: Union[None | str]=None,
                     image_root_name: Union[None | str]=None,
                     image_root_pattern: Union[None | str]=None,
                     image_list_names: Union[None | List[str]]=None,
@@ -1322,6 +1322,8 @@ class IPG:
                     image_on_enter: Union[None | Callable]=None,
                     image_on_move: Union[None | Callable]=None,
                     image_on_exit: Union[None | Callable]=None,
+                    image_width: Union[None | float]=None,
+                    image_height: Union[None | float]=None,
                     show: bool=True, 
                     user_data: Union[None | any]=None,
                   ) -> int:
@@ -1353,14 +1355,6 @@ class IPG:
                 Callback when a button is pressed.
             on_toggle_checkbox: Callable
                 Callback when a checkbox is toggled.
-            image_path: str
-                Folder path of the images, svg and/or png.
-            image_root_pattern: str
-                Pattern of the filename, # = number, i.e. "_#" = name_1 or name_100
-            image_root_name: str,
-                Root name of the image files.
-            image_list_names: List[str],
-                List of file names.
             image_on_press: Callable,
                 Callback for when an image is mouse left pressed.
             image_on_release: Callable,
@@ -1379,6 +1373,10 @@ class IPG:
                 Callback when mouse moves over an image.
             image_on_exit: Callable,
                 Callback when a mouse exits an image.
+            image_width: float
+                Width of images.
+            image_height: float
+                Height of images.
             column_widths: List[float]
                 A list of value for the column widths, if only one value is supplied then it will 
                 be the default for all columns.
