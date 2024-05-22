@@ -14,7 +14,7 @@ use iced::mouse::Interaction;
 use iced::widget::text::{LineHeight, Style};
 use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, Theme};
 use iced::alignment::Alignment;
-use iced::widget::{container, text, Column, Container, Image, Row, Scrollable, Text};
+use iced::widget::{container, text, Column, Container, Image, Row, Scrollable, Space, Text};
 use iced::alignment::Horizontal;
 use iced::advanced::image::{self, Handle};
 
@@ -155,35 +155,42 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
         HashMap::new()
     };
 
-     let table_widgets_ids = match table.widget_ids {
-            Some(ids) => ids.clone(),
-            None => HashMap::new()
-        };
+    //  let table_widgets_ids = match table.widget_ids {
+    //         Some(ids) => ids.clone(),
+    //         None => HashMap::new()
+    //     };
 
-    let mut widget_column_pos: Vec<usize> = vec![];
-        if widgets_construct {
-            widget_column_pos = table_widgets.keys().into_iter().map(|key| *key).collect();
-            
-        }
+    // get the widget column positions, if present.
+    let mut widget_column_positions: Vec<usize> = vec![];
+    if widgets_construct {
+        widget_column_positions = table_widgets.keys().into_iter().map(|key| *key).collect();
+        
+    }
 
-    let rows: Vec<Element<Message>> = vec![];
-    
+    // let mut widgets: Vec<TableWidget> = vec![];
+
+    // if widgets_construct {
+    //     let mut column_widgets: Vec<(usize, Vec<TableWidget>)> = vec![];
+    //     for position in widget_column_positions {
+    //        let wid_opt = table_widgets.get(&position);
+    //         match wid_opt {
+    //             Some(wid) => column_widgets.push((position.clone(), wid.clone())),
+    //             None => (),
+    //         } 
+    //     }
+    // }
+
+    // initializing the rows
+    let mut data_rows: Vec<Vec<String>> = vec![];
+    for _ in 0..table.table_length {
+        data_rows.push(vec![]);
+    }
+
     Python::with_gil(|py| {
 
         // Gets the entire column at each iteration
         for (col_index, py_data) in table.data.iter().enumerate() {
 
-            let mut widgets = vec![];
-
-            if widgets_construct && widget_column_pos.contains(&col_index){
-                
-                let wid_opt = table_widgets.get(&col_index);
-                widgets = match wid_opt {
-                    Some(wid) => wid.clone(),
-                    None => vec![],
-                }
-            }
-            
             let data: Result<HashMap<String, Vec<bool>>, _> = py_data.extract::<HashMap<String, Vec<bool>>>(py);
             if !data.is_err() { 
                 match data {
@@ -191,29 +198,17 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         for key in dt.keys() {
                             headers.push(add_header_text(key.to_owned()));                                          
                         }
-                        
-                        //Column values are put into individual columns then columns into  a row.
-                        let mut col_values: Vec<Element<Message>> = vec![];
 
                         // dt.values are the columns in the table
                         for value in dt.values() {
                             for (i, v) in value.iter().enumerate() {
 
                                 let mut label = "False".to_string();
-                                    if *v {label = "True".to_string();}
+                                    if *v {label = "True".to_string()}
 
-                                let col_element: Element<Message> = add_text_widget(label);        
-                                let cnt: Element<Message> = add_row_container(
-                                                                col_element, 
-                                                                i, 
-                                                                table.highlight_amount, 
-                                                                table.row_highlight);
-                                    
-
-                                col_values.push(cnt);
+                                data_rows[i].push(label);
                             }
                         }
-                        column_elements.push(fill_column(col_values));
                     },
                     Err(_) => (),
                 };
@@ -228,24 +223,13 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                             headers.push(add_header_text(key.to_owned()));  
                         }
 
-                        let mut col_values: Vec<Element<Message>> = vec![];
-
                         for value in dt.values() {
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
 
-                                let col_element: Element<Message> = add_text_widget(label);
-
-                                let cnt: Element<Message> = add_row_container(
-                                                                col_element, 
-                                                                i, 
-                                                                table.highlight_amount, 
-                                                                table.row_highlight);
-
-                                col_values.push(cnt);
+                                data_rows[i].push(label);
                             }
                         }
-                        column_elements.push(fill_column(col_values));
                     },
                     Err(_) => (),
                 };
@@ -260,24 +244,13 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                             headers.push(add_header_text(key.to_owned()));  
                         }
 
-                        let mut col_values: Vec<Element<Message>> = vec![];
-
                         for value in dt.values() {
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
 
-                                let col_element: Element<Message> = add_text_widget(label);
-
-                                let cnt: Element<Message> = add_row_container(
-                                                        col_element, 
-                                                        i, 
-                                                        table.highlight_amount, 
-                                                        table.row_highlight);
-
-                                col_values.push(cnt);
+                                data_rows[i].push(label);
                             }
                         }
-                        column_elements.push(fill_column(col_values));
                     },
                     Err(_) => (),
                 };
@@ -292,37 +265,14 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                             headers.push(add_header_text(key.to_owned()));  
                         }
 
-                        let mut col_values: Vec<Element<Message>> = vec![];
-
                         for value in dt.values() {
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
-                                  
-                                let col_element: Element<Message> = 
-                                if widget_column_pos.contains(&col_index) {
-                                    let is_checked = get_checked(&table.on_toggled, 
-                                                                        &col_index, 
-                                                                        i);
-                                    // label is image_path here.
-                                    add_widget(widgets[i],
-                                                table.id, 
-                                                label, i, 
-                                                &col_index, is_checked,
-                                                table.image_width, table.image_height)
-                                }else { 
-                                    add_text_widget(label)
-                                };
 
-                                let cnt: Element<Message> = add_row_container(
-                                                                col_element, 
-                                                                i, 
-                                                                table.highlight_amount, 
-                                                                table.row_highlight);
+                                data_rows[i].push(label);
 
-                                col_values.push(cnt)
                             }
                         }
-                        column_elements.push(fill_column(col_values));
                     },
                     Err(_) => (),
                 };
@@ -331,6 +281,49 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
         }
         
     });
+
+    // construct the table elements and widgets.
+    let mut body_column_vec: Vec<Element<Message>> = vec![];
+
+    for (row_index, row) in data_rows.iter().enumerate() {
+
+        let mut row_vec: Vec<Element<Message>> = vec![];
+
+        for (col_index, label) in row.iter().enumerate() {
+            let tbl_widgets = table_widgets.get(&col_index);
+            let row_element: Element<Message> = 
+                if tbl_widgets.is_some() {
+                    let is_checked = get_checked(&table.on_toggled, 
+                                                        &col_index, 
+                                                        row_index);
+
+                    let tbl_widgets = tbl_widgets.unwrap();
+                       
+                    // label is image_path here.
+                    add_widget(tbl_widgets[row_index],
+                                table.id, 
+                                label.clone(), row_index, 
+                                &col_index, is_checked,
+                                table.image_width, table.image_height)
+                        
+                    
+                } else {
+                    add_text_widget(label.clone()).into()
+                };
+
+                let cnt: Element<Message> = add_row_container(
+                                                row_element, 
+                                                row_index, 
+                                                table.highlight_amount, 
+                                                table.row_highlight);
+
+                row_vec.push(cnt);
+        }
+        let row_widget: Element<Message> = Row::with_children(row_vec).into();
+        body_column_vec.push(row_widget.into());
+    }
+
+    let body_column: Element<Message> = Column::with_children(body_column_vec).into();
 
     let title: Element<Message> = Text::new(table.title.clone()).into();
 
@@ -355,7 +348,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                 .padding(Padding::from([0, 0, 5, 0])) //bottom only
                 .into(),
         // table body
-        add_scroll(body, table.height),
+        add_scroll(body_column, table.height),
     ])
         .width(Length::Fixed(table.width))
         .height(Length::Fixed(table.height))
