@@ -1309,21 +1309,17 @@ class IPG:
                     gen_id: Union[None | int]=None,
                     on_press_button: Union[None | Callable]=None,
                     on_toggle_checkbox: Union[None | Callable]=None,
-                    image_folder: Union[None | str]=None,
-                    image_root_name: Union[None | str]=None,
-                    image_root_pattern: Union[None | str]=None,
-                    image_list_names: Union[None | List[str]]=None,
-                    image_on_press: Union[None | Callable]=None,
-                    image_on_release: Union[None | Callable]=None,
-                    image_on_rightPress: Union[None | Callable]=None,
-                    image_on_rightRelease: Union[None | Callable]=None,
-                    image_on_middlePress: Union[None | Callable]=None,
-                    image_on_middleRelease: Union[None | Callable]=None,
-                    image_on_enter: Union[None | Callable]=None,
-                    image_on_move: Union[None | Callable]=None,
-                    image_on_exit: Union[None | Callable]=None,
-                    image_width: Union[None | float]=None,
-                    image_height: Union[None | float]=None,
+                    on_press: Union[None | Callable]=None,
+                    on_release: Union[None | Callable]=None,
+                    on_rightPress: Union[None | Callable]=None,
+                    on_rightRelease: Union[None | Callable]=None,
+                    on_middlePress: Union[None | Callable]=None,
+                    on_middleRelease: Union[None | Callable]=None,
+                    on_enter: Union[None | Callable]=None,
+                    on_move: Union[None | Callable]=None,
+                    on_exit: Union[None | Callable]=None,
+                    image_width: Union[None | List[float]]=None,
+                    image_height: Union[None | List[float]]=None,
                     show: bool=True, 
                     user_data: Union[None | any]=None,
                   ) -> int:
@@ -1355,28 +1351,28 @@ class IPG:
                 Callback when a button is pressed.
             on_toggle_checkbox: Callable
                 Callback when a checkbox is toggled.
-            image_on_press: Callable,
-                Callback for when an image is mouse left pressed.
-            image_on_release: Callable,
-                Callback for when an image is mouse left released.
-            image_on_right_press: Callable,
-                Callback for when an image is mouse right pressed.
-            image_on_right_release: Callable,
-                Callback for when an image is mouse right released.
-            image_on_middle_press: Callable],
-                Callback for when an image is mouse middle pressed.
-            image_on_middle_release: Callable],
-                Callback for when an image is mouse middle released.
-            image_on_enter: Callable,
-                Callback when mouse enters an image.
-            image_on_move: Callable,
-                Callback when mouse moves over an image.
-            image_on_exit: Callable,
-                Callback when a mouse exits an image.
-            image_width: float
-                Width of images.
-            image_height: float
-                Height of images.
+            on_press: Callable,
+                Callback for when a selectable is mouse left pressed.
+            on_release: Callable,
+                Callback for when a selectable is mouse left released.
+            on_right_press: Callable,
+                Callback for when a selectable is mouse right pressed.
+            on_right_release: Callable,
+                Callback for when a selectable is mouse right released.
+            on_middle_press: Callable],
+                Callback for when a selectable is mouse middle pressed.
+            on_middle_release: Callable],
+                Callback for when a selectable is mouse middle released.
+            on_enter: Callable,
+                Callback when mouse enters a selectable.
+            on_move: Callable,
+                Callback when mouse moves over a selectable.
+            on_exit: Callable,
+                Callback when a mouse exits a selectable.
+            image_width: List[float]
+                A list of column widths for each column of images.  If only a single item in list then it applies to all.
+            image_height: List[float]
+                A list of column heights for each column of images.  If only a single item in list then it applies to all.
             column_widths: List[float]
                 A list of value for the column widths, if only one value is supplied then it will 
                 be the default for all columns.
@@ -2053,9 +2049,8 @@ class TableWidget:
     Button=0
     Checkbox=0
     Image=0
-    Radio=0
-    SelectableText=0
-    Svg=0
+    Text=0
+
 
 class IpgTextInputParams:
     Placeholder=0
