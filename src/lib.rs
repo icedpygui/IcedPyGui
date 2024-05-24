@@ -23,7 +23,7 @@ mod iced_widgets;
 mod graphics;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
-// use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
+use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 // use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
@@ -766,75 +766,75 @@ impl IPG {
     
     }
 
-    // #[pyo3(signature = (parent_id, head, body, is_open=true, minmax_id=None, foot=None, 
-    //                     gen_id=None, close_size=20.0, on_close=None, 
-    //                     width=None, height=None, width_fill=false, height_fill=false, 
-    //                     max_width=f32::INFINITY, max_height=f32::INFINITY, 
-    //                     padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
-    //                     style=None, user_data=None))]
-    // fn add_card(&mut self,
-    //             parent_id: String, 
-    //             head: String,
-    //             body: String,
-    //             // above required
-    //             is_open: bool,
-    //             minmax_id: Option<usize>,
-    //             foot: Option<String>,
-    //             gen_id: Option<usize>,
-    //             close_size: f32,
-    //             on_close: Option<PyObject>,
-    //             width: Option<f32>,
-    //             height: Option<f32>,
-    //             width_fill: bool,
-    //             height_fill: bool,
-    //             max_width: f32,
-    //             max_height: f32,
-    //             padding_head: Vec<f64>,
-    //             padding_body: Vec<f64>,
-    //             padding_foot: Vec<f64>,
-    //             style: Option<PyObject>,
-    //             user_data: Option<PyObject>, 
-    //             ) -> PyResult<usize> 
-    // {
-    //     let id = self.get_id(gen_id);
+    #[pyo3(signature = (parent_id, head, body, is_open=true, minmax_id=None, foot=None, 
+                        gen_id=None, close_size=15.0, on_close=None, 
+                        width=None, height=None, width_fill=false, height_fill=false, 
+                        max_width=f32::INFINITY, max_height=f32::INFINITY, 
+                        padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
+                        style=None, user_data=None))]
+    fn add_card(&mut self,
+                parent_id: String, 
+                head: String,
+                body: String,
+                // above required
+                is_open: bool,
+                minmax_id: Option<usize>,
+                foot: Option<String>,
+                gen_id: Option<usize>,
+                close_size: f32,
+                on_close: Option<PyObject>,
+                width: Option<f32>,
+                height: Option<f32>,
+                width_fill: bool,
+                height_fill: bool,
+                max_width: f32,
+                max_height: f32,
+                padding_head: Vec<f64>,
+                padding_body: Vec<f64>,
+                padding_foot: Vec<f64>,
+                style: Option<PyObject>,
+                user_data: Option<PyObject>, 
+                ) -> PyResult<usize> 
+    {
+        let id = self.get_id(gen_id);
 
-    //     if on_close.is_some() {
-    //         add_callback_to_mutex(id, "on_close".to_string(), on_close);
-    //     }
+        if on_close.is_some() {
+            add_callback_to_mutex(id, "on_close".to_string(), on_close);
+        }
 
-    //     let width = get_width(width, width_fill);
-    //     let height = get_height(height, height_fill);
+        let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
 
-    //     let padding_head = get_padding(padding_head);
-    //     let padding_body = get_padding(padding_body);
-    //     let padding_foot = get_padding(padding_foot);
+        let padding_head = get_padding(padding_head);
+        let padding_body = get_padding(padding_body);
+        let padding_foot = get_padding(padding_foot);
 
-    //     set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id);
 
-    //     let mut state = access_state();
+        let mut state = access_state();
 
-    //     state.widgets.insert(id, IpgWidgets::IpgCard(IpgCard::new(
-    //                                                 id,
-    //                                                 is_open,
-    //                                                 user_data,
-    //                                                 minmax_id,
-    //                                                 width,
-    //                                                 height,
-    //                                                 max_width,
-    //                                                 max_height,
-    //                                                 padding_head,
-    //                                                 padding_body,
-    //                                                 padding_foot,
-    //                                                 close_size,
-    //                                                 head,
-    //                                                 body,
-    //                                                 foot,
-    //                                                 style,
-    //                                             )));
+        state.widgets.insert(id, IpgWidgets::IpgCard(IpgCard::new(
+                                                    id,
+                                                    is_open,
+                                                    user_data,
+                                                    minmax_id,
+                                                    width,
+                                                    height,
+                                                    max_width,
+                                                    max_height,
+                                                    padding_head,
+                                                    padding_body,
+                                                    padding_foot,
+                                                    close_size,
+                                                    head,
+                                                    body,
+                                                    foot,
+                                                    style,
+                                                )));
 
-    //     Ok(id)
+        Ok(id)
 
-    // }
+    }
 
     #[pyo3(signature = (parent_id, gen_id=None, on_toggle=None, is_checked=false, 
                         label="".to_string(), width=None, width_fill=false, 
@@ -2392,9 +2392,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgButton(btn) => {
             button_item_update(btn, item, value);
         },
-        // IpgWidgets::IpgCard(crd) => {
-        //     card_item_update(crd, item, value);
-        // },
+        IpgWidgets::IpgCard(crd) => {
+            card_item_update(crd, item, value);
+        },
         IpgWidgets::IpgCheckBox(chk) => {
             checkbox_item_update(chk, item, value);
         },
@@ -2500,8 +2500,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgButtonStyles>()?;
     m.add_class::<IpgButtonArrows>()?;
     m.add_class::<IpgButtonParams>()?;
-    // m.add_class::<IpgCardStyles>()?;
-    // m.add_class::<IpgCardParams>()?;
+    m.add_class::<IpgCardStyles>()?;
+    m.add_class::<IpgCardParams>()?;
     m.add_class::<IpgColumnAlignment>()?;
     m.add_class::<IpgContainerAlignment>()?;
     m.add_class::<IpgContainerTheme>()?;

@@ -1,6 +1,6 @@
 
 use super::ipg_button::IpgButton;
-// use super::ipg_card::IpgCard;
+use super::ipg_card::IpgCard;
 use super::ipg_checkbox::IpgCheckBox;
 // use super::ipg_color_picker::IpgColorPicker;
 use super::ipg_container::IpgContainer;
@@ -46,7 +46,7 @@ pub enum IpgContainers {
 #[derive(Debug)]
 pub enum IpgWidgets {
     IpgButton(IpgButton),
-    // IpgCard(IpgCard),
+    IpgCard(IpgCard),
     IpgCheckBox(IpgCheckBox),
     // IpgColorPicker(IpgColorPicker),
     IpgDatePicker(IpgDatePicker),

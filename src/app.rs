@@ -15,7 +15,7 @@ use iced::Color;
 
 use crate::ipg_widgets;
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
-// use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
+use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
 // use ipg_widgets::ipg_color_picker::{ColPikMessage, construct_color_picker, color_picker_update};
 use ipg_widgets::ipg_column::construct_column;
@@ -57,7 +57,7 @@ pub enum Message {
     EventOccurred(Event),
 
     Button(usize, BTNMessage),
-    // Card(usize, CardMessage),
+    Card(usize, CardMessage),
     CheckBox(usize, CHKMessage),
     // ColorPicker(usize, ColPikMessage),
     DatePicker(usize, DPMessage),
@@ -161,10 +161,10 @@ impl multi_window::Application for App {
                 button_callback(id, message);
                 Command::none()
             },
-            // Message::Card(id, message) => {
-            //     card_callback(id, message);
-            //      Command::none()
-            // },
+            Message::Card(id, message) => {
+                card_callback(id, message);
+                 Command::none()
+            },
             Message::CheckBox(id, message) => {
                 checkbox_callback(id, message);
                 Command::none()
@@ -508,9 +508,9 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgButton(btn) => {
                     return construct_button(btn.clone())
                 },
-                // IpgWidgets::IpgCard(crd) => {
-                //   return construct_card(crd.clone())
-                // },
+                IpgWidgets::IpgCard(crd) => {
+                  return construct_card(crd.clone())
+                },
                 IpgWidgets::IpgCheckBox(chk) => {
                     return construct_checkbox(chk.clone())
                 },
