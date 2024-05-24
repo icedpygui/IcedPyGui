@@ -16,7 +16,9 @@ use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, The
 use iced::alignment::Alignment;
 use iced::widget::{container, text, Column, Container, Image, Row, Scrollable, Space, Text};
 use iced::alignment::Horizontal;
-use iced::advanced::image::{self, Handle};
+use iced::widget::svg;
+use iced::advanced::image;
+
 
 use pyo3::{PyObject, Python, pyclass};
 
@@ -42,8 +44,8 @@ pub struct IpgTable {
         pub widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>, // column#, widget type
         pub widget_ids: Option<HashMap<usize, Vec<usize>>>, // column, ids
         pub on_toggled: Option<HashMap<usize, Vec<bool>>>,
-        pub image_width: Option<f32>,
-        pub image_height: Option<f32>,
+        pub image_width: Option<Vec<f32>>,
+        pub image_height: Option<Vec<f32>>,
         pub show: bool,
         pub user_data: Option<PyObject>,
         pub container_id: usize,
@@ -64,8 +66,8 @@ impl IpgTable {
         widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>,
         widget_ids: Option<HashMap<usize, Vec<usize>>>,
         on_toggled: Option<HashMap<usize, Vec<bool>>>,
-        image_width: Option<f32>,
-        image_height: Option<f32>,
+        image_width: Option<Vec<f32>>,
+        image_height: Option<Vec<f32>>,
         show: bool,
         user_data: Option<PyObject>,
         container_id: usize,
@@ -130,7 +132,7 @@ pub enum TableWidget {
     Button,
     Checkbox,
     Image,
-    Svg,
+    Text,
 }
 
 struct Data {
@@ -155,30 +157,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
         HashMap::new()
     };
 
-    //  let table_widgets_ids = match table.widget_ids {
-    //         Some(ids) => ids.clone(),
-    //         None => HashMap::new()
-    //     };
-
     // get the widget column positions, if present.
     let mut widget_column_positions: Vec<usize> = vec![];
     if widgets_construct {
         widget_column_positions = table_widgets.keys().into_iter().map(|key| *key).collect();
         
     }
-
-    // let mut widgets: Vec<TableWidget> = vec![];
-
-    // if widgets_construct {
-    //     let mut column_widgets: Vec<(usize, Vec<TableWidget>)> = vec![];
-    //     for position in widget_column_positions {
-    //        let wid_opt = table_widgets.get(&position);
-    //         match wid_opt {
-    //             Some(wid) => column_widgets.push((position.clone(), wid.clone())),
-    //             None => (),
-    //         } 
-    //     }
-    // }
 
     // initializing the rows
     let mut data_rows: Vec<Vec<String>> = vec![];
@@ -304,7 +288,8 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                 table.id, 
                                 label.clone(), row_index, 
                                 &col_index, is_checked,
-                                table.image_width, table.image_height)
+                                table.image_width.clone(), 
+                                table.image_height.clone())
                         
                     
                 } else {
@@ -409,7 +394,7 @@ use iced::widget::Button;
 fn add_widget(widget: TableWidget, table_id: usize, 
                         label: String, row_index: usize, 
                         col_index: &usize, is_checked: bool,
-                        image_width: Option<f32>, image_height: Option<f32>) 
+                        image_width: Option<Vec<f32>>, image_height: Option<Vec<f32>>) 
                         -> Element<'static, Message> {
 
     match widget {
@@ -433,23 +418,57 @@ fn add_widget(widget: TableWidget, table_id: usize,
                                                     .into();
             chk.map(move |message| app::Message::Table(table_id, message))
         },
-        TableWidget::Image | TableWidget::Svg => {
-            // Since label is the string in the row, it's also the path if image is selected.
+        TableWidget::Image => {
+    
             let width: Length = match image_width {
-                Some(width) => Length::Fixed(width),
+                Some(width) => {
+                    if width.len() == 1 {
+                        Length::Fixed(width[0])
+                    } else {
+                    Length::Fixed(width[*col_index])
+                    }
+                },
                 None => Length::Shrink,
             };
+
             let height: Length = match image_height {
-                Some(width) => Length::Fixed(width),
+                Some(hgt) => {
+                    if hgt.len() == 1 {
+                        Length::Fixed(hgt[0])
+                    } else {
+                    Length::Fixed(hgt[*col_index])
+                    }
+                },
                 None => Length::Shrink,
             };
-            let img: Element<TableMessage> = Image::<Handle>::new(label)
+
+            // label below is actual the path in this case.
+            if label.contains(".png") {
+                let img: Element<TableMessage> = Image::<image::Handle>::new(label)
                                                                 .width(width)
                                                                 .height(height)
                                                                 .into();
-            
-            add_mousearea(img, table_id, row_index, *col_index)
+                 add_mousearea(img, table_id, row_index, *col_index)
+
+            } else if label.contains(".svg") {
+                let svg: Element<TableMessage> = svg(label)
+                                                    .width(width)
+                                                    .height(height)
+                                                    .into();
+                 add_mousearea(svg, table_id, row_index, *col_index)
+
+            } else {
+                panic!("Table: Only png and svg files supports at this time.")
+            }
         },
+        TableWidget::Text => {
+            let txt: Element<TableMessage> = text(label)
+                                                .width(Length::Fill)
+                                                .horizontal_alignment(Horizontal::Center)
+                                                .into();
+
+            add_mousearea(txt, table_id, row_index, *col_index)
+        }
     }
 }
 
@@ -546,6 +565,7 @@ pub fn mousearea_callback(table_id: usize, col_index: usize, row_index: usize, e
     let mut wco = get_set_widget_callback_data(wci);
     wco.id = table_id;
     wco.event_name = event_name;
+    wco.index_table = Some((row_index, col_index));
     process_callback(wco);
 
 }
@@ -610,7 +630,6 @@ pub fn process_callback(wco: WidgetCallbackOut)
                         Ok(_) => (),
                         Err(er) => panic!("Table: 4 parameters (id, widget_index, is_checked, user_data) are required or a python error in this function. {er}"),
                     }
-                    
                 } else {
                     
                     let res = callback.call1(py, (
@@ -624,7 +643,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     }
                 }
         });
-    } else {
+    } else if wco.event_name != "on_move".to_string() {
         Python::with_gil(|py| {
             if wco.user_data.is_some() {
                 let user_data = wco.user_data.unwrap();
@@ -637,7 +656,6 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     Ok(_) => (),
                     Err(er) => panic!("Table: 3 parameters (id, widget_index, user_data) are required or a python error in this function. {er}"),
                 }
-
             } else {
 
                 let res = callback.call1(py, (
@@ -651,6 +669,39 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 
             } 
         });
+    } else if wco.event_name == "on_move".to_string() {
+
+        Python::with_gil(|py| {
+            let point = match wco.points {
+                Some(pt) => pt,
+                None => panic!("Table: No point found for image"),
+            };
+
+            if wco.user_data.is_some() {
+                let user_data = wco.user_data.unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),
+                                                                    point,  
+                                                                    user_data
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Table: 3 parameters (id, point, user_data) are required or a python error in this function. {er}"),
+                }
+
+            } else {
+
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),
+                                                                    point,  
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Table: 2 parameter (id, point) are required or possibly a python error in this function. {er}"),
+                }
+            } 
+        });
+
     }
 
     drop(app_cbs);

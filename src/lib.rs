@@ -1668,10 +1668,10 @@ impl IPG {
                         column_widths=vec![], table_length=0, 
                         widgets_using_columns=None, gen_id=None, 
                         on_press_button=None, on_toggle_checkbox=None, 
-                        image_on_press=None, image_on_release=None, 
-                        image_on_right_press=None, image_on_right_release=None, 
-                        image_on_middle_press=None, image_on_middle_release=None, 
-                        image_on_enter=None, image_on_move=None, image_on_exit=None,
+                        on_press=None, on_release=None, 
+                        on_right_press=None, on_right_release=None, 
+                        on_middle_press=None, on_middle_release=None, 
+                        on_enter=None, on_move=None, on_exit=None,
                         image_width=None, image_height=None,
                         show=true, user_data=None))]
     fn add_table(&mut self,
@@ -1689,17 +1689,17 @@ impl IPG {
                     gen_id: Option<usize>,
                     on_press_button: Option<PyObject>,
                     on_toggle_checkbox: Option<PyObject>,
-                    image_on_press: Option<PyObject>,
-                    image_on_release: Option<PyObject>,
-                    image_on_right_press: Option<PyObject>,
-                    image_on_right_release: Option<PyObject>,
-                    image_on_middle_press: Option<PyObject>,
-                    image_on_middle_release: Option<PyObject>,
-                    image_on_enter: Option<PyObject>,
-                    image_on_move: Option<PyObject>,
-                    image_on_exit:Option<PyObject>,
-                    image_width: Option<f32>,
-                    image_height: Option<f32>,
+                    on_press: Option<PyObject>,
+                    on_release: Option<PyObject>,
+                    on_right_press: Option<PyObject>,
+                    on_right_release: Option<PyObject>,
+                    on_middle_press: Option<PyObject>,
+                    on_middle_release: Option<PyObject>,
+                    on_enter: Option<PyObject>,
+                    on_move: Option<PyObject>,
+                    on_exit:Option<PyObject>,
+                    image_width: Option<Vec<f32>>,
+                    image_height: Option<Vec<f32>>,
                     show: bool,
                     user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
@@ -1750,40 +1750,40 @@ impl IPG {
             add_callback_to_mutex(id, "on_toggle_checkbox".to_string(), on_toggle_checkbox);
         }
 
-        if image_on_press.is_some() {
-            add_callback_to_mutex(id, "on_press".to_string(), image_on_press);
+        if on_press.is_some() {
+            add_callback_to_mutex(id, "on_press".to_string(), on_press);
         }
         
-        if image_on_release.is_some() {
-            add_callback_to_mutex(id, "on_release".to_string(), image_on_release);
+        if on_release.is_some() {
+            add_callback_to_mutex(id, "on_release".to_string(), on_release);
         }
         
-        if image_on_right_press.is_some() {
-            add_callback_to_mutex(id, "on_right_press".to_string(), image_on_right_press);
+        if on_right_press.is_some() {
+            add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press);
         }
         
-        if image_on_right_release.is_some() {
-            add_callback_to_mutex(id, "on_right_release".to_string(), image_on_right_release);
+        if on_right_release.is_some() {
+            add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release);
         }
         
-        if image_on_middle_press.is_some() {
-            add_callback_to_mutex(id, "on_middle_press".to_string(), image_on_middle_press);
+        if on_middle_press.is_some() {
+            add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press);
         }
         
-        if image_on_middle_release.is_some() {
-            add_callback_to_mutex(id, "on_middle_release".to_string(), image_on_middle_release);
+        if on_middle_release.is_some() {
+            add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release);
         }
         
-        if image_on_enter.is_some() {
-            add_callback_to_mutex(id, "on_enter".to_string(), image_on_enter);
+        if on_enter.is_some() {
+            add_callback_to_mutex(id, "on_enter".to_string(), on_enter);
         }
         
-        if image_on_move.is_some() {
-            add_callback_to_mutex(id, "on_move".to_string(), image_on_move);
+        if on_move.is_some() {
+            add_callback_to_mutex(id, "on_move".to_string(), on_move);
         }
         
-        if image_on_exit.is_some() {
-            add_callback_to_mutex(id, "on_exit".to_string(), image_on_exit);
+        if on_exit.is_some() {
+            add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
         }
         
         set_state_of_widget(id, parent_id.clone());
