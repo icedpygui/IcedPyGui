@@ -1,138 +1,113 @@
-from icedpygui import IPG, IpgColumnAlignment, TableRowHighLight, TableWidget
-import random, os
+from icedpygui import IPG, IpgButtonStyles, IpgCardStyles, IpgCardParams
+from icedpygui import IpgColumnAlignment
 
 
+# Needed first, see other demos for using a class
 ipg = IPG()
 
 
-
-def widget_button(tbl_id: int, wid_index: tuple[int, int]):
-    print(tbl_id, wid_index)
-
-
-def widget_checkbox(tbl_id: int, wid_index: tuple[int, int], is_checked: bool):
-    print(tbl_id, wid_index, is_checked)
-
-
-def image_on_something(tbl_id: int, wid_index: tuple[int, int], ):
-    print(tbl_id, wid_index)
-
-
-def image_move(tbl_id: int, point: tuple[float, float]):
-    print(tbl_id, point)
+# Callback function for changing the card style
+# The update function is (wid, param, value)
+# wid = widget id
+def update_card(_btn_id: int):
+    global card_id
+    # The card_id is the first card in the series.  The only one that is changed.
+    # The btn_id is not used.
+    ipg.update_item(card_id, IpgCardParams.Head, "This is a new head with Danger style")
+    ipg.update_item(card_id, IpgCardParams.Body, "This is a new body.")
+    ipg.update_item(card_id, IpgCardParams.Foot, "This is a new foot")
+    ipg.update_item(card_id, IpgCardParams.Style, IpgCardStyles.Danger)
 
 
-def on_text_enter(tbl_id, text_index: tuple[int, int]):
-    print(tbl_id, text_index)
+# The callback will minimizes the first card, the button at the bottom left will maximize it.
+def minimize_card(card_id: int):
+    # In this case the card has a built in button, it can trigger the minimization.
+    # Therefore, unlike most other widgets, the id is the card_id needed.
+    # The update widget will always need a type where the correct
+    # parameter can be selected.  In this case is was IsOpen.
+    # id you look at the Card widget docs, you will know what the value
+    # type will be, in this case a boolean.
+    ipg.update_item(card_id, IpgCardParams.IsOpen, False)
 
 
-# Add the window
-ipg.add_window(window_id="main", title="Table Demo", width=700, height=800,
-                pos_x=100, pos_y=25, debug=False)
-
-# Add the container, since the table requires a width and height,
-# the container can shrink(default) to fit.
-ipg.add_column(window_id="main", container_id="col",
-                  width_fill=True, height_fill=True,
-                  align_items=IpgColumnAlignment.Center,
-                  spacing=75)
-
-# Initialize the lists.
-col0 = []
-col1 = []
-col2 = []
-col3 = []
-col4 = []
-col5 = []
-col6 = []
-
-# Add some random data of different types
-for i in range(0, 20):
-    # labels for the button widget
-    col0.append("Button")
-    # labels for the checkboxes
-    col1.append("")
-    # make a selectable text
-    col2.append("Select Me")
-    # make a float random number
-    col3.append(random.randrange(10, 99) + random.randrange(10, 99) / 100)
-    col4.append(random.choice(["one", "two", "three", "four", "five", "six", "seven"]))
-    col5.append(random.randrange(10, 99))
-    col6.append(random.choice([True, False]))
-
-# Create the table, the requirement is a list of dictionaries.
-# Rust does not have dictionaries but a similar type is called a HashMap.
-# The reason for the list of dictionaries is that you cannot extract a
-# mixed dictionary into a Rust HashMap.  The HashMap has to have predefined
-# types.  In this case they are <String, Vec<f64>>, <String, Vec<String>>,
-# <String, Vec<i64>>, and <String, Vec<bool>>.  As one iterates through the list,
-# each type is tested to see if it can be extracted in one of the types above.  If found,
-# the extraction occurs and life is wonderful.  If no existing type is found, then an error occurs.
-# Currently, not every variation is covered but that can be improved in future versions.
-# This probably covers the vast majorities needs.  If you need that mixed column, convert
-# the list to a string.  When the final version is displayed, it's converted to  a string anyway.
-data = [{"Button": col0},
-        {"ChkBox": col1},
-        {"Selectable": col2},
-        {"Col3": col3},
-        {"Col4": col4},
-        {"Col5": col5},
-        {"Col6": col6}]
+# Pressing the bottom button will maximize the card, returning it to the top.
+# Note the callback is from the button so the card_id has to be global.
+# Normally, you would use a class or dataclass to store these ids.
+def maximize_card(_btn_id: int):
+    global card_id
+    ipg.update_item(card_id, IpgCardParams.IsOpen, True)
 
 
-# The column widgets are prepared
-btn_widgets = []
-chkbox_widgets = []
-selectable = []
-for _ in range(0, len(col0)):
-    btn_widgets.append(TableWidget.Button)
-    chkbox_widgets.append(TableWidget.Checkbox)
-    selectable.append(TableWidget.Text)
+# window added first
+ipg.add_window(window_id="main", title="Card Demo", width=800, height=600,
+               pos_x=100, pos_y=25)
 
-# The table is added.
-ipg.add_table("col", "My Table", data, 
-              width=600.0, height=300.0, 
-              row_highlight=TableRowHighLight.Lighter,
-              table_length=len(col1),
-              widgets_using_columns= {0: btn_widgets, 1: chkbox_widgets, 2: selectable},
-              on_press_button=widget_button,
-              on_toggle_checkbox=widget_checkbox,
-              on_enter=on_text_enter,
-              )
+# add a container for the first button to center it.
+# A width_fill is used but the height remains a shrink
+# We have center aligned along the x axis.
+ipg.add_container(window_id="main", container_id="btn_cont", width_fill=True)
 
+# add a button with a callback on_press to update the first card.
+ipg.add_button("btn_cont",
+               label="Pressing this will change the updatable items in the first card\n if you close card 1, "
+                     "restore it by pressing on the bottom button.",
+               on_press=update_card)
 
+# add another is added container to center the column of cards to follow
+ipg.add_container(window_id="main", container_id="cont",
+                  width_fill=True, height_fill=True)
 
-# Setting up the image path
-cwd = os.getcwd()
-ferris_root_path = cwd + "/python_demo/resources/ferris"
-tiger_root_path = cwd + "/python_demo/resources/tiger"
-ferris = []
-tiger = []
-ferris_type = []
-tiger_type = []
-data = []
+# put a scrollable in the container since the column will be larger than the container
+ipg.add_scrollable(window_id="main", container_id="scroller", parent_id="cont", height_fill=True)
 
-for i in range(0, 5):
-    ferris.append(f"{ferris_root_path}_{i}.png")
-    tiger.append(f"{tiger_root_path}_{i}.svg")
-    ferris_type.append(TableWidget.Image)
-    tiger_type.append(TableWidget.Image)
+# Put a column in the scrollable.  Note that the height of the scrollable is fill
+# and then the column is made shorter that the scrollable.  This seems to work
+# most of the time but in some situations you'll need to use the window debug setting
+# to see how things line up and getting the contents to scroll.  Just remember the
+# scrollable has to be larger than the container, column, or row.
+ipg.add_column(window_id="main", container_id="col", parent_id="scroller",
+               align_items=IpgColumnAlignment.Center, width=400.0, spacing=0.0)
 
-data_img = [
-            {"Ferris": ferris},
-            {"Tiger": tiger}
-            ]
+# Add a row at the bottom to hold the button
+ipg.add_row("main", "bottom_row", parent_id="main",
+            width_fill=True, spacing=0.0)
 
-# The table is added for svg and png images.
-ipg.add_table("col", "My Images", data_img, 
-              width=500.0, height=300.0, 
-            #   row_highlight=TableRowHighLight.Lighter,
-              table_length=len(ferris),
-              widgets_using_columns= {0: ferris_type, 1: tiger_type},
-              image_width=[100.0, 75.0], image_height=[100.0, 75.0],
-              on_enter=image_on_something,
-              on_move=image_move,
-              )
+# Add the button. This button could have been hidden and when the card is minimized, then show it.
+# You could also have changed the label to min or max.
+ipg.add_button("bottom_row", "Card 1", style=IpgButtonStyles.Primary,
+               on_press=maximize_card)
+
+# define the head and body of the cards.
+head = "Python Iced_aw Card"
+body = ("\nThis is the body of the card.  \nNote how the style is add style=IpgCardStyles.Primary.  This method should "
+        "cut down on typo errors versus having to type in parameters that need to match exactly.")
+
+# Styles are set by importing the appropriate module, in this case IpgCardStyles, and selecting
+# the needed style from your IDE dropdown list.
+card_id = ipg.add_card("col", head, "Primary: " + body, foot="Foot",
+                       style=IpgCardStyles.Primary,
+                       on_close=minimize_card)
+ipg.add_card("col", head, "Secondary: " + body, foot="Foot",
+             style=IpgCardStyles.Secondary)
+ipg.add_card("col", head, "Success: " + body, foot="Foot",
+             style=IpgCardStyles.Success)
+ipg.add_card("col", head, "Danger: " + body, foot="Foot",
+             style=IpgCardStyles.Danger)
+ipg.add_card("col", head, "Warning: " + body, foot="Foot",
+             style=IpgCardStyles.Warning)
+ipg.add_card("col", head, "Info: " + body, foot="Foot",
+             style=IpgCardStyles.Info)
+ipg.add_card("col", head, "Light: " + body, foot="Foot",
+             style=IpgCardStyles.Light)
+ipg.add_card("col", head, "Dark: " + body, foot="Foot",
+             style=IpgCardStyles.Dark)
+ipg.add_card("col", head, body="White: " + body, foot="Foot",
+             style=IpgCardStyles.White)
+ipg.add_card("col", head, "Default: " + body, foot="Foot",
+             style=IpgCardStyles.Default)
+
+# if you use no style, them this is what you get, which is Default.
+ipg.add_card("col", head, "Default: If you use no style setting.\n" + body, foot="Foot")
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

@@ -7,10 +7,10 @@ use super::callbacks::{WidgetCallbackIn,
 WidgetCallbackOut, get_set_widget_callback_data,
 };
 
-use iced::{Element, Length, Padding};
+use iced::{Element, Length, Padding, Renderer, Theme};
 use iced::widget::{Column, Space, Text};
 
-use iced_aw::{Card, CardStyles};
+use crate::iced_widgets::card::{Card, CardStyles};
 
 use pyo3::{pyclass, PyObject, Python};
 

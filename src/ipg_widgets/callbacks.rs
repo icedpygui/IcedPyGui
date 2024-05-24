@@ -81,17 +81,17 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     drop(state);
                     wco
                 },
-                // IpgWidgets::IpgCard(crd) => {
-                //     let is_open = match wci.value_bool {
-                //         Some(open) => open,
-                //         None => panic!("Card is_open value not found"),
-                //     };
-                //     crd.is_open = is_open;
-                //     let mut wco = WidgetCallbackOut::default();
-                //     wco.user_data = crd.user_data.clone();
-                //     drop(state);
-                //     wco
-                // },
+                IpgWidgets::IpgCard(crd) => {
+                    let is_open = match wci.value_bool {
+                        Some(open) => open,
+                        None => panic!("Card is_open value not found"),
+                    };
+                    crd.is_open = is_open;
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.user_data = crd.user_data.clone();
+                    drop(state);
+                    wco
+                },
                 IpgWidgets::IpgCheckBox(cbox) => {
                     cbox.is_checked = match wci.on_toggle {
                         Some(data) => data,

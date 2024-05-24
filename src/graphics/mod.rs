@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 pub mod bootstrap_icon;
 pub mod bootstrap;
+pub mod colors;
 pub mod required;
 pub mod nerd;
 
