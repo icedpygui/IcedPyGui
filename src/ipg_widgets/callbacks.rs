@@ -200,11 +200,11 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     drop(state);
                     wco
                 },
-                // IpgWidgets::IpgMenu(menu) => {
-                //     let mut wco = WidgetCallbackOut::default();
-                //     wco.user_data = menu.user_data.clone();
-                //     wco
-                // },
+                IpgWidgets::IpgMenu(menu) => {
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.user_data = menu.user_data.clone();
+                    wco
+                },
                 IpgWidgets::IpgPickList(pl) => {
                     pl.selected = wci.value_str;
                     let mut wco = WidgetCallbackOut::default();

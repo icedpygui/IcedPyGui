@@ -2,7 +2,7 @@
 //!
 //! *This API requires the following crate features to be activated: card*
 
-use crate::graphics::bootstrap::{icon_to_string, Bootstrap};
+// use crate::graphics::bootstrap::{icon_to_string, Bootstrap};
 use crate::graphics::BOOTSTRAP_FONT;
 
 use iced::{
