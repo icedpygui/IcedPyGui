@@ -24,7 +24,7 @@ use ipg_widgets::ipg_date_picker::{DPMessage, construct_date_picker, date_picker
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 use ipg_widgets::ipg_events::process_events;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
-// use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
+use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
 use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_pointid, construct_mousearea};
 // use ipg_widgets::ipg_pane_grid::{PGMessage, construct_pane_grid, pane_grid_update, 
 //                                  construct_pane, pane_update};
@@ -62,7 +62,7 @@ pub enum Message {
     // ColorPicker(usize, ColPikMessage),
     DatePicker(usize, DPMessage),
     Image(usize, ImageMessage),
-    // Menu(usize, MenuMessage),
+    Menu(usize, MenuMessage),
     // Pane(PGMessage),
     // PaneGrid(PGMessage),
     PickList(usize, PLMessage),
@@ -181,10 +181,10 @@ impl multi_window::Application for App {
                 image_callback(id, message);
                 Command::none()
             },
-            // Message::Menu(id, message) => {
-            //     menu_callback(id, message);
-            //     Command::none()
-            // },
+            Message::Menu(id, message) => {
+                menu_callback(id, message);
+                Command::none()
+            },
             Message::MouseAreaOnPress(id) => {
                 mousearea_callback(id, "on_press".to_string());
                 Command::none()
@@ -520,9 +520,9 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgImage(img) => {
                     return construct_image(img.clone())
                 }
-                // IpgWidgets::IpgMenu(mn) => {
-                //     return construct_menu(mn.clone())
-                // }
+                IpgWidgets::IpgMenu(mn) => {
+                    return construct_menu(mn.clone())
+                }
                 IpgWidgets::IpgDatePicker(dp) => {
                     return construct_date_picker(dp.clone())
                 },

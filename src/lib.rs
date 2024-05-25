@@ -31,7 +31,7 @@ use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment, IpgContain
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
-// use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParams, IpgMenuSepTypes};
+use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParams, IpgMenuSepTypes};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParams};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
@@ -1099,45 +1099,45 @@ impl IPG {
         Ok(id)
     }
 
-    // #[pyo3(signature = (parent_id, items, widths, spacing, 
-    //                     on_select=None, separators=None, sep_types=None, 
-    //                     sep_label_names=None, user_data=None, gen_id=None))]
-    // fn add_menu(&mut self, 
-    //                 parent_id: String, 
-    //                 items: PyObject,
-    //                 widths: Vec<f32>,
-    //                 spacing: Vec<f32>,
-    //                 on_select: Option<PyObject>,
-    //                 separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
-    //                 sep_types: Option<Vec<IpgMenuSepTypes>>,
-    //                 sep_label_names: Option<Vec<String>>,
-    //                 user_data: Option<PyObject>,
-    //                 gen_id: Option<usize>,
-    //             ) -> PyResult<usize> 
-    // {
-    //     let id = self.get_id(gen_id);
+    #[pyo3(signature = (parent_id, items, widths, spacing, 
+                        on_select=None, separators=None, sep_types=None, 
+                        sep_label_names=None, user_data=None, gen_id=None))]
+    fn add_menu(&mut self, 
+                    parent_id: String, 
+                    items: PyObject,
+                    widths: Vec<f32>,
+                    spacing: Vec<f32>,
+                    on_select: Option<PyObject>,
+                    separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
+                    sep_types: Option<Vec<IpgMenuSepTypes>>,
+                    sep_label_names: Option<Vec<String>>,
+                    user_data: Option<PyObject>,
+                    gen_id: Option<usize>,
+                ) -> PyResult<usize> 
+    {
+        let id = self.get_id(gen_id);
 
-    //     if on_select.is_some() {
-    //         add_callback_to_mutex(id, "on_select".to_string(), on_select);
-    //     }
+        if on_select.is_some() {
+            add_callback_to_mutex(id, "on_select".to_string(), on_select);
+        }
 
-    //     set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id);
 
-    //     let mut state = access_state();
+        let mut state = access_state();
 
-    //     state.widgets.insert(id, IpgWidgets::IpgMenu(IpgMenu::new(
-    //                                                             id,
-    //                                                             items,
-    //                                                             widths,
-    //                                                             spacing,
-    //                                                             separators,
-    //                                                             sep_types,
-    //                                                             sep_label_names,
-    //                                                             user_data,
-    //                                                             )));
+        state.widgets.insert(id, IpgWidgets::IpgMenu(IpgMenu::new(
+                                                                id,
+                                                                items,
+                                                                widths,
+                                                                spacing,
+                                                                separators,
+                                                                sep_types,
+                                                                sep_label_names,
+                                                                user_data,
+                                                                )));
 
-    //     Ok(id)
-    // }
+        Ok(id)
+    }
 
     #[pyo3(signature = (parent_id, options, gen_id=None, on_select=None, 
                         width=None, width_fill=false, padding=vec![5.0],  
@@ -2407,9 +2407,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgImage(img) => {
             image_item_update(img, item, value);
         },
-        // IpgWidgets::IpgMenu(menu) => {
-        //     menu_item_update(menu, item, value);
-        // },
+        IpgWidgets::IpgMenu(menu) => {
+            menu_item_update(menu, item, value);
+        },
         IpgWidgets::IpgPickList(pl) => {
             pick_list_item_update(pl, item, value);
         },
@@ -2508,8 +2508,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgCheckboxParams>()?;
     m.add_class::<IpgDatePickerParams>()?;
     m.add_class::<IpgImageParams>()?;
-    // m.add_class::<IpgMenuParams>()?;
-    // m.add_class::<IpgMenuSepTypes>()?;
+    m.add_class::<IpgMenuParams>()?;
+    m.add_class::<IpgMenuSepTypes>()?;
     m.add_class::<IpgMouseAreaParams>()?;
     m.add_class::<IpgPickListParams>()?;
     m.add_class::<IpgProgressBarParams>()?;
