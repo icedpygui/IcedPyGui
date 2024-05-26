@@ -1,11 +1,10 @@
 from icedpygui import IPG, IpgTextParams, IpgRadioDirection, IpgRadioParams
 from icedpygui import IpgButtonParams, IpgProgressBarParams
 from icedpygui import IpgColumnAlignment
+from icedpygui import TableWidget, TableRowHighLight
 import random
 
-
 """
-    Python Examples located at https://github.com/icedpygui/IcedPyGui-Python-Examples
     IcedPyGui is based on Rust Iced gui at https://github.com/iced-rs/iced.
     Some code is used from Iced_aw at https://github.com/iced-rs/iced_aw.
     Pyo3 is used as the python wrapper at https://github.com/pyo3/pyo3.
@@ -230,7 +229,7 @@ class Demo:
 
     def construct_window_1(self):
         self.ipg.add_window(self.wnd_1, "Demo Window 1 - Iced Wrapped in Python",
-                            width=500, height=600, pos_x=350, pos_y=100)
+                            width=500, height=500, pos_x=100, pos_y=25)
 
         self.ipg.add_row(self.wnd_1, container_id=self.row_1, width_fill=True, height_fill=True)
         self.ipg.add_column(self.wnd_1, container_id=self.l_col_1, parent_id=self.row_1)
@@ -377,14 +376,13 @@ class Demo:
 
     def construct_window_2(self):
         self.ipg.add_window(self.wnd_2, "Demo Window 2 - Iced Wrapped in Python",
-                            width=500, height=500,
-                            pos_x=900, pos_y=100)
+                            width=600, height=500,
+                            pos_x=650, pos_y=25)
 
         self.ipg.add_column(window_id=self.wnd_2, container_id=self.l_col_2,
                             width_fill=True, align_items=IpgColumnAlignment.Center)
 
-        # A date picker is defined and the results are put in a text widget.
-
+    # A date picker is defined and the results are put in a text widget.
     def construct_date_picker(self):
         self.ipg.add_date_picker(self.l_col_2, on_submit=self.date_selected)
 
@@ -394,35 +392,85 @@ class Demo:
     def date_selected(self, _date_id, date):
         self.ipg.update_item(self.date_text_id, IpgTextParams.Content, f"You selected: {date}")
 
-    # A table is defined with 4 columns of random items.
+    # A table is defined with 6 columns of widgets and random items.
     # Rust does not allow types to be mixed in a list.
     # Therefore, if a mixed list is needed, convert it to a list[str].
     # The gui converts the list to strings anyway.
-    #  Width and height are required for the table.
+    # Width and height are required for the table.
     def construct_table(self):
-        col1: list[float] = []
-        col2: list[str] = []
-        col3: list[int] = []
-        col4: list[bool] = []
+        # Initialize the lists.
+        col0 = []
+        col1 = []
+        col2 = []
+        col3 = []
+        col4 = []
+        col5 = []
+        col6 = []
 
-        for i in range(0, 25):
+        # Add some random data of different types
+        for i in range(0, 20):
+            # labels for the button widget
+            col0.append("Button")
+            # labels for the checkboxes
+            col1.append("")
+            # make a selectable text
+            col2.append("Select Me")
             # make a float random number
-            col1.append(random.randrange(10, 99) + random.randrange(10, 99) / 100)
-            col2.append(random.choice(["one", "two", "3", "four", "5", "six", "seven"]))
-            col3.append(random.randrange(10, 99))
-            col4.append(random.choice([True, False]))
+            col3.append(random.randrange(10, 99) + random.randrange(10, 99) / 100)
+            col4.append(random.choice(["one", "two", "three", "four", "five", "six", "seven"]))
+            col5.append(random.randrange(10, 99))
+            col6.append(random.choice([True, False]))
 
-        # Note this is a list of dictionaries not a single dictionary
-        data = [
-            {"Floats": col1},
-            {"Strings": col2},
-            {"Integers": col3},
-            {"Booleans": col4}
-        ]
+        # Create the table, the requirement is a list of dictionaries.
+        # Rust does not have dictionaries but a similar type is called a HashMap.
+        # The reason for the list of dictionaries is that you cannot extract a
+        # mixed dictionary into a Rust HashMap.  The HashMap has to have predefined
+        # types.  In this case they are <>String, Vec<Widgets>, <String, Vec<f64>>, <String, Vec<String>>,
+        # <String, Vec<i64>>, and <String, Vec<bool>>.  As one iterates through the list,
+        # each type is tested to see if it can be extracted in one of the types above.  If found,
+        # the extraction occurs and life is wonderful.  If no existing type is found, then an error occurs.
+        # Currently, not every variation is covered but that can be improved in future versions.
+        # This probably covers the vast majority of needs.  If you need that mixed column, convert
+        # the list to a string.  When the final version is displayed, it's converted to  a string anyway.
+        data = [{"Button": col0},
+                {"ChkBox": col1},
+                {"Selectable": col2},
+                {"Col3": col3},
+                {"Col4": col4},
+                {"Col5": col5},
+                {"Col6": col6}]
 
-        table_id = self.ipg.add_table(parent_id=self.l_col_2,
-                                      title="My Table", data=data,
-                                      width=450.0, height=300.0)
+
+        # The column widgets are prepared
+        btn_widgets = []
+        chkbox_widgets = []
+        selectable = []
+
+        for _ in range(0, len(col0)):
+            btn_widgets.append(TableWidget.Button)
+            chkbox_widgets.append(TableWidget.Checkbox)
+            selectable.append(TableWidget.Text)
+
+        # The table is added.
+        self.ipg.add_table(self.l_col_2, "My Table", data, 
+                    width=600.0, height=300.0, 
+                    row_highlight=TableRowHighLight.Lighter,
+                    table_length=len(col1),
+                    widgets_using_columns= {0: btn_widgets, 1: chkbox_widgets, 2: selectable},
+                    on_press_button=self.widget_button,
+                    on_toggle_checkbox=self.widget_checkbox,
+                    on_enter=self.on_text_enter,
+                    )
+
+    def widget_button(self, tbl_id: int, wid_index: tuple[int, int]):
+        print(tbl_id, wid_index)
+
+    def widget_checkbox(self, tbl_id: int, wid_index: tuple[int, int], is_checked: bool):
+        print(tbl_id, wid_index, is_checked)
+
+    def on_text_enter(self, tbl_id, text_index: tuple[int, int]):
+        print(tbl_id, text_index)
+
 
 
 demo = Demo()
