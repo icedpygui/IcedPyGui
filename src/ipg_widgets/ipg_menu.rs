@@ -6,11 +6,11 @@ use iced::widget::{button, row, text, Button, Container, Row, Text};
 use iced::{alignment, Border, Color, Length, Renderer, Theme};
 
 use crate::graphics::{BOOTSTRAP_FONT, BOOTSTRAP_FONT_BYTES};
-use crate::iced_widgets::menu::style::{Appearance, MenuBarStyle, StyleSheet};
-use crate::iced_widgets::menu::menu_tree::{Item, Menu};
-use crate::iced_widgets::menu::menu_bar::MenuBar;
-use crate::iced_widgets::menu::common::{DrawPath, InnerBounds};
-use crate::iced_widgets::menu::quad;
+use crate::iced_aw_widgets::menu::style::{Appearance, MenuBarStyle, StyleSheet};
+use crate::iced_aw_widgets::menu::menu_tree::{Item, Menu};
+use crate::iced_aw_widgets::menu::menu_bar::MenuBar;
+use crate::iced_aw_widgets::menu::common::{DrawPath, InnerBounds};
+use crate::iced_aw_widgets::menu::quad;
 
 use pyo3::types::PyDict;
 use pyo3::{pyclass, PyObject, Python};
