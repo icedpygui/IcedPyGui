@@ -17,7 +17,6 @@ use crate::ipg_widgets;
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
-// use ipg_widgets::ipg_color_picker::{ColPikMessage, construct_color_picker, color_picker_update};
 use ipg_widgets::ipg_column::construct_column;
 use ipg_widgets::ipg_container::construct_container;
 use ipg_widgets::ipg_date_picker::{DPMessage, construct_date_picker, date_picker_update};
@@ -26,8 +25,6 @@ use ipg_widgets::ipg_events::process_events;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
 use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
 use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_pointid, construct_mousearea};
-// use ipg_widgets::ipg_pane_grid::{PGMessage, construct_pane_grid, pane_grid_update, 
-//                                  construct_pane, pane_update};
 use ipg_widgets::ipg_pick_list::{PLMessage, construct_picklist, pick_list_callback};
 use ipg_widgets::ipg_progress_bar::construct_progress_bar;
 use ipg_widgets::ipg_radio::{RDMessage, construct_radio, radio_callback};
@@ -40,7 +37,6 @@ use ipg_widgets::ipg_space::construct_space;
 use ipg_widgets::ipg_svg::{SvgMessage, construct_svg, svg_callback};
 use ipg_widgets::ipg_table::{contruct_table, TableMessage, table_callback};
 use ipg_widgets::ipg_text::construct_text;
-// use ipg_widgets::ipg_text_editor::{TEMessage, construct_text_editor};
 use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_callback};
 use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage, tick_callback};
 use ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
@@ -59,12 +55,9 @@ pub enum Message {
     Button(usize, BTNMessage),
     Card(usize, CardMessage),
     CheckBox(usize, CHKMessage),
-    // ColorPicker(usize, ColPikMessage),
     DatePicker(usize, DPMessage),
     Image(usize, ImageMessage),
     Menu(usize, MenuMessage),
-    // Pane(PGMessage),
-    // PaneGrid(PGMessage),
     PickList(usize, PLMessage),
     Radio(usize, RDMessage),
     Scrolled(usize, scrollable::Viewport),
@@ -72,7 +65,6 @@ pub enum Message {
     Slider(usize, SLMessage),
     Svg(usize, SvgMessage),
     Table(usize, TableMessage),
-    // TextEditor(TEMessage),
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
     Tick,
@@ -169,10 +161,6 @@ impl multi_window::Application for App {
                 checkbox_callback(id, message);
                 Command::none()
             },
-            // Message::ColorPicker(id, message) => {
-            //     color_picker_update(id, message);
-            //     Command::none()
-            // },
             Message::DatePicker(id, message) => {
                 date_picker_update(id, message);
                 Command::none()
@@ -221,14 +209,6 @@ impl multi_window::Application for App {
                 mousearea_callback(id, "on_exit".to_string());
                 Command::none()
             },
-            // Message::Pane(pn) => {
-            //     pane_update(pn);
-            //     Command::none()
-            // },
-            // Message::PaneGrid(pg) => {
-            //     pane_grid_update(pg);
-            //     Command::none()
-            // },
             Message::PickList(id, message) => {
                 pick_list_callback(id, message);
                 Command::none()
@@ -257,10 +237,6 @@ impl multi_window::Application for App {
                 table_callback(id, message);
                 Command::none()
             }
-            // Message::TextEditor(_message) => {
-            //     // text_editor_update(message);
-            //     Command::none()
-            // },
             Message::TextInput(id, message) => {
                 text_input_callback(id, message);
                 Command::none()
@@ -470,12 +446,6 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                 IpgContainers::IpgMouseArea(m_area) => {
                     return construct_mousearea(m_area, content)
                 },
-                // IpgContainers::IpgPane(pane) => {
-                //     return construct_pane(pane, content)
-                // },
-                // IpgContainers::IpgPaneGrid(pngd) => {
-                //     return construct_pane_grid(pngd, content)
-                // },
                 IpgContainers::IpgRow(row) => {
                     return construct_row(row, content)
                 },
@@ -514,9 +484,6 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgCheckBox(chk) => {
                     return construct_checkbox(chk.clone())
                 },
-                // IpgWidgets::IpgColorPicker(cp) => {
-                //     return construct_color_picker(cp.clone())
-                // },
                 IpgWidgets::IpgImage(img) => {
                     return construct_image(img.clone())
                 }
@@ -556,9 +523,6 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgText(text) => {
                     return construct_text(text)
                 },
-                // IpgWidgets::IpgTextEditor(te) => {
-                //     return construct_text_editor(te.clone()) 
-                // },
                 IpgWidgets::IpgTextInput(input) => {
                     return construct_text_input(input.clone())           
                 },

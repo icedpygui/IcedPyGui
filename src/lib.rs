@@ -20,12 +20,12 @@ use app::{App, Flags};
 
 mod ipg_widgets;
 mod iced_widgets;
+mod iced_aw_widgets;
 mod graphics;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
-// use ipg_widgets::ipg_color_picker::{IpgColorPicker, color_picker_item_update};
 use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
 use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment, IpgContainerTheme};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
@@ -46,7 +46,6 @@ use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_svg::{IpgSvg, IpgSvgParams, svg_item_update};
 use ipg_widgets::ipg_table::{IpgTable, TableRowHighLight, TableWidget};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
-// use ipg_widgets::ipg_text_editor::IpgTextEditor;
 use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInput, IpgTextInputParams};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParams};
@@ -899,70 +898,6 @@ impl IPG {
         Ok(id)
 
     }
-
-    // #[pyo3(signature = (parent_id, label="Set Color".to_string(), 
-    //                     gen_id=None, on_submit=None, show=true, 
-    //                     start_up_color=[0.5, 0.2, 0.7, 1.0], 
-    //                     width=None, height=None, width_fill=false, height_fill=false,
-    //                     padding=vec![10.0], corner_radius=0.0, 
-    //                     style=None, user_data=None, 
-    //                     ))]
-    // fn add_color_picker(
-    //                     &mut self,
-    //                     parent_id: String,
-    //                     // ** above required
-    //                     label: String,
-    //                     gen_id: Option<usize>,
-    //                     on_submit: Option<PyObject>,
-    //                     show: bool,
-    //                     start_up_color: [f32; 4],
-    //                     width: Option<f32>,
-    //                     height: Option<f32>,
-    //                     width_fill: bool,
-    //                     height_fill: bool,
-    //                     padding: Vec<f64>,
-    //                     corner_radius: f32,
-    //                     style: Option<PyObject>,
-    //                     user_data: Option<PyObject>,
-    //                     ) -> PyResult<usize> 
-    // {
-    //     let id = self.get_id(gen_id);
-
-    //     if on_submit.is_some() {
-    //         add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
-    //     }
-
-    //     let color = Color::from_rgba(start_up_color[0], 
-    //                                         start_up_color[1], 
-    //                                         start_up_color[2], 
-    //                                         start_up_color[3]);
-
-    //     let width = get_width(width, width_fill);
-    //     let height = get_height(height, height_fill);
-
-    //     let padding = get_padding(padding);
-
-    //     set_state_of_widget(id, parent_id);
-
-    //     let mut state = access_state();
-
-    //     state.widgets.insert(id, IpgWidgets::IpgColorPicker(
-    //                         IpgColorPicker::new(
-    //                                             id,
-    //                                             show,
-    //                                             color,
-    //                                             user_data,
-    //                                             label,
-    //                                             width,
-    //                                             height,
-    //                                             padding,
-    //                                             corner_radius,
-    //                                             style,                              
-    //                                             )));
-
-    //     Ok(id)
-
-    // }
 
     #[pyo3(signature = (parent_id, label="Calendar".to_string(), gen_id=None,
                         size_factor=1.0, padding=vec![5.0], on_submit=None, 
@@ -1891,27 +1826,6 @@ impl IPG {
 
     }
 
-    // #[pyo3(signature = (parent_id, file_name, gen_id=None))]
-    // fn add_text_editor(&mut self,
-    //                         parent_id: String,
-    //                         file_name: String,
-    //                         gen_id: Option<usize>,
-    //                     )  -> PyResult<usize>
-    // {
-    //     let id = self.get_id(gen_id);
-
-    //     set_state_of_widget(id, parent_id);
-
-    //     let mut state = access_state();
-        
-    //     state.widgets.insert(id, IpgWidgets::IpgTextEditor(IpgTextEditor::new(
-    //                                                     id,
-    //                                                     file_name,
-    //                                                     )));
-
-    //     Ok(id)
-    // }
-
     #[pyo3(signature = (parent_id, placeholder, gen_id=None,
                         on_input=None, on_submit=None, 
                         on_paste=None, width=None, width_fill=false, 
@@ -2398,9 +2312,6 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgCheckBox(chk) => {
             checkbox_item_update(chk, item, value);
         },
-        // IpgWidgets::IpgColorPicker(cp) => {
-        //     color_picker_item_update(cp, item, value);
-        // },
         IpgWidgets::IpgDatePicker(dp) => {
             date_picker_item_update(dp, item, value);
         },
@@ -2434,7 +2345,6 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgText(txt) => {
             text_item_update(txt, item, value);
         },
-        // IpgWidgets::IpgTextEditor(_) => (),
         IpgWidgets::IpgTextInput(ti) => {
             text_input_item_update(ti, item, value);
         },
