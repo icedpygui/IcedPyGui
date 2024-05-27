@@ -103,8 +103,8 @@ pub fn construct_date_picker(dp: IpgDatePicker) -> Element<'static, Message, The
     let content: Element<Message, Theme, Renderer> = 
                                     Container::new(Space::new(0.0, 0.0))
                                                 .padding(dp.padding)
-                                                .center_x()
-                                                .center_y()
+                                                .align_x(alignment::Horizontal::Center)
+                                                .align_y(alignment::Vertical::Center)
                                                 .width(width)
                                                 .height(height)
                                                 .style(|theme| date_picker_container(theme))
@@ -225,8 +225,8 @@ fn calendar_show_button(dp: IpgDatePicker) -> Element<'static, Message, Theme, R
 
     Container::new(s_btn)
                     .padding(dp.padding)
-                    .center_x()
-                    .center_y()
+                    .align_x(alignment::Horizontal::Center)
+                    .align_y(alignment::Vertical::Center)
                     .width(dp.hide_width)
                     .height(dp.hide_height)
                     .into()
@@ -292,8 +292,8 @@ fn create_first_row_arrows(id: usize, selected_month: String,
     let selected_month_cont: Element<Message, Theme, Renderer> = 
             Container::new(Text::new(selected_month.clone())
                         .size(text_size))
-                        .center_x()
-                        .center_y()
+                        .align_x(alignment::Horizontal::Center)
+                        .align_y(alignment::Vertical::Center)
                         .width(Length::Fixed(month_container_width))
                         .into();
 

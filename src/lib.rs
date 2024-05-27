@@ -1,14 +1,13 @@
 //!lib for all of the python callable functions using pyo3
 #![allow(non_snake_case)]
 
-use ipg_widgets::ipg_rule::IpgRule;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
 
 use iced::multi_window::Application;
 use iced::window::{self, Position};
-use iced::{Font, Length, Point, Settings, Size, Theme};
+use iced::{Background, Border, Color, Font, Length, Point, Settings, Size, Theme};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
@@ -37,6 +36,7 @@ use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickList
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams};
 use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
+use ipg_widgets::ipg_rule::IpgRule;
 use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, 
                                     IpgScrollableDirection, IpgScrollableParams};
 use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText, IpgSelectableTextHorAlign, 
@@ -60,6 +60,9 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
                             get_line_height,
                             get_padding,
                             get_shaping,};
+
+use graphics::colors::{IpgColor, match_ipg_color};
+
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
@@ -111,9 +114,9 @@ pub struct State {
     
     pub events: Vec<IpgEvents>,
     
-    pub pane_ids: Vec<usize>,
+    pub styling_background: Lazy<HashMap<String, Background>>,
+    pub styling_border: Lazy<HashMap<String, Border>>,
 }
-
 
 pub static STATE: Mutex<State> = Mutex::new(
     State {
@@ -136,7 +139,8 @@ pub static STATE: Mutex<State> = Mutex::new(
         
         events: vec![],
         
-        pane_ids: vec![],
+        styling_background: Lazy::new(||HashMap::new()),
+        styling_border: Lazy::new(||HashMap::new()),
     }
 );
 
@@ -334,7 +338,7 @@ impl IPG {
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         width=None, height=None, width_fill=false, height_fill=false, 
-                        max_height=f32::INFINITY, max_width=f32::INFINITY,
+                        center_xy=false, clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
                         align_x=IpgContainerAlignment::Center, align_y=IpgContainerAlignment::Center,
                         padding=DEFAULT_PADDING.to_vec(), show=true, style=None
                        ))]
@@ -347,6 +351,8 @@ impl IPG {
                         height: Option<f32>,
                         width_fill: bool,
                         height_fill: bool,
+                        center_xy: bool,
+                        clip: bool,
                         max_height: f32,
                         max_width: f32,
                         align_x: IpgContainerAlignment,
@@ -383,6 +389,8 @@ impl IPG {
                                                 max_height,
                                                 align_x,
                                                 align_y,
+                                                center_xy,
+                                                clip,
                                                 style,
                                             )));
 
@@ -1508,7 +1516,66 @@ impl IPG {
                                                     )));
 
         Ok(id)
-    } 
+    }
+
+    #[pyo3(signature = (parent_id, rgba=None, color=None, 
+                        invert=false, alpha=1.0, gen_id=None))]
+    fn add_styling_background(&mut self,
+                            parent_id: String,
+                            rgba: Option<[f32; 4]>,
+                            color: Option<IpgColor>,
+                            invert: bool,
+                            alpha: f32,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let color: Color = if rgba.is_some() {
+            let rgba = rgba.unwrap();
+            let mut color: Color = Color::from_rgba(rgba[0], rgba[1], rgba[2], rgba[3] * alpha);
+            if invert {
+                color.invert()
+            }
+            color
+        } else if color.is_some() {
+            let mut color: Color = match_ipg_color(color.unwrap());
+            color.scale_alpha(alpha);
+            if invert {
+                color.invert()
+            }
+            color
+        } else {
+            Color::TRANSPARENT
+        };
+
+        let background = Background::from(color);
+
+        let mut state = access_state();
+       
+        state.styling_background.insert(parent_id, background);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (parent_id, rgba=None, color=None, 
+        invert=false, alpha=1.0, gen_id=None))]
+    fn add_styling_border(&mut self,
+                            parent_id: String,
+                            rgba: Option<[f32; 4]>,
+                            color: Option<IpgColor>,
+                            invert: bool,
+                            alpha: f32,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+
+
+
+        Ok(id) 
+    }
 
     #[pyo3(signature = (parent_id, svg_path, gen_id=None, 
                         width=None, width_fill=false, 
@@ -2412,6 +2479,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgButtonParams>()?;
     m.add_class::<IpgCardStyles>()?;
     m.add_class::<IpgCardParams>()?;
+    m.add_class::<IpgColor>()?;
     m.add_class::<IpgColumnAlignment>()?;
     m.add_class::<IpgContainerAlignment>()?;
     m.add_class::<IpgContainerTheme>()?;

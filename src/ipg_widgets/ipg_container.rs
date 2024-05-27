@@ -23,6 +23,8 @@ pub struct IpgContainer {
     pub max_height: f32,
     pub align_x: IpgContainerAlignment,
     pub align_y: IpgContainerAlignment,
+    pub center_xy: bool,
+    pub clip: bool,
     pub style: Option<PyObject>,
 }
 
@@ -38,6 +40,8 @@ impl IpgContainer {
         max_height: f32,
         align_x: IpgContainerAlignment,
         align_y: IpgContainerAlignment,
+        center_xy: bool,
+        clip: bool,
         style: Option<PyObject>,
     ) -> Self {
         Self {
@@ -50,6 +54,8 @@ impl IpgContainer {
             max_height,
             align_x,
             align_y,
+            center_xy,
+            clip,
             style,
         }
     }
@@ -63,15 +69,16 @@ pub fn construct_container(con: &IpgContainer, content: Vec<Element<'static, Mes
                                                                         .height(Length::Shrink)
                                                                         .into();
 
-    let align_x = get_horizontal(con.align_x.clone());
-    let align_y = get_vertical(con.align_y.clone());
+    let align_x = get_horizontal(con.align_x.clone(), con.center_xy);
+    let align_y = get_vertical(con.align_y.clone(), con.center_xy);
 
     Container::new(col_content)
-            .padding(10)
+            .padding(con.padding)
             .width(con.width)
             .height(con.height)
             .align_x(align_x)
             .align_y(align_y)
+            .clip(con.clip)
             .style(container_body)
             .into()
 }
@@ -86,7 +93,9 @@ pub enum IpgContainerAlignment{
 }
 
 
-fn get_horizontal(x_align: IpgContainerAlignment) -> alignment::Horizontal {
+fn get_horizontal(x_align: IpgContainerAlignment, center: bool) -> alignment::Horizontal {
+
+    if center {return alignment::Horizontal::Center}
 
     match x_align {
         IpgContainerAlignment::Start => alignment::Horizontal::Left,
@@ -95,8 +104,10 @@ fn get_horizontal(x_align: IpgContainerAlignment) -> alignment::Horizontal {
     }
 }
 
-fn get_vertical(y_align: IpgContainerAlignment) -> alignment::Vertical {
+fn get_vertical(y_align: IpgContainerAlignment, center: bool) -> alignment::Vertical {
     
+    if center {return alignment::Vertical::Center}
+
     match y_align {
         IpgContainerAlignment::Start => alignment::Vertical::Top,
         IpgContainerAlignment::Center => alignment::Vertical::Center,

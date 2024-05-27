@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current
 ### Added
-
+-styling
+-container - center_xy
 
 ## [0.1.0] - 2024-05-27
 ### Added

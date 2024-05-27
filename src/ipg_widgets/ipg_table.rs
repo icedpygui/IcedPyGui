@@ -382,11 +382,11 @@ fn add_row_container(label: Element<Message>, row_index: usize,
     // Using container because text has no background 
     Container::new(label)
             .width(Length::Fill)
+            .align_x(alignment::Horizontal::Center)
+            .align_y(alignment::Vertical::Center)
             .style(move|theme| table_row_theme(theme, row_index.clone(), 
                         highlight_amount.clone(),
                         row_highlight))
-            .center_x()
-            
             .into()
 }
 
