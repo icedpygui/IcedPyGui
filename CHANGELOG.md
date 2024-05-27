@@ -6,9 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current
 ### Added
+
+
+## [0.1.0] - 2024-05-27
+### Added
 - Added svg widget
 - Added mousearea widget
-- Improved callback error message on all widgets 
+- Improved callback error message on all widgets
+- Refactor table and added ability to added the widgets button, checkbox, selectable text, image, and svg.
+- Updated to Iced rev=b30d34f
 
 ## [0.1.0-alpha] - 2024-05-02
 ### Added
