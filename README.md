@@ -14,7 +14,8 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
 * Supported Iced widgets
     * Button 
     * Checkbox 
-    * Canvas - Coming next release
+    * Canvas - next release
+    * ColorPalette - next release
     * Column - container
     * ComboBox - Needs modification to work in IPG, but PicKList good substitute
     * Container - container
@@ -23,17 +24,19 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     * Image
     * Modal
     * MouseArea
+    * Overlays - next release
     * PaneGrid - Future
     * PickList 
     * ProgressBar
-    * QRCodes - Future
+    * QRCodes - next release
     * Radio buttons - mutiple, grouped in one line of code
     * Row - container
     * Rule
     * Scrollable - container (modified in IPG) 
     * Slider
-    * Shader
+    * Shader - future
     * Space
+    * Stack - next release
     * Styling - Some widget styling, more to come
     * SVG
     * TextEditor - Future, needs modification to work in IPG
@@ -44,12 +47,12 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     * Windows multiple
 * Iced_aw widgets
     * Card
-    * ColorPicker
+    * ColorPicker - future
     * Menu
 * IPG widgets
     * DatePicker - compact and resizable
     * SelectableText - all mouse buttons supported
-    * Table - Currently simple, easily loaded with a list of dictionaries
+    * Table - Currently simple, easily loaded with a list of dictionaries, supports adding widgets button, checkbox, image, and svg.
 
 * Python issues to be addressed
     * Need to incorporate using with statement in python.  Using with would allow one to not have to supply the window or parent id if those follow closely.  For example:
