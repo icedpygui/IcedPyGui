@@ -14,6 +14,7 @@ pub struct IpgRow {
     pub width: Length,
     pub height: Length,
     pub align_items: IpgRowAlignment,
+    pub clip: bool,
 }
 
 impl IpgRow {
@@ -25,6 +26,7 @@ impl IpgRow {
         width: Length,
         height: Length,
         align_items: IpgRowAlignment,
+        clip: bool,
     ) -> Self {
         Self {
             id,
@@ -34,6 +36,7 @@ impl IpgRow {
             width,
             height,
             align_items,
+            clip
         }
     }
 }
@@ -48,6 +51,7 @@ pub fn construct_row(row: &IpgRow, content: Vec<Element<'static, Message>>) -> E
                         .padding(row.padding)
                         .spacing(row.spacing)
                         .width(row.width)
+                        .clip(row.clip)
                         .into()
 }
 

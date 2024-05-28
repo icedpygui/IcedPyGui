@@ -114,6 +114,7 @@ pub struct State {
     pub styling_background: Lazy<HashMap<usize, Background>>,
     pub styling_border: Lazy<HashMap<usize, Border>>,
     pub styling_shadow: Lazy<HashMap<usize, Shadow>>,
+    pub styling_text_color: Lazy<HashMap<usize, Color>>,
 }
 
 pub static STATE: Mutex<State> = Mutex::new(
@@ -140,6 +141,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         styling_background: Lazy::new(||HashMap::new()),
         styling_border: Lazy::new(||HashMap::new()),
         styling_shadow: Lazy::new(||HashMap::new()),
+        styling_text_color: Lazy::new(||HashMap::new()),
     }
 );
 
@@ -338,7 +340,7 @@ impl IPG {
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         width=None, height=None, width_fill=false, height_fill=false, 
                         center_xy=false, clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
-                        align_x=IpgContainerAlignment::Center, align_y=IpgContainerAlignment::Center,
+                        align_x=IpgContainerAlignment::Start, align_y=IpgContainerAlignment::Start,
                         padding=DEFAULT_PADDING.to_vec(), show=true
                        ))]
     fn add_container(&mut self,
@@ -402,7 +404,7 @@ impl IPG {
                         align_items=IpgColumnAlignment::Start, width=None, height=None,
                         width_fill=false, height_fill=false,
                         max_width=f32::INFINITY, padding=DEFAULT_PADDING.to_vec(), 
-                        spacing=20.0, show=true,
+                        spacing=20.0, clip=false, show=true,
                         ))]
     fn add_column(&mut self,
                         window_id: String,
@@ -417,6 +419,7 @@ impl IPG {
                         max_width: f32,
                         padding: Vec<f64>,
                         spacing: f32,
+                        clip: bool,
                         show: bool,
                         ) -> PyResult<usize> 
     {
@@ -448,6 +451,7 @@ impl IPG {
                                         height, 
                                         max_width, 
                                         align_items,
+                                        clip,
                                     )));
     
     Ok(self.id)
@@ -543,7 +547,7 @@ impl IPG {
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         align_items=IpgRowAlignment::Start, width=None, height=None, 
                         width_fill=false, height_fill=false,
-                        padding=DEFAULT_PADDING.to_vec(), spacing=20.0, 
+                        padding=DEFAULT_PADDING.to_vec(), spacing=20.0, clip=false,
                         show=true,
                         ))]
     fn add_row(&mut self,
@@ -558,6 +562,7 @@ impl IPG {
                     height_fill: bool,
                     padding: Vec<f64>,
                     spacing: f32,
+                    clip: bool,
                     show: bool,
                     ) -> PyResult<usize> 
     {
@@ -588,6 +593,7 @@ impl IPG {
                                     width, 
                                     height, 
                                     align_items,
+                                    clip,
                                 )));
                                 
         Ok(self.id)
@@ -716,8 +722,8 @@ impl IPG {
     
     #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
-                        height_fill=false, padding=vec![10.0], corner_radius=15.0, 
-                        style=None, arrow_style=None, user_data=None, 
+                        height_fill=false, padding=vec![10.0], clip=false, corner_radius=15.0, 
+                        style=None, style_custom=false, arrow_style=None, user_data=None, 
                         show=true, 
                         ))]
     fn add_button(&mut self,
@@ -731,8 +737,10 @@ impl IPG {
                         width_fill: bool,
                         height_fill: bool,
                         padding: Vec<f64>,
+                        clip: bool,
                         corner_radius: f32,
                         style: Option<PyObject>,
+                        style_custom: bool,
                         arrow_style: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
@@ -761,8 +769,10 @@ impl IPG {
                                                 width,
                                                 height,
                                                 padding,
+                                                clip,
                                                 corner_radius,
                                                 style,
+                                                style_custom,
                                                 arrow_style,                              
                                                 )));
         
@@ -1515,10 +1525,11 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, rgba=None, color=None, 
+    #[pyo3(signature = (parent_id=None, widget_id=None, rgba=None, color=None, 
                         invert=false, alpha=1.0, gen_id=None))]
     fn add_styling_background(&mut self,
-                            parent_id: String,
+                            parent_id: Option<String>,
+                            widget_id: Option<usize>,
                             rgba: Option<[f32; 4]>,
                             color: Option<IpgColor>,
                             invert: bool,
@@ -1532,7 +1543,13 @@ impl IPG {
 
         let background = Background::from(color);
 
-        let cont_id = get_container_id_via_string(parent_id);
+        let cont_id = if parent_id.is_some() {
+                get_container_id_via_string(parent_id.unwrap())
+            } else if widget_id.is_some() {
+                widget_id.unwrap()
+            } else {
+                panic!("styling background: A parent_id or a widget_id must be supplied")
+            };
 
         let mut state = access_state();
        
@@ -1543,10 +1560,11 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, rgba=None, color=None, 
+    #[pyo3(signature = (parent_id=None, widget_id=None, rgba=None, color=None, 
         invert=false, alpha=1.0, width=1.0, radius=vec![5.0], gen_id=None))]
     fn add_styling_border(&mut self,
-                            parent_id: String,
+                            parent_id: Option<String>,
+                            widget_id: Option<usize>,
                             rgba: Option<[f32; 4]>,
                             color: Option<IpgColor>,
                             invert: bool,
@@ -1570,7 +1588,13 @@ impl IPG {
 
         let border: Border = Border { color, width, radius };
 
-        let cont_id = get_container_id_via_string(parent_id);
+        let cont_id = if parent_id.is_some() {
+                get_container_id_via_string(parent_id.unwrap())
+            } else if widget_id.is_some() {
+                widget_id.unwrap()
+            } else {
+                panic!("styling border: A parent_id or a widget_id must be supplied")
+            };
 
         let mut state = access_state();
        
@@ -1581,11 +1605,12 @@ impl IPG {
         Ok(id) 
     }
 
-    #[pyo3(signature = (parent_id, rgba=None, color=None, 
+    #[pyo3(signature = (parent_id=None, widget_id=None, rgba=None, color=None, 
                         invert=false, alpha=1.0, offset_x=0.0, offset_y=0.0, 
                         blur_radius=0.0, gen_id=None))]
     fn add_styling_shadow(&mut self,
-                            parent_id: String,
+                            parent_id: Option<String>,
+                            widget_id: Option<usize>,
                             rgba: Option<[f32; 4]>,
                             color: Option<IpgColor>,
                             invert: bool,
@@ -1604,11 +1629,50 @@ impl IPG {
 
         let shadow: Shadow = Shadow { color, offset, blur_radius };
 
-        let cont_id = get_container_id_via_string(parent_id);
+        let cont_id = if parent_id.is_some() {
+                get_container_id_via_string(parent_id.unwrap())
+            } else if widget_id.is_some() {
+                widget_id.unwrap()
+            } else {
+                panic!("styling shadow: A parent_id or a widget_id must be supplied")
+            };
 
         let mut state = access_state();
        
         state.styling_shadow.insert(cont_id, shadow);
+
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (parent_id=None, widget_id=None, rgba=None, color=None, 
+                        invert=false, alpha=1.0, gen_id=None))]
+    fn add_styling_text_color(&mut self,
+                                parent_id: Option<String>,
+                                widget_id: Option<usize>,
+                                rgba: Option<[f32; 4]>,
+                                color: Option<IpgColor>,
+                                invert: bool,
+                                alpha: f32,
+                                gen_id: Option<usize>,
+                                ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let color: Color = get_color(rgba, color, alpha, invert);
+
+        let cont_id = if parent_id.is_some() {
+                get_container_id_via_string(parent_id.unwrap())
+            } else if widget_id.is_some() {
+                widget_id.unwrap()
+            } else {
+                panic!("styling text color: A parent_id or a widget_id must be supplied")
+            };
+
+        let mut state = access_state();
+       
+        state.styling_text_color.insert(cont_id, color);
 
         drop(state);
 

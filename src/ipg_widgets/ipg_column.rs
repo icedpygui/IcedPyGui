@@ -1,10 +1,9 @@
-
+//!Column Container
 use iced::{Element, Length, Padding};
 use iced::alignment::Alignment;
 use iced::widget::Column;
 use pyo3::pyclass;
 use crate::app::Message;
-// use crate::iced_widgets::column::Column;
 
 #[derive(Debug, Clone)]
 pub struct IpgColumn {
@@ -16,6 +15,7 @@ pub struct IpgColumn {
     pub height: Length,
     pub max_width: f32,
     pub align_items: IpgColumnAlignment,
+    pub clip: bool,
 }
 
 impl IpgColumn {
@@ -28,6 +28,7 @@ impl IpgColumn {
         height: Length,
         max_width: f32,
         align_items: IpgColumnAlignment,
+        clip: bool,
     ) -> Self {
         Self {
             id,
@@ -38,6 +39,7 @@ impl IpgColumn {
             height,
             max_width,
             align_items,
+            clip,
         }
     }
 }
@@ -61,6 +63,7 @@ pub fn construct_column(col: &IpgColumn, content: Vec<Element<'static, Message>>
                         .padding(col.padding)
                         .spacing(col.spacing)
                         .width(col.width)
+                        .clip(col.clip)
                         .into()
 }
 

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{access_callbacks, app};
+use crate::{access_callbacks, access_state, app};
 use super::helpers::{get_height, get_padding, get_width, 
                     try_extract_f64, try_extract_string, 
                     try_extract_boolean, try_extract_vec_f64};
@@ -9,12 +9,13 @@ use super::callbacks::{
     get_set_widget_callback_data
 };
 
+use iced::border::Radius;
 use iced::theme::palette;
-use iced::widget::button::{Status, Style};
+use iced::widget::button::{self, Status, Style};
 use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{Button, Space, Text};
-use iced::{Background, Border, Element, Length, Padding, Theme };
+use iced::{Background, Border, Color, Element, Length, Padding, Theme };
 
 use crate::graphics::bootstrap::{self, icon_to_string};
 
@@ -29,8 +30,10 @@ pub struct IpgButton {
     pub width: Length,
     pub height: Length,
     pub padding: Padding,
+    pub clip: bool,
     pub corner_radius: f32,
     pub style: Option<PyObject>,
+    pub style_custom: bool,
     pub arrow_style: Option<PyObject>,
 }
 
@@ -44,8 +47,10 @@ impl IpgButton {
         width: Length,
         height: Length,
         padding: Padding,
+        clip: bool,
         corner_radius: f32,
         style: Option<PyObject>,
+        style_custom: bool,
         arrow_style: Option<PyObject>,
         ) -> Self {
         Self {
@@ -56,8 +61,10 @@ impl IpgButton {
             width,
             height,
             padding,
+            clip,
             corner_radius,
             style,
+            style_custom,
             arrow_style,
         }
     }
@@ -103,8 +110,13 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
                                 .padding(btn.padding)
                                 .width(btn.width)
                                 .on_press(BTNMessage::OnPress)
+                                .clip(btn.clip)
                                 .style(move|theme: &Theme, status| {
-                                    get_button_style(btn.style.clone(), theme, status, radius)})
+                                    if btn.style_custom {
+                                        get_custom_styling(theme, status, btn.id)
+                                    } else {
+                                        get_button_style(btn.style.clone(), theme, status, radius)
+                                    }})
                                 .into();
 
     ipg_btn.map(move |message| app::Message::Button(btn.id, message))
@@ -358,7 +370,46 @@ pub fn get_button_style(style_opt: Option<PyObject>,
     }
 }
 
+fn get_custom_styling(_theme: &Theme, _status: Status, id: usize) -> button::Style {
+    
+    let state = access_state();
 
+    let background_opt = state.styling_background.get(&id);
+    let border_opt = state.styling_border.get(&id);
+    let shadow_opt = state.styling_shadow.get(&id);
+    let text_color_opt = state.styling_text_color.get(&id);
+
+    let background = match background_opt {
+        Some(bg) => *bg,
+        None => Background::Color(Color::TRANSPARENT),
+    };
+
+    let border = match border_opt {
+        Some(bd) => *bd,
+        None => Border{color: Color::TRANSPARENT, radius: Radius::from([5.0; 4]), width: 1.0},
+    };
+
+    let shadow = match shadow_opt {
+        Some(sh) => *sh,
+        None => Default::default(),
+    };
+
+    let text_color: Color = match text_color_opt {
+        Some(tc) => *tc,
+        None => Default::default(),
+    };
+
+
+    let style = button::Style {
+        background: Some(background),
+        border,
+        shadow,
+        text_color,
+        };
+
+    style
+
+}
 
 pub fn try_extract_button_style(style_obj: PyObject) -> IpgButtonStyles {
 

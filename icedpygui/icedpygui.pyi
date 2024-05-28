@@ -89,9 +89,11 @@ class IPG:
                         height_fill: bool=False,
                         max_height: float=float('inf'),
                         max_width: float=float('inf'),
-                        align_x: IpgContainerAlignment=IpgContainerAlignment.Center,
-                        align_y: IpgContainerAlignment=IpgContainerAlignment.Center,
-                        padding: List=[10.0], 
+                        align_x: IpgContainerAlignment=IpgContainerAlignment.Start,
+                        align_y: IpgContainerAlignment=IpgContainerAlignment.Start,
+                        center_xy: bool,
+                        padding: List=[10.0],
+                        clip: bool=False, 
                         show: bool=True,
                         ) -> int:
         """
@@ -126,11 +128,15 @@ class IPG:
                 Aligns the container horizontally; Start, Center, End
             align_y: IpgContainerAlignment
                 Aligns the container vertically; Start, Center, End
+                center_xy: bool
+                Centers items in container
             padding: List[float]
                 Sets the padding for container.
                 use [float] for all sides,
                 use [float, float] for [top&bottom, left&right]
                 use [float, float, float, float] for [top, right, bottom, left]
+            clip: bool
+                Whether to clip any text if size > container.
             show: bool
                 Shows or hides container and all of its contents.
             
@@ -153,6 +159,7 @@ class IPG:
                     max_width: float=float('inf'),
                     padding: List=[10.0], 
                     spacing: float=20.0,
+                    clip: bool=False,
                     show: bool=True,
                     ) -> int:
 
@@ -187,6 +194,8 @@ class IPG:
                 use [float, float, float, float] for [top, right, bottom, left]
             spacing: float
                 Sets the spacing between items in column.
+            clip: bool
+                Whether to clip any text if size > container.
             show: bool
                 Shows or hides widget.
             
@@ -271,6 +280,7 @@ class IPG:
                 height_fill: bool=False,
                 padding: List=[10.0], 
                 spacing: float=20.0,
+                clip: bool=False,
                 show: bool=True,
                 ) -> int:
 
@@ -431,8 +441,10 @@ class IPG:
                     width_fill: bool=False,
                     height_fill: bool=False,
                     padding: List=[10.0],
+                    clip: bool=False,
                     corner_radius: float=15.0,
                     style: IpgButtonStyles=IpgButtonStyles.Primary,
+                    style_custom: bool=False,
                     arrow_style: any=Union[None | IpgButtonArrows],
                     user_data: Union[None | any]=None,
                     show: bool=True, 
@@ -463,10 +475,14 @@ class IPG:
                 use [float] for all sides,
                 use [float, float] for [top&bottom, left&right]
                 use [float, float, float, float] for [top, right, bottom, left]
+            clip: bool
+                Whether to clip the label if width exceeded.
             corner_radius: float
                 Sets the roundness of the button box corners.  The effective range 0 to ~25.
             style: IpgButtonStyle
                 Primary, Secondary, Positive, Destructive, Text,
+            style_custom: bool,
+                if True, use the add_button_styling to cutomize the the button style.
             arrow_style: IpgButtonArrows
                 See dropdown list when IpgButtonArrow. is typed in when period is typed.
             user_data: any 
@@ -1226,7 +1242,8 @@ class IPG:
         """
 
     def add_styling_background(self,
-                                parent_id: str,
+                                parent_id: Union[None | str]=None,
+                                widget_id: Union[None | int]=None,
                                 rgba: Union[None | List[float]]=None,
                                 color: Union[None | IpgColor]=None,
                                 invert: bool=False,
@@ -1237,24 +1254,32 @@ class IPG:
         Adds styling to a container.
 
             Parameters
-                ----------
-                    parent_id: str
-                        Id of another container to place the widget in.
-                    rbga: List[float]
-                        A list of float items for the color [r, g, b, a].
-                    color: IpgColor
-                        A color form the class IpgColor
-                    invert: bool
-                        Whether to invert the given colors
-                    alpha: float
-                        whether to apply a alpha factor to the a.
-                    gen_id: int
-                        The only allowable entry for this id is that generated by ipg.generate_id().
+            ----------
+                parent_id: str
+                    Id of container to style, either parent_id or widget_id must be used.
+                widget_id: int
+                    Id of the widget to style.
+                rbga: List[float]
+                    A list of float items for the color [r, g, b, a].
+                color: IpgColor
+                    A color form the class IpgColor
+                invert: bool
+                    Whether to invert the given colors
+                alpha: float
+                    whether to apply a alpha factor to the a.
+                gen_id: int
+                    The only allowable entry for this id is that generated by ipg.generate_id().
+
+            Returns
+            -------
+            id: int
+                Internal id of widget and can be used by user if equated.
                     
         """
     
     def add_styling_border(self,
-                            parent_id: str,
+                            parent_id: Union[None | str]=None,
+                            widget_id: Union[None | int]=None,
                             rgba: Union[None | List[float]]=None,
                             color: Union[None | IpgColor]=None,
                             invert: bool=False,
@@ -1267,28 +1292,36 @@ class IPG:
         Adds a border to a container.
 
             Parameters
-                ----------
-                    parent_id: str
-                        Id of another container to place the widget in.
-                    rbga: List[float]
-                        A list of float items for the color [r, g, b, a].
-                    color: IpgColor
-                        A color form the class IpgColor
-                    invert: bool
-                        Whether to invert the given colors
-                    alpha: float
-                        whether to apply a alpha factor to the a.
-                    width: float
-                        The border width.
-                    radius: List[float]
-                        A list of either 1 or 4 float elements for the corner radius, 1 assumes all.
-                    gen_id: int
-                        The only allowable entry for this id is that generated by ipg.generate_id().
+            ----------
+                parent_id: str
+                    Id of container to style, either parent_id or widget_id must be used.
+                widget_id: int
+                    Id of the widget to style.
+                rbga: List[float]
+                    A list of float items for the color [r, g, b, a].
+                color: IpgColor
+                    A color form the class IpgColor
+                invert: bool
+                    Whether to invert the given colors
+                alpha: float
+                    whether to apply a alpha factor to the a.
+                width: float
+                    The border width.
+                radius: List[float]
+                    A list of either 1 or 4 float elements for the corner radius, 1 assumes all.
+                gen_id: int
+                    The only allowable entry for this id is that generated by ipg.generate_id().
+
+            Returns
+            -------
+                id: int
+                    Internal id of widget and can be used by user if equated.
                     
         """
 
     def add_styling_shadow(self,
-                            parent_id: str,
+                            parent_id: Union[None | str]=None,
+                            widget_id: Union[None | int]=None,
                             rgba: Union[None | List[float]]=None,
                             color: Union[None | IpgColor]=None,
                             invert: bool=False,
@@ -1302,26 +1335,67 @@ class IPG:
         Adds a border to a container.
 
             Parameters
-                ----------
-                    parent_id: str
-                        Id of another container to place the widget in.
-                    rbga: List[float]
-                        A list of float items for the color [r, g, b, a].
-                    color: IpgColor
-                        A color form the class IpgColor
-                    invert: bool
-                        Whether to invert the given colors
-                    alpha: float
-                        whether to apply a alpha factor to the a.
-                    offset_x: float
-                        The x vector offset for the shadow.
-                    offset_y: float
-                        The y vector offset for the shadow.
-                    blur_radius: float
-                        The blur radius of the shadow.
-                    gen_id: int
-                        The only allowable entry for this id is that generated by ipg.generate_id().
+            ----------
+                parent_id: str
+                    Id of container to style, either parent_id or widget_id must be used.
+                widget_id: int
+                    Id of the widget to style.
+                rbga: List[float]
+                    A list of float items for the color [r, g, b, a].
+                color: IpgColor
+                    A color form the class IpgColor
+                invert: bool
+                    Whether to invert the given colors
+                alpha: float
+                    whether to apply a alpha factor to the a.
+                offset_x: float
+                    The x vector offset for the shadow.
+                offset_y: float
+                    The y vector offset for the shadow.
+                blur_radius: float
+                    The blur radius of the shadow.
+                gen_id: int
+                    The only allowable entry for this id is that generated by ipg.generate_id().
                     
+            Returns
+            -------
+                id: int
+                    Internal id of widget and can be used by user if equated.
+        """
+
+    def add_styling_text_color(self,
+                                parent_id: Union[None | str]=None,
+                                widget_id: Union[None | int]=None,
+                                rgba: Union[None | List[float]]=None,
+                                color: Union[None | IpgColor]=None,
+                                invert: bool=False,
+                                alpha: float=1.0,
+                                gen_id: Union[None | int]=None,
+                                ) -> int:
+        """
+        Adds a border to a container.
+
+            Parameters
+            ----------
+                parent_id: str
+                    Id of container to style, either parent_id or widget_id must be used.
+                widget_id: int
+                    Id of the widget to style.
+                rbga: List[float]
+                    A list of float items for the color [r, g, b, a].
+                color: IpgColor
+                    A color form the class IpgColor
+                invert: bool
+                    Whether to invert the given colors
+                alpha: float
+                    whether to apply a alpha factor to the a.
+                gen_id: int
+                    The only allowable entry for this id is that generated by ipg.generate_id().
+
+            Returns
+            -------
+                id: int
+                    Internal id of widget and can be used by user if equated.     
         """
 
     def add_svg(self, 
@@ -1985,7 +2059,7 @@ class IpgColor:
     AZURE=0
     BEIGE=0
     BISQUE=0
-    BLACK=0;
+    BLACK=0
     BLANCHED_ALMOND=0
     BLUE=0
     BLUE_VIOLET=0

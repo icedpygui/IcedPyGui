@@ -1,4 +1,4 @@
-
+//!Container container
 use iced::{Element, Length, Padding, Theme};
 use iced::alignment;
 use iced::widget::{Column, Container, container};
@@ -63,7 +63,6 @@ impl IpgContainer {
 
 pub fn construct_container(con: IpgContainer, content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
     // iced container does not take a vec so need to put into a row or column first
-    dbg!("container");
     let col_content: Element<'static, Message> = Column::with_children(content)
                                                                         .width(Length::Shrink)
                                                                         .height(Length::Shrink)
