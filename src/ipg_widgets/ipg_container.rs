@@ -7,11 +7,14 @@ use iced::{Background, Border, Color};
 use palette::rgb::Rgb;
 use palette::{FromColor, Hsl};
 
-use pyo3::{pyclass, PyObject};
+use pyo3::pyclass;
+
 use crate::app::Message;
+use crate::style::styling::get_container_styling;
 
 
-#[derive(Debug)]
+
+#[derive(Debug, Clone)]
 pub struct IpgContainer {
     pub id: usize,
     pub show: bool,
@@ -25,7 +28,6 @@ pub struct IpgContainer {
     pub align_y: IpgContainerAlignment,
     pub center_xy: bool,
     pub clip: bool,
-    pub style: Option<PyObject>,
 }
 
 impl IpgContainer {
@@ -42,7 +44,6 @@ impl IpgContainer {
         align_y: IpgContainerAlignment,
         center_xy: bool,
         clip: bool,
-        style: Option<PyObject>,
     ) -> Self {
         Self {
             id,
@@ -56,14 +57,13 @@ impl IpgContainer {
             align_y,
             center_xy,
             clip,
-            style,
         }
     }
 }
 
-pub fn construct_container(con: &IpgContainer, content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
+pub fn construct_container(con: IpgContainer, content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
     // iced container does not take a vec so need to put into a row or column first
-
+    dbg!("container");
     let col_content: Element<'static, Message> = Column::with_children(content)
                                                                         .width(Length::Shrink)
                                                                         .height(Length::Shrink)
@@ -72,15 +72,18 @@ pub fn construct_container(con: &IpgContainer, content: Vec<Element<'static, Mes
     let align_x = get_horizontal(con.align_x.clone(), con.center_xy);
     let align_y = get_vertical(con.align_y.clone(), con.center_xy);
 
-    Container::new(col_content)
-            .padding(con.padding)
-            .width(con.width)
-            .height(con.height)
-            .align_x(align_x)
-            .align_y(align_y)
-            .clip(con.clip)
-            .style(container_body)
-            .into()
+    
+
+    let cont: Element<Message> = Container::new(col_content)
+                .padding(con.padding)
+                .width(con.width)
+                .height(con.height)
+                .align_x(align_x)
+                .align_y(align_y)
+                .clip(con.clip)
+                .style(move|Theme|get_container_styling(&Theme, con.id))
+                .into();
+    cont.into()
 }
 
 
@@ -134,17 +137,7 @@ impl Catalog for IpgContainerTheme {
     }
 }
 
-pub fn container_body(_theme: &Theme) -> Style {
-    Style {
-        background: Some(Background::Color(Color::TRANSPARENT)),
-        border: Border {
-            radius: 4.0.into(),
-            width: 1.0,
-            color: Color::TRANSPARENT,
-        },
-        ..Default::default()
-    }
-}
+
 
 pub fn date_picker_container(_theme: &Theme) -> Style {
     Style {

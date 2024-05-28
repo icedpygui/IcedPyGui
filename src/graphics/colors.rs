@@ -9,6 +9,28 @@ use iced::Color;
 use pyo3::pyclass;
 
 
+pub fn get_color(rgba: Option<[f32; 4]>, color: Option<IpgColor>, alpha: f32, invert: bool) -> Color {
+    let color: Color = if rgba.is_some() {
+        let rgba = rgba.unwrap();
+        let mut color: Color = Color::from_rgba(rgba[0], rgba[1], rgba[2], rgba[3] * alpha);
+        if invert {
+            color.invert()
+        }
+        color
+    } else if color.is_some() {
+        let mut color: Color = match_ipg_color(color.unwrap());
+        color.scale_alpha(alpha);
+        if invert {
+            color.invert()
+        }
+        color
+    } else {
+        Color::TRANSPARENT
+    };
+
+    color
+}
+
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum IpgColor {

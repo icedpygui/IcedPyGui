@@ -441,7 +441,7 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                     if content.len() > 1 {
                         panic!("A container can have only one widget, place your multiple widgets into  a column or row")
                     }
-                    return construct_container(con, content)
+                    return construct_container(con.clone(), content)
                 },
                 IpgContainers::IpgMouseArea(m_area) => {
                     return construct_mousearea(m_area, content)

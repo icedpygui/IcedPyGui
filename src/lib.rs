@@ -1,13 +1,14 @@
 //!lib for all of the python callable functions using pyo3
 #![allow(non_snake_case)]
 
+use iced::border::Radius;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
 
 use iced::multi_window::Application;
 use iced::window::{self, Position};
-use iced::{Background, Border, Color, Font, Length, Point, Settings, Size, Theme};
+use iced::{Background, Border, Color, Font, Length, Point, Settings, Shadow, Size, Theme, Vector};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
@@ -21,6 +22,8 @@ mod ipg_widgets;
 mod iced_widgets;
 mod iced_aw_widgets;
 mod graphics;
+mod style;
+
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
@@ -53,15 +56,9 @@ use ipg_widgets::ipg_tool_tip::IpgToolTip;
 use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, IpgWindowParams, IpgWindowThemes};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 
-use ipg_widgets::helpers::{check_for_dup_container_ids,  
-                            get_width, get_height,
-                            get_horizontal_alignment,
-                            get_vertical_alignment,
-                            get_line_height,
-                            get_padding,
-                            get_shaping,};
+use ipg_widgets::helpers::{check_for_dup_container_ids, get_container_id_via_string, get_height, get_horizontal_alignment, get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
 
-use graphics::colors::{IpgColor, match_ipg_color};
+use graphics::colors::{get_color, IpgColor};
 
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
@@ -114,8 +111,9 @@ pub struct State {
     
     pub events: Vec<IpgEvents>,
     
-    pub styling_background: Lazy<HashMap<String, Background>>,
-    pub styling_border: Lazy<HashMap<String, Border>>,
+    pub styling_background: Lazy<HashMap<usize, Background>>,
+    pub styling_border: Lazy<HashMap<usize, Border>>,
+    pub styling_shadow: Lazy<HashMap<usize, Shadow>>,
 }
 
 pub static STATE: Mutex<State> = Mutex::new(
@@ -141,6 +139,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         
         styling_background: Lazy::new(||HashMap::new()),
         styling_border: Lazy::new(||HashMap::new()),
+        styling_shadow: Lazy::new(||HashMap::new()),
     }
 );
 
@@ -340,7 +339,7 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         center_xy=false, clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
                         align_x=IpgContainerAlignment::Center, align_y=IpgContainerAlignment::Center,
-                        padding=DEFAULT_PADDING.to_vec(), show=true, style=None
+                        padding=DEFAULT_PADDING.to_vec(), show=true
                        ))]
     fn add_container(&mut self,
                         window_id: String,
@@ -359,7 +358,6 @@ impl IPG {
                         align_y: IpgContainerAlignment, 
                         padding: Vec<f64>, 
                         show: bool,
-                        style: Option<PyObject>,
                         ) -> PyResult<usize>
     {
         self.id += 1;
@@ -391,7 +389,6 @@ impl IPG {
                                                 align_y,
                                                 center_xy,
                                                 clip,
-                                                style,
                                             )));
 
         drop(state);
@@ -1531,50 +1528,91 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = if rgba.is_some() {
-            let rgba = rgba.unwrap();
-            let mut color: Color = Color::from_rgba(rgba[0], rgba[1], rgba[2], rgba[3] * alpha);
-            if invert {
-                color.invert()
-            }
-            color
-        } else if color.is_some() {
-            let mut color: Color = match_ipg_color(color.unwrap());
-            color.scale_alpha(alpha);
-            if invert {
-                color.invert()
-            }
-            color
-        } else {
-            Color::TRANSPARENT
-        };
+        let color: Color = get_color(rgba, color, alpha, invert);
 
         let background = Background::from(color);
 
+        let cont_id = get_container_id_via_string(parent_id);
+
         let mut state = access_state();
        
-        state.styling_background.insert(parent_id, background);
+        state.styling_background.insert(cont_id, background);
+
+        drop(state);
 
         Ok(id)
     }
 
     #[pyo3(signature = (parent_id, rgba=None, color=None, 
-        invert=false, alpha=1.0, gen_id=None))]
+        invert=false, alpha=1.0, width=1.0, radius=vec![5.0], gen_id=None))]
     fn add_styling_border(&mut self,
                             parent_id: String,
                             rgba: Option<[f32; 4]>,
                             color: Option<IpgColor>,
                             invert: bool,
                             alpha: f32,
+                            width: f32,
+                            radius: Vec<f32>,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
 
+        let color: Color = get_color(rgba, color, alpha, invert);
 
+        let radius: Radius = if radius.len() == 1 {
+            Radius::from([radius[0]; 4])
+        } else if radius.len() == 4 {
+            Radius::from([radius[0], radius[1], radius[2], radius[3]])
+        } else {
+            panic!("Radius must have a type of list with either 1 or 4 items")
+        };
 
+        let border: Border = Border { color, width, radius };
+
+        let cont_id = get_container_id_via_string(parent_id);
+
+        let mut state = access_state();
+       
+        state.styling_border.insert(cont_id, border);
+
+        drop(state);
 
         Ok(id) 
+    }
+
+    #[pyo3(signature = (parent_id, rgba=None, color=None, 
+                        invert=false, alpha=1.0, offset_x=0.0, offset_y=0.0, 
+                        blur_radius=0.0, gen_id=None))]
+    fn add_styling_shadow(&mut self,
+                            parent_id: String,
+                            rgba: Option<[f32; 4]>,
+                            color: Option<IpgColor>,
+                            invert: bool,
+                            alpha: f32,
+                            offset_x: f32,
+                            offset_y: f32,
+                            blur_radius: f32,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let color: Color = get_color(rgba, color, alpha, invert);
+
+        let offset: Vector = Vector {x: offset_x, y: offset_y};
+
+        let shadow: Shadow = Shadow { color, offset, blur_radius };
+
+        let cont_id = get_container_id_via_string(parent_id);
+
+        let mut state = access_state();
+       
+        state.styling_shadow.insert(cont_id, shadow);
+
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (parent_id, svg_path, gen_id=None, 

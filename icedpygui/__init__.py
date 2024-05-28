@@ -3,6 +3,7 @@ from .icedpygui import IpgAlignment
 from .icedpygui import IpgButtonStyles, IpgButtonArrows, IpgButtonParams
 from .icedpygui import IpgCardStyles, IpgCardParams
 from .icedpygui import IpgCheckboxParams
+from .icedpygui import IpgColor
 from .icedpygui import IpgColumnAlignment
 from .icedpygui import IpgContainerAlignment, IpgContainerTheme
 from .icedpygui import IpgDatePickerParams

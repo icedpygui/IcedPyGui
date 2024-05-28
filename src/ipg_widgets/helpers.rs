@@ -342,3 +342,19 @@ pub fn try_extract_ipg_alignment(value: PyObject) -> IpgAlignment {
     })
 }
 
+pub fn get_container_id_via_string(id: String) -> usize {
+
+    let state = access_state();
+
+    let container_id_opt = state.container_str_ids.get(&id);
+
+    let container_id: usize = if container_id_opt.is_some() {
+        *container_id_opt.unwrap()
+    } else {
+        panic!("add_styling_background: parent_id not found.")
+    };
+
+    drop(state);
+
+    container_id
+}
