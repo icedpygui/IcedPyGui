@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use crate::style::styling::lighten;
 use crate::{access_callbacks, access_state, app};
 use super::helpers::{get_height, get_padding, get_width, 
                     try_extract_f64, try_extract_string, 
@@ -370,7 +371,7 @@ pub fn get_button_style(style_opt: Option<PyObject>,
     }
 }
 
-fn get_custom_styling(_theme: &Theme, _status: Status, id: usize) -> button::Style {
+fn get_custom_styling(_theme: &Theme, status: Status, id: usize) -> button::Style {
     
     let state = access_state();
 
@@ -378,10 +379,16 @@ fn get_custom_styling(_theme: &Theme, _status: Status, id: usize) -> button::Sty
     let border_opt = state.styling_border.get(&id);
     let shadow_opt = state.styling_shadow.get(&id);
     let text_color_opt = state.styling_text_color.get(&id);
+    let bg_color_opt = state.styling_background_color.get(&id);
 
     let background = match background_opt {
         Some(bg) => *bg,
         None => Background::Color(Color::TRANSPARENT),
+    };
+
+    let bg_color = match bg_color_opt {
+        Some(bg) => *bg,
+        None => Color::TRANSPARENT,
     };
 
     let border = match border_opt {
@@ -399,15 +406,21 @@ fn get_custom_styling(_theme: &Theme, _status: Status, id: usize) -> button::Sty
         None => Default::default(),
     };
 
+    let base_style = button::Style {
+            background: Some(background),
+            border,
+            shadow,
+            text_color,
+            };
 
-    let style = button::Style {
-        background: Some(background),
-        border,
-        shadow,
-        text_color,
-        };
-
-    style
+    match status {
+        Status::Active | Status::Pressed => base_style,
+        Status::Hovered => Style {
+            background: Some(Background::Color(lighten(bg_color, 0.05))),
+            ..base_style
+        },
+        Status::Disabled => disabled(base_style),
+    }
 
 }
 

@@ -112,9 +112,11 @@ pub struct State {
     pub events: Vec<IpgEvents>,
     
     pub styling_background: Lazy<HashMap<usize, Background>>,
+    pub styling_background_color: Lazy<HashMap<usize, Color>>,
     pub styling_border: Lazy<HashMap<usize, Border>>,
     pub styling_shadow: Lazy<HashMap<usize, Shadow>>,
     pub styling_text_color: Lazy<HashMap<usize, Color>>,
+    
 }
 
 pub static STATE: Mutex<State> = Mutex::new(
@@ -139,6 +141,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         events: vec![],
         
         styling_background: Lazy::new(||HashMap::new()),
+        styling_background_color: Lazy::new(||HashMap::new()),
         styling_border: Lazy::new(||HashMap::new()),
         styling_shadow: Lazy::new(||HashMap::new()),
         styling_text_color: Lazy::new(||HashMap::new()),
@@ -1539,9 +1542,9 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, alpha, invert);
+        let iced_color: Color = get_color(rgba, color, alpha, invert);
 
-        let background = Background::from(color);
+        let background = Background::from(iced_color);
 
         let cont_id = if parent_id.is_some() {
                 get_container_id_via_string(parent_id.unwrap())
@@ -1555,6 +1558,10 @@ impl IPG {
        
         state.styling_background.insert(cont_id, background);
 
+        
+        state.styling_background_color.insert(cont_id, iced_color);
+        
+        
         drop(state);
 
         Ok(id)

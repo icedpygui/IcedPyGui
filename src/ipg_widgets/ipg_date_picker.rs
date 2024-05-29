@@ -2,7 +2,7 @@
 
 use crate::app::{Message, self};
 use crate::access_callbacks;
-use super::ipg_container::date_picker_container;
+use crate::style::styling::date_picker_container;
 use super::ipg_modal::IpgModal;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
