@@ -1,25 +1,25 @@
 #![allow(unused)]
-use std::collections::{BTreeMap, HashMap};
 
 use iced::advanced::graphics::core::Element;
-use iced::widget::{button, row, text, Button, Container, Row, Text};
-use iced::{alignment, Border, Color, Length, Renderer, Theme};
+use iced::border::Radius;
+use iced::widget::button::Status;
+use iced::widget::{button, row, Button, Container, Row, Text};
+use iced::{alignment, Background, Border, Color, Length, Renderer, Theme};
 
-use crate::graphics::{BOOTSTRAP_FONT, BOOTSTRAP_FONT_BYTES};
+use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::iced_aw_widgets::menu::style::{Appearance, MenuBarStyle, StyleSheet};
 use crate::iced_aw_widgets::menu::menu_tree::{Item, Menu};
 use crate::iced_aw_widgets::menu::menu_bar::MenuBar;
 use crate::iced_aw_widgets::menu::common::{DrawPath, InnerBounds};
 use crate::iced_aw_widgets::menu::quad;
+use crate::style::styling::lighten;
 
-use pyo3::types::PyDict;
 use pyo3::{pyclass, PyObject, Python};
 
 use crate::{access_callbacks, app};
 
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
-use super::helpers::{convert_vecs, try_extract_dict, try_extract_vec_f32, try_extract_vec_f64, try_extract_vec_str};
-use super::ipg_button::{self, theme_primary};
+use super::helpers::{try_extract_dict, try_extract_vec_f32};
 
 #[derive(Debug, Clone)]
 pub struct IpgMenu {
@@ -249,7 +249,7 @@ fn menu_button(label: String) -> Element<'static, MenuMessage, Theme, Renderer> 
                                     .on_press(MenuMessage::ItemPress(label))
                                     .width(Length::Fill)
                                     .style(move|theme: &Theme, status| {
-                                        theme_primary(theme, status, 15.0)})
+                                        get_styling(theme, status)})
                                     .into();
     btn
 }
@@ -266,7 +266,7 @@ fn menu_bar_button(label: String, width: f32) -> Element<'static, MenuMessage, T
                                     .on_press(MenuMessage::ItemPress(label))
                                     .width(Length::Fixed(width))
                                     .style(move|theme: &Theme, status| {
-                                        theme_primary(theme, status, 15.0)})
+                                        get_styling(theme, status)})
                                     .into();
     btn
 }
@@ -388,7 +388,7 @@ pub fn menu_item_update(mn: &mut IpgMenu,
         IpgMenuParams::Separators => {
             let extracted_seps = try_extract_separators(value);
             // If never set, equate and return
-            let mut menu_seps = match mn.separators.clone() {
+            let menu_seps = match mn.separators.clone() {
                 Some(seps) => seps,
                 None => {
                     mn.separators = Some(extracted_seps);
@@ -421,7 +421,7 @@ fn delete_insert_separators(extracted_seps: &Vec<(usize, usize, IpgMenuSepTypes)
     let mut deleted = false;
     let mut replaced = false;
     for (es_idx, (es_br_idx, es_it_idx, es_tp)) in extracted_seps.iter().enumerate() {
-        for (mn_idx, (mn_br_idx, mn_it_idx, mn_tp)) in menu_seps.iter().enumerate() {
+        for (mn_idx, (mn_br_idx, mn_it_idx, _mn_tp)) in menu_seps.iter().enumerate() {
             if mn_br_idx == es_br_idx && mn_it_idx == es_it_idx {
                 match es_tp {
                     IpgMenuSepTypes::Line => {
@@ -545,21 +545,6 @@ fn labeled_separator(label: String) -> Element<'static, MenuMessage, iced::Theme
     
 }
 
-fn circle(color: Color) -> quad::Quad {
-    let radius = 10.0;
-
-    quad::Quad {
-        quad_color: color.into(),
-        inner_bounds: InnerBounds::Square(radius * 2.0),
-        quad_border: Border {
-            radius: [radius; 4].into(),
-            ..Default::default()
-        },
-        height: Length::Fixed(20.0),
-        ..Default::default()
-    }
-}
-
 
 #[test]
 fn test_check_label_separators() {
@@ -645,4 +630,35 @@ fn test_delete_insert_separators() {
                     (2, 0, IpgMenuSepTypes::Label),
                     (1, 0, IpgMenuSepTypes::Dot)], menu_seps);
 
+}
+
+fn get_styling(_theme: &Theme, status: Status) -> button::Style {
+
+    let color = match_ipg_color(IpgColor::PRIMARY);
+
+    let base_style = button::Style {
+        background: Some(Background::Color(color)),
+        border: iced::Border { color: color, width: 1.0, radius: Radius::from([10.0; 4]) },
+        text_color: match_ipg_color(IpgColor::ANTIQUE_WHITE),
+        ..Default::default()
+        };
+
+    match status {
+        Status::Active | Status::Pressed => base_style,
+        Status::Hovered => button::Style {
+            background: Some(Background::Color(lighten(color, 0.05))),
+            ..base_style
+        },
+        Status::Disabled => disabled(base_style),
+    }
+}
+
+fn disabled(style: button::Style) -> button::Style {
+    button::Style {
+        background: style
+            .background
+            .map(|background| background.scale_alpha(0.5)),
+        text_color: style.text_color.scale_alpha(0.5),
+        ..style
+    }
 }

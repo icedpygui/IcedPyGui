@@ -1,5 +1,6 @@
-#![allow(dead_code)]
-
+// #![allow(dead_code)]
+#![allow(unused_assignments)]
+use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::style::styling::lighten;
 use crate::{access_callbacks, access_state, app};
 use super::helpers::{get_height, get_padding, get_width, 
@@ -11,7 +12,6 @@ use super::callbacks::{
 };
 
 use iced::border::Radius;
-use iced::theme::palette;
 use iced::widget::button::{self, Status, Style};
 use pyo3::{pyclass, PyObject, Python};
 
@@ -32,9 +32,10 @@ pub struct IpgButton {
     pub height: Length,
     pub padding: Padding,
     pub clip: bool,
-    pub corner_radius: f32,
-    pub style: Option<PyObject>,
-    pub style_custom: bool,
+    pub style_background: Option<String>,
+    pub style_border: Option<String>,
+    pub style_shadow: Option<String>,
+    pub style_text_color: Option<String>,
     pub arrow_style: Option<PyObject>,
 }
 
@@ -49,9 +50,10 @@ impl IpgButton {
         height: Length,
         padding: Padding,
         clip: bool,
-        corner_radius: f32,
-        style: Option<PyObject>,
-        style_custom: bool,
+        style_background: Option<String>,
+        style_border: Option<String>,
+        style_shadow: Option<String>,
+        style_text_color: Option<String>,
         arrow_style: Option<PyObject>,
         ) -> Self {
         Self {
@@ -63,9 +65,10 @@ impl IpgButton {
             height,
             padding,
             clip,
-            corner_radius,
-            style,
-            style_custom,
+            style_background,
+            style_border,
+            style_shadow,
+            style_text_color,
             arrow_style,
         }
     }
@@ -77,15 +80,15 @@ pub enum BTNMessage {
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgButtonStyles {
-    Primary,
-    Secondary,
-    Positive,
-    Destructive,
-    Text,
-}
+// #[derive(Debug, Clone)]
+// #[pyclass]
+// pub enum IpgButtonStyles {
+//     Primary,
+//     Secondary,
+//     Positive,
+//     Destructive,
+//     Text,
+// }
 
 
 pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
@@ -104,8 +107,6 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
         };
     }
 
-    let radius = btn.corner_radius.clone();
-
     let ipg_btn: Element<BTNMessage> = Button::new(label)
                                 .height(btn.height)
                                 .padding(btn.padding)
@@ -113,11 +114,12 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
                                 .on_press(BTNMessage::OnPress)
                                 .clip(btn.clip)
                                 .style(move|theme: &Theme, status| {
-                                    if btn.style_custom {
-                                        get_custom_styling(theme, status, btn.id)
-                                    } else {
-                                        get_button_style(btn.style.clone(), theme, status, radius)
-                                    }})
+                                    get_styling(theme, status, 
+                                                btn.style_background.clone(), 
+                                                btn.style_border.clone(), 
+                                                btn.style_shadow.clone(),
+                                                btn.style_text_color.clone())
+                                    })
                                 .into();
 
     ipg_btn.map(move |message| app::Message::Button(btn.id, message))
@@ -192,13 +194,11 @@ pub fn process_callback(wco: WidgetCallbackOut)
 #[pyclass]
 pub enum IpgButtonParams {
     ArrowStyle,
-    CornerRadius,
     Height,
     HeightFill,
     Label,
     Padding,
     Show,
-    Style,
     Width,
     WidthFill,
 }
@@ -214,9 +214,6 @@ pub fn button_item_update(btn: &mut IpgButton,
     match update {
        IpgButtonParams::ArrowStyle => {
             btn.arrow_style = Some(value);
-        },
-        IpgButtonParams::CornerRadius => {
-            btn.corner_radius = try_extract_f64(value) as f32;
         },
         IpgButtonParams::Label => {
             btn.label = try_extract_string(value);
@@ -236,9 +233,6 @@ pub fn button_item_update(btn: &mut IpgButton,
         IpgButtonParams::Show => {
             btn.show = try_extract_boolean(value);
         },
-        IpgButtonParams::Style => {
-            btn.style = Some(value);
-        },
         IpgButtonParams::Width => {
             let val = try_extract_f64(value);
             btn.width = get_width(Some(val as f32), false);
@@ -252,93 +246,93 @@ pub fn button_item_update(btn: &mut IpgButton,
 }
 
 
-/// A primary button; denoting a main action.
-pub fn theme_primary(theme: &Theme, status: Status, radius: f32) -> Style {
-    let palette = theme.extended_palette();
-    let base = styled(palette.primary.strong, radius);
+// /// A primary button; denoting a main action.
+// pub fn theme_primary(theme: &Theme, status: Status, radius: f32) -> Style {
+//     let palette = theme.extended_palette();
+//     let base = styled(palette.primary.strong, radius);
 
-    match status {
-        Status::Active | Status::Pressed => base,
-        Status::Hovered => Style {
-            background: Some(Background::Color(palette.primary.base.color)),
-            ..base
-        },
-        Status::Disabled => disabled(base),
-    }
-}
+//     match status {
+//         Status::Active | Status::Pressed => base,
+//         Status::Hovered => Style {
+//             background: Some(Background::Color(palette.primary.base.color)),
+//             ..base
+//         },
+//         Status::Disabled => disabled(base),
+//     }
+// }
 
-/// A secondary button; denoting a complementary action.
-pub fn theme_secondary(theme: &Theme, status: Status, radius: f32) -> Style {
-    let palette = theme.extended_palette();
-    let base = styled(palette.secondary.base, radius);
+// /// A secondary button; denoting a complementary action.
+// pub fn theme_secondary(theme: &Theme, status: Status, radius: f32) -> Style {
+//     let palette = theme.extended_palette();
+//     let base = styled(palette.secondary.base, radius);
 
-    match status {
-        Status::Active | Status::Pressed => base,
-        Status::Hovered => Style {
-            background: Some(Background::Color(palette.secondary.strong.color)),
-            ..base
-        },
-        Status::Disabled => disabled(base),
-    }
-}
+//     match status {
+//         Status::Active | Status::Pressed => base,
+//         Status::Hovered => Style {
+//             background: Some(Background::Color(palette.secondary.strong.color)),
+//             ..base
+//         },
+//         Status::Disabled => disabled(base),
+//     }
+// }
 
-/// A success button; denoting a good outcome.
-pub fn theme_success(theme: &Theme, status: Status, radius: f32) -> Style {
-    let palette = theme.extended_palette();
-    let base = styled(palette.success.base, radius);
+// /// A success button; denoting a good outcome.
+// pub fn theme_success(theme: &Theme, status: Status, radius: f32) -> Style {
+//     let palette = theme.extended_palette();
+//     let base = styled(palette.success.base, radius);
 
-    match status {
-        Status::Active | Status::Pressed => base,
-        Status::Hovered => Style {
-            background: Some(Background::Color(palette.success.strong.color)),
-            ..base
-        },
-        Status::Disabled => disabled(base),
-    }
-}
+//     match status {
+//         Status::Active | Status::Pressed => base,
+//         Status::Hovered => Style {
+//             background: Some(Background::Color(palette.success.strong.color)),
+//             ..base
+//         },
+//         Status::Disabled => disabled(base),
+//     }
+// }
 
-/// A danger button; denoting a destructive action.
-pub fn theme_danger(theme: &Theme, status: Status, radius: f32) -> Style {
-    let palette = theme.extended_palette();
-    let base = styled(palette.danger.base, radius);
+// /// A danger button; denoting a destructive action.
+// pub fn theme_danger(theme: &Theme, status: Status, radius: f32) -> Style {
+//     let palette = theme.extended_palette();
+//     let base = styled(palette.danger.base, radius);
 
-    match status {
-        Status::Active | Status::Pressed => base,
-        Status::Hovered => Style {
-            background: Some(Background::Color(palette.danger.strong.color)),
-            ..base
-        },
-        Status::Disabled => disabled(base),
-    }
-}
+//     match status {
+//         Status::Active | Status::Pressed => base,
+//         Status::Hovered => Style {
+//             background: Some(Background::Color(palette.danger.strong.color)),
+//             ..base
+//         },
+//         Status::Disabled => disabled(base),
+//     }
+// }
 
-/// A text button; useful for links.
-pub fn theme_text(theme: &Theme, status: Status) -> Style {
-    let palette = theme.extended_palette();
+// /// A text button; useful for links.
+// pub fn theme_text(theme: &Theme, status: Status) -> Style {
+//     let palette = theme.extended_palette();
 
-    let base = Style {
-        text_color: palette.background.base.text,
-        ..Style::default()
-    };
+//     let base = Style {
+//         text_color: palette.background.base.text,
+//         ..Style::default()
+//     };
 
-    match status {
-        Status::Active | Status::Pressed => base,
-        Status::Hovered => Style {
-            text_color: palette.background.base.text.scale_alpha(0.8),
-            ..base
-        },
-        Status::Disabled => disabled(base),
-    }
-}
+//     match status {
+//         Status::Active | Status::Pressed => base,
+//         Status::Hovered => Style {
+//             text_color: palette.background.base.text.scale_alpha(0.8),
+//             ..base
+//         },
+//         Status::Disabled => disabled(base),
+//     }
+// }
 
-fn styled(pair: palette::Pair, radius: f32) -> Style {
-    Style {
-        background: Some(Background::Color(pair.color)),
-        text_color: pair.text,
-        border: Border::rounded(radius),
-        ..Style::default()
-    }
-}
+// fn styled(pair: palette::Pair, radius: f32) -> Style {
+//     Style {
+//         background: Some(Background::Color(pair.color)),
+//         text_color: pair.text,
+//         border: Border::rounded(radius),
+//         ..Style::default()
+//     }
+// }
 
 fn disabled(style: Style) -> Style {
     Style {
@@ -350,73 +344,132 @@ fn disabled(style: Style) -> Style {
     }
 }
 
-pub fn get_button_style(style_opt: Option<PyObject>, 
-                                theme: &Theme, 
-                                status: Status, 
-                                radius: f32) -> Style {
+// pub fn get_button_style(style_opt: Option<PyObject>, 
+//                                 theme: &Theme, 
+//                                 status: Status, 
+//                                 radius: f32) -> Style {
 
-    let style_obj = match style_opt {
-        Some(st) => st,
-        None => return theme_primary(theme, status, radius),
-    };
+//     let style_obj = match style_opt {
+//         Some(st) => st,
+//         None => return theme_primary(theme, status, radius),
+//     };
 
-    let ipg_btn_style = try_extract_button_style(style_obj);
+//     let ipg_btn_style = try_extract_button_style(style_obj);
 
-    match ipg_btn_style {
-        IpgButtonStyles::Primary => theme_primary(theme, status, radius),
-        IpgButtonStyles::Secondary => theme_secondary(theme, status, radius),
-        IpgButtonStyles::Positive => theme_success(theme, status, radius),
-        IpgButtonStyles::Destructive => theme_danger(theme, status, radius),
-        IpgButtonStyles::Text => theme_text(theme, status),
-    }
-}
+//     match ipg_btn_style {
+//         IpgButtonStyles::Primary => theme_primary(theme, status, radius),
+//         IpgButtonStyles::Secondary => theme_secondary(theme, status, radius),
+//         IpgButtonStyles::Positive => theme_success(theme, status, radius),
+//         IpgButtonStyles::Destructive => theme_danger(theme, status, radius),
+//         IpgButtonStyles::Text => theme_text(theme, status),
+//     }
+// }
 
-fn get_custom_styling(_theme: &Theme, status: Status, id: usize) -> button::Style {
+pub fn get_styling(_theme: &Theme, status: Status, 
+                background: Option<String>, 
+                border: Option<String>, 
+                shadow: Option<String>,
+                text_color: Option<String>) 
+                -> button::Style {
     
     let state = access_state();
 
-    let background_opt = state.styling_background.get(&id);
-    let border_opt = state.styling_border.get(&id);
-    let shadow_opt = state.styling_shadow.get(&id);
-    let text_color_opt = state.styling_text_color.get(&id);
-    let bg_color_opt = state.styling_background_color.get(&id);
+    let background_opt = if background.is_some() {
+        state.styling_background.get(&background.unwrap())
+    } else {
+        None
+    };
+    
+    let mut bg_color = match_ipg_color(IpgColor::PRIMARY);
+    let mut background = Background::Color(bg_color);
+    let mut hover_factor = 0.05;
 
-    let background = match background_opt {
-        Some(bg) => *bg,
-        None => Background::Color(Color::TRANSPARENT),
+    match background_opt {
+        Some(bg) => {
+            bg_color = bg.color;
+            hover_factor = bg.hover_factor;
+        },
+        None => (),
+    }
+
+    background = Background::Color(bg_color);
+
+
+    let mut border_color = Color::TRANSPARENT;
+    let mut radius = Radius::from([5.0; 4]);
+    let mut border_width = 1.0;
+
+    let border_opt = if border.is_some() {
+        state.styling_border.get(&border.unwrap())
+    } else {
+        None
     };
 
-    let bg_color = match bg_color_opt {
-        Some(bg) => *bg,
-        None => Color::TRANSPARENT,
+    match border_opt {
+        Some(bd) => {
+            border_color = bd.color;
+            radius = bd.radius;
+            border_width = bd.width;
+        },
+        None => (),
+    }
+
+    let border = Border{ color: border_color, width: border_width, radius };
+
+
+    let mut shadow_color: Color = Color::TRANSPARENT;
+    let mut offset_x: f32 = 0.0;
+    let mut offset_y: f32 = 0.0;
+    let mut blur_radius: f32 = 0.0;
+
+    let shadow_opt = if shadow.is_some() {
+        state.styling_shadow.get(&shadow.unwrap())
+    } else {
+        None
     };
 
-    let border = match border_opt {
-        Some(bd) => *bd,
-        None => Border{color: Color::TRANSPARENT, radius: Radius::from([5.0; 4]), width: 1.0},
-    };
+    match shadow_opt {
+        Some(sh) => {
+            shadow_color = sh.color;
+            offset_x = sh.offset_x;
+            offset_y = sh.offset_y;
+            blur_radius =sh.blur_radius;
+        },
+        None => (),
+    }
 
-    let shadow = match shadow_opt {
-        Some(sh) => *sh,
-        None => Default::default(),
-    };
+    let shadow = iced::Shadow { color: shadow_color, offset: 
+                                        iced::Vector { x: offset_x, y: offset_y }, 
+                                        blur_radius };
 
-    let text_color: Color = match text_color_opt {
-        Some(tc) => *tc,
-        None => Default::default(),
+    let text_color_opt = if text_color.is_some() {
+        state.styling_text_color.get(&text_color.unwrap())
+    } else {
+        None
     };
+    
+    let mut text_color = match_ipg_color(IpgColor::BLACK);
+
+
+    match text_color_opt {
+        Some(tc) => {
+            text_color = tc.color;
+        },
+        None => (),
+    }
 
     let base_style = button::Style {
             background: Some(background),
             border,
             shadow,
             text_color,
+            ..Default::default()
             };
 
     match status {
         Status::Active | Status::Pressed => base_style,
         Status::Hovered => Style {
-            background: Some(Background::Color(lighten(bg_color, 0.05))),
+            background: Some(Background::Color(lighten(bg_color, hover_factor))),
             ..base_style
         },
         Status::Disabled => disabled(base_style),
@@ -424,17 +477,17 @@ fn get_custom_styling(_theme: &Theme, status: Status, id: usize) -> button::Styl
 
 }
 
-pub fn try_extract_button_style(style_obj: PyObject) -> IpgButtonStyles {
+// pub fn try_extract_button_style(style_obj: PyObject) -> IpgButtonStyles {
 
-    Python::with_gil(|py| {
-        let res = style_obj.extract::<IpgButtonStyles>(py);
+//     Python::with_gil(|py| {
+//         let res = style_obj.extract::<IpgButtonStyles>(py);
             
-        match res {
-            Ok(st) => st,
-            Err(_) => panic!("Button style extraction failed."),
-        }
-    })  
-}
+//         match res {
+//             Ok(st) => st,
+//             Err(_) => panic!("Button style extraction failed."),
+//         }
+//     })  
+// }
 
 pub fn try_extract_button_arrow(arrow_opt: Option<PyObject>) -> Option<String> {
 

@@ -1,18 +1,22 @@
-
+//! date_picker
 
 use crate::app::{Message, self};
 use crate::access_callbacks;
-use crate::style::styling::date_picker_container;
+use crate::graphics::colors::{match_ipg_color, IpgColor};
+use crate::style::styling::{date_picker_container, lighten};
 use super::ipg_modal::IpgModal;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 use crate::ICON_FONT_BOOT;
-use super::helpers::{get_padding, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_vec_f64, DATE_FORMATS, DAYS, MONTH_NAMES, WEEKDAYS};
-use super::ipg_button::{theme_primary, theme_success};
+use super::helpers::{get_padding, try_extract_boolean, 
+    try_extract_f64, try_extract_string, try_extract_vec_f64, 
+    DATE_FORMATS, DAYS, MONTH_NAMES, WEEKDAYS};
 
 use iced::advanced::graphics::core::Element;
-use iced::{Length, Padding, Renderer, Theme};
+use iced::border::Radius;
+use iced::widget::button::{self, Status};
+use iced::{Background, Length, Padding, Renderer, Theme};
 use iced::alignment::{self, Alignment};
 use iced::widget::{Button, Column, Container, PickList, Row, Space, Text};
 
@@ -372,9 +376,9 @@ fn get_calendar_days(id: usize, selected_year: i32,
                                     .padding(0)
                                     .style(move|theme: &Theme, status| {
                                             if day == selected_day {
-                                                theme_success(theme, status, 10.0)
+                                                get_styling(theme, status, "success".to_string())
                                             } else {
-                                                theme_primary(theme, status, 10.0)
+                                                get_styling(theme, status, "primary".to_string())
                                             }}
                                         )
                                     .into();
@@ -634,4 +638,40 @@ pub fn try_extract_date_picker_update(update_obj: PyObject) -> IpgDatePickerPara
             Err(_) => panic!("DatePicker update extraction failed"),
         }
     })
+}
+
+
+fn get_styling(_theme: &Theme, status: Status, style: String) -> button::Style{
+
+    let mut color = match_ipg_color(IpgColor::PRIMARY);
+
+    if style == "success" {
+        color = match_ipg_color(IpgColor::SUCCESS);
+    }
+
+    let base_style = button::Style {
+        background: Some(Background::Color(color)),
+        border: iced::Border { color: color, width: 1.0, radius: Radius::from([10.0; 4]) },
+        text_color: match_ipg_color(IpgColor::ANTIQUE_WHITE),
+        ..Default::default()
+        };
+
+    match status {
+        Status::Active | Status::Pressed => base_style,
+        Status::Hovered => button::Style {
+            background: Some(Background::Color(lighten(color, 0.05))),
+            ..base_style
+        },
+        Status::Disabled => disabled(base_style),
+    }
+}
+
+fn disabled(style: button::Style) -> button::Style {
+    button::Style {
+        background: style
+            .background
+            .map(|background| background.scale_alpha(0.5)),
+        text_color: style.text_color.scale_alpha(0.5),
+        ..style
+    }
 }

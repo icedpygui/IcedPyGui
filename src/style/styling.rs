@@ -8,42 +8,133 @@ use palette::rgb::Rgb;
 use crate::access_state;
 
 
+#[derive(Debug, Clone)]
+pub struct StyleBackground {
+    pub id: usize,
+    pub color: Color,
+    pub hover_factor: f32,
+}
 
-pub fn get_container_styling(_theme: &Theme, id: usize) -> container::Style {
+impl StyleBackground {
+    pub fn new(
+        id: usize,
+        color: Color,
+        hover_factor: f32,
+    ) -> Self {
+        Self {
+            id,
+            color,
+            hover_factor,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct StyleBorder {
+    pub id: usize,
+    pub color: Color,
+    pub radius: Radius,
+    pub width: f32,
+}
+
+impl StyleBorder {
+    pub fn new(
+        id: usize,
+        color: Color,
+        radius: Radius,
+        width: f32,
+    ) -> Self {
+        Self {
+            id,
+            color,
+            radius,
+            width,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct StyleShadow {
+    pub id: usize,
+    pub color: Color,
+    pub offset_x: f32,
+    pub offset_y: f32,
+    pub blur_radius: f32,
+}
+
+impl StyleShadow {
+    pub fn new(
+        id: usize,
+        color: Color,
+        offset_x: f32,
+        offset_y: f32,
+        blur_radius: f32,
+    ) -> Self {
+        Self {
+            id,
+            color,
+            offset_x,
+            offset_y,
+            blur_radius,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct StyleTextColor {
+    pub id: usize,
+    pub color: Color,
+}
+
+impl StyleTextColor {
+    pub fn new(
+        id: usize,
+        color: Color,
+    ) -> Self {
+        Self {
+            id,
+            color,
+        }
+    }
+}
+
+pub fn get_container_styling(_theme: &Theme, _style_id: Option<String>) -> container::Style {
     
-    let state = access_state();
+    // let state = access_state();
 
-    let background_opt = state.styling_background.get(&id);
-    let border_opt = state.styling_border.get(&id);
-    let shadow_opt = state.styling_shadow.get(&id);
-    let text_color_opt = state.styling_text_color.get(&id);
+    // let background_opt = state.styling_background.get(&id);
+    // let border_opt = state.styling_border.get(&id);
+    // let shadow_opt = state.styling_shadow.get(&id);
+    // let text_color_opt = state.styling_text_color.get(&id);
 
-    let background = match background_opt {
-        Some(bg) => *bg,
-        None => Background::Color(Color::TRANSPARENT),
-    };
+    // let background = match background_opt {
+    //     Some(bg) => *bg,
+    //     None => Background::Color(Color::TRANSPARENT),
+    // };
 
-    let border = match border_opt {
-        Some(bd) => *bd,
-        None => Border{color: Color::TRANSPARENT, radius: Radius::from([5.0; 4]), width: 1.0},
-    };
+    // let border = match border_opt {
+    //     Some(bd) => *bd,
+    //     None => Border{color: Color::TRANSPARENT, radius: Radius::from([5.0; 4]), width: 1.0},
+    // };
 
-    let shadow = match shadow_opt {
-        Some(sh) => *sh,
-        None => Default::default(),
-    };
+    // let shadow = match shadow_opt {
+    //     Some(sh) => *sh,
+    //     None => Default::default(),
+    // };
 
-    let text_color = match text_color_opt {
-        Some(tc) => Some(*tc),
-        None => None,
-    };
+    // let text_color = match text_color_opt {
+    //     Some(tc) => Some(*tc),
+    //     None => None,
+    // };
 
+    let background = Background::Color(Color::TRANSPARENT);
 
     let style = container::Style {
         background: Some(background),
-        border,
-        shadow,
-        text_color,
+        ..Default::default()
+        // border,
+        // shadow,
+        // text_color,
         };
 
     style

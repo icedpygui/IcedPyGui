@@ -9,8 +9,6 @@ use pyo3::pyclass;
 use crate::app::Message;
 use crate::style::styling::get_container_styling;
 
-
-
 #[derive(Debug, Clone)]
 pub struct IpgContainer {
     pub id: usize,
@@ -25,6 +23,7 @@ pub struct IpgContainer {
     pub align_y: IpgContainerAlignment,
     pub center_xy: bool,
     pub clip: bool,
+    pub style_id: Option<String>,
 }
 
 impl IpgContainer {
@@ -54,6 +53,7 @@ impl IpgContainer {
             align_y,
             center_xy,
             clip,
+            style_id: None,
         }
     }
 }
@@ -77,7 +77,7 @@ pub fn construct_container(con: IpgContainer, content: Vec<Element<'static, Mess
                 .align_x(align_x)
                 .align_y(align_y)
                 .clip(con.clip)
-                .style(move|Theme|get_container_styling(&Theme, con.id))
+                .style(move|Theme|get_container_styling(&Theme, con.style_id.clone()))
                 .into();
     cont.into()
 }

@@ -8,7 +8,7 @@ use pyo3::PyObject;
 
 use iced::multi_window::Application;
 use iced::window::{self, Position};
-use iced::{Background, Border, Color, Font, Length, Point, Settings, Shadow, Size, Theme, Vector};
+use iced::{Color, Font, Length, Point, Settings, Size, Theme};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
@@ -25,7 +25,7 @@ mod graphics;
 mod style;
 
 
-use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonStyles, IpgButtonParams};
+use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonParams};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
@@ -42,8 +42,8 @@ use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
 use ipg_widgets::ipg_rule::IpgRule;
 use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, 
                                     IpgScrollableDirection, IpgScrollableParams};
-use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText, IpgSelectableTextHorAlign, 
-                                        IpgSelectableTextParams, IpgSelectableTextVertAlign};
+use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText, 
+    IpgSelectableTextHorAlign, IpgSelectableTextParams, IpgSelectableTextVertAlign};
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParams};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_svg::{IpgSvg, IpgSvgParams, svg_item_update};
@@ -53,13 +53,16 @@ use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInput, IpgTextI
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParams};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
-use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, IpgWindowParams, IpgWindowThemes};
+use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, 
+    IpgWindowParams, IpgWindowThemes};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 
-use ipg_widgets::helpers::{check_for_dup_container_ids, get_container_id_via_string, get_height, get_horizontal_alignment, get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
+use ipg_widgets::helpers::{check_for_dup_container_ids, 
+    get_height, get_horizontal_alignment, 
+    get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-
+use style::styling::{StyleBackground, StyleBorder, StyleShadow, StyleTextColor};
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
@@ -111,11 +114,10 @@ pub struct State {
     
     pub events: Vec<IpgEvents>,
     
-    pub styling_background: Lazy<HashMap<usize, Background>>,
-    pub styling_background_color: Lazy<HashMap<usize, Color>>,
-    pub styling_border: Lazy<HashMap<usize, Border>>,
-    pub styling_shadow: Lazy<HashMap<usize, Shadow>>,
-    pub styling_text_color: Lazy<HashMap<usize, Color>>,
+    pub styling_background: Lazy<HashMap<String, StyleBackground>>,
+    pub styling_border: Lazy<HashMap<String, StyleBorder>>,
+    pub styling_shadow: Lazy<HashMap<String, StyleShadow>>,
+    pub styling_text_color: Lazy<HashMap<String, StyleTextColor>>,
     
 }
 
@@ -141,7 +143,6 @@ pub static STATE: Mutex<State> = Mutex::new(
         events: vec![],
         
         styling_background: Lazy::new(||HashMap::new()),
-        styling_background_color: Lazy::new(||HashMap::new()),
         styling_border: Lazy::new(||HashMap::new()),
         styling_shadow: Lazy::new(||HashMap::new()),
         styling_text_color: Lazy::new(||HashMap::new()),
@@ -725,9 +726,9 @@ impl IPG {
     
     #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
-                        height_fill=false, padding=vec![10.0], clip=false, corner_radius=15.0, 
-                        style=None, style_custom=false, arrow_style=None, user_data=None, 
-                        show=true, 
+                        height_fill=false, padding=vec![10.0], clip=false, 
+                        style_background=None, style_border=None, style_shadow=None, 
+                        style_text_color=None, arrow_style=None, user_data=None, show=true, 
                         ))]
     fn add_button(&mut self,
                         parent_id: String,
@@ -741,9 +742,10 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         clip: bool,
-                        corner_radius: f32,
-                        style: Option<PyObject>,
-                        style_custom: bool,
+                        style_background: Option<String>,
+                        style_border: Option<String>,
+                        style_shadow: Option<String>,
+                        style_text_color: Option<String>,
                         arrow_style: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
@@ -773,9 +775,10 @@ impl IPG {
                                                 height,
                                                 padding,
                                                 clip,
-                                                corner_radius,
-                                                style,
-                                                style_custom,
+                                                style_background,
+                                                style_border,
+                                                style_shadow,
+                                                style_text_color,
                                                 arrow_style,                              
                                                 )));
         
@@ -1528,54 +1531,45 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id=None, widget_id=None, rgba=None, color=None, 
-                        invert=false, alpha=1.0, gen_id=None))]
+    #[pyo3(signature = (style_id, rgba=None, color=None, 
+                        invert=false, scale_alpha=1.0, hover_factor=0.05, 
+                        gen_id=None))]
     fn add_styling_background(&mut self,
-                            parent_id: Option<String>,
-                            widget_id: Option<usize>,
+                            style_id: String,
                             rgba: Option<[f32; 4]>,
                             color: Option<IpgColor>,
                             invert: bool,
-                            alpha: f32,
+                            scale_alpha: f32,
+                            hover_factor: f32,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
 
-        let iced_color: Color = get_color(rgba, color, alpha, invert);
-
-        let background = Background::from(iced_color);
-
-        let cont_id = if parent_id.is_some() {
-                get_container_id_via_string(parent_id.unwrap())
-            } else if widget_id.is_some() {
-                widget_id.unwrap()
-            } else {
-                panic!("styling background: A parent_id or a widget_id must be supplied")
-            };
+        let color: Color = get_color(rgba, color, scale_alpha, invert);
 
         let mut state = access_state();
        
-        state.styling_background.insert(cont_id, background);
-
-        
-        state.styling_background_color.insert(cont_id, iced_color);
-        
+        state.styling_background.insert(style_id, StyleBackground::new( 
+                                                    id,
+                                                    color,
+                                                    hover_factor,
+                                                    ));
         
         drop(state);
 
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id=None, widget_id=None, rgba=None, color=None, 
-        invert=false, alpha=1.0, width=1.0, radius=vec![5.0], gen_id=None))]
+    #[pyo3(signature = (style_id, rgba=None, color=None, 
+                        invert=false, scale_alpha=1.0, width=1.0, 
+                        radius=vec![5.0], gen_id=None))]
     fn add_styling_border(&mut self,
-                            parent_id: Option<String>,
-                            widget_id: Option<usize>,
+                            style_id: String,
                             rgba: Option<[f32; 4]>,
                             color: Option<IpgColor>,
                             invert: bool,
-                            alpha: f32,
+                            scale_alpha: f32,
                             width: f32,
                             radius: Vec<f32>,
                             gen_id: Option<usize>,
@@ -1583,7 +1577,7 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, alpha, invert);
+        let color: Color = get_color(rgba, color, scale_alpha, invert);
 
         let radius: Radius = if radius.len() == 1 {
             Radius::from([radius[0]; 4])
@@ -1593,35 +1587,30 @@ impl IPG {
             panic!("Radius must have a type of list with either 1 or 4 items")
         };
 
-        let border: Border = Border { color, width, radius };
-
-        let cont_id = if parent_id.is_some() {
-                get_container_id_via_string(parent_id.unwrap())
-            } else if widget_id.is_some() {
-                widget_id.unwrap()
-            } else {
-                panic!("styling border: A parent_id or a widget_id must be supplied")
-            };
 
         let mut state = access_state();
        
-        state.styling_border.insert(cont_id, border);
+        state.styling_border.insert(style_id, StyleBorder::new( 
+                                                id,
+                                                color,
+                                                radius,
+                                                width,
+                                                ));
 
         drop(state);
 
         Ok(id) 
     }
 
-    #[pyo3(signature = (parent_id=None, widget_id=None, rgba=None, color=None, 
-                        invert=false, alpha=1.0, offset_x=0.0, offset_y=0.0, 
-                        blur_radius=0.0, gen_id=None))]
+    #[pyo3(signature = (style_id, rgba=None, color=None, 
+                        invert=false, scale_alpha=1.0, offset_x=0.0, 
+                        offset_y=0.0, blur_radius=0.0, gen_id=None))]
     fn add_styling_shadow(&mut self,
-                            parent_id: Option<String>,
-                            widget_id: Option<usize>,
+                            style_id: String,
                             rgba: Option<[f32; 4]>,
                             color: Option<IpgColor>,
                             invert: bool,
-                            alpha: f32,
+                            scale_alpha: f32,
                             offset_x: f32,
                             offset_y: f32,
                             blur_radius: f32,
@@ -1630,34 +1619,27 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, alpha, invert);
-
-        let offset: Vector = Vector {x: offset_x, y: offset_y};
-
-        let shadow: Shadow = Shadow { color, offset, blur_radius };
-
-        let cont_id = if parent_id.is_some() {
-                get_container_id_via_string(parent_id.unwrap())
-            } else if widget_id.is_some() {
-                widget_id.unwrap()
-            } else {
-                panic!("styling shadow: A parent_id or a widget_id must be supplied")
-            };
+        let color: Color = get_color(rgba, color, scale_alpha, invert);
 
         let mut state = access_state();
        
-        state.styling_shadow.insert(cont_id, shadow);
+        state.styling_shadow.insert(style_id, StyleShadow::new( 
+                                                id,
+                                                color,
+                                                offset_x,
+                                                offset_y,
+                                                blur_radius,
+                                                ));
 
         drop(state);
 
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id=None, widget_id=None, rgba=None, color=None, 
+    #[pyo3(signature = (style_id, rgba=None, color=None, 
                         invert=false, alpha=1.0, gen_id=None))]
     fn add_styling_text_color(&mut self,
-                                parent_id: Option<String>,
-                                widget_id: Option<usize>,
+                                style_id: String,
                                 rgba: Option<[f32; 4]>,
                                 color: Option<IpgColor>,
                                 invert: bool,
@@ -1669,17 +1651,12 @@ impl IPG {
 
         let color: Color = get_color(rgba, color, alpha, invert);
 
-        let cont_id = if parent_id.is_some() {
-                get_container_id_via_string(parent_id.unwrap())
-            } else if widget_id.is_some() {
-                widget_id.unwrap()
-            } else {
-                panic!("styling text color: A parent_id or a widget_id must be supplied")
-            };
-
         let mut state = access_state();
        
-        state.styling_text_color.insert(cont_id, color);
+        state.styling_text_color.insert(style_id, StyleTextColor::new( 
+                                                id,
+                                                color,
+                                                ));
 
         drop(state);
 
@@ -2071,7 +2048,8 @@ impl IPG {
                         start_label="Start Timer".to_string(), 
                         stop_label="Stop Timer".to_string(), width=None, height=None, 
                         width_fill=false, height_fill=false, padding=vec![10.0], 
-                        corner_radius=15.0, style=None, arrow_style=None, user_data=None))]
+                        style_background=None, style_border=None, style_shadow=None,
+                        style_text_color=None, arrow_style=None, user_data=None))]
     fn add_timer(&mut self,
                         parent_id: String,
                         duration_ms: u64,
@@ -2085,8 +2063,10 @@ impl IPG {
                         width_fill: bool,
                         height_fill: bool,
                         padding: Vec<f64>,
-                        corner_radius: f32,
-                        style: Option<PyObject>,
+                        style_background: Option<String>,
+                        style_border: Option<String>,
+                        style_shadow: Option<String>,
+                        style_text_color: Option<String>,
                         arrow_style: Option<PyObject>,
                         user_data: Option<PyObject>
                     ) -> PyResult<usize>
@@ -2121,8 +2101,10 @@ impl IPG {
                                                             width,
                                                             height,
                                                             padding,
-                                                            corner_radius,
-                                                            style,
+                                                            style_background,
+                                                            style_border,
+                                                            style_shadow,
+                                                            style_text_color,
                                                             arrow_style,
                                                             user_data, 
                                                             )));
@@ -2583,7 +2565,6 @@ fn set_state_cont_wnd_ids(state: &mut State, wnd_id: &String, cnt_str_id: String
 fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IPG>()?;
     m.add_class::<IpgAlignment>()?;
-    m.add_class::<IpgButtonStyles>()?;
     m.add_class::<IpgButtonArrows>()?;
     m.add_class::<IpgButtonParams>()?;
     m.add_class::<IpgCardStyles>()?;
