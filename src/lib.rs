@@ -32,7 +32,7 @@ use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
 use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
-use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
+use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, IpgImageFilterMethod, IpgImageParams, IpgImageRotation};
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParams, IpgMenuSepTypes};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParams};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
@@ -62,7 +62,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
     get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{StyleBackground, StyleBorder, StyleShadow, StyleTextColor};
+use style::styling::{StyleBackground, StyleBorder, StyleIconColor, StyleShadow, StyleTextColor};
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
@@ -116,6 +116,7 @@ pub struct State {
     
     pub styling_background: Lazy<HashMap<String, StyleBackground>>,
     pub styling_border: Lazy<HashMap<String, StyleBorder>>,
+    pub styling_icon_color: Lazy<HashMap<String, StyleIconColor>>,
     pub styling_shadow: Lazy<HashMap<String, StyleShadow>>,
     pub styling_text_color: Lazy<HashMap<String, StyleTextColor>>,
     
@@ -144,6 +145,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         
         styling_background: Lazy::new(||HashMap::new()),
         styling_border: Lazy::new(||HashMap::new()),
+        styling_icon_color: Lazy::new(||HashMap::new()),
         styling_shadow: Lazy::new(||HashMap::new()),
         styling_text_color: Lazy::new(||HashMap::new()),
     }
@@ -867,9 +869,10 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, gen_id=None, on_toggle=None, is_checked=false, 
                         label="".to_string(), width=None, width_fill=false, 
-                        size=16.0, spacing=20.0, text_line_height=1.3, 
+                        size=16.0, spacing=10.0, text_line_height=1.3, 
                         text_shaping="basic".to_string(),text_size=16.0, icon_x=false, 
-                        icon_size=25.0, user_data=None, show=true, style=None,
+                        icon_size=25.0, user_data=None, show=true, style_background=None,
+                        style_border=None,style_icon_color=None, style_text_color=None,
                         ))] 
     fn add_checkbox(&mut self,
                         parent_id: String,
@@ -889,7 +892,10 @@ impl IPG {
                         icon_size: f32,
                         user_data: Option<PyObject>,
                         show: bool,
-                        style: Option<PyObject>,
+                        style_background: Option<String>,
+                        style_border: Option<String>,
+                        style_icon_color: Option<String>,
+                        style_text_color: Option<String>,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -922,7 +928,10 @@ impl IPG {
                                                     text_shaping,
                                                     icon_x,
                                                     icon_size,
-                                                    style,
+                                                    style_background,
+                                                    style_border,
+                                                    style_icon_color,
+                                                    style_text_color,
                                                     )));
 
         Ok(id)
@@ -975,7 +984,11 @@ impl IPG {
     #[pyo3(signature = (parent_id, image_path, gen_id=None, 
                         width=None, width_fill=false, 
                         height=None, height_fill=false, 
-                        padding=vec![5.0], on_press=None, on_release=None,
+                        padding=vec![5.0], content_fit=IpgImageContentFit::Contain, 
+                        filter_method=IpgImageFilterMethod::Linear,
+                        rotation=IpgImageRotation::Floating,
+                        rotation_radians=0.0,
+                        on_press=None, on_release=None,
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
                         on_enter=None, on_move=None, on_exit=None, 
@@ -991,6 +1004,10 @@ impl IPG {
                     height: Option<f32>,
                     height_fill: bool,
                     padding: Vec<f64>,
+                    content_fit: IpgImageContentFit,
+                    filter_method: IpgImageFilterMethod,
+                    rotation: IpgImageRotation,
+                    rotation_radians: f32,
                     on_press: Option<PyObject>,
                     on_release: Option<PyObject>,
                     on_right_press: Option<PyObject>,
@@ -1057,6 +1074,10 @@ impl IPG {
                                                 width,
                                                 height,
                                                 padding,
+                                                content_fit,
+                                                filter_method,
+                                                rotation,
+                                                rotation_radians,
                                                 show,
                                                 user_data,
                                             )));
@@ -1541,7 +1562,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, scale_alpha=1.0, hover_factor=0.05, 
+                        invert=false, scale_alpha=1.0, accent_amount=0.05, 
                         gen_id=None))]
     fn add_styling_background(&mut self,
                             style_id: String,
@@ -1549,7 +1570,7 @@ impl IPG {
                             color: Option<IpgColor>,
                             invert: bool,
                             scale_alpha: f32,
-                            hover_factor: f32,
+                            accent_amount: f32,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize>
     {
@@ -1562,7 +1583,7 @@ impl IPG {
         state.styling_background.insert(style_id, StyleBackground::new( 
                                                     id,
                                                     color,
-                                                    hover_factor,
+                                                    accent_amount,
                                                     ));
         
         drop(state);
@@ -2583,7 +2604,10 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgContainerAlignment>()?;
     m.add_class::<IpgCheckboxParams>()?;
     m.add_class::<IpgDatePickerParams>()?;
+    m.add_class::<IpgImageContentFit>()?;
+    m.add_class::<IpgImageFilterMethod>()?;
     m.add_class::<IpgImageParams>()?;
+    m.add_class::<IpgImageRotation>()?;
     m.add_class::<IpgMenuParams>()?;
     m.add_class::<IpgMenuSepTypes>()?;
     m.add_class::<IpgMouseAreaParams>()?;

@@ -10,19 +10,19 @@ use palette::rgb::Rgb;
 pub struct StyleBackground {
     pub id: usize,
     pub color: Color,
-    pub hover_factor: f32,
+    pub accent_amount: f32,
 }
 
 impl StyleBackground {
     pub fn new(
         id: usize,
         color: Color,
-        hover_factor: f32,
+        accent: f32,
     ) -> Self {
         Self {
             id,
             color,
-            hover_factor,
+            accent_amount: accent,
         }
     }
 }
@@ -47,6 +47,23 @@ impl StyleBorder {
             color,
             radius,
             width,
+        }
+    }
+}
+
+pub struct StyleIconColor {
+    pub id: usize,
+    pub color: Color,
+}
+
+impl StyleIconColor {
+    pub fn new(
+        id: usize,
+        color: Color,
+    ) -> Self {
+        Self {
+            id,
+            color,
         }
     }
 }

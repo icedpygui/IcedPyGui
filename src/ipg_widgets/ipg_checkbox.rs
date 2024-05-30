@@ -1,7 +1,9 @@
 #![allow(unused_imports)]
 
+use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_f64, try_extract_string};
-use crate::access_callbacks;
+use crate::style::styling::lighten;
+use crate::{access_callbacks, access_state};
 use crate::app;
 use super::helpers::{get_width, get_shaping};
 use super::callbacks::{WidgetCallbackIn, 
@@ -12,10 +14,12 @@ use super::callbacks::{WidgetCallbackIn,
 use crate::graphics::BOOTSTRAP_FONT;
 use crate::graphics::bootstrap_icon::{Icon, icon_to_char};
 
-use iced::{Element, Font, Length, Pixels};
-use iced::widget::text::{self, LineHeight, Shaping};
+use iced::advanced::text;
+use iced::border::Radius;
+use iced::{Background, Border, Color, Element, Font, Length, Pixels, Theme};
+use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{Checkbox, Space};
-use iced::widget::checkbox;
+use iced::widget::checkbox::{self, Status};
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -37,7 +41,10 @@ pub struct IpgCheckBox {
     // font: Option<Font>,
     pub icon_x: bool,
     pub icon_size: f32,
-    pub style: Option<PyObject>,
+    pub style_background: Option<String>,
+    pub style_border: Option<String>,
+    pub style_icon_color: Option<String>,
+    pub style_text_color: Option<String>,
 }
 
 impl IpgCheckBox {
@@ -56,7 +63,10 @@ impl IpgCheckBox {
         text_shaping: Shaping,
         icon_x: bool,
         icon_size: f32,
-        style: Option<PyObject>,
+        style_background: Option<String>,
+        style_border: Option<String>,
+        style_icon_color: Option<String>,
+        style_text_color: Option<String>,
         ) -> Self {
             Self {
                 id,
@@ -72,7 +82,10 @@ impl IpgCheckBox {
                 text_shaping,
                 icon_x,
                 icon_size,
-                style,
+                style_background,
+                style_border,
+                style_icon_color,
+                style_text_color,
             }
     }
 }
@@ -111,10 +124,17 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
                                             font: BOOTSTRAP_FONT,
                                             code_point: icon_to_char(Icon::Check),
                                             size: Some(iced::Pixels(chk.icon_size)),
-                                            line_height: text::LineHeight::Relative(1.0),
+                                            line_height: text::LineHeight::default(),
                                             shaping: text::Shaping::Basic}
                                     }
                             )
+                            .style(move|theme: &Theme, status| {
+                                get_styling(theme, status, 
+                                    chk.style_background.clone(), 
+                                    chk.style_border.clone(), 
+                                    chk.style_icon_color.clone(),
+                                    chk.style_text_color.clone())
+                                })
                             .into();
 
     ipg_chk.map(move |message| app::Message::CheckBox(chk.id, message))
@@ -194,7 +214,6 @@ pub enum IpgCheckboxParams {
     Show,
     Size,
     Spacing,
-    Style,
     TextLineHeight,
     TextShaping,
     TextSize,
@@ -231,13 +250,6 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
         IpgCheckboxParams::Spacing => {
             chk.spacing = try_extract_f64(value) as f32;
         },
-        IpgCheckboxParams::Style => {
-            // TODO:
-            // chk.style = match value_str {
-            //     Some(st) => st,
-            //     None => panic!("Style must be of type string.")
-            // }
-        },
         IpgCheckboxParams::TextLineHeight => {
             let tlh = try_extract_f64(value);
             chk.text_line_height =  LineHeight::Relative(tlh as f32);
@@ -272,3 +284,120 @@ pub fn try_extract_checkbox_update(update_obj: PyObject) -> IpgCheckboxParams {
         }
     })
 }
+
+pub fn get_styling(_theme: &Theme, status: Status, 
+                    style_background: Option<String>, 
+                    style_border: Option<String>, 
+                    style_icon_color: Option<String>,
+                    style_text_color: Option<String>) 
+                    -> checkbox::Style {
+    
+    let state = access_state();
+
+    let background_opt = if style_background.is_some() {
+        state.styling_background.get(&style_background.unwrap())
+    } else {
+        None
+    };
+    
+    let (bg_color, accent_amount) = match background_opt {
+        Some(bg) => ( bg.color, bg.accent_amount ),
+        None => ( match_ipg_color(IpgColor::TRANSPARENT), 0.05 ),
+    };
+
+    let accent: Color = lighten(bg_color, accent_amount);
+
+    let border_opt = if style_border.is_some() {
+        state.styling_border.get(&style_border.unwrap())
+    } else {
+        None
+    };
+
+    let border: Border = match border_opt {
+        Some(bd) => Border {
+            color: bd.color,
+            radius: bd.radius,
+            width: bd.width,
+        },
+        None => { Border {
+                color: match_ipg_color(IpgColor::ANTIQUE_WHITE),
+                radius: <Radius as std::default::Default>::default(),
+                width: 1.0,
+            }
+        },
+    };
+
+    let icon_color_opt = if style_icon_color.is_some() {
+        state.styling_icon_color.get(&style_icon_color.unwrap())
+    } else {
+        None
+    };
+
+    let icon_color = match icon_color_opt {
+        Some(ic) => {
+            ic.color
+        },
+        None => match_ipg_color(IpgColor::ANTIQUE_WHITE),
+    };
+
+    let text_color_opt = if style_text_color.is_some() {
+        state.styling_text_color.get(&style_text_color.unwrap())
+    } else {
+        None
+    };
+    
+    let text_color = match text_color_opt {
+        Some(tc) => {
+            Some(tc.color)
+        },
+        None => Some(match_ipg_color(IpgColor::ANTIQUE_WHITE)),
+    };
+
+    match status {
+        Status::Active { is_checked } => styled(
+            icon_color,
+            bg_color,
+            bg_color,
+            is_checked,
+            border,
+            text_color,
+        ),
+        Status::Hovered { is_checked: _ } => styled(
+            icon_color,
+            bg_color,
+            accent,
+            true,
+            border,
+            text_color,
+        ),
+        Status::Disabled { is_checked } => styled(
+            icon_color,
+            bg_color,
+            bg_color,
+            is_checked,
+            border,
+            text_color,
+        ),
+    }
+}
+
+fn styled(
+    icon_color: Color,
+    base: Color,
+    accent: Color,
+    is_checked: bool,
+    border: Border,
+    text_color: Option<Color>,
+) -> checkbox::Style {
+    checkbox::Style {
+        background: Background::Color(if is_checked {
+            accent
+        } else {
+            base
+        }),
+        icon_color,
+        border,
+        text_color,
+    }
+}
+

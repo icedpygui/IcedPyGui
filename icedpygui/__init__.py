@@ -7,7 +7,7 @@ from .icedpygui import IpgColor
 from .icedpygui import IpgColumnAlignment
 from .icedpygui import IpgContainerAlignment
 from .icedpygui import IpgDatePickerParams
-from .icedpygui import IpgImageParams
+from .icedpygui import IpgImageParams, IpgImageContentFit, IpgImageFilterMethod, IpgImageRotation
 from .icedpygui import IpgMenuSepTypes, IpgMenuParams
 from .icedpygui import IpgMouseAreaParams
 from .icedpygui import IpgPickListParams

@@ -266,7 +266,7 @@ pub fn get_styling(_theme: &Theme, status: Status,
     match background_opt {
         Some(bg) => {
             bg_color = bg.color;
-            hover_factor = bg.hover_factor;
+            hover_factor = bg.accent_amount;
         },
         None => (),
     }
@@ -296,7 +296,7 @@ pub fn get_styling(_theme: &Theme, status: Status,
     let border = Border{ color: border_color, width: border_width, radius };
 
 
-    let mut shadow_color: Color = Color::TRANSPARENT;
+    let mut shadow_color: Color = Color{..Default::default()};
     let mut offset_x: f32 = 0.0;
     let mut offset_y: f32 = 0.0;
     let mut blur_radius: f32 = 0.0;
@@ -342,7 +342,6 @@ pub fn get_styling(_theme: &Theme, status: Status,
             border,
             shadow,
             text_color,
-            ..Default::default()
             };
 
     match status {

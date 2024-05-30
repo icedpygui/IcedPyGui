@@ -11,6 +11,9 @@ use super::helpers::try_extract_boolean;
 use super::helpers::try_extract_f64;
 use super::helpers::try_extract_string;
 use super::helpers::try_extract_vec_f64;
+use iced::widget::image::FilterMethod;
+use iced::Radians;
+use iced::Rotation;
 use iced::{Length, Element, Padding, Point};
 use iced::widget::{Container, Image, MouseArea};
 use iced::mouse::Interaction;
@@ -28,6 +31,10 @@ pub struct IpgImage {
         pub width: Length,
         pub height: Length,
         pub padding: Padding,
+        pub content_fit: IpgImageContentFit,
+        pub filter_method: IpgImageFilterMethod,
+        pub rotation: IpgImageRotation,
+        pub rotation_radians: f32,
         pub show: bool,
         pub user_data: Option<PyObject>,
 }
@@ -39,6 +46,10 @@ impl IpgImage {
         width: Length,
         height: Length,
         padding: Padding,
+        content_fit: IpgImageContentFit,
+        filter_method: IpgImageFilterMethod,
+        rotation: IpgImageRotation,
+        rotation_radians: f32,
         show: bool,
         user_data: Option<PyObject>,
         ) -> Self {
@@ -48,6 +59,10 @@ impl IpgImage {
             width,
             height,
             padding,
+            content_fit,
+            filter_method,
+            rotation,
+            rotation_radians,
             show,
             user_data,
         }
@@ -67,9 +82,37 @@ pub enum ImageMessage {
     OnExit,
 }
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgImageContentFit {
+    Contain,
+    Cover,
+    Fill,
+    IpgNone,
+    ScaleDown,
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgImageFilterMethod {
+    Linear,
+    Nearest,
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgImageRotation {
+    Floating,
+    Solid,
+}
+
 pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
 
-    let img: Element<ImageMessage> = Image::<image::Handle>::new(image.image_path).into();
+    let img: Element<ImageMessage> = Image::<image::Handle>::new(image.image_path)
+                                        .content_fit(match_content_fit(image.content_fit))
+                                        .filter_method(match_filter_method(image.filter_method))
+                                        .rotation(match_rotation(image.rotation, Radians::from(image.rotation_radians)))
+                                        .into();
 
     let cont: Element<ImageMessage> = Container::new(img)
                                                 .width(image.width)
@@ -93,6 +136,30 @@ pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
 
     ma.map(move |message| app::Message::Image(image.id, message))
 
+}
+
+fn match_content_fit(content: IpgImageContentFit) -> iced::ContentFit {
+    match content {
+        IpgImageContentFit::Contain => iced::ContentFit::Contain,
+        IpgImageContentFit::Cover => iced::ContentFit::Cover,
+        IpgImageContentFit::Fill => iced::ContentFit::Fill,
+        IpgImageContentFit::IpgNone => iced::ContentFit::None,
+        IpgImageContentFit::ScaleDown => iced::ContentFit::ScaleDown,
+    }
+}
+
+fn match_filter_method(fm: IpgImageFilterMethod) -> FilterMethod {
+    match fm {
+        IpgImageFilterMethod::Linear => FilterMethod::Linear,
+        IpgImageFilterMethod::Nearest => FilterMethod::Nearest,
+    }
+}
+
+fn match_rotation(rot: IpgImageRotation, radians: Radians) -> Rotation {
+    match rot {
+        IpgImageRotation::Floating => Rotation::Floating(radians),
+        IpgImageRotation::Solid => Rotation::Solid(radians),
+    }
 }
 
 pub fn image_callback(id: usize, message: ImageMessage) {

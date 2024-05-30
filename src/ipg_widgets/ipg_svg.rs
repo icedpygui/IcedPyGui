@@ -10,6 +10,7 @@ use super::helpers::try_extract_boolean;
 use super::helpers::try_extract_f64;
 use super::helpers::try_extract_string;
 
+use iced::widget::Space;
 use iced::{Length, Element, Point};
 use iced::widget::{Svg, MouseArea};
 use iced::mouse::Interaction;
@@ -67,7 +68,9 @@ pub enum SvgMessage {
 
 pub fn construct_svg(sg: IpgSvg) -> Element<'static, app::Message> {
 
-    // let style: theme::Svg = get_style(sg.style);
+    if !sg.show {
+        return Space::new(0.0, 0.0).into()
+    }
 
     let svg_handle = svg::Handle::from_path(sg.svg_path);
 
