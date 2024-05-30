@@ -29,7 +29,7 @@ use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, Ip
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
-use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment, IpgContainerTheme};
+use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageParams};
@@ -345,7 +345,8 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         center_xy=false, clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
                         align_x=IpgContainerAlignment::Start, align_y=IpgContainerAlignment::Start,
-                        padding=DEFAULT_PADDING.to_vec(), show=true
+                        padding=DEFAULT_PADDING.to_vec(), show=true, style_background=None, 
+                        style_border=None, style_shadow=None, style_text_color=None
                        ))]
     fn add_container(&mut self,
                         window_id: String,
@@ -364,6 +365,10 @@ impl IPG {
                         align_y: IpgContainerAlignment, 
                         padding: Vec<f64>, 
                         show: bool,
+                        style_background: Option<String>, 
+                        style_border: Option<String>, 
+                        style_shadow: Option<String>,
+                        style_text_color: Option<String>
                         ) -> PyResult<usize>
     {
         self.id += 1;
@@ -395,6 +400,10 @@ impl IPG {
                                                 align_y,
                                                 center_xy,
                                                 clip,
+                                                style_background, 
+                                                style_border, 
+                                                style_shadow,
+                                                style_text_color,
                                             )));
 
         drop(state);
@@ -2572,7 +2581,6 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgColor>()?;
     m.add_class::<IpgColumnAlignment>()?;
     m.add_class::<IpgContainerAlignment>()?;
-    m.add_class::<IpgContainerTheme>()?;
     m.add_class::<IpgCheckboxParams>()?;
     m.add_class::<IpgDatePickerParams>()?;
     m.add_class::<IpgImageParams>()?;

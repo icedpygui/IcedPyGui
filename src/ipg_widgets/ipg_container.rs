@@ -1,13 +1,16 @@
 //!Container container
-use iced::{Element, Length, Padding};
+#![allow(unused_assignments)]
+use iced::border::Radius;
+use iced::{Background, Border, Color, Element, Length, Padding, Theme};
 use iced::alignment;
-use iced::widget::{Column, Container};
-use iced::widget::container::{transparent, Catalog, Style, StyleFn};
+use iced::widget::{container, Column, Container};
+
 
 use pyo3::pyclass;
 
+use crate::access_state;
 use crate::app::Message;
-use crate::style::styling::get_container_styling;
+
 
 #[derive(Debug, Clone)]
 pub struct IpgContainer {
@@ -23,7 +26,10 @@ pub struct IpgContainer {
     pub align_y: IpgContainerAlignment,
     pub center_xy: bool,
     pub clip: bool,
-    pub style_id: Option<String>,
+    pub style_background: Option<String>, 
+    pub style_border: Option<String>, 
+    pub style_shadow: Option<String>,
+    pub style_text_color: Option<String>,
 }
 
 impl IpgContainer {
@@ -40,6 +46,10 @@ impl IpgContainer {
         align_y: IpgContainerAlignment,
         center_xy: bool,
         clip: bool,
+        style_background: Option<String>, 
+        style_border: Option<String>, 
+        style_shadow: Option<String>,
+        style_text_color: Option<String>
     ) -> Self {
         Self {
             id,
@@ -53,7 +63,10 @@ impl IpgContainer {
             align_y,
             center_xy,
             clip,
-            style_id: None,
+            style_background, 
+            style_border, 
+            style_shadow,
+            style_text_color
         }
     }
 }
@@ -77,7 +90,11 @@ pub fn construct_container(con: IpgContainer, content: Vec<Element<'static, Mess
                 .align_x(align_x)
                 .align_y(align_y)
                 .clip(con.clip)
-                .style(move|Theme|get_container_styling(&Theme, con.style_id.clone()))
+                .style(move|Theme|get_styling(&Theme, 
+                                                        con.style_background.clone(), 
+                                                        con.style_border.clone(), 
+                                                        con.style_shadow.clone(),
+                                                        con.style_text_color.clone()))
                 .into();
     cont.into()
 }
@@ -114,21 +131,103 @@ fn get_vertical(y_align: IpgContainerAlignment, center: bool) -> alignment::Vert
     }
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgContainerTheme {
-    Default,
-    Custom,
-}
 
-impl Catalog for IpgContainerTheme {
-    type Class<'a> = StyleFn<'a, Self>;
+pub fn get_styling(_theme: &Theme,
+                style_background: Option<String>, 
+                style_border: Option<String>, 
+                style_shadow: Option<String>,
+                style_text_color: Option<String>) 
+                -> container::Style {
+    
+    let state = access_state();
 
-    fn default<'a>() -> Self::Class<'a> {
-        Box::new(transparent)
+    let background_opt = if style_background.is_some() {
+        state.styling_background.get(&style_background.unwrap())
+    } else {
+        None
+    };
+    
+    let mut bg_color = Color::TRANSPARENT;
+    let mut background = Background::Color(bg_color);
+
+    match background_opt {
+        Some(bg) => {
+            bg_color = bg.color;
+        },
+        None => (),
     }
 
-    fn style(&self, class: &Self::Class<'_>) -> Style {
-        class(self)
+    background = Background::Color(bg_color);
+
+
+    let mut border_color = Color::TRANSPARENT;
+    let mut radius = Radius::from([0.0; 4]);
+    let mut border_width = 1.0;
+
+    let border_opt = if style_border.is_some() {
+        state.styling_border.get(&style_border.unwrap())
+    } else {
+        None
+    };
+
+    match border_opt {
+        Some(bd) => {
+            border_color = bd.color;
+            radius = bd.radius;
+            border_width = bd.width;
+        },
+        None => (),
     }
+
+    let border = Border{ color: border_color, width: border_width, radius };
+
+
+    let mut shadow_color: Color = Color::TRANSPARENT;
+    let mut offset_x: f32 = 0.0;
+    let mut offset_y: f32 = 0.0;
+    let mut blur_radius: f32 = 0.0;
+
+    let shadow_opt = if style_shadow.is_some() {
+        state.styling_shadow.get(&style_shadow.unwrap())
+    } else {
+        None
+    };
+
+    match shadow_opt {
+        Some(sh) => {
+            shadow_color = sh.color;
+            offset_x = sh.offset_x;
+            offset_y = sh.offset_y;
+            blur_radius =sh.blur_radius;
+        },
+        None => (),
+    }
+
+    let shadow = iced::Shadow { color: shadow_color, offset: 
+                                        iced::Vector { x: offset_x, y: offset_y }, 
+                                        blur_radius };
+
+    let text_color_opt = if style_text_color.is_some() {
+        state.styling_text_color.get(&style_text_color.unwrap())
+    } else {
+        None
+    };
+    
+    let mut text_color = None;
+
+
+    match text_color_opt {
+        Some(tc) => {
+            text_color = Some(tc.color);
+        },
+        None => (),
+    }
+
+    container::Style {
+            background: Some(background),
+            border,
+            shadow,
+            text_color,
+            }
+
 }

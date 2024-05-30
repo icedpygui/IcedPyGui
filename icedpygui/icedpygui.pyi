@@ -93,8 +93,12 @@ class IPG:
                         align_y: IpgContainerAlignment=IpgContainerAlignment.Start,
                         center_xy: bool,
                         padding: List=[10.0],
-                        clip: bool=False, 
+                        clip: bool=False,
                         show: bool=True,
+                        style_background: Union[None | str]=None,
+                        style_border: Union[None | str]=None,
+                        style_shadow: Union[None | str]=None,
+                        style_text_color: Union[None | str]=None,
                         ) -> int:
         """
         Adds a generic container to the gui
@@ -139,6 +143,14 @@ class IPG:
                 Whether to clip any text if size > container.
             show: bool
                 Shows or hides container and all of its contents.
+            style_background: str
+                style_id of the add_background_style.
+            style_border: str
+                style_id of the add_border_style.
+            style_shadow: str
+                style_id of the add_shadow_style.
+            style_text_color: str
+                style_id of the add_text_color_style.
             
         Returns
         -------
@@ -478,12 +490,14 @@ class IPG:
                 use [float, float, float, float] for [top, right, bottom, left]
             clip: bool
                 Whether to clip the label if width exceeded.
-            corner_radius: float
-                Sets the roundness of the button box corners.  The effective range 0 to ~25.
-            style: IpgButtonStyle
-                Primary, Secondary, Positive, Destructive, Text,
-            style_custom: bool,
-                if True, use the add_button_styling to cutomize the the button style.
+            style_background: str
+                style_id of the add_background_style.
+            style_border: str
+                style_id of the add_border_style.
+            style_shadow: str
+                style_id of the add_shadow_style.
+            style_text_color: str
+                style_id of the add_text_color_style.
             arrow_style: IpgButtonArrows
                 See dropdown list when IpgButtonArrow. is typed in when period is typed.
             user_data: any 
@@ -1712,8 +1726,10 @@ class IPG:
                         width_fill: bool=False,
                         height_fill: bool=False,
                         padding: list=[10.0],
-                        corner_radius: float=15.0,
-                        style: IpgButtonStyles=IpgButtonStyles.Primary,
+                        style_background: Union[None | str]=None,
+                        style_border: Union[None | str]=None,
+                        style_shadow: Union[None | str]=None,
+                        style_text_color: Union[None | str]=None,
                         arrow_style: Union[None | IpgButtonArrows]=None,
                         user_data: any=None,
                         ) -> int:
@@ -1749,10 +1765,14 @@ class IPG:
                 use [float] for all sides,
                 use [float, float] for [top&bottom, left&right]
                 use [float, float, float, float] for [top, right, bottom, left]
-        corner_radius: float
-            The rounding of the button corners.
-        style: IpgButtonStyles
-            The button style, defaults to Primary.
+        style_background: str
+                style_id of the add_background_style.
+        style_border: str
+            style_id of the add_border_style.
+        style_shadow: str
+            style_id of the add_shadow_style.
+        style_text_color: str
+            style_id of the add_text_color_style.
         arrow_style: Union[None | IpgButtonArrows]
             Determines if the button is an arrow.
         user_data: any
@@ -1983,14 +2003,6 @@ class IpgWindowThemes:
     TokyoNight=0
     TokyoNightStorm=0
     TokyoNightLight=0
-    
-    
-class IpgButtonStyles:
-    Primary=0
-    Secondary=0
-    Positive=0
-    Destructive=0
-    Text=0
 
 
 class IpgButtonParams:

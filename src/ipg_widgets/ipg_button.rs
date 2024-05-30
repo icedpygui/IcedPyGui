@@ -79,18 +79,6 @@ pub enum BTNMessage {
     OnPress,
 }
 
-
-// #[derive(Debug, Clone)]
-// #[pyclass]
-// pub enum IpgButtonStyles {
-//     Primary,
-//     Secondary,
-//     Positive,
-//     Destructive,
-//     Text,
-// }
-
-
 pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
 
     if !btn.show {
@@ -246,94 +234,6 @@ pub fn button_item_update(btn: &mut IpgButton,
 }
 
 
-// /// A primary button; denoting a main action.
-// pub fn theme_primary(theme: &Theme, status: Status, radius: f32) -> Style {
-//     let palette = theme.extended_palette();
-//     let base = styled(palette.primary.strong, radius);
-
-//     match status {
-//         Status::Active | Status::Pressed => base,
-//         Status::Hovered => Style {
-//             background: Some(Background::Color(palette.primary.base.color)),
-//             ..base
-//         },
-//         Status::Disabled => disabled(base),
-//     }
-// }
-
-// /// A secondary button; denoting a complementary action.
-// pub fn theme_secondary(theme: &Theme, status: Status, radius: f32) -> Style {
-//     let palette = theme.extended_palette();
-//     let base = styled(palette.secondary.base, radius);
-
-//     match status {
-//         Status::Active | Status::Pressed => base,
-//         Status::Hovered => Style {
-//             background: Some(Background::Color(palette.secondary.strong.color)),
-//             ..base
-//         },
-//         Status::Disabled => disabled(base),
-//     }
-// }
-
-// /// A success button; denoting a good outcome.
-// pub fn theme_success(theme: &Theme, status: Status, radius: f32) -> Style {
-//     let palette = theme.extended_palette();
-//     let base = styled(palette.success.base, radius);
-
-//     match status {
-//         Status::Active | Status::Pressed => base,
-//         Status::Hovered => Style {
-//             background: Some(Background::Color(palette.success.strong.color)),
-//             ..base
-//         },
-//         Status::Disabled => disabled(base),
-//     }
-// }
-
-// /// A danger button; denoting a destructive action.
-// pub fn theme_danger(theme: &Theme, status: Status, radius: f32) -> Style {
-//     let palette = theme.extended_palette();
-//     let base = styled(palette.danger.base, radius);
-
-//     match status {
-//         Status::Active | Status::Pressed => base,
-//         Status::Hovered => Style {
-//             background: Some(Background::Color(palette.danger.strong.color)),
-//             ..base
-//         },
-//         Status::Disabled => disabled(base),
-//     }
-// }
-
-// /// A text button; useful for links.
-// pub fn theme_text(theme: &Theme, status: Status) -> Style {
-//     let palette = theme.extended_palette();
-
-//     let base = Style {
-//         text_color: palette.background.base.text,
-//         ..Style::default()
-//     };
-
-//     match status {
-//         Status::Active | Status::Pressed => base,
-//         Status::Hovered => Style {
-//             text_color: palette.background.base.text.scale_alpha(0.8),
-//             ..base
-//         },
-//         Status::Disabled => disabled(base),
-//     }
-// }
-
-// fn styled(pair: palette::Pair, radius: f32) -> Style {
-//     Style {
-//         background: Some(Background::Color(pair.color)),
-//         text_color: pair.text,
-//         border: Border::rounded(radius),
-//         ..Style::default()
-//     }
-// }
-
 fn disabled(style: Style) -> Style {
     Style {
         background: style
@@ -344,38 +244,17 @@ fn disabled(style: Style) -> Style {
     }
 }
 
-// pub fn get_button_style(style_opt: Option<PyObject>, 
-//                                 theme: &Theme, 
-//                                 status: Status, 
-//                                 radius: f32) -> Style {
-
-//     let style_obj = match style_opt {
-//         Some(st) => st,
-//         None => return theme_primary(theme, status, radius),
-//     };
-
-//     let ipg_btn_style = try_extract_button_style(style_obj);
-
-//     match ipg_btn_style {
-//         IpgButtonStyles::Primary => theme_primary(theme, status, radius),
-//         IpgButtonStyles::Secondary => theme_secondary(theme, status, radius),
-//         IpgButtonStyles::Positive => theme_success(theme, status, radius),
-//         IpgButtonStyles::Destructive => theme_danger(theme, status, radius),
-//         IpgButtonStyles::Text => theme_text(theme, status),
-//     }
-// }
-
 pub fn get_styling(_theme: &Theme, status: Status, 
-                background: Option<String>, 
-                border: Option<String>, 
-                shadow: Option<String>,
-                text_color: Option<String>) 
-                -> button::Style {
+                    style_background: Option<String>, 
+                    style_border: Option<String>, 
+                    style_shadow: Option<String>,
+                    style_text_color: Option<String>) 
+                    -> button::Style {
     
     let state = access_state();
 
-    let background_opt = if background.is_some() {
-        state.styling_background.get(&background.unwrap())
+    let background_opt = if style_background.is_some() {
+        state.styling_background.get(&style_background.unwrap())
     } else {
         None
     };
@@ -396,11 +275,11 @@ pub fn get_styling(_theme: &Theme, status: Status,
 
 
     let mut border_color = Color::TRANSPARENT;
-    let mut radius = Radius::from([5.0; 4]);
+    let mut radius = Radius::from([10.0; 4]);
     let mut border_width = 1.0;
 
-    let border_opt = if border.is_some() {
-        state.styling_border.get(&border.unwrap())
+    let border_opt = if style_border.is_some() {
+        state.styling_border.get(&style_border.unwrap())
     } else {
         None
     };
@@ -422,8 +301,8 @@ pub fn get_styling(_theme: &Theme, status: Status,
     let mut offset_y: f32 = 0.0;
     let mut blur_radius: f32 = 0.0;
 
-    let shadow_opt = if shadow.is_some() {
-        state.styling_shadow.get(&shadow.unwrap())
+    let shadow_opt = if style_shadow.is_some() {
+        state.styling_shadow.get(&style_shadow.unwrap())
     } else {
         None
     };
@@ -442,13 +321,13 @@ pub fn get_styling(_theme: &Theme, status: Status,
                                         iced::Vector { x: offset_x, y: offset_y }, 
                                         blur_radius };
 
-    let text_color_opt = if text_color.is_some() {
-        state.styling_text_color.get(&text_color.unwrap())
+    let text_color_opt = if style_text_color.is_some() {
+        state.styling_text_color.get(&style_text_color.unwrap())
     } else {
         None
     };
     
-    let mut text_color = match_ipg_color(IpgColor::BLACK);
+    let mut text_color = match_ipg_color(IpgColor::ANTIQUE_WHITE);
 
 
     match text_color_opt {
@@ -476,18 +355,6 @@ pub fn get_styling(_theme: &Theme, status: Status,
     }
 
 }
-
-// pub fn try_extract_button_style(style_obj: PyObject) -> IpgButtonStyles {
-
-//     Python::with_gil(|py| {
-//         let res = style_obj.extract::<IpgButtonStyles>(py);
-            
-//         match res {
-//             Ok(st) => st,
-//             Err(_) => panic!("Button style extraction failed."),
-//         }
-//     })  
-// }
 
 pub fn try_extract_button_arrow(arrow_opt: Option<PyObject>) -> Option<String> {
 

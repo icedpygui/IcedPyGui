@@ -4,7 +4,6 @@ use std::result::Result;
 
 use crate::app::{self, Message};
 use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_uid};
-use crate::ipg_widgets::ipg_container::IpgContainerTheme;
 use crate::style::styling::table_row_theme;
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};

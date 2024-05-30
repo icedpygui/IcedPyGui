@@ -5,8 +5,6 @@ use iced::widget::container;
 use palette::{FromColor, Hsl};
 use palette::rgb::Rgb;
 
-use crate::access_state;
-
 
 #[derive(Debug, Clone)]
 pub struct StyleBackground {
@@ -98,48 +96,7 @@ impl StyleTextColor {
     }
 }
 
-pub fn get_container_styling(_theme: &Theme, _style_id: Option<String>) -> container::Style {
-    
-    // let state = access_state();
 
-    // let background_opt = state.styling_background.get(&id);
-    // let border_opt = state.styling_border.get(&id);
-    // let shadow_opt = state.styling_shadow.get(&id);
-    // let text_color_opt = state.styling_text_color.get(&id);
-
-    // let background = match background_opt {
-    //     Some(bg) => *bg,
-    //     None => Background::Color(Color::TRANSPARENT),
-    // };
-
-    // let border = match border_opt {
-    //     Some(bd) => *bd,
-    //     None => Border{color: Color::TRANSPARENT, radius: Radius::from([5.0; 4]), width: 1.0},
-    // };
-
-    // let shadow = match shadow_opt {
-    //     Some(sh) => *sh,
-    //     None => Default::default(),
-    // };
-
-    // let text_color = match text_color_opt {
-    //     Some(tc) => Some(*tc),
-    //     None => None,
-    // };
-
-    let background = Background::Color(Color::TRANSPARENT);
-
-    let style = container::Style {
-        background: Some(background),
-        ..Default::default()
-        // border,
-        // shadow,
-        // text_color,
-        };
-
-    style
-
-}
 
 
 pub fn date_picker_container(_theme: &Theme) -> container::Style {
