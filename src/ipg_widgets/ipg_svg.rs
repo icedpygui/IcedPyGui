@@ -307,6 +307,8 @@ pub enum IpgSvgParams {
     Show,
     Width,
     WidthFill,
+    RotationRadians,
+    Opacity,
 }
 
 
@@ -340,6 +342,14 @@ pub fn svg_item_update(img: &mut IpgSvg,
         IpgSvgParams::WidthFill => {
             let val = try_extract_boolean(value);
             img.width = get_width(None, val);
+        },
+        IpgSvgParams::RotationRadians => {
+            let val = try_extract_f64(value);
+            img.rotation_radians = val as f32;
+        },
+        IpgSvgParams::Opacity => {
+            let val = try_extract_f64(value);
+            img.opacity = val as f32;
         },
     }
 }

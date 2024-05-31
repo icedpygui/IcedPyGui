@@ -81,6 +81,11 @@ def increment_radians(timer_id: int, counter: int):
     ipg.update_item(ferris_ids[2], IpgImageParams.RotationRadians, radians)
     ipg.update_item(ferris_ids[3], IpgImageParams.RotationRadians, radians)
 
+    ipg.update_item(tiger_ids[0], IpgSvgParams.RotationRadians, radians)
+    ipg.update_item(tiger_ids[1], IpgSvgParams.RotationRadians, radians)
+    ipg.update_item(tiger_ids[2], IpgSvgParams.RotationRadians, radians)
+    ipg.update_item(tiger_ids[3], IpgSvgParams.RotationRadians, radians)
+
 
 
 # Add the window

@@ -25,7 +25,7 @@ mod graphics;
 mod style;
 
 
-use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonParams};
+use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonParams, IpgButtonStyle};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
@@ -33,7 +33,7 @@ use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, IpgImageFilterMethod, IpgImageParams, IpgImageRotation};
-use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParams, IpgMenuSepTypes};
+use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuBarStyle, IpgMenuItemStyle, IpgMenuItemType, IpgMenuParams, IpgMenuSepTypes};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParams};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
@@ -737,7 +737,8 @@ impl IPG {
     
     #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
-                        height_fill=false, padding=vec![10.0], clip=false, 
+                        height_fill=false, padding=vec![10.0], clip=false,
+                        style=Some(IpgButtonStyle::Primary), 
                         style_background=None, style_border=None, style_shadow=None, 
                         style_text_color=None, arrow_style=None, user_data=None, show=true, 
                         ))]
@@ -753,6 +754,7 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         clip: bool,
+                        style: Option<IpgButtonStyle>,
                         style_background: Option<String>,
                         style_border: Option<String>,
                         style_shadow: Option<String>,
@@ -786,6 +788,7 @@ impl IPG {
                                                 height,
                                                 padding,
                                                 clip,
+                                                style,
                                                 style_background,
                                                 style_border,
                                                 style_shadow,
@@ -1088,7 +1091,9 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, items, widths, spacing, 
-                        on_select=None, separators=None, sep_types=None, 
+                        on_select=None, bar_style=IpgMenuBarStyle::Text, 
+                        item_type=vec![], item_style=vec![], 
+                        separators=None, sep_types=None, 
                         sep_label_names=None, user_data=None, gen_id=None))]
     fn add_menu(&mut self, 
                     parent_id: String, 
@@ -1096,6 +1101,9 @@ impl IPG {
                     widths: Vec<f32>,
                     spacing: Vec<f32>,
                     on_select: Option<PyObject>,
+                    bar_style: IpgMenuBarStyle,
+                    item_type: Vec<(usize, usize, IpgMenuItemType)>,
+                    item_style: Vec<(usize, usize, IpgMenuItemStyle)>,
                     separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
                     sep_types: Option<Vec<IpgMenuSepTypes>>,
                     sep_label_names: Option<Vec<String>>,
@@ -1118,6 +1126,9 @@ impl IPG {
                                                                 items,
                                                                 widths,
                                                                 spacing,
+                                                                bar_style,
+                                                                item_type,
+                                                                item_style,
                                                                 separators,
                                                                 sep_types,
                                                                 sep_label_names,
@@ -1700,7 +1711,7 @@ impl IPG {
                         height=None, height_fill=false,
                         content_fit=IpgSvgContentFit::Contain,
                         rotation=IpgSvgRotation::Floating,
-                        rotation_radians=1.0, opacity=1.0, 
+                        rotation_radians=0.0, opacity=1.0, 
                         on_press=None, on_release=None,
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
@@ -2610,6 +2621,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgAlignment>()?;
     m.add_class::<IpgButtonArrows>()?;
     m.add_class::<IpgButtonParams>()?;
+    m.add_class::<IpgButtonStyle>()?;
     m.add_class::<IpgCardStyles>()?;
     m.add_class::<IpgCardParams>()?;
     m.add_class::<IpgColor>()?;
@@ -2622,6 +2634,9 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgImageParams>()?;
     m.add_class::<IpgImageRotation>()?;
     m.add_class::<IpgMenuParams>()?;
+    m.add_class::<IpgMenuBarStyle>()?;
+    m.add_class::<IpgMenuItemType>()?;
+    m.add_class::<IpgMenuItemStyle>()?;
     m.add_class::<IpgMenuSepTypes>()?;
     m.add_class::<IpgMouseAreaParams>()?;
     m.add_class::<IpgPickListParams>()?;

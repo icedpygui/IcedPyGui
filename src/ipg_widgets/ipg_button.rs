@@ -32,6 +32,7 @@ pub struct IpgButton {
     pub height: Length,
     pub padding: Padding,
     pub clip: bool,
+    pub style: Option<IpgButtonStyle>,
     pub style_background: Option<String>,
     pub style_border: Option<String>,
     pub style_shadow: Option<String>,
@@ -50,6 +51,7 @@ impl IpgButton {
         height: Length,
         padding: Padding,
         clip: bool,
+        style: Option<IpgButtonStyle>,
         style_background: Option<String>,
         style_border: Option<String>,
         style_shadow: Option<String>,
@@ -65,6 +67,7 @@ impl IpgButton {
             height,
             padding,
             clip,
+            style,
             style_background,
             style_border,
             style_shadow,
@@ -77,6 +80,16 @@ impl IpgButton {
 #[derive(Debug, Clone)]
 pub enum BTNMessage {
     OnPress,
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgButtonStyle {
+    Primary,
+    Secondary,
+    Success,
+    Danger,
+    Text,
 }
 
 pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
@@ -102,11 +115,15 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
                                 .on_press(BTNMessage::OnPress)
                                 .clip(btn.clip)
                                 .style(move|theme: &Theme, status| {
-                                    get_styling(theme, status, 
-                                                btn.style_background.clone(), 
-                                                btn.style_border.clone(), 
-                                                btn.style_shadow.clone(),
-                                                btn.style_text_color.clone())
+                                    if btn.style.is_some() {
+                                        get_standard_style(theme, status, btn.style.clone())
+                                        } else {
+                                        get_styling(theme, status, 
+                                                    btn.style_background.clone(), 
+                                                    btn.style_border.clone(), 
+                                                    btn.style_shadow.clone(),
+                                                    btn.style_text_color.clone())
+                                        }
                                     })
                                 .into();
 
@@ -233,6 +250,16 @@ pub fn button_item_update(btn: &mut IpgButton,
 
 }
 
+pub fn get_standard_style(theme: &Theme, status: Status, style: Option<IpgButtonStyle>) -> Style {
+    match style {
+        Some(IpgButtonStyle::Primary) => button::primary(theme, status),
+        Some(IpgButtonStyle::Secondary) => button::secondary(theme, status),
+        Some(IpgButtonStyle::Success) => button::success(theme, status),
+        Some(IpgButtonStyle::Danger) => button::danger(theme, status),
+        Some(IpgButtonStyle::Text) => button::text(theme, status),
+        None => button::primary(theme, status),
+    }
+}
 
 fn disabled(style: Style) -> Style {
     Style {

@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgColor, IpgRowAlignment
+from icedpygui import IPG, IpgColor, IpgRowAlignment, IpgButtonStyle
 
 ipg = IPG()
 
@@ -29,9 +29,10 @@ ipg.add_column(window_id="main", container_id="col", parent_id="cont")
 ipg.add_row(window_id="main", container_id="row_btn", parent_id="col",
             align_items=IpgRowAlignment.Center)
 
-ipg.add_button(parent_id="row_btn", label="Press Me")
+ipg.add_button(parent_id="row_btn", label="Press Me", style=IpgButtonStyle.Danger)
 
-ipg.add_button(parent_id="row_btn", label="Press Me", 
+ipg.add_button(parent_id="row_btn", label="Press Me",
+               style=None, 
                style_background="button", 
                style_border="button",
                style_text_color="button",
