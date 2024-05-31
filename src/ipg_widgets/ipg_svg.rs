@@ -11,6 +11,8 @@ use super::helpers::try_extract_f64;
 use super::helpers::try_extract_string;
 
 use iced::widget::Space;
+use iced::Radians;
+use iced::Rotation;
 use iced::{Length, Element, Point};
 use iced::widget::{Svg, MouseArea};
 use iced::mouse::Interaction;
@@ -27,7 +29,10 @@ pub struct IpgSvg {
         pub svg_path: String,
         pub width: Length,
         pub height: Length,
-        pub style: IpgSvgStyle,
+        pub content_fit: IpgSvgContentFit,
+        pub rotation: IpgSvgRotation,
+        pub rotation_radians: f32,
+        pub opacity: f32,
         pub show: bool,
         pub user_data: Option<PyObject>,
 }
@@ -38,6 +43,10 @@ impl IpgSvg {
         svg_path: String,
         width: Length,
         height: Length,
+        content_fit: IpgSvgContentFit,
+        rotation: IpgSvgRotation,
+        rotation_radians: f32,
+        opacity: f32,
         show: bool,
         user_data: Option<PyObject>,
         ) -> Self {
@@ -46,7 +55,10 @@ impl IpgSvg {
             svg_path,
             width,
             height,
-            style: IpgSvgStyle::Default,
+            content_fit,
+            rotation,
+            rotation_radians,
+            opacity,
             show,
             user_data,
         }
@@ -66,6 +78,23 @@ pub enum SvgMessage {
     OnExit,
 }
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgSvgContentFit {
+    Contain,
+    Cover,
+    Fill,
+    IpgNone,
+    ScaleDown,
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgSvgRotation {
+    Floating,
+    Solid,
+}
+
 pub fn construct_svg(sg: IpgSvg) -> Element<'static, app::Message> {
 
     if !sg.show {
@@ -77,7 +106,9 @@ pub fn construct_svg(sg: IpgSvg) -> Element<'static, app::Message> {
     let svg_widget: Element<SvgMessage> = Svg::new(svg_handle)
                                                 .width(sg.width)
                                                 .height(sg.height)
-                                                // .style(style)
+                                                .content_fit(match_content_fit(sg.content_fit))
+                                                .rotation(match_rotation(sg.rotation, Radians::from(sg.rotation_radians)))
+                                                .opacity(sg.opacity)
                                                 .into();
 
     let widget: Element<SvgMessage> = 
@@ -97,6 +128,23 @@ pub fn construct_svg(sg: IpgSvg) -> Element<'static, app::Message> {
 
     widget.map(move |message| app::Message::Svg(sg.id, message))
 
+}
+
+fn match_content_fit(content: IpgSvgContentFit) -> iced::ContentFit {
+    match content {
+        IpgSvgContentFit::Contain => iced::ContentFit::Contain,
+        IpgSvgContentFit::Cover => iced::ContentFit::Cover,
+        IpgSvgContentFit::Fill => iced::ContentFit::Fill,
+        IpgSvgContentFit::IpgNone => iced::ContentFit::None,
+        IpgSvgContentFit::ScaleDown => iced::ContentFit::ScaleDown,
+    }
+}
+
+fn match_rotation(rot: IpgSvgRotation, radians: Radians) -> Rotation {
+    match rot {
+        IpgSvgRotation::Floating => Rotation::Floating(radians),
+        IpgSvgRotation::Solid => Rotation::Solid(radians),
+    }
 }
 
 pub fn svg_callback(id: usize, message: SvgMessage) {
@@ -307,11 +355,12 @@ pub fn try_extract_svg_update(update_obj: PyObject) -> IpgSvgParams {
     })
 }
 
-#[derive(Debug, Clone)]
-pub enum IpgSvgStyle {
-    Default,
-    // Custom,
-}
+
+// #[derive(Debug, Clone)]
+// pub enum IpgSvgStyle {
+//     Default,
+//     // Custom,
+// }
 
 // fn get_style(st: IpgSvgStyle) -> theme::Svg {
 //     match st {

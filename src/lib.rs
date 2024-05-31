@@ -46,7 +46,7 @@ use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectabl
     IpgSelectableTextHorAlign, IpgSelectableTextParams, IpgSelectableTextVertAlign};
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParams};
 use ipg_widgets::ipg_space::IpgSpace;
-use ipg_widgets::ipg_svg::{IpgSvg, IpgSvgParams, svg_item_update};
+use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParams, IpgSvgRotation};
 use ipg_widgets::ipg_table::{IpgTable, TableRowHighLight, TableWidget};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
 use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInput, IpgTextInputParams};
@@ -987,7 +987,7 @@ impl IPG {
                         padding=vec![5.0], content_fit=IpgImageContentFit::Contain, 
                         filter_method=IpgImageFilterMethod::Linear,
                         rotation=IpgImageRotation::Floating,
-                        rotation_radians=0.0,
+                        rotation_radians=0.0, opacity=1.0,
                         on_press=None, on_release=None,
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
@@ -1008,6 +1008,7 @@ impl IPG {
                     filter_method: IpgImageFilterMethod,
                     rotation: IpgImageRotation,
                     rotation_radians: f32,
+                    opacity: f32,
                     on_press: Option<PyObject>,
                     on_release: Option<PyObject>,
                     on_right_press: Option<PyObject>,
@@ -1078,6 +1079,7 @@ impl IPG {
                                                 filter_method,
                                                 rotation,
                                                 rotation_radians,
+                                                opacity,
                                                 show,
                                                 user_data,
                                             )));
@@ -1695,7 +1697,10 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, svg_path, gen_id=None, 
                         width=None, width_fill=false, 
-                        height=None, height_fill=false, 
+                        height=None, height_fill=false,
+                        content_fit=IpgSvgContentFit::Contain,
+                        rotation=IpgSvgRotation::Floating,
+                        rotation_radians=1.0, opacity=1.0, 
                         on_press=None, on_release=None,
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
@@ -1711,6 +1716,10 @@ impl IPG {
                     width_fill: bool,
                     height: Option<f32>,
                     height_fill: bool,
+                    content_fit: IpgSvgContentFit,
+                    rotation: IpgSvgRotation,
+                    rotation_radians: f32,
+                    opacity: f32,
                     on_press: Option<PyObject>,
                     on_release: Option<PyObject>,
                     on_right_press: Option<PyObject>,
@@ -1774,6 +1783,10 @@ impl IPG {
                                                 svg_path,
                                                 width,
                                                 height,
+                                                content_fit,
+                                                rotation,
+                                                rotation_radians,
+                                                opacity,
                                                 show,
                                                 user_data,
                                             )));

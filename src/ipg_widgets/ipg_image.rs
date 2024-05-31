@@ -12,6 +12,7 @@ use super::helpers::try_extract_f64;
 use super::helpers::try_extract_string;
 use super::helpers::try_extract_vec_f64;
 use iced::widget::image::FilterMethod;
+use iced::widget::Space;
 use iced::Radians;
 use iced::Rotation;
 use iced::{Length, Element, Padding, Point};
@@ -35,6 +36,7 @@ pub struct IpgImage {
         pub filter_method: IpgImageFilterMethod,
         pub rotation: IpgImageRotation,
         pub rotation_radians: f32,
+        pub opacity: f32,
         pub show: bool,
         pub user_data: Option<PyObject>,
 }
@@ -50,6 +52,7 @@ impl IpgImage {
         filter_method: IpgImageFilterMethod,
         rotation: IpgImageRotation,
         rotation_radians: f32,
+        opacity: f32,
         show: bool,
         user_data: Option<PyObject>,
         ) -> Self {
@@ -63,6 +66,7 @@ impl IpgImage {
             filter_method,
             rotation,
             rotation_radians,
+            opacity,
             show,
             user_data,
         }
@@ -108,10 +112,15 @@ pub enum IpgImageRotation {
 
 pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
 
+    if !image.show {
+        return Space::new(0.0, 0.0).into()
+    }
+
     let img: Element<ImageMessage> = Image::<image::Handle>::new(image.image_path)
                                         .content_fit(match_content_fit(image.content_fit))
                                         .filter_method(match_filter_method(image.filter_method))
                                         .rotation(match_rotation(image.rotation, Radians::from(image.rotation_radians)))
+                                        .opacity(image.opacity)
                                         .into();
 
     let cont: Element<ImageMessage> = Container::new(img)
@@ -323,6 +332,8 @@ pub enum IpgImageParams {
     Show,
     Width,
     WidthFill,
+    RotationRadians,
+    Opacity,
 }
 
 
@@ -360,6 +371,14 @@ pub fn image_item_update(img: &mut IpgImage,
         IpgImageParams::WidthFill => {
             let val = try_extract_boolean(value);
             img.width = get_width(None, val);
+        },
+        IpgImageParams::RotationRadians => {
+            let val = try_extract_f64(value);
+            img.rotation_radians = val as f32;
+        },
+        IpgImageParams::Opacity => {
+            let val = try_extract_f64(value);
+            img.opacity = val as f32;
         },
     }
 }

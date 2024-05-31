@@ -766,6 +766,7 @@ class IPG:
                     filter_method: IpgImageFilterMethod=IpgImageFilterMethod.Linear, 
                     rotation: IpgImageRotation=IpgImageRotation.Floating,
                     rotation_radians: float=0.0,
+                    opacity: float=1.0,
                     show: bool=True,  
                     user_data: Union[None | any]=None,
                     ) -> int:
@@ -820,6 +821,8 @@ class IPG:
                 Solid - When the image is rotated, the container resizes to fit.
             rotation_radians: float
                 Amount to rotate, 180 degrees = 3.14159 radians.
+            opacity: float
+                How much opacity, 1=opaque, 0=transparent
             show: bool
                 To show the widget or not.
             user_data: any
@@ -1447,7 +1450,11 @@ class IPG:
                     width: Union[None | float]=None,
                     height: Union[None | float]=None,
                     width_fill: bool=False,
-                    height_fill: bool=False, 
+                    height_fill: bool=False,
+                    content_fit: IpgSvgContentFit=IpgSvgContentFit.Contain,
+                    rotation: IpgSvgRotation=IpgSvgRotation.Floating,
+                    rotation_radians: float=0.0,
+                    opacity: float=1.0, 
                     show: bool=True,  
                     user_data: Union[None | any]=None,
                     ) -> int:
@@ -1488,6 +1495,19 @@ class IPG:
                 Sets the height of the widget.   
             height_fill: bool
                 Sets the heigth to fill the available space, overrides height.
+            content_fit: IpgImageContentFit
+                Contain - The image will be scaled (preserving aspect ratio) so that it just fits within the window.
+                Cover - Scale the image to cover all of the bounding box, cropping if needed.
+                Fill - Distort the image so the widget is 100% covered without cropping.
+                IpgNone - Don't resize or scale the image at all.  This is best for when you've sized the image yourself.
+                ScaleDown - Scale the image down if it's too big for the space, but never scale it up.
+            rotation: IpgImageRotation
+                Floating - When image is roated, it floats above the container, not distoring it.
+                Solid - When the image is rotated, the container resizes to fit.
+            rotation_radians: float
+                Amount to rotate, 180 degrees = 3.14159 radians.
+            opacity: float
+                How much opacity, 1=opaque, 0=transparent
             show: bool
                 To show the widget or not.
             user_data: any
@@ -2253,6 +2273,7 @@ class IpgContainerTheme:
 class IpgDatePickerParams:
     Label=0
     Padding=0
+    RotationRadians=0
     SizeFactor=0
     Show=0
 
@@ -2279,6 +2300,7 @@ class IpgImageParams:
     Height=0
     HeightFill=0
     ImagePath=0
+    Opacity=0
     Padding=0
     Show=0
     Width=0
@@ -2419,6 +2441,18 @@ class IpgSvgParams:
     Height=0
     HeightFill=0
     Show=0
+
+class IpgSvgContentFit:
+    Contain=0
+    Cover=0
+    Fill=0
+    IpgNone=0
+    ScaleDown=0
+
+
+class IpgSvgRotation:
+    Floating=0
+    Solid=0
 
 
 class TableRowHighLight:
