@@ -46,7 +46,7 @@ use ipg_widgets::helpers::get_usize_of_id;
 use crate::{access_state, IpgIds};
 
 use crate::iced_widgets::mousearea::PointId;
-use crate::iced_widgets::scrollable;
+use iced::widget::scrollable;
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -60,7 +60,7 @@ pub enum Message {
     Menu(usize, MenuMessage),
     PickList(usize, PLMessage),
     Radio(usize, RDMessage),
-    Scrolled(usize, scrollable::Viewport),
+    Scrolled(scrollable::Viewport, usize),
     SelectableText(usize, SLTXTMessage),
     Slider(usize, SLMessage),
     Svg(usize, SvgMessage),
@@ -217,7 +217,7 @@ impl multi_window::Application for App {
                 radio_callback(id, message);
                 Command::none()
             },
-            Message::Scrolled(id, vp) => {
+            Message::Scrolled(vp, id) => {
                 scrollable_callback(id, vp);
                 Command::none()
             },
@@ -450,7 +450,7 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                     return construct_row(row, content)
                 },
                 IpgContainers::IpgScrollable(scroll) => {
-                    return construct_scrollable(scroll, content)
+                    return construct_scrollable(scroll.clone(), content)
                 },
                 IpgContainers::IpgToolTip(tool) => {
                     return construct_tool_tip(tool, content)

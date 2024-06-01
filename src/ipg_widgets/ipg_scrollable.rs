@@ -7,7 +7,7 @@ use super::callbacks::WidgetCallbackOut;
 use super::helpers::get_height;
 use super::helpers::get_width;
 use super::helpers::try_extract_f64;
-use crate::iced_widgets::scrollable::{Alignment, Direction, Properties, Scrollable, Viewport};
+use iced::widget::scrollable::{Alignment, Direction, Properties, Scrollable, Viewport};
 
 use iced::{Element, Length};
 use iced::widget::Column;
@@ -90,12 +90,12 @@ pub enum IpgScrollableAlignment {
 }
 
 
-pub fn construct_scrollable(scroll: &IpgScrollable, content: Vec<Element<'static, app::Message>> ) 
+pub fn construct_scrollable(scroll: IpgScrollable, content: Vec<Element<'static, app::Message>> ) 
                                                             -> Element<'static, app::Message> {
 
     let content: Element<'static, app::Message> = Column::with_children(content).into();
 
-    let direction = get_direction(scroll.direction.clone(),
+    let direction: Direction = get_direction(scroll.direction.clone(),
                                                         scroll.h_bar_width,
                                                         scroll.h_bar_margin,
                                                         scroll.h_scroller_width,
@@ -108,10 +108,9 @@ pub fn construct_scrollable(scroll: &IpgScrollable, content: Vec<Element<'static
 
 
     Scrollable::with_direction(content, direction)
-                    .ipg_id(scroll.id)
                     .width(scroll.width)
                     .height(scroll.height)
-                    .on_scroll(app::Message::Scrolled)
+                    .on_scroll(move|b| app::Message::Scrolled(b, scroll.id))
                     .into()
     
   
