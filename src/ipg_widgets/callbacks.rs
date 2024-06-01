@@ -50,6 +50,8 @@ pub struct WidgetCallbackOut {
     pub is_checked: Option<bool>,
     pub index: Option<usize>,
     pub index_table: Option<(usize, usize)>,
+    pub bar_index: Option<usize>,
+    pub menu_index: Option<usize>,
     pub on_toggle: Option<bool>,
     pub points: Option<Vec<(String, f32)>>,
     pub scroll_pos: Vec<(String, f32)>, 

@@ -1,4 +1,5 @@
 from icedpygui import IPG, IpgMenuSepTypes, IpgMenuParams, IpgTextParams
+from icedpygui import IpgMenuItemType, IpgMenuItemStyle
 from collections import OrderedDict
 
 
@@ -68,9 +69,9 @@ ipg.add_column("main", container_id="col")
 # A menu needs a dictionary of text values.  The key values become the 
 # menu bar labels.  One also needs to use an ordered dictionary since
 # the order needs to be maintained.
-items = OrderedDict({"Menu1": ["item1-1", "item1-2", "item1-3"],
-                     "Menu2": ["item2-1", "item2-2", "item2-3", "item2-4"],
-                     "Menu3": ["item3-1", "item3-2", "item3-3"]})
+items = OrderedDict({"Menu0": ["item0-0", "item0-1", "item0-2"],
+                     "Menu1": ["item1-0", "item1-1", "item1-2", "item1-3"],
+                     "Menu2": ["item2-0", "item2-1", "item2-2"]})
 
 # A list of the widths which must equal the number of menu bar labels, the dict keys,
 # or they must be a list of 1 number, i.e. [90.0] to indicate all widths are 90.0
@@ -83,13 +84,18 @@ spacing = [5.0, 10.0, 5.0]
 # The separator is a list of tuples [(bar_index, menu_index(separator is added after menu item), separator type)]
 separators = [(0, 0, IpgMenuSepTypes.Dot), (1, 1, IpgMenuSepTypes.Line), (2, 0, IpgMenuSepTypes.Label)]
 
+item_type = [(2, 1, IpgMenuItemType.Checkbox)]
+item_style = [(1, 3, IpgMenuItemStyle.Primary)]
+
 # Finally, we add the menu.  The separators are optional parameters.
 menu_id = ipg.add_menu("col", items, widths, spacing,
+                       item_type=item_type,
+                       item_style=item_style,
                        separators=separators, sep_label_names=["Label"],
                        on_select=menu_pressed, user_data="Some user_data")
 
 # spacing for readability
-ipg.add_space("col", height=50)
+ipg.add_space("col", height=120)
 
 # text info widgets
 text_id1 = ipg.add_text("col", "You selected menu iten - ")

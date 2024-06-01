@@ -735,7 +735,8 @@ impl IPG {
 
     }
     
-    #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
+    #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None,
+                        on_check=None, on_toggle=None, 
                         width=None, height=None, width_fill=false, 
                         height_fill=false, padding=vec![10.0], clip=false,
                         style=Some(IpgButtonStyle::Primary), 
@@ -748,6 +749,8 @@ impl IPG {
                         // ** above required
                         gen_id: Option<usize>,
                         on_press: Option<PyObject>,
+                        on_check: Option<PyObject>,
+                        on_toggle: Option<PyObject>,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
@@ -768,6 +771,14 @@ impl IPG {
 
         if on_press.is_some() {
             add_callback_to_mutex(id, "on_press".to_string(), on_press);
+        }
+
+        if on_check.is_some() {
+            add_callback_to_mutex(id, "on_check".to_string(), on_press);
+        }
+
+        if on_toggle.is_some() {
+            add_callback_to_mutex(id, "on_toggle".to_string(), on_press);
         }
 
         let width = get_width(width, width_fill);

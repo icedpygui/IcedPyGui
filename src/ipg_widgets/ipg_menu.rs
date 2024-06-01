@@ -78,7 +78,7 @@ impl IpgMenu {
 
 #[derive(Debug, Clone)]
 pub enum MenuMessage {
-    ItemPress(String),
+    ItemPress((usize, usize)),
     ItemCheckToggle((usize, usize), bool),
     ItemTogToggled(bool),
 }
@@ -184,7 +184,8 @@ pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message, Theme, 
 
         menu_bar.push(Item::with_menu(
                         menu_bar_button(label.clone(), 
-                                        mn.widths[bar_index], 
+                                        mn.widths[bar_index],
+                                        bar_index, 
                                         mn.bar_style.clone()),
 
                         Menu::new(menu_bar_items)
@@ -217,15 +218,31 @@ pub fn menu_callback(id: usize, message: MenuMessage) {
     wci.id = id;
     
     match message {
-        MenuMessage::ItemPress(item) => {
+        MenuMessage::ItemPress((bar_index, menu_index)) => {
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
-            wco.value_str = Some(item);
-            wco.event_name = "on_select".to_string();
+            wco.bar_index = Some(bar_index);
+            wco.menu_index = Some(menu_index);
+            wco.event_name = "on_press".to_string();
             process_callback(wco);
         }
-        MenuMessage::ItemCheckToggle(_, _) => todo!(),
-        MenuMessage::ItemTogToggled(_) => todo!(),
+        MenuMessage::ItemCheckToggle((bar_index, menu_index), is_checked) => {
+            wci.value_bool = Some(is_checked);
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.bar_index = Some(bar_index);
+            wco.menu_index = Some(menu_index);
+            wco.event_name = "on_check".to_string();
+            process_callback(wco);
+        },
+        MenuMessage::ItemTogToggled((bar_index, menu_index)) => {
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.bar_index = Some(bar_index);
+            wco.menu_index = Some(menu_index);
+            wco.event_name = "on_toggle".to_string();
+            process_callback(wco);
+        },
     }
 }
 
@@ -245,9 +262,20 @@ pub fn process_callback(wco: WidgetCallbackOut)
         None => panic!("Menu callback could not be found with id {}", wco.id),
     };
 
-    let item_selected = match wco.value_str {
-        Some(item) => item,
-        None => panic!("Menu item selected could not be processed")
+    let bar_index = match wco.bar_index {
+        Some(index) => index,
+        None => panic!("Menu: bar item could not be processed")
+    };
+
+    let menu_index_opt: Option<usize> = match wco.menu_index {
+        Some(index) => {
+                if index == 999 {
+                    None
+                } else {
+                    Some(index)
+                }
+            },
+        None => panic!("Menu: bar item could not be processed")
     };
 
     Python::with_gil(|py| {
@@ -258,7 +286,8 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 };
                 let res = callback.call1(py, (
                                                                     wco.id.clone(),
-                                                                    item_selected,  
+                                                                    bar_index,
+                                                                    menu_index_opt,  
                                                                     user_data
                                                                     ));
                 match res {
@@ -268,7 +297,8 @@ pub fn process_callback(wco: WidgetCallbackOut)
             } else {
                 let res = callback.call1(py, (
                                                                     wco.id.clone(),
-                                                                    item_selected  
+                                                                    bar_index,
+                                                                    menu_index_opt,  
                                                                     ));
                 match res {
                     Ok(_) => (),
@@ -315,7 +345,7 @@ fn get_menu_item(label: String,
 
             let btn: Element<MenuMessage, Theme, Renderer> = 
                             Button::new(label_txt)
-                                    .on_press(MenuMessage::ItemPress(label))
+                                    .on_press(MenuMessage::ItemPress((bar_index, menu_index)))
                                     .width(Length::Fill)
                                     .style(move|theme: &Theme, status| {
                                             get_standard_style(theme, status, std_style.clone())
@@ -328,6 +358,7 @@ fn get_menu_item(label: String,
             let chkbx: Element<MenuMessage, Theme, Renderer> = 
                         Checkbox::new(label, 
                             is_checked)
+                            .index((bar_index, menu_index))
                             .on_toggle(MenuMessage::ItemCheckToggle)
                             .into();
             chkbx
@@ -368,7 +399,7 @@ fn get_item_style(bar_index: &usize, menu_index: &usize,
         (menu_item_type, menu_item_style)
     }
 
-fn menu_bar_button(label: String, width: f32, bar_style: IpgMenuBarStyle) -> Element<'static, MenuMessage, Theme, Renderer> {
+fn menu_bar_button(label: String, width: f32, bar_index: usize, bar_style: IpgMenuBarStyle) -> Element<'static, MenuMessage, Theme, Renderer> {
 
     let style = match bar_style {
         IpgMenuBarStyle::Primary => IpgButtonStyle::Primary,
@@ -385,7 +416,7 @@ fn menu_bar_button(label: String, width: f32, bar_style: IpgMenuBarStyle) -> Ele
                                             .into();
 
     let btn: Element<MenuMessage, Theme, Renderer> = Button::new(label_txt)
-                                    .on_press(MenuMessage::ItemPress(label))
+                                    .on_press(MenuMessage::ItemPress((bar_index, 999)))
                                     .width(Length::Fixed(width))
                                     .style(move|theme: &Theme, status| {
                                         get_standard_style(theme, status, Some(style.clone()))})
