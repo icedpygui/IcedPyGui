@@ -2334,7 +2334,7 @@ class IpgMenuBarStyle:
 
 class IpgMenuItemType:
     Checkbox=0
-    Toggle=0
+    Toggler=0
 
 
 class IpgMenuItemStyle:

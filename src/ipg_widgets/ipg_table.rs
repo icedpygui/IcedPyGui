@@ -7,14 +7,13 @@ use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_u
 use crate::style::styling::table_row_theme;
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
-use crate::iced_widgets::checkbox::Checkbox;
 use crate::iced_widgets::mousearea_table::{MouseArea, PointIdRC};
 
 use iced::mouse::Interaction;
 use iced::widget::text::{LineHeight, Style};
 use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, Theme};
 use iced::alignment::Alignment;
-use iced::widget::{container, text, Column, Container, Image, Row, Scrollable, Space, Text};
+use iced::widget::{container, text, Checkbox, Column, Container, Image, Row, Scrollable, Space, Text};
 use iced::alignment::Horizontal;
 use iced::widget::svg;
 use iced::advanced::image;
@@ -99,7 +98,7 @@ impl IpgTable {
 #[derive(Debug, Clone)]
 pub enum TableMessage {
     TableButton((usize, usize)),
-    TableCheckbox((usize, usize), bool),
+    TableCheckbox(bool, (usize, usize)),
 
     MouseAreaOnPress((usize, usize)),
     MouseAreaOnRelease((usize, usize)),
@@ -135,6 +134,7 @@ pub enum TableWidget {
     Text,
 }
 
+#[derive(Debug, Clone)]
 struct Data {
     index: usize,
     d_type: DataTypes,
@@ -287,7 +287,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                     add_widget(tbl_widgets[row_index],
                                 table.id, 
                                 label.clone(), row_index, 
-                                &col_index, is_checked,
+                                col_index.clone(), is_checked,
                                 table.image_width.clone(), 
                                 table.image_height.clone())
                         
@@ -393,7 +393,7 @@ fn add_row_container(label: Element<Message>, row_index: usize,
 use iced::widget::Button;
 fn add_widget(widget: TableWidget, table_id: usize, 
                         label: String, row_index: usize, 
-                        col_index: &usize, is_checked: bool,
+                        col_index: usize, is_checked: bool,
                         image_width: Option<Vec<f32>>, image_height: Option<Vec<f32>>) 
                         -> Element<'static, Message> {
 
@@ -406,15 +406,14 @@ fn add_widget(widget: TableWidget, table_id: usize,
             let btn: Element<TableMessage> = Button::new(txt)
                                                             .padding(Padding::ZERO)
                                                             .width(Length::Fill)
-                                                            .on_press(TableMessage::TableButton((*col_index, row_index))) 
+                                                            .on_press(TableMessage::TableButton((col_index, row_index))) 
                                                             .into(); 
             btn.map(move |message| app::Message::Table(table_id, message))
         },
         TableWidget::Checkbox => {
             let chk: Element<TableMessage> = Checkbox::new(label, is_checked)
-                                                    .index((*col_index, row_index))
                                                     .width(Length::Shrink)
-                                                    .on_toggle(TableMessage::TableCheckbox)
+                                                    .on_toggle(move|b| TableMessage::TableCheckbox(b, (col_index, row_index)))
                                                     .into();
             chk.map(move |message| app::Message::Table(table_id, message))
         },
@@ -425,7 +424,7 @@ fn add_widget(widget: TableWidget, table_id: usize,
                     if width.len() == 1 {
                         Length::Fixed(width[0])
                     } else {
-                    Length::Fixed(width[*col_index])
+                    Length::Fixed(width[col_index])
                     }
                 },
                 None => Length::Shrink,
@@ -436,7 +435,7 @@ fn add_widget(widget: TableWidget, table_id: usize,
                     if hgt.len() == 1 {
                         Length::Fixed(hgt[0])
                     } else {
-                    Length::Fixed(hgt[*col_index])
+                    Length::Fixed(hgt[col_index])
                     }
                 },
                 None => Length::Shrink,
@@ -448,14 +447,14 @@ fn add_widget(widget: TableWidget, table_id: usize,
                                                                 .width(width)
                                                                 .height(height)
                                                                 .into();
-                 add_mousearea(img, table_id, row_index, *col_index)
+                 add_mousearea(img, table_id, row_index, col_index)
 
             } else if label.contains(".svg") {
                 let svg: Element<TableMessage> = svg(label)
                                                     .width(width)
                                                     .height(height)
                                                     .into();
-                 add_mousearea(svg, table_id, row_index, *col_index)
+                 add_mousearea(svg, table_id, row_index, col_index)
 
             } else {
                 panic!("Table: Only png and svg files supports at this time.")
@@ -467,7 +466,7 @@ fn add_widget(widget: TableWidget, table_id: usize,
                                                 .horizontal_alignment(Horizontal::Center)
                                                 .into();
 
-            add_mousearea(txt, table_id, row_index, *col_index)
+            add_mousearea(txt, table_id, row_index, col_index)
         }
     }
 }
@@ -514,7 +513,7 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             wco.event_name = "on_press_button".to_string();
             process_callback(wco);
         },
-        TableMessage::TableCheckbox((col_index, row_index), on_toggle) => {
+        TableMessage::TableCheckbox(on_toggle, (col_index, row_index)) => {
             wci.value_str =  Some("checkbox".to_string());
             wci.on_toggle = Some(on_toggle);
             wci.index_table = Some((col_index, row_index));

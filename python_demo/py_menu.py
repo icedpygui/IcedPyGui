@@ -84,8 +84,12 @@ spacing = [5.0, 10.0, 5.0]
 # The separator is a list of tuples [(bar_index, menu_index(separator is added after menu item), separator type)]
 separators = [(0, 0, IpgMenuSepTypes.Dot), (1, 1, IpgMenuSepTypes.Line), (2, 0, IpgMenuSepTypes.Label)]
 
-item_type = [(2, 1, IpgMenuItemType.Checkbox)]
+# We add a checkbox at position 2, 1 and a toggler at position 2, 2
+item_type = [(2, 1, IpgMenuItemType.Checkbox), (2, 2, IpgMenuItemType.Toggler)]
+
+# We change the style of position 1, 3 to primary
 item_style = [(1, 3, IpgMenuItemStyle.Primary)]
+
 
 # Finally, we add the menu.  The separators are optional parameters.
 menu_id = ipg.add_menu("col", items, widths, spacing,

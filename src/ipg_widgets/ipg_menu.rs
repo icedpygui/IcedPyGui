@@ -3,7 +3,7 @@
 use iced::advanced::graphics::core::Element;
 use iced::border::Radius;
 use iced::widget::button::Status;
-use iced::widget::{row, Button, Container, Row, Text, Toggler};
+use iced::widget::{row, Button, Checkbox, Container, Row, Text, Toggler};
 use iced::{alignment, Background, Border, Color, Length, Renderer, Theme};
 
 use crate::graphics::colors::{match_ipg_color, IpgColor};
@@ -12,7 +12,6 @@ use crate::iced_aw_widgets::menu::menu_tree::{Item, Menu};
 use crate::iced_aw_widgets::menu::menu_bar::MenuBar;
 use crate::iced_aw_widgets::menu::common::{DrawPath, InnerBounds};
 use crate::iced_aw_widgets::menu::quad;
-use crate::iced_widgets::checkbox::Checkbox;
 use crate::style::styling::lighten;
 
 use pyo3::{pyclass, PyObject, Python};
@@ -23,6 +22,7 @@ use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCal
 use super::helpers::{try_extract_dict, try_extract_vec_f32};
 
 use super::ipg_button::{get_standard_style, IpgButtonStyle};
+
 
 #[derive(Debug, Clone)]
 pub struct IpgMenu {
@@ -40,6 +40,8 @@ pub struct IpgMenu {
     menu_width: usize,
     new_menu: bool, 
     updating_separators: bool,
+    pub is_checked: bool,
+    pub is_toggled: bool,
 }
 
 impl IpgMenu {
@@ -71,6 +73,8 @@ impl IpgMenu {
             menu_width: 0,
             new_menu: false,
             updating_separators: false,
+            is_checked: false,
+            is_toggled: false,
         }
     }    
 }
@@ -78,9 +82,9 @@ impl IpgMenu {
 
 #[derive(Debug, Clone)]
 pub enum MenuMessage {
-    ItemPress((usize, usize)),
-    ItemCheckToggle((usize, usize), bool),
-    ItemTogToggled(bool),
+    ItemPressed((usize, usize)),
+    ItemCheckToggled(bool, (usize, usize)),
+    ItemTogToggled(bool, (usize, usize)),
 }
 
 #[derive(Debug, Clone)]
@@ -111,7 +115,7 @@ pub enum IpgMenuItemType {
     //default
     Button,
     Checkbox,
-    Toggle,
+    Toggler,
 }
 
 pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message, Theme, Renderer> {
@@ -160,7 +164,9 @@ pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message, Theme, 
                                     bar_index,
                                     menu_index, 
                                     &mn.item_type, 
-                                    &mn.item_style).into();
+                                    &mn.item_style,
+                                    mn.is_checked,
+                                    mn.is_toggled).into();
 
             menu_bar_items.push(Item::new(menu_item));
 
@@ -218,7 +224,7 @@ pub fn menu_callback(id: usize, message: MenuMessage) {
     wci.id = id;
     
     match message {
-        MenuMessage::ItemPress((bar_index, menu_index)) => {
+        MenuMessage::ItemPressed((bar_index, menu_index)) => {
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
             wco.bar_index = Some(bar_index);
@@ -226,8 +232,8 @@ pub fn menu_callback(id: usize, message: MenuMessage) {
             wco.event_name = "on_press".to_string();
             process_callback(wco);
         }
-        MenuMessage::ItemCheckToggle((bar_index, menu_index), is_checked) => {
-            wci.value_bool = Some(is_checked);
+        MenuMessage::ItemCheckToggled(is_checked, (bar_index, menu_index)) => {
+            wci.is_checked = Some(is_checked);
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
             wco.bar_index = Some(bar_index);
@@ -235,7 +241,8 @@ pub fn menu_callback(id: usize, message: MenuMessage) {
             wco.event_name = "on_check".to_string();
             process_callback(wco);
         },
-        MenuMessage::ItemTogToggled((bar_index, menu_index)) => {
+        MenuMessage::ItemTogToggled(togged, (bar_index, menu_index)) => {
+            wci.on_toggle = Some(togged);
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
             wco.bar_index = Some(bar_index);
@@ -328,6 +335,8 @@ fn get_menu_item(label: String,
                 menu_index: usize,
                 item_type: &Vec<(usize, usize, IpgMenuItemType)>, 
                 item_style: &Vec<(usize, usize, IpgMenuItemStyle)>,
+                is_checked: bool,
+                is_toggled: bool,
                 ) -> Element<'static, MenuMessage, Theme, Renderer> {
     
     let (i_type, i_style) = get_item_style(&bar_index, &menu_index, &item_type, &item_style);
@@ -345,7 +354,7 @@ fn get_menu_item(label: String,
 
             let btn: Element<MenuMessage, Theme, Renderer> = 
                             Button::new(label_txt)
-                                    .on_press(MenuMessage::ItemPress((bar_index, menu_index)))
+                                    .on_press(MenuMessage::ItemPressed((bar_index, menu_index)))
                                     .width(Length::Fill)
                                     .style(move|theme: &Theme, status| {
                                             get_standard_style(theme, status, std_style.clone())
@@ -354,19 +363,16 @@ fn get_menu_item(label: String,
             btn
         },
         IpgMenuItemType::Checkbox => {
-            let is_checked: bool = false;
             let chkbx: Element<MenuMessage, Theme, Renderer> = 
                         Checkbox::new(label, 
                             is_checked)
-                            .index((bar_index, menu_index))
-                            .on_toggle(MenuMessage::ItemCheckToggle)
+                            .on_toggle(move|b| MenuMessage::ItemCheckToggled(b, (bar_index, menu_index)))
                             .into();
             chkbx
         },
-        IpgMenuItemType::Toggle => {
-            let is_tog_toggled = false;
+        IpgMenuItemType::Toggler => {
             let tog: Element<MenuMessage, Theme, Renderer> = 
-                        Toggler::new(label, is_tog_toggled, MenuMessage::ItemTogToggled)
+                        Toggler::new(label, is_toggled, move|b| MenuMessage::ItemTogToggled(b, (bar_index, menu_index)))
                                                     .into();
             tog
         },
@@ -416,7 +422,7 @@ fn menu_bar_button(label: String, width: f32, bar_index: usize, bar_style: IpgMe
                                             .into();
 
     let btn: Element<MenuMessage, Theme, Renderer> = Button::new(label_txt)
-                                    .on_press(MenuMessage::ItemPress((bar_index, 999)))
+                                    .on_press(MenuMessage::ItemPressed((bar_index, 999)))
                                     .width(Length::Fixed(width))
                                     .style(move|theme: &Theme, status| {
                                         get_standard_style(theme, status, Some(style.clone()))})

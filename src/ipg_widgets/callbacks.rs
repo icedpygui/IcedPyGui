@@ -19,6 +19,7 @@ pub struct WidgetCallbackIn {
     pub index_table: Option<(usize, usize)>,
     pub is_submitted: Option<bool>,
     pub on_toggle: Option<bool>,
+    pub is_checked: Option<bool>,
     pub point: Option<Point>,
     pub selected: Option<String>,
     pub selected_index: Option<usize>,
@@ -204,6 +205,15 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                 },
                 IpgWidgets::IpgMenu(menu) => {
                     let mut wco = WidgetCallbackOut::default();
+                    if wci.is_checked.is_some() {
+                        menu.is_checked = wci.is_checked.unwrap();
+                        wco.is_checked = wci.is_checked;
+                    }
+                    if wci.on_toggle.is_some() {
+                        menu.is_toggled = wci.on_toggle.unwrap();
+                        wco.on_toggle = wci.on_toggle;
+                    }
+                    
                     wco.user_data = menu.user_data.clone();
                     wco
                 },

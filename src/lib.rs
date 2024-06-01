@@ -774,11 +774,11 @@ impl IPG {
         }
 
         if on_check.is_some() {
-            add_callback_to_mutex(id, "on_check".to_string(), on_press);
+            add_callback_to_mutex(id, "on_check".to_string(), on_check);
         }
 
         if on_toggle.is_some() {
-            add_callback_to_mutex(id, "on_toggle".to_string(), on_press);
+            add_callback_to_mutex(id, "on_toggle".to_string(), on_toggle);
         }
 
         let width = get_width(width, width_fill);
