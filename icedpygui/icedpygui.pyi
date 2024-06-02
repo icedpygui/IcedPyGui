@@ -2502,7 +2502,8 @@ class TableWidget:
     Button=0
     Checkbox=0
     Image=0
-    Text=0
+    SelectableText=0
+    Toggler=0
 
 
 class IpgTextInputParams:

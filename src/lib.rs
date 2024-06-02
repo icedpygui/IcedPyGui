@@ -735,8 +735,7 @@ impl IPG {
 
     }
     
-    #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None,
-                        on_check=None, on_toggle=None, 
+    #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
                         height_fill=false, padding=vec![10.0], clip=false,
                         style=Some(IpgButtonStyle::Primary), 
@@ -749,8 +748,6 @@ impl IPG {
                         // ** above required
                         gen_id: Option<usize>,
                         on_press: Option<PyObject>,
-                        on_check: Option<PyObject>,
-                        on_toggle: Option<PyObject>,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
@@ -771,14 +768,6 @@ impl IPG {
 
         if on_press.is_some() {
             add_callback_to_mutex(id, "on_press".to_string(), on_press);
-        }
-
-        if on_check.is_some() {
-            add_callback_to_mutex(id, "on_check".to_string(), on_check);
-        }
-
-        if on_toggle.is_some() {
-            add_callback_to_mutex(id, "on_toggle".to_string(), on_toggle);
         }
 
         let width = get_width(width, width_fill);
@@ -1820,7 +1809,8 @@ impl IPG {
                         row_highlight=None, highlight_amount=0.15,
                         column_widths=vec![], table_length=0, 
                         widgets_using_columns=None, gen_id=None, 
-                        on_press_button=None, on_toggle_checkbox=None, 
+                        on_button=None, on_checkbox=None,
+                        on_toggler=None, on_selectable=None,
                         on_press=None, on_release=None, 
                         on_right_press=None, on_right_release=None, 
                         on_middle_press=None, on_middle_release=None, 
@@ -1840,8 +1830,10 @@ impl IPG {
                     table_length: u32,
                     widgets_using_columns: Option<PyObject>,
                     gen_id: Option<usize>,
-                    on_press_button: Option<PyObject>,
-                    on_toggle_checkbox: Option<PyObject>,
+                    on_button: Option<PyObject>,
+                    on_checkbox: Option<PyObject>,
+                    on_toggler: Option<PyObject>,
+                    on_selectable: Option<PyObject>,
                     on_press: Option<PyObject>,
                     on_release: Option<PyObject>,
                     on_right_press: Option<PyObject>,
@@ -1860,47 +1852,66 @@ impl IPG {
 
         let id = self.get_id(gen_id);
 
-        let mut widget_ids: Option<HashMap<usize, Vec<usize>>> = None;
-        let mut widgets: Option<HashMap<usize, Vec<TableWidget>>> = None;
-        let mut on_toggled: Option<HashMap<usize, Vec<bool>>> = None;
-
+        let mut column_widgets: Option<HashMap<usize, Vec<TableWidget>>> = None;
+        
         if widgets_using_columns.is_some() {
             Python::with_gil(|py| {
                 let wwc = widgets_using_columns.unwrap();
                 let res = wwc.extract::<HashMap<usize, Vec<TableWidget>>>(py);
-                widgets = match res {
+                column_widgets = match res {
                     Ok(val) => Some(val),
                     Err(_) => panic!("table: Unable to extract widgets_using_columns"),
                 };
             });
         }
 
-        // Need to generate the ids for the widgets and the is_checked values
+        // Need to generate the ids for the widgets and the boolean values
         // Keeping the ids organized in a hashmap for now, may need only a vec.
-        if widgets.is_some() {
-            let mut wid_ids: HashMap<usize, Vec<usize>> = HashMap::new();
-            let mut chkbx_checked: HashMap<usize, Vec<bool>> = HashMap::new();
-            for col_position in widgets.as_ref().unwrap().keys() {
-                let mut ids: Vec<usize> = vec![];
-                let mut checked: Vec<bool> = vec![];
-                for _ in 0..table_length {
-                    self.id += 1;
-                    ids.push(self.id);
-                    checked.push(false);
+        let mut button_ids: Vec<(usize, usize, usize, bool)> = vec![]; // (id, row, col, bool)
+        let mut check_ids: Vec<(usize, usize, usize, bool)> = vec![];
+        let mut image_ids: Vec<(usize, usize, usize, bool)> = vec![];
+        let mut tog_ids: Vec<(usize, usize, usize, bool)> = vec![];
+        let mut select_ids: Vec<(usize, usize, usize, bool)> = vec![];
+            
+        if column_widgets.is_some() {
+            for (col, table_widgets) in column_widgets.unwrap() {
+                for (row, widget) in table_widgets.iter().enumerate() {
+                    match widget {
+                        TableWidget::Button => {
+                            button_ids.push((self.get_id(None), row, col, false));
+                        },
+                        TableWidget::Checkbox => {
+                            check_ids.push((self.get_id(None), row, col, false));
+                        },
+                        TableWidget::Image => {
+                            image_ids.push((self.get_id(None), row, col, false));
+                        },
+                        TableWidget::Toggler => {
+                            tog_ids.push((self.get_id(None), row, col, false));
+                        },
+                        TableWidget::SelectableText => {
+                            select_ids.push((self.get_id(None), row, col, false));
+                        },
+                    }
+
                 }
-                wid_ids.insert(*col_position, ids);
-                chkbx_checked.insert(*col_position, checked);
             }
-            widget_ids = Some(wid_ids);
-            on_toggled = Some(chkbx_checked);
+        }
+        
+        if on_button.is_some() {
+            add_callback_to_mutex(id, "on_button".to_string(), on_button);
         }
 
-        if on_press_button.is_some() {
-            add_callback_to_mutex(id, "on_press_button".to_string(), on_press_button);
+        if on_checkbox.is_some() {
+            add_callback_to_mutex(id, "on_checkbox".to_string(), on_checkbox);
         }
 
-        if on_toggle_checkbox.is_some() {
-            add_callback_to_mutex(id, "on_toggle_checkbox".to_string(), on_toggle_checkbox);
+        if on_toggler.is_some() {
+            add_callback_to_mutex(id, "on_toggler".to_string(), on_toggler);
+        }
+
+        if on_selectable.is_some() {
+            add_callback_to_mutex(id, "on_selectable".to_string(), on_selectable);
         }
 
         if on_press.is_some() {
@@ -1967,9 +1978,11 @@ impl IPG {
                                                     highlight_amount,
                                                     column_widths,
                                                     table_length,
-                                                    widgets,
-                                                    widget_ids,
-                                                    on_toggled,
+                                                    button_ids,
+                                                    check_ids,
+                                                    image_ids,
+                                                    tog_ids,
+                                                    select_ids,
                                                     image_width,
                                                     image_height,
                                                     show,
@@ -1981,8 +1994,6 @@ impl IPG {
         Ok(id)
 
     }
-
-
 
     #[pyo3(signature = (parent_id, content, gen_id=None, width=None, 
                         height=None, width_fill=false, height_fill=false, 

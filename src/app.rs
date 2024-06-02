@@ -24,7 +24,7 @@ use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 use ipg_widgets::ipg_events::process_events;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
 use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
-use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_pointid, construct_mousearea};
+use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_point, construct_mousearea};
 use ipg_widgets::ipg_pick_list::{PLMessage, construct_picklist, pick_list_callback};
 use ipg_widgets::ipg_progress_bar::construct_progress_bar;
 use ipg_widgets::ipg_radio::{RDMessage, construct_radio, radio_callback};
@@ -45,7 +45,7 @@ use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_wind
 use ipg_widgets::helpers::get_usize_of_id;
 use crate::{access_state, IpgIds};
 
-use crate::iced_widgets::mousearea::PointId;
+
 use iced::widget::scrollable;
 
 #[derive(Debug, Clone)]
@@ -79,7 +79,7 @@ pub enum Message {
     MouseAreaOnMiddlePress(usize),
     MouseAreaOnMiddleRelease(usize),
     MouseAreaOnEnter(usize),
-    MouseAreaOnMove(PointId),
+    MouseAreaOnMove(Point, usize),
     MouseAreaOnExit(usize),
 }
 
@@ -201,8 +201,8 @@ impl multi_window::Application for App {
                 mousearea_callback(id, "on_enter".to_string());
                 Command::none()
             },
-            Message::MouseAreaOnMove(pointid) => {
-                mousearea_callback_pointid(pointid, "on_move".to_string());
+            Message::MouseAreaOnMove(point, id) => {
+                mousearea_callback_point(id, point, "on_move".to_string());
                 Command::none()
             },
             Message::MouseAreaOnExit(id) => {
@@ -444,7 +444,7 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                     return construct_container(con.clone(), content)
                 },
                 IpgContainers::IpgMouseArea(m_area) => {
-                    return construct_mousearea(m_area, content)
+                    return construct_mousearea(m_area.clone(), content)
                 },
                 IpgContainers::IpgRow(row) => {
                     return construct_row(row, content)

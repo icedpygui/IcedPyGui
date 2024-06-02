@@ -7,13 +7,14 @@ use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_u
 use crate::style::styling::table_row_theme;
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
-use crate::iced_widgets::mousearea_table::{MouseArea, PointIdRC};
 
+use iced::Point;
 use iced::mouse::Interaction;
 use iced::widget::text::{LineHeight, Style};
 use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, Theme};
 use iced::alignment::Alignment;
-use iced::widget::{container, text, Checkbox, Column, Container, Image, Row, Scrollable, Space, Text};
+use iced::widget::{Button, container, Checkbox, Column, Container, Image, 
+    MouseArea, Row, Scrollable, Space, Text, text, Toggler};
 use iced::alignment::Horizontal;
 use iced::widget::svg;
 use iced::advanced::image;
@@ -40,9 +41,11 @@ pub struct IpgTable {
         pub highlight_amount: f32,
         pub column_widths: Vec<f32>,
         pub table_length: u32,
-        pub widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>, // column#, widget type
-        pub widget_ids: Option<HashMap<usize, Vec<usize>>>, // column, ids
-        pub on_toggled: Option<HashMap<usize, Vec<bool>>>,
+        pub button_ids: Vec<(usize, usize, usize, bool)>,
+        pub check_ids: Vec<(usize, usize, usize, bool)>,
+        pub image_ids: Vec<(usize, usize, usize, bool)>,
+        pub tog_ids: Vec<(usize, usize, usize, bool)>,
+        pub select_ids: Vec<(usize, usize, usize, bool)>,
         pub image_width: Option<Vec<f32>>,
         pub image_height: Option<Vec<f32>>,
         pub show: bool,
@@ -62,9 +65,11 @@ impl IpgTable {
         highlight_amount: f32,
         column_widths: Vec<f32>,
         table_length: u32,
-        widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>,
-        widget_ids: Option<HashMap<usize, Vec<usize>>>,
-        on_toggled: Option<HashMap<usize, Vec<bool>>>,
+        button_ids: Vec<(usize, usize, usize, bool)>,
+        check_ids: Vec<(usize, usize, usize, bool)>,
+        image_ids: Vec<(usize, usize, usize, bool)>,
+        tog_ids: Vec<(usize, usize, usize, bool)>,
+        select_ids: Vec<(usize, usize, usize, bool)>,
         image_width: Option<Vec<f32>>,
         image_height: Option<Vec<f32>>,
         show: bool,
@@ -82,9 +87,11 @@ impl IpgTable {
             highlight_amount,
             column_widths,
             table_length,
-            widgets_using_columns,
-            widget_ids,
-            on_toggled,
+            button_ids,
+            check_ids,
+            image_ids,
+            tog_ids,
+            select_ids,
             image_width,
             image_height,
             show,
@@ -99,6 +106,8 @@ impl IpgTable {
 pub enum TableMessage {
     TableButton((usize, usize)),
     TableCheckbox(bool, (usize, usize)),
+    TableToggler(bool, (usize, usize)),
+    TableSelectableText((usize, usize)),
 
     MouseAreaOnPress((usize, usize)),
     MouseAreaOnRelease((usize, usize)),
@@ -107,7 +116,7 @@ pub enum TableMessage {
     MouseAreaOnMiddlePress((usize, usize)),
     MouseAreaOnMiddleRelease((usize, usize)),
     MouseAreaOnEnter((usize, usize)),
-    MouseAreaOnMove(PointIdRC),
+    MouseAreaOnMove(Point, (usize, usize)),
     MouseAreaOnExit((usize, usize)),
 }
 
@@ -131,7 +140,8 @@ pub enum TableWidget {
     Button,
     Checkbox,
     Image,
-    Text,
+    Toggler,
+    SelectableText,
 }
 
 #[derive(Debug, Clone)]
@@ -147,22 +157,6 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
     let mut headers: Vec<Element<Message>>= vec![];
 
     let mut column_elements: Vec<Element<Message>> = vec![];
-
-    let mut widgets_construct = false;
-
-    let table_widgets: HashMap<usize, Vec<TableWidget>> = if table.widgets_using_columns.is_some() {
-        widgets_construct = true;
-        table.widgets_using_columns.unwrap()
-    } else {
-        HashMap::new()
-    };
-
-    // get the widget column positions, if present.
-    let mut widget_column_positions: Vec<usize> = vec![];
-    if widgets_construct {
-        widget_column_positions = table_widgets.keys().into_iter().map(|key| *key).collect();
-        
-    }
 
     // initializing the rows
     let mut data_rows: Vec<Vec<String>> = vec![];
@@ -269,41 +263,92 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
     // construct the table elements and widgets.
     let mut body_column_vec: Vec<Element<Message>> = vec![];
 
-    for (row_index, row) in data_rows.iter().enumerate() {
+    for (column_index, row) in data_rows.iter().enumerate() {
 
         let mut row_vec: Vec<Element<Message>> = vec![];
+        let mut row_element: Element<Message>;
 
-        for (col_index, label) in row.iter().enumerate() {
-            let tbl_widgets = table_widgets.get(&col_index);
-            let row_element: Element<Message> = 
-                if tbl_widgets.is_some() {
-                    let is_checked = get_checked(&table.on_toggled, 
-                                                        &col_index, 
-                                                        row_index);
+        for (row_index, label) in row.iter().enumerate() {
+            let index = check_for_widget(&table.button_ids, row_index, column_index);
+            if index.is_some() {
+                let (wid_id, row, col, bl) = table.button_ids[index.unwrap()];
+                row_element = add_widget(TableWidget::Button,
+                                    table.id, 
+                                    label.clone(), 
+                                    row, 
+                                    col, 
+                                    bl,
+                                    None, 
+                                    None);
+                continue;
+            }
 
-                    let tbl_widgets = tbl_widgets.unwrap();
-                       
-                    // label is image_path here.
-                    add_widget(tbl_widgets[row_index],
-                                table.id, 
-                                label.clone(), row_index, 
-                                col_index.clone(), is_checked,
-                                table.image_width.clone(), 
-                                table.image_height.clone())
-                        
-                    
-                } else {
-                    add_text_widget(label.clone()).into()
-                };
+            let index = check_for_widget(&table.check_ids, row_index, column_index);
+            if index.is_some() {
+                let (wid_id, row, col, bl) = table.check_ids[index.unwrap()];
+                row_element = add_widget(TableWidget::Checkbox,
+                                    table.id, 
+                                    label.clone(), 
+                                    row, 
+                                    col, 
+                                    bl,
+                                    None, 
+                                    None);
+                continue;
+            }
 
-                let cnt: Element<Message> = add_row_container(
-                                                row_element, 
-                                                row_index, 
-                                                table.highlight_amount, 
-                                                table.row_highlight);
+            let index = check_for_widget(&table.image_ids, row_index, column_index);
+            if index.is_some() {
+                let (wid_id, row, col, bl) = table.image_ids[index.unwrap()];
+                row_element = add_widget(TableWidget::Image,
+                                    table.id, 
+                                    label.clone(), 
+                                    row, 
+                                    col, 
+                                    bl,
+                                    table.image_width, 
+                                    table.image_height);
+                continue;
+            }
 
-                row_vec.push(cnt);
+            let index = check_for_widget(&table.tog_ids, row_index, column_index);
+            if index.is_some() {
+                let (wid_id, row, col, bl) = table.tog_ids[index.unwrap()];
+                row_element = add_widget(TableWidget::Toggler,
+                                    table.id, 
+                                    label.clone(), 
+                                    row, 
+                                    col, 
+                                    bl,
+                                    None, 
+                                    None);
+                continue;
+            }
+
+            let index = check_for_widget(&table.select_ids, row_index, column_index);
+            if index.is_some() {
+                let (wid_id, row, col, bl) = table.select_ids[index.unwrap()];
+                row_element =  add_widget(TableWidget::SelectableText,
+                                    table.id, 
+                                    label.clone(), 
+                                    row, 
+                                    col, 
+                                    bl,
+                                    None, 
+                                    None);
+                continue;
+            }
+
+            let row_element: Element<Message> = add_text_widget(label.clone());
         }
+        let cnt: Element<Message> = add_row_container(
+                                            row_element, 
+                                            column_index, 
+                                            table.highlight_amount, 
+                                            table.row_highlight);
+
+        row_vec.push(cnt);
+
         let row_widget: Element<Message> = Row::with_children(row_vec).into();
         body_column_vec.push(row_widget.into());
     }
@@ -376,11 +421,11 @@ fn add_text_widget(label: String) -> Element<'static, Message> {
     txt
 }
 
-fn add_row_container(label: Element<Message>, row_index: usize,
+fn add_row_container(content: Element<Message>, row_index: usize,
                     highlight_amount: f32, row_highlight: Option<TableRowHighLight>) 
                     -> Element<Message> {
     // Using container because text has no background 
-    Container::new(label)
+    Container::new(content)
             .width(Length::Fill)
             .align_x(alignment::Horizontal::Center)
             .align_y(alignment::Vertical::Center)
@@ -390,31 +435,34 @@ fn add_row_container(label: Element<Message>, row_index: usize,
             .into()
 }
 
-use iced::widget::Button;
-fn add_widget(widget: TableWidget, table_id: usize, 
-                        label: String, row_index: usize, 
-                        col_index: usize, is_checked: bool,
-                        image_width: Option<Vec<f32>>, image_height: Option<Vec<f32>>) 
-                        -> Element<'static, Message> {
+fn add_widget(widget_type: TableWidget, 
+                table_id: usize, 
+                label: String, row_index: usize, 
+                col_index: usize, is_checked: bool, 
+                image_width: Option<Vec<f32>>, image_height: Option<Vec<f32>>) 
+                -> Element<'static, Message> {
 
-    match widget {
+    match widget_type {
         TableWidget::Button => {
-            let txt = Text::new(label)
-                                                            .horizontal_alignment(Horizontal::Center)
-                                                            .width(Length::Fill);
+            let txt = 
+                    Text::new(label)
+                                .horizontal_alignment(Horizontal::Center)
+                                .width(Length::Fill);
                                                             
-            let btn: Element<TableMessage> = Button::new(txt)
-                                                            .padding(Padding::ZERO)
-                                                            .width(Length::Fill)
-                                                            .on_press(TableMessage::TableButton((col_index, row_index))) 
-                                                            .into(); 
+            let btn: Element<TableMessage> = 
+                    Button::new(txt)
+                                .padding(Padding::ZERO)
+                                .width(Length::Fill)
+                                .on_press(TableMessage::TableButton((row_index, col_index))) 
+                                .into(); 
             btn.map(move |message| app::Message::Table(table_id, message))
         },
         TableWidget::Checkbox => {
-            let chk: Element<TableMessage> = Checkbox::new(label, is_checked)
-                                                    .width(Length::Shrink)
-                                                    .on_toggle(move|b| TableMessage::TableCheckbox(b, (col_index, row_index)))
-                                                    .into();
+            let chk: Element<TableMessage> = 
+                    Checkbox::new(label, is_checked)
+                                .width(Length::Shrink)
+                                .on_toggle(move|b| TableMessage::TableCheckbox(b, (row_index, col_index)))
+                                .into();
             chk.map(move |message| app::Message::Table(table_id, message))
         },
         TableWidget::Image => {
@@ -460,13 +508,22 @@ fn add_widget(widget: TableWidget, table_id: usize,
                 panic!("Table: Only png and svg files supports at this time.")
             }
         },
-        TableWidget::Text => {
+        TableWidget::SelectableText => {
             let txt: Element<TableMessage> = text(label)
                                                 .width(Length::Fill)
                                                 .horizontal_alignment(Horizontal::Center)
                                                 .into();
 
             add_mousearea(txt, table_id, row_index, col_index)
+        },
+        TableWidget::Toggler => {
+            let is_toggled = false;
+            let tog: Element<TableMessage> = Toggler::new(Some(label), is_toggled,
+                                    move|b| TableMessage::TableToggler(b, (row_index, col_index)))
+                                    .into();
+
+
+            tog.map(move |message| app::Message::Table(table_id, message))
         }
     }
 }
@@ -476,8 +533,6 @@ fn add_mousearea(content: Element<TableMessage>, table_id: usize, row: usize, co
     
     let ma: Element<TableMessage> = 
                     MouseArea::new(content)
-                    .id(table_id)
-                    .table_pos((row, col))
                     .on_press(TableMessage::MouseAreaOnPress((row, col)))
                     .on_release(TableMessage::MouseAreaOnRelease((row, col)))
                     .on_right_press(TableMessage::MouseAreaOnRightPress((row, col)))
@@ -485,7 +540,7 @@ fn add_mousearea(content: Element<TableMessage>, table_id: usize, row: usize, co
                     .on_middle_press(TableMessage::MouseAreaOnMiddlePress((row, col)))
                     .on_middle_release(TableMessage::MouseAreaOnMiddleRelease((row, col)))
                     .on_enter(TableMessage::MouseAreaOnEnter((row, col)))
-                    .on_move(TableMessage::MouseAreaOnMove)
+                    .on_move(move|p| TableMessage::MouseAreaOnMove(p, (row, col)))
                     .on_exit(TableMessage::MouseAreaOnExit((row, col)))
                     .interaction(Interaction::Pointer)
                     .into();
@@ -510,53 +565,59 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = table_id; 
             wco.index_table = Some((col_index, row_index));
-            wco.event_name = "on_press_button".to_string();
+            wco.event_name = "on_press".to_string();
             process_callback(wco);
         },
-        TableMessage::TableCheckbox(on_toggle, (col_index, row_index)) => {
+        TableMessage::TableCheckbox(is_checked, (col_index, row_index)) => {
             wci.value_str =  Some("checkbox".to_string());
-            wci.on_toggle = Some(on_toggle);
+            wci.on_toggle = Some(is_checked);
             wci.index_table = Some((col_index, row_index));
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = table_id;
             wco.value_str =  Some("checkbox".to_string());
-            wco.event_name = "on_toggle_checkbox".to_string();
-            wco.on_toggle = Some(on_toggle);
+            wco.event_name = "on_check".to_string();
+            wco.on_toggle = Some(is_checked);
             wco.index_table = Some((col_index, row_index));
             process_callback(wco);
         },
-        TableMessage::MouseAreaOnPress((col_index, row_index)) => {
-            mousearea_callback(table_id, col_index, row_index, "on_press".to_string());
+        TableMessage::TableSelectableText(_) => {
+
+        }
+        TableMessage::TableToggler(on_toggle, (row_index, col_index)) => {
+            wci.value_str =  Some("checkbox".to_string());
+        }
+        TableMessage::MouseAreaOnPress((row_index, col_index)) => {
+            mousearea_callback(table_id, row_index, col_index, "on_press".to_string());
         },
-        TableMessage::MouseAreaOnRelease((col_index, row_index)) => {
-            mousearea_callback(table_id, col_index, row_index, "on_release".to_string());
+        TableMessage::MouseAreaOnRelease((row_index, col_index)) => {
+            mousearea_callback(table_id, row_index, col_index, "on_release".to_string());
         },
-        TableMessage::MouseAreaOnRightPress((col_index, row_index)) => {
-            mousearea_callback(table_id, col_index, row_index, "on_right_press".to_string());
+        TableMessage::MouseAreaOnRightPress((row_index, col_index)) => {
+            mousearea_callback(table_id, row_index, col_index, "on_right_press".to_string());
         },
-        TableMessage::MouseAreaOnRightRelease((col_index, row_index)) => {
-            mousearea_callback(table_id, col_index, row_index, "on_right_release".to_string());
+        TableMessage::MouseAreaOnRightRelease((row_index, col_index)) => {
+            mousearea_callback(table_id, row_index, col_index, "on_right_release".to_string());
         },
-        TableMessage::MouseAreaOnMiddlePress((col_index, row_index)) => {
-            mousearea_callback(table_id, col_index, row_index, "on_middle_press".to_string());
+        TableMessage::MouseAreaOnMiddlePress((row_index, col_index)) => {
+            mousearea_callback(table_id, row_index, col_index, "on_middle_press".to_string());
         },
-        TableMessage::MouseAreaOnMiddleRelease((col_index, row_index)) => {
-            mousearea_callback(table_id, col_index, row_index, "on_middle_release".to_string());
+        TableMessage::MouseAreaOnMiddleRelease((row_index, col_index)) => {
+            mousearea_callback(table_id, row_index, col_index, "on_middle_release".to_string());
         },
-        TableMessage::MouseAreaOnEnter((col_index, row_index)) => {
-            mousearea_callback(table_id, col_index, row_index, "on_enter".to_string());
+        TableMessage::MouseAreaOnEnter((row_index, col_index)) => {
+            mousearea_callback(table_id, row_index, col_index, "on_enter".to_string());
         },
-        TableMessage::MouseAreaOnMove(pointidrc) => {
-            mousearea_callback_pointidrc(pointidrc, "on_move".to_string());
+        TableMessage::MouseAreaOnMove(point, (row, col)) => {
+            mousearea_callback_point(table_id, point, (row, col), "on_move".to_string());
         },
-        TableMessage::MouseAreaOnExit((col_index, row_index)) => {
-            mousearea_callback(table_id, col_index, row_index, "on_exit".to_string());
+        TableMessage::MouseAreaOnExit((row_index, col_index)) => {
+            mousearea_callback(table_id, row_index, col_index, "on_exit".to_string());
         },
     }
 }
 
 
-pub fn mousearea_callback(table_id: usize, col_index: usize, row_index: usize, event_name: String) {
+pub fn mousearea_callback(table_id: usize, row_index: usize, col_index: usize, event_name: String) {
     
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = table_id;
@@ -570,12 +631,12 @@ pub fn mousearea_callback(table_id: usize, col_index: usize, row_index: usize, e
 }
 
 
-fn mousearea_callback_pointidrc(pointid: PointIdRC, event_name: String) {
+fn mousearea_callback_point(id: usize, point: Point, table_index: (usize, usize), event_name: String) {
 
     let mut points: Vec<(String, f32)> = vec![];
-    points.push(("x".to_string(), pointid.x));
-    points.push(("y".to_string(), pointid.y));
-    let id = pointid.id;
+    points.push(("x".to_string(), point.x));
+    points.push(("y".to_string(), point.y));
+
     
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
@@ -605,9 +666,9 @@ pub fn process_callback(wco: WidgetCallbackOut)
         None => panic!("Table callback could not be found with id {}", wco.id),
     };
 
-    let mut widget_index: (usize, usize) = (0, 0);
+    let mut table_index: (usize, usize) = (0, 0);
     if wco.index_table.is_some() {
-        widget_index = wco.index_table.unwrap();
+        table_index = wco.index_table.unwrap();
     }
     
     if wco.value_str == Some("checkbox".to_string()) {
@@ -621,7 +682,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     let user_data = wco.user_data.unwrap();
                     let res = callback.call1(py, (
                                                                         wco.id.clone(),
-                                                                        widget_index,
+                                                                        table_index,
                                                                         is_toggled,  
                                                                         user_data
                                                                         ));
@@ -633,7 +694,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     
                     let res = callback.call1(py, (
                                                                         wco.id.clone(),
-                                                                        widget_index,
+                                                                        table_index,
                                                                         is_toggled,  
                                                                         ));
                     match res {
@@ -648,7 +709,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 let user_data = wco.user_data.unwrap();
                 let res = callback.call1(py, (
                                                                     wco.id.clone(),
-                                                                    widget_index,  
+                                                                    table_index,  
                                                                     user_data
                                                                     ));
                 match res {
@@ -659,7 +720,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
                 let res = callback.call1(py, (
                                                                     wco.id.clone(),
-                                                                    widget_index,  
+                                                                    table_index,  
                                                                     ));
                 match res {
                     Ok(_) => (),
@@ -680,23 +741,25 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 let user_data = wco.user_data.unwrap();
                 let res = callback.call1(py, (
                                                                     wco.id.clone(),
-                                                                    point,  
+                                                                    point,
+                                                                    table_index,  
                                                                     user_data
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Table: 3 parameters (id, point, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Table: 4 parameters (id, point, index, user_data) are required or a python error in this function. {er}"),
                 }
 
             } else {
 
                 let res = callback.call1(py, (
                                                                     wco.id.clone(),
-                                                                    point,  
+                                                                    point,
+                                                                    table_index,  
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Table: 2 parameter (id, point) are required or possibly a python error in this function. {er}"),
+                    Err(er) => panic!("Table: 3 parameter (id, point, index) are required or possibly a python error in this function. {er}"),
                 }
             } 
         });
@@ -748,4 +811,20 @@ fn table_item_update(
         add_callback_to_mutex(id, "on_update".to_string(), on_update);
     }
     
+}
+
+// widgets = (id, row idx, col idx, bool)
+fn check_for_widget(widgets: &Vec<(usize, usize, usize, bool)>, row_index: usize, col_index: usize) -> Option<usize> {
+    // if empty return
+    if widgets.len() == 0 {return None}
+    // if not column return
+    if widgets[0].2 != col_index {return None}
+
+    // Becuase of possible mixed columns of widgets, need the index
+    for (index, widget) in widgets.iter().enumerate() {
+        if row_index == widget.1 {
+            return Some(index)
+        } 
+    }
+    return None
 }

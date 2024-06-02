@@ -6,9 +6,8 @@ use super::callbacks::{WidgetCallbackIn,
                         get_set_container_callback_data};
 use super::helpers::try_extract_boolean;
 
-use crate::iced_widgets::mousearea::{MouseArea, PointId};
-
-use iced::Element;
+use iced::widget::MouseArea;
+use iced::{Element, Point};
 use iced::widget::Column;
 use iced::mouse::Interaction;
 
@@ -38,15 +37,13 @@ impl IpgMouseArea {
     }
 }
 
-pub fn construct_mousearea(m_area: &IpgMouseArea, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
+pub fn construct_mousearea(m_area: IpgMouseArea, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
     let cont: Element<Message> = Column::with_children(content).into();
-    // Had to use the Message because the content already has Message.  Typical probablem
+    // Had to use the Message because the content already has Message.  Typical problem
     // with containers that are also like widgets with Message.
-    // TODO: The work around might be to collect the list of ids then construct the elements 
-    // in a central routine using the MouseAreaMessage as an example.
     let ma: Element<Message> = 
-                    MouseArea::new(m_area.id, cont)
+                    MouseArea::new(cont)
                     .on_press(Message::MouseAreaOnPress(m_area.id))
                     .on_release(Message::MouseAreaOnRelease(m_area.id))
                     .on_right_press(Message::MouseAreaOnRightPress(m_area.id))
@@ -54,7 +51,7 @@ pub fn construct_mousearea(m_area: &IpgMouseArea, content: Vec<Element<'static, 
                     .on_middle_press(Message::MouseAreaOnMiddlePress(m_area.id))
                     .on_middle_release(Message::MouseAreaOnMiddleRelease(m_area.id))
                     .on_enter(Message::MouseAreaOnEnter(m_area.id))
-                    .on_move(Message::MouseAreaOnMove)
+                    .on_move(move|p| Message::MouseAreaOnMove(p, m_area.id))
                     .on_exit(Message::MouseAreaOnExit(m_area.id))
                     .interaction(Interaction::Pointer)
                     .into();
@@ -75,12 +72,11 @@ pub fn mousearea_callback(id: usize, event_name: String) {
 
 }
 
-pub fn mousearea_callback_pointid(pointid: PointId, event_name: String) {
+pub fn mousearea_callback_point(id: usize, point: Point, event_name: String) {
 
     let mut points: Vec<(String, f32)> = vec![];
-    points.push(("x".to_string(), pointid.x));
-    points.push(("y".to_string(), pointid.y));
-    let id = pointid.id;
+    points.push(("x".to_string(), point.x));
+    points.push(("y".to_string(), point.y));
     
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
