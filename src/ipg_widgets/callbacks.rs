@@ -276,20 +276,48 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     wco
                 },
                 IpgWidgets::IpgTable(tbl) => {
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.user_data = tbl.user_data.clone();
                     let (row_index, col_index) = if wci.index_table.is_some() {
                          wci.index_table.unwrap()
                     } else {
-                        (0, 0)
+                        return wco;
                     };
-                    
+
                     if wci.value_str == Some("checkbox".to_string()) {
-                        let on_toggles = tbl.on_toggled.as_mut().unwrap();
-                        let on_togged = on_toggles.get_mut(&col_index).unwrap();
-                        on_togged[row_index] = wci.on_toggle.unwrap();
+                        let mut found_idx: Option<usize> = None;
+                        for (idx, (_id, row, col, _bl)) in tbl.check_ids.iter().enumerate() {
+                            if col_index != *col {
+                                break;
+                            }
+                            if row_index == *row {
+                               found_idx = Some(idx);
+                                break;
+                            }
+                        }
+                        if found_idx.is_some() {
+                            tbl.check_ids[found_idx.unwrap()].3 = wci.on_toggle.unwrap();
+                            return wco;
+                        }
+                    }
+
+                    if wci.value_str == Some("toggler".to_string()) {
+                        let mut found_idx: Option<usize> = None;
+                        for (idx, (_id, row, col, _bl)) in tbl.toggler_ids.iter().enumerate() {
+                            if col_index != *col {
+                                break;
+                            }
+                            if row_index == *row {
+                               found_idx = Some(idx);
+                                break;
+                            }
+                        }
+                        if found_idx.is_some() {
+                            tbl.check_ids[found_idx.unwrap()].3 = wci.on_toggle.unwrap();
+                            return wco;
+                        }
                     }
                     
-                    let mut wco = WidgetCallbackOut::default();
-                    wco.user_data = tbl.user_data.clone();
                     wco
                 },
                 IpgWidgets::IpgText(_) => {

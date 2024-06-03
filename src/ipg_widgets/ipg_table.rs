@@ -44,7 +44,7 @@ pub struct IpgTable {
         pub button_ids: Vec<(usize, usize, usize, bool)>,
         pub check_ids: Vec<(usize, usize, usize, bool)>,
         pub image_ids: Vec<(usize, usize, usize, bool)>,
-        pub tog_ids: Vec<(usize, usize, usize, bool)>,
+        pub toggler_ids: Vec<(usize, usize, usize, bool)>,
         pub select_ids: Vec<(usize, usize, usize, bool)>,
         pub image_width: Option<Vec<f32>>,
         pub image_height: Option<Vec<f32>>,
@@ -68,7 +68,7 @@ impl IpgTable {
         button_ids: Vec<(usize, usize, usize, bool)>,
         check_ids: Vec<(usize, usize, usize, bool)>,
         image_ids: Vec<(usize, usize, usize, bool)>,
-        tog_ids: Vec<(usize, usize, usize, bool)>,
+        toggler_ids: Vec<(usize, usize, usize, bool)>,
         select_ids: Vec<(usize, usize, usize, bool)>,
         image_width: Option<Vec<f32>>,
         image_height: Option<Vec<f32>>,
@@ -90,7 +90,7 @@ impl IpgTable {
             button_ids,
             check_ids,
             image_ids,
-            tog_ids,
+            toggler_ids,
             select_ids,
             image_width,
             image_height,
@@ -263,14 +263,17 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
     // construct the table elements and widgets.
     let mut body_column_vec: Vec<Element<Message>> = vec![];
 
-    for (column_index, row) in data_rows.iter().enumerate() {
+    for (row_index, row) in data_rows.iter().enumerate() {
 
         let mut row_vec: Vec<Element<Message>> = vec![];
-        let mut row_element: Element<Message>;
 
-        for (row_index, label) in row.iter().enumerate() {
-            let index = check_for_widget(&table.button_ids, row_index, column_index);
+        for (col_index, label) in row.iter().enumerate() {
+            let mut row_element: Element<Message> = Space::new(0.0, 0.0).into();
+            let mut widget_found = false;
+
+            let index = check_for_widget(&table.button_ids, row_index, col_index);
             if index.is_some() {
+                widget_found = true;
                 let (wid_id, row, col, bl) = table.button_ids[index.unwrap()];
                 row_element = add_widget(TableWidget::Button,
                                     table.id, 
@@ -280,11 +283,11 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     bl,
                                     None, 
                                     None);
-                continue;
             }
 
-            let index = check_for_widget(&table.check_ids, row_index, column_index);
+            let index = check_for_widget(&table.check_ids, row_index, col_index);
             if index.is_some() {
+                widget_found = true;
                 let (wid_id, row, col, bl) = table.check_ids[index.unwrap()];
                 row_element = add_widget(TableWidget::Checkbox,
                                     table.id, 
@@ -294,11 +297,11 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     bl,
                                     None, 
                                     None);
-                continue;
             }
 
-            let index = check_for_widget(&table.image_ids, row_index, column_index);
+            let index = check_for_widget(&table.image_ids, row_index, col_index);
             if index.is_some() {
+                widget_found = true;
                 let (wid_id, row, col, bl) = table.image_ids[index.unwrap()];
                 row_element = add_widget(TableWidget::Image,
                                     table.id, 
@@ -306,14 +309,14 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     row, 
                                     col, 
                                     bl,
-                                    table.image_width, 
-                                    table.image_height);
-                continue;
+                                    table.image_width.clone(), 
+                                    table.image_height.clone());
             }
 
-            let index = check_for_widget(&table.tog_ids, row_index, column_index);
+            let index = check_for_widget(&table.toggler_ids, row_index, col_index);
             if index.is_some() {
-                let (wid_id, row, col, bl) = table.tog_ids[index.unwrap()];
+                widget_found = true;
+                let (wid_id, row, col, bl) = table.toggler_ids[index.unwrap()];
                 row_element = add_widget(TableWidget::Toggler,
                                     table.id, 
                                     label.clone(), 
@@ -322,11 +325,11 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     bl,
                                     None, 
                                     None);
-                continue;
             }
 
-            let index = check_for_widget(&table.select_ids, row_index, column_index);
+            let index = check_for_widget(&table.select_ids, row_index, col_index);
             if index.is_some() {
+                widget_found = true;
                 let (wid_id, row, col, bl) = table.select_ids[index.unwrap()];
                 row_element =  add_widget(TableWidget::SelectableText,
                                     table.id, 
@@ -336,20 +339,25 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     bl,
                                     None, 
                                     None);
-                continue;
             }
-
-            let row_element: Element<Message> = add_text_widget(label.clone());
+           
+            if !widget_found {
+                row_element = add_text_widget(label.clone());
+            }
+            
+        
+            let cnt = add_row_container(
+                                                row_element, 
+                                                row_index, 
+                                                table.highlight_amount, 
+                                                table.row_highlight);
+            
+            row_vec.push(cnt);
         }
-        let cnt: Element<Message> = add_row_container(
-                                            row_element, 
-                                            column_index, 
-                                            table.highlight_amount, 
-                                            table.row_highlight);
-
-        row_vec.push(cnt);
-
-        let row_widget: Element<Message> = Row::with_children(row_vec).into();
+        
+        let row_widget: Element<Message> = Row::with_children(row_vec)
+                                                .into();
+        
         body_column_vec.push(row_widget.into());
     }
 
@@ -437,9 +445,12 @@ fn add_row_container(content: Element<Message>, row_index: usize,
 
 fn add_widget(widget_type: TableWidget, 
                 table_id: usize, 
-                label: String, row_index: usize, 
-                col_index: usize, is_checked: bool, 
-                image_width: Option<Vec<f32>>, image_height: Option<Vec<f32>>) 
+                label: String, 
+                row_index: usize, 
+                col_index: usize, 
+                is_toggled: bool, 
+                image_width: Option<Vec<f32>>, 
+                image_height: Option<Vec<f32>>) 
                 -> Element<'static, Message> {
 
     match widget_type {
@@ -459,7 +470,7 @@ fn add_widget(widget_type: TableWidget,
         },
         TableWidget::Checkbox => {
             let chk: Element<TableMessage> = 
-                    Checkbox::new(label, is_checked)
+                    Checkbox::new(label, is_toggled)
                                 .width(Length::Shrink)
                                 .on_toggle(move|b| TableMessage::TableCheckbox(b, (row_index, col_index)))
                                 .into();
@@ -561,30 +572,37 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
     wci.id = table_id;
 
     match message {
-        TableMessage::TableButton((col_index, row_index)) => {
+        TableMessage::TableButton((row_index, col_index)) => {
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = table_id; 
-            wco.index_table = Some((col_index, row_index));
-            wco.event_name = "on_press".to_string();
+            wco.index_table = Some((row_index, col_index));
+            wco.event_name = "on_button".to_string();
             process_callback(wco);
         },
-        TableMessage::TableCheckbox(is_checked, (col_index, row_index)) => {
+        TableMessage::TableCheckbox(on_toggle, (row_index, col_index)) => {
             wci.value_str =  Some("checkbox".to_string());
-            wci.on_toggle = Some(is_checked);
+            wci.on_toggle = Some(on_toggle);
             wci.index_table = Some((col_index, row_index));
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = table_id;
-            wco.value_str =  Some("checkbox".to_string());
-            wco.event_name = "on_check".to_string();
-            wco.on_toggle = Some(is_checked);
+            wco.event_name = "on_checkbox".to_string();
+            wco.on_toggle = Some(on_toggle);
             wco.index_table = Some((col_index, row_index));
             process_callback(wco);
         },
-        TableMessage::TableSelectableText(_) => {
-
+        TableMessage::TableSelectableText((row_index, col_index)) => {
+            
         }
         TableMessage::TableToggler(on_toggle, (row_index, col_index)) => {
-            wci.value_str =  Some("checkbox".to_string());
+            wci.value_str = Some("toggler".to_string());
+            wci.on_toggle = Some(on_toggle);
+            wci.index_table = Some((col_index, row_index));
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = table_id;
+            wco.event_name = "on_toggler".to_string();
+            wco.on_toggle = Some(on_toggle);
+            wco.index_table = Some((col_index, row_index));
+            process_callback(wco);
         }
         TableMessage::MouseAreaOnPress((row_index, col_index)) => {
             mousearea_callback(table_id, row_index, col_index, "on_press".to_string());
@@ -666,42 +684,39 @@ pub fn process_callback(wco: WidgetCallbackOut)
         None => panic!("Table callback could not be found with id {}", wco.id),
     };
 
-    let mut table_index: (usize, usize) = (0, 0);
-    if wco.index_table.is_some() {
-        table_index = wco.index_table.unwrap();
-    }
+    let table_index: (usize, usize) = match wco.index_table {
+        Some(ti) => ti,
+        None => panic!("Table: Unable to find table index for callback.")
+    };
     
-    if wco.value_str == Some("checkbox".to_string()) {
+    if vec!["on_button".to_string(), "on_checkbox".to_string(), "on_toggler".to_string()].contains(&wco.event_name) {
         
-        let is_toggled = match wco.on_toggle {
-            Some(checked) => checked,
-            None => panic!("Table: no value for is_checked found")
-        };
         Python::with_gil(|py| {
-                if wco.user_data.is_some() {
-                    let user_data = wco.user_data.unwrap();
-                    let res = callback.call1(py, (
-                                                                        wco.id.clone(),
-                                                                        table_index,
-                                                                        is_toggled,  
-                                                                        user_data
-                                                                        ));
-                    match res {
-                        Ok(_) => (),
-                        Err(er) => panic!("Table: 4 parameters (id, widget_index, is_checked, user_data) are required or a python error in this function. {er}"),
-                    }
-                } else {
-                    
-                    let res = callback.call1(py, (
-                                                                        wco.id.clone(),
-                                                                        table_index,
-                                                                        is_toggled,  
-                                                                        ));
-                    match res {
-                        Ok(_) => (),
-                        Err(er) => panic!("Table: 3 parameter (id, widget_index, is_checked) are required or possibly a python error in this function. {er}"),
-                    }
+            
+            if wco.user_data.is_some() {
+                let user_data = wco.user_data.unwrap();
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),
+                                                                    table_index,
+                                                                    wco.on_toggle,  
+                                                                    user_data
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Table: 4 parameters (id, widget_index, is_checked, user_data) are required or a python error in this function. {er}"),
                 }
+            } else {
+                
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),
+                                                                    table_index,
+                                                                    wco.on_toggle,  
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Table: 3 parameter (id, widget_index, is_checked) are required or possibly a python error in this function. {er}"),
+                }
+            }
         });
     } else if wco.event_name != "on_move".to_string() {
         Python::with_gil(|py| {
