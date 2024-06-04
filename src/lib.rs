@@ -1823,7 +1823,7 @@ impl IPG {
                     highlight_amount: f32,
                     column_widths: Vec<f32>,
                     table_length: u32,
-                    widgets_using_columns: Option<PyObject>,
+                    widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>,
                     gen_id: Option<usize>,
                     on_button: Option<PyObject>,
                     on_checkbox: Option<PyObject>,
@@ -1836,18 +1836,6 @@ impl IPG {
 
         let id = self.get_id(gen_id);
 
-        let mut column_widgets: Option<HashMap<usize, Vec<TableWidget>>> = None;
-        
-        if widgets_using_columns.is_some() {
-            Python::with_gil(|py| {
-                let wwc = widgets_using_columns.unwrap();
-                let res = wwc.extract::<HashMap<usize, Vec<TableWidget>>>(py);
-                column_widgets = match res {
-                    Ok(val) => Some(val),
-                    Err(_) => panic!("table: Unable to extract widgets_using_columns"),
-                };
-            });
-        }
 
         // Need to generate the ids for the widgets and the boolean values
         // Keeping the ids organized in a hashmap for now, may need only a vec.
@@ -1855,21 +1843,21 @@ impl IPG {
         let mut check_ids: Vec<(usize, usize, usize, bool)> = vec![];
         let mut tog_ids: Vec<(usize, usize, usize, bool)> = vec![];
             
-        if column_widgets.is_some() {
-            for (col, table_widgets) in column_widgets.unwrap() {
+        if widgets_using_columns.is_some() {
+            let table_widgets_hash = widgets_using_columns.unwrap();
+            for (col, table_widgets) in table_widgets_hash.iter() {
                 for (row, widget) in table_widgets.iter().enumerate() {
                     match widget {
                         TableWidget::Button => {
-                            button_ids.push((self.get_id(None), row, col, false));
+                            button_ids.push((self.get_id(None), row, col.clone(), false));
                         },
                         TableWidget::Checkbox => {
-                            check_ids.push((self.get_id(None), row, col, false));
+                            check_ids.push((self.get_id(None), row, col.clone(), false));
                         },
                         TableWidget::Toggler => {
-                            tog_ids.push((self.get_id(None), row, col, false));
+                            tog_ids.push((self.get_id(None), row, col.clone(), false));
                         },
                     }
-
                 }
             }
         }
