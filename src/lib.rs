@@ -1810,12 +1810,7 @@ impl IPG {
                         column_widths=vec![], table_length=0, 
                         widgets_using_columns=None, gen_id=None, 
                         on_button=None, on_checkbox=None,
-                        on_toggler=None, on_selectable=None,
-                        on_press=None, on_release=None, 
-                        on_right_press=None, on_right_release=None, 
-                        on_middle_press=None, on_middle_release=None, 
-                        on_enter=None, on_move=None, on_exit=None,
-                        image_width=None, image_height=None,
+                        on_toggler=None, button_style=None,
                         show=true, user_data=None))]
     fn add_table(&mut self,
                     parent_id: String,
@@ -1833,18 +1828,7 @@ impl IPG {
                     on_button: Option<PyObject>,
                     on_checkbox: Option<PyObject>,
                     on_toggler: Option<PyObject>,
-                    on_selectable: Option<PyObject>,
-                    on_press: Option<PyObject>,
-                    on_release: Option<PyObject>,
-                    on_right_press: Option<PyObject>,
-                    on_right_release: Option<PyObject>,
-                    on_middle_press: Option<PyObject>,
-                    on_middle_release: Option<PyObject>,
-                    on_enter: Option<PyObject>,
-                    on_move: Option<PyObject>,
-                    on_exit:Option<PyObject>,
-                    image_width: Option<Vec<f32>>,
-                    image_height: Option<Vec<f32>>,
+                    button_style: Option<HashMap<usize, IpgButtonStyle>>,
                     show: bool,
                     user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
@@ -1869,9 +1853,7 @@ impl IPG {
         // Keeping the ids organized in a hashmap for now, may need only a vec.
         let mut button_ids: Vec<(usize, usize, usize, bool)> = vec![]; // (id, row, col, bool)
         let mut check_ids: Vec<(usize, usize, usize, bool)> = vec![];
-        let mut image_ids: Vec<(usize, usize, usize, bool)> = vec![];
         let mut tog_ids: Vec<(usize, usize, usize, bool)> = vec![];
-        let mut select_ids: Vec<(usize, usize, usize, bool)> = vec![];
             
         if column_widgets.is_some() {
             for (col, table_widgets) in column_widgets.unwrap() {
@@ -1883,14 +1865,8 @@ impl IPG {
                         TableWidget::Checkbox => {
                             check_ids.push((self.get_id(None), row, col, false));
                         },
-                        TableWidget::Image => {
-                            image_ids.push((self.get_id(None), row, col, false));
-                        },
                         TableWidget::Toggler => {
                             tog_ids.push((self.get_id(None), row, col, false));
-                        },
-                        TableWidget::SelectableText => {
-                            select_ids.push((self.get_id(None), row, col, false));
                         },
                     }
 
@@ -1910,46 +1886,6 @@ impl IPG {
             add_callback_to_mutex(id, "on_toggler".to_string(), on_toggler);
         }
 
-        if on_selectable.is_some() {
-            add_callback_to_mutex(id, "on_selectable".to_string(), on_selectable);
-        }
-
-        if on_press.is_some() {
-            add_callback_to_mutex(id, "on_press".to_string(), on_press);
-        }
-        
-        if on_release.is_some() {
-            add_callback_to_mutex(id, "on_release".to_string(), on_release);
-        }
-        
-        if on_right_press.is_some() {
-            add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press);
-        }
-        
-        if on_right_release.is_some() {
-            add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release);
-        }
-        
-        if on_middle_press.is_some() {
-            add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press);
-        }
-        
-        if on_middle_release.is_some() {
-            add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release);
-        }
-        
-        if on_enter.is_some() {
-            add_callback_to_mutex(id, "on_enter".to_string(), on_enter);
-        }
-        
-        if on_move.is_some() {
-            add_callback_to_mutex(id, "on_move".to_string(), on_move);
-        }
-        
-        if on_exit.is_some() {
-            add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
-        }
-        
         set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
@@ -1978,13 +1914,10 @@ impl IPG {
                                                     highlight_amount,
                                                     column_widths,
                                                     table_length,
+                                                    button_style,
                                                     button_ids,
                                                     check_ids,
-                                                    image_ids,
                                                     tog_ids,
-                                                    select_ids,
-                                                    image_width,
-                                                    image_height,
                                                     show,
                                                     user_data,
                                                     container_id,

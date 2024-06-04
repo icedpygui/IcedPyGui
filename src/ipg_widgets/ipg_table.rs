@@ -7,6 +7,7 @@ use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_u
 use crate::style::styling::table_row_theme;
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
+use super::ipg_button::{self, IpgButtonStyle};
 
 use iced::Point;
 use iced::mouse::Interaction;
@@ -41,13 +42,10 @@ pub struct IpgTable {
         pub highlight_amount: f32,
         pub column_widths: Vec<f32>,
         pub table_length: u32,
+        pub button_style: Option<HashMap<usize, IpgButtonStyle>>,
         pub button_ids: Vec<(usize, usize, usize, bool)>,
         pub check_ids: Vec<(usize, usize, usize, bool)>,
-        pub image_ids: Vec<(usize, usize, usize, bool)>,
         pub toggler_ids: Vec<(usize, usize, usize, bool)>,
-        pub select_ids: Vec<(usize, usize, usize, bool)>,
-        pub image_width: Option<Vec<f32>>,
-        pub image_height: Option<Vec<f32>>,
         pub show: bool,
         pub user_data: Option<PyObject>,
         pub container_id: usize,
@@ -65,13 +63,10 @@ impl IpgTable {
         highlight_amount: f32,
         column_widths: Vec<f32>,
         table_length: u32,
+        button_style:  Option<HashMap<usize, IpgButtonStyle>>,
         button_ids: Vec<(usize, usize, usize, bool)>,
         check_ids: Vec<(usize, usize, usize, bool)>,
-        image_ids: Vec<(usize, usize, usize, bool)>,
         toggler_ids: Vec<(usize, usize, usize, bool)>,
-        select_ids: Vec<(usize, usize, usize, bool)>,
-        image_width: Option<Vec<f32>>,
-        image_height: Option<Vec<f32>>,
         show: bool,
         user_data: Option<PyObject>,
         container_id: usize,
@@ -87,13 +82,10 @@ impl IpgTable {
             highlight_amount,
             column_widths,
             table_length,
+            button_style,
             button_ids,
             check_ids,
-            image_ids,
             toggler_ids,
-            select_ids,
-            image_width,
-            image_height,
             show,
             user_data,
             container_id,
@@ -107,17 +99,6 @@ pub enum TableMessage {
     TableButton((usize, usize)),
     TableCheckbox(bool, (usize, usize)),
     TableToggler(bool, (usize, usize)),
-    TableSelectableText((usize, usize)),
-
-    MouseAreaOnPress((usize, usize)),
-    MouseAreaOnRelease((usize, usize)),
-    MouseAreaOnRightPress((usize, usize)),
-    MouseAreaOnRightRelease((usize, usize)),
-    MouseAreaOnMiddlePress((usize, usize)),
-    MouseAreaOnMiddleRelease((usize, usize)),
-    MouseAreaOnEnter((usize, usize)),
-    MouseAreaOnMove(Point, (usize, usize)),
-    MouseAreaOnExit((usize, usize)),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -139,9 +120,7 @@ pub enum TableRowHighLight {
 pub enum TableWidget {
     Button,
     Checkbox,
-    Image,
     Toggler,
-    SelectableText,
 }
 
 #[derive(Debug, Clone)]
@@ -281,8 +260,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     row, 
                                     col, 
                                     bl,
-                                    None, 
-                                    None);
+                                    table.button_style.clone());
             }
 
             let index = check_for_widget(&table.check_ids, row_index, col_index);
@@ -296,21 +274,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     col, 
                                     bl,
                                     None, 
-                                    None);
-            }
-
-            let index = check_for_widget(&table.image_ids, row_index, col_index);
-            if index.is_some() {
-                widget_found = true;
-                let (wid_id, row, col, bl) = table.image_ids[index.unwrap()];
-                row_element = add_widget(TableWidget::Image,
-                                    table.id, 
-                                    label.clone(), 
-                                    row, 
-                                    col, 
-                                    bl,
-                                    table.image_width.clone(), 
-                                    table.image_height.clone());
+                                    );
             }
 
             let index = check_for_widget(&table.toggler_ids, row_index, col_index);
@@ -324,28 +288,13 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     col, 
                                     bl,
                                     None, 
-                                    None);
+                                    );
             }
 
-            let index = check_for_widget(&table.select_ids, row_index, col_index);
-            if index.is_some() {
-                widget_found = true;
-                let (wid_id, row, col, bl) = table.select_ids[index.unwrap()];
-                row_element =  add_widget(TableWidget::SelectableText,
-                                    table.id, 
-                                    label.clone(), 
-                                    row, 
-                                    col, 
-                                    bl,
-                                    None, 
-                                    None);
-            }
-           
             if !widget_found {
                 row_element = add_text_widget(label.clone());
             }
             
-        
             let cnt = add_row_container(
                                                 row_element, 
                                                 row_index, 
@@ -448,9 +397,8 @@ fn add_widget(widget_type: TableWidget,
                 label: String, 
                 row_index: usize, 
                 col_index: usize, 
-                is_toggled: bool, 
-                image_width: Option<Vec<f32>>, 
-                image_height: Option<Vec<f32>>) 
+                is_toggled: bool,
+                button_style:  Option<HashMap<usize, IpgButtonStyle>>,) 
                 -> Element<'static, Message> {
 
     match widget_type {
@@ -459,12 +407,23 @@ fn add_widget(widget_type: TableWidget,
                     Text::new(label)
                                 .horizontal_alignment(Horizontal::Center)
                                 .width(Length::Fill);
-                                                            
+
+            let btn_style: Option<IpgButtonStyle> = if button_style.is_some() {
+                let style = button_style.unwrap();
+                match style.get(&col_index) {
+                    Some(st) => Some(st.clone()),
+                    None => None,
+                }
+            } else {
+                Some(IpgButtonStyle::Primary)
+            };
+
             let btn: Element<TableMessage> = 
                     Button::new(txt)
                                 .padding(Padding::ZERO)
                                 .width(Length::Fill)
                                 .on_press(TableMessage::TableButton((row_index, col_index))) 
+                                .style(move|theme, status|ipg_button::get_standard_style(theme, status, btn_style.clone()))
                                 .into(); 
             btn.map(move |message| app::Message::Table(table_id, message))
         },
@@ -476,59 +435,8 @@ fn add_widget(widget_type: TableWidget,
                                 .into();
             chk.map(move |message| app::Message::Table(table_id, message))
         },
-        TableWidget::Image => {
-    
-            let width: Length = match image_width {
-                Some(width) => {
-                    if width.len() == 1 {
-                        Length::Fixed(width[0])
-                    } else {
-                    Length::Fixed(width[col_index])
-                    }
-                },
-                None => Length::Shrink,
-            };
-
-            let height: Length = match image_height {
-                Some(hgt) => {
-                    if hgt.len() == 1 {
-                        Length::Fixed(hgt[0])
-                    } else {
-                    Length::Fixed(hgt[col_index])
-                    }
-                },
-                None => Length::Shrink,
-            };
-
-            // label below is actual the path in this case.
-            if label.contains(".png") {
-                let img: Element<TableMessage> = Image::<image::Handle>::new(label)
-                                                                .width(width)
-                                                                .height(height)
-                                                                .into();
-                 add_mousearea(img, table_id, row_index, col_index)
-
-            } else if label.contains(".svg") {
-                let svg: Element<TableMessage> = svg(label)
-                                                    .width(width)
-                                                    .height(height)
-                                                    .into();
-                 add_mousearea(svg, table_id, row_index, col_index)
-
-            } else {
-                panic!("Table: Only png and svg files supports at this time.")
-            }
-        },
-        TableWidget::SelectableText => {
-            let txt: Element<TableMessage> = text(label)
-                                                .width(Length::Fill)
-                                                .horizontal_alignment(Horizontal::Center)
-                                                .into();
-
-            add_mousearea(txt, table_id, row_index, col_index)
-        },
+        
         TableWidget::Toggler => {
-            let is_toggled = false;
             let tog: Element<TableMessage> = Toggler::new(Some(label), is_toggled,
                                     move|b| TableMessage::TableToggler(b, (row_index, col_index)))
                                     .into();
@@ -539,26 +447,6 @@ fn add_widget(widget_type: TableWidget,
     }
 }
 
-
-fn add_mousearea(content: Element<TableMessage>, table_id: usize, row: usize, col: usize) -> Element<Message> {
-    
-    let ma: Element<TableMessage> = 
-                    MouseArea::new(content)
-                    .on_press(TableMessage::MouseAreaOnPress((row, col)))
-                    .on_release(TableMessage::MouseAreaOnRelease((row, col)))
-                    .on_right_press(TableMessage::MouseAreaOnRightPress((row, col)))
-                    .on_right_release(TableMessage::MouseAreaOnRightRelease((row, col)))
-                    .on_middle_press(TableMessage::MouseAreaOnMiddlePress((row, col)))
-                    .on_middle_release(TableMessage::MouseAreaOnMiddleRelease((row, col)))
-                    .on_enter(TableMessage::MouseAreaOnEnter((row, col)))
-                    .on_move(move|p| TableMessage::MouseAreaOnMove(p, (row, col)))
-                    .on_exit(TableMessage::MouseAreaOnExit((row, col)))
-                    .interaction(Interaction::Pointer)
-                    .into();
-
-    ma.map(move |message| app::Message::Table(table_id, message))
-    
-}
 
 fn get_checked(on_toggled: &Option<HashMap<usize, Vec<bool>>>, col_index: &usize, row_index: usize) -> bool {
     let toggled_hmap = on_toggled.as_ref().unwrap();
@@ -582,89 +470,26 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
         TableMessage::TableCheckbox(on_toggle, (row_index, col_index)) => {
             wci.value_str =  Some("checkbox".to_string());
             wci.on_toggle = Some(on_toggle);
-            wci.index_table = Some((col_index, row_index));
+            wci.index_table = Some((row_index, col_index));
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = table_id;
             wco.event_name = "on_checkbox".to_string();
             wco.on_toggle = Some(on_toggle);
-            wco.index_table = Some((col_index, row_index));
+            wco.index_table = Some((row_index, col_index));
             process_callback(wco);
         },
-        TableMessage::TableSelectableText((row_index, col_index)) => {
-            
-        }
         TableMessage::TableToggler(on_toggle, (row_index, col_index)) => {
             wci.value_str = Some("toggler".to_string());
             wci.on_toggle = Some(on_toggle);
-            wci.index_table = Some((col_index, row_index));
+            wci.index_table = Some((row_index, col_index));
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = table_id;
             wco.event_name = "on_toggler".to_string();
             wco.on_toggle = Some(on_toggle);
-            wco.index_table = Some((col_index, row_index));
+            wco.index_table = Some((row_index, col_index));
             process_callback(wco);
         }
-        TableMessage::MouseAreaOnPress((row_index, col_index)) => {
-            mousearea_callback(table_id, row_index, col_index, "on_press".to_string());
-        },
-        TableMessage::MouseAreaOnRelease((row_index, col_index)) => {
-            mousearea_callback(table_id, row_index, col_index, "on_release".to_string());
-        },
-        TableMessage::MouseAreaOnRightPress((row_index, col_index)) => {
-            mousearea_callback(table_id, row_index, col_index, "on_right_press".to_string());
-        },
-        TableMessage::MouseAreaOnRightRelease((row_index, col_index)) => {
-            mousearea_callback(table_id, row_index, col_index, "on_right_release".to_string());
-        },
-        TableMessage::MouseAreaOnMiddlePress((row_index, col_index)) => {
-            mousearea_callback(table_id, row_index, col_index, "on_middle_press".to_string());
-        },
-        TableMessage::MouseAreaOnMiddleRelease((row_index, col_index)) => {
-            mousearea_callback(table_id, row_index, col_index, "on_middle_release".to_string());
-        },
-        TableMessage::MouseAreaOnEnter((row_index, col_index)) => {
-            mousearea_callback(table_id, row_index, col_index, "on_enter".to_string());
-        },
-        TableMessage::MouseAreaOnMove(point, (row, col)) => {
-            mousearea_callback_point(table_id, point, (row, col), "on_move".to_string());
-        },
-        TableMessage::MouseAreaOnExit((row_index, col_index)) => {
-            mousearea_callback(table_id, row_index, col_index, "on_exit".to_string());
-        },
     }
-}
-
-
-pub fn mousearea_callback(table_id: usize, row_index: usize, col_index: usize, event_name: String) {
-    
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = table_id;
-
-    let mut wco = get_set_widget_callback_data(wci);
-    wco.id = table_id;
-    wco.event_name = event_name;
-    wco.index_table = Some((row_index, col_index));
-    process_callback(wco);
-
-}
-
-
-fn mousearea_callback_point(id: usize, point: Point, table_index: (usize, usize), event_name: String) {
-
-    let mut points: Vec<(String, f32)> = vec![];
-    points.push(("x".to_string(), point.x));
-    points.push(("y".to_string(), point.y));
-
-    
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = id;
-
-    let mut wco = get_set_widget_callback_data(wci);
-    wco.id = id;
-    wco.event_name = event_name;
-    wco.points = Some(points);
-    process_callback(wco);
-    
 }
 
 
@@ -689,111 +514,66 @@ pub fn process_callback(wco: WidgetCallbackOut)
         None => panic!("Table: Unable to find table index for callback.")
     };
     
-    if vec!["on_button".to_string(), "on_checkbox".to_string(), "on_toggler".to_string()].contains(&wco.event_name) {
+    Python::with_gil(|py| {
         
-        Python::with_gil(|py| {
-            
-            if wco.user_data.is_some() {
-                let user_data = wco.user_data.unwrap();
-                let res = callback.call1(py, (
-                                                                    wco.id.clone(),
-                                                                    table_index,
-                                                                    wco.on_toggle,  
-                                                                    user_data
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Table: 4 parameters (id, widget_index, is_checked, user_data) are required or a python error in this function. {er}"),
-                }
-            } else {
-                
-                let res = callback.call1(py, (
-                                                                    wco.id.clone(),
-                                                                    table_index,
-                                                                    wco.on_toggle,  
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Table: 3 parameter (id, widget_index, is_checked) are required or possibly a python error in this function. {er}"),
-                }
+        if wco.user_data.is_some() {
+            let user_data = wco.user_data.unwrap();
+            let res = 
+                    if wco.event_name == "on_button" {
+                                callback.call1(py, (
+                                            wco.id.clone(),
+                                            table_index, 
+                                            user_data
+                                            ))
+                                }
+                                else {
+                                    callback.call1(py, (
+                                        wco.id.clone(),
+                                        table_index,
+                                        wco.on_toggle,  
+                                        user_data
+                                        ))
+                                };
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Table: 4 parameters (id, widget_index, on_toggle, user_data) are required or a python error in this function. {er}"),
             }
-        });
-    } else if wco.event_name != "on_move".to_string() {
-        Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = wco.user_data.unwrap();
-                let res = callback.call1(py, (
-                                                                    wco.id.clone(),
-                                                                    table_index,  
-                                                                    user_data
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Table: 3 parameters (id, widget_index, user_data) are required or a python error in this function. {er}"),
-                }
-            } else {
-
-                let res = callback.call1(py, (
-                                                                    wco.id.clone(),
-                                                                    table_index,  
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Table: 2 parameter (id, widget_index) are required or possibly a python error in this function. {er}"),
-                }
-                
-            } 
-        });
-    } else if wco.event_name == "on_move".to_string() {
-
-        Python::with_gil(|py| {
-            let point = match wco.points {
-                Some(pt) => pt,
-                None => panic!("Table: No point found for image"),
-            };
-
-            if wco.user_data.is_some() {
-                let user_data = wco.user_data.unwrap();
-                let res = callback.call1(py, (
-                                                                    wco.id.clone(),
-                                                                    point,
-                                                                    table_index,  
-                                                                    user_data
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Table: 4 parameters (id, point, index, user_data) are required or a python error in this function. {er}"),
-                }
-
-            } else {
-
-                let res = callback.call1(py, (
-                                                                    wco.id.clone(),
-                                                                    point,
-                                                                    table_index,  
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Table: 3 parameter (id, point, index) are required or possibly a python error in this function. {er}"),
-                }
-            } 
-        });
-
-    }
-
+        } else {
+            
+            let res = 
+                                if wco.event_name == "on_button" {
+                                    callback.call1(py, (
+                                                wco.id.clone(),
+                                                table_index, 
+                                                ))
+                                    }
+                                    else {
+                                        callback.call1(py, (
+                                            wco.id.clone(),
+                                            table_index,
+                                            wco.on_toggle,  
+                                            ))
+                                    };
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Table: 3 parameter (id, widget_index, on_toggle) are required or possibly a python error in this function. {er}"),
+            }
+        }
+    });
+ 
     drop(app_cbs);
          
 }
 
 
 fn table_item_update( 
-                        id: Option<usize>,
-                        title: Option<String>,
-                        headers: Option<Vec<String>>,
-                        data: Option<PyObject>,
-                        user_id: Option<String>,
-                        on_update: Option<PyObject>,
-                ) 
+                    id: Option<usize>,
+                    title: Option<String>,
+                    headers: Option<Vec<String>>,
+                    data: Option<PyObject>,
+                    user_id: Option<String>,
+                    on_update: Option<PyObject>,
+                    ) 
 {
     
     let id: usize = match id {

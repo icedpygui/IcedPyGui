@@ -1539,6 +1539,7 @@ class IPG:
                     highlight_amount: float=0.15,
                     table_length: int=0,
                     column_widths: List=[20.0],
+                    button_style: dict=Union[None | {int: IpgButtonStyle}],
                     widgets_using_columns: Union[None | dict]=None,
                     gen_id: Union[None | int]=None,
                     on_press_button: Union[None | Callable]=None,
@@ -2501,8 +2502,6 @@ class TableRowHighLight:
 class TableWidget:
     Button=0
     Checkbox=0
-    Image=0
-    SelectableText=0
     Toggler=0
 
 
