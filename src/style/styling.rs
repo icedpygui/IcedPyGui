@@ -4,6 +4,7 @@ use iced::{Background, Border, Color, Theme};
 use iced::widget::container;
 use palette::{FromColor, Hsl};
 use palette::rgb::Rgb;
+use pyo3::pyclass;
 
 
 #[derive(Debug, Clone)]
@@ -188,3 +189,64 @@ fn to_hsl(color: Color) -> Hsl {
 fn from_hsl(hsl: Hsl) -> Color {
     Rgb::from_color(hsl).into()
 }
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgStyleParam {
+    Background,
+    Border,
+    IconColor,
+    Shadow,
+}
+
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgStyleBackground {
+    Accent,
+    Color,
+    Rgba,
+}
+
+// pub fn style_background_update(bkg: &mut StyleBackground, item: PyObject, value: PyObject) {
+//     let update = try_extract_bkg_update(item);
+
+//     match update {
+//         IpgStyleBackgroundParam::Accent => {
+//             let val = try_extract_f64(value);
+//             bkg.accent_amount = val as f32;
+//         },
+//         IpgStyleBackgroundParam::Color => {
+//             let val = try_extract_color(value);
+//             bkg.color = val;
+//         },
+//         IpgStyleBackgroundParam::Rgba => {
+//             let val = try_extract_vec_f32(value);
+//             let rgba: [f32; 4] = [val[0], val[1], val[2], val[3]];
+//             let color = get_color(Some(rgba), None, 1.0, false);
+//             bkg.color = color;
+//         }
+//     }
+// }
+
+// pub fn try_extract_bkg_update(update_obj: PyObject) -> IpgStyleBackgroundParam {
+
+//     Python::with_gil(|py| {
+//         let res = update_obj.extract::<IpgStyleBackgroundParam>(py);
+//         match res {
+//             Ok(update) => update,
+//             Err(_) => panic!("Style Background update extraction failed"),
+//         }
+//     })
+// }
+
+// pub fn try_extract_color(color: PyObject) -> Color {
+
+//     Python::with_gil(|py| {
+//         let res = color.extract::<IpgColor>(py);
+//         match res {
+//             Ok(col) => get_color(None, Some(col), 1.0, false),
+//             Err(_) => panic!("Style Background color extraction failed"),
+//         }
+//     })
+// }

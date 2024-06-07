@@ -62,7 +62,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
     get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{StyleBackground, StyleBorder, StyleIconColor, StyleShadow, StyleTextColor};
+use style::styling::{IpgStyleParam, StyleBackground, StyleBorder, StyleIconColor, StyleShadow, StyleTextColor};
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
@@ -737,10 +737,9 @@ impl IPG {
     
     #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
-                        height_fill=false, padding=vec![10.0], clip=false,
-                        style=Some(IpgButtonStyle::Primary), 
+                        height_fill=false, padding=vec![10.0], clip=false, 
                         style_background=None, style_border=None, style_shadow=None, 
-                        style_text_color=None, arrow_style=None, user_data=None, show=true, 
+                        style_text_color=None, style_arrow=None, user_data=None, show=true, 
                         ))]
     fn add_button(&mut self,
                         parent_id: String,
@@ -754,12 +753,11 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         clip: bool,
-                        style: Option<IpgButtonStyle>,
                         style_background: Option<String>,
                         style_border: Option<String>,
                         style_shadow: Option<String>,
                         style_text_color: Option<String>,
-                        arrow_style: Option<PyObject>,
+                        style_arrow: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
@@ -788,12 +786,11 @@ impl IPG {
                                                 height,
                                                 padding,
                                                 clip,
-                                                style,
                                                 style_background,
                                                 style_border,
                                                 style_shadow,
                                                 style_text_color,
-                                                arrow_style,                              
+                                                style_arrow,                              
                                                 )));
         
         Ok(id)
@@ -805,7 +802,7 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_width=f32::INFINITY, max_height=f32::INFINITY, 
                         padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
-                        style=None, user_data=None))]
+                        style_background=None, style_border=None, style_text_color=None, user_data=None))]
     fn add_card(&mut self,
                 parent_id: String, 
                 head: String,
@@ -826,7 +823,9 @@ impl IPG {
                 padding_head: Vec<f64>,
                 padding_body: Vec<f64>,
                 padding_foot: Vec<f64>,
-                style: Option<PyObject>,
+                style_background: Option<String>,
+                style_border: Option<String>,
+                style_text_color: Option<String>,
                 user_data: Option<PyObject>, 
                 ) -> PyResult<usize> 
     {
@@ -863,7 +862,9 @@ impl IPG {
                                                     head,
                                                     body,
                                                     foot,
-                                                    style,
+                                                    style_background,
+                                                    style_border,
+                                                    style_text_color,
                                                 )));
 
         Ok(id)
@@ -2414,7 +2415,7 @@ impl IPG {
                     // is no longer used except for obtaining the id (usize type)
                     // which in turn allows one to get the Id type.  The state needs 
                     // to be dropped here before calling the window_update since it 
-                    // opened again.
+                    // is opened again.
                     // The window methods will be refactored later.
                     
                     Some(cnt) => {
@@ -2558,6 +2559,7 @@ fn set_state_cont_wnd_ids(state: &mut State, wnd_id: &String, cnt_str_id: String
         state.container_window_usize_ids.insert(cnt_id, wnd_id_usize);
 }
 
+
 #[pymodule]
 fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IPG>()?;
@@ -2594,6 +2596,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgSelectableTextHorAlign>()?;
     m.add_class::<IpgSelectableTextVertAlign>()?;
     m.add_class::<IpgSliderParams>()?;
+    m.add_class::<IpgStyleParam>()?;
     m.add_class::<IpgSvgParams>()?;
     m.add_class::<TableRowHighLight>()?;
     m.add_class::<TableWidget>()?;

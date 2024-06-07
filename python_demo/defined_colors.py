@@ -53,16 +53,16 @@ for (i, color) in enumerate(colors):
     color_text = str(color)[9:]
 
     ipg.add_container("main", container_id=f"cont{i}",
-                      parent_id="col",
-                    width_fill=True, height=30.0,
-                    center_xy=True, padding=[0.0])
+                        parent_id="col",
+                        width_fill=True, height=30.0,
+                        center_xy=True, padding=[0.0])
     
     if i in dark_text:
         ipg.add_styling_text_color(f"cont{i}", color=IpgColor.BLACK)
     
     ipg.add_text(f"cont{i}", f"{color_text} {i}")
 
-    ipg.add_styling_background(parent_id=f"cont{i}", color=color)
+    ipg.add_styling_background(style_id=f"cont{i}", color=color)
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

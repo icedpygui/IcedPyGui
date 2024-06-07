@@ -8,6 +8,11 @@ Python wrapper for Rust Iced Gui
 https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-320e9a5d8c5d
 
 </div>
+## Revisions
+    * Upcoming revision 0.1.1 estimated to be June 14 (probably called v0.2.0)
+    * Commits are not made to main but to an updating branch called updating-to-vx.x.x
+    * This branch may have errors and is usually a work in progres
+    * As IPG catches up to Iced, these updating branch will be more specific to an issue
 
 ## Features
 
@@ -21,7 +26,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     * Container - container
     * Events - keyboard, mouse, timer, and window
     * Fonts - Future
-    * Image
+    * Image - next release
     * Modal
     * MouseArea
     * Overlays - next release
@@ -29,7 +34,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     * PickList 
     * ProgressBar
     * QRCodes - next release
-    * Radio buttons - mutiple, grouped in one line of code
+    * Radio buttons - mutiple, grouped using one line of code
     * Row - container
     * Rule
     * Scrollable - container (modified in IPG) 
@@ -52,7 +57,8 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
 * IPG widgets
     * DatePicker - compact and resizable
     * SelectableText - all mouse buttons supported
-    * Table - Currently simple, easily loaded with a list of dictionaries, supports adding widgets button, checkbox, image, and svg.
+    * Table - Currently simple, easily loaded with a list of dictionaries, supports adding button, checkbox, and toggler
+    * ComplexTable - Will be container like where anything can be added option control row or column - 2nd release from this one
 
 * Python issues to be addressed
     * Need to incorporate using with statement in python.  Using with would allow one to not have to supply the window or parent id if those follow closely.  For example:
@@ -64,7 +70,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
     * @dataclass needs to be supported (support soon)
 
 ## Pyo3 Enhancements
-There are a number of future possible enhancements related to parrallism and async.
+    There are a number of future possible enhancements related to parrallism and async.
 
 ## Installation (PiPy)
 

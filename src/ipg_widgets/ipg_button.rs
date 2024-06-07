@@ -32,12 +32,11 @@ pub struct IpgButton {
     pub height: Length,
     pub padding: Padding,
     pub clip: bool,
-    pub style: Option<IpgButtonStyle>,
     pub style_background: Option<String>,
     pub style_border: Option<String>,
     pub style_shadow: Option<String>,
     pub style_text_color: Option<String>,
-    pub arrow_style: Option<PyObject>,
+    pub style_arrow: Option<PyObject>,
 }
 
 impl IpgButton {
@@ -51,7 +50,6 @@ impl IpgButton {
         height: Length,
         padding: Padding,
         clip: bool,
-        style: Option<IpgButtonStyle>,
         style_background: Option<String>,
         style_border: Option<String>,
         style_shadow: Option<String>,
@@ -67,12 +65,11 @@ impl IpgButton {
             height,
             padding,
             clip,
-            style,
             style_background,
             style_border,
             style_shadow,
             style_text_color,
-            arrow_style,
+            style_arrow: arrow_style,
         }
     }
 }
@@ -100,8 +97,8 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
 
     let mut label = Text::new(btn.label.clone());
 
-    if btn.arrow_style.is_some() {
-        let arrow_style = try_extract_button_arrow(btn.arrow_style);
+    if btn.style_arrow.is_some() {
+        let arrow_style = try_extract_button_arrow(btn.style_arrow);
         label = match arrow_style {
             Some(ar) => Text::new(ar).font(iced::Font::with_name("bootstrap-icons")),
             None => panic!("Button: Could not get extract arrow_style")
@@ -114,16 +111,12 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
                                 .width(btn.width)
                                 .on_press(BTNMessage::OnPress)
                                 .clip(btn.clip)
-                                .style(move|theme: &Theme, status| {
-                                    if btn.style.is_some() {
-                                        get_standard_style(theme, status, btn.style.clone())
-                                        } else {
-                                        get_styling(theme, status, 
-                                                    btn.style_background.clone(), 
-                                                    btn.style_border.clone(), 
-                                                    btn.style_shadow.clone(),
-                                                    btn.style_text_color.clone())
-                                        }
+                                .style(move|theme: &Theme, status| {   
+                                    get_styling(theme, status, 
+                                        btn.style_background.clone(), 
+                                        btn.style_border.clone(), 
+                                        btn.style_shadow.clone(),
+                                        btn.style_text_color.clone())  
                                     })
                                 .into();
 
@@ -204,6 +197,10 @@ pub enum IpgButtonParams {
     Label,
     Padding,
     Show,
+    StyleBackground,
+    StyleBorder,
+    StyleShadow,
+    StyleTextColor,
     Width,
     WidthFill,
 }
@@ -218,7 +215,7 @@ pub fn button_item_update(btn: &mut IpgButton,
 
     match update {
        IpgButtonParams::ArrowStyle => {
-            btn.arrow_style = Some(value);
+            btn.style_arrow = Some(value);
         },
         IpgButtonParams::Label => {
             btn.label = try_extract_string(value);
@@ -238,6 +235,22 @@ pub fn button_item_update(btn: &mut IpgButton,
         IpgButtonParams::Show => {
             btn.show = try_extract_boolean(value);
         },
+        IpgButtonParams::StyleBackground => {
+            let val = try_extract_string(value);
+            btn.style_background = Some(val);
+        },
+        IpgButtonParams::StyleBorder => {
+            let val = try_extract_string(value);
+            btn.style_border = Some(val);
+        },
+        IpgButtonParams::StyleShadow => {
+            let val = try_extract_string(value);
+            btn.style_shadow = Some(val);
+        },
+        IpgButtonParams::StyleTextColor => {
+            let val = try_extract_string(value);
+            btn.style_text_color = Some(val);
+        },
         IpgButtonParams::Width => {
             let val = try_extract_f64(value);
             btn.width = get_width(Some(val as f32), false);
@@ -249,6 +262,7 @@ pub fn button_item_update(btn: &mut IpgButton,
     }
 
 }
+
 
 pub fn get_standard_style(theme: &Theme, status: Status, style: Option<IpgButtonStyle>) -> Style {
     match style {

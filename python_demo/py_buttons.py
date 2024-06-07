@@ -1,7 +1,8 @@
-from icedpygui import IPG
-from icedpygui import IpgButtonArrows, IpgButtonParams, IpgButtonStyle
-from icedpygui import IpgColumnAlignment
-from icedpygui import IpgTextParams
+
+from icedpygui import IPG, IpgColor
+from icedpygui import IpgButtonArrows, IpgButtonParams
+from icedpygui import IpgColumnAlignment, IpgRowAlignment
+from icedpygui import IpgTextParams, IpgStyleParam
 
 
 # In this case a class is being used to give
@@ -37,21 +38,31 @@ class ButtonDemo:
         self.row_id: str = "padding_row"
         self.arrow_row: str = "arrow_row"
 
+
     # sets the gui up and starts the session.
     def setup_gui(self):
 
         # The first widget added must be a window, more windows can be added at any time.
         # Windows and containers must be added before their widgets are added. 
-        self.ipg.add_window(window_id=self.wnd_id, title="Button Demo", width=800, height=600,
+        self.ipg.add_window(window_id=self.wnd_id, title="Button Demo", width=800, height=700,
                             pos_x=100, pos_y=25)
         # Setup the styling section.
         self.setup_button_styles()
 
-        # Setup the slider section.
-        self.setup_slider_section()
-
         # Setup the padding section.
         self.setup_padding_section()
+
+        # Setup the change color button
+        self.setup_change_color()
+
+        # Setup the chnage in border
+        self.setup_change_border()
+
+        # Setup the change in shadow
+        self.setup_change_shadow()
+
+        # Setup the change in text color
+        self.setup_change_text_color()
 
         # Required to be the last widget sent to Iced,  If you start the program
         # and nothing happens, it might mean you forgot to add this command.
@@ -83,13 +94,17 @@ class ButtonDemo:
         # The callback is the same for each button but may be different based on needs.
         # The user_data is the style name and just used to update a text widget in the callback.
         style_text = ["Primary", "Secondary", "Success", "Danger", "Text"]
-        style_ipg = [IpgButtonStyle.Primary, IpgButtonStyle.Secondary, IpgButtonStyle.Success,
-                     IpgButtonStyle.Danger, IpgButtonStyle.Text]
+        background = [IpgColor.PRIMARY, IpgColor.SECONDARY, IpgColor.SUCCESS,
+                     IpgColor.DANGER, IpgColor.TRANSPARENT]
+        # add a border styling
+        self.ipg.add_styling_border(style_id="border", radius=[12.0])
 
         for i, style in enumerate(style_text):
+            self.ipg.add_styling_background(style_id=f"cont{i}", color=background[i])
             self.button_style_ids.append(self.ipg.add_button(parent_id=self.style_id,
                                                              label=style,
-                                                             style=style_ipg[i],
+                                                             style_background=f"cont{i}",
+                                                             style_border="border",
                                                              on_press=self.button_pressed,
                                                              user_data=style))
 
@@ -103,7 +118,8 @@ class ButtonDemo:
                                                              "",
                                                              on_press=self.button_pressed,
                                                              padding=[5.0],
-                                                             arrow_style=arrows_ipg[i],
+                                                             style_arrow=arrows_ipg[i],
+                                                             style_background=f"cont{i}",
                                                              user_data=arrow))
 
         # This is the text that will change when a button is pressed therefore the id is needed.
@@ -112,30 +128,13 @@ class ButtonDemo:
         self.ipg.add_text(parent_id=self.style_col_id, content="This will change when a button is pressed",
                           gen_id=self.btn_info)
 
-    def setup_slider_section(self):
+    def setup_padding_section(self):
 
         # A column is added for center alignment of the remaining items
         # One could have used a single column for everything, it's just a matter of
         # how you want to group things and your needs 
         self.ipg.add_column(window_id=self.wnd_id, container_id=self.sld_col,
                             align_items=IpgColumnAlignment.Center)
-
-        # text widget for info
-        self.ipg.add_text(parent_id=self.sld_col,
-                          content="Using the slider, see the effect of changing the corner radius")
-
-        # A slider widget is used to change a value which is sent to the callback, set_corner_radius.
-        # The value for the slider is passed to the callback.  In this case we need some additional 
-        # data sent so a list of integers are sent. You can send any type of data since it just
-        # passes through rust with no change.
-        self.ipg.add_slider(parent_id=self.sld_col, min=0.0, max=20.0, step=0.5, value=10.0,
-                            width=300.0, on_change=self.set_corner_radius,
-                            user_data=self.button_style_ids)
-
-        # Text widget for info, since it changes as the slider is moved, the id is needed.
-        self.text_id = self.ipg.add_text(parent_id=self.sld_col, content="Slider Value is 10")
-
-    def setup_padding_section(self):
 
         #  Text widgets are added for padding info.
         self.ipg.add_text(self.sld_col, content="The padding effect is shown below.")
@@ -159,9 +158,7 @@ class ButtonDemo:
 
         self.ipg.add_button(self.row_id, label="Padding t10, r20, b5 l15", padding=[10, 20, 5, 15])
 
-        # Another text widget for info.
-        self.ipg.add_text(parent_id=self.sld_col, content="The height and width will be show in a separate example")
-
+        
     def set_corner_radius(self, _slider_id: int, value: float, user_data: any):
         # This is the slider callback with it's id (not used), value and user_data.
         # These parameter names can be anything you like, the order is always
@@ -169,15 +166,72 @@ class ButtonDemo:
         # The user_data can be anything, since it's just passed through Rust.
         #  The list of all the ids were stored and each button can be changed based on their id.
         for btn_id in user_data:
-            self.ipg.update_item(btn_id, IpgButtonParams.CornerRadius, float(value))
+            self.ipg.update_item(btn_id, IpgButtonParams.StyleBorder, float(value))
 
         self.ipg.update_item(self.text_id, IpgTextParams.Content, f"Slider Value {value}")
+
+    def setup_change_color(self):
+        self.ipg.add_row(window_id=self.wnd_id, 
+                         container_id="color_row",
+                         width_fill=True, 
+                         align_items=IpgRowAlignment.End)
+        
+        # initial stye for button
+        self.ipg.add_styling_background("bkg", color=IpgColor.PRIMARY)
+        # style after button is pressed
+        self.ipg.add_styling_background("new_bkg", color=IpgColor.DANGER)
+
+        self.ipg.add_button(parent_id="color_row", 
+                            label="Press Me to\nChange Background Color",
+                            style_background="bkg",
+                            on_press=self.change_color)
+        
+    def setup_change_border(self):
+        #initial button border will be defaulted, new one below
+        self.ipg.add_styling_border(style_id="border_update", radius=[12.0], color=IpgColor.YELLOW, width=5.0)
+
+        self.ipg.add_button(parent_id="color_row", 
+                            label="Press Me to\nChange Border",
+                            style_border="border",
+                            on_press=self.change_border)
+    
+    def setup_change_shadow(self):
+        # Add future shadow style
+        self.ipg.add_styling_shadow(style_id="shadow", color=IpgColor.SALMON, blur_radius=15.0)
+
+        self.ipg.add_button(parent_id="color_row", 
+                            label="Press Me to\nChange Shadow",
+                            on_press=self.change_shadow)
+    
+    def setup_change_text_color(self):
+        # Add future text style
+        self.ipg.add_styling_text_color(style_id="text", color=IpgColor.BLACK)
+
+        self.ipg.add_button(parent_id="color_row", 
+                            label="Press Me to \nChange Text Color",
+                            on_press=self.change_text_color)
 
     def button_pressed(self, _btn_id: int, user_data: any):
         # This is a callback that occurs when the button is pressed
         # The btn_id equals the button that was pressed and the user_data, in this case,
         # is a string for the text widget below.  The btn_id is not used.
         self.ipg.update_item(self.btn_info, IpgTextParams.Content, f"Last button pressed was {user_data}")
+
+    def change_color(self, btn_id):
+        self.ipg.update_item(btn_id, IpgButtonParams.StyleBackground, 
+                             value="new_bkg")
+
+    def change_border(self, btn_id):
+        self.ipg.update_item(btn_id, IpgButtonParams.StyleBorder, 
+                             value="border_update")
+        
+    def change_shadow(self, btn_id):
+        self.ipg.update_item(btn_id, IpgButtonParams.StyleShadow, 
+                             value="shadow")
+        
+    def change_text_color(self, btn_id):
+        self.ipg.update_item(btn_id, IpgButtonParams.StyleTextColor, 
+                             value="text")
 
 
 # instantiates the class
