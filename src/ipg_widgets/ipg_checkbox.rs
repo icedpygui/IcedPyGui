@@ -2,7 +2,7 @@
 
 use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_f64, try_extract_string};
-use crate::style::styling::lighten;
+use crate::style::styling::{lighten, StyleBorder};
 use crate::{access_callbacks, access_state};
 use crate::app;
 use super::helpers::{get_width, get_shaping};
@@ -214,6 +214,10 @@ pub enum IpgCheckboxParams {
     Show,
     Size,
     Spacing,
+    StyleBackground,
+    StyleBorder,
+    StyleIconTextColor,
+    StyleTextColor,
     TextLineHeight,
     TextShaping,
     TextSize,
@@ -260,6 +264,18 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
         },
         IpgCheckboxParams::TextSize => {
             chk.text_size = try_extract_f64(value) as f32;
+        },
+        IpgCheckboxParams::StyleBackground => {
+            chk.style_background = Some(try_extract_string(value))
+        },
+        IpgCheckboxParams::StyleBorder => {
+            chk.style_border = Some(try_extract_string(value))
+        },
+        IpgCheckboxParams::StyleIconTextColor => {
+            chk.style_icon_color = Some(try_extract_string(value))
+        },
+        IpgCheckboxParams::StyleTextColor => {
+            chk.style_text_color = Some(try_extract_string(value))
         },
         IpgCheckboxParams::Width => {
             let wd = try_extract_f64(value);

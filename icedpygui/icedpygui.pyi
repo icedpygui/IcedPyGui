@@ -491,13 +491,11 @@ class IPG:
             clip: bool
                 Whether to clip the label if width exceeded.
             style_background: str
-                style_id of the add_background_style.
+                style_id of the add_styling_background.
             style_border: str
-                style_id of the add_border_style.
-            style_shadow: str
-                style_id of the add_shadow_style.
+                style_id of the add_styling_border.
             style_text_color: str
-                style_id of the add_text_color_style.
+                style_id of the add_styling_text_color.
             style_arrow: IpgButtonArrows
                 See dropdown list when IpgButtonArrow. is typed in when period is typed.
             user_data: any 
@@ -583,21 +581,25 @@ class IPG:
                      parent_id: str,
                      *,
                      on_toggle: Union[None | Callable] = None,
-                     is_checked: bool=False,
-                     label: Union[None | str]=None,
-                     gen_id: Union[None | int]=None,
-                     width: Union[None | float]=None,
-                     width_fill: bool=False,
-                     size: float=16.0,
-                     spacing: float = 15.0,
-                     text_line_height: float=1.3,
-                     text_shaping: str = "basic",
-                     text_size: float=16.0,
-                     icon_x: bool=False,
-                     icon_size: float=25.0,
-                     user_data: Union[None | any]=None,
-                     show: bool=True,
-                     ) -> int:
+                    is_checked: bool=False,
+                    label: Union[None | str]=None,
+                    gen_id: Union[None | int]=None,
+                    width: Union[None | float]=None,
+                    width_fill: bool=False,
+                    size: float=16.0,
+                    spacing: float = 15.0,
+                    text_line_height: float=1.3,
+                    text_shaping: str = "basic",
+                    text_size: float=16.0,
+                    icon_x: bool=False,
+                    icon_size: float=25.0,
+                    style_background: Union[None | str]=None,
+                    style_border: Union[None | str]=None,
+                    style_icon_color: Union[None | str]=None,
+                    style_text_color: Union[None | str]=None,
+                    user_data: Union[None | any]=None,
+                    show: bool=True,
+                    ) -> int:
         """
         Adds a checkbox to the gui
         
@@ -631,6 +633,14 @@ class IPG:
                 If true, uses the x versus the checkmark icon.
             icon_size: float
                 Sets the size of either the check or x icon.
+            style_background: str
+                style_id of the add_styling_background.
+            style_border: str
+                style_id of the add_styling_border.
+            style_icon_color: str
+                style_id of the add_styling_icon_color.
+            style_text_color: str
+                style_id of the add_styling_text_color.
             user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
             show: bool
@@ -1296,7 +1306,7 @@ class IPG:
                                 gen_id: Union[None | int]=None,
                                 ) -> int:
         """
-        Adds styling to a container.
+        Adds styling to a container or widget.
 
             Parameters
             ----------
@@ -1334,7 +1344,7 @@ class IPG:
                             gen_id: Union[None | int]=None,
                             ) -> int:
         """
-        Adds a border to a container.
+        Adds a border to a container or widget.
 
             Parameters
             ----------
@@ -1376,7 +1386,7 @@ class IPG:
                             gen_id: Union[None | int]=None,
                             ) -> int:
         """
-        Adds a border to a container.
+        Adds a shadow to a widget, not all widgets have a shadow.
 
             Parameters
             ----------
@@ -1405,6 +1415,38 @@ class IPG:
                     Internal id of widget and can be used by user if equated.
         """
 
+    def add_styling_icon_color(self,
+                                style_id: str,
+                                rgba: Union[None | List[float]]=None,
+                                color: Union[None | IpgColor]=None,
+                                invert: bool=False,
+                                alpha: float=1.0,
+                                gen_id: Union[None | int]=None,
+                                ) -> int:
+        """
+        Adds a defined color to an icon, if present.
+
+            Parameters
+            ----------
+                style_id: str
+                    Id of style for use by the containers and widgets.
+                rbga: List[float]
+                    A list of float items for the color [r, g, b, a].
+                color: IpgColor
+                    A color form the class IpgColor
+                invert: bool
+                    Whether to invert the given colors
+                alpha: float
+                    whether to apply a alpha factor to the a.
+                gen_id: int
+                    The only allowable entry for this id is that generated by ipg.generate_id().
+
+            Returns
+            -------
+                id: int
+                    Internal id of widget and can be used by user if equated.     
+        """
+
     def add_styling_text_color(self,
                                 style_id: str,
                                 rgba: Union[None | List[float]]=None,
@@ -1414,14 +1456,12 @@ class IPG:
                                 gen_id: Union[None | int]=None,
                                 ) -> int:
         """
-        Adds a border to a container.
+        Adds a defined color to the text in a container or widget.
 
             Parameters
             ----------
-                parent_id: str
-                    Id of container to style, either parent_id or widget_id must be used.
-                widget_id: int
-                    Id of the widget to style.
+                style_id: str
+                    Id of style for use by the containers and widgets.
                 rbga: List[float]
                     A list of float items for the color [r, g, b, a].
                 color: IpgColor
@@ -2061,6 +2101,7 @@ class IpgButtonParams:
     StyleBackground=0
     StyleBorder=0
     StyleShadow=0
+    StyleTextColor=0
     Width=0
     WidthFill=0
 
@@ -2102,7 +2143,10 @@ class IpgCheckboxParams:
     Show=0
     Size=0
     Spacing=0
-    Style=0
+    StyleBackground=0
+    StyleBorder=0
+    StyleIconTextColor=0
+    StyleTextColor=0
     TextLineHeight=0
     TextShaping=0
     TextSize=0

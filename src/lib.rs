@@ -802,7 +802,7 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_width=f32::INFINITY, max_height=f32::INFINITY, 
                         padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
-                        style_background=None, style_border=None, style_text_color=None, user_data=None))]
+                        style=None, user_data=None))]
     fn add_card(&mut self,
                 parent_id: String, 
                 head: String,
@@ -823,9 +823,7 @@ impl IPG {
                 padding_head: Vec<f64>,
                 padding_body: Vec<f64>,
                 padding_foot: Vec<f64>,
-                style_background: Option<String>,
-                style_border: Option<String>,
-                style_text_color: Option<String>,
+                style: Option<PyObject>,
                 user_data: Option<PyObject>, 
                 ) -> PyResult<usize> 
     {
@@ -862,9 +860,7 @@ impl IPG {
                                                     head,
                                                     body,
                                                     foot,
-                                                    style_background,
-                                                    style_border,
-                                                    style_text_color,
+                                                    style,
                                                 )));
 
         Ok(id)
@@ -1673,6 +1669,33 @@ impl IPG {
                                                 offset_x,
                                                 offset_y,
                                                 blur_radius,
+                                                ));
+
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (style_id, rgba=None, color=None, 
+                        invert=false, alpha=1.0, gen_id=None))]
+    fn add_styling_icon_color(&mut self,
+                                style_id: String,
+                                rgba: Option<[f32; 4]>,
+                                color: Option<IpgColor>,
+                                invert: bool,
+                                alpha: f32,
+                                gen_id: Option<usize>,
+                                ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let color: Color = get_color(rgba, color, alpha, invert);
+
+        let mut state = access_state();
+       
+        state.styling_icon_color.insert(style_id, StyleIconColor::new( 
+                                                id,
+                                                color,
                                                 ));
 
         drop(state);
