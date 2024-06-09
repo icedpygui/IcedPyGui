@@ -1,5 +1,6 @@
 // #![allow(dead_code)]
 #![allow(unused_assignments)]
+
 use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::style::styling::lighten;
 use crate::{access_callbacks, access_state, app};
@@ -18,7 +19,7 @@ use pyo3::{pyclass, PyObject, Python};
 use iced::widget::{Button, Space, Text};
 use iced::{Background, Border, Color, Element, Length, Padding, Theme };
 
-use crate::graphics::bootstrap::{self, icon_to_string};
+use crate::graphics::bootstrap::{self, icon_to_char, icon_to_string};
 
 
 #[derive(Debug, Clone)]
@@ -502,7 +503,7 @@ pub enum IpgButtonArrows {
 }
 
 
-fn get_bootstrap_arrow(arrow: IpgButtonArrows) -> String {
+pub fn get_bootstrap_arrow(arrow: IpgButtonArrows) -> String {
     match arrow {
         IpgButtonArrows::ArrowBarLeft => icon_to_string(bootstrap::Bootstrap::ArrowBarLeft),
         IpgButtonArrows::ArrowBarRight => icon_to_string(bootstrap::Bootstrap::ArrowBarRight),
@@ -574,5 +575,80 @@ fn get_bootstrap_arrow(arrow: IpgButtonArrows) -> String {
         IpgButtonArrows::ArrowsFullscreen => icon_to_string(bootstrap::Bootstrap::ArrowsFullscreen),
         IpgButtonArrows::ArrowsMove => icon_to_string(bootstrap::Bootstrap::ArrowsMove),
         IpgButtonArrows::ArrowsVertical => icon_to_string(bootstrap::Bootstrap::ArrowsVertical),
+    }
+}
+
+pub fn get_bootstrap_arrow_char(arrow: IpgButtonArrows) -> char {
+    match arrow {
+        IpgButtonArrows::ArrowBarLeft => icon_to_char(bootstrap::Bootstrap::ArrowBarLeft),
+        IpgButtonArrows::ArrowBarRight => icon_to_char(bootstrap::Bootstrap::ArrowBarRight),
+        IpgButtonArrows::ArrowBarUp => icon_to_char(bootstrap::Bootstrap::ArrowBarUp),
+        IpgButtonArrows::ArrowClockwise => icon_to_char(bootstrap::Bootstrap::ArrowClockwise),
+        IpgButtonArrows::ArrowCounterclockwise => icon_to_char(bootstrap::Bootstrap::ArrowCounterclockwise),
+        IpgButtonArrows::ArrowDown => icon_to_char(bootstrap::Bootstrap::ArrowDown),
+        IpgButtonArrows::ArrowDownCircle => icon_to_char(bootstrap::Bootstrap::ArrowDownCircle),
+        IpgButtonArrows::ArrowDownCircleFill => icon_to_char(bootstrap::Bootstrap::ArrowDownCircleFill),
+        IpgButtonArrows::ArrowDownLeft => icon_to_char(bootstrap::Bootstrap::ArrowDownLeft),
+        IpgButtonArrows::ArrowDownLeftCircle => icon_to_char(bootstrap::Bootstrap::ArrowDownLeftCircle),
+        IpgButtonArrows::ArrowDownLeftCircleFill => icon_to_char(bootstrap::Bootstrap::ArrowDownLeftCircleFill),
+        IpgButtonArrows::ArrowDownLeftSquare => icon_to_char(bootstrap::Bootstrap::ArrowDownLeftSquare),
+        IpgButtonArrows::ArrowDownLeftSquareFill => icon_to_char(bootstrap::Bootstrap::ArrowDownLeftSquareFill),
+        IpgButtonArrows::ArrowDownRight => icon_to_char(bootstrap::Bootstrap::ArrowDownRight),
+        IpgButtonArrows::ArrowDownRightCircle => icon_to_char(bootstrap::Bootstrap::ArrowDownRightCircle),
+        IpgButtonArrows::ArrowDownRightCircleFill => icon_to_char(bootstrap::Bootstrap::ArrowDownRightCircleFill),
+        IpgButtonArrows::ArrowDownRightSquare => icon_to_char(bootstrap::Bootstrap::ArrowDownRightSquare),
+        IpgButtonArrows::ArrowDownRightSquareFill => icon_to_char(bootstrap::Bootstrap::ArrowDownRightSquareFill),
+        IpgButtonArrows::ArrowDownShort => icon_to_char(bootstrap::Bootstrap::ArrowDownShort),
+        IpgButtonArrows::ArrowDownSquare => icon_to_char(bootstrap::Bootstrap::ArrowDownSquare),
+        IpgButtonArrows::ArrowDownSquareFill => icon_to_char(bootstrap::Bootstrap::ArrowDownSquareFill),
+        IpgButtonArrows::ArrowDownUp => icon_to_char(bootstrap::Bootstrap::ArrowDownUp),
+        IpgButtonArrows::ArrowLeft => icon_to_char(bootstrap::Bootstrap::ArrowLeft),
+        IpgButtonArrows::ArrowLeftCircle => icon_to_char(bootstrap::Bootstrap::ArrowLeftCircle),
+        IpgButtonArrows::ArrowLeftCircleFill => icon_to_char(bootstrap::Bootstrap::ArrowLeftCircleFill),
+        IpgButtonArrows::ArrowLeftRight => icon_to_char(bootstrap::Bootstrap::ArrowLeftRight),
+        IpgButtonArrows::ArrowLeftShort => icon_to_char(bootstrap::Bootstrap::ArrowLeftShort),
+        IpgButtonArrows::ArrowLeftSquare => icon_to_char(bootstrap::Bootstrap::ArrowLeftSquare),
+        IpgButtonArrows::ArrowLeftSquareFill => icon_to_char(bootstrap::Bootstrap::ArrowLeftSquareFill),
+        IpgButtonArrows::ArrowNinezerodegDown => icon_to_char(bootstrap::Bootstrap::ArrowNinezerodegDown),
+        IpgButtonArrows::ArrowNinezerodegLeft => icon_to_char(bootstrap::Bootstrap::ArrowNinezerodegLeft),
+        IpgButtonArrows::ArrowNinezerodegRight => icon_to_char(bootstrap::Bootstrap::ArrowNinezerodegRight),
+        IpgButtonArrows::ArrowNinezerodegUp => icon_to_char(bootstrap::Bootstrap::ArrowNinezerodegUp),
+        IpgButtonArrows::ArrowRepeat => icon_to_char(bootstrap::Bootstrap::ArrowRepeat),
+        IpgButtonArrows::ArrowReturnLeft => icon_to_char(bootstrap::Bootstrap::ArrowReturnLeft),
+        IpgButtonArrows::ArrowReturnRight => icon_to_char(bootstrap::Bootstrap::ArrowReturnRight),
+        IpgButtonArrows::ArrowRight => icon_to_char(bootstrap::Bootstrap::ArrowRight),
+        IpgButtonArrows::ArrowRightCircle => icon_to_char(bootstrap::Bootstrap::ArrowRightCircle),
+        IpgButtonArrows::ArrowRightCircleFill => icon_to_char(bootstrap::Bootstrap::ArrowRightCircleFill),
+        IpgButtonArrows::ArrowRightShort => icon_to_char(bootstrap::Bootstrap::ArrowRightShort),
+        IpgButtonArrows::ArrowRightSquare => icon_to_char(bootstrap::Bootstrap::ArrowRightSquare),
+        IpgButtonArrows::ArrowRightSquareFill => icon_to_char(bootstrap::Bootstrap::ArrowRightSquareFill),
+        IpgButtonArrows::ArrowThroughHeart => icon_to_char(bootstrap::Bootstrap::ArrowThroughHeart),
+        IpgButtonArrows::ArrowThroughHeartFill => icon_to_char(bootstrap::Bootstrap::ArrowThroughHeartFill),
+        IpgButtonArrows::ArrowUp => icon_to_char(bootstrap::Bootstrap::ArrowUp),
+        IpgButtonArrows::ArrowUpCircle => icon_to_char(bootstrap::Bootstrap::ArrowUpCircle),
+        IpgButtonArrows::ArrowUpCircleFill => icon_to_char(bootstrap::Bootstrap::ArrowUpCircleFill),
+        IpgButtonArrows::ArrowUpLeft => icon_to_char(bootstrap::Bootstrap::ArrowUpLeft),
+        IpgButtonArrows::ArrowUpLeftCircle => icon_to_char(bootstrap::Bootstrap::ArrowUpLeftCircle),
+        IpgButtonArrows::ArrowUpLeftCircleFill => icon_to_char(bootstrap::Bootstrap::ArrowUpLeftCircleFill),
+        IpgButtonArrows::ArrowUpLeftSquare => icon_to_char(bootstrap::Bootstrap::ArrowUpLeftSquare),
+        IpgButtonArrows::ArrowUpLeftSquareFill => icon_to_char(bootstrap::Bootstrap::ArrowUpLeftSquareFill),
+        IpgButtonArrows::ArrowUpRight => icon_to_char(bootstrap::Bootstrap::ArrowUpRight),
+        IpgButtonArrows::ArrowUpRightCircle => icon_to_char(bootstrap::Bootstrap::ArrowUpRightCircle),
+        IpgButtonArrows::ArrowUpRightCircleFill => icon_to_char(bootstrap::Bootstrap::ArrowUpRightCircleFill),
+        IpgButtonArrows::ArrowUpRightSquare => icon_to_char(bootstrap::Bootstrap::ArrowUpRightSquare),
+        IpgButtonArrows::ArrowUpRightSquareFill => icon_to_char(bootstrap::Bootstrap::ArrowUpRightSquareFill),
+        IpgButtonArrows::ArrowUpShort => icon_to_char(bootstrap::Bootstrap::ArrowUpShort),
+        IpgButtonArrows::ArrowUpSquare => icon_to_char(bootstrap::Bootstrap::ArrowUpSquare),
+        IpgButtonArrows::ArrowUpSquareFill => icon_to_char(bootstrap::Bootstrap::ArrowUpSquareFill),
+        IpgButtonArrows::Arrows => icon_to_char(bootstrap::Bootstrap::Arrows),
+        IpgButtonArrows::ArrowsAngleContract => icon_to_char(bootstrap::Bootstrap::ArrowsAngleContract),
+        IpgButtonArrows::ArrowsAngleExpand => icon_to_char(bootstrap::Bootstrap::ArrowsAngleExpand),
+        IpgButtonArrows::ArrowsCollapse => icon_to_char(bootstrap::Bootstrap::ArrowsCollapse),
+        IpgButtonArrows::ArrowsCollapseVertical => icon_to_char(bootstrap::Bootstrap::ArrowsCollapseVertical),
+        IpgButtonArrows::ArrowsExpand => icon_to_char(bootstrap::Bootstrap::ArrowsExpand),
+        IpgButtonArrows::ArrowsExpandVertical => icon_to_char(bootstrap::Bootstrap::ArrowsExpandVertical),
+        IpgButtonArrows::ArrowsFullscreen => icon_to_char(bootstrap::Bootstrap::ArrowsFullscreen),
+        IpgButtonArrows::ArrowsMove => icon_to_char(bootstrap::Bootstrap::ArrowsMove),
+        IpgButtonArrows::ArrowsVertical => icon_to_char(bootstrap::Bootstrap::ArrowsVertical),
     }
 }

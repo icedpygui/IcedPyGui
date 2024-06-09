@@ -35,7 +35,7 @@ use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, Ip
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, IpgImageFilterMethod, IpgImageParams, IpgImageRotation};
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuBarStyle, IpgMenuItemStyle, IpgMenuItemType, IpgMenuParams, IpgMenuSepTypes};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParams};
-use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListParams};
+use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickListHandle, IpgPickList, IpgPickListParams};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams};
 use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
@@ -1139,6 +1139,9 @@ impl IPG {
                         width=None, width_fill=false, padding=vec![5.0],  
                         placeholder=None, selected=None, text_size=None, 
                         text_line_height=1.3, text_shaping="basic".to_string(), 
+                        handle=IpgPickListHandle::Default, arrow_size=None, 
+                        dynamic_closed=None, dynamic_opened=None, custom_static=None,
+                        style_background=None, style_border=None, style_text_color=None,
                         user_data=None, show=true,
                         ))]
     fn add_pick_list(&mut self,
@@ -1155,6 +1158,14 @@ impl IPG {
                         text_size: Option<f32>,
                         text_line_height: f32,
                         text_shaping: String,
+                        handle: IpgPickListHandle,
+                        arrow_size: Option<f32>,
+                        dynamic_closed: Option<IpgButtonArrows>,
+                        dynamic_opened: Option<IpgButtonArrows>,
+                        custom_static: Option<IpgButtonArrows>,
+                        style_background: Option<String>,
+                        style_border: Option<String>,
+                        style_text_color: Option<String>,
                         user_data: Option<PyObject>,
                         show: bool,
                     ) -> PyResult<usize>
@@ -1190,6 +1201,14 @@ impl IPG {
                                                         text_size,
                                                         text_line_height,
                                                         text_shaping,
+                                                        handle,
+                                                        arrow_size,
+                                                        dynamic_closed,
+                                                        dynamic_opened,
+                                                        custom_static,
+                                                        style_background,
+                                                        style_border,
+                                                        style_text_color,
                                                     )));
 
         Ok(id)
@@ -2608,6 +2627,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgMenuSepTypes>()?;
     m.add_class::<IpgMouseAreaParams>()?;
     m.add_class::<IpgPickListParams>()?;
+    m.add_class::<IpgPickListHandle>()?;
     m.add_class::<IpgProgressBarParams>()?;
     m.add_class::<IpgRadioDirection>()?;
     m.add_class::<IpgRadioParams>()?;

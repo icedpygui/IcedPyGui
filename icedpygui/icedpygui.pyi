@@ -912,6 +912,11 @@ class IPG:
                         text_size: float=15.0,
                         text_line_height: float="default",
                         text_shaping: str="basic",
+                        handle: Union[None | IpgPickListHandle]=None,
+                        arrow_size: Union[None | float]=None,
+                        dynamic_closed: Union[None| IpgButtonArrows]=None,
+                        dynamic_opened: Union[None | IpgButtonArrows]=None,
+                        custom_static: Union[None | IpgButtonArrows]=None,
                         user_data: Union[None | any]=None,
                         show: bool=True,
                       ) -> int:
@@ -947,6 +952,8 @@ class IPG:
                 Sets the height of the box around the text.
             text_shaping: str
                 Sets the shape of the text.
+            handle: IpgPickListHandle
+                What type of indicatpr to use for the dropdown list, arrrow, ...
             user_data: any
                 Any data in any form needed by user to be passed through as a callback.
             show: bool
@@ -2415,6 +2422,13 @@ class IpgPickListParams:
     TextLineHeight=0
     Width=0
     Delete=0
+
+
+class IpgPickListHandle:
+    Arrow=0
+    Dynamic=0
+    HandleNone=0
+    Static=0
 
 
 class IpgProgressBarParams:
