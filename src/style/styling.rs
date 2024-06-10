@@ -11,7 +11,7 @@ use pyo3::pyclass;
 pub struct StyleBackground {
     pub id: usize,
     pub color: Color,
-    pub accent_amount: f32,
+    pub accent: f32,
 }
 
 impl StyleBackground {
@@ -23,7 +23,7 @@ impl StyleBackground {
         Self {
             id,
             color,
-            accent_amount: accent,
+            accent,
         }
     }
 }
@@ -32,16 +32,19 @@ impl StyleBackground {
 pub struct StyleBarColor {
     pub id: usize,
     pub color: Color,
+    pub accent: f32,
 }
 
 impl StyleBarColor {
     pub fn new(
         id: usize,
         color: Color,
+        accent: f32,
     ) -> Self {
         Self {
             id,
             color,
+            accent,
         }
     }
 }
@@ -52,6 +55,7 @@ pub struct StyleBorder {
     pub color: Color,
     pub radius: Radius,
     pub width: f32,
+    pub accent: f32,
 }
 
 impl StyleBorder {
@@ -60,33 +64,61 @@ impl StyleBorder {
         color: Color,
         radius: Radius,
         width: f32,
+        accent: f32,
     ) -> Self {
         Self {
             id,
             color,
             radius,
             width,
+            accent,
         }
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct StyleDotColor {
+    pub id: usize,
+    pub color: Color,
+    pub accent: f32,
+}
+
+impl StyleDotColor {
+    pub fn new(
+        id: usize,
+        color: Color,
+        accent: f32,
+    ) -> Self {
+        Self {
+            id,
+            color,
+            accent,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct StyleHandleColor {
     pub id: usize,
     pub color: Color,
+    pub accent: f32,
 }
 
 impl StyleHandleColor {
     pub fn new(
         id: usize,
         color: Color,
+        accent: f32,
     ) -> Self {
         Self {
             id,
             color,
+            accent,
         }
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct StyleIconColor {
     pub id: usize,
     pub color: Color,
@@ -229,7 +261,10 @@ fn from_hsl(hsl: Hsl) -> Color {
 #[pyclass]
 pub enum IpgStyleParam {
     Background,
+    BarColor,
     Border,
+    DotColor,
+    HandleColor,
     IconColor,
     Shadow,
 }

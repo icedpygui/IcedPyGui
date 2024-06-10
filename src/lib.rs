@@ -62,7 +62,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
     get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{IpgStyleParam, StyleBackground, StyleBarColor, StyleBorder, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
+use style::styling::{IpgStyleParam, StyleBackground, StyleBarColor, StyleBorder, StyleDotColor, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
@@ -117,6 +117,7 @@ pub struct State {
     pub styling_background: Lazy<HashMap<String, StyleBackground>>,
     pub styling_bar_color: Lazy<HashMap<String, StyleBarColor>>,
     pub styling_border: Lazy<HashMap<String, StyleBorder>>,
+    pub styling_dot_color: Lazy<HashMap<String, StyleDotColor>>,
     pub styling_handle_color: Lazy<HashMap<String, StyleHandleColor>>,
     pub styling_icon_color: Lazy<HashMap<String, StyleIconColor>>,
     pub styling_shadow: Lazy<HashMap<String, StyleShadow>>,
@@ -148,6 +149,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         styling_background: Lazy::new(||HashMap::new()),
         styling_bar_color: Lazy::new(||HashMap::new()),
         styling_border: Lazy::new(||HashMap::new()),
+        styling_dot_color: Lazy::new(||HashMap::new()),
         styling_handle_color: Lazy::new(||HashMap::new()),
         styling_icon_color: Lazy::new(||HashMap::new()),
         styling_shadow: Lazy::new(||HashMap::new()),
@@ -1275,7 +1277,9 @@ impl IPG {
                         spacing= 10.0, padding=DEFAULT_PADDING.to_vec(), 
                         width=None, width_fill=false, height=None, height_fill=false,
                         on_select=None, selected_index=None, 
-                        size=20.0, text_spacing=15.0, text_size=16.0,
+                        size=20.0, style_background=None, style_border=None,
+                        style_dot_color=None, style_text_color=None,
+                        text_spacing=15.0, text_size=16.0,
                         text_line_height=1.3, text_shaping="basic".to_string(), 
                         user_data=None, show=true, 
                         ))]
@@ -1294,6 +1298,10 @@ impl IPG {
                     on_select: Option<PyObject>,
                     selected_index: Option<usize>,
                     size: f32,
+                    style_background: Option<String>,
+                    style_border: Option<String>,
+                    style_dot_color: Option<String>,
+                    style_text_color: Option<String>,
                     text_spacing: f32,
                     text_size: f32,
                     text_line_height: f32,
@@ -1350,6 +1358,10 @@ impl IPG {
                                         text_line_height,
                                         text_shaping,
                                         self.group_index,
+                                        style_background,
+                                        style_border,
+                                        style_dot_color,
+                                        style_text_color,
                                     )));
         self.group_index += 1;                                      
         Ok(id)
@@ -1635,13 +1647,14 @@ impl IPG {
 
     #[pyo3(signature = (style_id, rgba=None, color=None, 
                         invert=false, scale_alpha=1.0, 
-                        gen_id=None))]
+                        accent=0.05, gen_id=None))]
     fn add_styling_bar_color(&mut self,
                             style_id: String,
                             rgba: Option<[f32; 4]>,
                             color: Option<IpgColor>,
                             invert: bool,
                             scale_alpha: f32,
+                            accent: f32,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize>
     {
@@ -1654,6 +1667,7 @@ impl IPG {
         state.styling_bar_color.insert(style_id, StyleBarColor::new( 
                                                     id,
                                                     color,
+                                                    accent,
                                                     ));
         
         drop(state);
@@ -1663,7 +1677,7 @@ impl IPG {
 
     #[pyo3(signature = (style_id, rgba=None, color=None, 
                         invert=false, scale_alpha=1.0, width=1.0, 
-                        radius=vec![5.0], gen_id=None))]
+                        radius=vec![5.0], accent=0.05, gen_id=None))]
     fn add_styling_border(&mut self,
                             style_id: String,
                             rgba: Option<[f32; 4]>,
@@ -1672,6 +1686,7 @@ impl IPG {
                             scale_alpha: f32,
                             width: f32,
                             radius: Vec<f32>,
+                            accent: f32,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize>
     {
@@ -1695,6 +1710,7 @@ impl IPG {
                                                 color,
                                                 radius,
                                                 width,
+                                                accent,
                                                 ));
 
         drop(state);
@@ -1703,13 +1719,45 @@ impl IPG {
     }
 
     #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, alpha=1.0, gen_id=None))]
+                        invert=false, scale_alpha=1.0, 
+                        accent=0.05, gen_id=None))]
+    fn add_styling_dot_color(&mut self,
+                            style_id: String,
+                            rgba: Option<[f32; 4]>,
+                            color: Option<IpgColor>,
+                            invert: bool,
+                            scale_alpha: f32,
+                            accent: f32,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let color: Color = get_color(rgba, color, scale_alpha, invert);
+
+        let mut state = access_state();
+       
+        state.styling_dot_color.insert(style_id, StyleDotColor::new( 
+                                                    id,
+                                                    color,
+                                                    accent,
+                                                    ));
+        
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (style_id, rgba=None, color=None, 
+                        invert=false, alpha=1.0, 
+                        accent=0.05, gen_id=None))]
     fn add_styling_handle_color(&mut self,
                                 style_id: String,
                                 rgba: Option<[f32; 4]>,
                                 color: Option<IpgColor>,
                                 invert: bool,
                                 alpha: f32,
+                                accent: f32,
                                 gen_id: Option<usize>,
                                 ) -> PyResult<usize>
     {
@@ -1722,6 +1770,7 @@ impl IPG {
         state.styling_handle_color.insert(style_id, StyleHandleColor::new( 
                                                 id,
                                                 color,
+                                                accent,
                                                 ));
 
         drop(state);

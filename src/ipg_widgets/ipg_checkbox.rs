@@ -317,7 +317,7 @@ pub fn get_styling(_theme: &Theme, status: Status,
     };
     
     let (bg_color, accent_amount) = match background_opt {
-        Some(bg) => ( bg.color, bg.accent_amount ),
+        Some(bg) => ( bg.color, bg.accent ),
         None => ( match_ipg_color(IpgColor::TRANSPARENT), 0.05 ),
     };
 

@@ -2523,6 +2523,10 @@ class IpgRadioParams:
     Show=0
     Size=0
     Spacing=0
+    StyleBackground=0
+    StyleBorder=0
+    StyleDotColor=0
+    StyleTextColor=0
     TextSpacing=0
     TextSize=0
     TextLineHeight=0
@@ -2601,7 +2605,10 @@ class IpgSliderParams:
 
 class IpgStyleParam:
     Background=0
+    BarColor=0
     Border=0
+    DotColor=0
+    HandleColor=0
     IconColor=0
     Shadow=0
 

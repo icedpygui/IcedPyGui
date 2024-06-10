@@ -1,15 +1,21 @@
 #![allow(unused)]
 
+use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::ipg_widgets::helpers::try_extract_boolean;
+use crate::style::styling::lighten;
 use crate::{access_state, access_callbacks};
 use crate::app;
-use super::helpers::{get_height, get_line_height, get_padding, get_width, try_extract_f64, try_extract_f64_option, try_extract_i64, try_extract_i64_option, try_extract_string, try_extract_vec_f64, try_extract_vec_str};
+use super::helpers::{get_height, get_line_height, get_padding, 
+    get_width, try_extract_f64, try_extract_f64_option, try_extract_i64, 
+    try_extract_i64_option, try_extract_option_string,  
+    try_extract_vec_f64, try_extract_vec_str};
 use super::ipg_enums::IpgWidgets;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 
-use iced::{Length, Element, Padding};
+use iced::widget::radio::{self, Status};
+use iced::{Background, Color, Element, Length, Padding, Theme};
 use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{Column, Radio, Row, Space};
 
@@ -35,9 +41,12 @@ pub struct IpgRadio {
     pub text_size: f32,
     pub text_line_height: LineHeight,
     pub text_shaping: Shaping,
-    // pub font: Option<Font>,
-    // pub style: <Renderer::Theme as StyleSheet>::Style,
     pub group_index: usize,
+    // pub font: Option<Font>,
+    pub style_background: Option<String>,
+    pub style_border: Option<String>,
+    pub style_dot_color: Option<String>,
+    pub style_text_color: Option<String>,
 }
 
 impl IpgRadio {
@@ -58,9 +67,12 @@ impl IpgRadio {
         text_size: f32,
         text_line_height: LineHeight,
         text_shaping: Shaping,
-        // font: Option<Font>,
-        // style: <Renderer::Theme as StyleSheet>::Style,
         radio_index: usize,
+        // font: Option<Font>,
+        style_background: Option<String>,
+        style_border: Option<String>,
+        style_dot_color: Option<String>,
+        style_text_color: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -79,9 +91,12 @@ impl IpgRadio {
             text_size,
             text_line_height,
             text_shaping,
-            // font: None,
-            // style: Default::default(),
             group_index: radio_index,
+            // font: None,
+            style_background,
+            style_border,
+            style_dot_color,
+            style_text_color,
         }
     }
 }
@@ -116,6 +131,10 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
     let mut radio_elements = vec![];
 
     for (i, label) in  radio.labels.iter().enumerate() {
+        let style_background = radio.style_background.clone();
+        let style_border = radio.style_border.clone();
+        let style_dot_color = radio.style_dot_color.clone();
+        let style_text_color = radio.style_text_color.clone();
         radio_elements.push(Radio::new(label.clone(), 
                                         CHOICES[radio.group_index][i],
                                         selected,
@@ -126,6 +145,14 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
                                     .text_size(radio.text_size)
                                     .text_line_height(radio.text_line_height)
                                     .text_shaping(radio.text_shaping)
+                                    .style(move|theme: &Theme, status| {   
+                                        get_styling(theme, status, 
+                                            style_background.clone(), 
+                                            style_border.clone(),
+                                            style_dot_color.clone(),
+                                            style_text_color.clone(),
+                                        )  
+                                        })
                                     .into());
     }
 
@@ -356,6 +383,10 @@ pub enum IpgRadioParams {
     Show,
     Size,
     Spacing,
+    StyleBackground,
+    StyleBorder,
+    StyleDotColor,
+    StyleTextColor,
     TextSpacing,
     TextSize,
     TextLineHeight,
@@ -410,6 +441,18 @@ pub fn radio_item_update(rd: &mut IpgRadio,
         },
         IpgRadioParams::Spacing => {
             rd.spacing = try_extract_f64(value) as f32;
+        },
+        IpgRadioParams::StyleBackground => {
+            rd.style_background = try_extract_option_string(value);
+        },
+        IpgRadioParams::StyleBorder => {
+            rd.style_border = try_extract_option_string(value);
+        },
+        IpgRadioParams::StyleDotColor => {
+            rd.style_dot_color = try_extract_option_string(value);
+        },
+        IpgRadioParams::StyleTextColor => {
+            rd.style_text_color = try_extract_option_string(value);
         },
         IpgRadioParams::TextSpacing => {
             rd.text_spacing = try_extract_f64(value) as f32;
@@ -480,7 +523,91 @@ pub fn try_extract_radio_direction(direct_obj: PyObject) -> IpgRadioDirection {
     })  
 }
 
- 
+pub fn get_styling(_theme: &Theme, status: Status, 
+                    style_background: Option<String>, 
+                    style_border: Option<String>,
+                    style_dot_color: Option<String>,
+                    style_text_color: Option<String>) 
+                    -> radio::Style {
+    
+    let state = access_state();
+
+    let background_opt = if style_background.is_some() {
+        state.styling_background.get(&style_background.unwrap())
+    } else {
+        None
+    };
+    
+    let bg_color = Color::TRANSPARENT;
+    let (background, accent_bkg) = match background_opt {
+        Some(bg) => {
+            (Background::Color(bg.color), bg.accent)
+        },
+        None => (Background::Color(bg_color), 0.05),
+    };
+
+
+    let mut border_color = match_ipg_color(IpgColor::PRIMARY);
+    let mut border_width = 1.0;
+
+    let border_opt = if style_border.is_some() {
+        state.styling_border.get(&style_border.unwrap())
+    } else {
+        None
+    };
+
+    match border_opt {
+        Some(bd) => {
+            border_color = bd.color;
+            border_width = bd.width;
+        },
+        None => (),
+    }
+
+    let text_color_opt = if style_text_color.is_some() {
+        state.styling_text_color.get(&style_text_color.unwrap())
+    } else {
+        None
+    };
+    
+    let text_color = match text_color_opt {
+        Some(tc) => {
+            Some(tc.color)
+        },
+        None => None,
+    };
+
+    let dot_color_opt = if style_dot_color.is_some() {
+        state.styling_dot_color.get(&style_dot_color.unwrap())
+    } else {
+        None
+    };
+
+    let dot_color: Color = match dot_color_opt {
+        Some(dot) => dot.color,
+        None => match_ipg_color(IpgColor::PRIMARY),
+    };
+
+    let active = radio::Style {
+        background,
+        dot_color,
+        border_width,
+        border_color,
+        text_color,
+    };
+
+    match status {
+        Status::Active { .. } => active,
+        Status::Hovered { .. } => radio::Style {
+            background: Background::Color(lighten(bg_color, accent_bkg)),
+                dot_color: lighten(dot_color, accent_bkg),
+            ..active
+        },
+    }
+
+}
+
+
 // The number of radio buttons per group is based on the number of Choices.
 // Therefore, they are currently limited to 26 per group, but can easily be extended
 // to a greater number.

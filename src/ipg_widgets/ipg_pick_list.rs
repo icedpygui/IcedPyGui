@@ -475,7 +475,7 @@ pub fn get_styling(_theme: &Theme, status: Status,
     let bg_color = match_ipg_color(IpgColor::PRIMARY);
     let (background, hover_factor) = match background_opt {
         Some(bg) => {
-            (Background::Color(bg.color), bg.accent_amount)
+            (Background::Color(bg.color), bg.accent)
         },
         None => (Background::Color(bg_color), 0.05),
     };

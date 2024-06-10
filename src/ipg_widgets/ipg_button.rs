@@ -308,7 +308,7 @@ pub fn get_styling(_theme: &Theme, status: Status,
     match background_opt {
         Some(bg) => {
             bg_color = bg.color;
-            hover_factor = bg.accent_amount;
+            hover_factor = bg.accent;
         },
         None => (),
     }
