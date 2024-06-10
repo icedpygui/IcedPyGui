@@ -29,6 +29,24 @@ impl StyleBackground {
 }
 
 #[derive(Debug, Clone)]
+pub struct StyleBarColor {
+    pub id: usize,
+    pub color: Color,
+}
+
+impl StyleBarColor {
+    pub fn new(
+        id: usize,
+        color: Color,
+    ) -> Self {
+        Self {
+            id,
+            color,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct StyleBorder {
     pub id: usize,
     pub color: Color,
@@ -48,6 +66,23 @@ impl StyleBorder {
             color,
             radius,
             width,
+        }
+    }
+}
+
+pub struct StyleHandleColor {
+    pub id: usize,
+    pub color: Color,
+}
+
+impl StyleHandleColor {
+    pub fn new(
+        id: usize,
+        color: Color,
+    ) -> Self {
+        Self {
+            id,
+            color,
         }
     }
 }

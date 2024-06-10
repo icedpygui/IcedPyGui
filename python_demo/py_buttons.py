@@ -141,7 +141,8 @@ class ButtonDemo:
         self.ipg.add_text(self.sld_col, content="T = Top, B=Bottom, L=Left, R=Right")
 
         # A row container is added to align the buttons.
-        self.ipg.add_row(window_id=self.wnd_id, container_id=self.row_id, parent_id=self.sld_col)
+        self.ipg.add_row(window_id=self.wnd_id, container_id=self.row_id, 
+                         parent_id=self.sld_col, align_items=IpgRowAlignment.Center)
 
         # All of the buttons below have different padding values.  The padding parameter
         # has 3 different type of values.  A list of a single item sets padding on all sides.
@@ -150,7 +151,7 @@ class ButtonDemo:
         # top, right, bottom, left, respectively. A clockwise pattern.
         # if you wanted just the right for example you would use all four and just adjust
         #  the second item in the list.  You will have to supply the default value for the others
-        self.ipg.add_button(self.row_id, label="Padding 0", padding=[0])
+        self.ipg.add_button(self.row_id, label="Padding all 0", padding=[0])
 
         self.ipg.add_button(self.row_id, label="Padding all,10", padding=[10])
 

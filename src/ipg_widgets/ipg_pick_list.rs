@@ -59,6 +59,7 @@ pub struct IpgPickList {
     pub custom_static: Option<IpgButtonArrows>,
     pub style_background: Option<String>,
     pub style_border: Option<String>,
+    pub style_handle_color: Option<String>,
     pub style_text_color: Option<String>,
 }
 
@@ -83,6 +84,7 @@ impl IpgPickList {
         custom_static: Option<IpgButtonArrows>,
         style_background: Option<String>,
         style_border: Option<String>,
+        style_handle_color: Option<String>,
         style_text_color: Option<String>,
         ) -> Self {
         Self {
@@ -104,6 +106,7 @@ impl IpgPickList {
             custom_static,
             style_background,
             style_border,
+            style_handle_color,
             style_text_color,
         }
     }
@@ -152,7 +155,8 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
                                         .style(move|theme: &Theme, status| {   
                                             get_styling(theme, status, 
                                                 pick.style_background.clone(), 
-                                                pick.style_border.clone(), 
+                                                pick.style_border.clone(),
+                                                pick.style_handle_color.clone(),
                                                 pick.style_text_color.clone(),
                                             )  
                                             })
@@ -435,7 +439,8 @@ fn get_handle(ipg_handle: IpgPickListHandle,
 
 pub fn get_styling(_theme: &Theme, status: Status, 
                     style_background: Option<String>, 
-                    style_border: Option<String>, 
+                    style_border: Option<String>,
+                    style_handle_color: Option<String>,
                     style_text_color: Option<String>) 
                     -> pick_list::Style {
     
@@ -456,8 +461,8 @@ pub fn get_styling(_theme: &Theme, status: Status,
     };
 
 
-    let mut border_color = Color::TRANSPARENT;
-    let mut radius = Radius::from([10.0; 4]);
+    let mut border_color = match_ipg_color(IpgColor::PRIMARY);
+    let mut radius = Radius::from([5.0; 4]);
     let mut border_width = 1.0;
 
     let border_opt = if style_border.is_some() {
@@ -483,24 +488,32 @@ pub fn get_styling(_theme: &Theme, status: Status,
         None
     };
     
-    let mut text_color = match_ipg_color(IpgColor::ANTIQUE_WHITE);
-
-
-    match text_color_opt {
+    let text_color = match text_color_opt {
         Some(tc) => {
-            text_color = tc.color;
+            tc.color
         },
-        None => (),
-    }
+        None => match_ipg_color(IpgColor::ANTIQUE_WHITE),
+    };
 
-    let placeholder_color: Color = lighten(bg_color, hover_factor);
+    let placeholder_color: Color = lighten(match_ipg_color(IpgColor::ANTIQUE_WHITE), hover_factor);
+
+    let handle_color_opt = if style_handle_color.is_some() {
+        state.styling_handle_color.get(&style_handle_color.unwrap())
+    } else {
+        None
+    };
+
+    let handle_color: Color = match handle_color_opt {
+        Some(hc) => hc.color,
+        None => text_color,
+    };
 
     let active = pick_list::Style {
             background: background,
             border,
             text_color,
             placeholder_color,
-            handle_color: text_color.clone(),
+            handle_color: handle_color,
             };
 
     match status {

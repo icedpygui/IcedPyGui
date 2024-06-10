@@ -62,7 +62,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
     get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{IpgStyleParam, StyleBackground, StyleBorder, StyleIconColor, StyleShadow, StyleTextColor};
+use style::styling::{IpgStyleParam, StyleBackground, StyleBarColor, StyleBorder, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
@@ -115,7 +115,9 @@ pub struct State {
     pub events: Vec<IpgEvents>,
     
     pub styling_background: Lazy<HashMap<String, StyleBackground>>,
+    pub styling_bar_color: Lazy<HashMap<String, StyleBarColor>>,
     pub styling_border: Lazy<HashMap<String, StyleBorder>>,
+    pub styling_handle_color: Lazy<HashMap<String, StyleHandleColor>>,
     pub styling_icon_color: Lazy<HashMap<String, StyleIconColor>>,
     pub styling_shadow: Lazy<HashMap<String, StyleShadow>>,
     pub styling_text_color: Lazy<HashMap<String, StyleTextColor>>,
@@ -144,7 +146,9 @@ pub static STATE: Mutex<State> = Mutex::new(
         events: vec![],
         
         styling_background: Lazy::new(||HashMap::new()),
+        styling_bar_color: Lazy::new(||HashMap::new()),
         styling_border: Lazy::new(||HashMap::new()),
+        styling_handle_color: Lazy::new(||HashMap::new()),
         styling_icon_color: Lazy::new(||HashMap::new()),
         styling_shadow: Lazy::new(||HashMap::new()),
         styling_text_color: Lazy::new(||HashMap::new()),
@@ -1141,8 +1145,8 @@ impl IPG {
                         text_line_height=1.3, text_shaping="basic".to_string(), 
                         handle=IpgPickListHandle::Default, arrow_size=None, 
                         dynamic_closed=None, dynamic_opened=None, custom_static=None,
-                        style_background=None, style_border=None, style_text_color=None,
-                        user_data=None, show=true,
+                        style_background=None, style_border=None, style_handle_color=None, 
+                        style_text_color=None, user_data=None, show=true,
                         ))]
     fn add_pick_list(&mut self,
                         parent_id: String,
@@ -1165,6 +1169,7 @@ impl IPG {
                         custom_static: Option<IpgButtonArrows>,
                         style_background: Option<String>,
                         style_border: Option<String>,
+                        style_handle_color: Option<String>,
                         style_text_color: Option<String>,
                         user_data: Option<PyObject>,
                         show: bool,
@@ -1208,6 +1213,7 @@ impl IPG {
                                                         custom_static,
                                                         style_background,
                                                         style_border,
+                                                        style_handle_color,
                                                         style_text_color,
                                                     )));
 
@@ -1217,7 +1223,8 @@ impl IPG {
     #[pyo3(signature = (parent_id, min, max, value,
                         gen_id=None, width=None, height=Some(16.0), 
                         width_fill=true, height_fill=false,
-                        show=true, 
+                        style_background=None, style_bar_color=None,
+                        style_border=None, show=true, 
                         ))]
     fn add_progress_bar(&mut self,
                             parent_id: String,
@@ -1230,6 +1237,9 @@ impl IPG {
                             height: Option<f32>,
                             width_fill: bool,
                             height_fill: bool,
+                            style_background: Option<String>,
+                            style_bar_color: Option<String>,
+                            style_border: Option<String>,
                             show: bool,
                             ) -> PyResult<usize> 
     {
@@ -1251,6 +1261,9 @@ impl IPG {
                                                 value,
                                                 width,
                                                 height,
+                                                style_background,
+                                                style_bar_color,
+                                                style_border,
                                             )));
 
         Ok(id)
@@ -1621,6 +1634,34 @@ impl IPG {
     }
 
     #[pyo3(signature = (style_id, rgba=None, color=None, 
+                        invert=false, scale_alpha=1.0, 
+                        gen_id=None))]
+    fn add_styling_bar_color(&mut self,
+                            style_id: String,
+                            rgba: Option<[f32; 4]>,
+                            color: Option<IpgColor>,
+                            invert: bool,
+                            scale_alpha: f32,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let color: Color = get_color(rgba, color, scale_alpha, invert);
+
+        let mut state = access_state();
+       
+        state.styling_bar_color.insert(style_id, StyleBarColor::new( 
+                                                    id,
+                                                    color,
+                                                    ));
+        
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (style_id, rgba=None, color=None, 
                         invert=false, scale_alpha=1.0, width=1.0, 
                         radius=vec![5.0], gen_id=None))]
     fn add_styling_border(&mut self,
@@ -1662,32 +1703,25 @@ impl IPG {
     }
 
     #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, scale_alpha=1.0, offset_x=0.0, 
-                        offset_y=0.0, blur_radius=0.0, gen_id=None))]
-    fn add_styling_shadow(&mut self,
-                            style_id: String,
-                            rgba: Option<[f32; 4]>,
-                            color: Option<IpgColor>,
-                            invert: bool,
-                            scale_alpha: f32,
-                            offset_x: f32,
-                            offset_y: f32,
-                            blur_radius: f32,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
+                        invert=false, alpha=1.0, gen_id=None))]
+    fn add_styling_handle_color(&mut self,
+                                style_id: String,
+                                rgba: Option<[f32; 4]>,
+                                color: Option<IpgColor>,
+                                invert: bool,
+                                alpha: f32,
+                                gen_id: Option<usize>,
+                                ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, scale_alpha, invert);
+        let color: Color = get_color(rgba, color, alpha, invert);
 
         let mut state = access_state();
        
-        state.styling_shadow.insert(style_id, StyleShadow::new( 
+        state.styling_handle_color.insert(style_id, StyleHandleColor::new( 
                                                 id,
                                                 color,
-                                                offset_x,
-                                                offset_y,
-                                                blur_radius,
                                                 ));
 
         drop(state);
@@ -1715,6 +1749,40 @@ impl IPG {
         state.styling_icon_color.insert(style_id, StyleIconColor::new( 
                                                 id,
                                                 color,
+                                                ));
+
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (style_id, rgba=None, color=None, 
+                        invert=false, scale_alpha=1.0, offset_x=0.0, 
+                        offset_y=0.0, blur_radius=0.0, gen_id=None))]
+    fn add_styling_shadow(&mut self,
+                            style_id: String,
+                            rgba: Option<[f32; 4]>,
+                            color: Option<IpgColor>,
+                            invert: bool,
+                            scale_alpha: f32,
+                            offset_x: f32,
+                            offset_y: f32,
+                            blur_radius: f32,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let color: Color = get_color(rgba, color, scale_alpha, invert);
+
+        let mut state = access_state();
+       
+        state.styling_shadow.insert(style_id, StyleShadow::new( 
+                                                id,
+                                                color,
+                                                offset_x,
+                                                offset_y,
+                                                blur_radius,
                                                 ));
 
         drop(state);

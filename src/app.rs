@@ -497,7 +497,7 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                         return construct_picklist(pick.clone())
                 },
                 IpgWidgets::IpgProgressBar(bar) => {
-                    return construct_progress_bar(bar)
+                    return construct_progress_bar(bar.clone())
                 }
                 IpgWidgets::IpgSelectableText(sltxt) => {
                     return construct_selectable_text(sltxt.clone())

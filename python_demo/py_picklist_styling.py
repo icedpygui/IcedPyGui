@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgPickListParams, IpgPickListHandle
-from icedpygui import IpgColumnAlignment, IpgButtonArrows
+from icedpygui import IpgColumnAlignment, IpgButtonArrows, IpgColor
 
 
 ipg = IPG()
@@ -78,6 +78,28 @@ pl_id = ipg.add_pick_list(parent_id="row4", options=options,
 
 ipg.add_text(parent_id="row4", content="Arrow Custom Style sized to 20.")
 
+
+# Setup some styling
+ipg.add_styling_background("bkg", color=IpgColor.DARK_OLIVE_GREEN)
+ipg.add_styling_border("border", color=IpgColor.ANTIQUE_WHITE)
+ipg.add_styling_handle_color("handle", color=IpgColor.DARK_SEA_GREEN)
+ipg.add_styling_text_color("text", color=IpgColor.LIGHT_GREEN)
+
+# add another row for picklist
+ipg.add_row("main", "row5", parent_id="col")
+
+# Another PickList is added and the handle is defined as an Custom which
+# will result in a down arrow used again but the size can be changed.
+pl_id = ipg.add_pick_list(parent_id="row5", options=options, 
+                            arrow_size=25.0,
+                            placeholder="Choose a Number...",
+                            style_background="bkg",
+                            style_border="border",
+                            style_handle_color="handle",
+                            style_text_color="text"
+                            )
+
+ipg.add_text(parent_id="row5", content="Background, Border, Handle, and Text styling")
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.
