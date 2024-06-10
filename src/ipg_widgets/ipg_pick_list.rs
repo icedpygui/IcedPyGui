@@ -296,6 +296,10 @@ pub enum IpgPickListParams {
     Placeholder,
     Padding,
     Show,
+    StyleBackground,
+    StyleBorder,
+    StyleHandleColor,
+    StyleTextColor,
     TextSize,
     TextLineHeight,
     Width,
@@ -325,6 +329,22 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
         },
         IpgPickListParams::Show => {
             pl.show = try_extract_boolean(value);
+        },
+        IpgPickListParams::StyleBackground => {
+            let val = try_extract_string(value);
+            pl.style_background = Some(val);
+        },
+        IpgPickListParams::StyleBorder => {
+            let val = try_extract_string(value);
+            pl.style_border = Some(val);
+        },
+        IpgPickListParams::StyleHandleColor => {
+            let val = try_extract_string(value);
+            pl.style_handle_color = Some(val);
+        },
+        IpgPickListParams::StyleTextColor => {
+            let val = try_extract_string(value);
+            pl.style_text_color = Some(val);
         },
         IpgPickListParams::TextSize => {
             let size = try_extract_f64(value);

@@ -2479,6 +2479,10 @@ class IpgPickListParams:
     Placeholder=0
     Padding=0
     Show=0
+    StyleBackground=0
+    StyleBorder=0
+    StyleHandleColor=0
+    StyleTextColor=0
     TextSize=0
     TextLineHeight=0
     Width=0
@@ -2497,9 +2501,13 @@ class IpgProgressBarParams:
     Min=0
     Max=0
     Show=0
+    StyleBackground=0
+    StyleBorder=0
+    StyleBarColor=0
     Value=0
     Width=0
     WidthFill=0
+
 
 
 class IpgRadioDirection:

@@ -6,7 +6,7 @@ use pyo3::{pyclass, PyObject, Python};
 use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::{access_state, app};
 
-use super::helpers::{get_height, get_width, try_extract_boolean, try_extract_f64};
+use super::helpers::{get_height, get_width, try_extract_boolean, try_extract_f64, try_extract_string};
 
 
 #[derive(Debug, Clone)]
@@ -79,6 +79,9 @@ pub enum IpgProgressBarParams {
     Min,
     Max,
     Show,
+    StyleBackground,
+    StyleBorder,
+    StyleBarColor,
     Value,
     Width,
     WidthFill,
@@ -104,6 +107,15 @@ pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
         },
         IpgProgressBarParams::Show => {
             pb.show = try_extract_boolean(value);
+        },
+        IpgProgressBarParams::StyleBackground => {
+            pb.style_background = Some(try_extract_string(value))
+        },
+        IpgProgressBarParams::StyleBorder => {
+            pb.style_border = Some(try_extract_string(value))
+        },
+        IpgProgressBarParams::StyleBarColor => {
+            pb.style_bar_color = Some(try_extract_string(value))
         },
         IpgProgressBarParams::Value => {
             pb.value = try_extract_f64(value) as f32;
@@ -171,7 +183,7 @@ pub fn get_styling(_theme: &Theme,
     };
 
     let bar_color_opt = if style_bar_color.is_some() {
-        state.styling_icon_color.get(&style_bar_color.unwrap())
+        state.styling_bar_color.get(&style_bar_color.unwrap())
     } else {
         None
     };
