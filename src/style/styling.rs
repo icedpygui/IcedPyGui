@@ -181,7 +181,32 @@ impl StyleTextColor {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct StyleFillMode {
+    pub id: usize,
+    pub full: Option<bool>,
+    pub percent: Option<f32>,
+    pub padded: Option<u16>,
+    pub asymmetric_padding: Option<(u16, u16)>,
+}
 
+impl StyleFillMode {
+    pub fn new(
+        id: usize,
+        full: Option<bool>,
+        percent: Option<f32>,
+        padded: Option<u16>,
+        asymmetric_padding: Option<(u16, u16)>,
+    ) -> Self {
+        Self {
+            id,
+            full,
+            percent,
+            padded,
+            asymmetric_padding,
+        }
+    }
+}
 
 
 pub fn date_picker_container(_theme: &Theme) -> container::Style {

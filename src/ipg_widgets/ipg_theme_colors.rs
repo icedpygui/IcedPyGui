@@ -1,5 +1,6 @@
 #![allow(dead_code)]
-use iced::Color;
+
+use iced::{Color, Theme};
 use palette::rgb::Rgb;
 use palette::{DarkenAssign, FromColor, LightenAssign, Mix, Okhsl, Srgb};
 use rand::prelude::*;
@@ -76,6 +77,41 @@ pub fn get_alt_color(action: IpgColorAction, color: Color, is_dark: bool) -> Col
         }
 }
 
+
+#[derive(Debug, Clone)]
+pub enum Contrast {
+    White,
+    Black,
+    Custom,
+}
+
+pub fn get_constrast_color(color: &Theme) -> Color {
+    match color {
+        Theme::Light => Color::BLACK,
+        Theme::Dark => Color::WHITE,
+        Theme::Dracula => Color::WHITE,
+        Theme::Nord => Color::WHITE,
+        Theme::SolarizedLight => Color::BLACK,
+        Theme::SolarizedDark => Color::WHITE,
+        Theme::GruvboxLight => Color::BLACK,
+        Theme::GruvboxDark => Color::WHITE,
+        Theme::CatppuccinLatte => Color::BLACK,
+        Theme::CatppuccinFrappe => Color::WHITE,
+        Theme::CatppuccinMacchiato => Color::WHITE,
+        Theme::CatppuccinMocha => Color::WHITE,
+        Theme::TokyoNight => Color::WHITE,
+        Theme::TokyoNightStorm => Color::WHITE,
+        Theme::TokyoNightLight => Color::WHITE,
+        Theme::KanagawaWave => Color::WHITE,
+        Theme::KanagawaDragon => Color::WHITE,
+        Theme::KanagawaLotus => Color::BLACK,
+        Theme::Moonfly => Color::WHITE,
+        Theme::Nightfly => Color::WHITE,
+        Theme::Oxocarbon => Color::WHITE,
+        Theme::Ferra => Color::WHITE,
+        Theme::Custom(_) => panic!("Constrast Color not found for a custom window color, supply your own background color"),
+    }   
+} 
 
 
 fn hex_to_color(hex: &str) -> Option<Color> {

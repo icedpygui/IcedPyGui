@@ -1023,7 +1023,7 @@ class IPG:
                 Sets the height of the bar.
             style_background: str
                 style_id of the add_styling_background.
-             style_barcolor: str
+            style_bar_color: str
                 style_id of the add_styling_bar_color.
             style_border: str
                 style_id of the add_styling_border.
@@ -1113,7 +1113,11 @@ class IPG:
                             parent_id, 
                             *,
                             width: Union[None | float]=None, 
-                            width_fill: bool=True
+                            width_fill: bool=True,
+                            thickness: int=1,
+                            style_background: Union[None | str]=None,
+                            style_border: Union[None | str]=None,
+                            style_fill_mode: Union[None | str]=None,
                             ) -> int:
         """
         Add a horizontal line divider.
@@ -1126,6 +1130,14 @@ class IPG:
                 Defines the horizontal length of the dividing line.
             width_fill: bool
                 If set, fills the available space for the horizontal length, overides width.
+            thickness: int
+                The thickness of the rule.
+            style_background: str
+                style_id of the add_styling_background.
+            style_border: str
+                style_id of the add_styling_border.
+            style_fill_mode: str
+                style_id of the add_styling_fill_mode.
 
         Returns
         -------
@@ -1134,10 +1146,14 @@ class IPG:
         """
 
     def add_rule_vertical(self, 
-                          parent_id,
-                          *, 
-                          height: Union[None | float]=None, 
-                          height_fill: bool=True
+                            parent_id,
+                            *, 
+                            height: Union[None | float]=None, 
+                            height_fill: bool=True,
+                            thickness: int=1,
+                            style_background: Union[None | str]=None,
+                            style_border: Union[None | str]=None,
+                            style_fill_mode: Union[None | str]=None,
                           ) -> int:
         """
         Add a vertical line divider.
@@ -1150,6 +1166,14 @@ class IPG:
                 Defines the vertical length of the dividing line.
             height_fill: bool
                 If set, fills the available space for the vertical length, overides height.
+            thickness: int
+                The thickness of the rule.
+            style_background: str
+                style_id of the add_styling_background.
+            style_border: str
+                style_id of the add_styling_border which only has radius as a valid entry.
+            style_fill_mode: str
+                style_id of the add_styling_fill_mode.
 
         Returns
         -------
@@ -1440,6 +1464,35 @@ class IPG:
                 id: int
                     Internal id of widget and can be used by user if equated.
                     
+        """
+
+    def add_styling_fill_mode(self,
+                                style_id: Union[None | str]=None,
+                                full: bool=True,
+                                percent: float=100.0,
+                                padded: Union[None | int]=None,
+                                asymmetric_padding: Union[None | tuple(int, int)]=None,
+                                ) -> int:
+        """
+        Determines how the color of the widget is distributed.
+
+            Parameters
+            ----------
+                style_id: str
+                    Id of style for use by the containers and widgets.
+                full: bool
+                    The color fills the container.
+                percent: float
+                    The color fills a percentage of the container and is centered
+                padded: int
+                    The padding around the fill color
+                asymmetric_padding: tuple(int, int)
+                    The padding on each side of the color.
+
+            Returns
+            -------
+                id: int
+                    Internal id of widget and can be used by user if equated.
         """
 
     def add_styling_shadow(self,
@@ -2608,6 +2661,7 @@ class IpgStyleParam:
     BarColor=0
     Border=0
     DotColor=0
+    FillMode=0
     HandleColor=0
     IconColor=0
     Shadow=0

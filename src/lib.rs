@@ -62,7 +62,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
     get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{IpgStyleParam, StyleBackground, StyleBarColor, StyleBorder, StyleDotColor, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
+use style::styling::{IpgStyleParam, StyleBackground, StyleBarColor, StyleBorder, StyleDotColor, StyleFillMode, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
@@ -118,6 +118,7 @@ pub struct State {
     pub styling_bar_color: Lazy<HashMap<String, StyleBarColor>>,
     pub styling_border: Lazy<HashMap<String, StyleBorder>>,
     pub styling_dot_color: Lazy<HashMap<String, StyleDotColor>>,
+    pub styling_fill_mode: Lazy<HashMap<String, StyleFillMode>>,
     pub styling_handle_color: Lazy<HashMap<String, StyleHandleColor>>,
     pub styling_icon_color: Lazy<HashMap<String, StyleIconColor>>,
     pub styling_shadow: Lazy<HashMap<String, StyleShadow>>,
@@ -150,6 +151,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         styling_bar_color: Lazy::new(||HashMap::new()),
         styling_border: Lazy::new(||HashMap::new()),
         styling_dot_color: Lazy::new(||HashMap::new()),
+        styling_fill_mode: Lazy::new(||HashMap::new()),
         styling_handle_color: Lazy::new(||HashMap::new()),
         styling_icon_color: Lazy::new(||HashMap::new()),
         styling_shadow: Lazy::new(||HashMap::new()),
@@ -1368,19 +1370,28 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (parent_id, width=None, width_fill=true))]
+    #[pyo3(signature = (parent_id, width, 
+                        width_fill=true, thickness=1,
+                        style_background=None, 
+                        style_border=None,
+                        style_fill_mode=None,))]
     fn add_rule_horizontal(&mut self, 
                             parent_id: String,
                             width: Option<f32>,
-                            width_fill: bool, 
+                            width_fill: bool,
+                            thickness: u16,
+                            style_background: Option<String>, 
+                            style_border: Option<String>,
+                            style_fill_mode: Option<String>,
                             ) -> PyResult<usize> 
     {
         let gen_id: Option<usize> = None;
         let id = self.get_id(gen_id);
 
-        let width = get_width(width, width_fill);
-        let height: Length = get_height(None, false);  // not used
         let rule_type = "h".to_string();
+
+        let width = get_width(width, width_fill);
+        let height = get_height(None, true);
 
         set_state_of_widget(id, parent_id);
 
@@ -1390,25 +1401,37 @@ impl IPG {
                                                         id,
                                                         width,
                                                         height,
+                                                        thickness,
                                                         rule_type,
+                                                        style_background, 
+                                                        style_border,
+                                                        style_fill_mode,
                                                         )));
 
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, height=None, height_fill=true))]
+    #[pyo3(signature = (parent_id, height=None, 
+                        height_fill=true, thickness=1,
+                        style_background=None, style_border=None,
+                        style_fill_mode=None,))]
     fn add_rule_vertical(&mut self, 
-                            parent_id: String, 
+                            parent_id: String,
                             height: Option<f32>,
                             height_fill: bool,
+                            thickness: u16,
+                            style_background: Option<String>, 
+                            style_border: Option<String>,
+                            style_fill_mode: Option<String>,
                             ) -> PyResult<usize> 
     {
         let gen_id: Option<usize> = None;
         let id = self.get_id(gen_id);
 
-        let width = get_width(None, false);  //Not used
-        let height: Length = get_height(height, height_fill);
         let rule_type = "v".to_string();
+
+        let width = get_width(None, true); // not used, just defaulted
+        let height = get_height(height, height_fill);
 
         set_state_of_widget(id, parent_id);
 
@@ -1418,7 +1441,11 @@ impl IPG {
                                                         id,
                                                         width,
                                                         height,
+                                                        thickness,
                                                         rule_type,
+                                                        style_background, 
+                                                        style_border,
+                                                        style_fill_mode,
                                                         )));
 
         Ok(id)
@@ -1716,6 +1743,33 @@ impl IPG {
         drop(state);
 
         Ok(id) 
+    }
+
+    #[pyo3(signature = (style_id, full=None, percent=None, 
+                        padded=None, asymmetric_padding=None, gen_id=None))]
+    fn add_styling_fill_mode(&mut self,
+                            style_id: String,
+                            full: Option<bool>,
+                            percent: Option<f32>,
+                            padded: Option<u16>,
+                            asymmetric_padding: Option<(u16, u16)>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+        
+        let mut state = access_state();
+       
+        state.styling_fill_mode.insert(style_id, StyleFillMode::new( 
+                                                    id,
+                                                    full,
+                                                    percent,
+                                                    padded,
+                                                    asymmetric_padding,
+                                                    ));
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (style_id, rgba=None, color=None, 
