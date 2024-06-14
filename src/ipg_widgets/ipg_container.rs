@@ -1,7 +1,7 @@
 //!Container container
 #![allow(unused_assignments)]
-use iced::border::Radius;
-use iced::{Background, Border, Color, Element, Length, Padding, Theme};
+
+use iced::{Background, Border, Element, Length, Padding, Shadow, Theme};
 use iced::alignment;
 use iced::widget::{container, Column, Container};
 
@@ -141,28 +141,22 @@ pub fn get_styling(_theme: &Theme,
     
     let state = access_state();
 
+    let default_style = container::Style::default();
+
     let background_opt = if style_background.is_some() {
         state.styling_background.get(&style_background.unwrap())
     } else {
         None
     };
     
-    let mut bg_color = Color::TRANSPARENT;
-    let mut background = Background::Color(bg_color);
 
-    match background_opt {
+   let background =  match background_opt {
         Some(bg) => {
-            bg_color = bg.color;
+            Some(Background::Color(bg.color))
         },
-        None => (),
-    }
+        None => default_style.background,
+    };
 
-    background = Background::Color(bg_color);
-
-
-    let mut border_color = Color::TRANSPARENT;
-    let mut radius = Radius::from([0.0; 4]);
-    let mut border_width = 1.0;
 
     let border_opt = if style_border.is_some() {
         state.styling_border.get(&style_border.unwrap())
@@ -170,22 +164,17 @@ pub fn get_styling(_theme: &Theme,
         None
     };
 
-    match border_opt {
+    let border = match border_opt {
         Some(bd) => {
-            border_color = bd.color;
-            radius = bd.radius;
-            border_width = bd.width;
+            Border {
+                color: bd.color,
+                width: bd.width,
+                radius: bd.radius,
+            }
         },
-        None => (),
-    }
+        None => default_style.border,
+    };
 
-    let border = Border{ color: border_color, width: border_width, radius };
-
-
-    let mut shadow_color: Color = Color::TRANSPARENT;
-    let mut offset_x: f32 = 0.0;
-    let mut offset_y: f32 = 0.0;
-    let mut blur_radius: f32 = 0.0;
 
     let shadow_opt = if style_shadow.is_some() {
         state.styling_shadow.get(&style_shadow.unwrap())
@@ -193,38 +182,32 @@ pub fn get_styling(_theme: &Theme,
         None
     };
 
-    match shadow_opt {
+    let shadow: Shadow = match shadow_opt {
         Some(sh) => {
-            shadow_color = sh.color;
-            offset_x = sh.offset_x;
-            offset_y = sh.offset_y;
-            blur_radius =sh.blur_radius;
+            Shadow {
+                color: sh.color,
+                offset: iced::Vector { x: sh.offset_x, y: sh.offset_y },
+                blur_radius: sh.blur_radius,
+            }
         },
-        None => (),
-    }
-
-    let shadow = iced::Shadow { color: shadow_color, offset: 
-                                        iced::Vector { x: offset_x, y: offset_y }, 
-                                        blur_radius };
+        None => default_style.shadow,
+    };
 
     let text_color_opt = if style_text_color.is_some() {
         state.styling_text_color.get(&style_text_color.unwrap())
     } else {
         None
     };
-    
-    let mut text_color = None;
 
-
-    match text_color_opt {
+    let text_color = match text_color_opt {
         Some(tc) => {
-            text_color = Some(tc.color);
+            Some(tc.color)
         },
-        None => (),
-    }
+        None => default_style.text_color,
+    };
 
     container::Style {
-            background: Some(background),
+            background,
             border,
             shadow,
             text_color,

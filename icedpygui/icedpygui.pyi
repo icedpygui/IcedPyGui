@@ -353,6 +353,14 @@ class IPG:
                         v_scroller_width: float=10.0,
                         v_bar_alignment: IpgScrollableAlignment=IpgScrollableAlignment.Start,
                         on_scroll: Union[None | Callable]=None,
+                        scroll_bar_style_background: Union[None | str]=None,
+                        scroll_bar_style_border: Union[None | str]=None,
+                        scroller_style_background: Union[None | str]=None,
+                        scroller_style_border: Union[None | str]=None,
+                        container_style_background: Union[None | str]=None,
+                        container_style_border: Union[None | str]=None,
+                        container_style_text_color: Union[None | str]=None,
+                        user_data: Union[None | any]=None,
                         ) -> int:
         """
         Wraps a scrollable widget around a container.
@@ -394,6 +402,20 @@ class IPG:
                 Sets the vertical bar alignment Start or End
             on_scroll: Callable
                 The callback function that is called when scrolling occurs
+            scroll_bar_style_background: str
+                Background color of the scroll bar.
+            scroll_bar_style_border: str
+                Border color, width and radius of the scroll bar.
+            scroller_style_background: str
+                Background color of the scroller.
+            scroller_style_border: str
+                Border color, width and radius of the scroller.
+            container_style_background: str
+                The background color of the container to be scrolled.
+            container_style_border: str
+                 Border color, width and radius of the container to be scrolled.
+            container_style_text_color: str
+                The text color of the container to be scrolled.
             user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
             show: bool
@@ -1360,7 +1382,7 @@ class IPG:
                                 rgba: Union[None | List[float]]=None,
                                 color: Union[None | IpgColor]=None,
                                 invert: bool=False,
-                                alpha: float=1.0,
+                                scale_alpha: float=1.0,
                                 accent_amount: float=0.05,
                                 gen_id: Union[None | int]=None,
                                 ) -> int:
@@ -1377,7 +1399,7 @@ class IPG:
                     A color form the class IpgColor
                 invert: bool
                     Whether to invert the given colors
-                alpha: float
+                scale_alpha: float
                     whether to apply a alpha factor to the a.
                 accent_amount: float
                     When a mouse hovers over some widget, it dertermines how much lighter the color becomes.

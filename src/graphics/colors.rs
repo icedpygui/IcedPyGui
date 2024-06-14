@@ -19,7 +19,7 @@ pub fn get_color(rgba: Option<[f32; 4]>, color: Option<IpgColor>, alpha: f32, in
         color
     } else if color.is_some() {
         let mut color: Color = match_ipg_color(color.unwrap());
-        color.scale_alpha(alpha);
+        color = color.scale_alpha(alpha);
         if invert {
             color.invert()
         }

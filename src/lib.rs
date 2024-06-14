@@ -630,7 +630,12 @@ impl IPG {
                         h_bar_alignment=IpgScrollableAlignment::Start,
                         v_bar_width=10.0, v_bar_margin=0.0, v_scroller_width=10.0, 
                         v_bar_alignment=IpgScrollableAlignment::Start,
-                        on_scroll=None, user_data=None,
+                        on_scroll=None, scroll_bar_style_background=None,
+                        scroll_bar_style_border=None, scroller_style_background=None,
+                        scroller_style_border=None, container_style_background=None,
+                        container_style_border=None, container_style_shadow=None,
+                        container_style_text_color=None,
+                        user_data=None,
                         ))]
     fn add_scrollable(&mut self,
                             window_id: String,
@@ -651,6 +656,14 @@ impl IPG {
                             v_scroller_width: f32,
                             v_bar_alignment: IpgScrollableAlignment,
                             on_scroll: Option<PyObject>,
+                            scroll_bar_style_background: Option<String>,
+                            scroll_bar_style_border: Option<String>,
+                            scroller_style_background: Option<String>,
+                            scroller_style_border: Option<String>,
+                            container_style_background: Option<String>,
+                            container_style_border: Option<String>,
+                            container_style_shadow: Option<String>,
+                            container_style_text_color: Option<String>,
                             user_data: Option<PyObject>,
                             ) -> PyResult<usize>
     {
@@ -690,8 +703,15 @@ impl IPG {
                                                     v_bar_margin,
                                                     v_scroller_width,
                                                     v_bar_alignment,
+                                                    scroll_bar_style_background,
+                                                    scroll_bar_style_border,
+                                                    scroller_style_background,
+                                                    scroller_style_border,
+                                                    container_style_background,
+                                                    container_style_border,
+                                                    container_style_shadow,
+                                                    container_style_text_color,
                                                     user_data,
-                                                    // style,
                                                     )));
 
         Ok(self.id)

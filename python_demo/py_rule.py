@@ -5,11 +5,13 @@ from icedpygui import IpgColumnAlignment, IpgColor
 ipg = IPG()
 
 # Add the window
-ipg.add_window("main", "Rule Demo", 500, 650,
+ipg.add_window("main", "Rule Demo", 
+               500, 650,
                 pos_x=100, pos_y=25)
 
 # Add a container for alignment
-ipg.add_container("main", "cont", width_fill=True, height_fill=True)
+ipg.add_container("main", "cont", 
+                  width_fill=True, height_fill=True)
 
 # Add a column to hold the wigets
 ipg.add_column("main", container_id="col", parent_id="cont",
