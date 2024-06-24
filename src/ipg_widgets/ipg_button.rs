@@ -287,58 +287,55 @@ pub fn get_styling(theme: &Theme, status: Status,
     if style_std_opt.is_some() {
         std_selected = true;
         let style_std = style_std_opt.unwrap().standard.clone();
-        base_style = match style_std {
+        match style_std {
             IpgStyleStandard::Primary => {
                 hover_style = styled(palette.primary.strong);
                 hover_style.background = Some(iced::Background::Color(palette.primary.base.color));
-                let mut style = styled(palette.primary.strong);
+                base_style = styled(palette.primary.strong);
                 if style_border.is_some() {
-                    style.border.color = palette.primary.weak.color;
+                    base_style.border.color = palette.primary.weak.color;
                     hover_style.border.color = palette.primary.weak.color;
                 }
                 if style_shadow.is_some() {
-                    style.shadow.color = palette.primary.base.color;
+                    base_style.shadow.color = palette.primary.base.color;
                     hover_style.shadow.color = palette.primary.base.color;
                 }
-                style
             },
             IpgStyleStandard::Success => {
                 hover_style = styled(palette.success.strong);
                 hover_style.background = Some(iced::Background::Color(palette.success.base.color));
-                let mut style = styled(palette.success.strong);
+                base_style = styled(palette.success.strong);
                 if style_border.is_some() {
-                    style.border.color = palette.success.weak.color;
+                    base_style.border.color = palette.success.weak.color;
                     hover_style.border.color = palette.success.weak.color;
                 }
                 if style_shadow.is_some() {
-                    style.shadow.color = palette.success.base.color;
+                    base_style.shadow.color = palette.success.base.color;
                     hover_style.shadow.color = palette.success.base.color;
                 }
-                style
             },
             IpgStyleStandard::Danger => {
                 hover_style = styled(palette.danger.strong);
                 hover_style.background = Some(iced::Background::Color(palette.danger.base.color));
-                let mut style = styled(palette.danger.strong);
+                base_style = styled(palette.danger.strong);
                 if style_border.is_some() {
-                    style.border.color = palette.danger.weak.color;
+                    base_style.border.color = palette.danger.weak.color;
                     hover_style.border.color = palette.danger.weak.color;
                 }
                 if style_shadow.is_some() {
-                    style.shadow.color = palette.danger.base.color;
+                    base_style.shadow.color = palette.danger.base.color;
                     hover_style.shadow.color = palette.danger.base.color;
                 }
-                style
             },
             IpgStyleStandard::Text => {
                 hover_style = button::Style {
                     text_color: palette.background.base.text.scale_alpha(0.8),
                     ..Style::default()
                 };
-                button::Style {
+                base_style = button::Style {
                     text_color: palette.background.base.text,
                     ..Style::default()
-                }
+                };
             },
         }
     }

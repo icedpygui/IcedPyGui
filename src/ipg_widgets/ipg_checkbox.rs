@@ -2,7 +2,7 @@
 
 use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_f64, try_extract_string};
-use crate::style::styling::{lighten, StyleBorder};
+use crate::style::styling::{lighten, IpgStyleStandard, StyleBorder};
 use crate::{access_callbacks, access_state};
 use crate::app;
 use super::helpers::{get_width, get_shaping};
@@ -16,7 +16,8 @@ use crate::graphics::bootstrap_icon::{Icon, icon_to_char};
 
 use iced::advanced::text;
 use iced::border::Radius;
-use iced::{Background, Border, Color, Element, Font, Length, Pixels, Theme};
+use iced::{Border, Color, Element, Font, Length, Pixels, Theme};
+use iced::theme::palette::Background;
 use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{Checkbox, Space};
 use iced::widget::checkbox::{self, Status};
@@ -41,10 +42,9 @@ pub struct IpgCheckBox {
     // font: Option<Font>,
     pub icon_x: bool,
     pub icon_size: f32,
-    pub style_background: Option<String>,
+    pub style_standard: Option<String>,
+    pub style_color: Option<String>,
     pub style_border: Option<String>,
-    pub style_icon_color: Option<String>,
-    pub style_text_color: Option<String>,
 }
 
 impl IpgCheckBox {
@@ -63,10 +63,9 @@ impl IpgCheckBox {
         text_shaping: Shaping,
         icon_x: bool,
         icon_size: f32,
-        style_background: Option<String>,
+        style_standard: Option<String>,
+        style_color: Option<String>,
         style_border: Option<String>,
-        style_icon_color: Option<String>,
-        style_text_color: Option<String>,
         ) -> Self {
             Self {
                 id,
@@ -82,10 +81,9 @@ impl IpgCheckBox {
                 text_shaping,
                 icon_x,
                 icon_size,
-                style_background,
+                style_standard,
+                style_color,
                 style_border,
-                style_icon_color,
-                style_text_color,
             }
     }
 }
@@ -128,12 +126,13 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
                                             shaping: text::Shaping::Basic}
                                     }
                             )
-                            .style(move|theme: &Theme, status| {
+                            .style(move|theme: &Theme, status| {   
                                 get_styling(theme, status, 
-                                    chk.style_background.clone(), 
-                                    chk.style_border.clone(), 
-                                    chk.style_icon_color.clone(),
-                                    chk.style_text_color.clone())
+                                    chk.style_standard.clone(),
+                                    chk.style_color.clone(), 
+                                    chk.style_border.clone(),
+                                    chk.is_checked 
+                                    )  
                                 })
                             .into();
 
@@ -214,10 +213,8 @@ pub enum IpgCheckboxParams {
     Show,
     Size,
     Spacing,
-    StyleBackground,
+    StyleColor,
     StyleBorder,
-    StyleIconTextColor,
-    StyleTextColor,
     TextLineHeight,
     TextShaping,
     TextSize,
@@ -265,17 +262,11 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
         IpgCheckboxParams::TextSize => {
             chk.text_size = try_extract_f64(value) as f32;
         },
-        IpgCheckboxParams::StyleBackground => {
-            chk.style_background = Some(try_extract_string(value))
+        IpgCheckboxParams::StyleColor => {
+            chk.style_color = Some(try_extract_string(value))
         },
         IpgCheckboxParams::StyleBorder => {
             chk.style_border = Some(try_extract_string(value))
-        },
-        IpgCheckboxParams::StyleIconTextColor => {
-            chk.style_icon_color = Some(try_extract_string(value))
-        },
-        IpgCheckboxParams::StyleTextColor => {
-            chk.style_text_color = Some(try_extract_string(value))
         },
         IpgCheckboxParams::Width => {
             let wd = try_extract_f64(value);
@@ -301,27 +292,153 @@ pub fn try_extract_checkbox_update(update_obj: PyObject) -> IpgCheckboxParams {
     })
 }
 
-pub fn get_styling(_theme: &Theme, status: Status, 
-                    style_background: Option<String>, 
-                    style_border: Option<String>, 
-                    style_icon_color: Option<String>,
-                    style_text_color: Option<String>) 
-                    -> checkbox::Style {
-    
+// pub fn get_standard_style(theme: &Theme, status: Status, style: Option<IpgStyleStandard>) -> checkbox::Style {
+//     match style {
+//         Some(IpgStyleStandard::Primary) => checkbox::primary(theme, status),
+//         Some(IpgStyleStandard::Success) => checkbox::success(theme, status),
+//         Some(IpgStyleStandard::Danger) => checkbox::danger(theme, status),
+//         Some(IpgStyleStandard::Text) => checkbox::primary(theme, status),
+//         None => checkbox::primary(theme, status),
+//     }
+// }
+
+pub fn get_styling(theme: &Theme, status: Status,
+                    style_standard: Option<String>, 
+                    style_color: Option<String>, 
+                    style_border: Option<String>,
+                    is_checked: bool, 
+                    ) -> checkbox::Style 
+{
     let state = access_state();
 
-    let background_opt = if style_background.is_some() {
-        state.styling_background.get(&style_background.unwrap())
+    // default active
+    let palette = theme.extended_palette();
+    let icon_color = palette.primary.strong.text;
+    let base = palette.primary.strong.color;
+    let accent = palette.primary.strong.color;
+    let border: Border = Border {
+                                radius: 2.0.into(),
+                                width: 1.0,
+                                color: palette.primary.strong.color,
+                            };
+    let mut base_style = styled(icon_color,
+                                        base,
+                                        accent,
+                                        is_checked,
+                                        border,
+                                        None);
+
+    // default hover that are different
+    let base_hover = palette.background.weak.color;
+    let accent_hover = palette.primary.base.color;
+
+    let mut hover_style = styled(icon_color,
+                                            base_hover,
+                                            accent_hover,
+                                            is_checked,
+                                            border,
+                                            None);
+    // default desiable that are different
+    let base_disabled = palette.background.weak.color;
+    let accent_disabled = palette.background.strong.color;
+    let disabled_style = styled(icon_color,
+                                            base_disabled,
+                                            accent_disabled,
+                                            is_checked,
+                                            border,
+                                            None);
+   
+
+    let style_std_opt = if style_standard.is_some() {
+        state.styling_standard.get(&style_standard.unwrap())
     } else {
         None
     };
-    
-    let (bg_color, accent_amount) = match background_opt {
-        Some(bg) => ( bg.color, bg.accent ),
-        None => ( match_ipg_color(IpgColor::TRANSPARENT), 0.05 ),
-    };
 
-    let accent: Color = lighten(bg_color, accent_amount);
+    let mut std_selected = false;
+    
+    if style_std_opt.is_some() {
+        std_selected = true;
+        let style_std = style_std_opt.unwrap().standard.clone();
+        match style_std {
+            IpgStyleStandard::Primary => {
+                let icon_color = palette.primary.strong.text;
+                let base = palette.primary.strong.color;
+                let accent = palette.primary.strong.color;
+                base_style = styled(icon_color,
+                                            base,
+                                            accent,
+                                            is_checked,
+                                            border,
+                                            None);
+
+                let base_hover = palette.background.weak.color;
+                let accent_hover = palette.primary.base.color;
+                hover_style = styled(icon_color,
+                                                    base_hover,
+                                                    accent_hover,
+                                                    is_checked,
+                                                    border,
+                                                    None);
+                
+                if style_border.is_some() {
+                    base_style.border.color = palette.primary.weak.color;
+                    hover_style.border.color = palette.primary.weak.color;
+                }
+            },
+            IpgStyleStandard::Success => {
+                let icon_color = palette.success.strong.text;
+                let base = palette.success.strong.color;
+                let accent = palette.success.strong.color;
+                base_style = styled(icon_color,
+                                            base,
+                                            accent,
+                                            is_checked,
+                                            border,
+                                            None);
+
+                let base_hover = palette.background.weak.color;
+                let accent_hover = palette.success.base.color;
+                hover_style = styled(icon_color,
+                                                    base_hover,
+                                                    accent_hover,
+                                                    is_checked,
+                                                    border,
+                                                    None);
+                
+                if style_border.is_some() {
+                    base_style.border.color = palette.success.weak.color;
+                    hover_style.border.color = palette.success.weak.color;
+                }
+            },
+            IpgStyleStandard::Danger => {
+                let icon_color = palette.danger.strong.text;
+                let base = palette.danger.strong.color;
+                let accent = palette.danger.strong.color;
+                base_style = styled(icon_color,
+                                            base,
+                                            accent,
+                                            is_checked,
+                                            border,
+                                            None);
+
+                let base_hover = palette.background.weak.color;
+                let accent_hover = palette.danger.base.color;
+                hover_style = styled(icon_color,
+                                                    base_hover,
+                                                    accent_hover,
+                                                    is_checked,
+                                                    border,
+                                                    None);
+                
+                if style_border.is_some() {
+                    base_style.border.color = palette.danger.weak.color;
+                    hover_style.border.color = palette.danger.weak.color;
+                }
+            },
+            IpgStyleStandard::Text => (),
+        }
+    }
 
     let border_opt = if style_border.is_some() {
         state.styling_border.get(&style_border.unwrap())
@@ -329,72 +446,64 @@ pub fn get_styling(_theme: &Theme, status: Status,
         None
     };
 
-    let border: Border = match border_opt {
-        Some(bd) => Border {
-            color: bd.color,
-            radius: bd.radius,
-            width: bd.width,
+    match border_opt {
+        Some(bd) => {
+            base_style.border.radius = bd.radius;
+            base_style.border.width = bd.width;
+            hover_style.border.radius = bd.radius;
+            hover_style.border.width = bd.width;
         },
-        None => { Border {
-                color: match_ipg_color(IpgColor::ANTIQUE_WHITE),
-                radius: <Radius as std::default::Default>::default(),
-                width: 1.0,
-            }
-        },
-    };
-
-    let icon_color_opt = if style_icon_color.is_some() {
-        state.styling_icon_color.get(&style_icon_color.unwrap())
-    } else {
-        None
-    };
-
-    let icon_color = match icon_color_opt {
-        Some(ic) => {
-            ic.color
-        },
-        None => match_ipg_color(IpgColor::ANTIQUE_WHITE),
-    };
-
-    let text_color_opt = if style_text_color.is_some() {
-        state.styling_text_color.get(&style_text_color.unwrap())
-    } else {
-        None
-    };
-    
-    let text_color = match text_color_opt {
-        Some(tc) => {
-            Some(tc.color)
-        },
-        None => Some(match_ipg_color(IpgColor::ANTIQUE_WHITE)),
-    };
-
-    match status {
-        Status::Active { is_checked } => styled(
-            icon_color,
-            bg_color,
-            bg_color,
-            is_checked,
-            border,
-            text_color,
-        ),
-        Status::Hovered { is_checked: _ } => styled(
-            icon_color,
-            bg_color,
-            accent,
-            true,
-            border,
-            text_color,
-        ),
-        Status::Disabled { is_checked } => styled(
-            icon_color,
-            bg_color,
-            bg_color,
-            is_checked,
-            border,
-            text_color,
-        ),
+        None => (),
     }
+
+    if !std_selected {
+
+        let color_palette_opt = if style_color.is_some() {
+            state.styling_color.get(&style_color.unwrap())
+        } else {
+            None
+        };
+
+        if color_palette_opt.is_some() {
+            let color_palette = color_palette_opt.unwrap().clone();
+            let mut text: Color = Color::BLACK;
+            if color_palette.text.is_some() {
+                text = color_palette.text.unwrap();
+            }
+            let background = Background::new(color_palette.base, text);
+            base_style.background = iced::Background::Color(background.weak.color);
+
+            if color_palette.text.is_some() {
+                base_style.text_color = Some(text);
+                hover_style.text_color = Some(text);
+            } else {
+                base_style.text_color = Some(background.base.text);
+                hover_style.text_color = Some(background.base.text);
+            }
+            
+            if color_palette.border.is_some() {
+                base_style.border.color = color_palette.border.unwrap();
+                hover_style = base_style.clone();
+                hover_style.background = iced::Background::Color(background.base.color);
+            }
+
+            if color_palette.icon.is_some() {
+                base_style.icon_color = color_palette.icon.unwrap();
+                hover_style = base_style.clone();
+                hover_style.icon_color = color_palette.icon.unwrap();
+                hover_style.background = iced::Background::Color(background.base.color);
+            }
+        }
+        
+    }
+    
+    match status {
+        Status::Active { is_checked: _ } => base_style,
+        Status::Hovered { is_checked: _ } => hover_style,
+        Status::Disabled { is_checked: _ } => disabled_style,
+    
+    }
+    
 }
 
 fn styled(
@@ -406,7 +515,7 @@ fn styled(
     text_color: Option<Color>,
 ) -> checkbox::Style {
     checkbox::Style {
-        background: Background::Color(if is_checked {
+        background: iced::Background::Color(if is_checked {
             accent
         } else {
             base
