@@ -4,10 +4,10 @@ use std::result::Result;
 
 use crate::app::{self, Message};
 use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_uid};
-use crate::style::styling::table_row_theme;
+use crate::style::styling::{table_row_theme, IpgStyleStandard};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
-use super::ipg_button::{self, IpgButtonStyle};
+use super::ipg_button;
 
 use iced::Point;
 use iced::mouse::Interaction;
@@ -42,7 +42,7 @@ pub struct IpgTable {
         pub highlight_amount: f32,
         pub column_widths: Vec<f32>,
         pub table_length: u32,
-        pub button_style: Option<HashMap<usize, IpgButtonStyle>>,
+        pub button_style: Option<HashMap<usize, IpgStyleStandard>>,
         pub button_ids: Vec<(usize, usize, usize, bool)>,
         pub check_ids: Vec<(usize, usize, usize, bool)>,
         pub toggler_ids: Vec<(usize, usize, usize, bool)>,
@@ -63,7 +63,7 @@ impl IpgTable {
         highlight_amount: f32,
         column_widths: Vec<f32>,
         table_length: u32,
-        button_style:  Option<HashMap<usize, IpgButtonStyle>>,
+        button_style:  Option<HashMap<usize, IpgStyleStandard>>,
         button_ids: Vec<(usize, usize, usize, bool)>,
         check_ids: Vec<(usize, usize, usize, bool)>,
         toggler_ids: Vec<(usize, usize, usize, bool)>,
@@ -398,7 +398,7 @@ fn add_widget(widget_type: TableWidget,
                 row_index: usize, 
                 col_index: usize, 
                 is_toggled: bool,
-                button_style:  Option<HashMap<usize, IpgButtonStyle>>,) 
+                button_style:  Option<HashMap<usize, IpgStyleStandard>>,) 
                 -> Element<'static, Message> {
 
     match widget_type {
@@ -408,14 +408,14 @@ fn add_widget(widget_type: TableWidget,
                                 .horizontal_alignment(Horizontal::Center)
                                 .width(Length::Fill);
 
-            let btn_style: Option<IpgButtonStyle> = if button_style.is_some() {
+            let btn_style: Option<IpgStyleStandard> = if button_style.is_some() {
                 let style = button_style.unwrap();
                 match style.get(&col_index) {
                     Some(st) => Some(st.clone()),
                     None => None,
                 }
             } else {
-                Some(IpgButtonStyle::Primary)
+                Some(IpgStyleStandard::Primary)
             };
 
             let btn: Element<TableMessage> = 

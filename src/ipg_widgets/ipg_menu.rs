@@ -2,7 +2,7 @@
 
 use iced::advanced::graphics::core::Element;
 use iced::border::Radius;
-use iced::widget::button::Status;
+use iced::widget::button::{self, Status};
 use iced::widget::{row, Button, Checkbox, Container, Row, Text, Toggler};
 use iced::{alignment, Background, Border, Color, Length, Renderer, Theme};
 
@@ -12,7 +12,7 @@ use crate::iced_aw_widgets::menu::menu_tree::{Item, Menu};
 use crate::iced_aw_widgets::menu::menu_bar::MenuBar;
 use crate::iced_aw_widgets::menu::common::{DrawPath, InnerBounds};
 use crate::iced_aw_widgets::menu::quad;
-use crate::style::styling::lighten;
+use crate::style::styling::{lighten, IpgStyleStandard};
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -21,7 +21,7 @@ use crate::{access_callbacks, app};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{try_extract_dict, try_extract_vec_f32};
 
-use super::ipg_button::{get_standard_style, IpgButtonStyle};
+use super::ipg_button::get_standard_style;
 
 
 #[derive(Debug, Clone)]
@@ -30,9 +30,9 @@ pub struct IpgMenu {
     pub items: PyObject,
     pub widths: Vec<f32>,
     pub spacing: Vec<f32>,
-    pub bar_style: IpgMenuBarStyle,
+    pub bar_style: IpgStyleStandard,
     pub item_type: Vec<(usize, usize, IpgMenuItemType)>,
-    pub item_style: Vec<(usize, usize, IpgMenuItemStyle)>,
+    pub item_style: Vec<(usize, usize, IpgStyleStandard)>,
     pub separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
     pub sep_types: Option<Vec<IpgMenuSepTypes>>,
     pub sep_label_names: Option<Vec<String>>,
@@ -50,9 +50,9 @@ impl IpgMenu {
         items: PyObject,
         widths: Vec<f32>,
         spacing: Vec<f32>,
-        bar_style: IpgMenuBarStyle,
+        bar_style: IpgStyleStandard,
         item_type: Vec<(usize, usize, IpgMenuItemType)>,
-        item_style: Vec<(usize, usize, IpgMenuItemStyle)>,
+        item_style: Vec<(usize, usize, IpgStyleStandard)>,
         separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
         sep_types: Option<Vec<IpgMenuSepTypes>>,
         sep_label_names: Option<Vec<String>>,
@@ -87,27 +87,6 @@ pub enum MenuMessage {
     ItemTogToggled(bool, (usize, usize)),
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgMenuBarStyle {
-    Primary,
-    Secondary,
-    Success,
-    Danger,
-    // default
-    Text,
-}
-
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgMenuItemStyle {
-    Primary,
-    Secondary,
-    Success,
-    Danger,
-    // default
-    Text,
-}
 
 #[derive(Debug, Clone)]
 #[pyclass]
@@ -334,7 +313,7 @@ fn get_menu_item(label: String,
                 bar_index: usize,
                 menu_index: usize,
                 item_type: &Vec<(usize, usize, IpgMenuItemType)>, 
-                item_style: &Vec<(usize, usize, IpgMenuItemStyle)>,
+                item_style: &Vec<(usize, usize, IpgStyleStandard)>,
                 is_checked: bool,
                 is_toggled: bool,
                 ) -> Element<'static, MenuMessage, Theme, Renderer> {
@@ -343,13 +322,6 @@ fn get_menu_item(label: String,
 
     let menu_item = match i_type {
         IpgMenuItemType::Button => {
-            let std_style = match i_style {
-                IpgMenuItemStyle::Primary => Some(IpgButtonStyle::Primary),
-                IpgMenuItemStyle::Secondary => Some(IpgButtonStyle::Secondary),
-                IpgMenuItemStyle::Success => Some(IpgButtonStyle::Success),
-                IpgMenuItemStyle::Danger => Some(IpgButtonStyle::Danger),
-                IpgMenuItemStyle::Text => Some(IpgButtonStyle::Text),
-            };
             let label_txt: Element<MenuMessage, Theme, Renderer> = Text::new(label.clone()).into();
 
             let btn: Element<MenuMessage, Theme, Renderer> = 
@@ -357,7 +329,7 @@ fn get_menu_item(label: String,
                                     .on_press(MenuMessage::ItemPressed((bar_index, menu_index)))
                                     .width(Length::Fill)
                                     .style(move|theme: &Theme, status| {
-                                            get_standard_style(theme, status, std_style.clone())
+                                            get_standard_style(theme, status, Some(i_style.clone()))
                                         })
                                     .into();
             btn
@@ -384,8 +356,8 @@ fn get_menu_item(label: String,
 
 fn get_item_style(bar_index: &usize, menu_index: &usize, 
                     item_type: &Vec<(usize, usize, IpgMenuItemType)>, 
-                    item_style: &Vec<(usize, usize, IpgMenuItemStyle)>) 
-                    -> (IpgMenuItemType, IpgMenuItemStyle) {
+                    item_style: &Vec<(usize, usize, IpgStyleStandard)>) 
+                    -> (IpgMenuItemType, IpgStyleStandard) {
         // default type
         let mut menu_item_type = IpgMenuItemType::Button;
         for (b_index, m_index, item) in item_type {
@@ -395,7 +367,7 @@ fn get_item_style(bar_index: &usize, menu_index: &usize,
         }
 
         // default style
-        let mut menu_item_style = IpgMenuItemStyle::Text;
+        let mut menu_item_style = IpgStyleStandard::Text;
         for (b_index, m_index, item) in item_style {
             if bar_index == b_index && menu_index == m_index {
                 menu_item_style = item.clone();
@@ -405,16 +377,8 @@ fn get_item_style(bar_index: &usize, menu_index: &usize,
         (menu_item_type, menu_item_style)
     }
 
-fn menu_bar_button(label: String, width: f32, bar_index: usize, bar_style: IpgMenuBarStyle) -> Element<'static, MenuMessage, Theme, Renderer> {
+fn menu_bar_button(label: String, width: f32, bar_index: usize, bar_style: IpgStyleStandard) -> Element<'static, MenuMessage, Theme, Renderer> {
 
-    let style = match bar_style {
-        IpgMenuBarStyle::Primary => IpgButtonStyle::Primary,
-        IpgMenuBarStyle::Secondary => IpgButtonStyle::Secondary,
-        IpgMenuBarStyle::Success => IpgButtonStyle::Success,
-        IpgMenuBarStyle::Danger => IpgButtonStyle::Danger,
-        IpgMenuBarStyle::Text => IpgButtonStyle::Text,
-    };
-    
     let label_txt: Element<MenuMessage, Theme, Renderer> = Text::new(label.clone())
                                             .vertical_alignment(alignment::Vertical::Center)
                                             .horizontal_alignment(alignment::Horizontal::Center)
@@ -425,7 +389,7 @@ fn menu_bar_button(label: String, width: f32, bar_index: usize, bar_style: IpgMe
                                     .on_press(MenuMessage::ItemPressed((bar_index, 999)))
                                     .width(Length::Fixed(width))
                                     .style(move|theme: &Theme, status| {
-                                        get_standard_style(theme, status, Some(style.clone()))})
+                                        get_standard_style(theme, status, Some(bar_style.clone()))})
                                     .into();
     btn
 }

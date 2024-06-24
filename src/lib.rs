@@ -25,7 +25,7 @@ mod graphics;
 mod style;
 
 
-use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonParams, IpgButtonStyle};
+use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonParams};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
@@ -33,7 +33,7 @@ use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, IpgImageFilterMethod, IpgImageParams, IpgImageRotation};
-use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuBarStyle, IpgMenuItemStyle, IpgMenuItemType, IpgMenuParams, IpgMenuSepTypes};
+use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuItemType, IpgMenuParams, IpgMenuSepTypes};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParams};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickListHandle, IpgPickList, IpgPickListParams};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
@@ -62,7 +62,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
     get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{IpgStyleParam, StyleBackground, StyleBarColor, StyleBorder, StyleDotColor, StyleFillMode, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
+use style::styling::{IpgPalette, IpgStyleParam, IpgStyleStandard, IpgStylingStandard, StyleBackground, StyleBarColor, StyleBorder, StyleDotColor, StyleFillMode, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
 
 const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
@@ -114,6 +114,8 @@ pub struct State {
     
     pub events: Vec<IpgEvents>,
     
+    pub styling_color: Lazy<HashMap<String, IpgPalette>>,
+    pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
     pub styling_background: Lazy<HashMap<String, StyleBackground>>,
     pub styling_bar_color: Lazy<HashMap<String, StyleBarColor>>,
     pub styling_border: Lazy<HashMap<String, StyleBorder>>,
@@ -147,6 +149,8 @@ pub static STATE: Mutex<State> = Mutex::new(
         
         events: vec![],
         
+        styling_color: Lazy::new(||HashMap::new()),
+        styling_standard: Lazy::new(||HashMap::new()),
         styling_background: Lazy::new(||HashMap::new()),
         styling_bar_color: Lazy::new(||HashMap::new()),
         styling_border: Lazy::new(||HashMap::new()),
@@ -766,8 +770,9 @@ impl IPG {
     #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
                         height_fill=false, padding=vec![10.0], clip=false, 
-                        style_background=None, style_border=None, style_shadow=None, 
-                        style_text_color=None, style_arrow=None, user_data=None, show=true, 
+                        style_standard=None, style_color=None, 
+                        style_border=None, style_shadow=None, 
+                        style_arrow=None, user_data=None, show=true, 
                         ))]
     fn add_button(&mut self,
                         parent_id: String,
@@ -781,10 +786,10 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         clip: bool,
-                        style_background: Option<String>,
+                        style_standard: Option<String>,
+                        style_color: Option<String>,
                         style_border: Option<String>,
                         style_shadow: Option<String>,
-                        style_text_color: Option<String>,
                         style_arrow: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
@@ -814,10 +819,10 @@ impl IPG {
                                                 height,
                                                 padding,
                                                 clip,
-                                                style_background,
+                                                style_standard,
+                                                style_color,
                                                 style_border,
                                                 style_shadow,
-                                                style_text_color,
                                                 style_arrow,                              
                                                 )));
         
@@ -1116,7 +1121,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, items, widths, spacing, 
-                        on_select=None, bar_style=IpgMenuBarStyle::Text, 
+                        on_select=None, bar_style=IpgStyleStandard::Text, 
                         item_type=vec![], item_style=vec![], 
                         separators=None, sep_types=None, 
                         sep_label_names=None, user_data=None, gen_id=None))]
@@ -1126,9 +1131,9 @@ impl IPG {
                     widths: Vec<f32>,
                     spacing: Vec<f32>,
                     on_select: Option<PyObject>,
-                    bar_style: IpgMenuBarStyle,
+                    bar_style: IpgStyleStandard,
                     item_type: Vec<(usize, usize, IpgMenuItemType)>,
-                    item_style: Vec<(usize, usize, IpgMenuItemStyle)>,
+                    item_style: Vec<(usize, usize, IpgStyleStandard)>,
                     separators: Option<Vec<(usize, usize, IpgMenuSepTypes)>>,
                     sep_types: Option<Vec<IpgMenuSepTypes>>,
                     sep_label_names: Option<Vec<String>>,
@@ -1662,6 +1667,98 @@ impl IPG {
         Ok(id)
     }
 
+    #[pyo3(signature = (style_id, 
+                        standard, 
+                        gen_id=None))]
+    fn add_styling_standard(&mut self,
+                            style_id: String,
+                            standard: IpgStyleStandard,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let mut state = access_state();
+       
+        state.styling_standard.insert(style_id, IpgStylingStandard::new( 
+                                                    id,
+                                                    standard,
+                                                    ));
+        
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (style_id, base_color=None, base_rgba=None, 
+                        bar_color=None, bar_rgba=None, 
+                        border_color=None, border_rgba=None, 
+                        blur_color=None, blur_rgba=None, 
+                        dot_color=None, dot_rgba=None,
+                        handle_color=None, handle_rgba=None, 
+                        icon_color=None, icon_rgba=None, 
+                        shadow_color=None, shadow_rgba=None,
+                        text_color=None, text_rgba=None,
+                        gen_id=None))]
+    fn add_styling_color(&mut self,
+                            style_id: String,
+                            base_color: Option<IpgColor>,
+                            base_rgba: Option<[f32; 4]>,
+                            bar_color: Option<IpgColor>,
+                            bar_rgba: Option<[f32; 4]>,
+                            border_color: Option<IpgColor>,
+                            border_rgba: Option<[f32; 4]>,
+                            blur_color: Option<IpgColor>,
+                            blur_rgba: Option<[f32; 4]>,
+                            dot_color: Option<IpgColor>,
+                            dot_rgba: Option<[f32; 4]>,
+                            handle_color: Option<IpgColor>,
+                            handle_rgba: Option<[f32; 4]>,
+                            icon_color: Option<IpgColor>,
+                            icon_rgba: Option<[f32; 4]>,
+                            shadow_color: Option<IpgColor>,
+                            shadow_rgba: Option<[f32; 4]>,
+                            text_color: Option<IpgColor>,
+                            text_rgba: Option<[f32; 4]>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let mut state = access_state();
+
+        if base_color.is_none() && base_rgba.is_none() {
+            panic!("A base color needs to be defined")
+        }
+
+        let base: Color = get_color(base_rgba, base_color, 1.0, false);
+        let bar: Option<Color> = Some(get_color(bar_rgba, bar_color, 1.0, false));
+        let blur: Option<Color> = Some(get_color(blur_rgba, blur_color, 1.0, false));
+        let border: Option<Color> = Some(get_color(border_rgba, border_color, 1.0, false));
+        let dot: Option<Color> = Some(get_color(dot_rgba, dot_color, 1.0, false));
+        let handle: Option<Color> = Some(get_color(handle_rgba, handle_color, 1.0, false));
+        let icon: Option<Color> = Some(get_color(icon_rgba, icon_color, 1.0, false));
+        let shadow: Option<Color> = Some(get_color(shadow_rgba, shadow_color, 1.0, false));
+        let text: Option<Color> = Some(get_color(text_rgba, text_color, 1.0, false));
+        
+        state.styling_color.insert(style_id, IpgPalette::new( 
+                                                    id,
+                                                    base,
+                                                    bar,
+                                                    border,
+                                                    blur,
+                                                    dot,
+                                                    handle,
+                                                    icon,
+                                                    shadow,
+                                                    text,
+                                                    ));
+        
+        drop(state);
+
+        Ok(id)
+    }
+
     #[pyo3(signature = (style_id, rgba=None, color=None, 
                         invert=false, scale_alpha=1.0, accent_amount=0.05, 
                         gen_id=None))]
@@ -2062,7 +2159,7 @@ impl IPG {
                     on_button: Option<PyObject>,
                     on_checkbox: Option<PyObject>,
                     on_toggler: Option<PyObject>,
-                    button_style: Option<HashMap<usize, IpgButtonStyle>>,
+                    button_style: Option<HashMap<usize, IpgStyleStandard>>,
                     show: bool,
                     user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
@@ -2799,7 +2896,6 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgAlignment>()?;
     m.add_class::<IpgButtonArrows>()?;
     m.add_class::<IpgButtonParams>()?;
-    m.add_class::<IpgButtonStyle>()?;
     m.add_class::<IpgCardStyles>()?;
     m.add_class::<IpgCardParams>()?;
     m.add_class::<IpgColor>()?;
@@ -2812,9 +2908,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgImageParams>()?;
     m.add_class::<IpgImageRotation>()?;
     m.add_class::<IpgMenuParams>()?;
-    m.add_class::<IpgMenuBarStyle>()?;
     m.add_class::<IpgMenuItemType>()?;
-    m.add_class::<IpgMenuItemStyle>()?;
     m.add_class::<IpgMenuSepTypes>()?;
     m.add_class::<IpgMouseAreaParams>()?;
     m.add_class::<IpgPickListParams>()?;
@@ -2831,6 +2925,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgSelectableTextVertAlign>()?;
     m.add_class::<IpgSliderParams>()?;
     m.add_class::<IpgStyleParam>()?;
+    m.add_class::<IpgStyleStandard>()?;
     m.add_class::<IpgSvgParams>()?;
     m.add_class::<TableRowHighLight>()?;
     m.add_class::<TableWidget>()?;

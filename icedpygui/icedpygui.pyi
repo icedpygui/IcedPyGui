@@ -476,10 +476,10 @@ class IPG:
                     height_fill: bool=False,
                     padding: List=[10.0],
                     clip: bool=False,
-                    style_background: Union[None | str]=None,
+                    style_standard: Union[None | str]=None,
+                    style_color: Union[None | str]=None,
                     style_border: Union[None | str]=None,
                     style_shadow: Union[None | str]=None,
-                    style_text_color: Union[None | str]=None,
                     style_arrow: Union[None | IpgButtonArrows]=None,
                     user_data: Union[None | any]=None,
                     show: bool=True, 
@@ -512,12 +512,14 @@ class IPG:
                 use [float, float, float, float] for [top, right, bottom, left]
             clip: bool
                 Whether to clip the label if width exceeded.
-            style_background: str
-                style_id of the add_styling_background.
+            style_standard: str
+                style_id of the add_styling_standard.
+            style_color: str
+                style_id of the add_styling_color.
             style_border: str
                 style_id of the add_styling_border.
-            style_text_color: str
-                style_id of the add_styling_text_color.
+            style_shadow: str
+                style_id of the add_styling_shadow.
             style_arrow: IpgButtonArrows
                 See dropdown list when IpgButtonArrow. is typed in when period is typed.
             user_data: any 
@@ -1377,6 +1379,37 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
 
+    def add_styling_color(self,
+                            style_id: str,
+                            base_color: Union[None | IpgColor]=None,
+                            base_rgba: Union[None | IpgColor]=None,
+                            bar_color: Union[None | IpgColor]=None,
+                            bar_rgba: Union[None | IpgColor]=None,
+                            border_color: Union[None | IpgColor]=None,
+                            border_rgba: Union[None | IpgColor]=None,
+                            blur_color: Union[None | IpgColor]=None,
+                            blur_rgba: Union[None | IpgColor]=None,
+                            dot_color: Union[None | IpgColor]=None,
+                            dot_rgba: Union[None | IpgColor]=None,
+                            handle_color: Union[None | IpgColor]=None,
+                            handle_rgba: Union[None | IpgColor]=None,
+                            icon_color: Union[None | IpgColor]=None,
+                            icon_rgba: Union[None | IpgColor]=None,
+                            shadow_color: Union[None | IpgColor]=None,
+                            shadow_rgba: Union[None | IpgColor]=None,
+                            text_color: Union[None | IpgColor]=None,
+                            text_rgba: Union[None | IpgColor]=None,
+                            gen_id: Union[None | int]=None,
+                        ) -> int:
+        """
+        Adds styling to a container or widget.
+
+            Parameters
+            ----------
+                style_id: str
+                    Id of style for use by the containers and widgets.
+        """
+
     def add_styling_background(self,
                                 style_id: str,
                                 rgba: Union[None | List[float]]=None,
@@ -1558,6 +1591,26 @@ class IPG:
                     Internal id of widget and can be used by user if equated.
         """
 
+    def add_styling_standard(self,
+                             style_id: str,
+                             standard: IpgStyleStandard,
+                             ) -> int:
+        """
+        Adds a standard style to a container or widget.
+
+            Parameters
+            ----------
+                style_id: str
+                    Id of style for use by the containers and widgets.
+                standard: IpgStyleStandard
+                    The standard styles are Primary, Success, Danger, Text
+
+            Returns
+            -------
+                id: int
+                    Internal id of widget and can be used by user if equated.   
+        """
+
     def add_styling_icon_color(self,
                                 style_id: str,
                                 rgba: Union[None | List[float]]=None,
@@ -1719,7 +1772,7 @@ class IPG:
                     highlight_amount: float=0.15,
                     table_length: int=0,
                     column_widths: List=[20.0],
-                    button_style: dict=Union[None | {int: IpgButtonStyle}],
+                    button_style: dict=Union[None | {int: IpgStyleStandard}],
                     widgets_using_columns: Union[None | dict]=None,
                     gen_id: Union[None | int]=None,
                     on_press_button: Union[None | Callable]=None,
@@ -2249,14 +2302,6 @@ class IpgButtonParams:
     WidthFill=0
 
 
-class IpgButtonStyle:
-    Primary=0
-    Secondary=0
-    Success=0
-    Danger=0
-    Text=0
-
-
 class IpgCardStyles: 
     Primary=0
     Secondary=0
@@ -2687,6 +2732,13 @@ class IpgStyleParam:
     HandleColor=0
     IconColor=0
     Shadow=0
+
+
+class IpgStyleStandard:
+    Primary=0
+    Success=0
+    Danger=0
+    Text=0
 
 
 class IpgSvgParams:

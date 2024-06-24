@@ -31,7 +31,7 @@ pub fn get_color(rgba: Option<[f32; 4]>, color: Option<IpgColor>, alpha: f32, in
     color
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[pyclass]
 pub enum IpgColor {
     PRIMARY,
