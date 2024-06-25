@@ -931,7 +931,7 @@ impl IPG {
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
-        dbg!(&style_border);
+        
         if on_toggle.is_some() {
             add_callback_to_mutex(id, "on_toggle".to_string(), on_toggle);
         }
@@ -1725,19 +1725,20 @@ impl IPG {
 
         let mut state = access_state();
 
-        if base_color.is_none() && base_rgba.is_none() {
+        let base = if base_color.is_none() && base_rgba.is_none() {
             panic!("A base color needs to be defined")
-        }
+        } else {
+            get_color(base_rgba, base_color, 1.0, false).unwrap()
+        };
 
-        let base: Color = get_color(base_rgba, base_color, 1.0, false);
-        let bar: Option<Color> = Some(get_color(bar_rgba, bar_color, 1.0, false));
-        let blur: Option<Color> = Some(get_color(blur_rgba, blur_color, 1.0, false));
-        let border: Option<Color> = Some(get_color(border_rgba, border_color, 1.0, false));
-        let dot: Option<Color> = Some(get_color(dot_rgba, dot_color, 1.0, false));
-        let handle: Option<Color> = Some(get_color(handle_rgba, handle_color, 1.0, false));
-        let icon: Option<Color> = Some(get_color(icon_rgba, icon_color, 1.0, false));
-        let shadow: Option<Color> = Some(get_color(shadow_rgba, shadow_color, 1.0, false));
-        let text: Option<Color> = Some(get_color(text_rgba, text_color, 1.0, false));
+        let bar: Option<Color> = get_color(bar_rgba, bar_color, 1.0, false);
+        let blur: Option<Color> = get_color(blur_rgba, blur_color, 1.0, false);
+        let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let dot: Option<Color> = get_color(dot_rgba, dot_color, 1.0, false);
+        let handle: Option<Color> = get_color(handle_rgba, handle_color, 1.0, false);
+        let icon: Option<Color> = get_color(icon_rgba, icon_color, 1.0, false);
+        let shadow: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
+        let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
         
         state.styling_color.insert(style_id, IpgPalette::new( 
                                                     id,
@@ -1772,8 +1773,12 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, scale_alpha, invert);
-
+        let color: Color = if rgba.is_some() | color.is_some() {
+            get_color(rgba, color, scale_alpha, invert).unwrap()
+        } else {
+            Color::TRANSPARENT
+        };
+        
         let mut state = access_state();
        
         state.styling_background.insert(style_id, StyleBackground::new( 
@@ -1802,7 +1807,11 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, scale_alpha, invert);
+        let color: Color = if rgba.is_some() | color.is_some() {
+            get_color(rgba, color, scale_alpha, invert).unwrap()
+        } else {
+            Color::BLACK
+        };
 
         let mut state = access_state();
        
@@ -1834,7 +1843,11 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, scale_alpha, invert);
+        let color: Color = if rgba.is_some() | color.is_some() {
+            get_color(rgba, color, scale_alpha, invert).unwrap()
+        } else {
+            Color::TRANSPARENT
+        };
 
         let radius: Radius = if radius.len() == 1 {
             Radius::from([radius[0]; 4])
@@ -1902,7 +1915,11 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, scale_alpha, invert);
+        let color: Color = if rgba.is_some() | color.is_some() {
+            get_color(rgba, color, scale_alpha, invert).unwrap()
+        } else {
+            Color::BLACK
+        };
 
         let mut state = access_state();
        
@@ -1932,7 +1949,11 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, alpha, invert);
+        let color: Color = if rgba.is_some() | color.is_some() {
+            get_color(rgba, color, alpha, invert).unwrap()
+        } else {
+            Color::BLACK
+        };
 
         let mut state = access_state();
        
@@ -1960,7 +1981,11 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, alpha, invert);
+        let color: Color = if rgba.is_some() | color.is_some() {
+            get_color(rgba, color, alpha, invert).unwrap()
+        } else {
+            Color::WHITE
+        };
 
         let mut state = access_state();
        
@@ -1991,7 +2016,11 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, scale_alpha, invert);
+        let color: Color = if rgba.is_some() | color.is_some() {
+            get_color(rgba, color, scale_alpha, invert).unwrap()
+        } else {
+            Color::WHITE
+        };
 
         let mut state = access_state();
        
@@ -2021,7 +2050,11 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = get_color(rgba, color, alpha, invert);
+        let color: Color = if rgba.is_some() | color.is_some() {
+            get_color(rgba, color, alpha, invert).unwrap()
+        } else {
+            Color::WHITE
+        };
 
         let mut state = access_state();
        

@@ -379,17 +379,18 @@ pub fn get_styling(theme: &Theme, status: Status,
         };
 
         if color_palette_opt.is_some() {
+            let text = if palette.is_dark {
+                Color::WHITE
+            } else {
+                Color::BLACK
+            };
             let color_palette = color_palette_opt.unwrap().clone();
-            let mut text: Color = Color::BLACK;
-            if color_palette.text.is_some() {
-                text = color_palette.text.unwrap();
-            }
             let background = Background::new(color_palette.base, text);
             base_style.background = Some(iced::Background::Color(background.weak.color));
 
             if color_palette.text.is_some() {
-                base_style.text_color = text;
-                hover_style.text_color = text;
+                base_style.text_color = color_palette.text.unwrap();
+                hover_style.text_color = color_palette.text.unwrap();
             } else {
                 base_style.text_color = background.base.text;
                 hover_style.text_color = background.base.text;

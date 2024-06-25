@@ -307,7 +307,7 @@ pub fn get_styling(theme: &Theme, status: Status,
     let mut disabled_style = primary(theme, status);
 
     let palette = theme.extended_palette();
-
+    
     let border_opt = if style_border.is_some() {
         state.styling_border.get(&style_border.unwrap())
     } else {
@@ -333,25 +333,29 @@ pub fn get_styling(theme: &Theme, status: Status,
         },
     }
 
-    let mut style_std_opt = if style_standard.is_some() {
+    if style_standard.is_none() && style_color.is_none() {
+        match status {
+            Status::Active { is_checked: _ } => return base_style,
+            Status::Hovered { is_checked: _ } => return hover_style,
+            Status::Disabled { is_checked: _ } => return disabled_style,
+        
+        }
+    }
+
+    let style_std_opt = if style_standard.is_some() {
         state.styling_standard.get(&style_standard.clone().unwrap())
     } else {
         None
     };
 
-    let mut std_selected = false;
-
-    if style_standard.is_none() && style_color.is_none() {
-        style_std_opt = Some(&IpgStylingStandard { id: 0, standard: IpgStyleStandard::Primary});
-    }
-    
+    // repeating the standard styles so one can modify the border of a standard style
     if style_std_opt.is_some() {
-        std_selected = true;
         let style_std = style_std_opt.unwrap().standard.clone();
+
         match style_std {
             IpgStyleStandard::Primary => {
                 let icon_color = palette.primary.strong.text;
-                let base = palette.primary.strong.color;
+                let base = palette.background.base.color;
                 let accent = palette.primary.strong.color;
                 base_style.border.color = accent;
                 base_style = styled(icon_color,
@@ -382,7 +386,7 @@ pub fn get_styling(theme: &Theme, status: Status,
             },
             IpgStyleStandard::Success => {
                 let icon_color = palette.success.strong.text;
-                let base = palette.success.strong.color;
+                let base = palette.background.base.color;
                 let accent = palette.success.strong.color;
                 base_style.border.color = accent;
                 base_style = styled(icon_color,
@@ -414,7 +418,7 @@ pub fn get_styling(theme: &Theme, status: Status,
             },
             IpgStyleStandard::Danger => {
                 let icon_color = palette.danger.strong.text;
-                let base = palette.danger.strong.color;
+                let base = palette.background.base.color;
                 let accent = palette.danger.strong.color;
                 base_style.border.color = accent;
                 base_style = styled(icon_color,
@@ -447,7 +451,7 @@ pub fn get_styling(theme: &Theme, status: Status,
         }
     }
 
-    if !std_selected {
+    if style_standard.is_none() && style_color.is_some() {
 
         let color_palette_opt = if style_color.is_some() {
             state.styling_color.get(&style_color.unwrap())
@@ -457,20 +461,20 @@ pub fn get_styling(theme: &Theme, status: Status,
 
         if color_palette_opt.is_some() {
             let color_palette = color_palette_opt.unwrap().clone();
-            let mut text: Color = Color::BLACK;
-            if color_palette.text.is_some() {
-                text = color_palette.text.unwrap();
+            let mut text_color: Color = Color::BLACK;
+            if palette.is_dark {
+                text_color = Color::WHITE;
             }
-            let background = Background::new(color_palette.base, text);
+           
+            if color_palette.text.is_some() {
+                text_color = color_palette.text.unwrap();
+            }
+            
+            let background = Background::new(color_palette.base, text_color);
             base_style.background = iced::Background::Color(background.weak.color);
-
-            if color_palette.text.is_some() {
-                base_style.text_color = Some(text);
-                hover_style.text_color = Some(text);
-            } else {
-                base_style.text_color = Some(background.base.text);
-                hover_style.text_color = Some(background.base.text);
-            }
+    
+            base_style.text_color = Some(text_color);
+            hover_style.text_color = Some(text_color);
             
             if color_palette.border.is_some() {
                 base_style.border.color = color_palette.border.unwrap();
