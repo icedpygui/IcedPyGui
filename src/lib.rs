@@ -903,9 +903,9 @@ impl IPG {
     #[pyo3(signature = (parent_id, gen_id=None, on_toggle=None, is_checked=false, 
                         label="".to_string(), width=None, width_fill=false, 
                         size=16.0, spacing=10.0, text_line_height=1.3, 
-                        text_shaping="basic".to_string(),text_size=16.0, icon_x=false, 
-                        icon_size=25.0, user_data=None, show=true, style_color=None,
-                        style_border=None,style_icon_color=None,
+                        text_shaping="basic".to_string(),text_size=16.0, 
+                        icon_x=false, icon_size=25.0, user_data=None, 
+                        show=true, style_standard=None, style_color=None, style_border=None,
                         ))] 
     fn add_checkbox(&mut self,
                         parent_id: String,
@@ -925,13 +925,13 @@ impl IPG {
                         icon_size: f32,
                         user_data: Option<PyObject>,
                         show: bool,
+                        style_standard: Option<String>,
                         style_color: Option<String>,
                         style_border: Option<String>,
-                        style_icon_color: Option<String>,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
-
+        dbg!(&style_border);
         if on_toggle.is_some() {
             add_callback_to_mutex(id, "on_toggle".to_string(), on_toggle);
         }
@@ -960,9 +960,9 @@ impl IPG {
                                                     text_shaping,
                                                     icon_x,
                                                     icon_size,
+                                                    style_standard,
                                                     style_color,
                                                     style_border,
-                                                    style_icon_color,
                                                     )));
 
         Ok(id)

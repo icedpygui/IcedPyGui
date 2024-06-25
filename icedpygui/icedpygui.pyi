@@ -617,10 +617,9 @@ class IPG:
                     text_size: float=16.0,
                     icon_x: bool=False,
                     icon_size: float=25.0,
-                    style_background: Union[None | str]=None,
+                    style_standard: Union[None | str]=None,
+                    style_color: Union[None | str]=None,
                     style_border: Union[None | str]=None,
-                    style_icon_color: Union[None | str]=None,
-                    style_text_color: Union[None | str]=None,
                     user_data: Union[None | any]=None,
                     show: bool=True,
                     ) -> int:
@@ -657,14 +656,10 @@ class IPG:
                 If true, uses the x versus the checkmark icon.
             icon_size: float
                 Sets the size of either the check or x icon.
-            style_background: str
-                style_id of the add_styling_background.
+            style_color: str
+                style_id of the add_styling_color.
             style_border: str
-                style_id of the add_styling_border.
-            style_icon_color: str
-                style_id of the add_styling_icon_color.
-            style_text_color: str
-                style_id of the add_styling_text_color.
+                style_id of the add_styling_border, radius, width.
             user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
             show: bool

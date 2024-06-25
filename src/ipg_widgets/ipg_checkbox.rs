@@ -2,7 +2,7 @@
 
 use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_f64, try_extract_string};
-use crate::style::styling::{lighten, IpgStyleStandard, StyleBorder};
+use crate::style::styling::{lighten, IpgStyleStandard, IpgStylingStandard, StyleBorder};
 use crate::{access_callbacks, access_state};
 use crate::app;
 use super::helpers::{get_width, get_shaping};
@@ -20,7 +20,7 @@ use iced::{Border, Color, Element, Font, Length, Pixels, Theme};
 use iced::theme::palette::Background;
 use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{Checkbox, Space};
-use iced::widget::checkbox::{self, Status};
+use iced::widget::checkbox::{self, primary, Status};
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -292,16 +292,6 @@ pub fn try_extract_checkbox_update(update_obj: PyObject) -> IpgCheckboxParams {
     })
 }
 
-// pub fn get_standard_style(theme: &Theme, status: Status, style: Option<IpgStyleStandard>) -> checkbox::Style {
-//     match style {
-//         Some(IpgStyleStandard::Primary) => checkbox::primary(theme, status),
-//         Some(IpgStyleStandard::Success) => checkbox::success(theme, status),
-//         Some(IpgStyleStandard::Danger) => checkbox::danger(theme, status),
-//         Some(IpgStyleStandard::Text) => checkbox::primary(theme, status),
-//         None => checkbox::primary(theme, status),
-//     }
-// }
-
 pub fn get_styling(theme: &Theme, status: Status,
                     style_standard: Option<String>, 
                     style_color: Option<String>, 
@@ -311,51 +301,49 @@ pub fn get_styling(theme: &Theme, status: Status,
 {
     let state = access_state();
 
-    // default active
+    // init styles
+    let mut base_style = primary(theme, status);
+    let mut hover_style = primary(theme, status);
+    let mut disabled_style = primary(theme, status);
+
     let palette = theme.extended_palette();
-    let icon_color = palette.primary.strong.text;
-    let base = palette.primary.strong.color;
-    let accent = palette.primary.strong.color;
-    let border: Border = Border {
-                                radius: 2.0.into(),
-                                width: 1.0,
-                                color: palette.primary.strong.color,
-                            };
-    let mut base_style = styled(icon_color,
-                                        base,
-                                        accent,
-                                        is_checked,
-                                        border,
-                                        None);
 
-    // default hover that are different
-    let base_hover = palette.background.weak.color;
-    let accent_hover = palette.primary.base.color;
+    let border_opt = if style_border.is_some() {
+        state.styling_border.get(&style_border.unwrap())
+    } else {
+        None
+    };
+  
+    match border_opt {
+        Some(bd) => {
+            base_style.border.radius = bd.radius;
+            base_style.border.width = bd.width;
+            hover_style.border.radius = bd.radius;
+            hover_style.border.width = bd.width;
+            disabled_style.border.radius = bd.radius;
+            disabled_style.border.width = bd.width;
+        },
+        None => {
+            base_style.border.radius = 2.0.into();
+            base_style.border.width = 1.0;
+            hover_style.border.radius = 2.0.into();
+            hover_style.border.width = 1.0;
+            disabled_style.border.radius = 2.0.into();
+            disabled_style.border.width = 1.0;
+        },
+    }
 
-    let mut hover_style = styled(icon_color,
-                                            base_hover,
-                                            accent_hover,
-                                            is_checked,
-                                            border,
-                                            None);
-    // default desiable that are different
-    let base_disabled = palette.background.weak.color;
-    let accent_disabled = palette.background.strong.color;
-    let disabled_style = styled(icon_color,
-                                            base_disabled,
-                                            accent_disabled,
-                                            is_checked,
-                                            border,
-                                            None);
-   
-
-    let style_std_opt = if style_standard.is_some() {
-        state.styling_standard.get(&style_standard.unwrap())
+    let mut style_std_opt = if style_standard.is_some() {
+        state.styling_standard.get(&style_standard.clone().unwrap())
     } else {
         None
     };
 
     let mut std_selected = false;
+
+    if style_standard.is_none() && style_color.is_none() {
+        style_std_opt = Some(&IpgStylingStandard { id: 0, standard: IpgStyleStandard::Primary});
+    }
     
     if style_std_opt.is_some() {
         std_selected = true;
@@ -365,95 +353,98 @@ pub fn get_styling(theme: &Theme, status: Status,
                 let icon_color = palette.primary.strong.text;
                 let base = palette.primary.strong.color;
                 let accent = palette.primary.strong.color;
+                base_style.border.color = accent;
                 base_style = styled(icon_color,
-                                            base,
-                                            accent,
-                                            is_checked,
-                                            border,
-                                            None);
+                                    base,
+                                    accent,
+                                    is_checked,
+                                    base_style.border,
+                                    None);
 
                 let base_hover = palette.background.weak.color;
                 let accent_hover = palette.primary.base.color;
+                hover_style.border.color = accent_hover;
                 hover_style = styled(icon_color,
-                                                    base_hover,
-                                                    accent_hover,
-                                                    is_checked,
-                                                    border,
-                                                    None);
-                
-                if style_border.is_some() {
-                    base_style.border.color = palette.primary.weak.color;
-                    hover_style.border.color = palette.primary.weak.color;
-                }
+                                    base_hover,
+                                    accent_hover,
+                                    is_checked,
+                                    hover_style.border,
+                                    None);
+                   
+                let base_disabled = palette.background.weak.color;
+                let accent_disabled = palette.background.strong.color;
+                disabled_style = styled(icon_color,
+                                    base_disabled,
+                                    accent_disabled,
+                                    is_checked,
+                                    disabled_style.border,
+                                    None);
             },
             IpgStyleStandard::Success => {
                 let icon_color = palette.success.strong.text;
                 let base = palette.success.strong.color;
                 let accent = palette.success.strong.color;
+                base_style.border.color = accent;
                 base_style = styled(icon_color,
-                                            base,
-                                            accent,
-                                            is_checked,
-                                            border,
-                                            None);
+                                    base,
+                                    accent,
+                                    is_checked,
+                                    base_style.border,
+                                    None);
 
                 let base_hover = palette.background.weak.color;
                 let accent_hover = palette.success.base.color;
+                hover_style.border.color = accent_hover;
                 hover_style = styled(icon_color,
-                                                    base_hover,
-                                                    accent_hover,
-                                                    is_checked,
-                                                    border,
-                                                    None);
+                                    base_hover,
+                                    accent_hover,
+                                    is_checked,
+                                    hover_style.border,
+                                    None);
+
+                let base_disabled = palette.background.weak.color;
+                let accent_disabled = palette.background.strong.color;
+                disabled_style = styled(icon_color,
+                                    base_disabled,
+                                    accent_disabled,
+                                    is_checked,
+                                    disabled_style.border,
+                                    None);
                 
-                if style_border.is_some() {
-                    base_style.border.color = palette.success.weak.color;
-                    hover_style.border.color = palette.success.weak.color;
-                }
             },
             IpgStyleStandard::Danger => {
                 let icon_color = palette.danger.strong.text;
                 let base = palette.danger.strong.color;
                 let accent = palette.danger.strong.color;
+                base_style.border.color = accent;
                 base_style = styled(icon_color,
-                                            base,
-                                            accent,
-                                            is_checked,
-                                            border,
-                                            None);
+                                    base,
+                                    accent,
+                                    is_checked,
+                                    base_style.border,
+                                    None);
 
                 let base_hover = palette.background.weak.color;
                 let accent_hover = palette.danger.base.color;
+                hover_style.border.color = accent_hover;
                 hover_style = styled(icon_color,
-                                                    base_hover,
-                                                    accent_hover,
-                                                    is_checked,
-                                                    border,
-                                                    None);
-                
-                if style_border.is_some() {
-                    base_style.border.color = palette.danger.weak.color;
-                    hover_style.border.color = palette.danger.weak.color;
-                }
+                                    base_hover,
+                                    accent_hover,
+                                    is_checked,
+                                    hover_style.border,
+                                    None);
+
+                let base_disabled = palette.background.weak.color;
+                let accent_disabled = palette.background.strong.color;
+                disabled_style = styled(icon_color,
+                                    base_disabled,
+                                    accent_disabled,
+                                    is_checked,
+                                    disabled_style.border,
+                                    None);
             },
             IpgStyleStandard::Text => (),
         }
-    }
-
-    let border_opt = if style_border.is_some() {
-        state.styling_border.get(&style_border.unwrap())
-    } else {
-        None
-    };
-
-    match border_opt {
-        Some(bd) => {
-            base_style.border.radius = bd.radius;
-            base_style.border.width = bd.width;
-            hover_style.border.radius = bd.radius;
-            hover_style.border.width = bd.width;
-        },
-        None => (),
     }
 
     if !std_selected {

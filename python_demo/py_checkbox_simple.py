@@ -20,7 +20,10 @@ def on_toggle(_chkbx_id: int, is_checked: bool):
     ipg.update_item(x_id, IpgCheckboxParams.IconX, is_checked)
     # changing the background using the style_id of "bkg", doesn't toggle unless
     # another styling is chosen based on the value of is_checked.
-    ipg.update_item(x_id, IpgCheckboxParams.StyleBackground, "bkg")
+    if is_checked:
+        ipg.update_item(x_id, IpgCheckboxParams.StyleColor, "checked_colors")
+    else:
+        ipg.update_item(x_id, IpgCheckboxParams.StyleColor, "unchecked_colors")
 
 
 # Add a window first
@@ -38,22 +41,31 @@ ipg.add_container(window_id="main", container_id="cont", width_fill=True,
 ipg.add_column(window_id="main", container_id="col", parent_id="cont",
                align_items=IpgColumnAlignment.Center)
 
-ipg.add_styling_background(style_id="bkg", color=IpgColor.BLUE)
-ipg.add_styling_border(style_id="border", color=IpgColor.GOLDEN_ROD, radius=[1.0])
-ipg.add_styling_icon_color(style_id="icon", color=IpgColor.LIGHT_BLUE)
-ipg.add_styling_text_color(style_id="text", color=IpgColor.YELLOW)
+ipg.add_styling_color(style_id="checked_colors", 
+                      base_color=IpgColor.BLUE,
+                      border_color=IpgColor.GOLDEN_ROD,
+                      icon_color=IpgColor.LIGHT_BLUE,
+                      text_color=IpgColor.YELLOW)
+
+ipg.add_styling_color(style_id="unchecked_colors", 
+                      base_color=IpgColor.YELLOW,
+                      border_color=IpgColor.RED,
+                      icon_color=IpgColor.RED,
+                      text_color=IpgColor.WHITE)
+
+ipg.add_styling_border(style_id="border", radius=[3.0], width=3.0)
+
 
 # Add the first checkbox with the callback on_toggle.
 ipg.add_checkbox(parent_id="col", label="Check Me!!!",
-                 style_background="bkg",
                  style_border="border",
-                 style_icon_color="icon",
-                 style_text_color="text",
                  on_toggle=on_toggle)
 
 # Add the second checkbox.  This has no callback since it not used.
 ipg.add_checkbox(parent_id="col", gen_id=x_id, 
-                 label="See my check change to an x and color change", 
+                 label="See my check change to an x and color change",
+                 style_color="unchecked_colors",
+                 style_border="border", 
                  is_checked=True)
 
 # Required to be the last widget sent to Iced,  If you start the program
