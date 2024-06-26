@@ -11,7 +11,7 @@ use pyo3::pyclass;
 #[pyclass]
 pub struct IpgPalette {
     pub id: usize,
-    pub base: Color,
+    pub base: Option<Color>,
     pub bar: Option<Color>,
     pub border: Option<Color>,
     pub blur: Option<Color>,
@@ -25,7 +25,7 @@ pub struct IpgPalette {
 impl IpgPalette {
     pub fn new(
         id: usize,
-        base: Color,
+        base: Option<Color>,
         bar: Option<Color>,
         border: Option<Color>,
         blur: Option<Color>,
@@ -53,7 +53,7 @@ impl IpgPalette {
 impl Default for IpgPalette {
     fn default() -> Self {
         Self { id: Default::default(), 
-            base: match_ipg_color(IpgColor::PRIMARY), 
+            base: Default::default(), 
             bar: Default::default(), 
             border: Default::default(), 
             blur: Default::default(), 
@@ -137,26 +137,20 @@ impl StyleBarColor {
 #[derive(Debug, Clone)]
 pub struct StyleBorder {
     pub id: usize,
-    pub color: Color,
     pub radius: Radius,
     pub width: f32,
-    pub accent: f32,
 }
 
 impl StyleBorder {
     pub fn new(
         id: usize,
-        color: Color,
         radius: Radius,
         width: f32,
-        accent: f32,
     ) -> Self {
         Self {
             id,
-            color,
             radius,
             width,
-            accent,
         }
     }
 }
@@ -224,7 +218,6 @@ impl StyleIconColor {
 #[derive(Debug, Clone)]
 pub struct StyleShadow {
     pub id: usize,
-    pub color: Color,
     pub offset_x: f32,
     pub offset_y: f32,
     pub blur_radius: f32,
@@ -233,14 +226,12 @@ pub struct StyleShadow {
 impl StyleShadow {
     pub fn new(
         id: usize,
-        color: Color,
         offset_x: f32,
         offset_y: f32,
         blur_radius: f32,
     ) -> Self {
         Self {
             id,
-            color,
             offset_x,
             offset_y,
             blur_radius,
@@ -306,7 +297,6 @@ pub fn date_picker_container(_theme: &Theme) -> container::Style {
     }
 }
 
-use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::ipg_widgets::ipg_table::TableRowHighLight;
 pub fn table_row_theme(theme: &Theme, idx: usize, amount: f32, 
                         highlighter: Option<TableRowHighLight>) -> container::Style {

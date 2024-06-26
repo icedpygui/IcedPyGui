@@ -6,6 +6,10 @@ ipg = IPG()
 
 # A technique explored in another demo where the
 # id is generated ahead of time.  Useful in some cases.
+# This id will work across windows so if you want the same
+# behavior for a windget that is on multiple windows
+# then use the gen_id on those widgets to change them all.
+# However, this id cannot be used more than once within a window.
 x_id = ipg.generate_id()
 
 

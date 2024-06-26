@@ -1,6 +1,6 @@
 
 use iced::border::Radius;
-use iced::{Background, Border, Element, Length, Theme};
+use iced::{Background, Border, Color, Element, Length, Theme};
 use iced::widget::{progress_bar, ProgressBar, Space};
 use pyo3::{pyclass, PyObject, Python};
 use crate::graphics::colors::{match_ipg_color, IpgColor};
@@ -170,7 +170,7 @@ pub fn get_styling(_theme: &Theme,
 
     let border: Border = match border_opt {
         Some(bd) => Border {
-            color: bd.color,
+            color: Color::BLACK,
             radius: bd.radius,
             width: bd.width,
         },

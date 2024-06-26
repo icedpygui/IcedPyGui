@@ -151,7 +151,7 @@ pub fn construct_scrollable(scroll: IpgScrollable, content: Vec<Element<'static,
                                     scroll.container_style_background.clone(),
                                     scroll.container_style_border.clone(),
                                     scroll.container_style_shadow.clone(),
-                                    scroll.container_style_text_color.clone(),
+                                    // scroll.container_style_text_color.clone(),
                                     )
                     })
                     .into()
@@ -366,10 +366,8 @@ fn get_styling(theme: &Theme, status: Status,
                 container_style_background: Option<String>,
                 container_style_border: Option<String>,
                 container_style_shadow: Option<String>,
-                container_style_text_color: Option<String>,
                 ) -> Style 
 {
-
 
     let default_style = default(theme, status);
 
@@ -385,7 +383,7 @@ fn get_styling(theme: &Theme, status: Status,
                                                                 container_style_background,
                                                                 container_style_border,
                                                                 container_style_shadow,
-                                                                container_style_text_color,
+                                                                
                                                                 );
 
     let scrollbar = Scrollbar {
@@ -495,7 +493,7 @@ fn get_border(style_border: Option<String>, default: Style) -> Border {
 
     let border = if border_opt.is_some() {
         let bd = border_opt.unwrap().clone();
-        Border{ color: bd.color, width: bd.width, radius: bd.radius }
+        Border{ color: Color::BLACK, width: bd.width, radius: bd.radius }
     } else {
         default.horizontal_scrollbar.scroller.border
     };

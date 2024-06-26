@@ -40,6 +40,7 @@ pub enum IpgColor {
     INFO,
     LIGHT,
     DARK,
+    BACKGROUND_THEME,
     ALICE_BLUE,
     ANTIQUE_WHITE,
     AQUA,
@@ -201,6 +202,7 @@ pub fn match_ipg_color(color: IpgColor) -> Color {
         IpgColor::INFO => INFO,
         IpgColor::LIGHT => LIGHT,
         IpgColor::DARK => DARK,
+        IpgColor::BACKGROUND_THEME => BACKGROUND_THEME,
         IpgColor::ALICE_BLUE => ALICE_BLUE,
         IpgColor::ANTIQUE_WHITE => ANTIQUE_WHITE,
         IpgColor::AQUA => AQUA,
@@ -376,6 +378,9 @@ pub const LIGHT: Color = GHOST_WHITE;
 
 /// Dark <span style="color:rgb(0.204, 0.227, 0.251)">Color</span>.
 pub const DARK: Color = Color::from_rgb(0.204, 0.227, 0.251);
+
+/// Background Theme which has a unique r value (0.123456) for testing if background theme.
+pub const BACKGROUND_THEME: Color = Color::from_rgb(0.123456, 1.0, 1.0);
 
 /// Alice Blue <span style="color:aliceBlue">Color</span>.
 pub const ALICE_BLUE: Color = Color::from_rgb(0.941, 0.973, 1.0);

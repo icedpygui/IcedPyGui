@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 
-use crate::graphics::colors::{match_ipg_color, IpgColor};
+use crate::graphics::colors::{get_color, match_ipg_color, IpgColor};
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_f64, try_extract_string};
 use crate::style::styling::{lighten, IpgStyleStandard, IpgStylingStandard, StyleBorder};
 use crate::{access_callbacks, access_state};
@@ -460,7 +460,8 @@ pub fn get_styling(theme: &Theme, status: Status,
         };
 
         if color_palette_opt.is_some() {
-            let color_palette = color_palette_opt.unwrap().clone();
+            let mut color_palette = color_palette_opt.unwrap().clone();
+
             let mut text_color: Color = Color::BLACK;
             if palette.is_dark {
                 text_color = Color::WHITE;
@@ -469,9 +470,14 @@ pub fn get_styling(theme: &Theme, status: Status,
             if color_palette.text.is_some() {
                 text_color = color_palette.text.unwrap();
             }
-            
-            let background = Background::new(color_palette.base, text_color);
+           
+            if color_palette.base.is_none() {
+                color_palette.base = get_color(None, Some(IpgColor::PRIMARY), 1.0, false)
+            }
+
+            let background = Background::new(color_palette.base.unwrap(), text_color);
             base_style.background = iced::Background::Color(background.weak.color);
+            hover_style.background = iced::Background::Color(background.base.color);
     
             base_style.text_color = Some(text_color);
             hover_style.text_color = Some(text_color);
@@ -479,14 +485,11 @@ pub fn get_styling(theme: &Theme, status: Status,
             if color_palette.border.is_some() {
                 base_style.border.color = color_palette.border.unwrap();
                 hover_style = base_style.clone();
-                hover_style.background = iced::Background::Color(background.base.color);
             }
 
             if color_palette.icon.is_some() {
                 base_style.icon_color = color_palette.icon.unwrap();
-                hover_style = base_style.clone();
                 hover_style.icon_color = color_palette.icon.unwrap();
-                hover_style.background = iced::Background::Color(background.base.color);
             }
         }
         

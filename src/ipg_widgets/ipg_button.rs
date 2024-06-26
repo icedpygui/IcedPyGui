@@ -1,6 +1,7 @@
 // #![allow(dead_code)]
 #![allow(unused_assignments)]
 
+use crate::graphics::colors::{get_color, IpgColor};
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, access_state, app};
 use super::helpers::{get_height, get_padding, get_width, 
@@ -384,8 +385,13 @@ pub fn get_styling(theme: &Theme, status: Status,
             } else {
                 Color::BLACK
             };
-            let color_palette = color_palette_opt.unwrap().clone();
-            let background = Background::new(color_palette.base, text);
+    
+            let mut color_palette = color_palette_opt.unwrap().clone();
+            
+            if color_palette.base.is_none() {
+                color_palette.base = get_color(None, Some(IpgColor::PRIMARY), 1.0, false)
+            }
+            let background = Background::new(color_palette.base.unwrap(), text);
             base_style.background = Some(iced::Background::Color(background.weak.color));
 
             if color_palette.text.is_some() {

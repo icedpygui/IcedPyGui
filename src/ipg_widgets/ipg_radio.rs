@@ -558,7 +558,6 @@ pub fn get_styling(_theme: &Theme, status: Status,
 
     match border_opt {
         Some(bd) => {
-            border_color = bd.color;
             border_width = bd.width;
         },
         None => (),

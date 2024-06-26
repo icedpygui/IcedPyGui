@@ -481,7 +481,7 @@ pub fn get_styling(_theme: &Theme, status: Status,
     };
 
 
-    let mut border_color = match_ipg_color(IpgColor::PRIMARY);
+    let border_color = match_ipg_color(IpgColor::PRIMARY);
     let mut radius = Radius::from([5.0; 4]);
     let mut border_width = 1.0;
 
@@ -493,7 +493,6 @@ pub fn get_styling(_theme: &Theme, status: Status,
 
     match border_opt {
         Some(bd) => {
-            border_color = bd.color;
             radius = bd.radius;
             border_width = bd.width;
         },

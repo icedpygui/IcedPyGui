@@ -95,10 +95,9 @@ class IPG:
                         padding: List=[10.0],
                         clip: bool=False,
                         show: bool=True,
-                        style_background: Union[None | str]=None,
+                        style_color: Union[None | str]=None,
                         style_border: Union[None | str]=None,
                         style_shadow: Union[None | str]=None,
-                        style_text_color: Union[None | str]=None,
                         ) -> int:
         """
         Adds a generic container to the gui
@@ -143,14 +142,12 @@ class IPG:
                 Whether to clip any text if size > container.
             show: bool
                 Shows or hides container and all of its contents.
-            style_background: str
-                style_id of the add_background_style.
+            style_color: str
+                style_id of the add_styling_color.
             style_border: str
-                style_id of the add_border_style.
+                style_id of the add_styling_border.
             style_shadow: str
-                style_id of the add_shadow_style.
-            style_text_color: str
-                style_id of the add_text_color_style.
+                style_id of the add_styling_shadow.
             
         Returns
         -------
@@ -1476,13 +1473,8 @@ class IPG:
     
     def add_styling_border(self,
                             style_id: str,
-                            rgba: Union[None | List[float]]=None,
-                            color: Union[None | IpgColor]=None,
-                            invert: bool=False,
-                            alpha: float=1.0,
-                            accent_amount: float=0.05,
                             width: float=1.0,
-                            radius: List=[5.0],
+                            radius: List=[2.0],
                             gen_id: Union[None | int]=None,
                             ) -> int:
         """
@@ -1547,10 +1539,6 @@ class IPG:
 
     def add_styling_shadow(self,
                             style_id: Union[None | str]=None,
-                            rgba: Union[None | List[float]]=None,
-                            color: Union[None | IpgColor]=None,
-                            invert: bool=False,
-                            alpha: float=1.0,
                             offset_x: float=0.0,
                             offset_y: float=0.0,
                             blur_radius: float=0.0,
@@ -1563,14 +1551,6 @@ class IPG:
             ----------
                 style_id: str
                     Id of style for use by the containers and widgets.
-                rbga: List[float]
-                    A list of float items for the color [r, g, b, a].
-                color: IpgColor
-                    A color form the class IpgColor
-                invert: bool
-                    Whether to invert the given colors
-                alpha: float
-                    whether to apply a alpha factor to the a.
                 offset_x: float
                     The x vector offset for the shadow.
                 offset_y: float
@@ -2346,6 +2326,7 @@ class IpgColor:
     INFO=0
     LIGHT=0
     DARK=0
+    BACKGROUND_THEME=0
     ALICE_BLUE=0
     ANTIQUE_WHITE=0
     AQUA=0

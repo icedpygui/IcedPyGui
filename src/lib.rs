@@ -359,8 +359,8 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         center_xy=false, clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
                         align_x=IpgContainerAlignment::Start, align_y=IpgContainerAlignment::Start,
-                        padding=DEFAULT_PADDING.to_vec(), show=true, style_background=None, 
-                        style_border=None, style_shadow=None, style_text_color=None
+                        padding=DEFAULT_PADDING.to_vec(), show=true, style_color=None, 
+                        style_border=None, style_shadow=None,
                        ))]
     fn add_container(&mut self,
                         window_id: String,
@@ -379,10 +379,9 @@ impl IPG {
                         align_y: IpgContainerAlignment, 
                         padding: Vec<f64>, 
                         show: bool,
-                        style_background: Option<String>, 
+                        style_color: Option<String>, 
                         style_border: Option<String>, 
                         style_shadow: Option<String>,
-                        style_text_color: Option<String>
                         ) -> PyResult<usize>
     {
         self.id += 1;
@@ -414,10 +413,9 @@ impl IPG {
                                                 align_y,
                                                 center_xy,
                                                 clip,
-                                                style_background, 
+                                                style_color, 
                                                 style_border, 
                                                 style_shadow,
-                                                style_text_color,
                                             )));
 
         drop(state);
@@ -1725,12 +1723,7 @@ impl IPG {
 
         let mut state = access_state();
 
-        let base = if base_color.is_none() && base_rgba.is_none() {
-            panic!("A base color needs to be defined")
-        } else {
-            get_color(base_rgba, base_color, 1.0, false).unwrap()
-        };
-
+        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
         let bar: Option<Color> = get_color(bar_rgba, bar_color, 1.0, false);
         let blur: Option<Color> = get_color(blur_rgba, blur_color, 1.0, false);
         let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
@@ -1826,28 +1819,15 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, scale_alpha=1.0, width=1.0, 
-                        radius=vec![5.0], accent=0.05, gen_id=None))]
+    #[pyo3(signature = (style_id, width=1.0, radius=vec![2.0], gen_id=None))]
     fn add_styling_border(&mut self,
                             style_id: String,
-                            rgba: Option<[f32; 4]>,
-                            color: Option<IpgColor>,
-                            invert: bool,
-                            scale_alpha: f32,
                             width: f32,
                             radius: Vec<f32>,
-                            accent: f32,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
-
-        let color: Color = if rgba.is_some() | color.is_some() {
-            get_color(rgba, color, scale_alpha, invert).unwrap()
-        } else {
-            Color::TRANSPARENT
-        };
 
         let radius: Radius = if radius.len() == 1 {
             Radius::from([radius[0]; 4])
@@ -1862,10 +1842,8 @@ impl IPG {
        
         state.styling_border.insert(style_id, StyleBorder::new( 
                                                 id,
-                                                color,
                                                 radius,
                                                 width,
-                                                accent,
                                                 ));
 
         drop(state);
@@ -1999,15 +1977,10 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, scale_alpha=1.0, offset_x=0.0, 
-                        offset_y=0.0, blur_radius=0.0, gen_id=None))]
+    #[pyo3(signature = (style_id, offset_x=0.0, offset_y=0.0, 
+                        blur_radius=0.0, gen_id=None))]
     fn add_styling_shadow(&mut self,
                             style_id: String,
-                            rgba: Option<[f32; 4]>,
-                            color: Option<IpgColor>,
-                            invert: bool,
-                            scale_alpha: f32,
                             offset_x: f32,
                             offset_y: f32,
                             blur_radius: f32,
@@ -2016,17 +1989,10 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let color: Color = if rgba.is_some() | color.is_some() {
-            get_color(rgba, color, scale_alpha, invert).unwrap()
-        } else {
-            Color::WHITE
-        };
-
         let mut state = access_state();
        
         state.styling_shadow.insert(style_id, StyleShadow::new( 
                                                 id,
-                                                color,
                                                 offset_x,
                                                 offset_y,
                                                 blur_radius,

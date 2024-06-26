@@ -1,10 +1,9 @@
 //!Container container
 #![allow(unused_assignments)]
 
-use iced::{Background, Border, Element, Length, Padding, Shadow, Theme};
+use iced::{Color, Element, Length, Padding, Theme};
 use iced::alignment;
 use iced::widget::{container, Column, Container};
-
 
 use pyo3::pyclass;
 
@@ -26,10 +25,9 @@ pub struct IpgContainer {
     pub align_y: IpgContainerAlignment,
     pub center_xy: bool,
     pub clip: bool,
-    pub style_background: Option<String>, 
+    pub style_color: Option<String>, 
     pub style_border: Option<String>, 
     pub style_shadow: Option<String>,
-    pub style_text_color: Option<String>,
 }
 
 impl IpgContainer {
@@ -46,10 +44,9 @@ impl IpgContainer {
         align_y: IpgContainerAlignment,
         center_xy: bool,
         clip: bool,
-        style_background: Option<String>, 
+        style_color: Option<String>, 
         style_border: Option<String>, 
         style_shadow: Option<String>,
-        style_text_color: Option<String>
     ) -> Self {
         Self {
             id,
@@ -63,10 +60,9 @@ impl IpgContainer {
             align_y,
             center_xy,
             clip,
-            style_background, 
+            style_color, 
             style_border, 
             style_shadow,
-            style_text_color
         }
     }
 }
@@ -74,14 +70,12 @@ impl IpgContainer {
 pub fn construct_container(con: IpgContainer, content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
     // iced container does not take a vec so need to put into a row or column first
     let col_content: Element<'static, Message> = Column::with_children(content)
-                                                                        .width(Length::Shrink)
-                                                                        .height(Length::Shrink)
-                                                                        .into();
+                                                    .width(Length::Shrink)
+                                                    .height(Length::Shrink)
+                                                    .into();
 
     let align_x = get_horizontal(con.align_x.clone(), con.center_xy);
     let align_y = get_vertical(con.align_y.clone(), con.center_xy);
-
-    
 
     let cont: Element<Message> = Container::new(col_content)
                 .padding(con.padding)
@@ -90,11 +84,12 @@ pub fn construct_container(con: IpgContainer, content: Vec<Element<'static, Mess
                 .align_x(align_x)
                 .align_y(align_y)
                 .clip(con.clip)
-                .style(move|Theme|get_styling(&Theme, 
-                                                        con.style_background.clone(), 
-                                                        con.style_border.clone(), 
-                                                        con.style_shadow.clone(),
-                                                        con.style_text_color.clone()))
+                .style(move|Theme|
+                    get_styling(&Theme, 
+                        con.style_color.clone(), 
+                        con.style_border.clone(), 
+                        con.style_shadow.clone(),
+                        ))
                 .into();
     cont.into()
 }
@@ -132,47 +127,73 @@ fn get_vertical(y_align: IpgContainerAlignment, center: bool) -> alignment::Vert
 }
 
 
-pub fn get_styling(_theme: &Theme,
-                style_background: Option<String>, 
+pub fn get_styling(theme: &Theme,
+                style_color: Option<String>, 
                 style_border: Option<String>, 
                 style_shadow: Option<String>,
-                style_text_color: Option<String>) 
-                -> container::Style {
+                ) -> container::Style {
     
     let state = access_state();
 
-    let default_style = container::Style::default();
+    // Basically the default theme, using transparent to clarify
+    let mut base_style = container::transparent(theme);
 
-    let background_opt = if style_background.is_some() {
-        state.styling_background.get(&style_background.unwrap())
+    let palette = theme.extended_palette();
+
+    let color_palette_opt = if style_color.is_some() {
+        state.styling_color.get(&style_color.unwrap())
     } else {
         None
     };
+
+    if color_palette_opt.is_some() {
+
+        let text_color = if palette.is_dark {
+            Color::WHITE
+        } else {
+            Color::BLACK
+        };
+        
+        let color_palette = color_palette_opt.unwrap().clone();
+
+        if color_palette.base.is_none() {
+             base_style.background = None;
+        } else {
+            let color = color_palette.base.unwrap();
+            if color.r == 0.123456 {
+                base_style.background = Some(palette.background.weak.color.into()); 
+            } else {
+                base_style.background = Some(color.into());
+            }
+        }
+
+        if color_palette.text.is_some() {
+            base_style.text_color = Some(color_palette.text.unwrap());
+        } else {
+            base_style.text_color = Some(text_color);
+        }
+        
+        if color_palette.border.is_some() {
+            base_style.border.color = color_palette.border.unwrap();
+        }
+
+        if color_palette.shadow.is_some() {
+            base_style.shadow.color = color_palette.shadow.unwrap();
+        }
+    }
     
-
-   let background =  match background_opt {
-        Some(bg) => {
-            Some(Background::Color(bg.color))
-        },
-        None => default_style.background,
-    };
-
-
     let border_opt = if style_border.is_some() {
         state.styling_border.get(&style_border.unwrap())
     } else {
         None
     };
 
-    let border = match border_opt {
+    match border_opt {
         Some(bd) => {
-            Border {
-                color: bd.color,
-                width: bd.width,
-                radius: bd.radius,
-            }
+            base_style.border.width = bd.width;
+            base_style.border.radius = bd.radius;    
         },
-        None => default_style.border,
+        None => (),
     };
 
 
@@ -182,35 +203,14 @@ pub fn get_styling(_theme: &Theme,
         None
     };
 
-    let shadow: Shadow = match shadow_opt {
+    match shadow_opt {
         Some(sh) => {
-            Shadow {
-                color: sh.color,
-                offset: iced::Vector { x: sh.offset_x, y: sh.offset_y },
-                blur_radius: sh.blur_radius,
-            }
+            base_style.shadow.offset = iced::Vector { x: sh.offset_x, y: sh.offset_y };
+            base_style.shadow.blur_radius = sh.blur_radius;
         },
-        None => default_style.shadow,
+        None => (),
     };
 
-    let text_color_opt = if style_text_color.is_some() {
-        state.styling_text_color.get(&style_text_color.unwrap())
-    } else {
-        None
-    };
-
-    let text_color = match text_color_opt {
-        Some(tc) => {
-            Some(tc.color)
-        },
-        None => default_style.text_color,
-    };
-
-    container::Style {
-            background,
-            border,
-            shadow,
-            text_color,
-            }
+   base_style
 
 }
