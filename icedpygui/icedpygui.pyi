@@ -621,7 +621,9 @@ class IPG:
                     show: bool=True,
                     ) -> int:
         """
-        Adds a checkbox to the gui
+        Adds a checkbox to the gui.
+        When styling, the base color appears during a mouse hover and when checked.  
+        If border color is not assigned, the border color will be the base color.
         
         Parameters
         ----------

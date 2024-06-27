@@ -2,7 +2,7 @@
 
 use crate::graphics::colors::{get_color, match_ipg_color, IpgColor};
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_f64, try_extract_string};
-use crate::style::styling::{lighten, IpgStyleStandard, IpgStylingStandard, StyleBorder};
+use crate::style::styling::{darken, lighten, IpgStyleStandard, IpgStylingStandard, StyleBorder};
 use crate::{access_callbacks, access_state};
 use crate::app;
 use super::helpers::{get_width, get_shaping};
@@ -470,21 +470,38 @@ pub fn get_styling(theme: &Theme, status: Status,
             }
 
             let background = Background::new(color_palette.base.unwrap(), text_color);
-            base_style.background = iced::Background::Color(background.weak.color);
-            hover_style.background = iced::Background::Color(background.base.color);
-    
-            base_style.text_color = Some(text_color);
-            hover_style.text_color = Some(text_color);
+
+            let icon_color = background.strong.text;
+            let base = Color::TRANSPARENT;
+            let accent = background.strong.color;
+            if color_palette.border.is_some() {
+                base_style.border.color = darken(color_palette.border.unwrap(), 0.07);
+            } else {
+                base_style.border.color = accent;
+            }
             
+            base_style = styled(icon_color,
+                                base,
+                                accent,
+                                is_checked,
+                                base_style.border,
+                                Some(text_color));
+
+            let base_hover = color_palette.base.unwrap();
+            let accent_hover = color_palette.base.unwrap();
             if color_palette.border.is_some() {
                 base_style.border.color = color_palette.border.unwrap();
-                hover_style = base_style.clone();
+            } else {
+                hover_style.border.color = accent_hover;
             }
-
-            if color_palette.icon.is_some() {
-                base_style.icon_color = color_palette.icon.unwrap();
-                hover_style.icon_color = color_palette.icon.unwrap();
-            }
+            
+            hover_style = styled(icon_color,
+                                base_hover,
+                                accent_hover,
+                                is_checked,
+                                hover_style.border,
+                                Some(text_color));
+                    
         }
         
     }
