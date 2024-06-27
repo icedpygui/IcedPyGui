@@ -65,25 +65,25 @@ ipg.add_button(parent_id="row_btn", label="Default",
 
 ipg.add_button(parent_id="row_btn", label="Primary\nborder & shadow", 
                on_press=on_press,
-               style_standard="btn_p",
+               style_standard=IpgStyleStandard.Primary,
                style_border="btn_border",
                style_shadow="btn_shadow")
 
 ipg.add_button(parent_id="row_btn", label="Success\nborder & shadow", 
                on_press=on_press,
-               style_standard="btn_s",
+               style_standard=IpgStyleStandard.Success,
                 style_border="btn_border",
                style_shadow="btn_shadow")
 
 ipg.add_button(parent_id="row_btn", label="Danger\nborder & shadow", 
                on_press=on_press,
-               style_standard="btn_d",
+               style_standard=IpgStyleStandard.Danger,
                 style_border="btn_border",
                style_shadow="btn_shadow")
 
 ipg.add_button(parent_id="row_btn", label="Text", 
                on_press=on_press,
-               style_standard="btn_t")
+               style_standard=IpgStyleStandard.Text)
 
 ipg.add_row(window_id="main", container_id="row_btn2", parent_id="col",
             align_items=IpgRowAlignment.Center)

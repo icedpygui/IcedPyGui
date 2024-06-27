@@ -1,4 +1,5 @@
 //!ipg_timer
+use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, app};
 
 use iced::widget::{Button, Text};
@@ -24,7 +25,7 @@ pub struct IpgTimer {
     pub width: Length,
     pub height: Length,
     pub padding: Padding,
-    pub style_background: Option<String>,
+    pub style_standard: Option<IpgStyleStandard>,
     pub style_border: Option<String>,
     pub style_shadow: Option<String>,
     pub style_text_color: Option<String>,
@@ -44,7 +45,7 @@ impl IpgTimer {
         width: Length,
         height: Length,
         padding: Padding,
-        style_background: Option<String>,
+        style_standard: Option<IpgStyleStandard>,
         style_border: Option<String>,
         style_shadow: Option<String>,
         style_text_color: Option<String>,
@@ -59,7 +60,7 @@ impl IpgTimer {
             width,
             height,
             padding,
-            style_background,
+            style_standard,
             style_border,
             style_shadow,
             style_text_color,
@@ -110,7 +111,7 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
                                 .on_press(on_press)
                                 .style(move|theme: &Theme, status| {
                                     get_styling(theme, status, 
-                                                tim.style_background.clone(), 
+                                                tim.style_standard.clone(), 
                                                 tim.style_border.clone(), 
                                                 tim.style_shadow.clone(),
                                                 tim.style_text_color.clone())})

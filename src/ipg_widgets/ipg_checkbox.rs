@@ -42,7 +42,7 @@ pub struct IpgCheckBox {
     // font: Option<Font>,
     pub icon_x: bool,
     pub icon_size: f32,
-    pub style_standard: Option<String>,
+    pub style_standard: Option<IpgStyleStandard>,
     pub style_color: Option<String>,
     pub style_border: Option<String>,
 }
@@ -63,7 +63,7 @@ impl IpgCheckBox {
         text_shaping: Shaping,
         icon_x: bool,
         icon_size: f32,
-        style_standard: Option<String>,
+        style_standard: Option<IpgStyleStandard>,
         style_color: Option<String>,
         style_border: Option<String>,
         ) -> Self {
@@ -293,7 +293,7 @@ pub fn try_extract_checkbox_update(update_obj: PyObject) -> IpgCheckboxParams {
 }
 
 pub fn get_styling(theme: &Theme, status: Status,
-                    style_standard: Option<String>, 
+                    style_standard: Option<IpgStyleStandard>, 
                     style_color: Option<String>, 
                     style_border: Option<String>,
                     is_checked: bool, 
@@ -342,15 +342,9 @@ pub fn get_styling(theme: &Theme, status: Status,
         }
     }
 
-    let style_std_opt = if style_standard.is_some() {
-        state.styling_standard.get(&style_standard.clone().unwrap())
-    } else {
-        None
-    };
-
     // repeating the standard styles so one can modify the border of a standard style
-    if style_std_opt.is_some() {
-        let style_std = style_std_opt.unwrap().standard.clone();
+    if style_standard.is_some() {
+        let style_std = style_standard.clone().unwrap();
 
         match style_std {
             IpgStyleStandard::Primary => {

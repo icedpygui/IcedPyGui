@@ -32,15 +32,15 @@ def on_toggle(_chkbx_id: int, is_checked: bool):
 
 def add_checkboxes():
     ipg.add_checkbox(parent_id="row", label="Primary",
-                    style_standard="std_p",
+                    style_standard=IpgStyleStandard.Primary,
                     on_toggle=on_toggle)
 
     ipg.add_checkbox(parent_id="row", label="Success",
-                    style_standard="std_s",
+                    style_standard=IpgStyleStandard.Success,
                     on_toggle=on_toggle)
 
     ipg.add_checkbox(parent_id="row", label="Danger",
-                    style_standard="std_d",
+                    style_standard=IpgStyleStandard.Danger,
                     on_toggle=on_toggle)
     
     # Add the second checkbox.  This has no callback since it not used.

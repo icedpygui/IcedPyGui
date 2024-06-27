@@ -34,7 +34,7 @@ pub struct IpgButton {
     pub height: Length,
     pub padding: Padding,
     pub clip: bool,
-    pub style_standard: Option<String>,
+    pub style_standard: Option<IpgStyleStandard>,
     pub style_color: Option<String>,
     pub style_border: Option<String>,
     pub style_shadow: Option<String>,
@@ -52,7 +52,7 @@ impl IpgButton {
         height: Length,
         padding: Padding,
         clip: bool,
-        style_standard: Option<String>,
+        style_standard: Option<IpgStyleStandard>,
         style_color: Option<String>,
         style_border: Option<String>,
         style_shadow: Option<String>,
@@ -264,7 +264,7 @@ pub fn get_standard_style(theme: &Theme, status: Status, style: Option<IpgStyleS
 }
 
 pub fn get_styling(theme: &Theme, status: Status,
-                    style_standard: Option<String>, 
+                    style_standard: Option<IpgStyleStandard>, 
                     style_color: Option<String>, 
                     style_border: Option<String>, 
                     style_shadow: Option<String>,
@@ -277,17 +277,11 @@ pub fn get_styling(theme: &Theme, status: Status,
     let mut hover_style = styled(palette.primary.strong);
     hover_style.background = Some(iced::Background::Color(palette.primary.base.color));
 
-    let style_std_opt = if style_standard.is_some() {
-        state.styling_standard.get(&style_standard.unwrap())
-    } else {
-        None
-    };
-
     let mut std_selected = false;
     
-    if style_std_opt.is_some() {
+    if style_standard.is_some() {
         std_selected = true;
-        let style_std = style_std_opt.unwrap().standard.clone();
+        let style_std = style_standard.unwrap().clone();
         match style_std {
             IpgStyleStandard::Primary => {
                 hover_style = styled(palette.primary.strong);
