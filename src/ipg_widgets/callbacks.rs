@@ -17,6 +17,7 @@ pub struct WidgetCallbackIn {
     pub counter: Option<u64>,
     pub index: Option<usize>,
     pub index_table: Option<(usize, usize)>,
+    pub increment_value: Option<i8>,
     pub is_submitted: Option<bool>,
     pub on_toggle: Option<bool>,
     pub is_checked: Option<bool>,
@@ -129,35 +130,32 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                 IpgWidgets::IpgDatePicker(dp) => {
                     
                     if wci.selected_day.is_some() {
-                        dp.selected_day = match wci.selected_day {
-                            Some(day) => day,
-                            None => panic!("DatePicker could not find selected_day"),
-                        };
+                        dp.selected_day = wci.selected_day.unwrap();
                     }
+                    // month index
                     if wci.index.is_some() {
-                        let index = match wci.index {
-                                            Some(idx) => idx,
-                                            None => panic!("Index not found")
-                                        };
-                        if index == 12 {
+                        let increment = wci.increment_value.unwrap();
+                        let index = wci.index.unwrap();
+                        if index == 12 && increment == 1 {
                             dp.selected_month_index = 1
+                        } else if index == 1 && increment == -1 {
+                            dp.selected_month_index = 12;
+                        } else if increment == -1 {
+                            dp.selected_month_index -= 1;
                         } else {
-                            dp.selected_month_index += 1; 
+                            dp.selected_month_index += 1;
                         }
-                        dp.selected_month = MONTH_NAMES[index].to_string();
+                        
+                        dp.selected_month = MONTH_NAMES[dp.selected_month_index].to_string();
                     }
                     
                     if wci.selected_year.is_some() {
-                        dp.selected_year = match wci.selected_year {
-                                            Some(yr) => yr + dp.selected_year,
-                                            None => panic!("Selected year not found")
-                                        };
+                        let yr = wci.selected_year.unwrap();
+                        dp.selected_year = yr + dp.selected_year;             
                     }
+
                     if wci.date_format.is_some() {
-                        dp.selected_format = match wci.date_format {
-                            Some(format) => format,
-                            None => panic!("DatePicker selected_format could not be found."),
-                        };
+                        dp.selected_format = wci.date_format.unwrap();
                     }
                     dp.selected_date = format_date(
                                                     dp.selected_format.clone(), 
@@ -166,18 +164,11 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                                                     dp.selected_day
                                                     );
                     
-                    
                     if wci.is_submitted.is_some() {
-                        dp.is_submitted = match wci.is_submitted {
-                            Some(is_sub) => is_sub,
-                            None => panic!("DatePicker is_submitted not found")
-                        }
+                        dp.is_submitted = wci.is_submitted.unwrap();
                     }
                     if wci.show.is_some() {
-                        dp.show = match wci.show {
-                            Some(sh) => sh,
-                            None => panic!("DatePicker show is not found"),
-                        }
+                        dp.show = wci.show.unwrap();
                     };
                     let mut wco = WidgetCallbackOut::default();
                     wco.selected_date = Some(dp.selected_date.clone());

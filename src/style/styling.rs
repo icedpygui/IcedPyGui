@@ -1,6 +1,6 @@
 //!Styling
 use iced::border::Radius;
-use iced::{Background, Border, Color, Theme};
+use iced::{Background, Color, Theme};
 use iced::widget::container;
 use palette::{FromColor, Hsl};
 use palette::rgb::Rgb;
@@ -281,19 +281,6 @@ impl StyleFillMode {
             padded,
             asymmetric_padding,
         }
-    }
-}
-
-
-pub fn date_picker_container(_theme: &Theme) -> container::Style {
-    container::Style {
-        background: Some(Background::Color(Color::from_rgba(0.7, 0.5, 0.6, 1.0))),
-        border: Border {
-            radius: 4.0.into(),
-            width: 1.0,
-            color: Color::TRANSPARENT,
-        },
-        ..Default::default()
     }
 }
 

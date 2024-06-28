@@ -2,8 +2,6 @@
 
 use crate::app::{Message, self};
 use crate::access_callbacks;
-use crate::graphics::colors::{match_ipg_color, IpgColor};
-use crate::style::styling::{date_picker_container, lighten};
 use super::ipg_modal::IpgModal;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
@@ -14,11 +12,10 @@ use super::helpers::{get_padding, try_extract_boolean,
     DATE_FORMATS, DAYS, MONTH_NAMES, WEEKDAYS};
 
 use iced::advanced::graphics::core::Element;
-use iced::border::Radius;
 use iced::widget::button::{self, Status};
-use iced::{Background, Length, Padding, Renderer, Theme};
+use iced::{Background, Border, Color, Length, Padding, Renderer, Theme};
 use iced::alignment::{self, Alignment};
-use iced::widget::{Button, Column, Container, PickList, Row, Space, Text};
+use iced::widget::{container, Button, Column, Container, PickList, Row, Space, Text};
 
 use chrono::prelude::*;
 use pyo3::{pyclass, PyObject, Python};
@@ -222,6 +219,7 @@ fn calendar_show_button(dp: IpgDatePicker) -> Element<'static, Message, Theme, R
                                     .on_press(DPMessage::ShowModal)
                                     .height(Length::Shrink)
                                     .width(Length::Shrink)
+                                    .style(move|theme, status| button::primary(theme, status))
                                     .into();
 
     let s_btn: Element<Message, Theme, Renderer> = 
@@ -259,6 +257,7 @@ fn create_first_row_arrows(id: usize, selected_month: String,
                         .width(btn_arrow_width)
                         .height(btn_arrow_height)
                         .padding(padding)
+                        .style(move|theme, status| button::text(theme, status))
                         .into();
     let month_left_btn: Element<'_, Message, Theme, Renderer> = 
                 left_btn.map(move |message| Message::DatePicker(id, message));
@@ -269,6 +268,7 @@ fn create_first_row_arrows(id: usize, selected_month: String,
                         .width(btn_arrow_width)
                         .height(btn_arrow_height)
                         .padding(padding)
+                        .style(move|theme, status| button::text(theme, status))
                         .into();
     let month_right_btn: Element<'_, Message, Theme, Renderer> = 
                 right_btn.map(move |message| Message::DatePicker(id, message));
@@ -279,6 +279,7 @@ fn create_first_row_arrows(id: usize, selected_month: String,
                         .width(btn_arrow_width)
                         .height(btn_arrow_height)
                         .padding(padding)
+                        .style(move|theme, status| button::text(theme, status))
                         .into();
     let year_left_btn: Element<'_, Message, Theme, Renderer> = 
                 left_btn.map(move |message| Message::DatePicker(id, message));
@@ -289,6 +290,7 @@ fn create_first_row_arrows(id: usize, selected_month: String,
                         .width(btn_arrow_width)
                         .height(btn_arrow_height)
                         .padding(padding)
+                        .style(move|theme, status| button::text(theme, status))
                         .into();
     let year_right_btn: Element<'_, Message, Theme, Renderer> = 
                 right_btn.map(move |message| Message::DatePicker(id, message));
@@ -423,6 +425,7 @@ fn create_select_row(id: usize,
     let cl_button: Element<DPMessage, Theme, Renderer> = 
                                 Button::new(close_text)
                                     .on_press(DPMessage::HideModal)
+                                    .style(move|theme, status| button::primary(theme, status))
                                     .into();
                                 
     let close_button: Element<Message, Theme, Renderer> = 
@@ -456,6 +459,7 @@ fn create_submit_row(id: usize, size_factor: f32, selected_date: String) -> Elem
     let submit_btn: Element<DPMessage, Theme, Renderer> = 
                                             Button::new(submit_text)
                                                     .on_press(DPMessage::OnSubmit)
+                                                    .style(move|theme, status| button::primary(theme, status))
                                                     .into();
     let submit_btn_mapped: Element<Message, Theme, Renderer> = 
                                 submit_btn.map(move |message| app::Message::DatePicker(id, message));
@@ -506,6 +510,7 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.index = Some(index);
+            wci.increment_value = Some(1);
             wci.is_submitted = Some(false);
             let _ = get_set_widget_callback_data(wci);
         }
@@ -514,6 +519,7 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.index = Some(index);
+            wci.increment_value = Some(-1);
             wci.is_submitted = Some(false);
             let _ = get_set_widget_callback_data(wci);
         }
@@ -641,37 +647,25 @@ pub fn try_extract_date_picker_update(update_obj: PyObject) -> IpgDatePickerPara
 }
 
 
-fn get_styling(_theme: &Theme, status: Status, style: String) -> button::Style{
+fn get_styling(theme: &Theme, status: Status, style: String) -> button::Style {
 
-    let mut color = match_ipg_color(IpgColor::PRIMARY);
-
-    if style == "success" {
-        color = match_ipg_color(IpgColor::SUCCESS);
+    match style.as_str() {
+        "primary" => button::primary(theme, status),
+        "success" => button::success(theme, status),
+        _ => button::primary(theme, status),
     }
-
-    let base_style = button::Style {
-        background: Some(Background::Color(color)),
-        border: iced::Border { color: color, width: 1.0, radius: Radius::from([10.0; 4]) },
-        text_color: match_ipg_color(IpgColor::ANTIQUE_WHITE),
-        ..Default::default()
-        };
-
-    match status {
-        Status::Active | Status::Pressed => base_style,
-        Status::Hovered => button::Style {
-            background: Some(Background::Color(lighten(color, 0.05))),
-            ..base_style
-        },
-        Status::Disabled => disabled(base_style),
-    }
+    
 }
+    
 
-fn disabled(style: button::Style) -> button::Style {
-    button::Style {
-        background: style
-            .background
-            .map(|background| background.scale_alpha(0.5)),
-        text_color: style.text_color.scale_alpha(0.5),
-        ..style
+pub fn date_picker_container(_theme: &Theme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(Color::from_rgba(0.7, 0.5, 0.6, 1.0))),
+        border: Border {
+            radius: 4.0.into(),
+            width: 1.0,
+            color: Color::TRANSPARENT,
+        },
+        ..Default::default()
     }
 }
