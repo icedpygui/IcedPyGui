@@ -1,17 +1,26 @@
 from icedpygui import IPG, IpgMenuSepTypes, IpgMenuParams, IpgTextParams
-from icedpygui import IpgMenuItemType, IpgMenuItemStyle
+from icedpygui import IpgMenuItemType, IpgStyleStandard
 from collections import OrderedDict
 
 
 ipg = IPG()
 
 
-# Simple callback where we put the label name that was pressed
-# into a text widget.  Callback params are selected by importing
-# the appropriate widgets parameter enums and selecting the parameter.
-def menu_pressed(_menu_id, data, user_data):
-    ipg.update_item(text_id1, IpgTextParams.Content, f"You selected menu iten - {data}")
-    ipg.update_item(text_id2, IpgTextParams.Content, f"Your user data - {user_data}")
+# The menu callback requires 4 parameters and an optional user_data
+# if a checkbox or toggler is used, the status will be the 4th parameter
+# or None is not used or selected. Use the indexes to determine which
+# widget was selected.
+def menu_pressed(_menu_id, bar_index, menu_index, toggled, user_data):
+    ipg.update_item(text_id0, IpgTextParams.Content, f"You selected bar item - {bar_index}")
+    ipg.update_item(text_id1, IpgTextParams.Content, f"You selected menu item - {menu_index}")
+    if bar_index == 2 and menu_index == 1:
+        check_or_tog = f"Your checkbox - {toggled}"
+    elif bar_index == 2 and menu_index == 2:
+        check_or_tog = f"Your toggler - {toggled}"
+    elif toggled is None:
+        check_or_tog = f"Your checkbox or toggler - {toggled}"
+    ipg.update_item(text_id2, IpgTextParams.Content, check_or_tog)
+    ipg.update_item(text_id3, IpgTextParams.Content, f"Your user data - {user_data}")
 
 
 # The callbacks below allow you to change all of the parameters for a widget.
@@ -88,7 +97,7 @@ separators = [(0, 0, IpgMenuSepTypes.Dot), (1, 1, IpgMenuSepTypes.Line), (2, 0, 
 item_type = [(2, 1, IpgMenuItemType.Checkbox), (2, 2, IpgMenuItemType.Toggler)]
 
 # We change the style of position 1, 3 to primary
-item_style = [(1, 3, IpgMenuItemStyle.Primary)]
+item_style = [(1, 3, IpgStyleStandard.Primary)]
 
 
 # Finally, we add the menu.  The separators are optional parameters.
@@ -102,8 +111,10 @@ menu_id = ipg.add_menu("col", items, widths, spacing,
 ipg.add_space("col", height=120)
 
 # text info widgets
-text_id1 = ipg.add_text("col", "You selected menu iten - ")
-text_id2 = ipg.add_text("col", "Your user data - ")
+text_id0 = ipg.add_text("col", "bar item")
+text_id1 = ipg.add_text("col", "menu iten")
+text_id2 = ipg.add_text("col", "checkbox or toggler")
+text_id3 = ipg.add_text("col", "user data - ")
 
 # let's add a button to change the widths parameter.
 ipg.add_button("col", "Update Menu Widths - The widths will shorten", on_press=update_menu_widths)

@@ -208,7 +208,7 @@ pub fn menu_callback(id: usize, message: MenuMessage) {
             wco.id = id;
             wco.bar_index = Some(bar_index);
             wco.menu_index = Some(menu_index);
-            wco.event_name = "on_press".to_string();
+            wco.event_name = "on_select".to_string();
             process_callback(wco);
         }
         MenuMessage::ItemCheckToggled(is_checked, (bar_index, menu_index)) => {
@@ -217,16 +217,16 @@ pub fn menu_callback(id: usize, message: MenuMessage) {
             wco.id = id;
             wco.bar_index = Some(bar_index);
             wco.menu_index = Some(menu_index);
-            wco.event_name = "on_check".to_string();
+            wco.event_name = "on_select".to_string();
             process_callback(wco);
         },
         MenuMessage::ItemTogToggled(togged, (bar_index, menu_index)) => {
-            wci.on_toggle = Some(togged);
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wci.on_toggle = Some(togged)
+;            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
             wco.bar_index = Some(bar_index);
             wco.menu_index = Some(menu_index);
-            wco.event_name = "on_toggle".to_string();
+            wco.event_name = "on_select".to_string();
             process_callback(wco);
         },
     }
@@ -248,10 +248,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
         None => panic!("Menu callback could not be found with id {}", wco.id),
     };
 
-    let bar_index = match wco.bar_index {
-        Some(index) => index,
-        None => panic!("Menu: bar item could not be processed")
-    };
+    let bar_index = wco.bar_index.unwrap();
 
     let menu_index_opt: Option<usize> = match wco.menu_index {
         Some(index) => {
@@ -264,6 +261,12 @@ pub fn process_callback(wco: WidgetCallbackOut)
         None => panic!("Menu: bar item could not be processed")
     };
 
+    let toggled: Option<bool> = if wco.is_checked.is_some() {
+        wco.is_checked
+    } else if wco.on_toggle.is_some() {
+        wco.on_toggle
+    } else {None};
+
     Python::with_gil(|py| {
             if wco.user_data.is_some() {
                 let user_data = match wco.user_data {
@@ -273,22 +276,24 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 let res = callback.call1(py, (
                                                                     wco.id.clone(),
                                                                     bar_index,
-                                                                    menu_index_opt,  
+                                                                    menu_index_opt,
+                                                                    toggled,  
                                                                     user_data
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Menu: 2 parameters (id, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Menu: 5 parameters (id, bar_index, menu_index, toggled, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = callback.call1(py, (
                                                                     wco.id.clone(),
                                                                     bar_index,
-                                                                    menu_index_opt,  
+                                                                    menu_index_opt,
+                                                                    toggled,  
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Menu: 1 parameter (id) is required or a python error in this function. {er}"),
+                    Err(er) => panic!("Menu: 4 parameter (id, bar_index, menu_index, toggled) is required or a python error in this function. {er}"),
                 }
             } 
     });

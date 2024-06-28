@@ -204,7 +204,6 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                         menu.is_toggled = wci.on_toggle.unwrap();
                         wco.on_toggle = wci.on_toggle;
                     }
-                    
                     wco.user_data = menu.user_data.clone();
                     wco
                 },
