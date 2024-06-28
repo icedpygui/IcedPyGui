@@ -2373,8 +2373,8 @@ impl IPG {
                         start_label="Start Timer".to_string(), 
                         stop_label="Stop Timer".to_string(), width=None, height=None, 
                         width_fill=false, height_fill=false, padding=vec![10.0], 
-                        style_standard=None, style_border=None, style_shadow=None,
-                        style_text_color=None, arrow_style=None, user_data=None))]
+                        style_standard=None, style_color=None, style_border=None, 
+                        style_shadow=None, style_arrow=None, user_data=None))]
     fn add_timer(&mut self,
                         parent_id: String,
                         duration_ms: u64,
@@ -2389,10 +2389,10 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         style_standard: Option<IpgStyleStandard>,
+                        style_color: Option<String>,
                         style_border: Option<String>,
                         style_shadow: Option<String>,
-                        style_text_color: Option<String>,
-                        arrow_style: Option<PyObject>,
+                        style_arrow: Option<PyObject>,
                         user_data: Option<PyObject>
                     ) -> PyResult<usize>
     {
@@ -2427,10 +2427,10 @@ impl IPG {
                                                             height,
                                                             padding,
                                                             style_standard,
+                                                            style_color,
                                                             style_border,
                                                             style_shadow,
-                                                            style_text_color,
-                                                            arrow_style,
+                                                            style_arrow,
                                                             user_data, 
                                                             )));
 

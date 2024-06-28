@@ -56,7 +56,7 @@ impl IpgButton {
         style_color: Option<String>,
         style_border: Option<String>,
         style_shadow: Option<String>,
-        arrow_style: Option<PyObject>,
+        style_arrow: Option<PyObject>,
         ) -> Self {
         Self {
             id,
@@ -71,7 +71,7 @@ impl IpgButton {
             style_color,
             style_border,
             style_shadow,
-            style_arrow: arrow_style,
+            style_arrow,
         }
     }
 }

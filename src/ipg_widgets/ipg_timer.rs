@@ -26,10 +26,10 @@ pub struct IpgTimer {
     pub height: Length,
     pub padding: Padding,
     pub style_standard: Option<IpgStyleStandard>,
+    pub style_color: Option<String>,
     pub style_border: Option<String>,
     pub style_shadow: Option<String>,
-    pub style_text_color: Option<String>,
-    pub arrow_style: Option<PyObject>,
+    pub style_arrow: Option<PyObject>,
     pub user_data: Option<PyObject>,
     pub counter: u64,
     pub started: bool,
@@ -46,10 +46,10 @@ impl IpgTimer {
         height: Length,
         padding: Padding,
         style_standard: Option<IpgStyleStandard>,
+        style_color: Option<String>,
         style_border: Option<String>,
         style_shadow: Option<String>,
-        style_text_color: Option<String>,
-        arrow_style: Option<PyObject>,
+        style_arrow: Option<PyObject>,
         user_data: Option<PyObject>,
         ) -> Self {
         Self {
@@ -61,10 +61,10 @@ impl IpgTimer {
             height,
             padding,
             style_standard,
+            style_color,
             style_border,
             style_shadow,
-            style_text_color,
-            arrow_style,
+            style_arrow,
             user_data,
             counter: 0,
             started: false,
@@ -96,11 +96,11 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
         label = Text::new(tim.stop_label.clone());
     }
 
-    if tim.arrow_style.is_some() {
-        let arrow_style = try_extract_button_arrow(tim.arrow_style);
-        label = match arrow_style {
+    if tim.style_arrow.is_some() {
+        let style_arrow = try_extract_button_arrow(tim.style_arrow);
+        label = match style_arrow {
             Some(ar) => Text::new(ar).font(ICON_FONT),
-            None => panic!("Timer: Could not get extract arrow_style")
+            None => panic!("Timer: Could not get extract style_arrow")
         };
     }
     
@@ -112,9 +112,10 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
                                 .style(move|theme: &Theme, status| {
                                     get_styling(theme, status, 
                                                 tim.style_standard.clone(), 
+                                                tim.style_color.clone(),
                                                 tim.style_border.clone(), 
                                                 tim.style_shadow.clone(),
-                                                tim.style_text_color.clone())})
+                                                )})
                                 .into();
     
     timer_btn.map(move |message: TIMMessage| app::Message::Timer(tim.id, message))
