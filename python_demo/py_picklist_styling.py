@@ -80,10 +80,11 @@ ipg.add_text(parent_id="row4", content="Arrow Custom Style sized to 20.")
 
 
 # Setup some styling
-ipg.add_styling_background("bkg", color=IpgColor.DARK_OLIVE_GREEN)
-ipg.add_styling_border("border", color=IpgColor.ANTIQUE_WHITE)
-ipg.add_styling_handle_color("handle", color=IpgColor.DARK_SEA_GREEN)
-ipg.add_styling_text_color("text", color=IpgColor.LIGHT_GREEN)
+ipg.add_styling_color("colors", 
+                        base_color=IpgColor.DARK_OLIVE_GREEN,
+                        border_color=IpgColor.ANTIQUE_WHITE,
+                        handle_color=IpgColor.DARK_SEA_GREEN,
+                        text_color=IpgColor.LIGHT_GREEN)
 
 # add another row for picklist
 ipg.add_row("main", "row5", parent_id="col")
@@ -93,10 +94,8 @@ ipg.add_row("main", "row5", parent_id="col")
 pl_id = ipg.add_pick_list(parent_id="row5", options=options, 
                             arrow_size=25.0,
                             placeholder="Choose a Number...",
-                            style_background="bkg",
+                            style_color="colors",
                             style_border="border",
-                            style_handle_color="handle",
-                            style_text_color="text"
                             )
 
 ipg.add_text(parent_id="row5", content="Background, Border, Handle, and Text styling")

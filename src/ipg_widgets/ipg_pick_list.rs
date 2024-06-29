@@ -3,8 +3,6 @@
 use crate::access_callbacks;
 use crate::access_state;
 use crate::app;
-use crate::graphics::colors::match_ipg_color;
-use crate::graphics::colors::IpgColor;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
@@ -16,19 +14,9 @@ use super::helpers::try_extract_string;
 use super::helpers::try_extract_vec_f64;
 use super::ipg_button::get_bootstrap_arrow_char;
 use super::ipg_button::IpgButtonArrows;
-use crate::style::styling::lighten;
 
-
-use iced::border::Radius;
-use iced::widget::pick_list;
-use iced::widget::pick_list::Status;
-use iced::widget::pick_list::Style;
-use iced::Background;
-use iced::Border;
-use iced::Color;
-use iced::Font;
-use iced::Pixels;
-use iced::Theme;
+use iced::widget::pick_list::{self, Status};
+use iced::{Color, Font, Pixels, Theme, theme};
 use iced::{Padding, Length, Element};
 use iced::widget::{PickList, Space};
 use iced::widget::pick_list::{Handle, Icon};
@@ -57,10 +45,9 @@ pub struct IpgPickList {
     pub dynamic_closed: Option<IpgButtonArrows>,
     pub dynamic_open: Option<IpgButtonArrows>,
     pub custom_static: Option<IpgButtonArrows>,
-    pub style_background: Option<String>,
+    pub style_standard: Option<String>,
+    pub style_color: Option<String>,
     pub style_border: Option<String>,
-    pub style_handle_color: Option<String>,
-    pub style_text_color: Option<String>,
 }
 
 impl IpgPickList {
@@ -82,10 +69,9 @@ impl IpgPickList {
         dynamic_closed: Option<IpgButtonArrows>,
         dynamic_open: Option<IpgButtonArrows>,
         custom_static: Option<IpgButtonArrows>,
-        style_background: Option<String>,
+        style_standard: Option<String>,
+        style_color: Option<String>,
         style_border: Option<String>,
-        style_handle_color: Option<String>,
-        style_text_color: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -104,10 +90,9 @@ impl IpgPickList {
             dynamic_closed,
             dynamic_open,
             custom_static,
-            style_background,
+            style_standard,
+            style_color,
             style_border,
-            style_handle_color,
-            style_text_color,
         }
     }
 }
@@ -154,10 +139,9 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
                                         .handle(handle)
                                         .style(move|theme: &Theme, status| {   
                                             get_styling(theme, status, 
-                                                pick.style_background.clone(), 
+                                                pick.style_standard.clone(),
+                                                pick.style_color.clone(), 
                                                 pick.style_border.clone(),
-                                                pick.style_handle_color.clone(),
-                                                pick.style_text_color.clone(),
                                             )  
                                             })
                                         .into();
@@ -296,10 +280,9 @@ pub enum IpgPickListParams {
     Placeholder,
     Padding,
     Show,
-    StyleBackground,
+    StyleStandard,
+    StyleColor,
     StyleBorder,
-    StyleHandleColor,
-    StyleTextColor,
     TextSize,
     TextLineHeight,
     Width,
@@ -330,21 +313,17 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
         IpgPickListParams::Show => {
             pl.show = try_extract_boolean(value);
         },
-        IpgPickListParams::StyleBackground => {
+        IpgPickListParams::StyleStandard => {
             let val = try_extract_string(value);
-            pl.style_background = Some(val);
+            pl.style_standard = Some(val);
+        },
+        IpgPickListParams::StyleColor => {
+            let val = try_extract_string(value);
+            pl.style_color = Some(val);
         },
         IpgPickListParams::StyleBorder => {
             let val = try_extract_string(value);
             pl.style_border = Some(val);
-        },
-        IpgPickListParams::StyleHandleColor => {
-            let val = try_extract_string(value);
-            pl.style_handle_color = Some(val);
-        },
-        IpgPickListParams::StyleTextColor => {
-            let val = try_extract_string(value);
-            pl.style_text_color = Some(val);
         },
         IpgPickListParams::TextSize => {
             let size = try_extract_f64(value);
@@ -457,33 +436,56 @@ fn get_handle(ipg_handle: IpgPickListHandle,
 }
 
 
-pub fn get_styling(_theme: &Theme, status: Status, 
-                    style_background: Option<String>, 
+pub fn get_styling(theme: &Theme, status: Status, 
+                    _style_standard: Option<String>,
+                    style_color: Option<String>, 
                     style_border: Option<String>,
-                    style_handle_color: Option<String>,
-                    style_text_color: Option<String>) 
-                    -> pick_list::Style {
+                    ) -> pick_list::Style {
     
+    let mut base_style = pick_list::default(theme, status);
+    let mut hover_style = pick_list::default(theme, status);
+
+    let palette = theme.extended_palette();
+
     let state = access_state();
 
-    let background_opt = if style_background.is_some() {
-        state.styling_background.get(&style_background.unwrap())
+    let color_palette_opt = if style_color.is_some() {
+        state.styling_color.get(&style_color.unwrap())
     } else {
         None
     };
     
-    let bg_color = match_ipg_color(IpgColor::PRIMARY);
-    let (background, hover_factor) = match background_opt {
-        Some(bg) => {
-            (Background::Color(bg.color), bg.accent)
-        },
-        None => (Background::Color(bg_color), 0.05),
-    };
+    if color_palette_opt.is_some() {
+        let text = if palette.is_dark {
+            Color::WHITE
+        } else {
+            Color::BLACK
+        };
 
+        let color_palette = color_palette_opt.unwrap().clone();
+        
+        let background = theme::palette::Background::new(color_palette.base.unwrap(), text);
+        base_style.background = iced::Background::Color(background.weak.color);
 
-    let border_color = match_ipg_color(IpgColor::PRIMARY);
-    let mut radius = Radius::from([5.0; 4]);
-    let mut border_width = 1.0;
+        if color_palette.text.is_some() {
+            base_style.text_color = color_palette.text.unwrap();
+            hover_style.text_color = color_palette.text.unwrap();
+        }
+        
+        if color_palette.border.is_some() {
+            let border_color = theme::palette::Background::new(color_palette.border.unwrap(), text);
+            base_style.border.color = border_color.base.color;
+            hover_style.border.color = border_color.strong.color;
+        }
+
+        if color_palette.placeholder.is_some() {
+            base_style.placeholder_color = color_palette.placeholder.unwrap(); 
+        }
+
+        if color_palette.handle.is_some() {
+            base_style.handle_color = color_palette.handle.unwrap(); 
+        }
+    }
 
     let border_opt = if style_border.is_some() {
         state.styling_border.get(&style_border.unwrap())
@@ -491,59 +493,18 @@ pub fn get_styling(_theme: &Theme, status: Status,
         None
     };
 
-    match border_opt {
-        Some(bd) => {
-            radius = bd.radius;
-            border_width = bd.width;
-        },
-        None => (),
+    if border_opt.is_some() {
+        let bd = border_opt.unwrap();
+        base_style.border.radius = bd.radius;
+        base_style.border.width = bd.width;
+        hover_style.border.radius = bd.radius;
+        hover_style.border.width = bd.width;
     }
-
-    let border = Border{ color: border_color, width: border_width, radius };
-
-    let text_color_opt = if style_text_color.is_some() {
-        state.styling_text_color.get(&style_text_color.unwrap())
-    } else {
-        None
-    };
-    
-    let text_color = match text_color_opt {
-        Some(tc) => {
-            tc.color
-        },
-        None => match_ipg_color(IpgColor::ANTIQUE_WHITE),
-    };
-
-    let placeholder_color: Color = lighten(match_ipg_color(IpgColor::ANTIQUE_WHITE), hover_factor);
-
-    let handle_color_opt = if style_handle_color.is_some() {
-        state.styling_handle_color.get(&style_handle_color.unwrap())
-    } else {
-        None
-    };
-
-    let handle_color: Color = match handle_color_opt {
-        Some(hc) => hc.color,
-        None => text_color,
-    };
-
-    let active = pick_list::Style {
-            background: background,
-            border,
-            text_color,
-            placeholder_color,
-            handle_color: handle_color,
-            };
+        
 
     match status {
-        Status::Active => active,
-        Status::Hovered | Status::Opened => Style {
-            border: Border {
-                color: lighten(bg_color, hover_factor),
-                ..active.border
-            },
-            ..active
-        },
+        Status::Active => base_style,
+        Status::Hovered | Status::Opened => hover_style,
     }
 
 }

@@ -1170,8 +1170,8 @@ impl IPG {
                         text_line_height=1.3, text_shaping="basic".to_string(), 
                         handle=IpgPickListHandle::Default, arrow_size=None, 
                         dynamic_closed=None, dynamic_opened=None, custom_static=None,
-                        style_background=None, style_border=None, style_handle_color=None, 
-                        style_text_color=None, user_data=None, show=true,
+                        style_standard=None, style_color=None, style_border=None, 
+                        user_data=None, show=true,
                         ))]
     fn add_pick_list(&mut self,
                         parent_id: String,
@@ -1192,10 +1192,9 @@ impl IPG {
                         dynamic_closed: Option<IpgButtonArrows>,
                         dynamic_opened: Option<IpgButtonArrows>,
                         custom_static: Option<IpgButtonArrows>,
-                        style_background: Option<String>,
+                        style_standard: Option<String>,
+                        style_color: Option<String>,
                         style_border: Option<String>,
-                        style_handle_color: Option<String>,
-                        style_text_color: Option<String>,
                         user_data: Option<PyObject>,
                         show: bool,
                     ) -> PyResult<usize>
@@ -1236,10 +1235,9 @@ impl IPG {
                                                         dynamic_closed,
                                                         dynamic_opened,
                                                         custom_static,
-                                                        style_background,
+                                                        style_standard,
+                                                        style_color,
                                                         style_border,
-                                                        style_handle_color,
-                                                        style_text_color,
                                                     )));
 
         Ok(id)
@@ -1692,7 +1690,8 @@ impl IPG {
                         blur_color=None, blur_rgba=None, 
                         dot_color=None, dot_rgba=None,
                         handle_color=None, handle_rgba=None, 
-                        icon_color=None, icon_rgba=None, 
+                        icon_color=None, icon_rgba=None,
+                        placeholder_color=None, placeholder_rgba=None, 
                         shadow_color=None, shadow_rgba=None,
                         text_color=None, text_rgba=None,
                         gen_id=None))]
@@ -1712,6 +1711,8 @@ impl IPG {
                             handle_rgba: Option<[f32; 4]>,
                             icon_color: Option<IpgColor>,
                             icon_rgba: Option<[f32; 4]>,
+                            placeholder_color: Option<IpgColor>,
+                            placeholder_rgba: Option<[f32; 4]>,
                             shadow_color: Option<IpgColor>,
                             shadow_rgba: Option<[f32; 4]>,
                             text_color: Option<IpgColor>,
@@ -1730,6 +1731,7 @@ impl IPG {
         let dot: Option<Color> = get_color(dot_rgba, dot_color, 1.0, false);
         let handle: Option<Color> = get_color(handle_rgba, handle_color, 1.0, false);
         let icon: Option<Color> = get_color(icon_rgba, icon_color, 1.0, false);
+        let placeholder: Option<Color> = get_color(placeholder_rgba, placeholder_color, 1.0, false);
         let shadow: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
         let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
         
@@ -1742,6 +1744,7 @@ impl IPG {
                                                     dot,
                                                     handle,
                                                     icon,
+                                                    placeholder,
                                                     shadow,
                                                     text,
                                                     ));

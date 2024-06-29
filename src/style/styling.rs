@@ -7,7 +7,7 @@ use palette::rgb::Rgb;
 use pyo3::pyclass;
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 #[pyclass]
 pub struct IpgPalette {
     pub id: usize,
@@ -18,6 +18,7 @@ pub struct IpgPalette {
     pub dot: Option<Color>,
     pub handle: Option<Color>,
     pub icon: Option<Color>,
+    pub placeholder: Option<Color>,
     pub shadow: Option<Color>,
     pub text: Option<Color>,
 }
@@ -32,6 +33,7 @@ impl IpgPalette {
         dot: Option<Color>,
         handle: Option<Color>,
         icon: Option<Color>,
+        placeholder: Option<Color>,
         shadow: Option<Color>,
         text: Option<Color>,
     ) -> Self {
@@ -44,27 +46,13 @@ impl IpgPalette {
             dot,
             handle,
             icon,
+            placeholder,
             shadow,
             text,
             }
     }
 }
 
-impl Default for IpgPalette {
-    fn default() -> Self {
-        Self { id: Default::default(), 
-            base: Default::default(), 
-            bar: Default::default(), 
-            border: Default::default(), 
-            blur: Default::default(), 
-            dot: Default::default(), 
-            handle: Default::default(), 
-            icon: Default::default(), 
-            shadow: Default::default(), 
-            text: Default::default(),
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 #[pyclass]
