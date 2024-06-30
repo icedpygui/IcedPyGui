@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgProgressBarParams, IpgTextParams
-from icedpygui import IpgColumnAlignment, IpgColor
+from icedpygui import IpgColumnAlignment, IpgColor, IpgStyleStandard
 
 
 ipg = IPG()
@@ -134,19 +134,15 @@ ipg.add_button("col2", "Press me to hide the bar.",
 
 
 # add some styling to a new bar
-ipg.add_styling_background("bkg", color=IpgColor.DANGER)
-ipg.add_styling_bar_color("bar", color=IpgColor.YELLOW)
-ipg.add_styling_border("border", color=IpgColor.YELLOW,
-                       radius=[12.0])
+ipg.add_styling_border("border", radius=[12.0])
 
 
 # Ading another bar and styling with a new background, bar color, and border.
 ipg.add_progress_bar("col2", 0.0, 100.0, 50.0,
-                     style_background="bkg",
-                     style_bar_color="bar",
+                     style_standard=IpgStyleStandard.Danger,
                      style_border="border")
 
-ipg.add_text(parent_id="col2", content="Styling with a new background, bar color, and border")
+ipg.add_text(parent_id="col2", content="Styling with a new bar color, and border")
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

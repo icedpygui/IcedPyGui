@@ -57,12 +57,6 @@ ipg.add_styling_color(style_id="colors_with_border",
                       icon_color=IpgColor.LIGHT_BLUE,
                       text_color=IpgColor.BLUE)
 
-# Standard style, even though Text is listed in the hint, there is
-# no Text for a checkbox
-ipg.add_styling_standard("std_p", IpgStyleStandard.Primary)
-ipg.add_styling_standard("std_s", IpgStyleStandard.Success)
-ipg.add_styling_standard("std_d", IpgStyleStandard.Danger)
-
 # The default border is 1 and the radius is 2, these are used just to exagerate.
 ipg.add_styling_border(style_id="border", radius=[4.0], width=2.0)
 

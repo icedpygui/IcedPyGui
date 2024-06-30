@@ -1246,7 +1246,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, min, max, value,
                         gen_id=None, width=None, height=Some(16.0), 
                         width_fill=true, height_fill=false,
-                        style_background=None, style_bar_color=None,
+                        style_standard=None, style_color=None, 
                         style_border=None, show=true, 
                         ))]
     fn add_progress_bar(&mut self,
@@ -1260,8 +1260,8 @@ impl IPG {
                             height: Option<f32>,
                             width_fill: bool,
                             height_fill: bool,
-                            style_background: Option<String>,
-                            style_bar_color: Option<String>,
+                            style_standard: Option<IpgStyleStandard>,
+                            style_color: Option<String>,
                             style_border: Option<String>,
                             show: bool,
                             ) -> PyResult<usize> 
@@ -1284,8 +1284,8 @@ impl IPG {
                                                 value,
                                                 width,
                                                 height,
-                                                style_background,
-                                                style_bar_color,
+                                                style_standard,
+                                                style_color,
                                                 style_border,
                                             )));
 

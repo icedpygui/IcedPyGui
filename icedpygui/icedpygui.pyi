@@ -473,7 +473,7 @@ class IPG:
                     height_fill: bool=False,
                     padding: List=[10.0],
                     clip: bool=False,
-                    style_standard: Union[None | str]=None,
+                    style_standard: Union[None | IpgStyleStandard]=None,
                     style_color: Union[None | str]=None,
                     style_border: Union[None | str]=None,
                     style_shadow: Union[None | str]=None,
@@ -509,8 +509,8 @@ class IPG:
                 use [float, float, float, float] for [top, right, bottom, left]
             clip: bool
                 Whether to clip the label if width exceeded.
-            style_standard: str
-                style_id of the add_styling_standard.
+            style_standard: class
+                IpgStyleStandard: Primary, Success, Danger, Text
             style_color: str
                 style_id of the add_styling_color.
             style_border: str
@@ -614,7 +614,7 @@ class IPG:
                     text_size: float=16.0,
                     icon_x: bool=False,
                     icon_size: float=25.0,
-                    style_standard: Union[None | str]=None,
+                    style_standard: Union[None | IpgStyleStandard]=None,
                     style_color: Union[None | str]=None,
                     style_border: Union[None | str]=None,
                     user_data: Union[None | any]=None,
@@ -655,6 +655,8 @@ class IPG:
                 If true, uses the x versus the checkmark icon.
             icon_size: float
                 Sets the size of either the check or x icon.
+            style_standard: class
+                IpgStyleStandard: Primary, Success, Danger, Text(not valid)
             style_color: str
                 style_id of the add_styling_color.
             style_border: str
@@ -1566,26 +1568,6 @@ class IPG:
             -------
                 id: int
                     Internal id of widget and can be used by user if equated.
-        """
-
-    def add_styling_standard(self,
-                             style_id: str,
-                             standard: IpgStyleStandard,
-                             ) -> int:
-        """
-        Adds a standard style to a container or widget.
-
-            Parameters
-            ----------
-                style_id: str
-                    Id of style for use by the containers and widgets.
-                standard: IpgStyleStandard
-                    The standard styles are Primary, Success, Danger, Text
-
-            Returns
-            -------
-                id: int
-                    Internal id of widget and can be used by user if equated.   
         """
 
     def add_styling_icon_color(self,

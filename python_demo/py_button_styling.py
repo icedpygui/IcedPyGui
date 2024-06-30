@@ -11,15 +11,6 @@ def on_press(btn_id):
 # between the different styles, only within the style type.
 # The same style type can be used for many widgets and containers.
 
-# The styling_standard for consists of 3 colors, primary, success
-# and danger, along with a text which is a transparent background.
-# These colors will depend on the window theme used. 
-
-ipg.add_styling_standard(style_id="btn_p", standard=IpgStyleStandard.Primary)
-ipg.add_styling_standard(style_id="btn_s", standard=IpgStyleStandard.Success)
-ipg.add_styling_standard(style_id="btn_d", standard=IpgStyleStandard.Danger)
-ipg.add_styling_standard(style_id="btn_t", standard=IpgStyleStandard.Text)
-
 # A border and shadow can be added as indicated below.  The color of these will
 # be automatically determined based on the base color of the widget.
 # If you you want a different color for these styles, you will have to use

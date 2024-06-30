@@ -189,7 +189,7 @@ pub enum IpgButtonParams {
     Label,
     Padding,
     Show,
-    StylePalette,
+    StyleColor,
     StyleBorder,
     StyleShadow,
     Width,
@@ -226,7 +226,7 @@ pub fn button_item_update(btn: &mut IpgButton,
         IpgButtonParams::Show => {
             btn.show = try_extract_boolean(value);
         },
-        IpgButtonParams::StylePalette => {
+        IpgButtonParams::StyleColor => {
             let val = try_extract_string(value);
             btn.style_color = Some(val);
         },
@@ -292,6 +292,7 @@ pub fn get_styling(theme: &Theme, status: Status,
         base_style.border.radius = border.radius;
         base_style.border.width = border.width;
     }
+
     if shadow_opt.is_some() {
         let shadow = shadow_opt.unwrap();
         base_style.shadow.offset = Vector{ x: shadow.offset_x, y: shadow.offset_y };
@@ -327,12 +328,14 @@ pub fn get_styling(theme: &Theme, status: Status,
         };
 
         if border_opt.is_some() {
-            base_style.border.color = border_color;
-            style.border = base_style.border;
+            style.border.color = border_color;
+            style.border.width = base_style.border.width;
+            style.border.radius = base_style.border.radius;
         }
         if shadow_opt.is_some() {
-            base_style.shadow.color = shadow_color;
-            style.shadow = base_style.shadow;
+            style.shadow.color = shadow_color;
+            style.shadow.blur_radius = base_style.shadow.blur_radius;
+            style.shadow.offset = base_style.shadow.offset;
         }
 
         return style

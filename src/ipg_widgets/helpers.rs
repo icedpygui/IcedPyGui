@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use std::collections::BTreeMap;
 
+use crate::style::styling::IpgStyleStandard;
 use crate::{access_state, IpgAlignment};
 use iced::window;
 use iced::{alignment::{Horizontal, Vertical}, Length, Padding};
@@ -347,6 +348,17 @@ pub fn try_extract_ipg_alignment(value: PyObject) -> IpgAlignment {
         match res {
             Ok(val) => val,
             Err(_) => panic!("Unable to extract python object for Alignment"),
+        }
+    })
+}
+
+pub fn try_extract_style_standard(value: PyObject) -> IpgStyleStandard {
+    Python::with_gil(|py| {
+
+        let res = value.extract::<IpgStyleStandard>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python object for StyleStandard"),
         }
     })
 }

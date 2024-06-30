@@ -1,12 +1,11 @@
 
-use iced::border::Radius;
-use iced::{Background, Border, Color, Element, Length, Theme};
+use iced::{Color, Element, Length, Theme, theme};
 use iced::widget::{progress_bar, ProgressBar, Space};
 use pyo3::{pyclass, PyObject, Python};
-use crate::graphics::colors::{match_ipg_color, IpgColor};
+use crate::style::styling::IpgStyleStandard;
 use crate::{access_state, app};
 
-use super::helpers::{get_height, get_width, try_extract_boolean, try_extract_f64, try_extract_string};
+use super::helpers::{get_height, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_style_standard};
 
 
 #[derive(Debug, Clone)]
@@ -19,8 +18,8 @@ pub struct IpgProgressBar {
     pub value: f32,
     pub width: Length,
     pub height: Length,
-    pub style_background: Option<String>,
-    pub style_bar_color: Option<String>,
+    pub style_standard: Option<IpgStyleStandard>,
+    pub style_color: Option<String>,
     pub style_border: Option<String>,
 }
 
@@ -33,8 +32,8 @@ impl IpgProgressBar {
         value: f32,
         width: Length,
         height: Length,
-        style_background: Option<String>,
-        style_bar_color: Option<String>,
+        style_standard: Option<IpgStyleStandard>,
+        style_color: Option<String>,
         style_border: Option<String>,
     ) -> Self {
         Self {
@@ -45,8 +44,8 @@ impl IpgProgressBar {
             value,
             width,
             height,
-            style_background,
-            style_bar_color,
+            style_standard,
+            style_color,
             style_border,
         }
     }
@@ -63,8 +62,8 @@ pub fn construct_progress_bar(bar: IpgProgressBar) -> Element<'static, app::Mess
                             .height(bar.height)
                             .style(move|theme: &Theme | {   
                                 get_styling(theme, 
-                                    bar.style_background.clone(), 
-                                    bar.style_bar_color.clone(), 
+                                    bar.style_standard.clone(), 
+                                    bar.style_color.clone(), 
                                     bar.style_border.clone(),
                                     )  
                                 })
@@ -79,9 +78,9 @@ pub enum IpgProgressBarParams {
     Min,
     Max,
     Show,
-    StyleBackground,
+    StyleStandard,
+    StyleColor,
     StyleBorder,
-    StyleBarColor,
     Value,
     Width,
     WidthFill,
@@ -108,14 +107,14 @@ pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
         IpgProgressBarParams::Show => {
             pb.show = try_extract_boolean(value);
         },
-        IpgProgressBarParams::StyleBackground => {
-            pb.style_background = Some(try_extract_string(value))
+        IpgProgressBarParams::StyleStandard => {
+            pb.style_standard = Some(try_extract_style_standard(value))
+        },
+        IpgProgressBarParams::StyleColor => {
+            pb.style_color = Some(try_extract_string(value))
         },
         IpgProgressBarParams::StyleBorder => {
             pb.style_border = Some(try_extract_string(value))
-        },
-        IpgProgressBarParams::StyleBarColor => {
-            pb.style_bar_color = Some(try_extract_string(value))
         },
         IpgProgressBarParams::Value => {
             pb.value = try_extract_f64(value) as f32;
@@ -143,24 +142,17 @@ pub fn try_extract_progress_bar_update(update_obj: PyObject) -> IpgProgressBarPa
     })
 }
 
-pub fn get_styling(_theme: &Theme, 
-                    style_background: Option<String>,
-                    style_bar_color: Option<String>,
+pub fn get_styling(theme: &Theme,
+                    style_standard: Option<IpgStyleStandard>,
+                    style_color: Option<String>,
                     style_border: Option<String>, 
                     ) -> progress_bar::Style 
 {
     let state = access_state();
 
-    let background_opt = if style_background.is_some() {
-        state.styling_background.get(&style_background.unwrap())
-    } else {
-        None
-    };
-    
-    let background = match background_opt {
-        Some(bg) => Background::Color(bg.color),
-        None => Background::Color(match_ipg_color(IpgColor::TRANSPARENT)),
-    };
+    if style_standard.is_none() && style_color.is_none() {
+        return progress_bar::primary(theme)
+    }
 
     let border_opt = if style_border.is_some() {
         state.styling_border.get(&style_border.unwrap())
@@ -168,38 +160,74 @@ pub fn get_styling(_theme: &Theme,
         None
     };
 
-    let border: Border = match border_opt {
-        Some(bd) => Border {
-            color: Color::BLACK,
-            radius: bd.radius,
-            width: bd.width,
-        },
-        None => { Border {
-                color: match_ipg_color(IpgColor::ANTIQUE_WHITE),
-                radius: <Radius as std::default::Default>::default(),
-                width: 1.0,
-            }
-        },
-    };
+    let mut base_style = progress_bar::primary(theme);
 
-    let bar_color_opt = if style_bar_color.is_some() {
-        state.styling_bar_color.get(&style_bar_color.unwrap())
+    if border_opt.is_some() {
+        let border = border_opt.unwrap();
+        base_style.border.radius = border.radius;
+        base_style.border.width = border.width;
+    }
+
+    let palette = theme.extended_palette();
+
+    if style_standard.is_some() {
+        let style_std = style_standard.unwrap().clone();
+        
+        // if border is used, will use the standard color
+        let mut border_color = palette.primary.strong.color;
+
+        let mut style = match style_std {
+            IpgStyleStandard::Primary => {
+                progress_bar::primary(theme)
+            },
+            IpgStyleStandard::Success => {
+                border_color = palette.success.strong.color;
+                progress_bar::success(theme)
+            },
+            IpgStyleStandard::Danger => {
+                border_color = palette.danger.strong.color;
+                progress_bar::danger(theme)
+            },
+            IpgStyleStandard::Text => panic!("IpgStandardStyle.Text is not valid for progress bar"),
+        };
+
+        if border_opt.is_some() {
+            style.border.color = border_color;
+            style.border.width = base_style.border.width;
+            style.border.radius = base_style.border.radius;
+        }
+
+        return style
+    }
+
+    let color_palette_opt = if style_color.is_some() {
+        state.styling_color.get(&style_color.unwrap())
     } else {
         None
     };
+    
+    if color_palette_opt.is_some() {
+        let text = if palette.is_dark {
+            Color::WHITE
+        } else {
+            Color::BLACK
+        };
 
-    let bar = match bar_color_opt {
-        Some(bc) => {
-            Background::Color(bc.color)
-        },
-        None => Background::Color(match_ipg_color(IpgColor::GRAY)),
-    };
+        let mut color_palette = color_palette_opt.unwrap().clone();
+        
+        if color_palette.base.is_none() {
+            color_palette.base = Some(Color::TRANSPARENT);
+        }
 
-    progress_bar::Style {
-            background,
-            bar,
-            border,
+        let background = theme::palette::Background::new(color_palette.base.unwrap(), text);
+        base_style.background = iced::Background::Color(background.weak.color);
+        
+        if color_palette.border.is_some() {
+            base_style.border.color = color_palette.border.unwrap();
+        }
+
     }
- 
 
+    base_style
+ 
 }
