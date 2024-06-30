@@ -299,150 +299,51 @@ pub fn get_styling(theme: &Theme, status: Status,
                     is_checked: bool, 
                     ) -> checkbox::Style 
 {
+    if style_standard.is_none() && style_color.is_none() {
+        return checkbox::primary(theme, status)
+    }
+    
     let state = access_state();
 
-    // init styles
-    let mut base_style = primary(theme, status);
-    let mut hover_style = primary(theme, status);
-    let mut disabled_style = primary(theme, status);
-
-    let palette = theme.extended_palette();
-    
     let border_opt = if style_border.is_some() {
         state.styling_border.get(&style_border.unwrap())
     } else {
         None
     };
+
+    let mut base_style = checkbox::primary(theme, Status::Active { is_checked });
+    let mut hover_style = checkbox::primary(theme, Status::Hovered { is_checked });
+    let disabled_style = checkbox::primary(theme, Status::Disabled { is_checked });
+    
+    if border_opt.is_some() {
+        let border = border_opt.unwrap();
+        base_style.border.radius = border.radius;
+        base_style.border.width = border.width;
+    }
   
-    match border_opt {
-        Some(bd) => {
-            base_style.border.radius = bd.radius;
-            base_style.border.width = bd.width;
-            hover_style.border.radius = bd.radius;
-            hover_style.border.width = bd.width;
-            disabled_style.border.radius = bd.radius;
-            disabled_style.border.width = bd.width;
-        },
-        None => {
-            base_style.border.radius = 2.0.into();
-            base_style.border.width = 1.0;
-            hover_style.border.radius = 2.0.into();
-            hover_style.border.width = 1.0;
-            disabled_style.border.radius = 2.0.into();
-            disabled_style.border.width = 1.0;
-        },
-    }
+    let palette = theme.extended_palette();
 
-    if style_standard.is_none() && style_color.is_none() {
-        match status {
-            Status::Active { is_checked: _ } => return base_style,
-            Status::Hovered { is_checked: _ } => return hover_style,
-            Status::Disabled { is_checked: _ } => return disabled_style,
-        
-        }
-    }
-
-    // repeating the standard styles so one can modify the border of a standard style
     if style_standard.is_some() {
         let style_std = style_standard.clone().unwrap();
 
-        match style_std {
+        let mut style = match style_std {
             IpgStyleStandard::Primary => {
-                let icon_color = palette.primary.strong.text;
-                let base = palette.background.base.color;
-                let accent = palette.primary.strong.color;
-                base_style.border.color = accent;
-                base_style = styled(icon_color,
-                                    base,
-                                    accent,
-                                    is_checked,
-                                    base_style.border,
-                                    None);
-
-                let base_hover = palette.background.weak.color;
-                let accent_hover = palette.primary.base.color;
-                hover_style.border.color = accent_hover;
-                hover_style = styled(icon_color,
-                                    base_hover,
-                                    accent_hover,
-                                    is_checked,
-                                    hover_style.border,
-                                    None);
-                   
-                let base_disabled = palette.background.weak.color;
-                let accent_disabled = palette.background.strong.color;
-                disabled_style = styled(icon_color,
-                                    base_disabled,
-                                    accent_disabled,
-                                    is_checked,
-                                    disabled_style.border,
-                                    None);
+                checkbox::primary(theme, status)  
             },
             IpgStyleStandard::Success => {
-                let icon_color = palette.success.strong.text;
-                let base = palette.background.base.color;
-                let accent = palette.success.strong.color;
-                base_style.border.color = accent;
-                base_style = styled(icon_color,
-                                    base,
-                                    accent,
-                                    is_checked,
-                                    base_style.border,
-                                    None);
-
-                let base_hover = palette.background.weak.color;
-                let accent_hover = palette.success.base.color;
-                hover_style.border.color = accent_hover;
-                hover_style = styled(icon_color,
-                                    base_hover,
-                                    accent_hover,
-                                    is_checked,
-                                    hover_style.border,
-                                    None);
-
-                let base_disabled = palette.background.weak.color;
-                let accent_disabled = palette.background.strong.color;
-                disabled_style = styled(icon_color,
-                                    base_disabled,
-                                    accent_disabled,
-                                    is_checked,
-                                    disabled_style.border,
-                                    None);
-                
+                checkbox::success(theme, status)
             },
             IpgStyleStandard::Danger => {
-                let icon_color = palette.danger.strong.text;
-                let base = palette.background.base.color;
-                let accent = palette.danger.strong.color;
-                base_style.border.color = accent;
-                base_style = styled(icon_color,
-                                    base,
-                                    accent,
-                                    is_checked,
-                                    base_style.border,
-                                    None);
-
-                let base_hover = palette.background.weak.color;
-                let accent_hover = palette.danger.base.color;
-                hover_style.border.color = accent_hover;
-                hover_style = styled(icon_color,
-                                    base_hover,
-                                    accent_hover,
-                                    is_checked,
-                                    hover_style.border,
-                                    None);
-
-                let base_disabled = palette.background.weak.color;
-                let accent_disabled = palette.background.strong.color;
-                disabled_style = styled(icon_color,
-                                    base_disabled,
-                                    accent_disabled,
-                                    is_checked,
-                                    disabled_style.border,
-                                    None);
+                checkbox::danger(theme, status)
             },
-            IpgStyleStandard::Text => (),
+            IpgStyleStandard::Text => panic!("StandardStyle::Text not valid for checkbox"),
+        };
+        // One can change the border for standard styles.
+        if border_opt.is_some() {
+            style.border.width = base_style.border.width;
+            style.border.radius = base_style.border.radius;
         }
+        return style
     }
 
     if style_standard.is_none() && style_color.is_some() {
