@@ -12,13 +12,11 @@ use super::callbacks::{
     get_set_widget_callback_data
 };
 
-
 use iced::widget::button::{self, Status, Style};
 use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{Button, Space, Text};
-use iced::{Border, Color, Element, Length, Padding, Theme, Vector };
-use iced::theme::palette::{Background, Pair};
+use iced::{theme, Color, Element, Length, Padding, Theme, Vector };
 
 use crate::graphics::bootstrap::{self, icon_to_char, icon_to_string};
 
@@ -270,70 +268,10 @@ pub fn get_styling(theme: &Theme, status: Status,
                     style_shadow: Option<String>,
                     ) -> button::Style 
 {
-    let state = access_state();
-
-    let palette = theme.extended_palette();
-    let mut base_style = styled(palette.primary.strong);
-    let mut hover_style = styled(palette.primary.strong);
-    hover_style.background = Some(iced::Background::Color(palette.primary.base.color));
-
-    let mut std_selected = false;
-    
-    if style_standard.is_some() {
-        std_selected = true;
-        let style_std = style_standard.unwrap().clone();
-        match style_std {
-            IpgStyleStandard::Primary => {
-                hover_style = styled(palette.primary.strong);
-                hover_style.background = Some(iced::Background::Color(palette.primary.base.color));
-                base_style = styled(palette.primary.strong);
-                if style_border.is_some() {
-                    base_style.border.color = palette.primary.weak.color;
-                    hover_style.border.color = palette.primary.weak.color;
-                }
-                if style_shadow.is_some() {
-                    base_style.shadow.color = palette.primary.base.color;
-                    hover_style.shadow.color = palette.primary.base.color;
-                }
-            },
-            IpgStyleStandard::Success => {
-                hover_style = styled(palette.success.strong);
-                hover_style.background = Some(iced::Background::Color(palette.success.base.color));
-                base_style = styled(palette.success.strong);
-                if style_border.is_some() {
-                    base_style.border.color = palette.success.weak.color;
-                    hover_style.border.color = palette.success.weak.color;
-                }
-                if style_shadow.is_some() {
-                    base_style.shadow.color = palette.success.base.color;
-                    hover_style.shadow.color = palette.success.base.color;
-                }
-            },
-            IpgStyleStandard::Danger => {
-                hover_style = styled(palette.danger.strong);
-                hover_style.background = Some(iced::Background::Color(palette.danger.base.color));
-                base_style = styled(palette.danger.strong);
-                if style_border.is_some() {
-                    base_style.border.color = palette.danger.weak.color;
-                    hover_style.border.color = palette.danger.weak.color;
-                }
-                if style_shadow.is_some() {
-                    base_style.shadow.color = palette.danger.base.color;
-                    hover_style.shadow.color = palette.danger.base.color;
-                }
-            },
-            IpgStyleStandard::Text => {
-                hover_style = button::Style {
-                    text_color: palette.background.base.text.scale_alpha(0.8),
-                    ..Style::default()
-                };
-                base_style = button::Style {
-                    text_color: palette.background.base.text,
-                    ..Style::default()
-                };
-            },
-        }
+    if style_standard.is_none() && style_color.is_none() {
+        return button::primary(theme, status)
     }
+    let state = access_state();
 
     let border_opt = if style_border.is_some() {
         state.styling_border.get(&style_border.unwrap())
@@ -341,74 +279,107 @@ pub fn get_styling(theme: &Theme, status: Status,
         None
     };
 
-    match border_opt {
-        Some(bd) => {
-            base_style.border.radius = bd.radius;
-            base_style.border.width = bd.width;
-            hover_style.border.radius = bd.radius;
-            hover_style.border.width = bd.width;
-        },
-        None => (),
-    }
-
     let shadow_opt = if style_shadow.is_some() {
         state.styling_shadow.get(&style_shadow.unwrap())
     } else {
         None
     };
 
-    match shadow_opt {
-        Some(sh) => {
-            base_style.shadow.offset = Vector::new(sh.offset_x, sh.offset_y);
-            base_style.shadow.blur_radius =sh.blur_radius;
-        },
-        None => (),
+    let mut base_style = button::primary(theme, status);
+    
+    if border_opt.is_some() {
+        let border = border_opt.unwrap();
+        base_style.border.radius = border.radius;
+        base_style.border.width = border.width;
+    }
+    if shadow_opt.is_some() {
+        let shadow = shadow_opt.unwrap();
+        base_style.shadow.offset = Vector{ x: shadow.offset_x, y: shadow.offset_y };
+        base_style.shadow.blur_radius = shadow.blur_radius;
     }
 
-    if !std_selected {
+    let palette = theme.extended_palette();
 
-        let color_palette_opt = if style_color.is_some() {
-            state.styling_color.get(&style_color.unwrap())
-        } else {
-            None
+    if style_standard.is_some() {
+        let style_std = style_standard.unwrap().clone();
+        
+        // if shadow or border is used, will use the standard color
+        let mut shadow_color = palette.primary.weak.color;
+        let mut border_color = palette.primary.strong.color;
+
+        let mut style = match style_std {
+            IpgStyleStandard::Primary => {
+                button::primary(theme, status)
+            },
+            IpgStyleStandard::Success => {
+                shadow_color = palette.success.weak.color;
+                border_color = palette.success.strong.color;
+                button::success(theme, status)
+            },
+            IpgStyleStandard::Danger => {
+                shadow_color = palette.danger.weak.color;
+                border_color = palette.danger.strong.color;
+                button::danger(theme, status)
+            },
+            IpgStyleStandard::Text => {
+                button::text(theme, status)
+            },
         };
 
-        if color_palette_opt.is_some() {
-            let text = if palette.is_dark {
-                Color::WHITE
-            } else {
-                Color::BLACK
-            };
-    
-            let mut color_palette = color_palette_opt.unwrap().clone();
-            
-            if color_palette.base.is_none() {
-                color_palette.base = get_color(None, Some(IpgColor::PRIMARY), 1.0, false)
-            }
-            let background = Background::new(color_palette.base.unwrap(), text);
-            base_style.background = Some(iced::Background::Color(background.weak.color));
+        if border_opt.is_some() {
+            base_style.border.color = border_color;
+            style.border = base_style.border;
+        }
+        if shadow_opt.is_some() {
+            base_style.shadow.color = shadow_color;
+            style.shadow = base_style.shadow;
+        }
 
-            if color_palette.text.is_some() {
-                base_style.text_color = color_palette.text.unwrap();
-                hover_style.text_color = color_palette.text.unwrap();
-            } else {
-                base_style.text_color = background.base.text;
-                hover_style.text_color = background.base.text;
-            }
-            
-            if color_palette.border.is_some() {
-                base_style.border.color = color_palette.border.unwrap();
-                hover_style = base_style.clone();
-                hover_style.background = Some(iced::Background::Color(background.base.color));
-            }
+        return style
+    }
 
-            if color_palette.shadow.is_some() {
-                base_style.shadow.color = color_palette.shadow.unwrap();
-            }
+    let color_palette_opt = if style_color.is_some() {
+        state.styling_color.get(&style_color.unwrap())
+    } else {
+        None
+    };
+
+    let mut hover_style = button::Style::default();
+
+    if color_palette_opt.is_some() {
+        let text = if palette.is_dark {
+            Color::WHITE
+        } else {
+            Color::BLACK
+        };
+
+        let mut color_palette = color_palette_opt.unwrap().clone();
+        
+        if color_palette.base.is_none() {
+            color_palette.base = get_color(None, Some(IpgColor::PRIMARY), 1.0, false)
+        }
+
+        let background = theme::palette::Background::new(color_palette.base.unwrap(), text);
+        base_style.background = Some(iced::Background::Color(background.weak.color));
+
+        if color_palette.text.is_some() {
+            base_style.text_color = color_palette.text.unwrap();
+        } else {
+            base_style.text_color = background.base.text;
         }
         
+        if color_palette.border.is_some() {
+            base_style.border.color = color_palette.border.unwrap();
+        }
+
+        if color_palette.shadow.is_some() {
+            base_style.shadow.color = color_palette.shadow.unwrap();
+        }
+
+        hover_style = base_style.clone();
+        hover_style.background = Some(iced::Background::Color(background.strong.color));
     }
-    
+        
     let style = match status {
         Status::Active | Status::Pressed => base_style,
         Status::Hovered => hover_style,
@@ -419,14 +390,6 @@ pub fn get_styling(theme: &Theme, status: Status,
 
 }
 
-fn styled(pair: Pair) -> Style {
-    Style {
-        background: Some(iced::Background::Color(pair.color)),
-        text_color: pair.text,
-        border: Border::rounded(2),
-        ..Style::default()
-    }
-}
 
 fn disabled(style: Style) -> Style {
     Style {

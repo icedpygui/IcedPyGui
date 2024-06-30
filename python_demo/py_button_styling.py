@@ -40,10 +40,8 @@ ipg.add_styling_color(style_id="custom",
                       shadow_color=IpgColor.LIGHT_YELLOW,
                       text_color=IpgColor.BLACK)
 
-ipg.add_styling_color(style_id="custom text",
-                      base_color=IpgColor.PRIMARY, 
-                      text_color=IpgColor.DARK_BLUE)
-
+ipg.add_styling_color(style_id="primary", 
+                      base_color=IpgColor.PRIMARY)
 
 # Add the window first
 ipg.add_window("main", "Menu", 800, 600,  pos_x=100, pos_y=25)
@@ -93,7 +91,9 @@ ipg.add_button(parent_id="row_btn2", label="Custom Style",
                style_border="btn_border",
                style_shadow="btn_shadow")
 
-ipg.add_button(parent_id="row_btn2", label="Override Text Color",
-               style_color="custom text")
+ipg.add_button(parent_id="row_btn2", label="Custom Style",
+               style_color="primary", 
+               style_border="btn_border",
+               style_shadow="btn_shadow")
 
 ipg.start_session()
