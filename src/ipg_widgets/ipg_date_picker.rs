@@ -648,7 +648,8 @@ pub fn try_extract_date_picker_update(update_obj: PyObject) -> IpgDatePickerPara
 
 
 fn get_styling(theme: &Theme, status: Status, style: String) -> button::Style {
-
+    // just using 2 standard stylings, calendar days are primary
+    // and the selected day is success.
     match style.as_str() {
         "primary" => button::primary(theme, status),
         "success" => button::success(theme, status),
