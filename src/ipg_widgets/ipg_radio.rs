@@ -15,7 +15,7 @@ use super::callbacks::{WidgetCallbackIn,
                         get_set_widget_callback_data};
 
 use iced::widget::radio::{self, Status};
-use iced::{Background, Color, Element, Length, Padding, Theme};
+use iced::{Background, Color, Element, Length, Padding, Theme, theme};
 use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{Column, Radio, Row, Space};
 
@@ -43,10 +43,8 @@ pub struct IpgRadio {
     pub text_shaping: Shaping,
     pub group_index: usize,
     // pub font: Option<Font>,
-    pub style_background: Option<String>,
+    pub style_color: Option<String>,
     pub style_border: Option<String>,
-    pub style_dot_color: Option<String>,
-    pub style_text_color: Option<String>,
 }
 
 impl IpgRadio {
@@ -69,10 +67,8 @@ impl IpgRadio {
         text_shaping: Shaping,
         radio_index: usize,
         // font: Option<Font>,
-        style_background: Option<String>,
+        style_color: Option<String>,
         style_border: Option<String>,
-        style_dot_color: Option<String>,
-        style_text_color: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -93,10 +89,8 @@ impl IpgRadio {
             text_shaping,
             group_index: radio_index,
             // font: None,
-            style_background,
+            style_color,
             style_border,
-            style_dot_color,
-            style_text_color,
         }
     }
 }
@@ -131,10 +125,8 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
     let mut radio_elements = vec![];
 
     for (i, label) in  radio.labels.iter().enumerate() {
-        let style_background = radio.style_background.clone();
+        let style_color = radio.style_color.clone();
         let style_border = radio.style_border.clone();
-        let style_dot_color = radio.style_dot_color.clone();
-        let style_text_color = radio.style_text_color.clone();
         radio_elements.push(Radio::new(label.clone(), 
                                         CHOICES[radio.group_index][i],
                                         selected,
@@ -147,10 +139,9 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
                                     .text_shaping(radio.text_shaping)
                                     .style(move|theme: &Theme, status| {   
                                         get_styling(theme, status, 
-                                            style_background.clone(), 
+                                            style_color.clone(), 
                                             style_border.clone(),
-                                            style_dot_color.clone(),
-                                            style_text_color.clone(),
+                                            selected,
                                         )  
                                         })
                                     .into());
@@ -347,30 +338,11 @@ fn process_callback(wco: WidgetCallbackOut)
 
 
 fn match_widgets (widget: &mut IpgWidgets) -> &mut IpgRadio {
+    
     match widget {
-        IpgWidgets::IpgButton(_) => (),
-        IpgWidgets::IpgCard(_) => (),
-        IpgWidgets::IpgCheckBox(_) => (),
-        // IpgWidgets::IpgColorPicker(_) => (),
-        IpgWidgets::IpgDatePicker(_) => (),
-        IpgWidgets::IpgImage(_) => (),
-        IpgWidgets::IpgMenu(_) => (),
-        IpgWidgets::IpgPickList(_) => (),
-        IpgWidgets::IpgProgressBar(_) => (),
         IpgWidgets::IpgRadio(radio) => return radio,
-        IpgWidgets::IpgRule(_) => (),
-        IpgWidgets::IpgSelectableText(_) => (),
-        IpgWidgets::IpgSlider(_) => (),
-        IpgWidgets::IpgSpace(_) => (),
-        IpgWidgets::IpgSvg(_) => (),
-        IpgWidgets::IpgTable(_) => (),
-        IpgWidgets::IpgText(_) => (),
-        // IpgWidgets::IpgTextEditor(_) => (),
-        IpgWidgets::IpgTextInput(_) => (),
-        IpgWidgets::IpgTimer(_) => (),
-        IpgWidgets::IpgToggler(_) => (),
+        _ => panic!("Radio expected to find radio in IpgWidgets")
     }
-    panic!("Radio unable to find radio in IpgWidgets")
 }
 
 #[derive(Debug, Clone)]
@@ -383,10 +355,8 @@ pub enum IpgRadioParams {
     Show,
     Size,
     Spacing,
-    StyleBackground,
+    StyleColor,
     StyleBorder,
-    StyleDotColor,
-    StyleTextColor,
     TextSpacing,
     TextSize,
     TextLineHeight,
@@ -442,17 +412,11 @@ pub fn radio_item_update(rd: &mut IpgRadio,
         IpgRadioParams::Spacing => {
             rd.spacing = try_extract_f64(value) as f32;
         },
-        IpgRadioParams::StyleBackground => {
-            rd.style_background = try_extract_option_string(value);
+        IpgRadioParams::StyleColor => {
+            rd.style_color = try_extract_option_string(value);
         },
         IpgRadioParams::StyleBorder => {
             rd.style_border = try_extract_option_string(value);
-        },
-        IpgRadioParams::StyleDotColor => {
-            rd.style_dot_color = try_extract_option_string(value);
-        },
-        IpgRadioParams::StyleTextColor => {
-            rd.style_text_color = try_extract_option_string(value);
         },
         IpgRadioParams::TextSpacing => {
             rd.text_spacing = try_extract_f64(value) as f32;
@@ -523,87 +487,69 @@ pub fn try_extract_radio_direction(direct_obj: PyObject) -> IpgRadioDirection {
     })  
 }
 
-pub fn get_styling(_theme: &Theme, status: Status, 
-                    style_background: Option<String>, 
+pub fn get_styling(theme: &Theme, status: Status, 
+                    style_color: Option<String>, 
                     style_border: Option<String>,
-                    style_dot_color: Option<String>,
-                    style_text_color: Option<String>) 
-                    -> radio::Style {
+                    selected: Option<Choice>,
+                    ) -> radio::Style {
+
+    if style_color.is_none() && style_border.is_none() {
+        return radio::default(theme, status)
+    }
     
     let state = access_state();
 
-    let background_opt = if style_background.is_some() {
-        state.styling_background.get(&style_background.unwrap())
+    let color_palette_opt = if style_color.is_some() {
+        state.styling_color.get(&style_color.unwrap())
     } else {
         None
     };
-    
-    let bg_color = Color::TRANSPARENT;
-    let (background, accent_bkg) = match background_opt {
-        Some(bg) => {
-            (Background::Color(bg.color), bg.accent)
-        },
-        None => (Background::Color(bg_color), 0.05),
-    };
-
-
-    let mut border_color = match_ipg_color(IpgColor::PRIMARY);
-    let mut border_width = 1.0;
 
     let border_opt = if style_border.is_some() {
         state.styling_border.get(&style_border.unwrap())
     } else {
         None
     };
+    
+    let mut base_style = radio::default(theme, status);
+    let mut hover_style = radio::default(theme, status);
 
-    match border_opt {
-        Some(bd) => {
-            border_width = bd.width;
-        },
-        None => (),
+    let palette = theme.extended_palette();
+
+    if border_opt.is_some() {
+        let border = border_opt.unwrap();
+        base_style.border_width = border.width;
+        hover_style.border_width = border.width;
     }
 
-    let text_color_opt = if style_text_color.is_some() {
-        state.styling_text_color.get(&style_text_color.unwrap())
-    } else {
-        None
-    };
-    
-    let text_color = match text_color_opt {
-        Some(tc) => {
-            Some(tc.color)
-        },
-        None => None,
-    };
+    if color_palette_opt.is_some() {
 
-    let dot_color_opt = if style_dot_color.is_some() {
-        state.styling_dot_color.get(&style_dot_color.unwrap())
-    } else {
-        None
-    };
+        let mut color_palette = color_palette_opt.unwrap().clone();
+        
+        base_style.text_color = color_palette.text;
+        
+        
+        if color_palette.border.is_some() {
+            base_style.border_color = color_palette.border.unwrap();
+        } else {
+            base_style.border_color = palette.primary.strong.color;
+        }
 
-    let dot_color: Color = match dot_color_opt {
-        Some(dot) => dot.color,
-        None => match_ipg_color(IpgColor::PRIMARY),
-    };
+        if color_palette.dot.is_some() {
+            base_style.dot_color = color_palette.dot.unwrap();
+        } else {
+            base_style.dot_color = palette.primary.strong.color;
+        }
 
-    let active = radio::Style {
-        background,
-        dot_color,
-        border_width,
-        border_color,
-        text_color,
-    };
+        hover_style = base_style.clone();
+        hover_style.background = palette.primary.weak.color.into();
+    }
 
     match status {
-        Status::Active { .. } => active,
-        Status::Hovered { .. } => radio::Style {
-            background: Background::Color(lighten(bg_color, accent_bkg)),
-                dot_color: lighten(dot_color, accent_bkg),
-            ..active
-        },
+        Status::Active { .. } => base_style,
+        Status::Hovered { .. } => hover_style,
     }
-
+    
 }
 
 

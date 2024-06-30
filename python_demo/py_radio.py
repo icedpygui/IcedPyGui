@@ -149,22 +149,17 @@ def change_height(chk_id: int, checked: bool, radio_ids: list[int]):
 
 def change_right_radio_colors(chk_id: int, checked: bool, radio_right_id: int):
     if checked:
-        ipg.update_item(radio_right_id, IpgRadioParams.StyleBackground, "bkg")
+        ipg.update_item(radio_right_id, IpgRadioParams.StyleColor, "color")
         ipg.update_item(radio_right_id, IpgRadioParams.StyleBorder, "border")
-        ipg.update_item(radio_right_id, IpgRadioParams.StyleDotColor, "dot")
-        ipg.update_item(radio_right_id, IpgRadioParams.StyleTextColor, "text")
     else:
-        ipg.update_item(radio_right_id, IpgRadioParams.StyleBackground, None)
+        ipg.update_item(radio_right_id, IpgRadioParams.StyleColor, None)
         ipg.update_item(radio_right_id, IpgRadioParams.StyleBorder, None)
-        ipg.update_item(radio_right_id, IpgRadioParams.StyleDotColor, None)
-        ipg.update_item(radio_right_id, IpgRadioParams.StyleTextColor, None)
 
 
 # define the styling that's used later
-ipg.add_styling_border(style_id="border", color=IpgColor.YELLOW, width=3.0)
-ipg.add_styling_background(style_id="bkg", color=IpgColor.YELLOW)
-ipg.add_styling_dot_color(style_id="dot", color=IpgColor.BLUE)
-ipg.add_styling_text_color(style_id="text", color=IpgColor.YELLOW)
+ipg.add_styling_border(style_id="border", width=3.0)
+ipg.add_styling_color(style_id="color", dot_color=IpgColor.YELLOW, text_color=IpgColor.YELLOW)
+
 
 # **************Window Constructions Starts Here*************************
 
@@ -247,7 +242,7 @@ ipg.add_checkbox("chk_col", label="Change the Height", user_data=[rd_left_id, rd
 ipg.add_checkbox("chk_col", label="Hide the left Radios", user_data=rd_left_id,
                  on_toggle=hide_left_radio)
 
-ipg.add_checkbox("chk_col", label="Change the circle color", user_data=rd_right_id,
+ipg.add_checkbox("chk_col", label="Change the border, dot and text color", user_data=rd_right_id,
                  on_toggle=change_right_radio_colors)
 
 

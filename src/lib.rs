@@ -1296,8 +1296,7 @@ impl IPG {
                         spacing= 10.0, padding=DEFAULT_PADDING.to_vec(), 
                         width=None, width_fill=false, height=None, height_fill=false,
                         on_select=None, selected_index=None, 
-                        size=20.0, style_background=None, style_border=None,
-                        style_dot_color=None, style_text_color=None,
+                        size=20.0, style_color=None, style_border=None,
                         text_spacing=15.0, text_size=16.0,
                         text_line_height=1.3, text_shaping="basic".to_string(), 
                         user_data=None, show=true, 
@@ -1317,10 +1316,8 @@ impl IPG {
                     on_select: Option<PyObject>,
                     selected_index: Option<usize>,
                     size: f32,
-                    style_background: Option<String>,
+                    style_color: Option<String>,
                     style_border: Option<String>,
-                    style_dot_color: Option<String>,
-                    style_text_color: Option<String>,
                     text_spacing: f32,
                     text_size: f32,
                     text_line_height: f32,
@@ -1377,10 +1374,8 @@ impl IPG {
                                         text_line_height,
                                         text_shaping,
                                         self.group_index,
-                                        style_background,
+                                        style_color,
                                         style_border,
-                                        style_dot_color,
-                                        style_text_color,
                                     )));
         self.group_index += 1;                                      
         Ok(id)

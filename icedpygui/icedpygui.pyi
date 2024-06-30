@@ -937,9 +937,8 @@ class IPG:
                         dynamic_closed: Union[None| IpgButtonArrows]=None,
                         dynamic_opened: Union[None | IpgButtonArrows]=None,
                         custom_static: Union[None | IpgButtonArrows]=None,
-                        style_background: Union[None, str]=None,
+                        style_color: Union[None, str]=None,
                         style_border: Union[None, str]=None,
-                        style_text_color: Union[None, str]=None,
                         user_data: Union[None | any]=None,
                         show: bool=True,
                       ) -> int:
@@ -985,14 +984,10 @@ class IPG:
                 The type of arrow wanted for when the picklist is opened.
             custom_static: IpgArrows
                 The type of arrow wanted for the picklist.
-            style_background: str
-                style_id of the add_styling_background.
+            style_color: str
+                style_id of the add_styling_color.
             style_border: str
                 style_id of the add_styling_border.
-            style_placeholder_color: str
-                style_id of the add_styling_icon_color.
-            style_text_color: str
-                style_id of the add_styling_text_color.
             user_data: any
                 Any data in any form needed by user to be passed through as a callback.
             show: bool
@@ -1014,8 +1009,7 @@ class IPG:
                         width: Union[None | float]=None,
                         width_fill: bool=False,
                         height: float=1.0,
-                        style_background: Union[None, str]=None,
-                        style_bar_color: Union[None, str]=None,
+                        style_color: Union[None, str]=None,
                         style_border: Union[None, str]=None,
                         user_data: Union[None, any]=None,
                         show: bool=True,
@@ -1041,10 +1035,8 @@ class IPG:
                 If set, the widget fills the available space.
             height: float
                 Sets the height of the bar.
-            style_background: str
-                style_id of the add_styling_background.
-            style_bar_color: str
-                style_id of the add_styling_bar_color.
+            style_color: str
+                style_id of the add_styling_color.
             style_border: str
                 style_id of the add_styling_border.
             user_data: any
@@ -1071,6 +1063,8 @@ class IPG:
                     on_select: Union[None | Callable]=None,
                     selected_index: Union[None | int]=None,
                     size: float=20.0,
+                    style_color: Union[None | str]=None,
+                    style_border: Union[None | str]=None,
                     text_spacing: float=15.0,
                     text_size: float=16.0,
                     text_line_height: float=1.3,
@@ -1114,6 +1108,10 @@ class IPG:
                 Radius of the round radio button.
             spacing: float
                 Spacing between the radio buttons.
+            style_color: str
+                style_id of the add_styling_color.
+            style_border: str
+                style_id of the add_styling_border.
             text_shaping: str
                 Sets the text shape.
             text_size: float
