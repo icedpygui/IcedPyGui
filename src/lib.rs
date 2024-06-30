@@ -1170,7 +1170,7 @@ impl IPG {
                         text_line_height=1.3, text_shaping="basic".to_string(), 
                         handle=IpgPickListHandle::Default, arrow_size=None, 
                         dynamic_closed=None, dynamic_opened=None, custom_static=None,
-                        style_standard=None, style_color=None, style_border=None, 
+                        style_color=None, style_border=None, 
                         user_data=None, show=true,
                         ))]
     fn add_pick_list(&mut self,
@@ -1192,7 +1192,6 @@ impl IPG {
                         dynamic_closed: Option<IpgButtonArrows>,
                         dynamic_opened: Option<IpgButtonArrows>,
                         custom_static: Option<IpgButtonArrows>,
-                        style_standard: Option<String>,
                         style_color: Option<String>,
                         style_border: Option<String>,
                         user_data: Option<PyObject>,
@@ -1235,7 +1234,6 @@ impl IPG {
                                                         dynamic_closed,
                                                         dynamic_opened,
                                                         custom_static,
-                                                        style_standard,
                                                         style_color,
                                                         style_border,
                                                     )));

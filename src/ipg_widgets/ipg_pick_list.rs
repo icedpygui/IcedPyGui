@@ -45,7 +45,6 @@ pub struct IpgPickList {
     pub dynamic_closed: Option<IpgButtonArrows>,
     pub dynamic_open: Option<IpgButtonArrows>,
     pub custom_static: Option<IpgButtonArrows>,
-    pub style_standard: Option<String>,
     pub style_color: Option<String>,
     pub style_border: Option<String>,
 }
@@ -69,7 +68,6 @@ impl IpgPickList {
         dynamic_closed: Option<IpgButtonArrows>,
         dynamic_open: Option<IpgButtonArrows>,
         custom_static: Option<IpgButtonArrows>,
-        style_standard: Option<String>,
         style_color: Option<String>,
         style_border: Option<String>,
         ) -> Self {
@@ -90,7 +88,6 @@ impl IpgPickList {
             dynamic_closed,
             dynamic_open,
             custom_static,
-            style_standard,
             style_color,
             style_border,
         }
@@ -139,7 +136,6 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
                                         .handle(handle)
                                         .style(move|theme: &Theme, status| {   
                                             get_styling(theme, status, 
-                                                pick.style_standard.clone(),
                                                 pick.style_color.clone(), 
                                                 pick.style_border.clone(),
                                             )  
@@ -280,7 +276,6 @@ pub enum IpgPickListParams {
     Placeholder,
     Padding,
     Show,
-    StyleStandard,
     StyleColor,
     StyleBorder,
     TextSize,
@@ -312,10 +307,6 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
         },
         IpgPickListParams::Show => {
             pl.show = try_extract_boolean(value);
-        },
-        IpgPickListParams::StyleStandard => {
-            let val = try_extract_string(value);
-            pl.style_standard = Some(val);
         },
         IpgPickListParams::StyleColor => {
             let val = try_extract_string(value);
@@ -437,7 +428,6 @@ fn get_handle(ipg_handle: IpgPickListHandle,
 
 
 pub fn get_styling(theme: &Theme, status: Status, 
-                    _style_standard: Option<String>,
                     style_color: Option<String>, 
                     style_border: Option<String>,
                     ) -> pick_list::Style {
