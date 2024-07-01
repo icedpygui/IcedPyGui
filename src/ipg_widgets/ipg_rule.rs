@@ -11,7 +11,7 @@ pub struct IpgRule {
     pub height: Length,
     pub thickness: u16,
     pub rule_type: String,
-    pub style_background: Option<String>, 
+    pub style_color: Option<String>, 
     pub style_border: Option<String>,
     pub style_fill_mode: Option<String>,
 }
@@ -23,7 +23,7 @@ impl IpgRule {
         height: Length,
         thickness: u16, 
         rule_type: String,
-        style_background: Option<String>, 
+        style_color: Option<String>, 
         style_border: Option<String>,
         style_fill_mode: Option<String>,
         ) -> Self {
@@ -33,7 +33,7 @@ impl IpgRule {
             height,
             thickness,
             rule_type,
-            style_background, 
+            style_color, 
             style_border,
             style_fill_mode,
         }
@@ -55,10 +55,10 @@ pub fn construct_rule(rule: IpgRule) -> Element<'static, app::Message> {
 // The width or height parameters seems to have no effect so set to 0.
 fn construct_horizontal(rule: IpgRule) -> Element<'static, app::Message>{
 
-    let rule_h: Element<app::Message> = Rule::horizontal(rule.thickness)
+    let rule_h: Element<app::Message> = Rule::horizontal(1)
                                             .style(move|theme: &Theme| {   
                                                 get_styling(theme,
-                                                    rule.style_background.clone(), 
+                                                    rule.style_color.clone(), 
                                                     rule.style_border.clone(), 
                                                     rule.style_fill_mode.clone(),
                                                     rule.thickness,
@@ -72,10 +72,10 @@ fn construct_horizontal(rule: IpgRule) -> Element<'static, app::Message>{
 
 fn construct_rule_vertical(rule: IpgRule) -> Element<'static, app::Message> {
 
-    let rule_v: Element<app::Message> = Rule::vertical(rule.thickness)
+    let rule_v: Element<app::Message> = Rule::vertical(1)
                                             .style(move|theme: &Theme| {   
                                                 get_styling(theme,
-                                                    rule.style_background.clone(), 
+                                                    rule.style_color.clone(), 
                                                     rule.style_border.clone(), 
                                                     rule.style_fill_mode.clone(),
                                                     rule.thickness,
@@ -89,28 +89,32 @@ fn construct_rule_vertical(rule: IpgRule) -> Element<'static, app::Message> {
 
 
 fn get_styling(theme: &Theme,
-                style_background: Option<String>, 
+                style_color: Option<String>, 
                 style_border: Option<String>,
                 style_fill_mode: Option<String>,
                 thickness: u16,
                 ) -> Style {
 
-    let default_style = rule::default(theme);
+    let mut base_style = rule::default(theme);
+
+    if style_color.is_none() && style_border.is_none() && style_fill_mode.is_none() {
+        return  base_style
+    }
 
     let state = access_state();
 
-    let background_opt = if style_background.is_some() {
-        state.styling_background.get(&style_background.unwrap())
+    let color_palette_opt = if style_color.is_some() {
+        state.styling_color.get(&style_color.unwrap())
     } else {
         None
     };
 
-    let bg_color = if background_opt.is_some() {
-        let color = background_opt.unwrap();
-        color.color
-    } else {
-        default_style.color
-    };
+    if color_palette_opt.is_some() {
+        let color_palette = color_palette_opt.unwrap();
+        if color_palette.base.is_some() {
+            base_style.color = color_palette.base.unwrap();
+        }
+    }
 
     let border_opt = if style_border.is_some() {
         state.styling_border.get(&style_border.unwrap())
@@ -118,12 +122,12 @@ fn get_styling(theme: &Theme,
         None
     };
 
-    let b_radius = if border_opt.is_some() {
+    if border_opt.is_some() {
         let border = border_opt.unwrap();
-        border.radius
-    } else {
-        0.0.into()
-    };
+        base_style.radius = border.radius; 
+    }
+
+    base_style.width = thickness;
 
     let fill_mode_opt = if style_fill_mode.is_some() {
         state.styling_fill_mode.get(&style_fill_mode.unwrap())
@@ -149,11 +153,8 @@ fn get_styling(theme: &Theme,
         FillMode::Full
     };
 
-    Style {
-        color: bg_color,
-        width: thickness,
-        radius: b_radius,
-        fill_mode,
-    }
+    base_style.fill_mode = fill_mode;
+
+    base_style
 
 }

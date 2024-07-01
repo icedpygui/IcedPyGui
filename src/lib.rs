@@ -1384,15 +1384,16 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, width, 
                         width_fill=true, thickness=1,
-                        style_background=None, 
+                        style_color=None, 
                         style_border=None,
-                        style_fill_mode=None,))]
+                        style_fill_mode=None,
+                        ))]
     fn add_rule_horizontal(&mut self, 
                             parent_id: String,
                             width: Option<f32>,
                             width_fill: bool,
                             thickness: u16,
-                            style_background: Option<String>, 
+                            style_color: Option<String>, 
                             style_border: Option<String>,
                             style_fill_mode: Option<String>,
                             ) -> PyResult<usize> 
@@ -1415,7 +1416,7 @@ impl IPG {
                                                         height,
                                                         thickness,
                                                         rule_type,
-                                                        style_background, 
+                                                        style_color, 
                                                         style_border,
                                                         style_fill_mode,
                                                         )));
@@ -1425,14 +1426,16 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, height=None, 
                         height_fill=true, thickness=1,
-                        style_background=None, style_border=None,
-                        style_fill_mode=None,))]
+                        style_color=None, 
+                        style_border=None,
+                        style_fill_mode=None,
+                        ))]
     fn add_rule_vertical(&mut self, 
                             parent_id: String,
                             height: Option<f32>,
                             height_fill: bool,
                             thickness: u16,
-                            style_background: Option<String>, 
+                            style_color: Option<String>, 
                             style_border: Option<String>,
                             style_fill_mode: Option<String>,
                             ) -> PyResult<usize> 
@@ -1455,7 +1458,7 @@ impl IPG {
                                                         height,
                                                         thickness,
                                                         rule_type,
-                                                        style_background, 
+                                                        style_color, 
                                                         style_border,
                                                         style_fill_mode,
                                                         )));

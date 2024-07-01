@@ -1133,7 +1133,7 @@ class IPG:
                             width: Union[None | float]=None, 
                             width_fill: bool=True,
                             thickness: int=1,
-                            style_background: Union[None | str]=None,
+                            style_color: Union[None | str]=None,
                             style_border: Union[None | str]=None,
                             style_fill_mode: Union[None | str]=None,
                             ) -> int:
@@ -1150,8 +1150,8 @@ class IPG:
                 If set, fills the available space for the horizontal length, overides width.
             thickness: int
                 The thickness of the rule.
-            style_background: str
-                style_id of the add_styling_background.
+            style_color: str
+                style_id of the add_styling_color.
             style_border: str
                 style_id of the add_styling_border.
             style_fill_mode: str
@@ -1169,7 +1169,7 @@ class IPG:
                             height: Union[None | float]=None, 
                             height_fill: bool=True,
                             thickness: int=1,
-                            style_background: Union[None | str]=None,
+                            style_color: Union[None | str]=None,
                             style_border: Union[None | str]=None,
                             style_fill_mode: Union[None | str]=None,
                           ) -> int:
@@ -1186,8 +1186,8 @@ class IPG:
                 If set, fills the available space for the vertical length, overides height.
             thickness: int
                 The thickness of the rule.
-            style_background: str
-                style_id of the add_styling_background.
+            style_color: str
+                style_id of the add_styling_color.
             style_border: str
                 style_id of the add_styling_border which only has radius as a valid entry.
             style_fill_mode: str
