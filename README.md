@@ -9,7 +9,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
 
 </div>
 ## Revisions
-    * Upcoming revision 0.1.1 estimated to be June 14 (probably called v0.2.0)
+    * Upcoming revision 0.1.1 estimated to be July 8 (probably called v0.2.0)
     * Commits are not made to main but to an updating branch called updating-to-vx.x.x
     * This branch may have errors and is usually a work in progres
     * As IPG catches up to Iced, these updating branch will be more specific to an issue
