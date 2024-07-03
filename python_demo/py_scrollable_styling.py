@@ -16,27 +16,16 @@ ipg.add_container(window_id="main", container_id="cont",
 
 # Let's add some styling for the scrollable before adding it.
 # Let's style the bar first with a dark color
-ipg.add_styling_background("s_bar_bkg", color=IpgColor.DARK_BLUE)
-
-# Add another bkg for the scroller
-ipg.add_styling_background("scroller_bkg", color=IpgColor.BLUE)
-
-# Add another bkg for the container background, since only a Container has
-# has any styling and Column and Row do not.  You could have added the column
-# to the container and styled it but this saves a step.
-ipg.add_styling_background(style_id="cont_bkg", color=IpgColor.DARK_BLUE)
-
-# Need another style for the text color
-ipg.add_styling_text_color("cont_text", color=IpgColor.ORANGE)
+ipg.add_styling_color("color",
+                    # scrollbar_color=IpgColor.LIGHT_BLUE,
+                    scroller_color=IpgColor.BLUE)
 
 # Add the scrollable restricting the width so it can center and height 
 # wich is less than the length of the data in the column for scrolling.
 scroll_id_1 = ipg.add_scrollable(window_id="main", container_id="scroll",
                                 width=500, height=150.0,
-                                scroll_bar_style_background="s_bar_bkg",
-                                scroller_style_background="scroller_bkg",
-                                container_style_background="cont_bkg",
-                                container_style_text_color="cont_text")
+                                # style_color="color",
+                                )
 
 # Add the column for the data
 ipg.add_column(window_id="main", container_id="col",

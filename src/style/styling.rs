@@ -19,6 +19,8 @@ pub struct IpgPalette {
     pub handle: Option<Color>,
     pub icon: Option<Color>,
     pub placeholder: Option<Color>,
+    pub scroller: Option<Color>,
+    pub scrollbar: Option<Color>,
     pub shadow: Option<Color>,
     pub text: Option<Color>,
 }
@@ -34,6 +36,8 @@ impl IpgPalette {
         handle: Option<Color>,
         icon: Option<Color>,
         placeholder: Option<Color>,
+        scroller: Option<Color>,
+        scrollbar: Option<Color>,
         shadow: Option<Color>,
         text: Option<Color>,
     ) -> Self {
@@ -47,6 +51,8 @@ impl IpgPalette {
             handle,
             icon,
             placeholder,
+            scroller,
+            scrollbar,
             shadow,
             text,
             }
@@ -81,27 +87,6 @@ impl IpgStylingStandard {
 }
 
 #[derive(Debug, Clone)]
-pub struct StyleBackground {
-    pub id: usize,
-    pub color: Color,
-    pub accent: f32,
-}
-
-impl StyleBackground {
-    pub fn new(
-        id: usize,
-        color: Color,
-        accent: f32,
-    ) -> Self {
-        Self {
-            id,
-            color,
-            accent,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
 pub struct StyleBarColor {
     pub id: usize,
     pub color: Color,
@@ -127,6 +112,8 @@ pub struct StyleBorder {
     pub id: usize,
     pub radius: Radius,
     pub width: f32,
+    pub scroller_radius: Radius,
+    pub scrollbar_radius: Radius,
 }
 
 impl StyleBorder {
@@ -134,11 +121,15 @@ impl StyleBorder {
         id: usize,
         radius: Radius,
         width: f32,
+        scroller_radius: Radius,
+        scrollbar_radius: Radius,
     ) -> Self {
         Self {
             id,
             radius,
             width,
+            scroller_radius,
+            scrollbar_radius,
         }
     }
 }

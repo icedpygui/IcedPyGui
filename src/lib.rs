@@ -62,9 +62,8 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
     get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{IpgPalette, IpgStyleParam, IpgStyleStandard, IpgStylingStandard, StyleBackground, StyleBarColor, StyleBorder, StyleDotColor, StyleFillMode, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
+use style::styling::{IpgPalette, IpgStyleParam, IpgStyleStandard, IpgStylingStandard, StyleBarColor, StyleBorder, StyleDotColor, StyleFillMode, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
 
-const DEFAULT_PADDING: [f64; 1] = [10.0];
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
 
 use std::sync::{Mutex, MutexGuard};
@@ -116,7 +115,6 @@ pub struct State {
     
     pub styling_color: Lazy<HashMap<String, IpgPalette>>,
     pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
-    pub styling_background: Lazy<HashMap<String, StyleBackground>>,
     pub styling_bar_color: Lazy<HashMap<String, StyleBarColor>>,
     pub styling_border: Lazy<HashMap<String, StyleBorder>>,
     pub styling_dot_color: Lazy<HashMap<String, StyleDotColor>>,
@@ -151,7 +149,6 @@ pub static STATE: Mutex<State> = Mutex::new(
         
         styling_color: Lazy::new(||HashMap::new()),
         styling_standard: Lazy::new(||HashMap::new()),
-        styling_background: Lazy::new(||HashMap::new()),
         styling_bar_color: Lazy::new(||HashMap::new()),
         styling_border: Lazy::new(||HashMap::new()),
         styling_dot_color: Lazy::new(||HashMap::new()),
@@ -359,7 +356,7 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         center_xy=false, clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
                         align_x=IpgContainerAlignment::Start, align_y=IpgContainerAlignment::Start,
-                        padding=DEFAULT_PADDING.to_vec(), show=true, style_color=None, 
+                        padding=vec![0.0], show=true, style_color=None, 
                         style_border=None, style_shadow=None,
                        ))]
     fn add_container(&mut self,
@@ -428,8 +425,8 @@ impl IPG {
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         align_items=IpgColumnAlignment::Start, width=None, height=None,
                         width_fill=false, height_fill=false,
-                        max_width=f32::INFINITY, padding=DEFAULT_PADDING.to_vec(), 
-                        spacing=20.0, clip=false, show=true,
+                        max_width=f32::INFINITY, padding=vec![0.0], 
+                        spacing=10.0, clip=false, show=true,
                         ))]
     fn add_column(&mut self,
                         window_id: String,
@@ -572,7 +569,7 @@ impl IPG {
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         align_items=IpgRowAlignment::Start, width=None, height=None, 
                         width_fill=false, height_fill=false,
-                        padding=DEFAULT_PADDING.to_vec(), spacing=20.0, clip=false,
+                        padding=vec![0.0], spacing=10.0, clip=false,
                         show=true,
                         ))]
     fn add_row(&mut self,
@@ -632,11 +629,8 @@ impl IPG {
                         h_bar_alignment=IpgScrollableAlignment::Start,
                         v_bar_width=10.0, v_bar_margin=0.0, v_scroller_width=10.0, 
                         v_bar_alignment=IpgScrollableAlignment::Start,
-                        on_scroll=None, scroll_bar_style_background=None,
-                        scroll_bar_style_border=None, scroller_style_background=None,
-                        scroller_style_border=None, container_style_background=None,
-                        container_style_border=None, container_style_shadow=None,
-                        container_style_text_color=None,
+                        on_scroll=None, style_color=None,
+                        style_border=None,
                         user_data=None,
                         ))]
     fn add_scrollable(&mut self,
@@ -658,14 +652,8 @@ impl IPG {
                             v_scroller_width: f32,
                             v_bar_alignment: IpgScrollableAlignment,
                             on_scroll: Option<PyObject>,
-                            scroll_bar_style_background: Option<String>,
-                            scroll_bar_style_border: Option<String>,
-                            scroller_style_background: Option<String>,
-                            scroller_style_border: Option<String>,
-                            container_style_background: Option<String>,
-                            container_style_border: Option<String>,
-                            container_style_shadow: Option<String>,
-                            container_style_text_color: Option<String>,
+                            style_color: Option<String>,
+                            style_border: Option<String>,
                             user_data: Option<PyObject>,
                             ) -> PyResult<usize>
     {
@@ -705,14 +693,8 @@ impl IPG {
                                                     v_bar_margin,
                                                     v_scroller_width,
                                                     v_bar_alignment,
-                                                    scroll_bar_style_background,
-                                                    scroll_bar_style_border,
-                                                    scroller_style_background,
-                                                    scroller_style_border,
-                                                    container_style_background,
-                                                    container_style_border,
-                                                    container_style_shadow,
-                                                    container_style_text_color,
+                                                    style_color,
+                                                    style_border,
                                                     user_data,
                                                     )));
 
@@ -1293,7 +1275,7 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, labels, gen_id=None,
                         direction=IpgRadioDirection::Vertical, 
-                        spacing= 10.0, padding=DEFAULT_PADDING.to_vec(), 
+                        spacing= 10.0, padding=vec![10.0], 
                         width=None, width_fill=false, height=None, height_fill=false,
                         on_select=None, selected_index=None, 
                         size=20.0, style_color=None, style_border=None,
@@ -1687,7 +1669,9 @@ impl IPG {
                         dot_color=None, dot_rgba=None,
                         handle_color=None, handle_rgba=None, 
                         icon_color=None, icon_rgba=None,
-                        placeholder_color=None, placeholder_rgba=None, 
+                        placeholder_color=None, placeholder_rgba=None,
+                        scroller_color=None, scroller_rgba=None,
+                        scrollbar_color=None, scrollbar_rgba=None, 
                         shadow_color=None, shadow_rgba=None,
                         text_color=None, text_rgba=None,
                         gen_id=None))]
@@ -1709,6 +1693,10 @@ impl IPG {
                             icon_rgba: Option<[f32; 4]>,
                             placeholder_color: Option<IpgColor>,
                             placeholder_rgba: Option<[f32; 4]>,
+                            scroller_color: Option<IpgColor>,
+                            scroller_rgba: Option<[f32; 4]>,
+                            scrollbar_color: Option<IpgColor>,
+                            scrollbar_rgba: Option<[f32; 4]>,
                             shadow_color: Option<IpgColor>,
                             shadow_rgba: Option<[f32; 4]>,
                             text_color: Option<IpgColor>,
@@ -1728,6 +1716,8 @@ impl IPG {
         let handle: Option<Color> = get_color(handle_rgba, handle_color, 1.0, false);
         let icon: Option<Color> = get_color(icon_rgba, icon_color, 1.0, false);
         let placeholder: Option<Color> = get_color(placeholder_rgba, placeholder_color, 1.0, false);
+        let scroller: Option<Color> = get_color(scroller_rgba, scroller_color, 1.0, false);
+        let scrollbar: Option<Color> = get_color(scrollbar_rgba, scrollbar_color, 1.0, false);
         let shadow: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
         let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
         
@@ -1741,42 +1731,10 @@ impl IPG {
                                                     handle,
                                                     icon,
                                                     placeholder,
+                                                    scroller,
+                                                    scrollbar,
                                                     shadow,
                                                     text,
-                                                    ));
-        
-        drop(state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, scale_alpha=1.0, accent_amount=0.05, 
-                        gen_id=None))]
-    fn add_styling_background(&mut self,
-                            style_id: String,
-                            rgba: Option<[f32; 4]>,
-                            color: Option<IpgColor>,
-                            invert: bool,
-                            scale_alpha: f32,
-                            accent_amount: f32,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        let color: Color = if rgba.is_some() | color.is_some() {
-            get_color(rgba, color, scale_alpha, invert).unwrap()
-        } else {
-            Color::TRANSPARENT
-        };
-        
-        let mut state = access_state();
-       
-        state.styling_background.insert(style_id, StyleBackground::new( 
-                                                    id,
-                                                    color,
-                                                    accent_amount,
                                                     ));
         
         drop(state);
@@ -1818,11 +1776,16 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id, width=1.0, radius=vec![2.0], gen_id=None))]
+    #[pyo3(signature = (style_id, width=1.0, radius=vec![2.0], 
+                        scroller_radius=vec![2.0], scrollbar_radius=vec![2.0], 
+                        gen_id=None
+                        ))]
     fn add_styling_border(&mut self,
                             style_id: String,
                             width: f32,
                             radius: Vec<f32>,
+                            scroller_radius: Vec<f32>,
+                            scrollbar_radius: Vec<f32>,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize>
     {
@@ -1836,6 +1799,21 @@ impl IPG {
             panic!("Radius must have a type of list with either 1 or 4 items")
         };
 
+        let scrollbar_radius: Radius = if scrollbar_radius.len() == 1 {
+            Radius::from([scrollbar_radius[0]; 4])
+        } else if scroller_radius.len() == 4 {
+            Radius::from([scroller_radius[0], scroller_radius[1], scroller_radius[2], scroller_radius[3]])
+        } else {
+            panic!("Radius must have a type of list with either 1 or 4 items")
+        };
+
+        let scroller_radius: Radius = if scroller_radius.len() == 1 {
+            Radius::from([scroller_radius[0]; 4])
+        } else if scroller_radius.len() == 4 {
+            Radius::from([scroller_radius[0], scroller_radius[1], scroller_radius[2], scroller_radius[3]])
+        } else {
+            panic!("Radius must have a type of list with either 1 or 4 items")
+        };
 
         let mut state = access_state();
        
@@ -1843,6 +1821,8 @@ impl IPG {
                                                 id,
                                                 radius,
                                                 width,
+                                                scroller_radius,
+                                                scrollbar_radius,
                                                 ));
 
         drop(state);
@@ -2306,7 +2286,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, placeholder, gen_id=None,
                         on_input=None, on_submit=None, 
                         on_paste=None, width=None, width_fill=false, 
-                        padding=DEFAULT_PADDING.to_vec(), 
+                        padding=vec![10.0], 
                         size=20.0, line_height=None, 
                         user_data=None, is_secure=false, show=true,
                         ))]

@@ -1,6 +1,7 @@
 //!Container container
 #![allow(unused_assignments)]
 
+use iced::theme::palette::Pair;
 use iced::{Color, Element, Length, Padding, Theme};
 use iced::alignment;
 use iced::widget::{container, Column, Container};
@@ -156,10 +157,15 @@ pub fn get_styling(theme: &Theme,
         
         let color_palette = color_palette_opt.unwrap().clone();
 
+        let mut color = theme.extended_palette().background.base.color;
+
         if color_palette.base.is_none() {
              base_style.background = None;
         } else {
-            let color = color_palette.base.unwrap();
+            color = color_palette.base.unwrap();
+            // When base_color=background_theme which has r=0.123456 then
+            // enstead of getting a transparent background, we get the weak color.
+            // See the py_container_styling example to see the results of this. 
             if color.r == 0.123456 {
                 base_style.background = Some(palette.background.weak.color.into()); 
             } else {
@@ -170,7 +176,8 @@ pub fn get_styling(theme: &Theme,
         if color_palette.text.is_some() {
             base_style.text_color = Some(color_palette.text.unwrap());
         } else {
-            base_style.text_color = Some(text_color);
+            let readable = Pair::new(color, text_color);
+            base_style.text_color = Some(readable.text);
         }
         
         if color_palette.border.is_some() {

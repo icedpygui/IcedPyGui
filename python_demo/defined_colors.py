@@ -1,6 +1,31 @@
 from icedpygui import IPG, IpgColor
 
 
+"""
+Styling color rules:
+
+    Of the three containers, Container, Column, and Row, the only one that has styling is the container.
+    If you want styling for the other two, place them within a Container.
+
+    The styling_color has many options for styling various widgets.  You will need to use the proper 
+    parameter for a given widget.  For example, to style a scrollbar, use the scrollbar_color or 
+    scrollbar_rgba.  The base_color or base_rgba is used for the background and if no other colors
+    are given, it will generate the other colors by generating a base, weak, and strong color for 
+    items such as mouse hover or drag, text color, etc.  If these are not to your liking, supply
+    whatever color you would like.
+
+    Each widget has a styling note associated with the hint.
+
+    Along with the theme colors used in Iced, IPG also uses colors obtained from
+    https://www.w3schools.com/cssref/css_colors.php.
+
+    This program generates the colors in a container along with the name, base, weak, and strong
+    variations.  The text color is generated automatically to be readable but can also be defined
+    by the user.
+
+"""
+
+
 ipg = IPG()
 
 colors = [IpgColor.PRIMARY, IpgColor.SECONDARY, IpgColor.SUCCESS, IpgColor.DANGER, IpgColor.WARNING, 
@@ -36,33 +61,55 @@ colors = [IpgColor.PRIMARY, IpgColor.SECONDARY, IpgColor.SUCCESS, IpgColor.DANGE
           IpgColor.TAN, IpgColor.TEAL, IpgColor.THISTLE, IpgColor.TOMATO, IpgColor.TRANSPARENT, IpgColor.TURQUOISE, 
           IpgColor.VIOLET, IpgColor.WHEAT, IpgColor.WHITE, IpgColor.WHITE_SMOKE, IpgColor.YELLOW, IpgColor.YELLOW_GREEN]
 
-dark_text = [4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 16, 22, 26, 28, 46, 54, 57, 58, 59, 64, 65]
-dark_text.extend(range(69, 93))
-dark_text.extend([95, 101, 102, 105, 106, 107, 108, 110,116, 117, 118, 120,121, 
-                  123,125,135, 137, 138,142, 143, 150,152, 153, 154, 155, 156])
+widths = [300, 150, 150]
 # Add the window first
-ipg.add_window("main", "Menu", 500, 600,  pos_x=100, pos_y=25)
+ipg.add_window("main", "Menu", 
+               600, 600,  
+               pos_x=100, pos_y=25,
+               )
+
+headers = ["Base Color", "Weak Color", "Strong Color"]
+
+# add row with some padding on top
+ipg.add_row(window_id="main", 
+            container_id="info_row",
+            width_fill=True,
+            padding=[20.0, 0.0, 0.0, 0.0])
+
+for i in range(0, 3):
+    ipg.add_container(window_id="main", 
+                    container_id=f"info{i}",
+                    parent_id="info_row",
+                    center_xy=True,
+                    width=widths[i],
+                    )
+    
+    ipg.add_text(parent_id=f"info{i}", content=headers[0])
+
 
 ipg.add_scrollable(window_id="main", container_id="scroll", height=550.0, width_fill=True)
 
 # Add a column container to hold everything
 ipg.add_column(window_id="main", parent_id="scroll", container_id="col", 
                width_fill=True, spacing=0.0)
+
 for (i, color) in enumerate(colors):
 
-    color_text = str(color)[9:]
+    ipg.add_row(window_id="main", parent_id="col", container_id=f"row{i}", padding=[0.0])
+
+    color_name = str(color)[9:]
+
+    ipg.add_styling_color(style_id=f"cont{i}", base_color=color)
 
     ipg.add_container("main", container_id=f"cont{i}",
-                        parent_id="col",
-                        width_fill=True, height=30.0,
+                        parent_id=f"row{i}",
+                        style_color= f"cont{i}",
+                        width=widths[0], height=30.0,
                         center_xy=True, padding=[0.0])
-    
-    if i in dark_text:
-        ipg.add_styling_text_color(f"cont{i}", color=IpgColor.BLACK)
-    
-    ipg.add_text(f"cont{i}", f"{color_text} {i}")
 
-    ipg.add_styling_background(style_id=f"cont{i}", color=color)
+    ipg.add_text(f"cont{i}", f"{color_name}")
+
+    
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.
