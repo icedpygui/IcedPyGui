@@ -1,8 +1,9 @@
 //!Container container
 #![allow(unused_assignments)]
 
+use iced::border::Radius;
 use iced::theme::palette::Pair;
-use iced::{Color, Element, Length, Padding, Theme};
+use iced::{Background, Border, Color, Element, Length, Padding, Shadow, Theme, Vector};
 use iced::alignment;
 use iced::widget::{container, Column, Container};
 
@@ -10,6 +11,7 @@ use pyo3::pyclass;
 
 use crate::access_state;
 use crate::app::Message;
+use crate::style::styling::{is_dark, IpgColorPalette};
 
 
 #[derive(Debug, Clone)]
@@ -26,9 +28,7 @@ pub struct IpgContainer {
     pub align_y: IpgContainerAlignment,
     pub center_xy: bool,
     pub clip: bool,
-    pub style_color: Option<String>, 
-    pub style_border: Option<String>, 
-    pub style_shadow: Option<String>,
+    pub style: Option<String>, 
 }
 
 impl IpgContainer {
@@ -45,9 +45,7 @@ impl IpgContainer {
         align_y: IpgContainerAlignment,
         center_xy: bool,
         clip: bool,
-        style_color: Option<String>, 
-        style_border: Option<String>, 
-        style_shadow: Option<String>,
+        style: Option<String>,
     ) -> Self {
         Self {
             id,
@@ -61,12 +59,68 @@ impl IpgContainer {
             align_y,
             center_xy,
             clip,
-            style_color, 
-            style_border, 
-            style_shadow,
+            style, 
         }
     }
 }
+
+
+pub struct IpgContainerStyle {
+    pub id: usize,
+    pub base: Option<Color>,
+    pub strong: Option<Color>,
+    pub weak: Option<Color>,
+    pub strong_factor: Option<f32>,
+    pub weak_factor: Option<f32>,
+    pub border: Option<Color>,
+    pub border_radius: Vec<f32>,
+    pub border_width: f32,
+    pub shadow: Option<Color>,
+    pub shadow_offset_x: f32,
+    pub shadow_offset_y: f32,
+    pub shadow_blur_radius: f32,
+    pub text: Option<Color>,
+    pub use_background: bool,
+}
+
+impl IpgContainerStyle {
+    pub fn new(
+        id: usize,
+        base: Option<Color>,
+        strong: Option<Color>,
+        weak: Option<Color>,
+        strong_factor: Option<f32>,
+        weak_factor: Option<f32>,
+        border: Option<Color>,
+        border_radius: Vec<f32>,
+        border_width: f32,
+        shadow: Option<Color>,
+        shadow_offset_x: f32,
+        shadow_offset_y: f32,
+        shadow_blur_radius: f32,
+        text: Option<Color>,
+        use_background: bool,
+    ) -> Self {
+        Self {
+            id,
+            base,
+            strong,
+            weak,
+            strong_factor,
+            weak_factor,
+            border,
+            border_radius,
+            border_width,
+            shadow,
+            shadow_offset_x,
+            shadow_offset_y,
+            shadow_blur_radius,
+            text,
+            use_background,
+        }
+    }
+}
+
 
 pub fn construct_container(con: IpgContainer, content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
     // iced container does not take a vec so need to put into a row or column first
@@ -87,9 +141,7 @@ pub fn construct_container(con: IpgContainer, content: Vec<Element<'static, Mess
                 .clip(con.clip)
                 .style(move|Theme|
                     get_styling(&Theme, 
-                        con.style_color.clone(), 
-                        con.style_border.clone(), 
-                        con.style_shadow.clone(),
+                        con.style.clone(),
                         ))
                 .into();
     cont.into()
@@ -129,95 +181,105 @@ fn get_vertical(y_align: IpgContainerAlignment, center: bool) -> alignment::Vert
 
 
 pub fn get_styling(theme: &Theme,
-                style_color: Option<String>, 
-                style_border: Option<String>, 
-                style_shadow: Option<String>,
+                style: Option<String>,  
                 ) -> container::Style {
     
     let state = access_state();
 
-    // Basically the default theme, using transparent to clarify
-    let mut base_style = container::transparent(theme);
+    if style.is_none() {
+        return container::transparent(theme);
+    }
+
+    let style_opt = if style.is_some() {
+        state.container_style.get(&style.unwrap())
+    } else {
+        panic!("Container style: Could not find container style id")
+    };
+
+    let style = if style_opt.is_some() {
+        style_opt.unwrap()
+    } else {
+        panic!("Container style: style id not found.")
+    };
+
+    if style.base.is_none() && style.weak.is_some() {
+        panic!("Container style: if you define style.weak, you must define style.base too")
+    }
+
+    // Strong is not used in container
+    let mut base = Color::default();
+    let mut weak = Color::default();
 
     let palette = theme.extended_palette();
 
-    let color_palette_opt = if style_color.is_some() {
-        state.styling_color.get(&style_color.unwrap())
-    } else {
-        None
-    };
+    let mut background = Some(palette.background.weak.color.into());
+    let background_color = theme.palette().background;
 
-    if color_palette_opt.is_some() {
+    let mut text_color = None;
+    
+    let mut border = Border::default();
+    let mut shadow = Shadow::default();
 
-        let text_color = if palette.is_dark {
-            Color::WHITE
-        } else {
-            Color::BLACK
-        };
-        
-        let color_palette = color_palette_opt.unwrap().clone();
+    // all custom colors
+    if style.base.is_some() && style.weak.is_some() {
+       base = style.base.unwrap();
+       weak = style.weak.unwrap();
+       text_color = Some(get_text_color(style.text, weak));
+    }
 
-        let mut color = theme.extended_palette().background.base.color;
+    // generate weak
+    if style.base.is_some() && style.weak.is_none() {
+        if !style.use_background {
+            base = style.base.unwrap();
+            text_color = Some(get_text_color(style.text, base));
+            let custom = IpgColorPalette::generate(base, background_color, 
+                                                            text_color.unwrap(), 
+                                                            style.strong_factor, style.weak_factor);
 
-        if color_palette.base.is_none() {
-             base_style.background = None;
-        } else {
-            color = color_palette.base.unwrap();
-            // When base_color=background_theme which has r=0.123456 then
-            // enstead of getting a transparent background, we get the weak color.
-            // See the py_container_styling example to see the results of this. 
-            if color.r == 0.123456 {
-                base_style.background = Some(palette.background.weak.color.into()); 
-            } else {
-                base_style.background = Some(color.into());
-            }
-        }
-
-        if color_palette.text.is_some() {
-            base_style.text_color = Some(color_palette.text.unwrap());
-        } else {
-            let readable = Pair::new(color, text_color);
-            base_style.text_color = Some(readable.text);
-        }
-        
-        if color_palette.border.is_some() {
-            base_style.border.color = color_palette.border.unwrap();
-        }
-
-        if color_palette.shadow.is_some() {
-            base_style.shadow.color = color_palette.shadow.unwrap();
+            background = Some(Background::Color(custom.weak.color));
         }
     }
+
+    if style.border.is_some() {
+        border.color = style.border.unwrap();
+    }
+
+    if style.border_radius.len() == 1 {
+        border.radius = Radius::from(style.border_radius[0]);
+    } else if style.border_radius.len() == 4 {
+        let radius = [style.border_radius[0], style.border_radius[1], 
+                                style.border_radius[2], style.border_radius[3]];
+        border.radius = Radius::from(radius);
+    } else {
+        panic!("Container style: Border radius must be a list of 1 or 4 items")
+    }
     
-    let border_opt = if style_border.is_some() {
-        state.styling_border.get(&style_border.unwrap())
-    } else {
-        None
-    };
+    border.width = style.border_width;
+    
+    if style.shadow.is_some() {
+        shadow.color = style.shadow.unwrap();
+        shadow.blur_radius = style.shadow_blur_radius;
+        shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y }
+    }
+    
+    container::Style {
+        background,
+        border,
+        shadow,
+        text_color,
+    }
+    
+}
 
-    match border_opt {
-        Some(bd) => {
-            base_style.border.width = bd.width;
-            base_style.border.radius = bd.radius;    
-        },
-        None => (),
-    };
-
-
-    let shadow_opt = if style_shadow.is_some() {
-        state.styling_shadow.get(&style_shadow.unwrap())
-    } else {
-        None
-    };
-
-    match shadow_opt {
-        Some(sh) => {
-            base_style.shadow.offset = iced::Vector { x: sh.offset_x, y: sh.offset_y };
-            base_style.shadow.blur_radius = sh.blur_radius;
-        },
-        None => (),
-    };
-
-   base_style
-
+fn get_text_color(text: Option<Color>, weak: Color) -> Color {
+    if text.is_some() {
+        text.unwrap()
+   } else {
+        let mut t_color = Color::BLACK;
+        if is_dark(weak) {
+            t_color = Color::WHITE;
+        } 
+        let pair = Pair::new(weak, t_color);
+        pair.text
+   }
 }

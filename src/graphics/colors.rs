@@ -379,8 +379,8 @@ pub const LIGHT: Color = GHOST_WHITE;
 /// Dark <span style="color:rgb(0.204, 0.227, 0.251)">Color</span>.
 pub const DARK: Color = Color::from_rgb(0.204, 0.227, 0.251);
 
-/// Background Theme which has a unique r value (0.123456) for testing if background theme.
-pub const BACKGROUND_THEME: Color = Color::from_rgb(0.123456, 1.0, 1.0);
+/// Background Theme, color not used but Background Theme tested for.
+pub const BACKGROUND_THEME: Color = Color::from_rgb(0.204, 0.227, 0.251);
 
 /// Alice Blue <span style="color:aliceBlue">Color</span>.
 pub const ALICE_BLUE: Color = Color::from_rgb(0.941, 0.973, 1.0);

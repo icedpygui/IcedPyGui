@@ -1,15 +1,16 @@
 //!lib for all of the python callable functions using pyo3
 #![allow(non_snake_case)]
 
-use iced::border::Radius;
+
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
 
 use iced::multi_window::Application;
 use iced::window::{self, Position};
-use iced::{Color, Font, Length, Point, Settings, Size, Theme};
+use iced::{Color, Font, Length, Point, Settings, Size, Theme, theme};
 use iced::widget::text::{self, LineHeight};
+use iced::border::Radius;
 
 use core::panic;
 use std::iter::Iterator;
@@ -29,7 +30,7 @@ use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, Ip
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
-use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment};
+use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment, IpgContainerStyle};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, IpgImageFilterMethod, IpgImageParams, IpgImageRotation};
@@ -62,7 +63,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids,
     get_line_height, get_padding, get_shaping, get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{IpgPalette, IpgStyleParam, IpgStyleStandard, IpgStylingStandard, StyleBarColor, StyleBorder, StyleDotColor, StyleFillMode, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
+use style::styling::{readable, IpgPalette, IpgStyleParam, IpgStyleStandard, IpgStylingStandard, StyleBarColor, StyleBorder, StyleDotColor, StyleFillMode, StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
 
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
 
@@ -113,6 +114,8 @@ pub struct State {
     
     pub events: Vec<IpgEvents>,
     
+    pub container_style: Lazy<HashMap<String, IpgContainerStyle>>,
+
     pub styling_color: Lazy<HashMap<String, IpgPalette>>,
     pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
     pub styling_bar_color: Lazy<HashMap<String, StyleBarColor>>,
@@ -146,6 +149,8 @@ pub static STATE: Mutex<State> = Mutex::new(
         window_theme: Lazy::new(||HashMap::new()),
         
         events: vec![],
+
+        container_style: Lazy::new(||HashMap::new()),
         
         styling_color: Lazy::new(||HashMap::new()),
         styling_standard: Lazy::new(||HashMap::new()),
@@ -356,8 +361,8 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         center_xy=false, clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
                         align_x=IpgContainerAlignment::Start, align_y=IpgContainerAlignment::Start,
-                        padding=vec![0.0], show=true, style_color=None, 
-                        style_border=None, style_shadow=None,
+                        padding=vec![0.0], show=true, style=None, 
+                        
                        ))]
     fn add_container(&mut self,
                         window_id: String,
@@ -376,9 +381,7 @@ impl IPG {
                         align_y: IpgContainerAlignment, 
                         padding: Vec<f64>, 
                         show: bool,
-                        style_color: Option<String>, 
-                        style_border: Option<String>, 
-                        style_shadow: Option<String>,
+                        style: Option<String>,
                         ) -> PyResult<usize>
     {
         self.id += 1;
@@ -410,9 +413,7 @@ impl IPG {
                                                 align_y,
                                                 center_xy,
                                                 clip,
-                                                style_color, 
-                                                style_border, 
-                                                style_shadow,
+                                                style, 
                                             )));
 
         drop(state);
@@ -421,6 +422,80 @@ impl IPG {
 
     }
 
+    #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
+                        strong_color=None, strong_rgba=None,
+                        weak_color=None, weak_rgba=None,
+                        strong_factor=0.15, weak_factor=0.40, 
+                        border_color=None, border_rgba=None,
+                        border_radius = vec![0.0], border_width=1.0,
+                        shadow_color=None, shadow_rgba=None,
+                        shadow_offset_x=0.0, shadow_offset_y=0.0,
+                        shadow_blur_radius=1.0,
+                        text_color=None, text_rgba=None,
+                        
+                        gen_id=None))]
+    fn add_container_style(&mut self,
+                            style_id: String,
+                            base_color: Option<IpgColor>,
+                            base_rgba: Option<[f32; 4]>,
+                            strong_color: Option<IpgColor>,
+                            strong_rgba: Option<[f32; 4]>,
+                            weak_color: Option<IpgColor>,
+                            weak_rgba: Option<[f32; 4]>,
+                            strong_factor: Option<f32>,
+                            weak_factor: Option<f32>,
+                            border_color: Option<IpgColor>,
+                            border_rgba: Option<[f32; 4]>,
+                            border_radius: Vec<f32>,
+                            border_width: f32,
+                            shadow_color: Option<IpgColor>,
+                            shadow_rgba: Option<[f32; 4]>,
+                            shadow_offset_x: f32,
+                            shadow_offset_y: f32,
+                            shadow_blur_radius: f32,
+                            text_color: Option<IpgColor>,
+                            text_rgba: Option<[f32; 4]>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let mut state = access_state();
+
+        let mut use_background = false;
+        if base_color == Some(IpgColor::BACKGROUND_THEME) {
+            use_background = true;
+        }
+
+        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+        let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
+        let weak: Option<Color> = get_color(weak_rgba, weak_color, 1.0, false);
+        let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let shadow: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
+        let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+
+        state.container_style.insert(style_id, IpgContainerStyle::new( 
+                                                    id,
+                                                    base,
+                                                    strong,
+                                                    weak,
+                                                    strong_factor,
+                                                    weak_factor,
+                                                    border,
+                                                    border_radius,
+                                                    border_width,
+                                                    shadow,
+                                                    shadow_offset_x,
+                                                    shadow_offset_y,
+                                                    shadow_blur_radius,
+                                                    text,
+                                                    use_background,
+                                                    ));
+        
+        drop(state);
+
+        Ok(id)
+    }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         align_items=IpgColumnAlignment::Start, width=None, height=None,
@@ -1662,7 +1737,10 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id, base_color=None, base_rgba=None, 
+    #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
+                        strong_color=None, strong_rgba=None,
+                        weak_color=None, weak_rgba=None,
+                        strong_factor=0.15, weak_factor=0.40, 
                         bar_color=None, bar_rgba=None, 
                         border_color=None, border_rgba=None, 
                         blur_color=None, blur_rgba=None, 
@@ -1679,6 +1757,12 @@ impl IPG {
                             style_id: String,
                             base_color: Option<IpgColor>,
                             base_rgba: Option<[f32; 4]>,
+                            strong_color: Option<IpgColor>,
+                            strong_rgba: Option<[f32; 4]>,
+                            weak_color: Option<IpgColor>,
+                            weak_rgba: Option<[f32; 4]>,
+                            strong_factor: f32,
+                            weak_factor: f32,
                             bar_color: Option<IpgColor>,
                             bar_rgba: Option<[f32; 4]>,
                             border_color: Option<IpgColor>,
@@ -1709,6 +1793,8 @@ impl IPG {
         let mut state = access_state();
 
         let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+        let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
+        let weak: Option<Color> = get_color(weak_rgba, weak_color, 1.0, false);
         let bar: Option<Color> = get_color(bar_rgba, bar_color, 1.0, false);
         let blur: Option<Color> = get_color(blur_rgba, blur_color, 1.0, false);
         let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
@@ -1724,6 +1810,10 @@ impl IPG {
         state.styling_color.insert(style_id, IpgPalette::new( 
                                                     id,
                                                     base,
+                                                    strong,
+                                                    weak,
+                                                    strong_factor,
+                                                    weak_factor,
                                                     bar,
                                                     border,
                                                     blur,
@@ -1740,6 +1830,28 @@ impl IPG {
         drop(state);
 
         Ok(id)
+    }
+
+    #[pyo3(signature = (base_color=None, base_rgba=None))]
+    fn get_color_palette(&mut self, 
+                            base_color: Option<IpgColor>,
+                            base_rgba: Option<[f32; 4]>,
+                        ) -> PyResult<([f32; 4], [f32; 4], [f32; 4])>
+    {
+        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+
+        let text_color = readable(base.unwrap(), Color::WHITE);
+
+        let palette = theme::palette::Background::new(base.unwrap(), text_color);
+
+        let color = palette.strong.color;
+        let strong = [color.r, color.g, color.b, color.a];
+        let color = palette.weak.color;
+        let weak = [color.r, color.g, color.b, color.a];
+        let color = text_color;
+        let text = [color.r, color.g, color.b, color.a];
+
+        Ok((strong, weak, text)) 
     }
 
     #[pyo3(signature = (style_id, rgba=None, color=None, 

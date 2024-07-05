@@ -2,27 +2,36 @@ from icedpygui import IPG, IpgColor
 
 
 """
-Styling color rules:
+Styling color notes:
 
     Of the three containers, Container, Column, and Row, the only one that has styling is the container.
     If you want styling for the other two, place them within a Container.
 
-    The styling_color has many options for styling various widgets.  You will need to use the proper 
-    parameter for a given widget.  For example, to style a scrollbar, use the scrollbar_color or 
-    scrollbar_rgba.  The base_color or base_rgba is used for the background and if no other colors
-    are given, it will generate the other colors by generating a base, weak, and strong color for 
-    items such as mouse hover or drag, text color, etc.  If these are not to your liking, supply
-    whatever color you would like.
+    If no styling is supplied, then the default theme styling will be used.  However, you can used the
+    style_standard option for each widget to select a limited number of styles such as primary, success,
+    and danger.  The theme colors are limited at this time but during the next revision, a custom
+    theme will be implemented.  You can however use any othe the IpgColors to style your widgets.  There
+    are 155 colors (https://www.w3schools.com/cssref/css_colors.php) to choose from or make up you 
+    own using the rgba option. 
 
-    Each widget has a styling note associated with the hint.
+    There are 4 special color parameters used in add_styling_colors,  base, strong, weak, and text.
+    These colors are used to color multiple parts of the widget and show mouse hove and drag effects. 
+    There are also additional color parameters where more colors for a widget may be neededs, for
+    example border color.
+    
+    If you supply only the base, IPG will generate the strong, weak, and text colors for you.  
+    This demo demostrates that for you.  There is a special widget, get_palette colors that
+    will get the additional colors for you so that you can determine if those are suitable.
+    However, if you just supply any base color, IPG will automatically use them in the widget.
 
-    Along with the theme colors used in Iced, IPG also uses colors obtained from
-    https://www.w3schools.com/cssref/css_colors.php.
-
-    This program generates the colors in a container along with the name, base, weak, and strong
-    variations.  The text color is generated automatically to be readable but can also be defined
-    by the user.
-
+    If you don't like the strong and weak colors, just supply them yourself.
+    
+    Important:  Each widget has a styling note associated with the hint which indicates which
+    color is used for each part of the widget.  In some cases, an additional color is needed
+    beyond the 3 basic ones.  These are supplied by you.  For example a border color for a
+    container.  The styling_border only changes the width and corner radius, you'll need to 
+    add the styling_color with the border option to add color to the border. 
+    
 """
 
 
@@ -61,7 +70,9 @@ colors = [IpgColor.PRIMARY, IpgColor.SECONDARY, IpgColor.SUCCESS, IpgColor.DANGE
           IpgColor.TAN, IpgColor.TEAL, IpgColor.THISTLE, IpgColor.TOMATO, IpgColor.TRANSPARENT, IpgColor.TURQUOISE, 
           IpgColor.VIOLET, IpgColor.WHEAT, IpgColor.WHITE, IpgColor.WHITE_SMOKE, IpgColor.YELLOW, IpgColor.YELLOW_GREEN]
 
-widths = [300, 150, 150]
+# global to define the 3 column widths
+widths = [260, 150, 150]
+
 # Add the window first
 ipg.add_window("main", "Menu", 
                600, 600,  
@@ -77,6 +88,7 @@ ipg.add_row(window_id="main",
             padding=[20.0, 0.0, 0.0, 0.0])
 
 for i in range(0, 3):
+    # Add the 3 containers for the header text
     ipg.add_container(window_id="main", 
                     container_id=f"info{i}",
                     parent_id="info_row",
@@ -84,9 +96,9 @@ for i in range(0, 3):
                     width=widths[i],
                     )
     
-    ipg.add_text(parent_id=f"info{i}", content=headers[0])
+    ipg.add_text(parent_id=f"info{i}", content=headers[i])
 
-
+# Add a scrollable container for all of the colors
 ipg.add_scrollable(window_id="main", container_id="scroll", height=550.0, width_fill=True)
 
 # Add a column container to hold everything
@@ -94,22 +106,44 @@ ipg.add_column(window_id="main", parent_id="scroll", container_id="col",
                width_fill=True, spacing=0.0)
 
 for (i, color) in enumerate(colors):
-
+    # Add a row for each color set
     ipg.add_row(window_id="main", parent_id="col", container_id=f"row{i}", padding=[0.0])
 
+    # get the name by cutting off the first 9 characters
     color_name = str(color)[9:]
 
-    ipg.add_styling_color(style_id=f"cont{i}", base_color=color)
+    # Get the 3 colors based on the given IpgColor
+    # These return colors are rgba
+    (strong, weak, text) = ipg.get_color_palette(color)
 
-    ipg.add_container("main", container_id=f"cont{i}",
+    # create styling for the 3 containers
+    ipg.add_styling_color(style_id=f"base{i}", 
+                          base_color=color)
+    ipg.add_styling_color(style_id=f"strong{i}", 
+                          base_rgba=strong)
+    ipg.add_styling_color(style_id=f"weak{i}", 
+                          base_rgba=weak)
+
+    # add the 3 containers
+    ipg.add_container("main", container_id=f"cont1{i}",
                         parent_id=f"row{i}",
-                        style_color= f"cont{i}",
+                        style_color= f"base{i}",
                         width=widths[0], height=30.0,
                         center_xy=True, padding=[0.0])
+    ipg.add_container("main", container_id=f"cont2{i}",
+                        parent_id=f"row{i}",
+                        style_color= f"strong{i}",
+                        width=widths[1], height=30.0,
+                        center_xy=True, padding=[0.0])
+    ipg.add_container("main", container_id=f"cont3{i}",
+                        parent_id=f"row{i}",
+                        style_color= f"weak{i}",
+                        width=widths[2], height=30.0,
+                        center_xy=True, padding=[0.0])
 
-    ipg.add_text(f"cont{i}", f"{color_name}")
+    ipg.add_text(f"cont1{i}", f"{color_name}")
 
-    
+
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

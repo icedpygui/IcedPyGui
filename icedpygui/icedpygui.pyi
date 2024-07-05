@@ -95,9 +95,8 @@ class IPG:
                         padding: List=[10.0],
                         clip: bool=False,
                         show: bool=True,
-                        style_color: Union[None | str]=None,
-                        style_border: Union[None | str]=None,
-                        style_shadow: Union[None | str]=None,
+                        style: Union[None | str]=None,
+                        style_standard: Union[None | IpgStyleStandard]=None
                         ) -> int:
         """
         Adds a generic container to the gui
@@ -142,17 +141,80 @@ class IPG:
                 Whether to clip any text if size > container.
             show: bool
                 Shows or hides container and all of its contents.
-            style_color: str
-                style_id of the add_styling_color.
-            style_border: str
-                style_id of the add_styling_border.
-            style_shadow: str
-                style_id of the add_styling_shadow.
+            style: str
+                style_id of the add_container_style.
+            style_Standard: str
+                IpgStyleStandard class.
             
         Returns
         -------
         id: int
             Internal id of widget and can be used by user if equated.
+        """
+
+    def add_container_style(self,
+                            style_id: str, 
+                            *,
+                            base_color: Union[None | IpgColor]=None,
+                            base_rgba: Union[None | list]=None,
+                            weak_color: Union[None | IpgColor]=None,
+                            weak_rgba: Union[None | list]=None,
+                            strong_factor: float=0.15, 
+                            weak_factor: float=0.40, 
+                            border_color: Union[None | IpgColor]=None, 
+                            border_rgba: Union[None | list]=None,
+                            border_radius: list=[0.0], 
+                            border_width: float=1.0,
+                            shadow_color: Union[None | IpgColor]=None, 
+                            shadow_rgba: Union[None | list]=None,
+                            shadow_offset_x: float=0.0, 
+                            shadow_offset_y: float=0.0,
+                            shadow_blur_radius: float=1.0,
+                            text_color: Union[None | IpgColor]=None, 
+                            text_rgba: Union[None | list]=None
+                        ) -> int:
+        """
+        Adds styling to container
+
+        Parameters
+        ----------
+            style_id: str
+                Id of container_style. 
+            base_color: IpgColor]
+                The theme background and base are used to calculate the weak and/or strong for the widget.
+            base_rgba: list,
+                The color in rgba format [float; 4] used as state above.
+            weak_color: IpgColor
+                The color used for the container background of the container.
+            weak_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            strong_factor: float
+                Used to calculate the strong color.  
+            weak_factor: float
+                Used to calculate the weak color.
+            border_color: IpgColor
+                Color used for the border.
+            border_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            border_radius: list
+                The radius of the 4 corners, [float]=all corners, 
+                [floate;4] top-left, top-right, bottom-right, bottom-left.
+            border_width: float
+                Border width.
+            shadow_color: IpgColor
+                The color of the shadow.
+            shadow_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            shadow_offset_x: float
+                Shadow offset in the horizontal direction.
+            shadow_offset_y: float
+                Shadow offset in the vertical direction.
+            shadow_blur_radius: float
+                The blur radius of the shadow.
+            text_color: IpgColor
+                The text color, if not defined, will either be a Black or White variation based on theme background.
+            text_rgba: list]
+                The color in rgba format [float; 4] used as state above.
         """
 
     def add_column(self,
@@ -1377,6 +1439,10 @@ class IPG:
                             style_id: str,
                             base_color: Union[None | IpgColor]=None,
                             base_rgba: Union[None | IpgColor]=None,
+                            strong_color: Union[None | IpgColor]=None,
+                            strong_rgba: Union[None | IpgColor]=None,
+                            weak_color: Union[None | IpgColor]=None,
+                            weak_rgba: Union[None | IpgColor]=None,
                             bar_color: Union[None | IpgColor]=None,
                             bar_rgba: Union[None | IpgColor]=None,
                             border_color: Union[None | IpgColor]=None,

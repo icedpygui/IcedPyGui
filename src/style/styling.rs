@@ -1,9 +1,10 @@
 //!Styling
 use iced::border::Radius;
-use iced::{Background, Color, Theme};
-use iced::widget::container;
-use palette::{FromColor, Hsl};
+use iced::theme::palette::Pair;
+use iced::{Color, Theme};
+use palette::{FromColor, Hsl, Mix};
 use palette::rgb::Rgb;
+use palette::color_difference::Wcag21RelativeContrast;
 use pyo3::pyclass;
 
 
@@ -12,6 +13,10 @@ use pyo3::pyclass;
 pub struct IpgPalette {
     pub id: usize,
     pub base: Option<Color>,
+    pub strong: Option<Color>,
+    pub weak: Option<Color>,
+    pub strong_factor: f32,
+    pub weak_factor: f32,
     pub bar: Option<Color>,
     pub border: Option<Color>,
     pub blur: Option<Color>,
@@ -29,6 +34,10 @@ impl IpgPalette {
     pub fn new(
         id: usize,
         base: Option<Color>,
+        strong: Option<Color>,
+        weak: Option<Color>,
+        strong_factor: f32,
+        weak_factor: f32,
         bar: Option<Color>,
         border: Option<Color>,
         blur: Option<Color>,
@@ -44,6 +53,10 @@ impl IpgPalette {
         Self {
             id,
             base,
+            strong,
+            weak,
+            strong_factor,
+            weak_factor,
             bar,
             border,
             blur,
@@ -263,33 +276,65 @@ impl StyleFillMode {
     }
 }
 
-use crate::ipg_widgets::ipg_table::TableRowHighLight;
-pub fn table_row_theme(theme: &Theme, idx: usize, amount: f32, 
-                        highlighter: Option<TableRowHighLight>) -> container::Style {
+/// A set of background colors.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct IpgColorPalette {
+    /// The base background color.
+    pub base: Pair,
+    /// A weaker version of the base background color.
+    pub weak: Pair,
+    /// A stronger version of the base background color.
+    pub strong: Pair,
+}
 
-    let mut background = get_theme_color(theme);
+impl IpgColorPalette {
+    /// Generates a set of [`IpgColorPalette`] colors from the base and text colors.
+    pub fn generate(base: Color, background: Color, text: Color, 
+                mut strong_factor: Option<f32>, mut weak_factor: Option<f32>) -> Self {
+        
+        if weak_factor.is_none() {
+            weak_factor = Some(0.4);
+        }
 
-    if idx % 2 == 0 {
-        background = match highlighter {
-                Some(hl) => 
-                    match hl {
-                        TableRowHighLight::Darker => darken(background, amount),
-                        TableRowHighLight::Lighter => lighten(background, amount),
-                        },
-                None => background,
-            }
-    }; 
-    
-    container::Style {
-        background: Some(Background::Color(background)),
-        ..Default::default()
+        if strong_factor.is_none() {
+            strong_factor = Some(0.1);
+        }
+
+        let weak = mix(base, background, weak_factor.unwrap()); 
+        let strong = deviate(base, strong_factor.unwrap());
+
+        Self {
+            base: Pair::new(base, text),
+            weak: Pair::new(weak, text),
+            strong: Pair::new(strong, text),
+        }
     }
 }
 
-fn get_theme_color(wnd_theme: &Theme) -> Color {
+pub fn mix(a: Color, b: Color, factor: f32) -> Color {
+    let a_hsl = to_hsl(a);
+    let b_hsl = to_hsl(b);
+
+    let mixed = a_hsl.mix(b_hsl, factor);
+    from_hsl(mixed)
+}
+
+fn deviate(color: Color, amount: f32) -> Color {
+    if is_dark(color) {
+        lighten(color, amount)
+    } else {
+        darken(color, amount)
+    }
+}
+
+pub fn get_theme_color(wnd_theme: &Theme) -> Color {
     let palette = Theme::palette(wnd_theme);
 
     palette.background
+}
+
+pub fn is_dark(color: Color) -> bool {
+    to_hsl(color).lightness < 0.6
 }
 
 pub fn darken(color: Color, amount: f32) -> Color {
@@ -324,6 +369,35 @@ fn from_hsl(hsl: Hsl) -> Color {
     Rgb::from_color(hsl).into()
 }
 
+pub fn readable(background: Color, text: Color) -> Color {
+    if is_readable(background, text) {
+        text
+    } else {
+        let white_contrast = relative_contrast(background, Color::WHITE);
+        let black_contrast = relative_contrast(background, Color::BLACK);
+
+        if white_contrast >= black_contrast {
+            Color::WHITE
+        } else {
+            Color::BLACK
+        }
+    }
+}
+
+fn is_readable(a: Color, b: Color) -> bool {
+    let a_srgb = Rgb::from(a);
+    let b_srgb = Rgb::from(b);
+
+    a_srgb.has_enhanced_contrast_text(b_srgb)
+}
+
+fn relative_contrast(a: Color, b: Color) -> f32 {
+    let a_srgb = Rgb::from(a);
+    let b_srgb = Rgb::from(b);
+
+    a_srgb.relative_contrast(b_srgb)
+}
+
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum IpgStyleParam {
@@ -345,45 +419,3 @@ pub enum IpgStyleBackground {
     Rgba,
 }
 
-// pub fn style_background_update(bkg: &mut StyleBackground, item: PyObject, value: PyObject) {
-//     let update = try_extract_bkg_update(item);
-
-//     match update {
-//         IpgStyleBackgroundParam::Accent => {
-//             let val = try_extract_f64(value);
-//             bkg.accent_amount = val as f32;
-//         },
-//         IpgStyleBackgroundParam::Color => {
-//             let val = try_extract_color(value);
-//             bkg.color = val;
-//         },
-//         IpgStyleBackgroundParam::Rgba => {
-//             let val = try_extract_vec_f32(value);
-//             let rgba: [f32; 4] = [val[0], val[1], val[2], val[3]];
-//             let color = get_color(Some(rgba), None, 1.0, false);
-//             bkg.color = color;
-//         }
-//     }
-// }
-
-// pub fn try_extract_bkg_update(update_obj: PyObject) -> IpgStyleBackgroundParam {
-
-//     Python::with_gil(|py| {
-//         let res = update_obj.extract::<IpgStyleBackgroundParam>(py);
-//         match res {
-//             Ok(update) => update,
-//             Err(_) => panic!("Style Background update extraction failed"),
-//         }
-//     })
-// }
-
-// pub fn try_extract_color(color: PyObject) -> Color {
-
-//     Python::with_gil(|py| {
-//         let res = color.extract::<IpgColor>(py);
-//         match res {
-//             Ok(col) => get_color(None, Some(col), 1.0, false),
-//             Err(_) => panic!("Style Background color extraction failed"),
-//         }
-//     })
-// }

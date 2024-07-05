@@ -4,10 +4,11 @@ use std::result::Result;
 
 use crate::app::{self, Message};
 use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_uid};
-use crate::style::styling::{table_row_theme, IpgStyleStandard};
+use crate::style::styling::{get_theme_color, IpgStyleStandard};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 use super::ipg_button;
+use crate::style::styling::{lighten, darken};
 
 use iced::Point;
 use iced::mouse::Interaction;
@@ -622,4 +623,26 @@ fn check_for_widget(widgets: &Vec<(usize, usize, usize, bool)>, row_index: usize
         } 
     }
     return None
+}
+
+fn table_row_theme(theme: &Theme, idx: usize, amount: f32, 
+                        highlighter: Option<TableRowHighLight>) -> container::Style {
+
+    let mut background = get_theme_color(theme);
+
+    if idx % 2 == 0 {
+        background = match highlighter {
+                Some(hl) => 
+                    match hl {
+                        TableRowHighLight::Darker => darken(background, amount),
+                        TableRowHighLight::Lighter => lighten(background, amount),
+                        },
+                None => background,
+            }
+    }; 
+    
+    container::Style {
+        background: Some(Background::Color(background)),
+        ..Default::default()
+    }
 }
