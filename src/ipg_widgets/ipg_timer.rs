@@ -25,10 +25,8 @@ pub struct IpgTimer {
     pub width: Length,
     pub height: Length,
     pub padding: Padding,
+    pub style: Option<String>,
     pub style_standard: Option<IpgStyleStandard>,
-    pub style_color: Option<String>,
-    pub style_border: Option<String>,
-    pub style_shadow: Option<String>,
     pub style_arrow: Option<PyObject>,
     pub user_data: Option<PyObject>,
     pub counter: u64,
@@ -45,10 +43,8 @@ impl IpgTimer {
         width: Length,
         height: Length,
         padding: Padding,
+        style: Option<String>,
         style_standard: Option<IpgStyleStandard>,
-        style_color: Option<String>,
-        style_border: Option<String>,
-        style_shadow: Option<String>,
         style_arrow: Option<PyObject>,
         user_data: Option<PyObject>,
         ) -> Self {
@@ -60,10 +56,8 @@ impl IpgTimer {
             width,
             height,
             padding,
+            style,
             style_standard,
-            style_color,
-            style_border,
-            style_shadow,
             style_arrow,
             user_data,
             counter: 0,
@@ -110,12 +104,10 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
                                 .width(tim.width)
                                 .on_press(on_press)
                                 .style(move|theme: &Theme, status| {
-                                    get_styling(theme, status, 
-                                                tim.style_standard.clone(), 
-                                                tim.style_color.clone(),
-                                                tim.style_border.clone(), 
-                                                tim.style_shadow.clone(),
-                                                )})
+                                    get_styling(theme, status,
+                                        tim.style.clone(),
+                                        tim.style_standard.clone(),
+                                    )  })
                                 .into();
     
     timer_btn.map(move |message: TIMMessage| app::Message::Timer(tim.id, message))

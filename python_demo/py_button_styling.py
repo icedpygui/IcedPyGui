@@ -18,20 +18,22 @@ def on_press(btn_id):
 # example that shows all of the current colors you can use and if those are not
 # suitable, use the rgba values. 
 
-ipg.add_styling_border(style_id="btn_border", radius=[12.0], width=5.0)
-ipg.add_styling_shadow(style_id="btn_shadow", 
-                       offset_x=0.0, offset_y=0.0, blur_radius=15.0)
 
 # When using custom colors, the text color is calculated based on the 
 # background but may not be visible enough, if so, add the text_color 
 # of your choice.
-ipg.add_styling_color(style_id="custom", 
+ipg.add_button_style(style_id="custom", 
                       base_color=IpgColor.YELLOW,
                       border_color=IpgColor.DARK_GOLDEN_ROD,
                       shadow_color=IpgColor.LIGHT_YELLOW,
-                      text_color=IpgColor.BLACK)
+                      text_color=IpgColor.BLACK,
+                      border_radius=[12.0], 
+                      border_width=5.0,
+                      shadow_offset_x=0.0, 
+                      shadow_offset_y=0.0, 
+                      shadow_blur_radius=15.0)
 
-ipg.add_styling_color(style_id="primary", 
+ipg.add_button_style(style_id="primary", 
                       base_color=IpgColor.PRIMARY)
 
 # Add the window first
@@ -52,23 +54,20 @@ ipg.add_row(window_id="main", container_id="row_btn", parent_id="col",
 ipg.add_button(parent_id="row_btn", label="Default", 
                on_press=on_press)
 
-ipg.add_button(parent_id="row_btn", label="Primary\nborder & shadow", 
+ipg.add_button(parent_id="row_btn", label="Primary", 
                on_press=on_press,
                style_standard=IpgStyleStandard.Primary,
-               style_border="btn_border",
-               style_shadow="btn_shadow")
+               )
 
-ipg.add_button(parent_id="row_btn", label="Success\nborder & shadow", 
+ipg.add_button(parent_id="row_btn", label="Success", 
                on_press=on_press,
                style_standard=IpgStyleStandard.Success,
-                style_border="btn_border",
-               style_shadow="btn_shadow")
+                )
 
-ipg.add_button(parent_id="row_btn", label="Danger\nborder & shadow", 
+ipg.add_button(parent_id="row_btn", label="Danger", 
                on_press=on_press,
                style_standard=IpgStyleStandard.Danger,
-                style_border="btn_border",
-               style_shadow="btn_shadow")
+                )
 
 ipg.add_button(parent_id="row_btn", label="Text", 
                on_press=on_press,
@@ -77,14 +76,9 @@ ipg.add_button(parent_id="row_btn", label="Text",
 ipg.add_row(window_id="main", container_id="row_btn2", parent_id="col",
             align_items=IpgRowAlignment.Center)
 
-ipg.add_button(parent_id="row_btn2", label="Custom Style",
-               style_color="custom", 
-               style_border="btn_border",
-               style_shadow="btn_shadow")
+ipg.add_button(parent_id="row_btn2", label="Custom Primary",
+               style="primary", 
+               )
 
-ipg.add_button(parent_id="row_btn2", label="Custom Style",
-               style_color="primary", 
-               style_border="btn_border",
-               style_shadow="btn_shadow")
 
 ipg.start_session()

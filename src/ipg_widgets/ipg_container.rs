@@ -64,7 +64,7 @@ impl IpgContainer {
     }
 }
 
-
+#[derive(Debug, Clone)]
 pub struct IpgContainerStyle {
     pub id: usize,
     pub base: Option<Color>,

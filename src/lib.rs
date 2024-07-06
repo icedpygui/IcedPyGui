@@ -26,7 +26,7 @@ mod graphics;
 mod style;
 
 
-use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonParams};
+use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonParams, IpgButtonStyle};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
 use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
@@ -115,6 +115,7 @@ pub struct State {
     pub events: Vec<IpgEvents>,
     
     pub container_style: Lazy<HashMap<String, IpgContainerStyle>>,
+    pub button_style: Lazy<HashMap<String, IpgButtonStyle>>,
 
     pub styling_color: Lazy<HashMap<String, IpgPalette>>,
     pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
@@ -151,6 +152,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         events: vec![],
 
         container_style: Lazy::new(||HashMap::new()),
+        button_style: Lazy::new(||HashMap::new()),
         
         styling_color: Lazy::new(||HashMap::new()),
         styling_standard: Lazy::new(||HashMap::new()),
@@ -432,7 +434,6 @@ impl IPG {
                         shadow_offset_x=0.0, shadow_offset_y=0.0,
                         shadow_blur_radius=1.0,
                         text_color=None, text_rgba=None,
-                        
                         gen_id=None))]
     fn add_container_style(&mut self,
                             style_id: String,
@@ -825,8 +826,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
                         height_fill=false, padding=vec![10.0], clip=false, 
-                        style_standard=None, style_color=None, 
-                        style_border=None, style_shadow=None, 
+                        style=None, style_standard=None, 
                         style_arrow=None, user_data=None, show=true, 
                         ))]
     fn add_button(&mut self,
@@ -841,10 +841,8 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         clip: bool,
+                        style: Option<String>,
                         style_standard: Option<IpgStyleStandard>,
-                        style_color: Option<String>,
-                        style_border: Option<String>,
-                        style_shadow: Option<String>,
                         style_arrow: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
@@ -874,15 +872,87 @@ impl IPG {
                                                 height,
                                                 padding,
                                                 clip,
+                                                style,
                                                 style_standard,
-                                                style_color,
-                                                style_border,
-                                                style_shadow,
                                                 style_arrow,                              
                                                 )));
         
         Ok(id)
     
+    }
+
+    #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
+                        strong_color=None, strong_rgba=None,
+                        weak_color=None, weak_rgba=None,
+                        strong_factor=0.15, weak_factor=0.40, 
+                        border_color=None, border_rgba=None,
+                        border_radius = vec![0.0], border_width=1.0,
+                        shadow_color=None, shadow_rgba=None,
+                        shadow_offset_x=0.0, shadow_offset_y=0.0,
+                        shadow_blur_radius=1.0,
+                        text_color=None, text_rgba=None,
+                        gen_id=None))]
+    fn add_button_style(&mut self,
+                            style_id: String,
+                            base_color: Option<IpgColor>,
+                            base_rgba: Option<[f32; 4]>,
+                            strong_color: Option<IpgColor>,
+                            strong_rgba: Option<[f32; 4]>,
+                            weak_color: Option<IpgColor>,
+                            weak_rgba: Option<[f32; 4]>,
+                            strong_factor: Option<f32>,
+                            weak_factor: Option<f32>,
+                            border_color: Option<IpgColor>,
+                            border_rgba: Option<[f32; 4]>,
+                            border_radius: Vec<f32>,
+                            border_width: f32,
+                            shadow_color: Option<IpgColor>,
+                            shadow_rgba: Option<[f32; 4]>,
+                            shadow_offset_x: f32,
+                            shadow_offset_y: f32,
+                            shadow_blur_radius: f32,
+                            text_color: Option<IpgColor>,
+                            text_rgba: Option<[f32; 4]>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let mut state = access_state();
+
+        let mut use_background = false;
+        if base_color == Some(IpgColor::BACKGROUND_THEME) {
+            use_background = true;
+        }
+
+        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+        let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
+        let weak: Option<Color> = get_color(weak_rgba, weak_color, 1.0, false);
+        let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let shadow: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
+        let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+
+        state.button_style.insert(style_id, IpgButtonStyle::new( 
+                                                    id,
+                                                    base,
+                                                    strong,
+                                                    weak,
+                                                    strong_factor,
+                                                    weak_factor,
+                                                    border,
+                                                    border_radius,
+                                                    border_width,
+                                                    shadow,
+                                                    shadow_offset_x,
+                                                    shadow_offset_y,
+                                                    shadow_blur_radius,
+                                                    text,
+                                                    use_background,
+                                                    ));
+        
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (parent_id, head, body, is_open=true, minmax_id=None, foot=None, 
@@ -2464,8 +2534,8 @@ impl IPG {
                         start_label="Start Timer".to_string(), 
                         stop_label="Stop Timer".to_string(), width=None, height=None, 
                         width_fill=false, height_fill=false, padding=vec![10.0], 
-                        style_standard=None, style_color=None, style_border=None, 
-                        style_shadow=None, style_arrow=None, user_data=None))]
+                        style=None, style_standard=None, style_arrow=None, 
+                        user_data=None))]
     fn add_timer(&mut self,
                         parent_id: String,
                         duration_ms: u64,
@@ -2479,10 +2549,8 @@ impl IPG {
                         width_fill: bool,
                         height_fill: bool,
                         padding: Vec<f64>,
+                        style: Option<String>,
                         style_standard: Option<IpgStyleStandard>,
-                        style_color: Option<String>,
-                        style_border: Option<String>,
-                        style_shadow: Option<String>,
                         style_arrow: Option<PyObject>,
                         user_data: Option<PyObject>
                     ) -> PyResult<usize>
@@ -2517,10 +2585,8 @@ impl IPG {
                                                             width,
                                                             height,
                                                             padding,
+                                                            style,
                                                             style_standard,
-                                                            style_color,
-                                                            style_border,
-                                                            style_shadow,
                                                             style_arrow,
                                                             user_data, 
                                                             )));
