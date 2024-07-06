@@ -14,7 +14,7 @@ use iced::widget::button::{self, Status, Style};
 use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{Button, Space, Text};
-use iced::{Border, Color, Element, Length, Padding, Theme, Vector };
+use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector };
 use iced::theme::palette::Pair;
 
 use crate::graphics::bootstrap::{self, icon_to_char, icon_to_string};
@@ -326,10 +326,12 @@ pub fn get_styling(theme: &Theme, status: Status,
     };
 
     let mut base_style = button::primary(theme, status);
+    let mut hover_style = button::primary(theme, status);
     let style = style_opt.unwrap();
     let mut border = Border::default();
+    let mut shadow = Shadow::default();
 
-    if style.base.is_none() && (style.strong.is_some() | style.weak.is_some()) {
+    if style.base.is_none() && (style.strong.is_some() || style.weak.is_some()) {
         panic!("Container style: if you define style.weak or style.strong, you must define style.base too")
     }
 
@@ -357,12 +359,10 @@ pub fn get_styling(theme: &Theme, status: Status,
     border.width = style.border_width;
 
     if style.shadow.is_some() {
-        base_style.shadow.color = style.shadow.unwrap();
-        base_style.shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
-        base_style.shadow.blur_radius = style.shadow_blur_radius;
+        shadow.color = style.shadow.unwrap();
+        shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
+        shadow.blur_radius = style.shadow_blur_radius;
     }
-
-    let mut hover_style = base_style.clone();
 
     // all custom colors
     if style.base.is_some() && style.strong.is_some() && style.weak.is_some() {
@@ -371,15 +371,16 @@ pub fn get_styling(theme: &Theme, status: Status,
         base_style.background = Some(iced::Background::Color(style.strong.unwrap()));
         base_style.text_color = text_color;
 
-        hover_style.background = Some(iced::Background::Color(style.base.unwrap()));
     }
 
     // if only base is defined, generate strong and weak
     if style.base.is_some() && style.strong.is_none() && style.weak.is_none() {
+        dbg!("here");
         let text = if style.text.is_some() {
             style.text.unwrap()
         } else {
-            let pair = Pair::new(style.base.unwrap(), style.text.unwrap());
+            let text = get_text_color(style.text, style.base.unwrap());
+            let pair = Pair::new(style.base.unwrap(), text);
             pair.text
         };
         let background = theme.palette().background;
@@ -389,10 +390,9 @@ pub fn get_styling(theme: &Theme, status: Status,
                                                                 style.strong_factor,
                                                                 style.weak_factor);
         
-        base_style.background = Some(iced::Background::Color(palette.strong.color));
-        base_style.text_color = palette.strong.text;
+        base_style = styled(palette.strong, border, shadow);
 
-        hover_style.background = Some(iced::Background::Color(palette.base.color));
+        hover_style = styled(palette.base, border, shadow);
     }
 
 
@@ -406,6 +406,14 @@ pub fn get_styling(theme: &Theme, status: Status,
 
 }
 
+fn styled(pair: Pair, border: Border, shadow: Shadow) -> Style {
+    Style {
+        background: Some(iced::Background::Color(pair.color)),
+        text_color: pair.text,
+        border,
+        shadow,
+    }
+}
 
 fn disabled(style: Style) -> Style {
     Style {
