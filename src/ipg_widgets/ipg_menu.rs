@@ -4,7 +4,7 @@ use iced::advanced::graphics::core::Element;
 use iced::border::Radius;
 use iced::widget::button::{self, Status};
 use iced::widget::{row, Button, Checkbox, Container, Row, Text, Toggler};
-use iced::{alignment, Background, Border, Color, Length, Renderer, Theme};
+use iced::{alignment, Background, Border, Color, Length, Renderer, Shadow, Theme};
 
 use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::iced_aw_widgets::menu::style::{Appearance, MenuBarStyle, StyleSheet};
@@ -334,7 +334,8 @@ fn get_menu_item(label: String,
                                     .on_press(MenuMessage::ItemPressed((bar_index, menu_index)))
                                     .width(Length::Fill)
                                     .style(move|theme: &Theme, status| {
-                                            get_standard_style(theme, status, Some(i_style.clone()))
+                                            get_standard_style(theme, status, Some(i_style.clone()), 
+                                                                None, None)
                                         })
                                     .into();
             btn
@@ -394,7 +395,8 @@ fn menu_bar_button(label: String, width: f32, bar_index: usize, bar_style: IpgSt
                                     .on_press(MenuMessage::ItemPressed((bar_index, 999)))
                                     .width(Length::Fixed(width))
                                     .style(move|theme: &Theme, status| {
-                                        get_standard_style(theme, status, Some(bar_style.clone()))})
+                                        get_standard_style(theme, status, Some(bar_style.clone()), 
+                                                            None, None)})
                                     .into();
     btn
 }

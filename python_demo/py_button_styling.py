@@ -44,25 +44,43 @@ def add_buttons(window: str):
     ipg.add_row(window_id=window, container_id="row_btn2", parent_id="col",
                 align_items=IpgRowAlignment.Center)
 
-    ipg.add_button_style(style_id="primary", 
-                        base_color=IpgColor.PRIMARY)
+    ipg.add_button_style(style_id="dodger", 
+                        base_color=IpgColor.DODGER_BLUE)
 
-    ipg.add_button(parent_id="row_btn2", label="Custom Primary",
-                style="primary", 
+    ipg.add_button(parent_id="row_btn2", label="Custom Base Only Defined",
+                style="dodger", 
                 )
 
-
-
-ipg.add_button_style(style_id="custom", 
-                      base_color=IpgColor.YELLOW,
+    ipg.add_button_style(style_id="custom", 
+                      base_color=IpgColor.DODGER_BLUE,
                       border_color=IpgColor.DARK_GOLDEN_ROD,
-                      shadow_color=IpgColor.LIGHT_YELLOW,
+                      shadow_color=IpgColor.DARK_ORANGE,
                       text_color=IpgColor.BLACK,
                       border_radius=[12.0], 
                       border_width=5.0,
                       shadow_offset_x=0.0, 
                       shadow_offset_y=0.0, 
                       shadow_blur_radius=15.0)
+    
+    ipg.add_button(parent_id="row_btn2", label="All Colors Custom",
+                   style="custom")
+    
+    ipg.add_row(window_id=window, container_id="row_btn3", parent_id="col",
+                align_items=IpgRowAlignment.Center)
+    
+    ipg.add_button_style(style_id="std_border",
+                         border_color=IpgColor.GREEN,
+                         border_radius=[12.0],
+                         border_width=5.0,
+                         shadow_color=IpgColor.DARK_GREEN,
+                         shadow_blur_radius=10.0,
+                         shadow_offset_x=5.0,
+                         shadow_offset_y=5.0,
+                         )
+    
+    ipg.add_button(parent_id="row_btn3", label="Standard with Border and shadow",
+                    style="std_border",
+                    style_standard=IpgStyleStandard.Success)
 
 # Add the windows
 ipg.add_window("main1", "Button Styling", 500, 600,  

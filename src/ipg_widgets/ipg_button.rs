@@ -67,14 +67,12 @@ impl IpgButton {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct IpgButtonStyle {
     pub id: usize,
     pub base: Option<Color>,
     pub strong: Option<Color>,
-    pub weak: Option<Color>,
     pub strong_factor: Option<f32>,
-    pub weak_factor: Option<f32>,
     pub border: Option<Color>,
     pub border_radius: Vec<f32>,
     pub border_width: f32,
@@ -83,7 +81,6 @@ pub struct IpgButtonStyle {
     pub shadow_offset_y: f32,
     pub shadow_blur_radius: f32,
     pub text: Option<Color>,
-    pub use_background: bool,
 }
 
 impl IpgButtonStyle {
@@ -91,9 +88,7 @@ impl IpgButtonStyle {
         id: usize,
         base: Option<Color>,
         strong: Option<Color>,
-        weak: Option<Color>,
         strong_factor: Option<f32>,
-        weak_factor: Option<f32>,
         border: Option<Color>,
         border_radius: Vec<f32>,
         border_width: f32,
@@ -102,15 +97,12 @@ impl IpgButtonStyle {
         shadow_offset_y: f32,
         shadow_blur_radius: f32,
         text: Option<Color>,
-        use_background: bool,
     ) -> Self {
         Self {
             id,
             base,
             strong,
-            weak,
             strong_factor,
-            weak_factor,
             border,
             border_radius,
             border_width,
@@ -119,7 +111,6 @@ impl IpgButtonStyle {
             shadow_offset_y,
             shadow_blur_radius,
             text,
-            use_background,
         }
     }
 }
@@ -294,11 +285,41 @@ pub fn button_item_update(btn: &mut IpgButton,
 }
 
 
-pub fn get_standard_style(theme: &Theme, status: Status, style: Option<IpgStyleStandard>) -> Style {
-    match style {
-        Some(IpgStyleStandard::Primary) => button::primary(theme, status),
-        Some(IpgStyleStandard::Success) => button::success(theme, status),
-        Some(IpgStyleStandard::Danger) => button::danger(theme, status),
+pub fn get_standard_style(theme: &Theme, status: Status, 
+                            std_style: Option<IpgStyleStandard>,
+                            border: Option<Border>, shadow: Option<Shadow>) -> Style {
+
+    match std_style {
+        Some(IpgStyleStandard::Primary) => {
+            let mut style = button::primary(theme, status);
+            if border.is_some() {
+                style.border = border.unwrap();
+            }
+            if shadow.is_some() {
+                style.shadow = shadow.unwrap();
+            }
+            style
+        },
+        Some(IpgStyleStandard::Success) => {
+            let mut style = button::success(theme, status);
+            if border.is_some() {
+                style.border = border.unwrap();
+            }
+            if shadow.is_some() {
+                style.shadow = shadow.unwrap();
+            }
+            style
+        },
+        Some(IpgStyleStandard::Danger) => {
+            let mut style = button::danger(theme, status);
+            if border.is_some() {
+                style.border = border.unwrap();
+            }
+            if shadow.is_some() {
+                style.shadow = shadow.unwrap();
+            }
+            style
+        },
         Some(IpgStyleStandard::Text) => button::text(theme, status),
         None => button::primary(theme, status),
     }
@@ -313,49 +334,35 @@ pub fn get_styling(theme: &Theme, status: Status,
         return button::primary(theme, status)
     }
 
-    if style_standard.is_some() {
-        return get_standard_style(theme, status, style_standard)
-    }
-
     let state = access_state();
 
     let style_opt = if style.is_some() {
         state.button_style.get(&style.unwrap())
     } else {
-        panic!("Button style: Button style id could not be found")
+        None
     };
 
-    let mut base_style = button::primary(theme, status);
-    let mut hover_style = button::primary(theme, status);
-    let style = style_opt.unwrap();
+    if style_opt.is_none() && style_standard.is_some() {
+            return get_standard_style(theme, status, style_standard, None, None)
+    }
+
     let mut border = Border::default();
     let mut shadow = Shadow::default();
 
-    if style.base.is_none() && (style.strong.is_some() || style.weak.is_some()) {
-        panic!("Container style: if you define style.weak or style.strong, you must define style.base too")
+    let mut base_style = button::primary(theme, status);
+    let mut hover_style = button::primary(theme, status);
+
+    let mut style = IpgButtonStyle::default();
+
+    if style_opt.is_some() {
+        style = style_opt.unwrap().clone();
     }
 
-    if style.base.is_some() && style.strong.is_some() && style.weak.is_none() {
-        panic!("Container style: if you define style.strong, you must define style.weak too")
-    }
-
-    if style.base.is_some() && style.strong.is_none() && style.weak.is_some() {
-        panic!("Container style: if you define style.weak, you must define style.strong too")
-    }
-    
     if style.border.is_some() {
         border.color = style.border.unwrap();
     }
 
-    if style.border_radius.len() == 1 {
-        border.radius = Radius::from(style.border_radius[0]);
-    } else if style.border_radius.len() == 4 {
-        let radius = [style.border_radius[0], style.border_radius[1], 
-                                style.border_radius[2], style.border_radius[3]];
-        border.radius = Radius::from(radius);
-    } else {
-        panic!("Button style: Border radius must be a list of 1 or 4 items")
-    }
+    border.radius = get_radius(style.border_radius.clone());
     border.width = style.border_width;
 
     if style.shadow.is_some() {
@@ -363,19 +370,37 @@ pub fn get_styling(theme: &Theme, status: Status,
         shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
         shadow.blur_radius = style.shadow_blur_radius;
     }
+    
+    // style_standard overrides style
+    if style_standard.is_some() {
+        return get_standard_style(theme, status, style_standard, Some(border), Some(shadow))
+    }
+
+    if style.base.is_none() && style.strong.is_some() {
+        panic!("Container style: if you define style.strong, you must define style.base too")
+    }
 
     // all custom colors
-    if style.base.is_some() && style.strong.is_some() && style.weak.is_some() {
-        let text_color = get_text_color(style.text, style.weak.unwrap());
+    if style.base.is_some() && style.strong.is_some() {
+        let text = if style.text.is_some() {
+            style.text.unwrap()
+        } else {
+            let text = get_text_color(style.text, style.base.unwrap());
+            let pair = Pair::new(style.base.unwrap(), text);
+            pair.text
+        };
 
-        base_style.background = Some(iced::Background::Color(style.strong.unwrap()));
-        base_style.text_color = text_color;
+        let base_pair = Pair::new(style.base.unwrap(), text);
+        let strong_pair = Pair::new(style.strong.unwrap(), text);
+
+        base_style = styled(base_pair, border, shadow);
+
+        hover_style = styled(strong_pair, border, shadow);
 
     }
 
     // if only base is defined, generate strong and weak
-    if style.base.is_some() && style.strong.is_none() && style.weak.is_none() {
-        dbg!("here");
+    if style.base.is_some() && style.strong.is_none() {
         let text = if style.text.is_some() {
             style.text.unwrap()
         } else {
@@ -388,11 +413,11 @@ pub fn get_styling(theme: &Theme, status: Status,
                                                                 background,
                                                                 text, 
                                                                 style.strong_factor,
-                                                                style.weak_factor);
+                                                                None);
         
-        base_style = styled(palette.strong, border, shadow);
+        base_style = styled(palette.base, border, shadow);
 
-        hover_style = styled(palette.base, border, shadow);
+        hover_style = styled(palette.strong, border, shadow);
     }
 
 
@@ -425,15 +450,27 @@ fn disabled(style: Style) -> Style {
     }
 }
 
-fn get_text_color(text: Option<Color>, weak: Color) -> Color {
+fn get_radius(border_radius: Vec<f32>) -> Radius {
+    if border_radius.len() == 1 {
+        Radius::from(border_radius[0])
+    } else if border_radius.len() == 4 {
+        let radius = [border_radius[0], border_radius[1], 
+                                border_radius[2], border_radius[3]];
+        Radius::from(radius)
+    } else {
+        panic!("Button style: Border radius must be a list of 1 or 4 items")
+    }
+}
+
+fn get_text_color(text: Option<Color>, color: Color) -> Color {
     if text.is_some() {
         text.unwrap()
    } else {
         let mut t_color = Color::BLACK;
-        if is_dark(weak) {
+        if is_dark(color) {
             t_color = Color::WHITE;
         } 
-        let pair = Pair::new(weak, t_color);
+        let pair = Pair::new(color, t_color);
         pair.text
    }
 }

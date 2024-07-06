@@ -11,6 +11,7 @@ use iced::window::{self, Position};
 use iced::{Color, Font, Length, Point, Settings, Size, Theme, theme};
 use iced::widget::text::{self, LineHeight};
 use iced::border::Radius;
+use style::ipg_palette::IpgPaletteSet;
 
 use core::panic;
 use std::iter::Iterator;
@@ -883,8 +884,7 @@ impl IPG {
 
     #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
                         strong_color=None, strong_rgba=None,
-                        weak_color=None, weak_rgba=None,
-                        strong_factor=0.15, weak_factor=0.40, 
+                        strong_factor=0.15, 
                         border_color=None, border_rgba=None,
                         border_radius = vec![0.0], border_width=1.0,
                         shadow_color=None, shadow_rgba=None,
@@ -898,10 +898,7 @@ impl IPG {
                             base_rgba: Option<[f32; 4]>,
                             strong_color: Option<IpgColor>,
                             strong_rgba: Option<[f32; 4]>,
-                            weak_color: Option<IpgColor>,
-                            weak_rgba: Option<[f32; 4]>,
                             strong_factor: Option<f32>,
-                            weak_factor: Option<f32>,
                             border_color: Option<IpgColor>,
                             border_rgba: Option<[f32; 4]>,
                             border_radius: Vec<f32>,
@@ -920,14 +917,8 @@ impl IPG {
 
         let mut state = access_state();
 
-        let mut use_background = false;
-        if base_color == Some(IpgColor::BACKGROUND_THEME) {
-            use_background = true;
-        }
-
         let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
         let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
-        let weak: Option<Color> = get_color(weak_rgba, weak_color, 1.0, false);
         let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
         let shadow: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
         let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
@@ -936,9 +927,7 @@ impl IPG {
                                                     id,
                                                     base,
                                                     strong,
-                                                    weak,
                                                     strong_factor,
-                                                    weak_factor,
                                                     border,
                                                     border_radius,
                                                     border_width,
@@ -947,7 +936,6 @@ impl IPG {
                                                     shadow_offset_y,
                                                     shadow_blur_radius,
                                                     text,
-                                                    use_background,
                                                     ));
         
         drop(state);
@@ -3065,6 +3053,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgMenuItemType>()?;
     m.add_class::<IpgMenuSepTypes>()?;
     m.add_class::<IpgMouseAreaParams>()?;
+    m.add_class::<IpgPaletteSet>()?;
     m.add_class::<IpgPickListParams>()?;
     m.add_class::<IpgPickListHandle>()?;
     m.add_class::<IpgProgressBarParams>()?;

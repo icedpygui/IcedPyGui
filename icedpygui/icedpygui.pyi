@@ -534,11 +534,9 @@ class IPG:
                     width_fill: bool=False,
                     height_fill: bool=False,
                     padding: List=[10.0],
-                    clip: bool=False,
+                    clip: bool=False, 
+                    style: Union[None | str]=None,
                     style_standard: Union[None | IpgStyleStandard]=None,
-                    style_color: Union[None | str]=None,
-                    style_border: Union[None | str]=None,
-                    style_shadow: Union[None | str]=None,
                     style_arrow: Union[None | IpgButtonArrows]=None,
                     user_data: Union[None | any]=None,
                     show: bool=True, 
@@ -571,14 +569,10 @@ class IPG:
                 use [float, float, float, float] for [top, right, bottom, left]
             clip: bool
                 Whether to clip the label if width exceeded.
+            style: str
+                style_id of the add_button_style.
             style_standard: class
                 IpgStyleStandard: Primary, Success, Danger, Text
-            style_color: str
-                style_id of the add_styling_color.
-            style_border: str
-                style_id of the add_styling_border.
-            style_shadow: str
-                style_id of the add_styling_shadow.
             style_arrow: IpgButtonArrows
                 See dropdown list when IpgButtonArrow. is typed in when period is typed.
             user_data: any 
@@ -590,6 +584,68 @@ class IPG:
         -------
         id: int
             Internal id of widget and can be used by user if equated.
+        """
+    def add_button_style(self,
+                            style_id: str, 
+                            *,
+                            base_color: Union[None | IpgColor]=None,
+                            base_rgba: Union[None | list]=None,
+                            strong_color:  Union[None | IpgColor]=None,
+                            strong_rgba:  Union[None | list]=None,
+                            strong_factor: float=0.15, 
+                            border_color: Union[None | IpgColor]=None, 
+                            border_rgba: Union[None | list]=None,
+                            border_radius: list=[0.0], 
+                            border_width: float=1.0,
+                            shadow_color: Union[None | IpgColor]=None, 
+                            shadow_rgba: Union[None | list]=None,
+                            shadow_offset_x: float=0.0, 
+                            shadow_offset_y: float=0.0,
+                            shadow_blur_radius: float=1.0,
+                            text_color: Union[None | IpgColor]=None, 
+                            text_rgba: Union[None | list]=None
+                        ) -> int:
+        """
+        Adds styling to container
+
+        Parameters
+        ----------
+            style_id: str
+                Id of container_style. 
+            base_color: IpgColor]
+                The theme background and base are used to calculate the weak and/or strong for the widget,
+                if not defined by user.
+            base_rgba: list,
+                The color in rgba format [float; 4] used as state above.
+            strong_color: IpgColor
+                The color used for the mouse hover over the button.
+            strong_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            strong_factor: float
+                Used to calculate the strong color, if strong_color not defined.  
+            border_color: IpgColor
+                Color used for the border.
+            border_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            border_radius: list
+                The radius of the 4 corners, [float]=all corners, 
+                [floate;4] top-left, top-right, bottom-right, bottom-left.
+            border_width: float
+                Border width.
+            shadow_color: IpgColor
+                The color of the shadow.
+            shadow_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            shadow_offset_x: float
+                Shadow offset in the horizontal direction.
+            shadow_offset_y: float
+                Shadow offset in the vertical direction.
+            shadow_blur_radius: float
+                The blur radius of the shadow.
+            text_color: IpgColor
+                The text color, if not defined, will either be a Black or White variation based on theme background.
+            text_rgba: list]
+                The color in rgba format [float; 4] used as state above.
         """
 
     def add_card(self,
@@ -2317,10 +2373,8 @@ class IpgButtonParams:
     Label=0
     Padding=0
     Show=0
-    StyleBackground=0
-    StyleBorder=0
-    StyleShadow=0
-    StyleTextColor=0
+    Style=0
+    StyleStandard=0
     Width=0
     WidthFill=0
 

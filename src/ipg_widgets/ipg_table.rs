@@ -10,7 +10,7 @@ use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 use super::ipg_button;
 use crate::style::styling::{lighten, darken};
 
-use iced::Point;
+use iced::{Border, Point, Shadow};
 use iced::mouse::Interaction;
 use iced::widget::text::{LineHeight, Style};
 use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, Theme};
@@ -424,7 +424,9 @@ fn add_widget(widget_type: TableWidget,
                                 .padding(Padding::ZERO)
                                 .width(Length::Fill)
                                 .on_press(TableMessage::TableButton((row_index, col_index))) 
-                                .style(move|theme, status|ipg_button::get_standard_style(theme, status, btn_style.clone()))
+                                .style(move|theme, status|
+                                    ipg_button::get_standard_style(theme, status, btn_style.clone(), 
+                                                                None, None))
                                 .into(); 
             btn.map(move |message| app::Message::Table(table_id, message))
         },
