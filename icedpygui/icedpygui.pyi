@@ -159,8 +159,8 @@ class IPG:
                             base_rgba: Union[None | list]=None,
                             weak_color: Union[None | IpgColor]=None,
                             weak_rgba: Union[None | list]=None,
-                            strong_factor: float=0.15, 
-                            weak_factor: float=0.40, 
+                            strong_factor: float=0.40, 
+                            weak_factor: float=0.15, 
                             border_color: Union[None | IpgColor]=None, 
                             border_rgba: Union[None | list]=None,
                             border_radius: list=[0.0], 
@@ -592,7 +592,7 @@ class IPG:
                             base_rgba: Union[None | list]=None,
                             strong_color:  Union[None | IpgColor]=None,
                             strong_rgba:  Union[None | list]=None,
-                            strong_factor: float=0.15, 
+                            strong_factor: float=0.40, 
                             border_color: Union[None | IpgColor]=None, 
                             border_rgba: Union[None | list]=None,
                             border_radius: list=[0.0], 
@@ -717,9 +717,9 @@ class IPG:
         """
 
     def add_checkbox(self,
-                     parent_id: str,
-                     *,
-                     on_toggle: Union[None | Callable] = None,
+                    parent_id: str,
+                    *,
+                    on_toggle: Union[None | Callable] = None,
                     is_checked: bool=False,
                     label: Union[None | str]=None,
                     gen_id: Union[None | int]=None,
@@ -732,9 +732,8 @@ class IPG:
                     text_size: float=16.0,
                     icon_x: bool=False,
                     icon_size: float=25.0,
+                    style: Union[None | str]=None,
                     style_standard: Union[None | IpgStyleStandard]=None,
-                    style_color: Union[None | str]=None,
-                    style_border: Union[None | str]=None,
                     user_data: Union[None | any]=None,
                     show: bool=True,
                     ) -> int:
@@ -773,10 +772,10 @@ class IPG:
                 If true, uses the x versus the checkmark icon.
             icon_size: float
                 Sets the size of either the check or x icon.
+            style: str
+                style_id of the add_checkbox_style.
             style_standard: class
                 IpgStyleStandard: Primary, Success, Danger, Text(not valid)
-            style_color: str
-                style_id of the add_styling_color.
             style_border: str
                 style_id of the add_styling_border, radius, width.
             user_data: any 
@@ -790,6 +789,63 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
     
+    def add_checkbox_style(self,
+                            style_id: str, 
+                            *,
+                            base_color: Union[None | IpgColor]=None,
+                            base_rgba: Union[None | list]=None,
+                            strong_color:  Union[None | IpgColor]=None,
+                            strong_rgba:  Union[None | list]=None,
+                            weak_color:  Union[None | IpgColor]=None,
+                            weak_rgba:  Union[None | list]=None,
+                            strong_factor: float=0.40,
+                            weak_factor: float=0.15, 
+                            border_color: Union[None | IpgColor]=None, 
+                            border_rgba: Union[None | list]=None,
+                            border_radius: list=[0.0], 
+                            border_width: float=1.0,
+                            text_color: Union[None | IpgColor]=None, 
+                            text_rgba: Union[None | list]=None
+                        ) -> int:
+        """
+        Adds styling to container
+
+        Parameters
+        ----------
+            style_id: str
+                Id of container_style. 
+            base_color: IpgColor]
+                The theme background and base are used to calculate the weak and/or strong for the widget,
+                if not defined by user.
+            base_rgba: list,
+                The color in rgba format [float; 4] used as state above.
+            strong_color: IpgColor
+                The color used for the mouse hover over the button.
+            strong_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            weak_color: IpgColor
+                The color used for the mouse hover over the button.
+            weak_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            strong_factor: float
+                Used to calculate the strong color, if strong_color not defined.
+            weak_factor: float
+                Used to calculate the weak color, if weak_color not defined. 
+            border_color: IpgColor
+                Color used for the border.
+            border_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            border_radius: list
+                The radius of the 4 corners, [float]=all corners, 
+                [floate;4] top-left, top-right, bottom-right, bottom-left.
+            border_width: float
+                Border width.
+            text_color: IpgColor
+                The text color, if not defined, will either be a Black or White variation based on theme background.
+            text_rgba: list]
+                The color in rgba format [float; 4] used as state above.
+        """
+
     def add_color_picker(
                         self,
                         parent_id: str,

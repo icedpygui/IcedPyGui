@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_state, IpgAlignment};
+use iced::border::Radius;
 use iced::window;
 use iced::{alignment::{Horizontal, Vertical}, Length, Padding};
 use iced::widget::text::{Shaping, LineHeight};
@@ -120,6 +121,18 @@ pub fn get_padding(padding: Vec<f64>)-> Padding {
     3 => panic!("Padding must have a List of 1, 2, or 4 items"),
     4 => Padding::from(vec_to_array4(&padding)),
     _ => panic!("Padding must have a List of less than 4 items"),
+    }
+}
+
+pub fn get_radius(border_radius: Vec<f32>) -> Radius {
+    if border_radius.len() == 1 {
+        Radius::from(border_radius[0])
+    } else if border_radius.len() == 4 {
+        let radius = [border_radius[0], border_radius[1], 
+                                border_radius[2], border_radius[3]];
+        Radius::from(radius)
+    } else {
+        panic!("Button style: Border radius must be a list of 1 or 4 items")
     }
 }
 

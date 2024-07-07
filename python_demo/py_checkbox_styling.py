@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgCheckboxParams, IpgColumnAlignment, IpgColor
+from icedpygui import IPG, IpgColumnAlignment, IpgColor
 from icedpygui import IpgWindowThemes, IpgStyleStandard
 
 #  Required to instantiate IPG
@@ -20,15 +20,13 @@ def add_checkboxes():
     # Add a checkbox with custom styling.
     ipg.add_checkbox(parent_id="col", 
                     label="I have custon styling",
-                    style_color="colors_no_border",
-                    style_border="border", 
+                    style="colors_no_border",
                     )
     
     # Add a checkbox with custom styling.
     ipg.add_checkbox(parent_id="col", 
                     label="I have custon styling with ugly border",
-                    style_color="colors_with_border",
-                    style_border="border", 
+                    style="colors_with_border",
                     )
 
 
@@ -45,20 +43,20 @@ def add_info():
 # The styling can be added at any time before use.
 # No border color is set here so the unchecked border 
 # should be the base color.
-ipg.add_styling_color(style_id="colors_no_border", 
+ipg.add_checkbox_style(style_id="colors_no_border", 
                       base_color=IpgColor.BLUE,
                       icon_color=IpgColor.LIGHT_BLUE,
                       text_color=IpgColor.BLUE)
 
 # Border color defined here.
-ipg.add_styling_color(style_id="colors_with_border", 
+ipg.add_checkbox_style(style_id="colors_with_border", 
                       base_color=IpgColor.BLUE,
                       border_color=IpgColor.YELLOW,
                       icon_color=IpgColor.LIGHT_BLUE,
                       text_color=IpgColor.BLUE)
 
 # The default border is 1 and the radius is 2, these are used just to exagerate.
-ipg.add_styling_border(style_id="border", radius=[4.0], width=2.0)
+ipg.add_checkbox_style(style_id="border", border_radius=[4.0], border_width=2.0)
 
 
 # Add a window first

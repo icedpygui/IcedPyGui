@@ -29,7 +29,7 @@ mod style;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonParams, IpgButtonStyle};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
-use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams};
+use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams, IpgCheckboxStyle};
 use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
 use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment, IpgContainerStyle};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
@@ -117,6 +117,7 @@ pub struct State {
     
     pub container_style: Lazy<HashMap<String, IpgContainerStyle>>,
     pub button_style: Lazy<HashMap<String, IpgButtonStyle>>,
+    pub checkbox_style: Lazy<HashMap<String, IpgCheckboxStyle>>,
 
     pub styling_color: Lazy<HashMap<String, IpgPalette>>,
     pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
@@ -154,6 +155,7 @@ pub static STATE: Mutex<State> = Mutex::new(
 
         container_style: Lazy::new(||HashMap::new()),
         button_style: Lazy::new(||HashMap::new()),
+        checkbox_style: Lazy::new(||HashMap::new()),
         
         styling_color: Lazy::new(||HashMap::new()),
         styling_standard: Lazy::new(||HashMap::new()),
@@ -428,7 +430,7 @@ impl IPG {
     #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
                         strong_color=None, strong_rgba=None,
                         weak_color=None, weak_rgba=None,
-                        strong_factor=0.15, weak_factor=0.40, 
+                        strong_factor=0.40, weak_factor=0.15, 
                         border_color=None, border_rgba=None,
                         border_radius = vec![0.0], border_width=1.0,
                         shadow_color=None, shadow_rgba=None,
@@ -884,7 +886,7 @@ impl IPG {
 
     #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
                         strong_color=None, strong_rgba=None,
-                        strong_factor=0.15, 
+                        strong_factor=0.40, 
                         border_color=None, border_rgba=None,
                         border_radius = vec![0.0], border_width=1.0,
                         shadow_color=None, shadow_rgba=None,
@@ -1018,7 +1020,7 @@ impl IPG {
                         size=16.0, spacing=10.0, text_line_height=1.3, 
                         text_shaping="basic".to_string(),text_size=16.0, 
                         icon_x=false, icon_size=25.0, user_data=None, 
-                        show=true, style_standard=None, style_color=None, style_border=None,
+                        show=true, style=None, style_standard=None, 
                         ))] 
     fn add_checkbox(&mut self,
                         parent_id: String,
@@ -1038,9 +1040,8 @@ impl IPG {
                         icon_size: f32,
                         user_data: Option<PyObject>,
                         show: bool,
+                        style: Option<String>,
                         style_standard: Option<IpgStyleStandard>,
-                        style_color: Option<String>,
-                        style_border: Option<String>,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -1073,13 +1074,72 @@ impl IPG {
                                                     text_shaping,
                                                     icon_x,
                                                     icon_size,
+                                                    style,
                                                     style_standard,
-                                                    style_color,
-                                                    style_border,
                                                     )));
 
         Ok(id)
 
+    }
+
+    #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
+                        strong_color=None, strong_rgba=None,
+                        weak_color=None, weak_rgba=None,
+                        strong_factor=0.40, weak_factor=0.15,
+                        border_color=None, border_rgba=None,
+                        border_radius = vec![2.0], border_width=1.0,
+                        icon_color=None, icon_rgba=None,
+                        text_color=None, text_rgba=None,
+                        gen_id=None))]
+    fn add_checkbox_style(&mut self,
+                            style_id: String,
+                            base_color: Option<IpgColor>,
+                            base_rgba: Option<[f32; 4]>,
+                            strong_color: Option<IpgColor>,
+                            strong_rgba: Option<[f32; 4]>,
+                            weak_color: Option<IpgColor>,
+                            weak_rgba: Option<[f32; 4]>,
+                            strong_factor: Option<f32>,
+                            weak_factor: Option<f32>,
+                            border_color: Option<IpgColor>,
+                            border_rgba: Option<[f32; 4]>,
+                            border_radius: Vec<f32>,
+                            border_width: f32,
+                            icon_color: Option<IpgColor>,
+                            icon_rgba: Option<[f32; 4]>,
+                            text_color: Option<IpgColor>,
+                            text_rgba: Option<[f32; 4]>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let mut state = access_state();
+
+        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+        let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
+        let weak: Option<Color> = get_color(weak_rgba, weak_color, 1.0, false);
+        let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let icon_color: Option<Color> = get_color(icon_rgba, icon_color, 1.0, false);
+        let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+
+        state.checkbox_style.insert(style_id, IpgCheckboxStyle::new( 
+                                                    id,
+                                                    base,
+                                                    strong,
+                                                    strong_factor,
+                                                    weak,
+                                                    weak_factor,
+                                                    border,
+                                                    border_radius,
+                                                    border_width,
+                                                    icon_color,
+                                                    text,
+                                                    ));
+        
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (parent_id, label="Calendar".to_string(), gen_id=None,

@@ -276,6 +276,19 @@ impl StyleFillMode {
     }
 }
 
+pub fn get_text_pair(text: Option<Color>, color: Color) -> Color {
+    if text.is_some() {
+        text.unwrap()
+   } else {
+        let mut t_color = Color::BLACK;
+        if is_dark(color) {
+            t_color = Color::WHITE;
+        } 
+        let pair = Pair::new(color, t_color);
+        pair.text
+   }
+}
+
 /// A set of background colors.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IpgColorPalette {

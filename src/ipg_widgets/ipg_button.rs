@@ -1,15 +1,14 @@
 // #![allow(dead_code)]
 #![allow(unused_assignments)]
 
-use crate::style::styling::{is_dark, IpgColorPalette, IpgStyleStandard};
+use crate::style::styling::{get_text_pair, IpgColorPalette, IpgStyleStandard};
 use crate::{access_callbacks, access_state, app};
-use super::helpers::{get_height, get_padding, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_style_standard, try_extract_vec_f64};
+use super::helpers::{get_height, get_padding, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_style_standard, try_extract_vec_f64};
 use super::callbacks::{
     WidgetCallbackIn, WidgetCallbackOut, 
     get_set_widget_callback_data
 };
 
-use iced::border::Radius;
 use iced::widget::button::{self, Status, Style};
 use pyo3::{pyclass, PyObject, Python};
 
@@ -377,7 +376,7 @@ pub fn get_styling(theme: &Theme, status: Status,
     }
 
     if style.base.is_none() && style.strong.is_some() {
-        panic!("Container style: if you define style.strong, you must define style.base too")
+        panic!("Button style: if you define style.strong, you must define style.base too")
     }
 
     // all custom colors
@@ -385,7 +384,7 @@ pub fn get_styling(theme: &Theme, status: Status,
         let text = if style.text.is_some() {
             style.text.unwrap()
         } else {
-            let text = get_text_color(style.text, style.base.unwrap());
+            let text = get_text_pair(style.text, style.base.unwrap());
             let pair = Pair::new(style.base.unwrap(), text);
             pair.text
         };
@@ -404,7 +403,7 @@ pub fn get_styling(theme: &Theme, status: Status,
         let text = if style.text.is_some() {
             style.text.unwrap()
         } else {
-            let text = get_text_color(style.text, style.base.unwrap());
+            let text = get_text_pair(style.text, style.base.unwrap());
             let pair = Pair::new(style.base.unwrap(), text);
             pair.text
         };
@@ -448,31 +447,6 @@ fn disabled(style: Style) -> Style {
         text_color: style.text_color.scale_alpha(0.5),
         ..style
     }
-}
-
-fn get_radius(border_radius: Vec<f32>) -> Radius {
-    if border_radius.len() == 1 {
-        Radius::from(border_radius[0])
-    } else if border_radius.len() == 4 {
-        let radius = [border_radius[0], border_radius[1], 
-                                border_radius[2], border_radius[3]];
-        Radius::from(radius)
-    } else {
-        panic!("Button style: Border radius must be a list of 1 or 4 items")
-    }
-}
-
-fn get_text_color(text: Option<Color>, color: Color) -> Color {
-    if text.is_some() {
-        text.unwrap()
-   } else {
-        let mut t_color = Color::BLACK;
-        if is_dark(color) {
-            t_color = Color::WHITE;
-        } 
-        let pair = Pair::new(color, t_color);
-        pair.text
-   }
 }
 
 pub fn try_extract_button_arrow(arrow_opt: Option<PyObject>) -> Option<String> {
