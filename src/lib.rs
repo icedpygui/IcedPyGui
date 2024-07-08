@@ -1085,7 +1085,7 @@ impl IPG {
     #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
                         strong_color=None, strong_rgba=None,
                         weak_color=None, weak_rgba=None,
-                        strong_factor=0.40, weak_factor=0.15,
+                        strong_factor=None, weak_factor=None,
                         border_color=None, border_rgba=None,
                         border_radius = vec![2.0], border_width=1.0,
                         icon_color=None, icon_rgba=None,

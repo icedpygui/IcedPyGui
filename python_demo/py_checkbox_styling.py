@@ -28,6 +28,15 @@ def add_checkboxes():
                     label="I have custon styling with ugly border",
                     style="colors_with_border",
                     )
+    
+    # Add a checkbox with border styling.
+    ipg.add_checkbox(parent_id="col", 
+                    label="I have custon border styling with rounded and thicker border",
+                    style="border",
+                    )
+    
+    # Add a checkbox with no styling, should get primary
+    ipg.add_checkbox(parent_id="col", label="No style defined = primary")
 
 
 def add_info():
@@ -41,7 +50,7 @@ def add_info():
 
 
 # The styling can be added at any time before use.
-# No border color is set here so the unchecked border 
+# No border color is set here so the unchecked box border 
 # should be the base color.
 ipg.add_checkbox_style(style_id="colors_no_border", 
                       base_color=IpgColor.BLUE,
@@ -56,7 +65,7 @@ ipg.add_checkbox_style(style_id="colors_with_border",
                       text_color=IpgColor.BLUE)
 
 # The default border is 1 and the radius is 2, these are used just to exagerate.
-ipg.add_checkbox_style(style_id="border", border_radius=[4.0], border_width=2.0)
+ipg.add_checkbox_style(style_id="border", border_radius=[4.0], border_width=3.0)
 
 
 # Add a window first
