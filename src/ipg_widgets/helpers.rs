@@ -112,14 +112,26 @@ pub fn get_height(height: Option<f32>, height_fill: bool)-> Length {
 }
 
 // Standard method for padding
-pub fn get_padding(padding: Vec<f64>)-> Padding {
+pub fn get_padding_f64(padding: Vec<f64>)-> Padding {
     let len = padding.len();
     match len {
     0 => panic!("Padding must have at List of at least 1, 2 or 4 items"),
     1 => Padding::from(padding[0] as f32),
-    2 => Padding::from(vec_to_array2(&padding)),
+    2 => Padding::from(vec_to_array2_f64(&padding)),
     3 => panic!("Padding must have a List of 1, 2, or 4 items"),
-    4 => Padding::from(vec_to_array4(&padding)),
+    4 => Padding::from(vec_to_array4_f64(&padding)),
+    _ => panic!("Padding must have a List of less than 4 items"),
+    }
+}
+
+pub fn get_padding_f32(padding: Vec<f32>)-> Padding {
+    let len = padding.len();
+    match len {
+    0 => panic!("Padding must have at List of at least 1, 2 or 4 items"),
+    1 => Padding::from(padding[0]),
+    2 => Padding::from(vec_to_array2_f32(&padding)),
+    3 => panic!("Padding must have a List of 1, 2, or 4 items"),
+    4 => Padding::from(vec_to_array4_f32(&padding)),
     _ => panic!("Padding must have a List of less than 4 items"),
     }
 }
@@ -136,16 +148,21 @@ pub fn get_radius(border_radius: Vec<f32>) -> Radius {
     }
 }
 
-fn vec_to_array2(arr: &[f64]) -> [f32; 2] {
-
+fn vec_to_array2_f64(arr: &[f64]) -> [f32; 2] {
     [arr[0] as f32, arr[1] as f32]
-    
 }
 
-fn vec_to_array4(arr: &[f64]) -> [f32; 4] {
+fn vec_to_array4_f64(arr: &[f64]) -> [f32; 4] {
     [arr[0] as f32, arr[1] as f32, arr[2] as f32, arr[3] as f32]
 }
 
+fn vec_to_array2_f32(arr: &[f32]) -> [f32; 2] {
+    [arr[0], arr[1]]
+}
+
+fn vec_to_array4_f32(arr: &[f32]) -> [f32; 4] {
+    [arr[0], arr[1], arr[2], arr[3]]
+}
 
 pub fn get_horizontal_alignment(align: &str) -> Horizontal {
     match align {

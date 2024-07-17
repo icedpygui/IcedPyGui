@@ -3,7 +3,7 @@
 
 use crate::style::styling::{get_text_pair, IpgColorPalette, IpgStyleStandard};
 use crate::{access_callbacks, access_state, app};
-use super::helpers::{get_height, get_padding, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_style_standard, try_extract_vec_f64};
+use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_style_standard, try_extract_vec_f64};
 use super::callbacks::{
     WidgetCallbackIn, WidgetCallbackOut, 
     get_set_widget_callback_data
@@ -258,7 +258,7 @@ pub fn button_item_update(btn: &mut IpgButton,
         },
         IpgButtonParams::Padding => {
             let val = try_extract_vec_f64(value);
-            btn.padding =  get_padding(val);
+            btn.padding =  get_padding_f64(val);
         },
         IpgButtonParams::Show => {
             btn.show = try_extract_boolean(value);

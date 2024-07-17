@@ -7,7 +7,7 @@ use super::callbacks::{WidgetCallbackIn,
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 use crate::ICON_FONT_BOOT;
-use super::helpers::{get_padding, try_extract_boolean, 
+use super::helpers::{get_padding_f64, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f64, 
     DATE_FORMATS, DAYS, MONTH_NAMES, WEEKDAYS};
 
@@ -624,7 +624,7 @@ pub fn date_picker_item_update(dp: &mut IpgDatePicker,
         },
         IpgDatePickerParams::Padding => {
             let pd = try_extract_vec_f64(value);
-            dp.padding = get_padding(pd);
+            dp.padding = get_padding_f64(pd);
         },
         IpgDatePickerParams::SizeFactor => {
                 dp.size_factor = try_extract_f64(value) as f32;

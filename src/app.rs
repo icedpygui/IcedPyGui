@@ -476,64 +476,100 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
         Some(widget) => 
             match widget {      
                 IpgWidgets::IpgButton(btn) => {
-                    return construct_button(btn.clone())
+                    let button = btn.clone();
+                    drop(state);
+                    return construct_button(button)
                 },
                 IpgWidgets::IpgCard(crd) => {
-                  return construct_card(crd.clone())
+                    let card = crd.clone();
+                    drop(state);
+                  return construct_card(card)
                 },
                 IpgWidgets::IpgCheckBox(chk) => {
-                    return construct_checkbox(chk.clone())
+                    let c_box = chk.clone();
+                    drop(state);
+                    return construct_checkbox(c_box)
                 },
                 IpgWidgets::IpgImage(img) => {
-                    return construct_image(img.clone())
+                    let image = img.clone();
+                    drop(state);
+                    return construct_image(image)
                 }
                 IpgWidgets::IpgMenu(mn) => {
-                    return construct_menu(mn.clone())
+                    let menu = mn.clone();
+                    drop(state);
+;                    return construct_menu(menu)
                 }
                 IpgWidgets::IpgDatePicker(dp) => {
-                    return construct_date_picker(dp.clone())
+                    let d_picker = dp.clone();
+                    drop(state);
+                    return construct_date_picker(d_picker)
                 },
                 IpgWidgets::IpgPickList(pick) => {
-                        return construct_picklist(pick.clone())
+                    let pck = pick.clone();
+                    drop(state);
+                    return construct_picklist(pck)
                 },
                 IpgWidgets::IpgProgressBar(bar) => {
-                    return construct_progress_bar(bar.clone())
+                    let br = bar.clone();
+                    drop(state);
+                    return construct_progress_bar(br)
                 }
                 IpgWidgets::IpgSelectableText(sltxt) => {
-                    return construct_selectable_text(sltxt.clone())
+                    let s_txt = sltxt.clone();
+                    drop(state);
+                    return construct_selectable_text(s_txt)
                 },
                 IpgWidgets::IpgRadio(radio) => {
-                    return construct_radio(radio.clone()) 
+                    let rad = radio.clone();
+                    drop(state);
+                    return construct_radio(rad) 
                 },
                 IpgWidgets::IpgRule(rule) => {
-                    return construct_rule(rule.clone()) 
+                    let rul = rule.clone();
+                    drop(state);
+                    return construct_rule(rul) 
                 },
                 IpgWidgets::IpgSlider(slider) => {
-                    return construct_slider(slider.clone())
+                    let sld = slider.clone();
+                    drop(state);
+                    return construct_slider(sld)
                 },
                 IpgWidgets::IpgSpace(sp) => {
                     return construct_space(sp)
                 },
                 IpgWidgets::IpgSvg(isvg) => {
-                    return construct_svg(isvg.clone())
+                    let svg = isvg.clone();
+                    drop(state);
+                    return construct_svg(svg)
                 },
                 IpgWidgets::IpgTable(table) => {
-                    return contruct_table(table.clone())
+                    let tbl = table.clone();
+                    drop(state);
+                    return contruct_table(tbl)
                 },
                 IpgWidgets::IpgText(text) => {
-                    return construct_text(text)
+                    let txt = text.clone();
+                    drop(state);
+                    return construct_text(txt)
                 },
                 IpgWidgets::IpgTextInput(input) => {
-                    return construct_text_input(input.clone())           
+                    let t_input = input.clone();
+                    drop(state);
+                    return construct_text_input(t_input)           
                 },
                 IpgWidgets::IpgTimer(tim) => {
-                    return construct_timer(tim.clone());
+                    let tm = tim.clone();
+                    drop(state);
+                    return construct_timer(tm);
                 },
                 IpgWidgets::IpgToggler(tog) => {
-                    return construct_toggler(tog.clone())           
+                    let tg = tog.clone();
+                    drop(state);
+                    return construct_toggler(tg)           
                 },
             },
-        None => panic!("Widget not found in fn get_widget")
+        None => panic!("App: Widgets not found in fn get_widget")
     }
 }
 

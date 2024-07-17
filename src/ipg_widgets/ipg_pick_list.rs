@@ -6,7 +6,7 @@ use crate::app;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
-use super::helpers::get_padding;
+use super::helpers::get_padding_f64;
 use super::helpers::get_width;
 use super::helpers::try_extract_boolean;
 use super::helpers::try_extract_f64;
@@ -303,7 +303,7 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
         },
         IpgPickListParams::Padding => {
             let val = try_extract_vec_f64(value);
-            pl.padding =  get_padding(val);
+            pl.padding =  get_padding_f64(val);
         },
         IpgPickListParams::Show => {
             pl.show = try_extract_boolean(value);

@@ -5,7 +5,7 @@ use super::callbacks::{WidgetCallbackIn,
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 use super::helpers::get_height;
-use super::helpers::get_padding;
+use super::helpers::get_padding_f64;
 use super::helpers::get_width;
 use super::helpers::try_extract_boolean;
 use super::helpers::try_extract_f64;
@@ -359,7 +359,7 @@ pub fn image_item_update(img: &mut IpgImage,
         },
         IpgImageParams::Padding => {
             let val = try_extract_vec_f64(value);
-            img.padding =  get_padding(val);
+            img.padding =  get_padding_f64(val);
         },
         IpgImageParams::Show => {
             img.show = try_extract_boolean(value);

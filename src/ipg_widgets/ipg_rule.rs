@@ -53,7 +53,7 @@ pub fn construct_rule(rule: IpgRule) -> Element<'static, app::Message> {
 }
 
 // The width or height parameters seems to have no effect so set to 0.
-fn construct_horizontal(rule: IpgRule) -> Element<'static, app::Message>{
+pub fn construct_horizontal(rule: IpgRule) -> Element<'static, app::Message>{
 
     let rule_h: Element<app::Message> = Rule::horizontal(1)
                                             .style(move|theme: &Theme| {   

@@ -1041,14 +1041,18 @@ class IPG:
     def add_menu(self, 
                 parent_id: str,  
                 items: OrderedDict[str, list[str]],
-                widths: list,
-                spacing: list,
-                bar_style: IpgMenuBarStyle=IpgMenuBarStyle.Text,
-                item_type: List[tuple(int,int, IpgMenuItemType)]=[all, all, IpgMenuItemType.Button],
-                item_style: List[tuple(int,int, IpgMenuItemStyle)]=[all, all, IpgMenuItemStyle.Text],
-                separators: Union[None | List[Tuple(int, int, IpgMenuSepTypes)]]=None,
-                sep_types: Union[None | List[IpgMenuSepTypes]]=None,
-                sep_label_names: Union[None | List[str]]=None, 
+                item_widths: list,
+                item_spacings: list,
+                bar_style_all: Union[None|tuple(Union[None|IpgStyleStandard], Union[None|str])]=None,
+                button_item_style_all: Union[None|tuple(Union[None|IpgStyleStandard], Union[None|str])]=None,
+                checkbox_item_style_all: Union[None|tuple(Union[None|IpgStyleStandard], Union[None|str])]=None,
+                circle_item_style_all: Union[None|str]=None,
+                dot_item_style_all: Union[None|str]=None,
+                label_item_style_all: Union[None|str]=None,
+                line_item_style_all: Union[None|str]=None,
+                text_item_style_all: Union[None|tuple(Union[None|IpgStyleStandard], Union[None|str])]=None,
+                toggler_item_style_all:Union[None|tuple(Union[None|IpgStyleStandard], Union[None|str])]=None,
+                item_styles: Union[None, List[tuple(int, int, IpgMenuType, Union[None|IpgStyleStandard], Union[None|str])]]=None, 
                 on_select: Union[None | Callable]=None, 
                 gen_id: Union[None | int]=None,
                 user_data: Union[None | any]=None,
@@ -1062,23 +1066,37 @@ class IPG:
                 Id of another container to place the widget in.
             items: OrderedDict[str, list[str]]
                 Sets the menu items with the key being the bar item and values the menu items.
-            widths: list[float]
+            item_widths: list[float]
                 The widths of the bar items.
-            spacing: list[float]
-            bar_type: List[IpgMenuBarStyle]
-                Style of buttons for bar; Primary, Secondary, Success, Danger, Text(defauilt).
-            item_type: List[Tuple(bar_index, item_index, IpgMenuItemType)]
-                Types are Button(default, if none chosen), Checkbox, Toggle
-            item_style: List[Tuple(bar_index, item_index, IpgMenuItemStyle)]
-                Predefined styles for the button; Primary, Secondary, Success, Danger, Text(defauilt).
-                The spacing between the menu items in each bar item.
-            separators: List[Tuple(bar_index, item_index, IpgMenuSepTypes)]
-                A list of tuples [(bar_index, menu_index, separator type)].  The separator is added
-                after the menu index.
-            sep_types: List[tuple(bar_index, item_indexIpgMenuSepTypes)]
-                Sets the type of separator line, dot, or label.
-            sep_label_names: List[str]
-                Sets the separators label names, if type label is used.
+            item_spacings: list[float]
+                The space between labels
+            bar_style_all: IpgStandardStyle or style_id
+                Styles all of the menu bar items.
+                if using custom style_id, use add_menu_bar_style()
+            button_item_style_all: IpgStandardStyle or style_id
+                Styles all of the buttons used in the menu items, if added.
+                if using custom style_id, use the add_button_style()
+            checkbox_item_style_all: IpgStandardStyle or style_id
+                Styles all of the checkboxes used in the menu items, if added.
+                if using custom style_id, use the add_checkbox_style()
+            circle_item_style_all: tyle_id
+                Styles all of the circles used in the menu items, if added.
+                if using custom style_id, use the add_menu_separator_style()
+            dot_item_style_all: style_id
+                Styles all of the dotted line separators used in the menu items, if added.
+                if using custom style_id, use the add_menu_separator_style()
+            label_item_style_all: style_id
+                Styles all of the label separators used in the menu items, if added.
+                if using custom style_id, use the add_menu_separator_style()
+            line_item_style_all: style_id
+                Styles all of the line separators used in the menu items, if added.
+                if using custom style_id, use the add_menu_separator_style()
+            text_item_style_all: IpgStandardStyle or style_id
+                Styles all of the text used in the menu.
+                if using custom style_id, use the add_menu_text_style()
+            toggler_item_style_all: IpgStandardStyle or style_id
+                Styles all of the togglers used in the menu items, if added.
+                if using custom style_id, use the add_toggler_style()
             on_select: Callable
                 The cllback for when the menu item is selected.
             gen_id: int
@@ -1090,6 +1108,53 @@ class IPG:
         -------
         id: int
             Internal id of widget and can be used by user if equated.
+        """
+
+    def add_menu_bar_style(self,
+                       ) -> int:
+        """
+        Adds style in the menu itself, not the menu items or bar items
+        """
+
+    def add_menu_style(self,
+                       ) -> int:
+        """
+        Adds style in the menu itself, not the menu items or bar items
+        """
+
+    def add_menu_separator_style(self,
+                                style_id: str,
+                                separator_type: IpgMenuSeparatorType,
+                                *,
+                                height: float=20.0,
+                                height_fill: bool=False,
+                                width: Union[None | float]=None,
+                                width_fill: bool=True,
+                                quad_ratios: Union[None | list[float]]=[0.98, 0.2],
+                                separator_color: Union[None | IpgColor]=None,
+                                separator_rgba: Union[None | list[float]]=None,
+                                separator_border_color: Union[None | IpgColor]=None,
+                                separator_border_rgba: Union[None | list[float]]=None,
+                                separator_border_width: Union[None | float]=None,
+                                separator_border_radius: Union[None | list[float]]=None,
+                                separator_shadow_color: Union[None | IpgColor]=None,
+                                separator_shadow_rgba: Union[None | list[float]]=None,
+                                separator_shadow_offset: Union[None | list[float]]=None,
+                                separator_shadow_blur_radius: Union[None | float]=None,
+                                background_color: Union[None | IpgColor]=None,
+                                background_rgba: Union[None | list[float]]=None,
+                                background_border_color: Union[None | IpgColor]=None,
+                                background_border_rgba: Union[None | list[float]]=None,
+                                background_border_width: Union[None | float]=None,
+                                background_border_radius: Union[None | list[float]]=None,
+                                background_shadow_color: Union[None | IpgColor]=None,
+                                background_shadow_rgba: Union[None | list[float]]=None,
+                                background_shadow_offset: Union[None | list[float]]=None,
+                                background_shadow_blur_radius: Union[None | float]=None,
+                                gen_id: Union[None | int]=None,
+                                ) -> int:
+        """
+        
         """
 
     def add_pick_list(self,
@@ -2437,7 +2502,6 @@ class IpgButtonParams:
 
 class IpgCardStyles: 
     Primary=0
-    Secondary=0
     Success=0
     Danger=0
     Warning=0
@@ -2477,7 +2541,6 @@ class IpgCheckboxParams:
 
 class IpgColor:
     PRIMARY=0
-    SECONDARY=0
     SUCCESS=0
     DANGER=0
     WARNING=0
@@ -2690,38 +2753,33 @@ class IpgImageParams:
     WidthFill=0
 
 
-class IpgMenuBarStyle:
-    Primary=0
-    Secondary=0
-    Success=0
-    Danger=0
-    Text=0
+class IpgMenuParam:
+    BarHeight=0
+    BarHeightFill=0
+    BarPadding=0
+    BarSpacing=0
+    BarWidth=0
+    BarWidthFill=0
+    CheckBoundsWidth=0
+    Show=0
 
 
-class IpgMenuItemType:
+class IpgMenuType:
+    Button=0
     Checkbox=0
+    Circle=0
+    Dot=0
+    Label=0
+    Line=0
+    Text=0
     Toggler=0
 
 
-class IpgMenuItemStyle:
-    Primary=0
-    Secondary=0
-    Success=0
-    Danger=0
-    Text=0
-
-
-class IpgMenuParams:
-    MenuUpdate=0
-    Separators=0
-    Spacing=0
-    Widths=0
-
-
-class IpgMenuSepTypes:
-    Line=0
+class IpgMenuSeparatorType:
+    Circle=0
     Dot=0
     Label=0
+    Line=0
 
 
 class IpgMouseAreaParams:

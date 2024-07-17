@@ -1,5 +1,4 @@
-from icedpygui import IPG, IpgMenuSepTypes, IpgMenuParams, IpgTextParams
-from icedpygui import IpgMenuItemType, IpgStyleStandard
+from icedpygui import IPG, IpgMenuType, IpgWindowThemes
 from collections import OrderedDict
 
 
@@ -8,129 +7,67 @@ ipg = IPG()
 
 # The menu callback requires 4 parameters and an optional user_data
 # if a checkbox or toggler is used, the status will be the 4th parameter
-# or None is not used or selected. Use the indexes to determine which
+# or None if not used or selected. Use the indexes to determine which
 # widget was selected.
-def menu_pressed(_menu_id, bar_index, menu_index, toggled, user_data):
-    ipg.update_item(text_id0, IpgTextParams.Content, f"You selected bar item - {bar_index}")
-    ipg.update_item(text_id1, IpgTextParams.Content, f"You selected menu item - {menu_index}")
-    if bar_index == 2 and menu_index == 1:
-        check_or_tog = f"Your checkbox - {toggled}"
-    elif bar_index == 2 and menu_index == 2:
-        check_or_tog = f"Your toggler - {toggled}"
-    elif toggled is None:
-        check_or_tog = f"Your checkbox or toggler - {toggled}"
-    ipg.update_item(text_id2, IpgTextParams.Content, check_or_tog)
-    ipg.update_item(text_id3, IpgTextParams.Content, f"Your user data - {user_data}")
+def menu_pressed(menu_id, bar_index, menu_index, toggled, user_data):
+    print(f"menu id={menu_id} bar_index={bar_index} menu_index={menu_index} toggled={toggled} user_data={user_data}")
 
+# Adding two windows to show color contrasts 
+# Add the 1st window, the default theme is Dark
+ipg.add_window("main-dark", "Menu", 
+               400, 400,  
+               pos_x=100, pos_y=25,
+               )
 
-# The callbacks below allow you to change all of the parameters for a widget.
-# They may or may not have frequent usage but it makes the gui very flexible
-# when the data that may be loaded effects the placement, sizes, etc. used.
-# These callbacks also demonstrate the usage of the widget parameters and
-# are used in the testing of the code to make sure it behaves as expected.
+# Add the 2nd window with a lighter theme
+ipg.add_window("main-light", "Menu", 
+               400, 400,  
+               pos_x=600, pos_y=25,
+               theme=IpgWindowThemes.GruvboxLight
+               )
 
-# Update the menu by adding a new dictionary.
-# This update may not be a common scenario but for completion, it's included.
-# Since the dictionary needs to maintain its order, user OrderedDict.
-# Once the dictionary is made, update the menu using the update command.
-# This action will remove all separators, so these will need to be added
-# along with the other menu parameters as needed.  These have been separated
-# out for this demo just to show the effect more.
-def update_menu(_btn_id):
-    new_menu = OrderedDict({"New1": ["1", "2", "3"],
-                            "New2": ["4", "5", "6"]
-                            })
-    ipg.update_item(menu_id, IpgMenuParams.MenuUpdate, new_menu)
+# Add a column container to to each window
+ipg.add_column("main-dark", container_id="col-dark")
+ipg.add_column("main-light", container_id="col-light")
 
-
-# In this case since one may have updated the menu, we don't know the menu width
-# so we use the single width for all.
-def update_menu_widths(_btn_id):
-    new_widths = [80.0]
-    ipg.update_item(menu_id, IpgMenuParams.Widths, new_widths)
-
-
-# Update the spacings using 5 for all
-def update_menu_spacing(_btn_id):
-    new_spacings = [5.0]
-    ipg.update_item(menu_id, IpgMenuParams.Spacing, new_spacings)
-
-
-# Remember to put the separator in a list.  If the separator exists then
-# its replaced, if not its added.  To delete a separator, use the Delete type.
-def change_menu_separators(_btn_id):
-    new_separator = [(1, 1, IpgMenuSepTypes.Dot)]
-    ipg.update_item(menu_id, IpgMenuParams.Separators, new_separator)
-
-
-# Add some new separators
-def add_menu_separators(_btn_id):
-    new_separator = [(0, 1, IpgMenuSepTypes.Line)]
-    ipg.update_item(menu_id, IpgMenuParams.Separators, new_separator)
-
-
-# Add the window first
-ipg.add_window("main", "Menu", 500, 600,  pos_x=100, pos_y=25)
-
-# Add a column container to hold everything
-ipg.add_column("main", container_id="col")
-
-# A menu needs a dictionary of text values.  The key values become the 
-# menu bar labels.  One also needs to use an ordered dictionary since
-# the order needs to be maintained.
-items = OrderedDict({"Menu0": ["item0-0", "item0-1", "item0-2"],
-                     "Menu1": ["item1-0", "item1-1", "item1-2", "item1-3"],
-                     "Menu2": ["item2-0", "item2-1", "item2-2"]})
+# A menu needs an ordered dictionary since
+# the order needs to be maintained.  The key values become the 
+# menu bar labels.  The values are a list of tuples which are
+# the item labels, if needed.  Not all types of items need a label.
+# Use the IpgMenuType to select the different types of items.
+# The Text is the standard type.
+items = OrderedDict({"Menu0": [(None, IpgMenuType.Dot),
+                               ("item0-1", IpgMenuType.Text), 
+                               ("item0-2", IpgMenuType.Text), 
+                               ("item0-3", IpgMenuType.Text),
+                               ],
+                     "Menu1": [("item1-0", IpgMenuType.Text), 
+                               (None, IpgMenuType.Line), 
+                               ("item1-2", IpgMenuType.Text), 
+                               ("item1-3", IpgMenuType.Button),
+                               ],
+                     "Menu2": [("Label-0", IpgMenuType.Label),
+                               ("item2-1", IpgMenuType.Text), 
+                               ("item2-2", IpgMenuType.Checkbox), 
+                               ("item2-3", IpgMenuType.Toggler),
+                               (None, IpgMenuType.Circle),
+                               ]})
 
 # A list of the widths which must equal the number of menu bar labels, the dict keys,
 # or they must be a list of 1 number, i.e. [90.0] to indicate all widths are 90.0
 widths = [90.0, 100.0, 90.0]
 
 # A list of the spacings which must equal the number of menu bar labels, the dict keys,
-# or they must b a list of 1 number, i.e. [5.0] to indicate all spacings are 5.0
-spacing = [5.0, 10.0, 5.0]
+# or they must be a list of 1 number, i.e. [5.0] to indicate all spacings of 5.0
+spacing = [5.0]
 
-# The separator is a list of tuples [(bar_index, menu_index(separator is added after menu item), separator type)]
-separators = [(0, 0, IpgMenuSepTypes.Dot), (1, 1, IpgMenuSepTypes.Line), (2, 0, IpgMenuSepTypes.Label)]
-
-# We add a checkbox at position 2, 1 and a toggler at position 2, 2
-item_type = [(2, 1, IpgMenuItemType.Checkbox), (2, 2, IpgMenuItemType.Toggler)]
-
-# We change the style of position 1, 3 to primary
-item_style = [(1, 3, IpgStyleStandard.Primary)]
-
-
-# Finally, we add the menu.  The separators are optional parameters.
-menu_id = ipg.add_menu("col", items, widths, spacing,
-                       item_type=item_type,
-                       item_style=item_style,
-                       separators=separators, sep_label_names=["Label"],
-                       on_select=menu_pressed, user_data="Some user_data")
-
-# spacing for readability
-ipg.add_space("col", height=120)
-
-# text info widgets
-text_id0 = ipg.add_text("col", "bar item")
-text_id1 = ipg.add_text("col", "menu iten")
-text_id2 = ipg.add_text("col", "checkbox or toggler")
-text_id3 = ipg.add_text("col", "user data - ")
-
-# let's add a button to change the widths parameter.
-ipg.add_button("col", "Update Menu Widths - The widths will shorten", on_press=update_menu_widths)
-
-# let add a button to change the spacing parameter.
-ipg.add_button("col", "Update Menu Spacing - The Menu2 spacing will change", on_press=update_menu_spacing)
-
-# let add a button to change a separator.
-ipg.add_button("col", "Update Menu Separator - The Menu2 separator to a dots", on_press=change_menu_separators)
-
-# let add a button to add a separator.
-ipg.add_button("col", "Add Menu Separator - The Menu1 added line separator ", on_press=add_menu_separators)
-
-# let add a button to change the entire menu.
-ipg.add_button("col", "Update Menu Items", on_press=update_menu)
-
+# Finally, we add the menus to each window.
+windows = ["col-dark", "col-light"]
+for col in windows:
+    ipg.add_menu(col, items, 
+                widths, spacing,
+                on_select=menu_pressed, 
+                user_data=col)
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

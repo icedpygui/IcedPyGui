@@ -4,7 +4,7 @@ use crate::app;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
-use super::helpers::get_padding;
+use super::helpers::get_padding_f64;
 use super::helpers::get_width;
 use super::helpers::try_extract_boolean;
 use super::helpers::try_extract_f64;
@@ -222,7 +222,7 @@ pub fn text_input_item_update(ti: &mut IpgTextInput,
         },
         IpgTextInputParams::Padding => {
             let val = try_extract_vec_f64(value);
-            ti.padding =  get_padding(val);
+            ti.padding =  get_padding_f64(val);
         },
         IpgTextInputParams::Size => {
             ti.size = try_extract_f64(value) as f32;

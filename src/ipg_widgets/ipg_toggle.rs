@@ -1,5 +1,6 @@
 
 
+use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, app, IpgAlignment};
 use super::helpers::{get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_alignment, try_extract_string};
 use super::callbacks::{
@@ -9,10 +10,11 @@ use super::callbacks::{
 
 
 use iced::widget::text::LineHeight;
+use iced::widget::toggler;
 use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{Space, Toggler};
-use iced::{alignment, Element, Length};
+use iced::{alignment, Element, Length, Theme};
 
 
 
@@ -229,4 +231,12 @@ fn get_text_alignment(ta: IpgAlignment) -> alignment::Horizontal {
         IpgAlignment::Center => alignment::Horizontal::Center,
         IpgAlignment::Right => alignment::Horizontal::Right,
     }
+}
+
+pub fn get_styling(theme: &Theme, status: toggler::Status,
+                    _style: Option<String>,
+                    _style_standard: Option<IpgStyleStandard>,  
+                    ) -> toggler::Style 
+{
+    toggler::default(theme, status)
 }

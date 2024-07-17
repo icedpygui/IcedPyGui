@@ -57,7 +57,7 @@ impl IpgText {
     }
 }
 
-pub fn construct_text(text: &IpgText) -> Element<'static, Message> {
+pub fn construct_text(text: IpgText) -> Element<'static, Message> {
 
     if !text.show {
         return Space::new(Length::Shrink, Length::Shrink).into()

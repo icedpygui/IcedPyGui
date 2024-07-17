@@ -5,7 +5,7 @@ use crate::ipg_widgets::helpers::try_extract_boolean;
 use crate::style::styling::lighten;
 use crate::{access_state, access_callbacks};
 use crate::app;
-use super::helpers::{get_height, get_line_height, get_padding, 
+use super::helpers::{get_height, get_line_height, get_padding_f64, 
     get_width, try_extract_f64, try_extract_f64_option, try_extract_i64, 
     try_extract_i64_option, try_extract_option_string,  
     try_extract_vec_f64, try_extract_vec_str};
@@ -384,7 +384,7 @@ pub fn radio_item_update(rd: &mut IpgRadio,
         },
         IpgRadioParams::Padding => {
             let val = try_extract_vec_f64(value);
-            rd.padding =  get_padding(val);
+            rd.padding =  get_padding_f64(val);
         },
         IpgRadioParams::SelectedIndex => {
             let index_opt = try_extract_i64_option(value);

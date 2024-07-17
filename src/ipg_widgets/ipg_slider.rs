@@ -126,7 +126,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
         Some(vl) => vl,
         None => panic!("Slider value in callback could not be found"),
     };
-                  
+                 
     Python::with_gil(|py| {
         if wco.user_data.is_some() {
             let user_data = match wco.user_data {
