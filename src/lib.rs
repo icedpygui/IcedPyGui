@@ -120,7 +120,7 @@ pub struct State {
     pub button_style: Lazy<HashMap<String, IpgButtonStyle>>,
     pub checkbox_style: Lazy<HashMap<String, IpgCheckboxStyle>>,
     pub menu_bar_style: Lazy<HashMap<String, IpgMenuBarStyle>>,
-    pub menu_item_style: Lazy<HashMap<String, IpgMenuStyle>>,
+    pub menu_style: Lazy<HashMap<String, IpgMenuStyle>>,
     pub menu_separator_style: Lazy<HashMap<String, IpgMenuSeparatorStyle>>,
 
     pub styling_color: Lazy<HashMap<String, IpgPalette>>,
@@ -161,7 +161,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         button_style: Lazy::new(||HashMap::new()),
         checkbox_style: Lazy::new(||HashMap::new()),
         menu_bar_style: Lazy::new(||HashMap::new()),
-        menu_item_style: Lazy::new(||HashMap::new()),
+        menu_style: Lazy::new(||HashMap::new()),
         menu_separator_style: Lazy::new(||HashMap::new()),
         
         styling_color: Lazy::new(||HashMap::new()),
@@ -1303,20 +1303,20 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, items, 
+    #[pyo3(signature = (parent_id, 
+                        items,
+                        bar_widths,
                         item_widths, 
-                        item_spacings, 
-                        on_select=None, 
-                        bar_spacing=None,
-                        bar_padding=None,
-                        bar_width=None,
-                        bar_width_fill=false,
+                        bar_spacings=None,
+                        bar_paddings=None,
                         bar_height=None,
-                        bar_height_fill=false,
                         bar_check_bounds_width=None,
+                        item_spacings=None,
+                        item_offsets=None, 
+                        on_select=None,
                         menu_bar_style=None,
                         menu_style=None,
-                        bar_style_all=None,
+                        button_bar_style_all=None,
                         button_item_style_all=None,
                         checkbox_item_style_all=None,
                         circle_item_style_all=None,
@@ -1331,19 +1331,18 @@ impl IPG {
     fn add_menu(&mut self, 
                     parent_id: String, 
                     items: PyObject,
+                    bar_widths: Vec<f32>,
                     item_widths: Vec<f32>,
-                    item_spacings: Vec<f32>,
-                    on_select: Option<PyObject>,
-                    bar_spacing: Option<f32>,
-                    bar_padding: Option<Vec<f32>>,
-                    bar_width: Option<f32>,
-                    bar_width_fill: bool,
+                    bar_spacings: Option<f32>,
+                    bar_paddings: Option<Vec<f32>>,
                     bar_height: Option<f32>,
-                    bar_height_fill: bool,
                     bar_check_bounds_width: Option<f32>,
+                    item_spacings: Option<Vec<f32>>,
+                    item_offsets: Option<Vec<f32>>,
+                    on_select: Option<PyObject>,
                     menu_bar_style: Option<String>,
                     menu_style: Option<String>,
-                    bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
+                    button_bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
                     button_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
                     checkbox_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
                     circle_item_style_all: Option<String>,
@@ -1364,22 +1363,20 @@ impl IPG {
             add_callback_to_mutex(id, "on_select".to_string(), on_select);
         }
 
-        let spacing = if bar_spacing.is_some() {
-            bar_spacing.unwrap()
+        let spacing = if bar_spacings.is_some() {
+            bar_spacings.unwrap()
         } else {
             0.0
         };
 
-        let padding = if bar_padding.is_some() {
-            get_padding_f32(bar_padding.unwrap())
+        let padding = if bar_paddings.is_some() {
+            get_padding_f32(bar_paddings.unwrap())
         } else {
             Padding::ZERO
         };
         
-        let width = get_width(bar_width, bar_width_fill);
-
-        let height = get_height(bar_height, bar_height_fill);
-        
+        let height = get_height(bar_height, false);
+ 
         let check_bounds_width = if bar_check_bounds_width.is_some() {
             bar_check_bounds_width.unwrap()
         } else {
@@ -1393,16 +1390,17 @@ impl IPG {
         state.widgets.insert(id, IpgWidgets::IpgMenu(IpgMenu::new(
                                                                 id,
                                                                 items,
+                                                                bar_widths,
                                                                 item_widths,
-                                                                item_spacings,
                                                                 spacing,
                                                                 padding,
-                                                                width,
                                                                 height,
                                                                 check_bounds_width,
+                                                                item_spacings,
+                                                                item_offsets,
                                                                 menu_bar_style,
                                                                 menu_style,
-                                                                bar_style_all,
+                                                                button_bar_style_all,
                                                                 button_item_style_all,
                                                                 checkbox_item_style_all,
                                                                 circle_item_style_all,
@@ -1486,6 +1484,12 @@ impl IPG {
                         shadow_offset_x=None,
                         shadow_offset_y=None,
                         shadow_blur_radius=None,
+                        path_base_color=None,
+                        path_base_rgba=None,
+                        path_border_color=None,
+                        path_border_rgba=None,
+                        path_border_radius=None,
+                        path_border_width=None,
                         gen_id=None))]
     fn add_menu_style(&mut self,
                             style_id: String,
@@ -1500,6 +1504,12 @@ impl IPG {
                             shadow_offset_x: Option<f32>,
                             shadow_offset_y: Option<f32>,
                             shadow_blur_radius: Option<f32>,
+                            path_base_color: Option<IpgColor>,
+                            path_base_rgba: Option<[f32; 4]>,
+                            path_border_color: Option<IpgColor>,
+                            path_border_rgba: Option<[f32; 4]>,
+                            path_border_radius: Option<Vec<f32>>,
+                            path_border_width: Option<f32>,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize>
     {
@@ -1508,10 +1518,12 @@ impl IPG {
         let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
         let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
         let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
+        let path_base: Option<Color> = get_color(path_base_rgba, path_base_color, 1.0, false);
+        let path_border_color: Option<Color> = get_color(path_border_rgba, path_border_color, 1.0, false);
 
         let mut state = access_state();
 
-        state.menu_item_style.insert(style_id, IpgMenuStyle::new( 
+        state.menu_style.insert(style_id, IpgMenuStyle::new( 
                                                     id,
                                                     base,
                                                     border_color,
@@ -1521,6 +1533,10 @@ impl IPG {
                                                     shadow_offset_x,
                                                     shadow_offset_y,
                                                     shadow_blur_radius,
+                                                    path_base,
+                                                    path_border_color,
+                                                    path_border_radius,
+                                                    path_border_width,
                                                     ));
         
         drop(state);

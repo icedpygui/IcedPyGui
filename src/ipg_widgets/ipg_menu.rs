@@ -31,17 +31,18 @@ use super::{ipg_checkbox, ipg_toggle};
 pub struct IpgMenu {
     pub id: usize,
     pub items: PyObject, //ordered py dictionary
+    pub bar_widths: Vec<f32>,
     pub item_widths: Vec<f32>,
-    pub item_spacings: Vec<f32>,
     pub bar_spacing: f32,
     pub bar_padding: Padding,
-    pub bar_width: Length,
     pub bar_height: Length,
     pub check_bounds_width: f32,
+    pub item_spacings: Option<Vec<f32>>,
+    pub item_offsets: Option<Vec<f32>>,
     pub menu_bar_style: Option<String>, // style_id of add_menu_bar_style()
     pub menu_style: Option<String>, // style_id of add_menu_style()
     // Option<String> in the below styles refer to the style_id of widget styles, not add_menu_style
-    pub bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
+    pub button_bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
     pub button_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
     pub checkbox_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
     pub circle_item_style_all: Option<String>,
@@ -54,7 +55,7 @@ pub struct IpgMenu {
     pub theme: Theme,
     pub show: bool,
     pub user_data: Option<PyObject>,
-    menu_width: usize,
+    menu_columns: usize,
     new_menu: bool, 
     updating_separators: bool,
     pub is_checked: bool,
@@ -65,16 +66,17 @@ impl IpgMenu {
     pub fn new(
         id: usize,
         items: PyObject,
+        bar_widths: Vec<f32>,
         item_widths: Vec<f32>,
-        item_spacings: Vec<f32>,
         bar_spacing: f32,
         bar_padding: Padding,
-        bar_width: Length,
         bar_height: Length,
         check_bounds_width: f32,
+        item_spacings: Option<Vec<f32>>,
+        item_offsets: Option<Vec<f32>>,
         menu_bar_style: Option<String>,
         menu_style: Option<String>,
-        bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
+        button_bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
         button_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
         checkbox_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
         circle_item_style_all: Option<String>,
@@ -91,16 +93,17 @@ impl IpgMenu {
         Self {
             id,
             items,
+            bar_widths,
             item_widths,
-            item_spacings,
             bar_spacing,
             bar_padding,
-            bar_width,
             bar_height,
             check_bounds_width,
+            item_spacings,
+            item_offsets,
             menu_bar_style,
             menu_style,
-            bar_style_all,
+            button_bar_style_all,
             button_item_style_all,
             checkbox_item_style_all,
             circle_item_style_all,
@@ -113,7 +116,7 @@ impl IpgMenu {
             theme,
             show,
             user_data,
-            menu_width: 0,
+            menu_columns: 0,
             new_menu: false,
             updating_separators: false,
             is_checked: false,
@@ -173,6 +176,10 @@ pub struct IpgMenuStyle {
     pub shadow_offset_x: Option<f32>,
     pub shadow_offset_y: Option<f32>,
     pub shadow_blur_radius: Option<f32>,
+    pub path_base_color: Option<Color>,
+    pub path_border_color: Option<Color>,
+    pub path_border_radius: Option<Vec<f32>>,
+    pub path_border_width: Option<f32>,
 }
 
 impl IpgMenuStyle {
@@ -186,6 +193,10 @@ impl IpgMenuStyle {
         shadow_offset_x: Option<f32>,
         shadow_offset_y: Option<f32>,
         shadow_blur_radius: Option<f32>,
+        path_base_color: Option<Color>,
+        path_border_color: Option<Color>,
+        path_border_radius: Option<Vec<f32>>,
+        path_border_width: Option<f32>,
     ) -> Self {
         Self {
             id,
@@ -197,6 +208,10 @@ impl IpgMenuStyle {
             shadow_offset_x,
             shadow_offset_y,
             shadow_blur_radius,
+            path_base_color,
+            path_border_color,
+            path_border_radius,
+            path_border_width,
         }
     }
 }
@@ -230,93 +245,122 @@ pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message, Theme, 
     // Labels are the keys of the dictionary items
     let labels: Vec<String> = menu.clone().into_keys().collect();
 
-    mn.menu_width = labels.len();
+    mn.menu_columns = labels.len();
 
     // default the spacing and widths if new menu.
     // Occurs during menu updating.
     if mn.new_menu {
-        mn.item_spacings = vec![5.0; mn.menu_width];
-        mn.item_widths = vec![100.0; mn.menu_width];
+        mn.item_spacings = Some(vec![0.0; mn.menu_columns]);
+        mn.item_widths = vec![0.0; mn.menu_columns];
+        mn.item_offsets = Some(vec![0.0; mn.menu_columns]);
         mn.new_menu = false;
     }
-    
-    let mut menu_bar: Vec<Element<'static, MenuMessage, Theme, Renderer>> = vec![];
 
-    // Checking if spacing and widths match and expanding vecs if len is 1.
-    if mn.item_spacings.len() != 1 && mn.menu_width != mn.item_spacings.len() {
-        panic!("Menu: Spaces and the Menu dictionary must be of the same width")
-    } else if mn.item_spacings.len() == 1 {
-        mn.item_spacings = vec![mn.item_spacings[0]; mn.menu_width];
+    let mut item_spacings = vec![0.0; mn.menu_columns];
+    if mn.item_spacings.is_some() {
+        let spacings = mn.item_spacings.unwrap();
+        if spacings.len() == 1 {
+            item_spacings = vec![spacings[0]; mn.menu_columns]
+        } else if spacings.len() != mn.menu_columns {
+            panic!("Menu spacings: The number of spacings {} must be 1 or match the number of bar items {}.", spacings.len(), mn.menu_columns)
+        } else {
+            item_spacings = spacings;
+        }
     }
-    if mn.item_widths.len() != 1 && mn.menu_width != mn.item_widths.len() {
-        panic!("Menu: Widths and the Menu dictionary must be of the same width")
-    } else if mn.item_widths.len() == 1 {
-        mn.item_widths = vec![mn.item_widths[0]; mn.menu_width];
+
+    let item_widths = if mn.item_widths.len() == 1 {
+        vec![mn.item_widths[0]; mn.menu_columns]
+    } else if mn.item_widths.len() != mn.menu_columns {
+        panic!("Menu item widths: The number of widths {} must be 1 or match the number of bar items {}.", mn.item_widths.len(), mn.menu_columns)
+    } else {
+        mn.item_widths
+    };
+    
+    let bar_widths = if mn.bar_widths.len() == 1 {
+        vec![mn.bar_widths[0]; mn.menu_columns]
+    } else if mn.bar_widths.len() != mn.menu_columns {
+        panic!("Menu bar_widths: The number of widths {} must be 1 or match the number of bar items {}.", mn.bar_widths.len(), mn.menu_columns)
+    } else {
+        mn.bar_widths
+    };
+
+    let mut item_offsets = vec![0.0; mn.menu_columns];
+    if mn.item_offsets.is_some() {
+        let offsets = mn.item_offsets.unwrap();
+        if offsets.len() == 1 {
+            item_offsets = vec![offsets[0]; mn.menu_columns]
+        } else if offsets.len() != mn.menu_columns {
+            panic!("Menu offsets: The number of offsets {} must be 1 or match the number of bar items {}.", item_offsets.len(), mn.menu_columns)
+        } else {
+            item_offsets = offsets;
+        }
     }
+
+    let mut menu_bar: Vec<Element<'static, MenuMessage, Theme, Renderer>> = vec![];
 
     let mut bar_items: Vec<Item<MenuMessage, Theme, Renderer>> = vec![];
 
-        for (bar_index, (bar_label, menu_items)) 
-            in menu.iter().enumerate() {
-            
-            let mut items: Vec<Item<'static, MenuMessage, Theme, Renderer>> = vec![];
+    for (bar_index, (bar_label, menu_items)) 
+        in menu.iter().enumerate() {
+        
+        let mut items: Vec<Item<'static, MenuMessage, Theme, Renderer>> = vec![];
 
-            let bar_style = mn.bar_style_all.clone();
+        let bar_style = mn.button_bar_style_all.clone();
 
-            let widths = mn.item_widths.clone();
+        for (item_index, (item_label, item_type)) 
+            in menu_items.iter().enumerate() {
 
-            for (item_index, (item_label, item_type)) 
-                in menu_items.iter().enumerate() {
-
-                items.push(get_menu_item(item_label.clone(),
-                                        item_type.clone(),
-                                        bar_index,
-                                        item_index,
-                                        mn.item_styles.clone(),
-                                        mn.button_item_style_all.clone(),
-                                        mn.checkbox_item_style_all.clone(),
-                                        mn.circle_item_style_all.clone(),
-                                        mn.dot_item_style_all.clone(),
-                                        mn.label_item_style_all.clone(),
-                                        mn.line_item_style_all.clone(),
-                                        mn.text_item_style_all.clone(),
-                                        mn.toggler_item_style_all.clone(),
-                                        mn.is_checked,
-                                        mn.is_toggled,
-                                        mn.theme.clone(),
-                                        ));
-            }
-
-            let menu_tpl = 
-            |items| Menu::new(items)
-                .max_width(100.0)
-                .offset(0.0)
-                .spacing(5.0);
-
-            let bar_item = Item::with_menu(menu_bar_button(
-                                                            bar_label.clone(),
-                                                            widths[bar_index],
-                                                            bar_index,
-                                                            bar_style), 
-                                                            menu_tpl(items)
-                                                            .width(widths[bar_index]));
-
-            bar_items.push(bar_item); 
+            items.push(get_menu_item(item_label.clone(),
+                                    item_type.clone(),
+                                    bar_index,
+                                    item_index,
+                                    mn.item_styles.clone(),
+                                    mn.button_item_style_all.clone(),
+                                    mn.checkbox_item_style_all.clone(),
+                                    mn.circle_item_style_all.clone(),
+                                    mn.dot_item_style_all.clone(),
+                                    mn.label_item_style_all.clone(),
+                                    mn.line_item_style_all.clone(),
+                                    mn.text_item_style_all.clone(),
+                                    mn.toggler_item_style_all.clone(),
+                                    mn.is_checked,
+                                    mn.is_toggled,
+                                    mn.theme.clone(),
+                                    ));
         }
+        
+        let menu_tpl = 
+        |items| Menu::new(items)
+            .max_width(100.0) // Don't see any effect
+            .spacing(item_spacings[bar_index])
+            .width(item_widths[bar_index])
+            .offset(item_offsets[bar_index])
+            ;
 
-        let mb = MenuBar::new(bar_items)
-                    .draw_path(DrawPath::Backdrop)
-                    .style(move|theme:&iced::Theme, status: Status | 
-                        get_mb_styling(theme, status, 
-                            mn.menu_bar_style.clone(), 
-                            mn.menu_style.clone()
-                        )
+        let bar_item = Item::with_menu(menu_bar_button(
+                                                        bar_label.clone(),
+                                                        item_widths[bar_index],
+                                                        bar_index,
+                                                        bar_style), 
+                                                        menu_tpl(items)
+                                                        );
+
+        bar_items.push(bar_item); 
+    }
+
+    let mb = MenuBar::new(bar_items)
+                .draw_path(DrawPath::Backdrop)
+                .style(move|theme:&iced::Theme, status: Status | 
+                    get_mb_styling(theme, status, 
+                        mn.menu_bar_style.clone(), 
+                        mn.menu_style.clone()
                     )
-                    .spacing(mn.bar_spacing)
-                    .padding(mn.bar_padding)
-                    .width(mn.bar_width)
-                    .height(mn.bar_height)
-                    .check_bounds_width(mn.check_bounds_width);
+                )
+                .spacing(mn.bar_spacing)
+                .padding(mn.bar_padding)
+                // .width(bar_widths[bar_index])
+                .height(mn.bar_height)
+                .check_bounds_width(mn.check_bounds_width);
 
     let ipg_menu: Element<MenuMessage, Theme, Renderer> = Container::new(mb).into();
 
@@ -338,23 +382,122 @@ fn get_mb_styling(theme: &Theme,
         return menu_style
     }
 
-    let style = match state.menu_bar_style.get(&bar_style_id.clone().unwrap()){
+    if bar_style_id.is_some() {
+
+        let b_style = match state.menu_bar_style.get(&bar_style_id.clone().unwrap()){
         Some(st) => st,
         None => panic!("Bar Menu Style: Unable to find the style_id {}", bar_style_id.unwrap()),
-    };
+        };
 
-    
-    let mut border = menu_style.path_border;
+        if b_style.base.is_some() {
+            menu_style.bar_background = b_style.base.unwrap().into();
+        }
 
-    if style.border_color.is_some() {
-        border.color = style.border_color.unwrap();
+        if b_style.border_width.is_some() {
+            menu_style.bar_border.width = b_style.border_width.unwrap();
+        }
+
+        if b_style.border_color.is_some() {
+            // just in case the user forget to set width, then something shows
+            if menu_style.bar_border.width == 0.0 {
+                menu_style.bar_border.width = 1.0;
+            }
+            menu_style.bar_border.color = b_style.border_color.unwrap();
+        }
+
+        if b_style.border_radius.is_some() {
+            menu_style.bar_border.radius = get_radius(b_style.border_radius.clone().unwrap()).into();
+        }
+
+        if b_style.shadow_color.is_some() {
+            menu_style.bar_shadow.color = b_style.shadow_color.unwrap();
+        }
+
+        if b_style.shadow_offset_x.is_some() {
+            let v = menu_style.bar_shadow.offset;
+            menu_style.bar_shadow.offset = Vector{ x: b_style.shadow_offset_x.unwrap(), y: v.y };
+        }
+
+        if b_style.shadow_offset_y.is_some() {
+            let v = menu_style.bar_shadow.offset;
+            menu_style.bar_shadow.offset = Vector{ x: v.x , y: b_style.shadow_offset_y.unwrap() };
+        }
+
+        if b_style.shadow_blur_radius.is_some() {
+            menu_style.bar_shadow.blur_radius = b_style.shadow_blur_radius.unwrap();
+        }
     }
 
+    if menu_style_id.is_some() {
 
-    primary(theme, status)
+        let m_style = match state.menu_style.get(&menu_style_id.clone().unwrap()){
+        Some(st) => st,
+        None => panic!("Menu Style: Unable to find the style_id {}", menu_style_id.unwrap()),
+        };
+
+        if m_style.base.is_some() {
+            menu_style.menu_background = m_style.base.unwrap().into();
+        }
+
+        if m_style.border_width.is_some() {
+            menu_style.menu_border.width = m_style.border_width.unwrap();
+        }
+
+        if m_style.border_color.is_some() {
+            // just in case the user forget to set width, then something shows
+            if menu_style.menu_border.width == 0.0 {
+                menu_style.menu_border.width = 1.0;
+            }
+            menu_style.menu_border.color = m_style.border_color.unwrap();
+        }
+
+        if m_style.border_radius.is_some() {
+            menu_style.menu_border.radius = get_radius(m_style.border_radius.clone().unwrap()).into();
+        }
+
+        if m_style.shadow_color.is_some() {
+            menu_style.menu_shadow.color = m_style.shadow_color.unwrap();
+        }
+
+        if m_style.shadow_offset_x.is_some() {
+            let v = menu_style.menu_shadow.offset;
+            menu_style.menu_shadow.offset = Vector{ x: m_style.shadow_offset_x.unwrap(), y: v.y };
+        }
+
+        if m_style.shadow_offset_y.is_some() {
+            let v = menu_style.menu_shadow.offset;
+            menu_style.menu_shadow.offset = Vector{ x: v.x , y: m_style.shadow_offset_y.unwrap() };
+        }
+
+        if m_style.shadow_blur_radius.is_some() {
+            menu_style.menu_shadow.blur_radius = m_style.shadow_blur_radius.unwrap();
+        }
+
+        if m_style.path_base_color.is_some() {
+            menu_style.path = m_style.path_base_color.unwrap().into();
+        }
+
+        if m_style.path_border_width.is_some() {
+            menu_style.path_border.width = m_style.path_border_width.unwrap();
+        }
+
+        if m_style.path_border_color.is_some() {
+            // just in case the user forget to set width, then something shows
+            if menu_style.path_border.width == 0.0 {
+                menu_style.path_border.width = 1.0;
+            }
+            menu_style.path_border.color = m_style.path_border_color.unwrap();
+        }
+
+        if m_style.path_border_radius.is_some() {
+            menu_style.path_border.radius = get_radius(m_style.path_border_radius.clone().unwrap()).into();
+        }
+    }
+
+    drop(state);
+    menu_style
 
 }
-
 
 
 pub fn menu_callback(id: usize, message: MenuMessage) {
@@ -468,8 +611,7 @@ pub enum IpgMenuParam {
     BarHeightFill,
     BarPadding,
     BarSpacing,
-    BarWidth,
-    BarWidthFill,
+    BarWidths,
     CheckBoundsWidth,
     Show,
 }
@@ -502,13 +644,8 @@ pub fn menu_item_update(mn: &mut IpgMenu,
         IpgMenuParam::BarSpacing => {
             mn.bar_spacing = try_extract_f64(value) as f32;
         },
-        IpgMenuParam::BarWidth => {
-            let val = try_extract_f64(value) as f32;
-            mn.bar_width = get_width(Some(val),false);
-        },
-        IpgMenuParam::BarWidthFill => {
-            let val = try_extract_boolean(value);
-            mn.bar_width = get_width(None,val);
+        IpgMenuParam::BarWidths => {
+            mn.bar_widths = try_extract_vec_f32(value);
         },
         IpgMenuParam::CheckBoundsWidth => {
             mn.check_bounds_width = try_extract_f64(value) as f32;
@@ -516,7 +653,6 @@ pub fn menu_item_update(mn: &mut IpgMenu,
         IpgMenuParam::Show => {
             mn.show = try_extract_boolean(value);
         },
-        
     }
 
 }
@@ -749,13 +885,12 @@ fn menu_bar_button(label: String,
                                 Text::new(label.clone())
                                     .vertical_alignment(alignment::Vertical::Center)
                                     .horizontal_alignment(alignment::Horizontal::Center)
-                                    .width(Length::Fill)
                                     .into();
 
     let btn: Element<'static, MenuMessage, Theme, Renderer> = 
                                 Button::new(label_txt)
                                     .on_press(MenuMessage::ItemPressed((bar_index, 999)))
-                                    .width(Length::Fixed(width))
+                                    .width(width)
                                     .style(move|theme: &Theme, status| {
                                         if style_standard.is_none() && style.is_none() {
                                             button::text(theme, status)
@@ -767,10 +902,6 @@ fn menu_bar_button(label: String,
                                     .into();
     btn
 }
-
-
-
-
 
 #[derive(Debug, Clone)]
 pub struct IpgMenuSeparatorStyle {

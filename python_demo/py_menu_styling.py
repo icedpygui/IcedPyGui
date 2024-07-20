@@ -42,9 +42,18 @@ ipg.add_window("main-light", "Menu",
                debug=True)
 
 # Add a column container to to each window
+# If border is used in the menu and the menu 
+# is aligned next to the window border, a little 
+# bit of padding will neeed to be added to the 
+# container so that the menu border is not cut off.
 ipg.add_column("main-dark", 
                container_id="col-dark",
+               padding=[5.0],
                spacing=125.0,)
+
+# Add a contatiner and text at top for info
+ipg.add_container("main-light", "cont")
+ipg.add_text(parent_id="cont", content="The window debug flag is set to better show the changes that occur when the sliders are changed and the offsets for the menu items.")
 
 ipg.add_column("main-light", 
                container_id="col-light",
@@ -91,13 +100,15 @@ ipg.add_button_style("bar-btn-light", border_radius=[10.0])
 
 
 # A list of the widths which must equal the number of menu bar labels, the dict keys,
-# or they must be a list of 1 number, i.e. [90.0] to indicate all widths are 90.0
-widths = [90.0, 100.0, 90.0]
+# or they must be a list of 1 number, i.e. [90.0] to indicate all widths are 90.0.
+bar_widths = [120.0]
+item_widths = [100.0, 120.0, 140.0]
 
-# A list of the spacings which must equal the number of menu bar labels, the dict keys,
+# A list of the spacings in each column of items.  The size of the list  must 
+# equal the number of menu bar labels, the dict keys,
 # or they must be a list of 1 number, i.e. [5.0] to indicate all spacings of 5.0
-spacing = [5.0]
-
+item_spacings = [5.0]
+item_offsets = [10.0, 40.0, 60.0]
 # Add the menus to each window.
 # The all styling takes a tuple (IpgStandardStyle, style_id),
 # both items are optional.  Use None to default them.
@@ -110,25 +121,68 @@ spacing = [5.0]
 # to use a standard color, use the IpgStandardStyle to select the color
 # and then the button style to change any other parameters.
 # NOTE: The separators circle, dot, label, and line parameter 
-# is not a tuple but a str becuase they have no standard style.
-ipg.add_menu("col-dark", items, 
-            widths, spacing,
+# are not tuples but a str because they have no standard style.
+ipg.add_menu("col-dark", items,
+             bar_widths=bar_widths,
+            item_widths=item_widths,
             on_select=menu_pressed,
-            bar_style_all=(None, "bar-btn-dark"),
+            button_bar_style_all=(None, "bar-btn-dark"),
             button_item_style_all=(None, "btn"),
             line_item_style_all="line-dark", # not a tuple
             user_data="I'm in the dark window")
 
-# No styling menu
-ipg.add_menu("col-dark", items, 
-                widths, spacing,
-                )
+
+# Create the bar styling
+# When adding a border, if the left appears to be cut off,
+# then add some left padding to the container that the menu
+# is in.
+ipg.add_menu_bar_style(style_id="mb_style",
+                       base_color=IpgColor.DIM_GREY,
+                       border_width=2.0, 
+                       border_color=IpgColor.WHITE,
+                       border_radius=[20.0], # the default style is [8.0]
+                       shadow_color=IpgColor.LIGHT_GREY,
+                       shadow_offset_x=5.0,
+                       shadow_offset_y=5.0,
+                       shadow_blur_radius=10.0,
+                       )
+
+# The path style changes the style of the bar button
+# when the menu is displayed.  The path should be
+# a contrast to the bar styling.
+ipg.add_menu_style(style_id="mn_style",
+                       base_color=IpgColor.DIM_GREY,
+                       border_width=2.0, 
+                       border_color=IpgColor.WHITE,
+                       border_radius=[20.0], # the default style is [8.0]
+                       shadow_color=IpgColor.LIGHT_GREY,
+                       shadow_offset_x=5.0,
+                       shadow_offset_y=5.0,
+                       shadow_blur_radius=10.0,
+                       path_base_color=IpgColor.DIM_GREY,
+                       path_border_color=IpgColor.ANTIQUE_WHITE,
+                       path_border_width=2.0,
+                       path_border_radius=[8.0],
+                       )
+
+# Add some styling to the menu bar and menu
+ipg.add_menu("col-dark", items,
+            bar_widths=bar_widths,
+            item_widths=item_widths,
+            menu_bar_style="mb_style",
+            menu_style="mn_style",
+            )
 
 
-menu_id = ipg.add_menu("col-light", items, 
-                        widths, spacing,
+# Adding to second window
+
+menu_id = ipg.add_menu("col-light", items,
+                       bar_widths=bar_widths, 
+                        item_widths=item_widths, 
+                        item_spacings=item_spacings,
+                        item_offsets=item_offsets,
                         on_select=menu_pressed,
-                        bar_style_all=(IpgStyleStandard.Danger, "bar-btn-light"),
+                        button_bar_style_all=(IpgStyleStandard.Danger, "bar-btn-light"),
                         button_item_style_all=(None, "btn"), 
                         user_data="I'm in the light window")
 
