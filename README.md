@@ -10,7 +10,7 @@ https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-
 </div>
 
 ## Revisions/Releases
- * Upcoming release 0.2.0 estimated to be July 15
+ * Upcoming release 0.2.0 estimated to be July 30
  * Iced has undergone significant changes since 0.12.0 release, so a lot of changes along with adding styling.
     
 ## Features
