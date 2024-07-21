@@ -55,17 +55,20 @@ items = OrderedDict({"Menu0": [(None, IpgMenuType.Dot),
 
 # A list of the widths which must equal the number of menu bar labels, the dict keys,
 # or they must be a list of 1 number, i.e. [90.0] to indicate all widths are 90.0
-widths = [90.0, 100.0, 90.0]
+item_widths = [90.0, 100.0, 90.0]
+bar_widths = [100.0]
 
 # A list of the spacings which must equal the number of menu bar labels, the dict keys,
 # or they must be a list of 1 number, i.e. [5.0] to indicate all spacings of 5.0
-spacing = [5.0]
+item_spacings = [5.0]
 
 # Finally, we add the menus to each window.
 windows = ["col-dark", "col-light"]
 for col in windows:
     ipg.add_menu(col, items, 
-                widths, spacing,
+                bar_widths, 
+                item_widths,
+                item_spacings=item_spacings,
                 on_select=menu_pressed, 
                 user_data=col)
 

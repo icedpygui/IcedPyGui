@@ -38,8 +38,8 @@ use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, Ip
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParam, IpgMenuSeparatorStyle, 
     IpgMenuSeparatorType, IpgMenuBarStyle, IpgMenuStyle, IpgMenuType};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParams};
-use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickListHandle, IpgPickList, IpgPickListParams};
-use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams};
+use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListHandle, IpgPickListParams, IpgPickListStyle};
+use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams, IpgProgressBarStyle};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams};
 use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
 use ipg_widgets::ipg_rule::IpgRule;
@@ -122,6 +122,8 @@ pub struct State {
     pub menu_bar_style: Lazy<HashMap<String, IpgMenuBarStyle>>,
     pub menu_style: Lazy<HashMap<String, IpgMenuStyle>>,
     pub menu_separator_style: Lazy<HashMap<String, IpgMenuSeparatorStyle>>,
+    pub pick_list_style: Lazy<HashMap<String, IpgPickListStyle>>,
+    pub progress_bar_style: Lazy<HashMap<String, IpgProgressBarStyle>>,
 
     pub styling_color: Lazy<HashMap<String, IpgPalette>>,
     pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
@@ -163,6 +165,8 @@ pub static STATE: Mutex<State> = Mutex::new(
         menu_bar_style: Lazy::new(||HashMap::new()),
         menu_style: Lazy::new(||HashMap::new()),
         menu_separator_style: Lazy::new(||HashMap::new()),
+        pick_list_style: Lazy::new(||HashMap::new()),
+        progress_bar_style: Lazy::new(||HashMap::new()),
         
         styling_color: Lazy::new(||HashMap::new()),
         styling_standard: Lazy::new(||HashMap::new()),
@@ -1657,8 +1661,7 @@ impl IPG {
                         text_line_height=1.3, text_shaping="basic".to_string(), 
                         handle=IpgPickListHandle::Default, arrow_size=None, 
                         dynamic_closed=None, dynamic_opened=None, custom_static=None,
-                        style_color=None, style_border=None, 
-                        user_data=None, show=true,
+                        style=None, user_data=None, show=true,
                         ))]
     fn add_pick_list(&mut self,
                         parent_id: String,
@@ -1679,8 +1682,7 @@ impl IPG {
                         dynamic_closed: Option<IpgButtonArrows>,
                         dynamic_opened: Option<IpgButtonArrows>,
                         custom_static: Option<IpgButtonArrows>,
-                        style_color: Option<String>,
-                        style_border: Option<String>,
+                        style: Option<String>,
                         user_data: Option<PyObject>,
                         show: bool,
                     ) -> PyResult<usize>
@@ -1721,18 +1723,92 @@ impl IPG {
                                                         dynamic_closed,
                                                         dynamic_opened,
                                                         custom_static,
-                                                        style_color,
-                                                        style_border,
+                                                        style,
                                                     )));
         drop(state);
+        Ok(id)
+    }
+
+#[pyo3(signature = (style_id,
+                    base_color=None,
+                    base_rgba=None,
+                    strong_color=None,
+                    strong_rgba=None,
+                    weak_color=None,
+                    weak_rgba=None,
+                    strong_factor=None,
+                    weak_factor=None,
+                    text_color=None,
+                    text_rgba=None,
+                    handle_color=None,
+                    handle_rgba=None,
+                    placeholder_color=None,
+                    placeholder_rgba=None,
+                    border_color=None,
+                    border_rgba=None,
+                    border_radius=None,
+                    border_width=None,
+                    gen_id=None))]
+    fn add_pick_list_style(&mut self,
+                            style_id: String,
+                            base_color: Option<IpgColor>,
+                            base_rgba: Option<[f32; 4]>,
+                            strong_color: Option<IpgColor>,
+                            strong_rgba: Option<[f32; 4]>,
+                            weak_color: Option<IpgColor>,
+                            weak_rgba: Option<[f32; 4]>,
+                            strong_factor: Option<f32>,
+                            weak_factor: Option<f32>,
+                            text_color: Option<IpgColor>,
+                            text_rgba: Option<[f32; 4]>,
+                            handle_color: Option<IpgColor>,
+                            handle_rgba: Option<[f32; 4]>,
+                            placeholder_color: Option<IpgColor>,
+                            placeholder_rgba: Option<[f32; 4]>,
+                            border_color: Option<IpgColor>,
+                            border_rgba: Option<[f32; 4]>,
+                            border_radius: Option<Vec<f32>>,
+                            border_width: Option<f32>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+        
+        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+        let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
+        let weak: Option<Color> = get_color(weak_rgba, weak_color, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let handle_color: Option<Color> = get_color(handle_rgba, handle_color, 1.0, false);
+        let placeholder_color = get_color(placeholder_rgba, placeholder_color, 1.0, false);
+        let text_color = get_color(text_rgba, text_color, 1.0, false);
+
+        let mut state = access_state();
+
+        state.pick_list_style.insert(style_id, IpgPickListStyle::new( 
+                                                    id,
+                                                    base,
+                                                    strong,
+                                                    weak,
+                                                    strong_factor,
+                                                    weak_factor,
+                                                    text_color,
+                                                    handle_color,
+                                                    placeholder_color,
+                                                    border_color,
+                                                    border_radius,
+                                                    border_width,
+                                                    ));
+        
+        drop(state);
+
         Ok(id)
     }
 
     #[pyo3(signature = (parent_id, min, max, value,
                         gen_id=None, width=None, height=Some(16.0), 
                         width_fill=true, height_fill=false,
-                        style_standard=None, style_color=None, 
-                        style_border=None, show=true, 
+                        style_standard=None, style=None, 
+                        show=true, 
                         ))]
     fn add_progress_bar(&mut self,
                             parent_id: String,
@@ -1746,8 +1822,7 @@ impl IPG {
                             width_fill: bool,
                             height_fill: bool,
                             style_standard: Option<IpgStyleStandard>,
-                            style_color: Option<String>,
-                            style_border: Option<String>,
+                            style: Option<String>,
                             show: bool,
                             ) -> PyResult<usize> 
     {
@@ -1770,12 +1845,52 @@ impl IPG {
                                                 width,
                                                 height,
                                                 style_standard,
-                                                style_color,
-                                                style_border,
+                                                style,
                                             )));
         drop(state);
         Ok(id)
 
+    }
+
+    #[pyo3(signature = (style_id, 
+                        base_color=None, base_rgba=None,
+                        bar_color=None, bar_rgba=None,
+                        border_color=None, border_rgba=None,
+                        border_radius=None, border_width=None,
+                        gen_id=None))]
+    fn add_progress_bar_style(&mut self,
+                                style_id: String,
+                                base_color: Option<IpgColor>,
+                                base_rgba: Option<[f32; 4]>,
+                                bar_color: Option<IpgColor>,
+                                bar_rgba: Option<[f32; 4]>,
+                                border_color: Option<IpgColor>,
+                                border_rgba: Option<[f32; 4]>,
+                                border_radius: Option<Vec<f32>>,
+                                border_width: Option<f32>,
+                                gen_id: Option<usize>,
+                                ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let mut state = access_state();
+
+        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+        let bar: Option<Color> = get_color(bar_rgba, bar_color, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+
+        state.progress_bar_style.insert(style_id, IpgProgressBarStyle::new( 
+                                                    id,
+                                                    base,
+                                                    bar,
+                                                    border_color,
+                                                    border_radius,
+                                                    border_width,
+                                                    ));
+        
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (parent_id, labels, gen_id=None,

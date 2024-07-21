@@ -1281,6 +1281,33 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
 
+    def add_pick_list_style(self,
+                            style_id: str,
+                            *,
+                            base_color: Union[None | IpgColor]=None,
+                            base_rgba: Union[None | list[float, 4]]=None,
+                            strong_color: Union[None | IpgColor]=None,
+                            strong_rgba: Union[None | list[float, 4]]=None,
+                            weak_color: Union[None | IpgColor]=None,
+                            weak_rgba: Union[None | list[float, 4]]=None,
+                            strong_factor: Union[None | float]=None,
+                            weak_factor: Union[None | float]=None,
+                            text_color: Union[None | IpgColor]=None,
+                            text_rgba: Union[None | list[float, 4]]=None,
+                            handle_color: Union[None | IpgColor]=None,
+                            handle_rgba: Union[None | list[float, 4]]=None,
+                            placeholder_color: Union[None | IpgColor]=None,
+                            placeholder_rgba: Union[None | list[float, 4]]=None,
+                            border_color: Union[None | IpgColor]=None,
+                            border_rgba: Union[None | list[float, 4]]=None,
+                            border_radius: Union[None | list[float]]=None,
+                            border_width: Union[None | float]=None,
+                            gen_id: Union[None | int]=None,
+                            ) -> int:
+        """
+        Add PickList styling.
+        """
+
     def add_progress_bar(self,
                         parent_id: str,
                         min: float,
@@ -1291,8 +1318,8 @@ class IPG:
                         width: Union[None | float]=None,
                         width_fill: bool=False,
                         height: float=1.0,
-                        style_color: Union[None, str]=None,
-                        style_border: Union[None, str]=None,
+                        style_standard: Union[None | IpgStyleStandard]=None,
+                        style: Union[None, str]=None,
                         user_data: Union[None, any]=None,
                         show: bool=True,
                          ) -> int:
@@ -1317,10 +1344,8 @@ class IPG:
                 If set, the widget fills the available space.
             height: float
                 Sets the height of the bar.
-            style_color: str
-                style_id of the add_styling_color.
-            style_border: str
-                style_id of the add_styling_border.
+            style: str
+                style_id of the add_progress_bar_style.
             user_data: any
                 Any data in any form needed by user to be passed through as a callback.
             show: bool
@@ -1330,6 +1355,23 @@ class IPG:
         -------
         id: int
             Internal id of widget and can be used by user if equated.
+        """
+
+    def add_progress_bar_style(self,
+                                style_id: str,
+                                *,
+                                base_color: Union[None | IpgColor]=None,
+                                base_rgba: Union[None | list[float, 4]]=None,
+                                bar_color: Union[None | IpgColor]=None,
+                                bar_rgba: Union[None | list[float, 4]]=None,
+                                border_color: Union[None | IpgColor]=None,
+                                border_rgba: Union[None | list[float, 4]]=None,
+                                border_radius: Union[None | list[float, 4]]=None,
+                                border_width: Union[None | float]=None,
+                                gen_id: Union[None | int]=None,
+                               ) -> int:
+        """
+        Add ProgressBar style.
         """
 
     def add_radio(self,

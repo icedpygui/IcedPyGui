@@ -6,7 +6,7 @@ ipg = IPG()
 
 # global var for callback
 value = 75.0
-
+hide = True
 
 # The callbacks below allow you to change all of the parameters for a widget.
 # They may or may not have frequent usage but it makes the gui very flexible
@@ -59,7 +59,9 @@ def change_width_to_fill(_btn_id: int, pg_id: any):
 
 
 def hide_bar(_btn_id: int, pg_id: any):
-    ipg.update_item(pg_id, IpgProgressBarParams.Show, False)
+    global hide
+    hide = not hide
+    ipg.update_item(pg_id, IpgProgressBarParams.Show, hide)
 
 
 # Add the window
@@ -73,6 +75,8 @@ ipg.add_container(window_id="main", container_id="cont", width_fill=True,
 # Add a column for the widgets
 ipg.add_column("main", "col", parent_id="cont",
                align_items=IpgColumnAlignment.Center, spacing=2)
+
+ipg.add_space(parent_id="col", height=50.0)
 
 # add a row for the  for the pg bar
 ipg.add_row(window_id="main", container_id="row1", parent_id="col",
@@ -129,20 +133,31 @@ ipg.add_button("col2", "Press Me to to fill the bar width, do the above first",
                on_press=change_width_to_fill, user_data=pg_id)
 
 # Add a button to hide the bar
-ipg.add_button("col2", "Press me to hide the bar.",
+ipg.add_button("col2", "Press me to hide/show the bar.",
                on_press=hide_bar, user_data=pg_id)
 
 
 # add some styling to a new bar
-ipg.add_styling_border("border", radius=[12.0])
+ipg.add_progress_bar_style("border", 
+                           border_radius=[8.0], 
+                           border_color=IpgColor.BLUE,
+                           border_width=3.0,
+                           base_color=IpgColor.LIGHT_BLUE,
+                           bar_color=IpgColor.ALICE_BLUE)
 
 
 # Ading another bar and styling with a new background, bar color, and border.
 ipg.add_progress_bar("col2", 0.0, 100.0, 50.0,
-                     style_standard=IpgStyleStandard.Danger,
-                     style_border="border")
+                     style="border")
 
-ipg.add_text(parent_id="col2", content="Styling with a new bar color, and border")
+ipg.add_text(parent_id="col2", content="Styling with a new bar color, base color, and border")
+
+# Ading another bar with just a standard styling.
+ipg.add_progress_bar("col2", 0.0, 100.0, 50.0,
+                     style_standard=IpgStyleStandard.Danger)
+
+ipg.add_text(parent_id="col2", content="Styling with Danger standard style only")
+
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

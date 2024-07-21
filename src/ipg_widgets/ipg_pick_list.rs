@@ -3,10 +3,13 @@
 use crate::access_callbacks;
 use crate::access_state;
 use crate::app;
+use crate::style::styling;
+use crate::style::styling::get_text_pair;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 use super::helpers::get_padding_f64;
+use super::helpers::get_radius;
 use super::helpers::get_width;
 use super::helpers::try_extract_boolean;
 use super::helpers::try_extract_f64;
@@ -15,8 +18,9 @@ use super::helpers::try_extract_vec_f64;
 use super::ipg_button::get_bootstrap_arrow_char;
 use super::ipg_button::IpgButtonArrows;
 
+use iced::theme::palette::Pair;
 use iced::widget::pick_list::{self, Status};
-use iced::{Color, Font, Pixels, Theme, theme};
+use iced::{Color, Font, Pixels, Theme};
 use iced::{Padding, Length, Element};
 use iced::widget::{PickList, Space};
 use iced::widget::pick_list::{Handle, Icon};
@@ -45,8 +49,7 @@ pub struct IpgPickList {
     pub dynamic_closed: Option<IpgButtonArrows>,
     pub dynamic_open: Option<IpgButtonArrows>,
     pub custom_static: Option<IpgButtonArrows>,
-    pub style_color: Option<String>,
-    pub style_border: Option<String>,
+    pub style: Option<String>,
 }
 
 impl IpgPickList {
@@ -68,8 +71,7 @@ impl IpgPickList {
         dynamic_closed: Option<IpgButtonArrows>,
         dynamic_open: Option<IpgButtonArrows>,
         custom_static: Option<IpgButtonArrows>,
-        style_color: Option<String>,
-        style_border: Option<String>,
+        style: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -88,8 +90,55 @@ impl IpgPickList {
             dynamic_closed,
             dynamic_open,
             custom_static,
-            style_color,
-            style_border,
+            style,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct IpgPickListStyle {
+    pub id: usize,
+    pub base: Option<Color>, // background
+    pub strong: Option<Color>,
+    pub weak: Option<Color>,
+    pub strong_factor: Option<f32>,
+    pub weak_factor: Option<f32>,
+    pub text_color: Option<Color>,
+    pub handle_color: Option<Color>,
+    pub placeholder_color: Option<Color>,
+    pub border_color: Option<Color>,
+    pub border_radius: Option<Vec<f32>>,
+    pub border_width: Option<f32>,
+}
+
+impl IpgPickListStyle {
+    pub fn new(
+        id: usize,
+        base: Option<Color>,
+        strong: Option<Color>,
+        weak: Option<Color>,
+        strong_factor: Option<f32>,
+        weak_factor: Option<f32>,
+        text_color: Option<Color>,
+        handle_color: Option<Color>,
+        placeholder_color: Option<Color>,                 
+        border_color: Option<Color>,
+        border_radius: Option<Vec<f32>>,
+        border_width: Option<f32>,
+    ) -> Self {
+        Self {
+            id,
+            base,
+            strong,
+            weak,
+            strong_factor,
+            weak_factor,
+            text_color,
+            handle_color,
+            placeholder_color,
+            border_color,
+            border_radius,
+            border_width,
         }
     }
 }
@@ -136,8 +185,7 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
                                         .handle(handle)
                                         .style(move|theme: &Theme, status| {   
                                             get_styling(theme, status, 
-                                                pick.style_color.clone(), 
-                                                pick.style_border.clone(),
+                                                pick.style.clone(),
                                             )  
                                             })
                                         .into();
@@ -276,8 +324,7 @@ pub enum IpgPickListParams {
     Placeholder,
     Padding,
     Show,
-    StyleColor,
-    StyleBorder,
+    Style,
     TextSize,
     TextLineHeight,
     Width,
@@ -308,13 +355,9 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
         IpgPickListParams::Show => {
             pl.show = try_extract_boolean(value);
         },
-        IpgPickListParams::StyleColor => {
+        IpgPickListParams::Style => {
             let val = try_extract_string(value);
-            pl.style_color = Some(val);
-        },
-        IpgPickListParams::StyleBorder => {
-            let val = try_extract_string(value);
-            pl.style_border = Some(val);
+            pl.style = Some(val);
         },
         IpgPickListParams::TextSize => {
             let size = try_extract_f64(value);
@@ -428,73 +471,134 @@ fn get_handle(ipg_handle: IpgPickListHandle,
 
 
 pub fn get_styling(theme: &Theme, status: Status, 
-                    style_color: Option<String>, 
-                    style_border: Option<String>,
+                    style_str: Option<String>, 
                     ) -> pick_list::Style {
     
-    let mut base_style = pick_list::default(theme, status);
-    let mut hover_style = pick_list::default(theme, status);
-
-    let palette = theme.extended_palette();
+    let mut active_style = pick_list::default(theme, Status::Active);
+    let mut hover_opened_style = pick_list::default(theme, Status::Hovered);
 
     let state = access_state();
 
-    let color_palette_opt = if style_color.is_some() {
-        state.styling_color.get(&style_color.unwrap())
-    } else {
-        None
-    };
-    
-    if color_palette_opt.is_some() {
-        let text = if palette.is_dark {
-            Color::WHITE
-        } else {
-            Color::BLACK
-        };
-
-        let color_palette = color_palette_opt.unwrap().clone();
-        
-        let background = theme::palette::Background::new(color_palette.base.unwrap(), text);
-        base_style.background = iced::Background::Color(background.weak.color);
-
-        if color_palette.text.is_some() {
-            base_style.text_color = color_palette.text.unwrap();
-            hover_style.text_color = color_palette.text.unwrap();
-        }
-        
-        if color_palette.border.is_some() {
-            let border_color = theme::palette::Background::new(color_palette.border.unwrap(), text);
-            base_style.border.color = border_color.base.color;
-            hover_style.border.color = border_color.strong.color;
-        }
-
-        if color_palette.placeholder.is_some() {
-            base_style.placeholder_color = color_palette.placeholder.unwrap(); 
-        }
-
-        if color_palette.handle.is_some() {
-            base_style.handle_color = color_palette.handle.unwrap(); 
+    if style_str.is_none() {
+        return match status {
+            Status::Active => active_style,
+            Status::Hovered | Status::Opened => hover_opened_style,
         }
     }
 
-    let border_opt = if style_border.is_some() {
-        state.styling_border.get(&style_border.unwrap())
-    } else {
-        None
+    let style_opt = state.pick_list_style.get(&style_str.clone().unwrap());
+    
+    let style = match style_opt {
+        Some(st) => st,
+        None => panic!("PiclList: The style_id {} for add_pick_list_style couldot be found", style_str.unwrap())
     };
 
-    if border_opt.is_some() {
-        let bd = border_opt.unwrap();
-        base_style.border.radius = bd.radius;
-        base_style.border.width = bd.width;
-        hover_style.border.radius = bd.radius;
-        hover_style.border.width = bd.width;
+    if style.base.is_none() && style.strong.is_some() || style.weak.is_some() {
+        panic!("PickList style: if you define strong and/or weak, you must define style.base too")
+    }
+
+    if (style.strong.is_some() && style.weak.is_none()) || 
+        (style.strong.is_none() && style.weak.is_some()) {
+            panic!("PickList style: If you define weak or strong, you must define both")
+        }
+
+    // all custom colors
+    if style.base.is_some() && style.strong.is_some() && style.weak.is_some() {
+        let text = if style.text_color.is_some() {
+            style.text_color.unwrap()
+        } else {
+            let text = get_text_pair(style.text_color, style.base.unwrap());
+            let pair = Pair::new(style.base.unwrap(), text);
+            pair.text
+        };
+
+        let strong_pair = Pair::new(style.strong.unwrap(), text);
+        let weak_pair = Pair::new(style.weak.unwrap(), text);
+
+        // The hover_opened status only changes the border color to primary
+        active_style.text_color = weak_pair.text;
+        active_style.background = weak_pair.color.into();
+        active_style.placeholder_color = strong_pair.color;
+        active_style.handle_color = weak_pair.text;
+
+        if style.border_color.is_none() {
+            active_style.border.color = strong_pair.color;
+        } else {
+            let border_color = style.border_color.unwrap();
+            active_style.border.color = border_color;
+            let palette = styling::IpgColorPalette::generate(border_color,
+                                                            weak_pair.color,
+                                                                text, 
+                                                                style.strong_factor,
+                                                                style.weak_factor);
+            hover_opened_style.border.color = palette.strong.color;
+        }
+
+    }
+
+    // Only base defined
+    if style.base.is_some() && style.strong.is_none() && style.weak.is_none() {
+        let text = if style.text_color.is_some() {
+            style.text_color.unwrap()
+        } else {
+            let text = get_text_pair(style.text_color, style.base.unwrap());
+            let pair = Pair::new(style.base.unwrap(), text);
+            pair.text
+        };
+
+        let background = theme.palette().background;
+        let palette = styling::IpgColorPalette::generate(style.base.unwrap(),
+                                                                        background,
+                                                                        text, 
+                                                                        style.strong_factor,
+                                                                        style.weak_factor);
+        let placeholder_color = if style.placeholder_color.is_some() {
+            style.placeholder_color.unwrap()
+        } else {
+            palette.strong.color
+        };
+
+        let handle_color = if style.handle_color.is_some() {
+            style.handle_color.unwrap()
+        } else {
+            palette.weak.color
+        };
+
+        // The hover_opened status only changes the border color to primary
+        active_style.text_color = palette.weak.text;
+        active_style.background = palette.weak.color.into();
+        active_style.placeholder_color = placeholder_color;
+        active_style.handle_color = handle_color;
+
+        if style.border_color.is_none() {
+            active_style.border.color = palette.strong.color;
+        } else {
+            let border_color = style.border_color.unwrap();
+            active_style.border.color = border_color;
+            let palette = styling::IpgColorPalette::generate(border_color,
+                                                            palette.weak.color,
+                                                                text, 
+                                                                None,
+                                                                None);
+            hover_opened_style.border.color = palette.strong.color;
+        }
+
+    }
+    
+    if style.border_radius.is_some() {
+        active_style.border.radius = get_radius(style.border_radius.clone().unwrap());
+        hover_opened_style.border.radius = get_radius(style.border_radius.clone().unwrap());
+    }
+
+    if style.border_width.is_some() {
+        active_style.border.width = style.border_width.unwrap();
+        hover_opened_style.border.width = style.border_width.unwrap();
     }
         
 
     match status {
-        Status::Active => base_style,
-        Status::Hovered | Status::Opened => hover_style,
+        Status::Active => active_style,
+        Status::Hovered | Status::Opened => hover_opened_style,
     }
 
 }
