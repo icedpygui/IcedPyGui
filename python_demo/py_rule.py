@@ -7,7 +7,9 @@ ipg = IPG()
 # Add the window
 ipg.add_window("main", "Rule Demo", 
                500, 650,
-                pos_x=100, pos_y=25)
+                pos_x=100, pos_y=25,
+                # debug=True
+                )
 
 # Add a container for alignment
 ipg.add_container("main", "cont", 
@@ -24,35 +26,45 @@ ipg.add_space(parent_id="col", width_fill=True, height=20.0)
 ipg.add_text(parent_id="col", content="Below are vertical and horizontal rules")
 
 # add some styling
-ipg.add_styling_color("bkg_v", base_color=IpgColor.YELLOW)
-ipg.add_styling_color("bkg_h", base_color=IpgColor.BLUE)
+ipg.add_rule_style("v", 
+                   color=IpgColor.YELLOW, 
+                   border_radius=[10.0])
 
-# The border style only has radius as a valid entry.
-ipg.add_styling_border(style_id="border", radius=[10.0])
+ipg.add_rule_style("h", 
+                   color=IpgColor.BLUE, 
+                   border_radius=[10.0])
 
 # The fill_mode styling
-ipg.add_styling_fill_mode("fill_50", percent=50.0)
-ipg.add_styling_fill_mode("pad", asymmetric_padding=(10, 30))
+ipg.add_rule_style("fill_50", 
+                   color=IpgColor.BLUE, 
+                   fillmode_percent=50.0)
+
+# The padding is almost like percent except it gives you
+# an unsymmetrical ability. It can be seen better if you uncomment the 
+# degug mode in the window.
+ipg.add_rule_style("pad",
+                   color=IpgColor.BLUE,
+                   fillmode_asymmetric_padding=(10, 50))
 
 
 # Add the rules
 ipg.add_rule_vertical("col", height=250, thickness=5, 
-                      style_color="bkg_v")
+                      style="v")
+
 ipg.add_rule_horizontal("col", width=250, thickness=15,
-                        style_color="bkg_h", 
-                        style_border="border")
+                        style="h", 
+                        )
+
 ipg.add_text(parent_id="col", content="Styling added to above with color and corner radius")
 
 ipg.add_rule_horizontal("col", width=250, thickness=15,
-                        style_color="bkg_h", 
-                        style_fill_mode="fill_50",
-                        style_border="border")
+                        style="fill_50", 
+                        )
 ipg.add_text(parent_id="col", content="Additional Styling added to above with 50% color fill")
 
 ipg.add_rule_horizontal("col", width=250, thickness=15, 
-                        style_color="bkg_h", 
-                        style_fill_mode="pad",
-                        style_border="border")
+                        style="pad")
+
 ipg.add_text(parent_id="col", content="Additional Styling added to above with unsymmetrical padding")
 
 # Required to be the last widget sent to Iced,  If you start the program
