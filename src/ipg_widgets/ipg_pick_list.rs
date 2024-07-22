@@ -490,7 +490,7 @@ pub fn get_styling(theme: &Theme, status: Status,
     
     let style = match style_opt {
         Some(st) => st,
-        None => panic!("PiclList: The style_id {} for add_pick_list_style couldot be found", style_str.unwrap())
+        None => panic!("PiclList: The style_id {} for add_pick_list_style could not be found", style_str.unwrap())
     };
 
     if style.base.is_none() && style.strong.is_some() || style.weak.is_some() {

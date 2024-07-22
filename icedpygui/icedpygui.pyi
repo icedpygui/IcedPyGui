@@ -1451,6 +1451,33 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
 
+    def add_radio_style(self,
+                        style_id: str,
+                        *,
+                        circle_inner_color: Union[None | IpgColor]=None,
+                        circle_inner_hover_color: Union[None | IpgColor]=None,
+                        hover_color_factor: Union[None | float]=None,
+                        border_color: Union[None | IpgColor]=None,
+                        border_rgba: Union[None | list[float, 4]]=None,
+                        border_width: Union[None | float]=None,
+                        dot_color: Union[None | IpgColor]=None,
+                        dot_rgba: Union[None | list[float, 4]]=None,
+                        text_color: Union[None | IpgColor]=None,
+                        text_rgba: Union[None | list[float, 4]]=None,
+                        gen_id: Union[None | int]=None,
+                        ) -> int:
+        """
+        Add Radio style.
+
+        The styling colors will change when the mouse hovers over the radio button.
+        The hover changes are the circle's inner color and the circle border color.  
+        chagnes to this new hover inner color.  The default style 
+        is to use the background color and change it to a weak color.  You can either
+        define the base color and have the hover color be calculated based on the 
+        hover_color_factor (default=0.1) or define your own hover color.  The remaining
+        color definitions are obvious except for the border which is the circle itself.
+        """
+
     def add_rule_horizontal(self, 
                             parent_id, 
                             *,
@@ -2918,10 +2945,7 @@ class IpgRadioParams:
     Show=0
     Size=0
     Spacing=0
-    StyleBackground=0
-    StyleBorder=0
-    StyleDotColor=0
-    StyleTextColor=0
+    Style=0
     TextSpacing=0
     TextSize=0
     TextLineHeight=0

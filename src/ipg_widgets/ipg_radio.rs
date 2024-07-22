@@ -2,18 +2,19 @@
 
 use crate::graphics::colors::{match_ipg_color, IpgColor};
 use crate::ipg_widgets::helpers::try_extract_boolean;
-use crate::style::styling::lighten;
+use crate::style::styling::{self, get_text_pair, lighten, strong};
 use crate::{access_state, access_callbacks};
 use crate::app;
-use super::helpers::{get_height, get_line_height, get_padding_f64, 
-    get_width, try_extract_f64, try_extract_f64_option, try_extract_i64, 
-    try_extract_i64_option, try_extract_option_string,  
-    try_extract_vec_f64, try_extract_vec_str};
+use super::helpers::{get_height, get_line_height, get_padding_f64, get_width, 
+    try_extract_f64, try_extract_f64_option, try_extract_i64, try_extract_i64_option, 
+    try_extract_option_string, try_extract_vec_f64, try_extract_vec_str};
 use super::ipg_enums::IpgWidgets;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
+use super::ipg_theme_colors::is_dark;
 
+use iced::theme::palette::Pair;
 use iced::widget::radio::{self, Status};
 use iced::{Background, Color, Element, Length, Padding, Theme, theme};
 use iced::widget::text::{LineHeight, Shaping};
@@ -43,8 +44,7 @@ pub struct IpgRadio {
     pub text_shaping: Shaping,
     pub group_index: usize,
     // pub font: Option<Font>,
-    pub style_color: Option<String>,
-    pub style_border: Option<String>,
+    pub style: Option<String>,
 }
 
 impl IpgRadio {
@@ -67,8 +67,7 @@ impl IpgRadio {
         text_shaping: Shaping,
         radio_index: usize,
         // font: Option<Font>,
-        style_color: Option<String>,
-        style_border: Option<String>,
+        style: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -89,12 +88,46 @@ impl IpgRadio {
             text_shaping,
             group_index: radio_index,
             // font: None,
-            style_color,
-            style_border,
+            style,
         }
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct IpgRadioStyle {
+    pub id: usize,
+    pub circle_inner_color: Option<Color>,
+    pub circle_inner_hover_color: Option<Color>,
+    pub hover_color_factor: Option<f32>,
+    pub dot_color: Option<Color>,
+    pub border_color: Option<Color>,
+    pub border_width: Option<f32>,
+    pub text_color: Option<Color>,
+}
+
+impl IpgRadioStyle {
+    pub fn new(
+        id: usize,
+        circle_inner_color: Option<Color>,
+        circle_inner_hover_color: Option<Color>,
+        hover_color_factor: Option<f32>,
+        dot_color: Option<Color>,
+        border_color: Option<Color>,
+        border_width: Option<f32>,
+        text_color: Option<Color>,
+    ) -> Self {
+        Self {
+            id,
+            circle_inner_color,
+            circle_inner_hover_color,
+            hover_color_factor,
+            dot_color,
+            border_color,
+            border_width,
+            text_color,
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 #[pyclass]
@@ -124,9 +157,20 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
 
     let mut radio_elements = vec![];
 
+    // Due to the closure in the style, had to covert to array of strings
+    let mut style: Vec<Option<String>> = vec![];
+    for i in 0..radio.labels.len() {
+        style.push(radio.style.clone())
+    }
+
     for (i, label) in  radio.labels.iter().enumerate() {
-        let style_color = radio.style_color.clone();
-        let style_border = radio.style_border.clone();
+
+        let style_str = if style[i].is_some() {
+            style[i].clone().unwrap()
+        } else {
+            "none".to_string()
+        };
+        
         radio_elements.push(Radio::new(label.clone(), 
                                         CHOICES[radio.group_index][i],
                                         selected,
@@ -137,13 +181,10 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
                                     .text_size(radio.text_size)
                                     .text_line_height(radio.text_line_height)
                                     .text_shaping(radio.text_shaping)
-                                    .style(move|theme: &Theme, status| {   
+                                    .style(move|theme: &Theme, status| {
                                         get_styling(theme, status, 
-                                            style_color.clone(), 
-                                            style_border.clone(),
-                                            selected,
-                                        )  
-                                        })
+                                        style_str.clone(),
+                                        )})
                                     .into());
     }
 
@@ -355,8 +396,7 @@ pub enum IpgRadioParams {
     Show,
     Size,
     Spacing,
-    StyleColor,
-    StyleBorder,
+    Style,
     TextSpacing,
     TextSize,
     TextLineHeight,
@@ -412,11 +452,8 @@ pub fn radio_item_update(rd: &mut IpgRadio,
         IpgRadioParams::Spacing => {
             rd.spacing = try_extract_f64(value) as f32;
         },
-        IpgRadioParams::StyleColor => {
-            rd.style_color = try_extract_option_string(value);
-        },
-        IpgRadioParams::StyleBorder => {
-            rd.style_border = try_extract_option_string(value);
+        IpgRadioParams::Style => {
+            rd.style = try_extract_option_string(value);
         },
         IpgRadioParams::TextSpacing => {
             rd.text_spacing = try_extract_f64(value) as f32;
@@ -488,68 +525,86 @@ pub fn try_extract_radio_direction(direct_obj: PyObject) -> IpgRadioDirection {
 }
 
 pub fn get_styling(theme: &Theme, status: Status, 
-                    style_color: Option<String>, 
-                    style_border: Option<String>,
-                    selected: Option<Choice>,
+                    style_str: String,
                     ) -> radio::Style {
-
-    if style_color.is_none() && style_border.is_none() {
-        return radio::default(theme, status)
-    }
     
-    let state = access_state();
-
-    let color_palette_opt = if style_color.is_some() {
-        state.styling_color.get(&style_color.unwrap())
-    } else {
-        None
-    };
-
-    let border_opt = if style_border.is_some() {
-        state.styling_border.get(&style_border.unwrap())
-    } else {
-        None
-    };
-    
-    let mut base_style = radio::default(theme, status);
+    let mut active_style = radio::default(theme, status);
     let mut hover_style = radio::default(theme, status);
 
-    let palette = theme.extended_palette();
+    let state = access_state();
 
-    if border_opt.is_some() {
-        let border = border_opt.unwrap();
-        base_style.border_width = border.width;
-        hover_style.border_width = border.width;
+    if style_str == "none".to_string() {
+        return match status {
+            Status::Active{..} => active_style,
+            Status::Hovered{..}  => hover_style,
+        }
     }
 
-    if color_palette_opt.is_some() {
+    let style_opt = state.radio_style.get(&style_str.clone());
+    
+    let style = match style_opt {
+        Some(st) => st,
+        None => panic!("Radio: The style_id '{}' for add_radio_style could not be found", style_str)
+    };
 
-        let mut color_palette = color_palette_opt.unwrap().clone();
-        
-        base_style.text_color = color_palette.text;
-        
-        
-        if color_palette.border.is_some() {
-            base_style.border_color = color_palette.border.unwrap();
+    let text_opt: Option<Color> = if style.text_color.is_some() {
+        style.text_color
+    } else {
+        None
+    };
+    let text = if text_opt.is_some() {
+        text_opt.unwrap()
+    } else {
+        if is_dark(theme.palette().background) {
+            Color::WHITE
         } else {
-            base_style.border_color = palette.primary.strong.color;
+            Color::BLACK
         }
+    };
 
-        if color_palette.dot.is_some() {
-            base_style.dot_color = color_palette.dot.unwrap();
-        } else {
-            base_style.dot_color = palette.primary.strong.color;
-        }
+    active_style.text_color = text_opt;
+    hover_style.text_color = text_opt;
 
-        hover_style = base_style.clone();
-        hover_style.background = palette.primary.weak.color.into();
+    // The hover status changes the circle inner color to background weak
+    // and the border color to match the inner_hover_color.
+    // Therefore, if inner color defined then just do a strong to show change
+    if style.circle_inner_color.is_some() {
+        active_style.background = style.circle_inner_color.unwrap().into();
     }
 
-    match status {
-        Status::Active { .. } => base_style,
-        Status::Hovered { .. } => hover_style,
+    if style.circle_inner_hover_color.is_some() {
+        hover_style.background = style.circle_inner_hover_color.unwrap().into();
+        hover_style.border_color = style.circle_inner_hover_color.unwrap().into();
+    }
+
+    if style.circle_inner_color.is_some() && style.circle_inner_hover_color.is_none() {
+        hover_style.background = strong(style.circle_inner_color.unwrap(), 
+                                        style.hover_color_factor).into();
+        hover_style.border_color = strong(style.circle_inner_color.unwrap(), 
+                                        style.hover_color_factor).into();
+    } 
+    
+    if style.dot_color.is_some() {
+        active_style.dot_color = style.dot_color.unwrap();
+        hover_style.dot_color = style.dot_color.unwrap();
     }
     
+    // border color changes to inner color during hover
+    if style.border_color.is_some() {
+        active_style.border_color = style.border_color.unwrap();
+    }
+    
+    if style.border_width.is_some() {
+        active_style.border_width = style.border_width.unwrap();
+        hover_style.border_width = style.border_width.unwrap();
+    }
+        
+
+    match status {
+        Status::Active{..} => active_style,
+        Status::Hovered{..} => hover_style,
+    }
+
 }
 
 

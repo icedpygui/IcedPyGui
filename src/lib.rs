@@ -40,7 +40,7 @@ use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParam, IpgMenuSepa
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParams};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListHandle, IpgPickListParams, IpgPickListStyle};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams, IpgProgressBarStyle};
-use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams};
+use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams, IpgRadioStyle};
 use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
 use ipg_widgets::ipg_rule::IpgRule;
 use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, 
@@ -124,6 +124,7 @@ pub struct State {
     pub menu_separator_style: Lazy<HashMap<String, IpgMenuSeparatorStyle>>,
     pub pick_list_style: Lazy<HashMap<String, IpgPickListStyle>>,
     pub progress_bar_style: Lazy<HashMap<String, IpgProgressBarStyle>>,
+    pub radio_style:  Lazy<HashMap<String, IpgRadioStyle>>,
 
     pub styling_color: Lazy<HashMap<String, IpgPalette>>,
     pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
@@ -167,6 +168,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         menu_separator_style: Lazy::new(||HashMap::new()),
         pick_list_style: Lazy::new(||HashMap::new()),
         progress_bar_style: Lazy::new(||HashMap::new()),
+        radio_style: Lazy::new(||HashMap::new()),
         
         styling_color: Lazy::new(||HashMap::new()),
         styling_standard: Lazy::new(||HashMap::new()),
@@ -1898,7 +1900,7 @@ impl IPG {
                         spacing= 10.0, padding=vec![10.0], 
                         width=None, width_fill=false, height=None, height_fill=false,
                         on_select=None, selected_index=None, 
-                        size=20.0, style_color=None, style_border=None,
+                        size=20.0, style=None,
                         text_spacing=15.0, text_size=16.0,
                         text_line_height=1.3, text_shaping="basic".to_string(), 
                         user_data=None, show=true, 
@@ -1918,8 +1920,7 @@ impl IPG {
                     on_select: Option<PyObject>,
                     selected_index: Option<usize>,
                     size: f32,
-                    style_color: Option<String>,
-                    style_border: Option<String>,
+                    style: Option<String>,
                     text_spacing: f32,
                     text_size: f32,
                     text_line_height: f32,
@@ -1976,13 +1977,65 @@ impl IPG {
                                         text_line_height,
                                         text_shaping,
                                         self.group_index,
-                                        style_color,
-                                        style_border,
+                                        style,
                                     )));
         self.group_index += 1;
         drop(state);                                      
         Ok(id)
 
+    }
+
+#[pyo3(signature = (style_id,
+                    circle_inner_color=None, circle_inner_rgba=None,
+                    circle_inner_hover_color=None,
+                    circle_inner_hover_rgba=None,
+                    hover_color_factor=None,
+                    border_color=None, border_rgba=None,
+                    border_width=None,
+                    dot_color=None, dot_rgba=None,
+                    text_color=None, text_rgba=None,
+                    gen_id=None))]
+    fn add_radio_style(&mut self,
+                            style_id: String,
+                            circle_inner_color: Option<IpgColor>,
+                            circle_inner_rgba: Option<[f32; 4]>,
+                            circle_inner_hover_color: Option<IpgColor>,
+                            circle_inner_hover_rgba: Option<[f32; 4]>,
+                            hover_color_factor: Option<f32>,
+                            border_color: Option<IpgColor>,
+                            border_rgba: Option<[f32; 4]>,
+                            border_width: Option<f32>,
+                            dot_color: Option<IpgColor>,
+                            dot_rgba: Option<[f32; 4]>,
+                            text_color: Option<IpgColor>,
+                            text_rgba: Option<[f32; 4]>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let mut state = access_state();
+
+        let circle_inner_color = get_color(circle_inner_rgba, circle_inner_color, 1.0, false);
+        let circle_inner_hover_color = get_color(circle_inner_hover_rgba, circle_inner_hover_color, 1.0, false);
+        let dot: Option<Color> = get_color(dot_rgba, dot_color, 1.0, false);
+        let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+
+        state.radio_style.insert(style_id, IpgRadioStyle::new( 
+                                                    id,
+                                                    circle_inner_color,
+                                                    circle_inner_hover_color,
+                                                    hover_color_factor,
+                                                    dot,
+                                                    border,
+                                                    border_width,
+                                                    text,
+                                                    ));
+        
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (parent_id, width, 
