@@ -50,7 +50,7 @@ def change_value(btn_id):
     ipg.update_item(sl_id, IpgSliderParams.Value, 100.0)
 
 
-def add_color(btn_id):
+def add_styling(btn_id):
     ipg.update_item(sl_id, IpgSliderParams.Style, "color")
 
 
@@ -63,7 +63,14 @@ def toggle_show(btn_id):
 
 # Add a slider style for the colors
 ipg.add_slider_style(style_id="color",
-                     handle_color_base=IpgColor.DARK_GREEN)
+                     rail_colors_base=(IpgColor.GREEN, IpgColor.GREEN_YELLOW),
+                     handle_color_base=IpgColor.DARK_GREEN,
+                     rail_width=10.0,
+                     rail_border_radius=[8.0],
+                     handle_rectangle_width=20,
+                     handle_rectangle_border_radius=[5.0],
+                     handle_border_width=2.0,
+                     handle_border_color=IpgColor.DARK_GREEN,)
 
 # Add the window
 ipg.add_window(window_id="main", title="Slider Demo", width=600, height=600,
@@ -123,7 +130,7 @@ ipg.add_button(parent_id="row_3", label="Press Me to Change Step", on_press=chan
 ipg.add_button(parent_id="row_3", label="Press Me to Change Value", on_press=change_value)
 
 ipg.add_row(window_id="main", container_id="row_4", parent_id="col")
-ipg.add_button(parent_id="row_4", label="Press Me to Add Color", on_press=add_color)
+ipg.add_button(parent_id="row_4", label="Press Me to Add Styling", on_press=add_styling)
 
 
 
