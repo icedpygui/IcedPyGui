@@ -1,5 +1,5 @@
 
-use iced::{Element, Length};
+use iced::{Color, Element, Length};
 use iced::alignment::{Horizontal, Vertical};
 use iced::widget::text::{Catalog, LineHeight, Shaping, Style, StyleFn};
 use iced::widget::{Space, Text};
@@ -22,7 +22,7 @@ pub struct IpgText {
     // pub font: Font,
     pub shaping: Shaping,
     pub show: bool,
-    // pub style: Style,
+    pub style: Option<Color>,
 }
 
 impl IpgText {
@@ -38,7 +38,7 @@ impl IpgText {
         // font: Font,
         shaping: Shaping,
         show: bool,
-        // style: Style,
+        style: Option<Color>,
         ) -> Self {
         Self {
             id,
@@ -52,7 +52,7 @@ impl IpgText {
             // font,
             shaping,
             show,
-            // style: Style,
+            style,
         }
     }
 }
@@ -73,7 +73,12 @@ pub fn construct_text(text: IpgText) -> Element<'static, Message> {
                         .vertical_alignment(text.vertical_alignment)
                         // .font()
                         .shaping(text.shaping)
-                        // style: Style,
+                        .style(move|_theme|{
+                            let mut style = Style::default();
+                            style.color = text.style;
+                            style
+                            }
+                        )
                         .into() 
 }
 

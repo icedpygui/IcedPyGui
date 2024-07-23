@@ -3065,7 +3065,9 @@ impl IPG {
                         height=None, width_fill=false, height_fill=false, 
                         h_align="left".to_string(), v_align="top".to_string(),
                         line_height=1.3, size=16.0, 
-                        shaping="basic".to_string(), show=true,
+                        shaping="basic".to_string(), 
+                        text_color=None, text_rgba=None,
+                        show=true,
                         ))]
     fn add_text(&mut self,
                     parent_id: String,
@@ -3081,6 +3083,8 @@ impl IPG {
                     line_height: f32,
                     size: f32,
                     shaping: String,
+                    text_color: Option<IpgColor>,
+                    text_rgba: Option<[f32; 4]>,
                     show: bool,
                     ) -> PyResult<usize> 
     {
@@ -3098,6 +3102,8 @@ impl IPG {
 
         let vertical_alignment = get_vertical_alignment(&v_align);
 
+        let style = get_color(text_rgba, text_color, 1.0, false);
+
         set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
@@ -3114,7 +3120,7 @@ impl IPG {
                                         // font: Font,
                                         shaping,
                                         show,
-                                        // style: Style,
+                                        style,
                                     )));
         drop(state);
         Ok(id)
