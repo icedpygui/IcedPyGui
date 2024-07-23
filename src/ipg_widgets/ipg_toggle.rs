@@ -1,12 +1,14 @@
 
 
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, app, IpgAlignment};
-use super::helpers::{get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_alignment, try_extract_string};
+use crate::{access_callbacks, app};
+use super::helpers::{get_width, try_extract_boolean, try_extract_f64, 
+    try_extract_ipg_horizontal_alignment, try_extract_string};
 use super::callbacks::{
     WidgetCallbackIn, WidgetCallbackOut, 
     get_set_widget_callback_data
 };
+use super::ipg_enums::IpgHorizontalAlignment;
 
 
 use iced::widget::text::LineHeight;
@@ -30,7 +32,7 @@ pub struct IpgToggler {
     pub size: f32,
     pub text_size: f32,
     pub text_line_height: LineHeight,
-    pub text_alignment: IpgAlignment,
+    pub text_alignment: IpgHorizontalAlignment,
     pub spacing: f32,
 }
 
@@ -45,7 +47,7 @@ impl IpgToggler {
         size: f32,
         text_size: f32,
         text_line_height: LineHeight,
-        text_alignment: IpgAlignment,
+        text_alignment: IpgHorizontalAlignment,
         spacing: f32,
         ) -> Self {
         Self {
@@ -159,7 +161,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass]
-pub enum IpgTogglerParams {
+pub enum IpgTogglerParam {
     Alignment,
     Label,
     LineHeight,
@@ -179,33 +181,33 @@ pub fn toggler_item_update(tog: &mut IpgToggler,
     let update = try_extract_toggler_update(item);
   
     match update {
-        IpgTogglerParams::Label => {
+        IpgTogglerParam::Label => {
             tog.label = Some(try_extract_string(value));
         },
-        IpgTogglerParams::Show => {
+        IpgTogglerParam::Show => {
             tog.show = try_extract_boolean(value);
         },
-        IpgTogglerParams::Width => {
+        IpgTogglerParam::Width => {
             let val = try_extract_f64(value);
             tog.width = get_width(Some(val as f32), false);
         },
-        IpgTogglerParams::WidthFill => {
+        IpgTogglerParam::WidthFill => {
             let val = try_extract_boolean(value);
             tog.width = get_width(None, val);
         },
-        IpgTogglerParams::Alignment => {
-            let val: IpgAlignment = try_extract_ipg_alignment(value);
+        IpgTogglerParam::Alignment => {
+            let val: IpgHorizontalAlignment = try_extract_ipg_horizontal_alignment(value);
             tog.text_alignment = val;
         },
-        IpgTogglerParams::LineHeight => {
+        IpgTogglerParam::LineHeight => {
             let val = try_extract_f64(value) as f32; 
             tog.text_line_height = LineHeight::Relative(val);
         },
-        IpgTogglerParams::Size => {
+        IpgTogglerParam::Size => {
             let val = try_extract_f64(value) as f32;
             tog.size = val;
         },
-        IpgTogglerParams::TextSize => {
+        IpgTogglerParam::TextSize => {
             let val = try_extract_f64(value) as f32;
             tog.text_size = val;
         },
@@ -214,10 +216,10 @@ pub fn toggler_item_update(tog: &mut IpgToggler,
 }
 
 
-pub fn try_extract_toggler_update(update_obj: PyObject) -> IpgTogglerParams {
+pub fn try_extract_toggler_update(update_obj: PyObject) -> IpgTogglerParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgTogglerParams>(py);
+        let res = update_obj.extract::<IpgTogglerParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Toggler update extraction failed"),
@@ -225,11 +227,11 @@ pub fn try_extract_toggler_update(update_obj: PyObject) -> IpgTogglerParams {
     })
 }
 
-fn get_text_alignment(ta: IpgAlignment) -> alignment::Horizontal {
+fn get_text_alignment(ta: IpgHorizontalAlignment) -> alignment::Horizontal {
     match ta {
-        IpgAlignment::Left => alignment::Horizontal::Left,
-        IpgAlignment::Center => alignment::Horizontal::Center,
-        IpgAlignment::Right => alignment::Horizontal::Right,
+        IpgHorizontalAlignment::Left => alignment::Horizontal::Left,
+        IpgHorizontalAlignment::Center => alignment::Horizontal::Center,
+        IpgHorizontalAlignment::Right => alignment::Horizontal::Right,
     }
 }
 

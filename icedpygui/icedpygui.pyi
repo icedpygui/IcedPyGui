@@ -39,7 +39,7 @@ class IPG:
                     pos_y: Union[None | float]=None,
                     pos_centered: bool=False,
                     resizable: bool=True,
-                    theme: IpgWindowThemes=IpgWindowThemes.Dark,
+                    theme: IpgWindowTheme=IpgWindowTheme.Dark,
                     debug: bool=False,
                     show: bool=True,
                     ) -> int:
@@ -90,8 +90,8 @@ class IPG:
                         height_fill: bool=False,
                         max_height: float=float('inf'),
                         max_width: float=float('inf'),
-                        align_x: IpgContainerAlignment=IpgContainerAlignment.Start,
-                        align_y: IpgContainerAlignment=IpgContainerAlignment.Start,
+                        align_x: IpgAlignment=IpgAlignment.Start,
+                        align_y: IpgAlignment=IpgAlignment.Start,
                         center_xy: bool,
                         padding: List=[10.0],
                         clip: bool=False,
@@ -223,7 +223,7 @@ class IPG:
                     container_id: str,
                     *,
                     parent_id: Union[None | str]=None,
-                    align_items: IpgColumnAlignment=IpgColumnAlignment.Start,
+                    align_items: IpgAlignment=IpgAlignment.Start,
                     width: Union[None | float]=None,
                     height: Union[None | float]=None,
                     width_fill: bool=False,
@@ -345,7 +345,7 @@ class IPG:
                 container_id: str,
                 *,
                 parent_id: Union[None | str]=None,
-                align_items: IpgRowAlignment=IpgRowAlignment.Start,
+                align_items: IpgAlignment=IpgAlignment.Start,
                 width: Union[None | float]=None,
                 height: Union[None | float]=None,
                 width_fill: bool=False,
@@ -407,11 +407,11 @@ class IPG:
                         h_bar_width: float=10.0,
                         h_bar_margin: float=0.0,
                         h_scroller_width: float=10.0,
-                        h_bar_alignment: IpgScrollableAlignment=IpgScrollableAlignment.Start,
+                        h_bar_alignment: IpgAlignment=IpgAlignment.Start,
                         v_bar_width: float=10.0,
                         v_bar_margin: float=0.0,
                         v_scroller_width: float=10.0,
-                        v_bar_alignment: IpgScrollableAlignment=IpgScrollableAlignment.Start,
+                        v_bar_alignment: IpgAlignment=IpgAlignment.Start,
                         on_scroll: Union[None | Callable]=None,
                         scroll_bar_style_background: Union[None | str]=None,
                         scroll_bar_style_border: Union[None | str]=None,
@@ -538,7 +538,7 @@ class IPG:
                     clip: bool=False, 
                     style: Union[None | str]=None,
                     style_standard: Union[None | IpgStyleStandard]=None,
-                    style_arrow: Union[None | IpgButtonArrows]=None,
+                    style_arrow: Union[None | IpgButtonArrow]=None,
                     user_data: Union[None | any]=None,
                     show: bool=True, 
                     ) -> int:
@@ -666,7 +666,7 @@ class IPG:
                     padding_body: float=5.0, 
                     padding_foot: float=5.0,
                     show: bool=True,
-                    style: IpgCardStyles=IpgCardStyles.Primary, 
+                    style: IpgCardStyle=IpgCardStyle.Primary, 
                     user_data: Union[None | any]=None, 
                 ) -> int:
         """
@@ -1217,9 +1217,9 @@ class IPG:
                         text_shaping: str="basic",
                         handle: Union[None | IpgPickListHandle]=None,
                         arrow_size: Union[None | float]=None,
-                        dynamic_closed: Union[None| IpgButtonArrows]=None,
-                        dynamic_opened: Union[None | IpgButtonArrows]=None,
-                        custom_static: Union[None | IpgButtonArrows]=None,
+                        dynamic_closed: Union[None| IpgButtonArrow]=None,
+                        dynamic_opened: Union[None | IpgButtonArrow]=None,
+                        custom_static: Union[None | IpgButtonArrow]=None,
                         style_color: Union[None, str]=None,
                         style_border: Union[None, str]=None,
                         user_data: Union[None | any]=None,
@@ -1878,269 +1878,6 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
 
-    def add_styling_color(self,
-                            style_id: str,
-                            base_color: Union[None | IpgColor]=None,
-                            base_rgba: Union[None | IpgColor]=None,
-                            strong_color: Union[None | IpgColor]=None,
-                            strong_rgba: Union[None | IpgColor]=None,
-                            weak_color: Union[None | IpgColor]=None,
-                            weak_rgba: Union[None | IpgColor]=None,
-                            bar_color: Union[None | IpgColor]=None,
-                            bar_rgba: Union[None | IpgColor]=None,
-                            border_color: Union[None | IpgColor]=None,
-                            border_rgba: Union[None | IpgColor]=None,
-                            blur_color: Union[None | IpgColor]=None,
-                            blur_rgba: Union[None | IpgColor]=None,
-                            dot_color: Union[None | IpgColor]=None,
-                            dot_rgba: Union[None | IpgColor]=None,
-                            handle_color: Union[None | IpgColor]=None,
-                            handle_rgba: Union[None | IpgColor]=None,
-                            icon_color: Union[None | IpgColor]=None,
-                            icon_rgba: Union[None | IpgColor]=None,
-                            shadow_color: Union[None | IpgColor]=None,
-                            shadow_rgba: Union[None | IpgColor]=None,
-                            text_color: Union[None | IpgColor]=None,
-                            text_rgba: Union[None | IpgColor]=None,
-                            gen_id: Union[None | int]=None,
-                        ) -> int:
-        """
-        Adds styling to a container or widget.
-
-            Parameters
-            ----------
-                style_id: str
-                    Id of style for use by the containers and widgets.
-        """
-
-    def add_styling_background(self,
-                                style_id: str,
-                                rgba: Union[None | List[float]]=None,
-                                color: Union[None | IpgColor]=None,
-                                invert: bool=False,
-                                scale_alpha: float=1.0,
-                                accent_amount: float=0.05,
-                                gen_id: Union[None | int]=None,
-                                ) -> int:
-        """
-        Adds styling to a container or widget.
-
-            Parameters
-            ----------
-                style_id: str
-                    Id of style for use by the containers and widgets.
-                rbga: List[float]
-                    A list of float items for the color [r, g, b, a].
-                color: IpgColor
-                    A color form the class IpgColor
-                invert: bool
-                    Whether to invert the given colors
-                scale_alpha: float
-                    whether to apply a alpha factor to the a.
-                accent_amount: float
-                    When a mouse hovers over some widget, it dertermines how much lighter the color becomes.
-                gen_id: int
-                    The only allowable entry for this id is that generated by ipg.generate_id().
-
-            Returns
-            -------
-            id: int
-                Internal id of widget and can be used by user if equated.
-                    
-        """
-
-    def add_styling_bar_color(self,
-                                style_id: str,
-                                rgba: Union[None | List[float]]=None,
-                                color: Union[None | IpgColor]=None,
-                                invert: bool=False,
-                                alpha: float=1.0,
-                                gen_id: Union[None | int]=None,
-                                ) -> int:
-        """
-        Adds styling to a container or widget.
-
-            Parameters
-            ----------
-                style_id: str
-                    Id of style for use by the containers and widgets.
-                rbga: List[float]
-                    A list of float items for the color [r, g, b, a].
-                color: IpgColor
-                    A color form the class IpgColor
-                invert: bool
-                    Whether to invert the given colors
-                alpha: float
-                    whether to apply a alpha factor to the a.
-                gen_id: int
-                    The only allowable entry for this id is that generated by ipg.generate_id().
-
-            Returns
-            -------
-            id: int
-                Internal id of widget and can be used by user if equated.
-                    
-        """
-    
-    def add_styling_border(self,
-                            style_id: str,
-                            width: float=1.0,
-                            radius: List=[2.0],
-                            gen_id: Union[None | int]=None,
-                            ) -> int:
-        """
-        Adds a border to a container or widget.
-
-            Parameters
-            ----------
-                style_id: str
-                    Id of style for use by the containers and widgets.
-                rbga: List[float]
-                    A list of float items for the color [r, g, b, a].
-                color: IpgColor
-                    A color form the class IpgColor
-                invert: bool
-                    Whether to invert the given colors
-                alpha: float
-                    whether to apply a alpha factor to the a.
-                accent_amount: float
-                    When a mouse hovers over some widget, it dertermines how much lighter the color becomes.
-                width: float
-                    Width of the border
-                radius: List[float]
-                    The radius of the 4 corners of a box.  A list of one [5.0] means all corners.
-                gen_id: int
-                    The only allowable entry for this id is that generated by ipg.generate_id().
-
-            Returns
-            -------
-                id: int
-                    Internal id of widget and can be used by user if equated.
-                    
-        """
-
-    def add_styling_fill_mode(self,
-                                style_id: Union[None | str]=None,
-                                full: bool=True,
-                                percent: float=100.0,
-                                padded: Union[None | int]=None,
-                                asymmetric_padding: Union[None | tuple(int, int)]=None,
-                                ) -> int:
-        """
-        Determines how the color of the widget is distributed.
-
-            Parameters
-            ----------
-                style_id: str
-                    Id of style for use by the containers and widgets.
-                full: bool
-                    The color fills the container.
-                percent: float
-                    The color fills a percentage of the container and is centered
-                padded: int
-                    The padding around the fill color
-                asymmetric_padding: tuple(int, int)
-                    The padding on each side of the color.
-
-            Returns
-            -------
-                id: int
-                    Internal id of widget and can be used by user if equated.
-        """
-
-    def add_styling_shadow(self,
-                            style_id: Union[None | str]=None,
-                            offset_x: float=0.0,
-                            offset_y: float=0.0,
-                            blur_radius: float=0.0,
-                            gen_id: Union[None | int]=None,
-                            ) -> int:
-        """
-        Adds a shadow to a widget, not all widgets have a shadow.
-
-            Parameters
-            ----------
-                style_id: str
-                    Id of style for use by the containers and widgets.
-                offset_x: float
-                    The x vector offset for the shadow.
-                offset_y: float
-                    The y vector offset for the shadow.
-                blur_radius: float
-                    The blur radius of the shadow.
-                gen_id: int
-                    The only allowable entry for this id is that generated by ipg.generate_id().
-                    
-            Returns
-            -------
-                id: int
-                    Internal id of widget and can be used by user if equated.
-        """
-
-    def add_styling_icon_color(self,
-                                style_id: str,
-                                rgba: Union[None | List[float]]=None,
-                                color: Union[None | IpgColor]=None,
-                                invert: bool=False,
-                                alpha: float=1.0,
-                                gen_id: Union[None | int]=None,
-                                ) -> int:
-        """
-        Adds a defined color to an icon, if present.
-
-            Parameters
-            ----------
-                style_id: str
-                    Id of style for use by the containers and widgets.
-                rbga: List[float]
-                    A list of float items for the color [r, g, b, a].
-                color: IpgColor
-                    A color form the class IpgColor
-                invert: bool
-                    Whether to invert the given colors
-                alpha: float
-                    whether to apply a alpha factor to the a.
-                gen_id: int
-                    The only allowable entry for this id is that generated by ipg.generate_id().
-
-            Returns
-            -------
-                id: int
-                    Internal id of widget and can be used by user if equated.     
-        """
-
-    def add_styling_text_color(self,
-                                style_id: str,
-                                rgba: Union[None | List[float]]=None,
-                                color: Union[None | IpgColor]=None,
-                                invert: bool=False,
-                                alpha: float=1.0,
-                                gen_id: Union[None | int]=None,
-                                ) -> int:
-        """
-        Adds a defined color to the text in a container or widget.
-
-            Parameters
-            ----------
-                style_id: str
-                    Id of style for use by the containers and widgets.
-                rbga: List[float]
-                    A list of float items for the color [r, g, b, a].
-                color: IpgColor
-                    A color form the class IpgColor
-                invert: bool
-                    Whether to invert the given colors
-                alpha: float
-                    whether to apply a alpha factor to the a.
-                gen_id: int
-                    The only allowable entry for this id is that generated by ipg.generate_id().
-
-            Returns
-            -------
-                id: int
-                    Internal id of widget and can be used by user if equated.     
-        """
-
     def add_svg(self, 
                     parent_id: str, 
                     svg_path: str,
@@ -2477,7 +2214,7 @@ class IPG:
                         style_border: Union[None | str]=None,
                         style_shadow: Union[None | str]=None,
                         style_text_color: Union[None | str]=None,
-                        arrow_style: Union[None | IpgButtonArrows]=None,
+                        arrow_style: Union[None | IpgButtonArrow]=None,
                         user_data: any=None,
                         ) -> int:
         """
@@ -2722,12 +2459,24 @@ class IPG:
 
 
 class IpgAlignment:
+    Start=0
+    Center=0
+    End=0
+
+
+class IpgHorizontalAlignment:
     Left=0
     Center=0
     Right=0
 
 
-class IpgWindowThemes:
+class IpgVerticalAlignment:
+    Top=0
+    Center=0
+    Bottom=0
+
+
+class IpgWindowTheme:
     Dark=0
     Light=0
     CatppuccinLatte=0
@@ -2752,7 +2501,7 @@ class IpgWindowThemes:
     TokyoNightLight=0
 
 
-class IpgButtonParams:
+class IpgButtonParam:
     ArrowStyle=0
     CornerRadius=0
     Height=0
@@ -2766,7 +2515,7 @@ class IpgButtonParams:
     WidthFill=0
 
 
-class IpgCardStyles: 
+class IpgCardStyle: 
     Primary=0
     Success=0
     Danger=0
@@ -2778,7 +2527,7 @@ class IpgCardStyles:
     Default=0
 
 
-class IpgCardParams:
+class IpgCardParam:
     Body=0
     Foot=0
     Head=0
@@ -2786,7 +2535,7 @@ class IpgCardParams:
     Style=0
 
 
-class IpgCheckboxParams:
+class IpgCheckboxParam:
     IconSize=0
     IconX=0
     IsChecked=0
@@ -2964,25 +2713,12 @@ class IpgColor:
     YELLOW=0
     YELLOW_GREEN=0
 
-
-class IpgColumnAlignment:
-    Start=0
-    Center=0
-    End=0
-
-
-class IpgContainerAlignment:
-    Start=0
-    Center=0
-    End=0
-
-
 class IpgContainerTheme:
     Default=0
     Custom=0
 
 
-class IpgDatePickerParams:
+class IpgDatePickerParam:
     Label=0
     Padding=0
     RotationRadians=0
@@ -3008,7 +2744,7 @@ class IpgImageRotation:
     Solid=0
 
 
-class IpgImageParams:
+class IpgImageParam:
     Height=0
     HeightFill=0
     ImagePath=0
@@ -3046,11 +2782,11 @@ class IpgMenuSeparatorType:
     Line=0
 
 
-class IpgMouseAreaParams:
+class IpgMouseAreaParam:
     show=0
 
 
-class IpgPickListParams:
+class IpgPickListParam:
     Options=0
     Placeholder=0
     Padding=0
@@ -3072,7 +2808,7 @@ class IpgPickListHandle:
     Static=0
 
 
-class IpgProgressBarParams:
+class IpgProgressBarParam:
     Height=0
     Min=0
     Max=0
@@ -3091,7 +2827,7 @@ class IpgRadioDirection:
     Vertical=0
 
 
-class IpgRadioParams:
+class IpgRadioParam:
     Direction=0
     Labels=0
     Padding=0
@@ -3110,24 +2846,13 @@ class IpgRadioParams:
     HeightFill=0
 
 
-class IpgRowAlignment:
-    Start=0
-    Center=0
-    End=0
-
-
 class IpgScrollableDirection:
     Vertical=0
     Horizontal=0
     Both=0
 
 
-class IpgScrollableAlignment:
-    Start=0
-    End=0
-
-
-class IpgScrollableParams:
+class IpgScrollableParam:
     Width=0
     Height=0
     HBarWidth=0
@@ -3140,7 +2865,7 @@ class IpgScrollableParams:
     VBarAlignment=0
 
 
-class IpgSelectableTextParams:
+class IpgSelectableTextParam:
     Text=0
     Width=0
     WidthFill=0
@@ -3150,22 +2875,11 @@ class IpgSelectableTextParams:
     VerticalAlign=0
     LineHeight=0
     Size=0
+    TectColor=0
+    TextRgba=0
     Show=0
 
-
-class IpgSelectableTextHorAlign:
-    Left=0
-    Center=0
-    Right=0
-
-
-class IpgSelectableTextVertAlign:
-    Top=0
-    Center=0
-    Bottom=0
-
-
-class IpgSliderParams:
+class IpgSliderParam:
     Min=0
     Max=0
     Step=0
@@ -3195,7 +2909,7 @@ class IpgStyleStandard:
     Text=0
 
 
-class IpgSvgParams:
+class IpgSvgParam:
     SvgPath=0
     Width=0
     WidthFill=0
@@ -3227,7 +2941,7 @@ class TableWidget:
     Toggler=0
 
 
-class IpgTextInputParams:
+class IpgTextInputParam:
     Placeholder=0
     Value=0
     IsSecure=0
@@ -3237,7 +2951,7 @@ class IpgTextInputParams:
     LineHeight=0
 
 
-class IpgTextParams:
+class IpgTextParam:
     Content=0
     Height=0
     HeightFill=0
@@ -3246,6 +2960,8 @@ class IpgTextParams:
     HzAlignRight=0
     LineHeight=0
     Size=0
+    TextColor=0
+    TextRgba=0
     VtAlignTop=0
     VtAlignCenter=0
     VtAlignBottom=0
@@ -3254,7 +2970,7 @@ class IpgTextParams:
     Show=0
 
 
-class IpgTogglerParams:
+class IpgTogglerParam:
     Alignment=0
     Label=0
     LineHeight=0
@@ -3265,12 +2981,12 @@ class IpgTogglerParams:
     WidthFill=0
 
 
-class IpgWindowParams:
+class IpgWindowParam:
     Debug=0
     Theme=0
 
 
-class IpgButtonArrows:
+class IpgButtonArrow:
     ArrowBarLeft=0
     ArrowBarRight=0
     ArrowBarUp=0

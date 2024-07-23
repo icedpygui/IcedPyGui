@@ -1,5 +1,5 @@
-from icedpygui.icedpygui import IPG, IpgProgressBarParams, IpgTextParams
-from icedpygui import IpgColumnAlignment, IpgSliderParams, IpgColor
+from icedpygui.icedpygui import IPG, IpgProgressBarParam, IpgTextParam
+from icedpygui.icedpygui import IpgAlignment, IpgSliderParam, IpgColor
 
 ipg = IPG()
 
@@ -9,12 +9,12 @@ show = True
 # Couple of callbacks for change and release
 # The slider_id is not used since we are updating the bar and the text
 def slider_on_change(_slider_id, data):
-    ipg.update_item(on_change_id, IpgTextParams.Content, f"On Change value is {data}")
-    ipg.update_item(bar_id, IpgProgressBarParams.Value, data)
+    ipg.update_item(on_change_id, IpgTextParam.Content, f"On Change value is {data}")
+    ipg.update_item(bar_id, IpgProgressBarParam.Value, data)
 
 
 def slider_on_release(_slider_id, data):
-    ipg.update_item(on_release_id, IpgTextParams.Content, f"On Release value is {data}")
+    ipg.update_item(on_release_id, IpgTextParam.Content, f"On Release value is {data}")
 
 
 # The callbacks below allow you to change all of the parameters for a widget.
@@ -23,41 +23,41 @@ def slider_on_release(_slider_id, data):
 # These callbacks also demonstrate the usage of the widget parameters and
 # are used in the testing of the code to make sure it behaves as expected.
 def change_width(btn_id):
-    ipg.update_item(sl_id, IpgSliderParams.Width, 200.0)
+    ipg.update_item(sl_id, IpgSliderParam.Width, 200.0)
     # change bar too
-    ipg.update_item(bar_id, IpgProgressBarParams.Width, 200.0)
+    ipg.update_item(bar_id, IpgProgressBarParam.Width, 200.0)
 
 
 def change_height(btn_id):
-    ipg.update_item(sl_id, IpgSliderParams.Height, 30.0)
+    ipg.update_item(sl_id, IpgSliderParam.Height, 30.0)
 
 
 def change_min(btn_id):
-    ipg.update_item(sl_id, IpgSliderParams.Min, 50.0)
-    ipg.update_item(min_txt_id, IpgTextParams.Content, "50")
+    ipg.update_item(sl_id, IpgSliderParam.Min, 50.0)
+    ipg.update_item(min_txt_id, IpgTextParam.Content, "50")
 
 
 def change_max(btn_id):
-    ipg.update_item(sl_id, IpgSliderParams.Max, 150.0)
-    ipg.update_item(max_txt_id, IpgTextParams.Content, "150")
+    ipg.update_item(sl_id, IpgSliderParam.Max, 150.0)
+    ipg.update_item(max_txt_id, IpgTextParam.Content, "150")
 
 
 def change_step(btn_id):
-    ipg.update_item(sl_id, IpgSliderParams.Step, 5.0)
+    ipg.update_item(sl_id, IpgSliderParam.Step, 5.0)
 
 
 def change_value(btn_id):
-    ipg.update_item(sl_id, IpgSliderParams.Value, 100.0)
+    ipg.update_item(sl_id, IpgSliderParam.Value, 100.0)
 
 
 def add_styling(btn_id):
-    ipg.update_item(sl_id, IpgSliderParams.Style, "color")
+    ipg.update_item(sl_id, IpgSliderParam.Style, "color")
 
 
 def toggle_show(btn_id):
     global show
     show = not show
-    ipg.update_item(sl_id, IpgSliderParams.Show, show)
+    ipg.update_item(sl_id, IpgSliderParam.Show, show)
 
 
 
@@ -78,7 +78,7 @@ ipg.add_window(window_id="main", title="Slider Demo", width=600, height=600,
 
 # Add the column and center the widgets in it.
 ipg.add_column("main", container_id="col",
-               align_items=IpgColumnAlignment.Center,
+               align_items=IpgAlignment.Center,
                width_fill=True, height_fill=True, spacing=5)
 
 # Add some instructions, adding spacing since the columns spacing was decreased to 5.

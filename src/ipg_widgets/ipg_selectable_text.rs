@@ -2,15 +2,21 @@
 
 use crate::app;
 use crate::access_callbacks;
+use crate::graphics::colors::get_color;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
+use super::helpers::try_extract_ipg_color;
+use super::helpers::try_extract_vec_f32;
 use super::helpers::{get_height, get_width, try_extract_boolean,
                     try_extract_f64, try_extract_string};
+use super::ipg_enums::IpgHorizontalAlignment;
+use super::ipg_enums::IpgVerticalAlignment;
 
+use iced::Color;
 use iced::{Length, Element, Point};
 use iced::alignment::{Horizontal, Vertical};
-use iced::widget::text::{LineHeight, Shaping};
+use iced::widget::text::{LineHeight, Shaping, Style};
 use iced::widget::{MouseArea, Text};
 use iced::mouse::Interaction;
 
@@ -25,14 +31,14 @@ pub struct IpgSelectableText {
         pub content: String,
         pub width: Length,
         pub height: Length,
-        pub horizontal_alignment: IpgSelectableTextHorAlign,
-        pub vertical_alignment: IpgSelectableTextVertAlign,
+        pub horizontal_alignment: IpgHorizontalAlignment,
+        pub vertical_alignment: IpgVerticalAlignment,
         pub line_height: LineHeight,
         pub size: f32,
         pub show: bool,
         // pub font: Font,
         pub shaping: Shaping,
-        // pub style: Style,
+        pub text_color: Option<Color>,
         pub user_data: Option<PyObject>,
 }
 
@@ -42,14 +48,14 @@ impl IpgSelectableText {
         content: String,
         width: Length,
         height: Length,
-        horizontal_alignment: IpgSelectableTextHorAlign,
-        vertical_alignment: IpgSelectableTextVertAlign,
+        horizontal_alignment: IpgHorizontalAlignment,
+        vertical_alignment: IpgVerticalAlignment,
         line_height: LineHeight,
         size: f32,
         show: bool,
         // font: Font,
         shaping: Shaping,
-        // style: Style,
+        text_color: Option<Color>,
         user_data: Option<PyObject>,
         ) -> Self {
         Self {
@@ -64,7 +70,7 @@ impl IpgSelectableText {
             show,
             // font: Font,
             shaping,
-            // style: Style,
+            text_color,
             user_data,
         }
     }
@@ -99,7 +105,12 @@ pub fn construct_selectable_text(sl_text: IpgSelectableText) -> Element<'static,
                             .vertical_alignment(vert_align)
                             // font: Font,
                             .shaping(sl_text.shaping)
-                            // style: Style,
+                            .style(move|_theme|{
+                                let mut style = Style::default();
+                                style.color = sl_text.text_color;
+                                style
+                                }
+                            )
                             .into();
 
     let ma: Element<'_, SLTXTMessage> = 
@@ -275,7 +286,7 @@ fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgSelectableTextParams {
+pub enum IpgSelectableTextParam {
     Text,
     Width,
     WidthFill,
@@ -284,24 +295,10 @@ pub enum IpgSelectableTextParams {
     HorizontalAlign,
     VerticalAlign,
     LineHeight,
+    TextColor, 
+    TextRgba,
     Size,
     Show,
-}
-
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgSelectableTextHorAlign {
-    Left,
-    Center,
-    Right,
-}
-
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgSelectableTextVertAlign {
-    Top,
-    Center,
-    Bottom,
 }
 
 pub fn selectable_text_item_update(st: &mut IpgSelectableText,
@@ -312,48 +309,57 @@ pub fn selectable_text_item_update(st: &mut IpgSelectableText,
     let update = try_extract_selectable_update(item);
 
     match update {
-        IpgSelectableTextParams::Text => {
+        IpgSelectableTextParam::Text => {
             st.content = try_extract_string(value);
         },
-        IpgSelectableTextParams::Width => {
+        IpgSelectableTextParam::Width => {
             let val = try_extract_f64(value);
             st.width = get_width(Some(val as f32), false);
         },
-        IpgSelectableTextParams::WidthFill => {
+        IpgSelectableTextParam::WidthFill => {
             let val = try_extract_boolean(value);
             st.width = get_width(None, val);
         },
-        IpgSelectableTextParams::Height => {
+        IpgSelectableTextParam::Height => {
             let val = try_extract_f64(value);
             st.height = get_height(Some(val as f32), false);
         },
-        IpgSelectableTextParams::HeightFill => {
+        IpgSelectableTextParam::HeightFill => {
             let val = try_extract_boolean(value);
             st.height = get_height(None, val);
         }
-        IpgSelectableTextParams::HorizontalAlign => {
+        IpgSelectableTextParam::HorizontalAlign => {
             st.horizontal_alignment = try_extract_hor_align(value);
         },
-        IpgSelectableTextParams::VerticalAlign => {
+        IpgSelectableTextParam::VerticalAlign => {
             st.vertical_alignment = try_extract_vert_align(value);
         },
-        IpgSelectableTextParams::LineHeight => {
+        IpgSelectableTextParam::LineHeight => {
             let val = try_extract_f64(value) as f32;
             st.line_height = LineHeight::Relative(val);
         },
-        IpgSelectableTextParams::Size => {
+        IpgSelectableTextParam::Size => {
             st.size = try_extract_f64(value) as f32;
         },
-        IpgSelectableTextParams::Show => {
+        IpgSelectableTextParam::TextColor => {
+            let ipg_color = Some(try_extract_ipg_color(value));
+            st.text_color = get_color(None, ipg_color, 1.0, false);
+        },
+        IpgSelectableTextParam::TextRgba => {
+            let v = try_extract_vec_f32(value);
+            let color_rgba = Some([v[0], v[1], v[2], v[3]]);
+            st.text_color = get_color(color_rgba, None, 1.0, false);
+        },
+        IpgSelectableTextParam::Show => {
             st.show = try_extract_boolean(value);
         },
     }
 }
 
-fn try_extract_selectable_update(update_obj: PyObject) -> IpgSelectableTextParams {
+fn try_extract_selectable_update(update_obj: PyObject) -> IpgSelectableTextParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgSelectableTextParams>(py);
+        let res = update_obj.extract::<IpgSelectableTextParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Button update extraction failed"),
@@ -361,10 +367,10 @@ fn try_extract_selectable_update(update_obj: PyObject) -> IpgSelectableTextParam
     })
 }
 
-fn try_extract_hor_align(value: PyObject) -> IpgSelectableTextHorAlign {
+fn try_extract_hor_align(value: PyObject) -> IpgHorizontalAlignment {
     
     Python::with_gil(|py| {
-        let res = value.extract::<IpgSelectableTextHorAlign>(py);
+        let res = value.extract::<IpgHorizontalAlignment>(py);
         match res {
             Ok(h_align) => h_align,
             Err(_) => panic!("IpgSectableText: unable to extract IpgSelectableTextHorAlign"),
@@ -372,10 +378,10 @@ fn try_extract_hor_align(value: PyObject) -> IpgSelectableTextHorAlign {
     })
 }
 
-fn try_extract_vert_align(value: PyObject) -> IpgSelectableTextVertAlign {
+fn try_extract_vert_align(value: PyObject) -> IpgVerticalAlignment {
     
     Python::with_gil(|py| {
-        let res = value.extract::<IpgSelectableTextVertAlign>(py);
+        let res = value.extract::<IpgVerticalAlignment>(py);
         match res {
             Ok(v_align) => v_align,
             Err(_) => panic!("IpgSelectableText: unable to extract IpgSelectableTextHorAlign"),
@@ -383,18 +389,18 @@ fn try_extract_vert_align(value: PyObject) -> IpgSelectableTextVertAlign {
     })
 }
 
-fn get_horizontal_align(ha: IpgSelectableTextHorAlign) -> Horizontal {
+fn get_horizontal_align(ha: IpgHorizontalAlignment) -> Horizontal {
     match ha {
-        IpgSelectableTextHorAlign::Left => Horizontal::Left,
-        IpgSelectableTextHorAlign::Center => Horizontal::Center,
-        IpgSelectableTextHorAlign::Right => Horizontal::Right,
+        IpgHorizontalAlignment::Left => Horizontal::Left,
+        IpgHorizontalAlignment::Center => Horizontal::Center,
+        IpgHorizontalAlignment::Right => Horizontal::Right,
     }
 }
 
-fn get_vertical_align(va: IpgSelectableTextVertAlign) -> Vertical {
+fn get_vertical_align(va: IpgVerticalAlignment) -> Vertical {
     match va {
-        IpgSelectableTextVertAlign::Top => Vertical::Top,
-        IpgSelectableTextVertAlign::Center => Vertical::Center,
-        IpgSelectableTextVertAlign::Bottom => Vertical::Bottom,
+        IpgVerticalAlignment::Top => Vertical::Top,
+        IpgVerticalAlignment::Center => Vertical::Center,
+        IpgVerticalAlignment::Bottom => Vertical::Bottom,
     }
 }

@@ -324,7 +324,7 @@ fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgImageParams {
+pub enum IpgImageParam {
     Height,
     HeightFill,
     ImagePath,
@@ -346,47 +346,47 @@ pub fn image_item_update(img: &mut IpgImage,
     let update = try_extract_button_update(item);
 
     match update {
-        IpgImageParams::Height => {
+        IpgImageParam::Height => {
             let val = try_extract_f64(value);
             img.height = get_height(Some(val as f32), false);
         },
-        IpgImageParams::HeightFill => {
+        IpgImageParam::HeightFill => {
             let val = try_extract_boolean(value);
             img.height = get_height(None, val);
         },
-        IpgImageParams::ImagePath => {
+        IpgImageParam::ImagePath => {
             img.image_path = try_extract_string(value);
         },
-        IpgImageParams::Padding => {
+        IpgImageParam::Padding => {
             let val = try_extract_vec_f64(value);
             img.padding =  get_padding_f64(val);
         },
-        IpgImageParams::Show => {
+        IpgImageParam::Show => {
             img.show = try_extract_boolean(value);
         },
-        IpgImageParams::Width => {
+        IpgImageParam::Width => {
             let val = try_extract_f64(value);
             img.width = get_width(Some(val as f32), false);
         },
-        IpgImageParams::WidthFill => {
+        IpgImageParam::WidthFill => {
             let val = try_extract_boolean(value);
             img.width = get_width(None, val);
         },
-        IpgImageParams::RotationRadians => {
+        IpgImageParam::RotationRadians => {
             let val = try_extract_f64(value);
             img.rotation_radians = val as f32;
         },
-        IpgImageParams::Opacity => {
+        IpgImageParam::Opacity => {
             let val = try_extract_f64(value);
             img.opacity = val as f32;
         },
     }
 }
 
-pub fn try_extract_button_update(update_obj: PyObject) -> IpgImageParams {
+pub fn try_extract_button_update(update_obj: PyObject) -> IpgImageParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgImageParams>(py);
+        let res = update_obj.extract::<IpgImageParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Image update extraction failed"),

@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgColor
-from icedpygui import IpgColumnAlignment
+from icedpygui import IpgAlignment
 
 
 ipg = IPG()
@@ -17,7 +17,7 @@ ipg.add_container(window_id="main", container_id="cont",
 # Let's add some styling for the scrollable before adding it.
 # Let's style the bar first with a dark color
 ipg.add_styling_color("color",
-                    # scrollbar_color=IpgColor.LIGHT_BLUE,
+                    scrollbar_color=IpgColor.LIGHT_BLUE,
                     scroller_color=IpgColor.BLUE)
 
 # Add the scrollable restricting the width so it can center and height 
@@ -30,7 +30,7 @@ scroll_id_1 = ipg.add_scrollable(window_id="main", container_id="scroll",
 # Add the column for the data
 ipg.add_column(window_id="main", container_id="col",
                             parent_id="scroll", width_fill=True,
-                            align_items=IpgColumnAlignment.Center)
+                            align_items=IpgAlignment.Center)
 
 #  Add some content to scroll
 for i in range(0, 25):

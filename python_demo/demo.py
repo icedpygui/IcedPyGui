@@ -1,6 +1,6 @@
-from icedpygui import IPG, IpgTextParams, IpgRadioDirection, IpgRadioParams
-from icedpygui import IpgButtonParams, IpgProgressBarParams
-from icedpygui import IpgColumnAlignment
+from icedpygui import IPG, IpgTextParam, IpgRadioDirection, IpgRadioParam
+from icedpygui import IpgButtonParam, IpgProgressBarParam
+from icedpygui import IpgAlignment
 from icedpygui import TableWidget, TableRowHighLight
 import random
 
@@ -246,8 +246,8 @@ class Demo:
 
     def button_pressed(self, btn_id):
         self.button_presses += 1
-        self.ipg.update_item(btn_id, IpgButtonParams.Label, f"You Pressed {self.button_presses} times!")
-        self.ipg.update_item(self.btn_text_id, IpgTextParams.Content,
+        self.ipg.update_item(btn_id, IpgButtonParam.Label, f"You Pressed {self.button_presses} times!")
+        self.ipg.update_item(self.btn_text_id, IpgTextParam.Content,
                              f"A text can count too: {self.button_presses} times!")
 
     # A checkbox is defined and a text is defined with the show value of False.
@@ -262,7 +262,7 @@ class Demo:
                                                 show=False)  # note: show is False
 
     def box_checked_id(self, _chk_id, data):
-        self.ipg.update_item(self.text_id_chkbox, IpgTextParams.Show, data)  # show set to True
+        self.ipg.update_item(self.text_id_chkbox, IpgTextParam.Show, data)  # show set to True
 
     # a progress bar and a slider are defined and connected together via the callbacks
     def construct_slider_and_progress_bar(self):
@@ -282,11 +282,11 @@ class Demo:
     # not use the on_change or filter it by using a counter to select
     # only a few changes.
     def slider_on_change(self, _slider_id, data):
-        self.ipg.update_item(self.slider_text_id, IpgTextParams.Content, f"Slide = {data}")
-        self.ipg.update_item(self.bar_id, IpgProgressBarParams.Value, data)
+        self.ipg.update_item(self.slider_text_id, IpgTextParam.Content, f"Slide = {data}")
+        self.ipg.update_item(self.bar_id, IpgProgressBarParam.Value, data)
 
     def slider_on_release(self, _slider_id, data):
-        self.ipg.update_item(self.bar_id, IpgProgressBarParams.Value, data)
+        self.ipg.update_item(self.bar_id, IpgProgressBarParam.Value, data)
 
         # A picklist is defined here width a place holder. The option list holder the selections.
 
@@ -298,7 +298,7 @@ class Demo:
         self.picklist_text_id = self.ipg.add_text(self.l_col_1, "You picked:")
 
     def picked_item(self, id, data):
-        self.ipg.update_item(self.picklist_text_id, IpgTextParams.Content, f"You Picked: {data}")
+        self.ipg.update_item(self.picklist_text_id, IpgTextParam.Content, f"You Picked: {data}")
 
     # *****************Right Column in Window 1*************************
     # Two groups of radio buttons are defined, one vertical and one horizontal
@@ -312,7 +312,7 @@ class Demo:
 
     # The radio on_select returns a tuple (index, label)
     def radio_selected_v(self, _radio_id, data):
-        self.ipg.update_item(self.radio_1_text_id, IpgTextParams.Content, f"You selected: {data}")
+        self.ipg.update_item(self.radio_1_text_id, IpgTextParam.Content, f"You selected: {data}")
 
     # This set of radio buttons will be horizontal
     def construct_radio_buttons_h(self):
@@ -325,7 +325,7 @@ class Demo:
         # The radio on_select returns a tuple (index, label)
 
     def radio_selected_h(self, _radio_id, data):
-        self.ipg.update_item(self.radio_2_text_id, IpgTextParams.Content, f"You selected: {data}")
+        self.ipg.update_item(self.radio_2_text_id, IpgTextParam.Content, f"You selected: {data}")
 
         # A button style can act as a selectable text but has only one callback.
         # A selectable text has a number of different callbacks for all the mouse buttons and
@@ -347,10 +347,10 @@ class Demo:
         self.selectable_text_id = self.ipg.add_text(self.r_col_1, "Selectable actions:")
 
     def selecting_text(self, sel_txt_id):
-        self.ipg.update_item(self.selectable_text_id, IpgTextParams.Content, f"Selectable id: {sel_txt_id}")
+        self.ipg.update_item(self.selectable_text_id, IpgTextParam.Content, f"Selectable id: {sel_txt_id}")
 
     def selecting_text_with_point(self, _sel_txt_id, data):
-        self.ipg.update_item(self.selectable_text_id, IpgTextParams.Content, f"point: {data}")
+        self.ipg.update_item(self.selectable_text_id, IpgTextParam.Content, f"point: {data}")
 
     def construct_text_input(self):
         self.ipg.add_text_input(parent_id=self.r_col_1,
@@ -365,11 +365,11 @@ class Demo:
         # Maybe helpful in some cases where callbacks are similar or there are many.
 
     def text_input_submitted(self, _input_id, data):
-        self.ipg.update_item(self.text_input_id, IpgTextParams.Content,
+        self.ipg.update_item(self.text_input_id, IpgTextParam.Content,
                              f"You submitted: {data}")
 
     def text_on_input(self, _input_id, data):
-        self.ipg.update_item(self.text_input_id, IpgTextParams.Content,
+        self.ipg.update_item(self.text_input_id, IpgTextParam.Content,
                              f"Adding while typing: {data}")
 
     # **********************window_2*****************************************************
@@ -380,7 +380,7 @@ class Demo:
                             pos_x=650, pos_y=25)
 
         self.ipg.add_column(window_id=self.wnd_2, container_id=self.l_col_2,
-                            width_fill=True, align_items=IpgColumnAlignment.Center)
+                            width_fill=True, align_items=IpgAlignment.Center)
 
     # A date picker is defined and the results are put in a text widget.
     def construct_date_picker(self):
@@ -390,7 +390,7 @@ class Demo:
                                               "You selected:")
 
     def date_selected(self, _date_id, date):
-        self.ipg.update_item(self.date_text_id, IpgTextParams.Content, f"You selected: {date}")
+        self.ipg.update_item(self.date_text_id, IpgTextParam.Content, f"You selected: {date}")
 
     # A table is defined with 6 columns of widgets and random items.
     # Rust does not allow types to be mixed in a list.

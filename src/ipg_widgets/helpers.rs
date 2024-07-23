@@ -1,14 +1,17 @@
 #![allow(dead_code)]
 use std::collections::BTreeMap;
 
+use crate::graphics::colors::IpgColor;
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_state, IpgAlignment};
+use crate::access_state;
 use iced::border::Radius;
 use iced::window;
 use iced::{alignment::{Horizontal, Vertical}, Length, Padding};
 use iced::widget::text::{Shaping, LineHeight};
 
 use pyo3::{PyObject, Python};
+
+use super::ipg_enums::{IpgAlignment, IpgHorizontalAlignment, IpgVerticalAlignment};
 
 pub fn check_for_dup_container_ids(id: usize, container_id: Option<String>) {
 
@@ -382,6 +385,28 @@ pub fn try_extract_ipg_alignment(value: PyObject) -> IpgAlignment {
     })
 }
 
+pub fn try_extract_ipg_horizontal_alignment(value: PyObject) -> IpgHorizontalAlignment {
+    Python::with_gil(|py| {
+
+        let res = value.extract::<IpgHorizontalAlignment>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python object for Horizontal Alignment"),
+        }
+    })
+}
+
+pub fn try_extract_ipg_vertical_alignment(value: PyObject) -> IpgVerticalAlignment {
+    Python::with_gil(|py| {
+
+        let res = value.extract::<IpgVerticalAlignment>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python object for Vertical Alignment"),
+        }
+    })
+}
+
 pub fn try_extract_style_standard(value: PyObject) -> IpgStyleStandard {
     Python::with_gil(|py| {
 
@@ -389,6 +414,17 @@ pub fn try_extract_style_standard(value: PyObject) -> IpgStyleStandard {
         match res {
             Ok(val) => val,
             Err(_) => panic!("Unable to extract python object for StyleStandard"),
+        }
+    })
+}
+
+pub fn try_extract_ipg_color(value: PyObject) -> IpgColor {
+    Python::with_gil(|py| {
+
+        let res = value.extract::<IpgColor>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python object for IpgColor"),
         }
     })
 }

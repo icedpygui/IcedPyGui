@@ -1,26 +1,23 @@
 from .icedpygui import IPG
-from .icedpygui import IpgAlignment 
-from .icedpygui import IpgButtonArrows, IpgButtonParams
-from .icedpygui import IpgCardStyles, IpgCardParams
-from .icedpygui import IpgCheckboxParams
+from .icedpygui import IpgAlignment, IpgHorizontalAlignment, IpgVerticalAlignment 
+from .icedpygui import IpgButtonArrow, IpgButtonParam
+from .icedpygui import IpgCardStyle, IpgCardParam
+from .icedpygui import IpgCheckboxParam
 from .icedpygui import IpgColor
-from .icedpygui import IpgColumnAlignment
-from .icedpygui import IpgContainerAlignment
-from .icedpygui import IpgDatePickerParams
-from .icedpygui import IpgImageParams, IpgImageContentFit, IpgImageFilterMethod, IpgImageRotation
+from .icedpygui import IpgDatePickerParam
+from .icedpygui import IpgImageParam, IpgImageContentFit, IpgImageFilterMethod, IpgImageRotation
 from .icedpygui import IpgMenuType, IpgMenuSeparatorType, IpgMenuParam
-from .icedpygui import IpgMouseAreaParams
-from .icedpygui import IpgPickListParams, IpgPickListHandle
-from .icedpygui import IpgProgressBarParams
-from .icedpygui import IpgRadioParams, IpgRadioDirection
-from .icedpygui import IpgRowAlignment
-from .icedpygui import IpgScrollableDirection, IpgScrollableAlignment, IpgScrollableParams
-from .icedpygui import IpgSelectableTextParams, IpgSelectableTextHorAlign, IpgSelectableTextVertAlign
-from .icedpygui import IpgSliderParams
+from .icedpygui import IpgMouseAreaParam
+from .icedpygui import IpgPickListParam, IpgPickListHandle
+from .icedpygui import IpgProgressBarParam
+from .icedpygui import IpgRadioParam, IpgRadioDirection
+from .icedpygui import IpgScrollableDirection, IpgScrollableParam
+from .icedpygui import IpgSelectableTextParam
+from .icedpygui import IpgSliderParam
 from .icedpygui import IpgStyleParam, IpgStyleStandard
-from .icedpygui import IpgSvgParams
+from .icedpygui import IpgSvgParam
 from .icedpygui import TableRowHighLight, TableWidget
-from .icedpygui import IpgTextInputParams
-from .icedpygui import IpgTextParams
-from .icedpygui import IpgTogglerParams
-from .icedpygui import IpgWindowThemes, IpgWindowParams
+from .icedpygui import IpgTextInputParam
+from .icedpygui import IpgTextParam
+from .icedpygui import IpgTogglerParam
+from .icedpygui import IpgWindowTheme, IpgWindowParam

@@ -2,8 +2,11 @@
 use iced::{Element, Length, Padding};
 use iced::alignment::Alignment;
 use iced::widget::Column;
-use pyo3::pyclass;
+
 use crate::app::Message;
+
+use super::ipg_enums::IpgAlignment;
+
 
 #[derive(Debug, Clone)]
 pub struct IpgColumn {
@@ -14,7 +17,7 @@ pub struct IpgColumn {
     pub width: Length,
     pub height: Length,
     pub max_width: f32,
-    pub align_items: IpgColumnAlignment,
+    pub align_items: IpgAlignment,
     pub clip: bool,
 }
 
@@ -27,7 +30,7 @@ impl IpgColumn {
         width: Length,
         height: Length,
         max_width: f32,
-        align_items: IpgColumnAlignment,
+        align_items: IpgAlignment,
         clip: bool,
     ) -> Self {
         Self {
@@ -45,14 +48,6 @@ impl IpgColumn {
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgColumnAlignment {
-    Start,
-    Center,
-    End,
-}
-
 pub fn construct_column(col: &IpgColumn, content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
 
     let align_items = get_alignment(col.align_items.clone());
@@ -68,11 +63,11 @@ pub fn construct_column(col: &IpgColumn, content: Vec<Element<'static, Message>>
 }
 
 
-fn get_alignment(align: IpgColumnAlignment) -> Alignment {
+fn get_alignment(align: IpgAlignment) -> Alignment {
 
     match align {
-        IpgColumnAlignment::Start => Alignment::Start,
-        IpgColumnAlignment::Center => Alignment::Center,
-        IpgColumnAlignment::End => Alignment::End,
+        IpgAlignment::Start => Alignment::Start,
+        IpgAlignment::Center => Alignment::Center,
+        IpgAlignment::End => Alignment::End,
     }
 }

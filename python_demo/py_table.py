@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgColumnAlignment, TableRowHighLight, TableWidget, IpgButtonStyle
+from icedpygui import IPG, IpgAlignment, TableRowHighLight, TableWidget
 import random, os
 
 
@@ -26,7 +26,7 @@ ipg.add_window(window_id="main", title="Table Demo", width=800, height=800,
 # the container can shrink(default) to fit.
 ipg.add_column(window_id="main", container_id="col",
                   width_fill=True, height_fill=True,
-                  align_items=IpgColumnAlignment.Center,
+                  align_items=IpgAlignment.Center,
                   spacing=75)
 
 # Initialize the lists.

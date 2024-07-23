@@ -1,5 +1,5 @@
 from icedpygui import IPG
-from icedpygui import IpgColumnAlignment, IpgColor
+from icedpygui import IpgAlignment, IpgColor
 
 
 ipg = IPG()
@@ -17,7 +17,7 @@ ipg.add_container("main", "cont",
 
 # Add a column to hold the wigets
 ipg.add_column("main", container_id="col", parent_id="cont",
-               align_items=IpgColumnAlignment.Center)
+               align_items=IpgAlignment.Center)
 
 # Add some spacing
 ipg.add_space(parent_id="col", width_fill=True, height=20.0)

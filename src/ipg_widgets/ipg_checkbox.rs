@@ -246,7 +246,7 @@ fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgCheckboxParams {
+pub enum IpgCheckboxParam {
     IconSize,
     IconX,
     IsChecked,
@@ -271,50 +271,50 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     let update = try_extract_checkbox_update(item);
 
     match update {
-        IpgCheckboxParams::IconSize => {
+        IpgCheckboxParam::IconSize => {
             chk.icon_size = try_extract_f64(value) as f32;
         },
-        IpgCheckboxParams::IconX => {
+        IpgCheckboxParam::IconX => {
             chk.icon_x = try_extract_boolean(value);
         },
-        IpgCheckboxParams::IsChecked => {
+        IpgCheckboxParam::IsChecked => {
             chk.is_checked = try_extract_boolean(value);
         },
-        IpgCheckboxParams::Label => {
+        IpgCheckboxParam::Label => {
             chk.label = try_extract_string(value);
         },
-        IpgCheckboxParams::Show => {
+        IpgCheckboxParam::Show => {
             chk.show = try_extract_boolean(value);
         },
-        IpgCheckboxParams::Size => {
+        IpgCheckboxParam::Size => {
             chk.size = try_extract_f64(value) as f32;
         },
-        IpgCheckboxParams::Spacing => {
+        IpgCheckboxParam::Spacing => {
             chk.spacing = try_extract_f64(value) as f32;
         },
-        IpgCheckboxParams::TextLineHeight => {
+        IpgCheckboxParam::TextLineHeight => {
             let tlh = try_extract_f64(value);
             chk.text_line_height =  LineHeight::Relative(tlh as f32);
         },
-        IpgCheckboxParams::TextShaping => {
+        IpgCheckboxParam::TextShaping => {
             let ts =try_extract_string(value);
             chk.text_shaping = get_shaping(ts); 
         },
-        IpgCheckboxParams::TextSize => {
+        IpgCheckboxParam::TextSize => {
             chk.text_size = try_extract_f64(value) as f32;
         },
-        IpgCheckboxParams::Style => {
+        IpgCheckboxParam::Style => {
             chk.style = Some(try_extract_string(value))
         },
-        IpgCheckboxParams::StyleStandard => {
+        IpgCheckboxParam::StyleStandard => {
             let val = try_extract_style_standard(value);
             chk.style_standard = Some(val)
         },
-        IpgCheckboxParams::Width => {
+        IpgCheckboxParam::Width => {
             let wd = try_extract_f64(value);
             chk.width =  get_width(Some(wd as f32), false);
         },
-        IpgCheckboxParams::WidthFill => {
+        IpgCheckboxParam::WidthFill => {
             let wd = try_extract_boolean(value);
             chk.width =  get_width(None, wd);
         },
@@ -322,10 +322,10 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
 }
 
 
-pub fn try_extract_checkbox_update(update_obj: PyObject) -> IpgCheckboxParams {
+pub fn try_extract_checkbox_update(update_obj: PyObject) -> IpgCheckboxParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgCheckboxParams>(py);
+        let res = update_obj.extract::<IpgCheckboxParam>(py);
 
         match res {
             Ok(update) => update,

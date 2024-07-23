@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgColor, IpgWindowThemes, IpgRowAlignment, IpgStyleStandard
+from icedpygui import IPG, IpgColor, IpgWindowTheme, IpgAlignment, IpgStyleStandard
 
 ipg = IPG()
 
@@ -16,7 +16,7 @@ def add_buttons(window: str):
 
     # Add a row to hold widgtes, horizontally.
     ipg.add_row(window_id=window, container_id="row_btn", parent_id="col",
-                align_items=IpgRowAlignment.Center)
+                align_items=IpgAlignment.Center)
 
     # Add buttoms
     ipg.add_button(parent_id="row_btn", label="Default", 
@@ -42,7 +42,7 @@ def add_buttons(window: str):
                 style_standard=IpgStyleStandard.Text)
 
     ipg.add_row(window_id=window, container_id="row_btn2", parent_id="col",
-                align_items=IpgRowAlignment.Center)
+                align_items=IpgAlignment.Center)
 
     ipg.add_button_style(style_id="dodger", 
                         base_color=IpgColor.DODGER_BLUE)
@@ -66,7 +66,7 @@ def add_buttons(window: str):
                    style="custom")
     
     ipg.add_row(window_id=window, container_id="row_btn3", parent_id="col",
-                align_items=IpgRowAlignment.Center)
+                align_items=IpgAlignment.Center)
     
     ipg.add_button_style(style_id="std_border",
                          border_color=IpgColor.GREEN,
@@ -87,7 +87,7 @@ ipg.add_window("main1", "Button Styling", 500, 600,
                pos_x=100, pos_y=25)
 ipg.add_window("main2", "Button Styling", 500, 600,  
                pos_x=650, pos_y=25,
-               theme=IpgWindowThemes.GruvboxLight)
+               theme=IpgWindowTheme.GruvboxLight)
 
 add_buttons("main1")
 

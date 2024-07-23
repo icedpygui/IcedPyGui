@@ -1,6 +1,6 @@
 from turtle import color
 from icedpygui import IPG, IpgColor
-from icedpygui import IpgWindowThemes
+from icedpygui import IpgWindowTheme
 
 
 ipg = IPG()
@@ -15,7 +15,7 @@ ipg.add_window(main_1, "Scollable - Styling",
 ipg.add_window(main_2, "Scollable - Styling",
                             400, 500,
                             pos_x=600.0, pos_y=100.0,
-                            theme=IpgWindowThemes.SolarizedLight)
+                            theme=IpgWindowTheme.SolarizedLight)
 
 # Add just the theme background
 ipg.add_container_style(style_id="theme_bkg", base_color=IpgColor.BACKGROUND_THEME)

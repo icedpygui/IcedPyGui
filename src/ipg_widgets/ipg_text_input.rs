@@ -189,7 +189,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgTextInputParams {
+pub enum IpgTextInputParam {
     Placeholder,
     Value,
     IsSecure,
@@ -207,27 +207,27 @@ pub fn text_input_item_update(ti: &mut IpgTextInput,
     let update = try_extract_text_input_update(item);
 
     match update {
-        IpgTextInputParams::Placeholder => {
+        IpgTextInputParam::Placeholder => {
             ti.placeholder = try_extract_string(value);
         },
-        IpgTextInputParams::Value => {
+        IpgTextInputParam::Value => {
             ti.value = try_extract_string(value);
         },
-        IpgTextInputParams::IsSecure => {
+        IpgTextInputParam::IsSecure => {
             ti.is_secure = try_extract_boolean(value);
         },
-        IpgTextInputParams::Width => {
+        IpgTextInputParam::Width => {
             let val = try_extract_f64(value);
             ti.width = get_width(Some(val as f32), false);
         },
-        IpgTextInputParams::Padding => {
+        IpgTextInputParam::Padding => {
             let val = try_extract_vec_f64(value);
             ti.padding =  get_padding_f64(val);
         },
-        IpgTextInputParams::Size => {
+        IpgTextInputParam::Size => {
             ti.size = try_extract_f64(value) as f32;
         },
-        IpgTextInputParams::LineHeight => {
+        IpgTextInputParam::LineHeight => {
             let val = try_extract_f64(value) as f32;
             ti.line_height = LineHeight::Relative(val);
         },
@@ -235,10 +235,10 @@ pub fn text_input_item_update(ti: &mut IpgTextInput,
 }
 
 
-fn try_extract_text_input_update(update_obj: PyObject) -> IpgTextInputParams {
+fn try_extract_text_input_update(update_obj: PyObject) -> IpgTextInputParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgTextInputParams>(py);
+        let res = update_obj.extract::<IpgTextInputParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("TextInput update extraction failed"),

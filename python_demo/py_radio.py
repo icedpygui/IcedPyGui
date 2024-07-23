@@ -1,5 +1,5 @@
-from icedpygui import IPG, IpgRadioParams, IpgRadioDirection, IpgTextParams
-from icedpygui import IpgColumnAlignment, IpgColor
+from icedpygui import IPG, IpgRadioParam, IpgRadioDirection, IpgTextParam
+from icedpygui import IpgAlignment, IpgColor
 
 
 # The radio widget has a count limitation unlike the other widgets due to the way
@@ -17,12 +17,12 @@ ipg = IPG()
 # The callback data parameter for the radio is a list = [index, label]
 # In this case, the user_data is a string but it can be anything
 def selected_radio_1(rd_id: int, data: list[int, str], user_data: str):
-    ipg.update_item(rd_text_id_1, IpgTextParams.Content,
+    ipg.update_item(rd_text_id_1, IpgTextParam.Content,
                     f"Radio callback id = {rd_id}, \n index = {data[0]}, \nlabel = {data[1]} \n user_data = {user_data}")
 
 
 def selected_radio_2(rd_id: int, data: list[int, str], user_data: str):
-    ipg.update_item(rd_text_id_2, IpgTextParams.Content,
+    ipg.update_item(rd_text_id_2, IpgTextParam.Content,
                     f"Radio callback id = {rd_id}, \n index = {data[0]}, \nlabel = {data[1]} \n user_data = {user_data}")
 
 
@@ -41,16 +41,16 @@ def change_direction(chk_id: int, checked: bool, radio_ids: list[int]):
     if checked:
         radio1 = IpgRadioDirection.Horizontal
         radio2 = IpgRadioDirection.Vertical
-    ipg.update_item(radio_ids[0], IpgRadioParams.Direction, radio1)
-    ipg.update_item(radio_ids[1], IpgRadioParams.Direction, radio2)
+    ipg.update_item(radio_ids[0], IpgRadioParam.Direction, radio1)
+    ipg.update_item(radio_ids[1], IpgRadioParam.Direction, radio2)
 
 
 def change_selection(chk_id: int, checked: bool, radio_ids: list[int]):
     selected = None
     if checked:
         selected = 2
-    ipg.update_item(radio_ids[0], IpgRadioParams.SelectedIndex, selected)
-    ipg.update_item(radio_ids[1], IpgRadioParams.SelectedIndex, selected)
+    ipg.update_item(radio_ids[0], IpgRadioParam.SelectedIndex, selected)
+    ipg.update_item(radio_ids[1], IpgRadioParam.SelectedIndex, selected)
 
 
 # When you change the labels you are actually replacing the radios, so the
@@ -60,66 +60,66 @@ def change_labels(chk_id: int, checked: bool, radio_ids: list[int]):
     if checked:
         labels = [["ants", "flies", "bees", "wasps"], ["cat", "dog", "horse"]]
 
-    ipg.update_item(radio_ids[0], IpgRadioParams.Labels, labels[0])
-    ipg.update_item(radio_ids[1], IpgRadioParams.Labels, labels[1])
+    ipg.update_item(radio_ids[0], IpgRadioParam.Labels, labels[0])
+    ipg.update_item(radio_ids[1], IpgRadioParam.Labels, labels[1])
     # unselecting any if selected
-    ipg.update_item(radio_ids[0], IpgRadioParams.SelectedIndex, None)
-    ipg.update_item(radio_ids[1], IpgRadioParams.SelectedIndex, None)
+    ipg.update_item(radio_ids[0], IpgRadioParam.SelectedIndex, None)
+    ipg.update_item(radio_ids[1], IpgRadioParam.SelectedIndex, None)
 
 
 def hide_left_radio(chk_id: int, checked: bool, rd_left_id: int):
     show = True
     if checked:
         show = False
-    ipg.update_item(rd_left_id, IpgRadioParams.Show, show)
+    ipg.update_item(rd_left_id, IpgRadioParam.Show, show)
 
 
 def change_size(chk_id: int, checked: bool, radio_ids: list[int]):
     size = 20.0
     if checked:
         size = 10.0
-    ipg.update_item(radio_ids[0], IpgRadioParams.Size, size)
-    ipg.update_item(radio_ids[1], IpgRadioParams.Size, size)
+    ipg.update_item(radio_ids[0], IpgRadioParam.Size, size)
+    ipg.update_item(radio_ids[1], IpgRadioParam.Size, size)
 
 
 def change_spacing(chk_id: int, checked: bool, radio_ids: list[int]):
     spacing = 10.0
     if checked:
         spacing = 20.0
-    ipg.update_item(radio_ids[0], IpgRadioParams.Spacing, spacing)
-    ipg.update_item(radio_ids[1], IpgRadioParams.Spacing, spacing)
+    ipg.update_item(radio_ids[0], IpgRadioParam.Spacing, spacing)
+    ipg.update_item(radio_ids[1], IpgRadioParam.Spacing, spacing)
 
 
 def change_text_spacing(chk_id: int, checked: bool, radio_ids: list[int]):
     ts = 15
     if checked:
         ts = 30.0
-    ipg.update_item(radio_ids[0], IpgRadioParams.TextSpacing, ts)
-    ipg.update_item(radio_ids[1], IpgRadioParams.TextSpacing, ts)
+    ipg.update_item(radio_ids[0], IpgRadioParam.TextSpacing, ts)
+    ipg.update_item(radio_ids[1], IpgRadioParam.TextSpacing, ts)
 
 
 def change_text_size(chk_id: int, checked: bool, radio_ids: list[int]):
     ts = 16.0
     if checked:
         ts = 20.0
-    ipg.update_item(radio_ids[0], IpgRadioParams.TextSize, ts)
-    ipg.update_item(radio_ids[1], IpgRadioParams.TextSize, ts)
+    ipg.update_item(radio_ids[0], IpgRadioParam.TextSize, ts)
+    ipg.update_item(radio_ids[1], IpgRadioParam.TextSize, ts)
 
 
 def change_text_line_heigth(chk_id: int, checked: bool, radio_ids: list[int]):
     tlh = 1.3
     if checked:
         tlh = 3.0
-    ipg.update_item(radio_ids[0], IpgRadioParams.TextLineHeight, tlh)
-    ipg.update_item(radio_ids[1], IpgRadioParams.TextLineHeight, tlh)
+    ipg.update_item(radio_ids[0], IpgRadioParam.TextLineHeight, tlh)
+    ipg.update_item(radio_ids[1], IpgRadioParam.TextLineHeight, tlh)
 
 
 def change_width(chk_id: int, checked: bool, radio_ids: list[int]):
     wd = None  # defaults to shrink
     if checked:
         wd = 150.0
-    ipg.update_item(radio_ids[0], IpgRadioParams.Width, wd)
-    ipg.update_item(radio_ids[1], IpgRadioParams.Width, wd)
+    ipg.update_item(radio_ids[0], IpgRadioParam.Width, wd)
+    ipg.update_item(radio_ids[1], IpgRadioParam.Width, wd)
 
 
 def change_width_fill(chk_id: int, checked: bool, radio_ids: list[int]):
@@ -128,19 +128,19 @@ def change_width_fill(chk_id: int, checked: bool, radio_ids: list[int]):
     wdf = False  # defaults to shrink
     if checked:
         wdf = True
-    ipg.update_item(radio_ids[0], IpgRadioParams.Width, None)
-    ipg.update_item(radio_ids[1], IpgRadioParams.Width, None)
+    ipg.update_item(radio_ids[0], IpgRadioParam.Width, None)
+    ipg.update_item(radio_ids[1], IpgRadioParam.Width, None)
 
-    ipg.update_item(radio_ids[0], IpgRadioParams.WidthFill, wdf)
-    ipg.update_item(radio_ids[1], IpgRadioParams.WidthFill, wdf)
+    ipg.update_item(radio_ids[0], IpgRadioParam.WidthFill, wdf)
+    ipg.update_item(radio_ids[1], IpgRadioParam.WidthFill, wdf)
 
 
 def change_height(chk_id: int, checked: bool, radio_ids: list[int]):
     ht = None  # defaults to shrink
     if checked:
         ht = 150.0
-    ipg.update_item(radio_ids[0], IpgRadioParams.Height, ht)
-    ipg.update_item(radio_ids[1], IpgRadioParams.Height, ht)
+    ipg.update_item(radio_ids[0], IpgRadioParam.Height, ht)
+    ipg.update_item(radio_ids[1], IpgRadioParam.Height, ht)
 
     # Note:  Changing the height to HeightFill doesn't work in this case.
     # It seems to happens sometimes when there is a clash between the
@@ -149,9 +149,9 @@ def change_height(chk_id: int, checked: bool, radio_ids: list[int]):
 
 def change_right_radio_colors(chk_id: int, checked: bool, radio_right_id: int):
     if checked:
-        ipg.update_item(radio_right_id, IpgRadioParams.Style, "color")
+        ipg.update_item(radio_right_id, IpgRadioParam.Style, "color")
     else:
-        ipg.update_item(radio_right_id, IpgRadioParams.Style, None)
+        ipg.update_item(radio_right_id, IpgRadioParam.Style, None)
 
 
 
@@ -174,7 +174,7 @@ ipg.add_container("main", container_id="cont",
                   width_fill=True, height_fill=True)
 
 ipg.add_column(window_id="main", container_id="col", parent_id="cont",
-               align_items=IpgColumnAlignment.Center, height=600.0, width=500.0)
+               align_items=IpgAlignment.Center, height=600.0, width=500.0)
 
 ipg.add_space("col", height=100)
 

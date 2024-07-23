@@ -1,5 +1,5 @@
-from icedpygui import IPG, IpgPickListParams, IpgPickListHandle
-from icedpygui import IpgColumnAlignment, IpgButtonArrows, IpgColor
+from icedpygui import IPG, IpgPickListHandle
+from icedpygui import IpgAlignment, IpgButtonArrow, IpgColor
 
 
 ipg = IPG()
@@ -20,7 +20,7 @@ ipg.add_window("main", "Pick List Demo", 800, 600,
 # all widgets need to be added to a container, so a container
 # is the second widget needed.
 ipg.add_column("main", container_id="col",
-               align_items=IpgColumnAlignment.Start, width_fill=True)
+               align_items=IpgAlignment.Start, width_fill=True)
 
 ipg.add_space(parent_id="col", height=50.0)
 
@@ -61,8 +61,8 @@ pl_id = ipg.add_pick_list(parent_id="row3", options=options,
                             placeholder="Choose a Number...", 
                             handle=IpgPickListHandle.Dynamic,
                             arrow_size=20.0, # the dynamic arrows can be sized too, if needed
-                            dynamic_closed=IpgButtonArrows.ArrowUp,
-                            dynamic_opened=IpgButtonArrows.ArrowDown,
+                            dynamic_closed=IpgButtonArrow.ArrowUp,
+                            dynamic_opened=IpgButtonArrow.ArrowDown,
                             on_select=picked_item
                             )
 
@@ -77,7 +77,7 @@ pl_id = ipg.add_pick_list(parent_id="row4", options=options,
                             placeholder="Choose a Number...", 
                             handle=IpgPickListHandle.Static,
                             arrow_size=20.0, # the custom arrows can be sized too, if needed
-                            custom_static=IpgButtonArrows.ArrowNinezerodegDown,
+                            custom_static=IpgButtonArrow.ArrowNinezerodegDown,
                             on_select=picked_item
                             )
 

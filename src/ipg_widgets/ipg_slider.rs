@@ -230,7 +230,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgSliderParams {
+pub enum IpgSliderParam {
     Min,
     Max,
     Step,
@@ -247,44 +247,44 @@ pub fn slider_item_update(sldr: &mut IpgSlider, item: PyObject, value: PyObject)
     let update = try_extract_slider_update(item);
 
     match update {
-        IpgSliderParams::Min => {
+        IpgSliderParam::Min => {
             sldr.min = try_extract_f64(value) as f32;
         },
-        IpgSliderParams::Max => {
+        IpgSliderParam::Max => {
             sldr.max = try_extract_f64(value) as f32;
         },
-        IpgSliderParams::Step => {
+        IpgSliderParam::Step => {
             sldr.step = try_extract_f64(value) as f32;
         },
-        IpgSliderParams::Value => {
+        IpgSliderParam::Value => {
             sldr.value = try_extract_f64(value) as f32;
         },
-        IpgSliderParams::Width => {
+        IpgSliderParam::Width => {
             let val = try_extract_f64(value);
             sldr.width = get_width(Some(val as f32), false);
         },
-        IpgSliderParams::WidthFill => {
+        IpgSliderParam::WidthFill => {
             let val = try_extract_boolean(value);
             sldr.width = get_width(None, val);
         },
-        IpgSliderParams::Height => {
+        IpgSliderParam::Height => {
             sldr.height = try_extract_f64(value) as f32;
         },
-        IpgSliderParams::Style => {
+        IpgSliderParam::Style => {
 
             sldr.style = Some(try_extract_string(value));
         }
-        IpgSliderParams::Show => {
+        IpgSliderParam::Show => {
             sldr.show = try_extract_boolean(value);
         },
     }
 }
 
 
-fn try_extract_slider_update(update_obj: PyObject) -> IpgSliderParams {
+fn try_extract_slider_update(update_obj: PyObject) -> IpgSliderParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgSliderParams>(py);
+        let res = update_obj.extract::<IpgSliderParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Slider update extraction failed"),

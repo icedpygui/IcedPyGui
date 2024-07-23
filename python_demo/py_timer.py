@@ -1,21 +1,21 @@
-from icedpygui import IPG, IpgTextParams
+from icedpygui import IPG, IpgTextParam
 
 ipg = IPG()
 
 
 # Fires when the timer is started
 def on_start(btn_id, counter):
-    ipg.update_item(counter_id, IpgTextParams.Content, f"Count: {counter}")
+    ipg.update_item(counter_id, IpgTextParam.Content, f"Count: {counter}")
 
 
 # Fires on every tick
 def on_tick(timer_id, counter):
-    ipg.update_item(counter_id, IpgTextParams.Content, f"Count: {counter}")
+    ipg.update_item(counter_id, IpgTextParam.Content, f"Count: {counter}")
 
 
 # Fires on stopping
 def on_stop(timer_id, counter):
-    ipg.update_item(counter_id, IpgTextParams.Content, f"Count stopped at {counter}")
+    ipg.update_item(counter_id, IpgTextParam.Content, f"Count stopped at {counter}")
 
 
 # Add a window
@@ -23,8 +23,10 @@ ipg.add_window("main", "Timer Demo",
                400, 400,  pos_x=100, pos_y=25)
 
 # Add the container to center everything
-ipg.add_container(window_id="main", container_id="cont", width_fill=True,
-                  height_fill=True)
+ipg.add_container(window_id="main", container_id="cont", 
+                  width_fill=True,
+                  height_fill=True,
+                  center_xy=True)
 
 # Add the column to hold the widgets
 ipg.add_column(window_id="main", container_id="col", parent_id="cont")

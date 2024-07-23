@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgMenuType, IpgWindowThemes
+from icedpygui import IPG, IpgMenuType, IpgWindowTheme
 from collections import OrderedDict
 
 
@@ -23,7 +23,7 @@ ipg.add_window("main-dark", "Menu",
 ipg.add_window("main-light", "Menu", 
                400, 400,  
                pos_x=600, pos_y=25,
-               theme=IpgWindowThemes.GruvboxLight
+               theme=IpgWindowTheme.GruvboxLight
                )
 
 # Add a column container to to each window

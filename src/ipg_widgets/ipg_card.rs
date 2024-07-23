@@ -84,7 +84,7 @@ pub enum CardMessage {
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgCardStyles {
+pub enum IpgCardStyle {
     Primary,
     Secondary,
     Success,
@@ -209,7 +209,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgCardParams {
+pub enum IpgCardParam {
     Head,
     Body,
     Foot,
@@ -226,19 +226,19 @@ pub fn card_item_update(crd: &mut IpgCard,
     let update = try_extract_card_update(item);
 
     match update {
-        IpgCardParams::Body => {
+        IpgCardParam::Body => {
             crd.body = try_extract_string(value);
         },
-        IpgCardParams::Foot => {
+        IpgCardParam::Foot => {
             crd.foot = Some(try_extract_string(value));
         },
-        IpgCardParams::Head => {
+        IpgCardParam::Head => {
             crd.head = try_extract_string(value);
         },
-        IpgCardParams::IsOpen => {
+        IpgCardParam::IsOpen => {
             crd.is_open = try_extract_boolean(value);
         },
-        IpgCardParams::Style => {
+        IpgCardParam::Style => {
             crd.style = Some(value);
         },
     }
@@ -255,24 +255,24 @@ pub fn get_card_style_from_obj(style_opt: Option<PyObject>) -> CardStyles {
     let ipg_card_style = try_extract_card_style(style_obj);
 
     match ipg_card_style {
-        IpgCardStyles::Primary => CardStyles::Primary,
-        IpgCardStyles::Secondary => CardStyles::Secondary, 
-        IpgCardStyles::Success => CardStyles::Success, 
-        IpgCardStyles::Danger => CardStyles::Danger, 
-        IpgCardStyles::Warning => CardStyles::Warning,
-        IpgCardStyles::Info => CardStyles::Info, 
-        IpgCardStyles::Light => CardStyles::Light, 
-        IpgCardStyles::Dark => CardStyles::Dark, 
-        IpgCardStyles::White => CardStyles::White, 
-        IpgCardStyles::Default => CardStyles::Default,
+        IpgCardStyle::Primary => CardStyles::Primary,
+        IpgCardStyle::Secondary => CardStyles::Secondary, 
+        IpgCardStyle::Success => CardStyles::Success, 
+        IpgCardStyle::Danger => CardStyles::Danger, 
+        IpgCardStyle::Warning => CardStyles::Warning,
+        IpgCardStyle::Info => CardStyles::Info, 
+        IpgCardStyle::Light => CardStyles::Light, 
+        IpgCardStyle::Dark => CardStyles::Dark, 
+        IpgCardStyle::White => CardStyles::White, 
+        IpgCardStyle::Default => CardStyles::Default,
     }
 }
 
 
-pub fn try_extract_card_style(style_obj: PyObject) -> IpgCardStyles {
+pub fn try_extract_card_style(style_obj: PyObject) -> IpgCardStyle {
 
     Python::with_gil(|py| {
-        let res = style_obj.extract::<IpgCardStyles>(py);
+        let res = style_obj.extract::<IpgCardStyle>(py);
         match res {
             Ok(st) => st,
             Err(_) => panic!("Card style failed to extract."),
@@ -281,9 +281,9 @@ pub fn try_extract_card_style(style_obj: PyObject) -> IpgCardStyles {
 }
 
 
-pub fn try_extract_card_update(update_obj: PyObject) -> IpgCardParams {
+pub fn try_extract_card_update(update_obj: PyObject) -> IpgCardParam {
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgCardParams>(py);
+        let res = update_obj.extract::<IpgCardParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Card update extraction failed."),

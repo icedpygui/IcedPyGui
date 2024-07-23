@@ -26,39 +26,40 @@ mod graphics;
 mod style;
 
 
-use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrows, IpgButtonParams, IpgButtonStyle};
-use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyles, IpgCardParams};
-use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParams, IpgCheckboxStyle};
-use ipg_widgets::ipg_column::{IpgColumn, IpgColumnAlignment};
-use ipg_widgets::ipg_container::{IpgContainer, IpgContainerAlignment, IpgContainerStyle};
-use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParams};
+use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
+use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyle, IpgCardParam};
+use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle};
+use ipg_widgets::ipg_column::IpgColumn;
+use ipg_widgets::ipg_container::{IpgContainer, IpgContainerStyle};
+use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParam};
 use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, IpgImageFilterMethod, 
-    IpgImageParams, IpgImageRotation};
+    IpgImageParam, IpgImageRotation};
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParam, IpgMenuSeparatorStyle, 
     IpgMenuSeparatorType, IpgMenuBarStyle, IpgMenuStyle, IpgMenuType};
-use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParams};
-use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListHandle, IpgPickListParams, IpgPickListStyle};
-use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParams, IpgProgressBarStyle};
-use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParams, IpgRadioStyle};
-use ipg_widgets::ipg_row::{IpgRow, IpgRowAlignment};
+use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParam};
+use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListHandle, IpgPickListParam, IpgPickListStyle};
+use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle};
+use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParam, IpgRadioStyle};
+use ipg_widgets::ipg_row::IpgRow;
 use ipg_widgets::ipg_rule::{IpgRule, IpgRuleStyle};
 use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, 
-                                    IpgScrollableDirection, IpgScrollableParams};
+                                    IpgScrollableDirection, IpgScrollableParam};
 use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText, 
-    IpgSelectableTextHorAlign, IpgSelectableTextParams, IpgSelectableTextVertAlign};
-use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParams, IpgSliderStyle};
+                                        IpgSelectableTextParam};
+use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParam, IpgSliderStyle};
 use ipg_widgets::ipg_space::IpgSpace;
-use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParams, IpgSvgRotation};
+use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParam, IpgSvgRotation};
 use ipg_widgets::ipg_table::{IpgTable, TableRowHighLight, TableWidget};
-use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParams};
-use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInput, IpgTextInputParams};
+use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
+use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInput, IpgTextInputParam};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
-use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParams};
+use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParam};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
 use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, 
-    IpgWindowParams, IpgWindowThemes};
-use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
+    IpgWindowParam, IpgWindowTheme};
+use ipg_widgets::ipg_enums::{IpgAlignment, IpgContainers, IpgHorizontalAlignment, 
+    IpgVerticalAlignment, IpgWidgets};
 
 use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_horizontal_alignment, 
     get_line_height, get_padding_f32, get_padding_f64, get_shaping, 
@@ -282,7 +283,7 @@ impl IPG {
 
     #[pyo3(signature = (window_id, title, width, height, pos_x=None, pos_y=None,
                         pos_centered=false, resizable=true, 
-                        theme=IpgWindowThemes::Dark, exit_on_close=true, on_resize=None, 
+                        theme=IpgWindowTheme::Dark, exit_on_close=true, on_resize=None, 
                         show=true, debug=false, user_data=None))]
     fn add_window(&mut self,
                         window_id: String, 
@@ -293,7 +294,7 @@ impl IPG {
                         pos_y: Option<f32>,
                         pos_centered: bool,
                         resizable: bool,
-                        theme: IpgWindowThemes,
+                        theme: IpgWindowTheme,
                         exit_on_close: bool,
                         on_resize: Option<PyObject>,
                         show: bool,
@@ -387,7 +388,7 @@ impl IPG {
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         width=None, height=None, width_fill=false, height_fill=false, 
                         center_xy=false, clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
-                        align_x=IpgContainerAlignment::Start, align_y=IpgContainerAlignment::Start,
+                        align_x=IpgHorizontalAlignment::Left, align_y=IpgVerticalAlignment::Top,
                         padding=vec![0.0], show=true, style=None, 
                         
                        ))]
@@ -404,8 +405,8 @@ impl IPG {
                         clip: bool,
                         max_height: f32,
                         max_width: f32,
-                        align_x: IpgContainerAlignment,
-                        align_y: IpgContainerAlignment, 
+                        align_x: IpgHorizontalAlignment,
+                        align_y: IpgVerticalAlignment, 
                         padding: Vec<f64>, 
                         show: bool,
                         style: Option<String>,
@@ -524,7 +525,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
-                        align_items=IpgColumnAlignment::Start, width=None, height=None,
+                        align_items=IpgAlignment::Start, width=None, height=None,
                         width_fill=false, height_fill=false,
                         max_width=f32::INFINITY, padding=vec![0.0], 
                         spacing=10.0, clip=false, show=true,
@@ -534,7 +535,7 @@ impl IPG {
                         container_id: String,
                         // **above required
                         parent_id: Option<String>,
-                        align_items: IpgColumnAlignment,
+                        align_items: IpgAlignment,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
@@ -668,7 +669,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
-                        align_items=IpgRowAlignment::Start, width=None, height=None, 
+                        align_items=IpgAlignment::Start, width=None, height=None, 
                         width_fill=false, height_fill=false,
                         padding=vec![0.0], spacing=10.0, clip=false,
                         show=true,
@@ -678,7 +679,7 @@ impl IPG {
                     container_id: String,
                     // required above
                     parent_id: Option<String>,
-                    align_items: IpgRowAlignment,
+                    align_items: IpgAlignment,
                     width: Option<f32>,
                     height: Option<f32>,
                     width_fill: bool,
@@ -1687,9 +1688,9 @@ impl IPG {
                         text_shaping: String,
                         handle: IpgPickListHandle,
                         arrow_size: Option<f32>,
-                        dynamic_closed: Option<IpgButtonArrows>,
-                        dynamic_opened: Option<IpgButtonArrows>,
-                        custom_static: Option<IpgButtonArrows>,
+                        dynamic_closed: Option<IpgButtonArrow>,
+                        dynamic_opened: Option<IpgButtonArrow>,
+                        custom_static: Option<IpgButtonArrow>,
                         style: Option<String>,
                         user_data: Option<PyObject>,
                         show: bool,
@@ -2157,13 +2158,19 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, text, gen_id=None, on_press=None, on_release=None, 
-                        on_right_press=None, on_right_release=None, on_middle_press=None, 
-                        on_middle_release=None, on_move=None, on_enter=None, on_exit=None, 
-                        width=None, height=None, width_fill=false, height_fill=false, 
-                        h_align=IpgSelectableTextHorAlign::Left, v_align=IpgSelectableTextVertAlign::Top, 
-                        line_height=1.3, size=16.0, show=true, 
-                        shaping="basic".to_string(), user_data=None
+    #[pyo3(signature = (parent_id, text, gen_id=None, 
+                        on_press=None, on_release=None, 
+                        on_right_press=None, on_right_release=None, 
+                        on_middle_press=None, on_middle_release=None, 
+                        on_move=None, on_enter=None, on_exit=None, 
+                        width=None, width_fill=false,
+                        height=None, height_fill=false, 
+                        h_align=IpgHorizontalAlignment::Left, 
+                        v_align=IpgVerticalAlignment::Top, 
+                        line_height=1.3, size=16.0,
+                        text_color=None, text_rgba=None, 
+                        show=true, shaping="basic".to_string(), 
+                        user_data=None
                         ))]
     fn add_selectable_text(&mut self,
                             parent_id: String,
@@ -2180,13 +2187,15 @@ impl IPG {
                             on_enter: Option<PyObject>,
                             on_exit: Option<PyObject>,
                             width: Option<f32>,
-                            height: Option<f32>,
                             width_fill: bool,
+                            height: Option<f32>,
                             height_fill: bool,
-                            h_align: IpgSelectableTextHorAlign,
-                            v_align: IpgSelectableTextVertAlign,
+                            h_align: IpgHorizontalAlignment,
+                            v_align: IpgVerticalAlignment,
                             line_height: f32,
                             size: f32,
+                            text_color: Option<IpgColor>,
+                            text_rgba: Option<[f32; 4]>,
                             show: bool,
                             shaping: String,
                             user_data: Option<PyObject>,
@@ -2240,6 +2249,8 @@ impl IPG {
 
         let shaping = get_shaping(shaping);
 
+        let text_color = get_color(text_rgba, text_color, 1.0, false);
+
         set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
@@ -2255,6 +2266,7 @@ impl IPG {
                                                     size,
                                                     show,
                                                     shaping,
+                                                    text_color,
                                                     user_data,
                                                     )));
         drop(state);
@@ -3258,7 +3270,7 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, label=None, gen_id=None, toggled=None, 
                         width=None, width_fill=false, size=20.0, text_size=16.0,
-                        text_line_height=1.3, text_alignment=IpgAlignment::Center, 
+                        text_line_height=1.3, text_alignment=IpgHorizontalAlignment::Center, 
                         spacing=10.0, user_data=None, show=true, 
                         ))]
     fn add_toggler(&mut self,
@@ -3272,7 +3284,7 @@ impl IPG {
                         size: f32,
                         text_size: f32,
                         text_line_height: f32,
-                        text_alignment: IpgAlignment,
+                        text_alignment: IpgHorizontalAlignment,
                         spacing: f32,
                         user_data: Option<PyObject>,
                         show: bool,
@@ -3711,58 +3723,45 @@ fn set_state_cont_wnd_ids(state: &mut State, wnd_id: &String, cnt_str_id: String
 fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IPG>()?;
     m.add_class::<IpgAlignment>()?;
-    m.add_class::<IpgButtonArrows>()?;
-    m.add_class::<IpgButtonParams>()?;
-    m.add_class::<IpgCardStyles>()?;
-    m.add_class::<IpgCardParams>()?;
+    m.add_class::<IpgHorizontalAlignment>()?;
+    m.add_class::<IpgVerticalAlignment>()?;
+    m.add_class::<IpgButtonArrow>()?;
+    m.add_class::<IpgButtonParam>()?;
+    m.add_class::<IpgCardStyle>()?;
+    m.add_class::<IpgCardParam>()?;
     m.add_class::<IpgColor>()?;
-    m.add_class::<IpgColumnAlignment>()?;
-    m.add_class::<IpgContainerAlignment>()?;
-    m.add_class::<IpgCheckboxParams>()?;
-    m.add_class::<IpgDatePickerParams>()?;
+    m.add_class::<IpgCheckboxParam>()?;
+    m.add_class::<IpgDatePickerParam>()?;
     m.add_class::<IpgImageContentFit>()?;
     m.add_class::<IpgImageFilterMethod>()?;
-    m.add_class::<IpgImageParams>()?;
+    m.add_class::<IpgImageParam>()?;
     m.add_class::<IpgImageRotation>()?;
     m.add_class::<IpgMenuParam>()?;
     m.add_class::<IpgMenuSeparatorType>()?;
     m.add_class::<IpgMenuType>()?;
-    m.add_class::<IpgMouseAreaParams>()?;
+    m.add_class::<IpgMouseAreaParam>()?;
     m.add_class::<IpgPaletteSet>()?;
-    m.add_class::<IpgPickListParams>()?;
+    m.add_class::<IpgPickListParam>()?;
     m.add_class::<IpgPickListHandle>()?;
-    m.add_class::<IpgProgressBarParams>()?;
+    m.add_class::<IpgProgressBarParam>()?;
     m.add_class::<IpgRadioDirection>()?;
-    m.add_class::<IpgRadioParams>()?;
-    m.add_class::<IpgRowAlignment>()?;
-    m.add_class::<IpgScrollableAlignment>()?;
+    m.add_class::<IpgRadioParam>()?;
     m.add_class::<IpgScrollableDirection>()?;
-    m.add_class::<IpgScrollableParams>()?;
-    m.add_class::<IpgSelectableTextParams>()?;
-    m.add_class::<IpgSelectableTextHorAlign>()?;
-    m.add_class::<IpgSelectableTextVertAlign>()?;
-    m.add_class::<IpgSliderParams>()?;
+    m.add_class::<IpgScrollableParam>()?;
+    m.add_class::<IpgSelectableTextParam>()?;
+    m.add_class::<IpgSliderParam>()?;
     m.add_class::<IpgStyleParam>()?;
     m.add_class::<IpgStyleStandard>()?;
-    m.add_class::<IpgSvgParams>()?;
+    m.add_class::<IpgSvgParam>()?;
     m.add_class::<TableRowHighLight>()?;
     m.add_class::<TableWidget>()?;
-    m.add_class::<IpgTextInputParams>()?;
-    m.add_class::<IpgTextParams>()?;
+    m.add_class::<IpgTextInputParam>()?;
+    m.add_class::<IpgTextParam>()?;
     m.add_class::<IpgTimerParams>()?;
-    m.add_class::<IpgTogglerParams>()?;
-    m.add_class::<IpgWindowParams>()?;
-    m.add_class::<IpgWindowThemes>()?;
+    m.add_class::<IpgTogglerParam>()?;
+    m.add_class::<IpgWindowParam>()?;
+    m.add_class::<IpgWindowTheme>()?;
     Ok(())
-}
-
-
-#[derive(Debug, Clone, PartialEq)]
-#[pyclass]
-pub enum IpgAlignment {
-    Left,
-    Center, 
-    Right,
 }
 
 fn set_state_of_container(

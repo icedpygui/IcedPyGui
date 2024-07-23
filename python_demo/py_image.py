@@ -1,5 +1,5 @@
-from icedpygui import IPG, IpgImageParams, IpgTextParams, IpgSvgParams
-from icedpygui import IpgColumnAlignment
+from icedpygui import IPG, IpgImageParam, IpgTextParam, IpgSvgParam
+from icedpygui import IpgAlignment
 import os, math
 
 
@@ -33,7 +33,7 @@ def image_selected(image_id):
     except:
         index = tiger_ids.index(image_id)
 
-    ipg.update_item(text_ids[index], IpgTextParams.Content, "You Pressed Me!")
+    ipg.update_item(text_ids[index], IpgTextParam.Content, "You Pressed Me!")
 
 
 # Callback for when the mouse is moving over the image.
@@ -45,7 +45,7 @@ def on_mouse_move(image_id, point):
 
     x = '{:{}.{}}'.format(point.get('x'), 10, 4)
     y = '{:{}.{}}'.format(point.get('y'), 10, 4)
-    ipg.update_item(text_points[index], IpgTextParams.Content, f"x={x}\ny={y}\n")
+    ipg.update_item(text_points[index], IpgTextParam.Content, f"x={x}\ny={y}\n")
 
 
 # On exit, reset the text widget
@@ -54,7 +54,7 @@ def on_mouse_exit(image_id):
         index = ferris_ids.index(image_id)
     except:
         index = tiger_ids.index(image_id)
-    ipg.update_item(text_points[index], IpgTextParams.Content, "Point")
+    ipg.update_item(text_points[index], IpgTextParam.Content, "Point")
 
 
 # On right_press, ferris shows
@@ -70,21 +70,21 @@ def toggle_images(image_id):
     show_ferris[index] = not show_ferris[index]
     show_tiger[index] = not show_tiger[index]
 
-    ipg.update_item(ferris_ids[index], IpgImageParams.Show, show_ferris[index])
-    ipg.update_item(tiger_ids[index], IpgSvgParams.Show, show_tiger[index])
+    ipg.update_item(ferris_ids[index], IpgImageParam.Show, show_ferris[index])
+    ipg.update_item(tiger_ids[index], IpgSvgParam.Show, show_tiger[index])
 
 
 def increment_radians(timer_id: int, counter: int):
     radians = counter*0.048481
-    ipg.update_item(ferris_ids[0], IpgImageParams.RotationRadians, radians)
-    ipg.update_item(ferris_ids[1], IpgImageParams.RotationRadians, radians)
-    ipg.update_item(ferris_ids[2], IpgImageParams.RotationRadians, radians)
-    ipg.update_item(ferris_ids[3], IpgImageParams.RotationRadians, radians)
+    ipg.update_item(ferris_ids[0], IpgImageParam.RotationRadians, radians)
+    ipg.update_item(ferris_ids[1], IpgImageParam.RotationRadians, radians)
+    ipg.update_item(ferris_ids[2], IpgImageParam.RotationRadians, radians)
+    ipg.update_item(ferris_ids[3], IpgImageParam.RotationRadians, radians)
 
-    ipg.update_item(tiger_ids[0], IpgSvgParams.RotationRadians, radians)
-    ipg.update_item(tiger_ids[1], IpgSvgParams.RotationRadians, radians)
-    ipg.update_item(tiger_ids[2], IpgSvgParams.RotationRadians, radians)
-    ipg.update_item(tiger_ids[3], IpgSvgParams.RotationRadians, radians)
+    ipg.update_item(tiger_ids[0], IpgSvgParam.RotationRadians, radians)
+    ipg.update_item(tiger_ids[1], IpgSvgParam.RotationRadians, radians)
+    ipg.update_item(tiger_ids[2], IpgSvgParam.RotationRadians, radians)
+    ipg.update_item(tiger_ids[3], IpgSvgParam.RotationRadians, radians)
 
 
 
@@ -95,7 +95,7 @@ ipg.add_window(window_id="main", title="Date Picker Demo", width=600, height=500
 # Add a column to hold the widgets
 ipg.add_column(window_id="main", container_id="col", parent_id="main",
                width_fill=True, height_fill=True,
-               align_items=IpgColumnAlignment.Center)
+               align_items=IpgAlignment.Center)
 
 # Add a space for readability
 ipg.add_space(parent_id="col", height=50.0)

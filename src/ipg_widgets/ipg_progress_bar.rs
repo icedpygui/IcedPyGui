@@ -100,7 +100,7 @@ pub fn construct_progress_bar(bar: IpgProgressBar) -> Element<'static, app::Mess
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgProgressBarParams {
+pub enum IpgProgressBarParam {
     Height,
     Min,
     Max,
@@ -120,33 +120,33 @@ pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
     let update = try_extract_progress_bar_update(item);
 
     match update {
-        IpgProgressBarParams::Height => {
+        IpgProgressBarParam::Height => {
             let val = try_extract_f64(value);
             pb.height = get_height(Some(val as f32), false);
         },
-        IpgProgressBarParams::Min => {
+        IpgProgressBarParam::Min => {
             pb.min = try_extract_f64(value) as f32;
         },
-        IpgProgressBarParams::Max => {
+        IpgProgressBarParam::Max => {
             pb.max = try_extract_f64(value) as f32;
         },
-        IpgProgressBarParams::Show => {
+        IpgProgressBarParam::Show => {
             pb.show = try_extract_boolean(value);
         },
-        IpgProgressBarParams::StyleStandard => {
+        IpgProgressBarParam::StyleStandard => {
             pb.style_standard = Some(try_extract_style_standard(value))
         },
-        IpgProgressBarParams::Style => {
+        IpgProgressBarParam::Style => {
             pb.style = Some(try_extract_string(value))
         },
-        IpgProgressBarParams::Value => {
+        IpgProgressBarParam::Value => {
             pb.value = try_extract_f64(value) as f32;
         },
-        IpgProgressBarParams::Width => {
+        IpgProgressBarParam::Width => {
             let val = try_extract_f64(value);
             pb.width = get_width(Some(val as f32), false);
         },
-        IpgProgressBarParams::WidthFill => {
+        IpgProgressBarParam::WidthFill => {
             let val = try_extract_boolean(value);
             pb.width = get_width(None, val);
         },
@@ -154,10 +154,10 @@ pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
 }
 
 
-pub fn try_extract_progress_bar_update(update_obj: PyObject) -> IpgProgressBarParams {
+pub fn try_extract_progress_bar_update(update_obj: PyObject) -> IpgProgressBarParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgProgressBarParams>(py);
+        let res = update_obj.extract::<IpgProgressBarParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("ProgressBar update extraction failed"),

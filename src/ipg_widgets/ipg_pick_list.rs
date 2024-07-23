@@ -16,7 +16,7 @@ use super::helpers::try_extract_f64;
 use super::helpers::try_extract_string;
 use super::helpers::try_extract_vec_f64;
 use super::ipg_button::get_bootstrap_arrow_char;
-use super::ipg_button::IpgButtonArrows;
+use super::ipg_button::IpgButtonArrow;
 
 use iced::theme::palette::Pair;
 use iced::widget::pick_list::{self, Status};
@@ -46,9 +46,9 @@ pub struct IpgPickList {
     pub text_shaping: Shaping,
     pub handle: IpgPickListHandle,
     pub arrow_size: Option<f32>,
-    pub dynamic_closed: Option<IpgButtonArrows>,
-    pub dynamic_open: Option<IpgButtonArrows>,
-    pub custom_static: Option<IpgButtonArrows>,
+    pub dynamic_closed: Option<IpgButtonArrow>,
+    pub dynamic_open: Option<IpgButtonArrow>,
+    pub custom_static: Option<IpgButtonArrow>,
     pub style: Option<String>,
 }
 
@@ -68,9 +68,9 @@ impl IpgPickList {
         text_shaping: Shaping,
         handle: IpgPickListHandle,
         arrow_size: Option<f32>,
-        dynamic_closed: Option<IpgButtonArrows>,
-        dynamic_open: Option<IpgButtonArrows>,
-        custom_static: Option<IpgButtonArrows>,
+        dynamic_closed: Option<IpgButtonArrow>,
+        dynamic_open: Option<IpgButtonArrow>,
+        custom_static: Option<IpgButtonArrow>,
         style: Option<String>,
         ) -> Self {
         Self {
@@ -319,7 +319,7 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
 
  #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgPickListParams {
+pub enum IpgPickListParam {
     Options,
     Placeholder,
     Padding,
@@ -340,39 +340,39 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
     let update = try_extract_pick_list_update(item);
 
     match update {
-        IpgPickListParams::Options => {
+        IpgPickListParam::Options => {
             pl.options = value;
             pl.selected = None;
         },
-        IpgPickListParams::Placeholder => {
+        IpgPickListParam::Placeholder => {
             pl.placeholder = Some(try_extract_string(value));
             pl.selected = None;
         },
-        IpgPickListParams::Padding => {
+        IpgPickListParam::Padding => {
             let val = try_extract_vec_f64(value);
             pl.padding =  get_padding_f64(val);
         },
-        IpgPickListParams::Show => {
+        IpgPickListParam::Show => {
             pl.show = try_extract_boolean(value);
         },
-        IpgPickListParams::Style => {
+        IpgPickListParam::Style => {
             let val = try_extract_string(value);
             pl.style = Some(val);
         },
-        IpgPickListParams::TextSize => {
+        IpgPickListParam::TextSize => {
             let size = try_extract_f64(value);
             pl.text_size = Some(size as f32);
         },
-        IpgPickListParams::TextLineHeight => {
+        IpgPickListParam::TextLineHeight => {
             let val = try_extract_f64(value) as f32;
             pl.text_line_height = LineHeight::Relative(val);
         },
-        IpgPickListParams::Width => {
+        IpgPickListParam::Width => {
             let val = try_extract_f64(value);
             pl.width = get_width(Some(val as f32), false);
         },
          // TODO: Doesn't work, shrink the box but still displaces the text.
-        // IpgPickListUpdate::WidthFill => {
+        // IpgPickListParam::WidthFill => {
         //     let val = try_extract_boolean(value);
         //     pl.width = get_width(None, val);
         // },
@@ -380,10 +380,10 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
 
 }
 
-pub fn try_extract_pick_list_update(update_obj: PyObject) -> IpgPickListParams {
+pub fn try_extract_pick_list_update(update_obj: PyObject) -> IpgPickListParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgPickListParams>(py);
+        let res = update_obj.extract::<IpgPickListParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("PickList update extraction failed"),
@@ -403,9 +403,9 @@ pub enum IpgPickListHandle {
 
 fn get_handle(ipg_handle: IpgPickListHandle, 
                 arrow_size: Option<f32>,
-                closed: Option<IpgButtonArrows>,
-                opened: Option<IpgButtonArrows>,
-                custom: Option<IpgButtonArrows>,
+                closed: Option<IpgButtonArrow>,
+                opened: Option<IpgButtonArrow>,
+                custom: Option<IpgButtonArrow>,
             ) -> Handle<Font> 
 {
     match ipg_handle {
@@ -420,12 +420,12 @@ fn get_handle(ipg_handle: IpgPickListHandle,
         IpgPickListHandle::Dynamic => {
             let arrow_closed = match closed {
                 Some(cls) => get_bootstrap_arrow_char(cls),
-                None => get_bootstrap_arrow_char(IpgButtonArrows::ArrowBarRight),
+                None => get_bootstrap_arrow_char(IpgButtonArrow::ArrowBarRight),
             };
 
             let arrow_opened = match opened {
                 Some(op) => get_bootstrap_arrow_char(op),
-                None => get_bootstrap_arrow_char(IpgButtonArrows::ArrowBarRight),
+                None => get_bootstrap_arrow_char(IpgButtonArrow::ArrowBarRight),
             };
 
             let size = if arrow_size.is_some() {
@@ -450,7 +450,7 @@ fn get_handle(ipg_handle: IpgPickListHandle,
         IpgPickListHandle::Static => {
                 let custom_type = match custom {
                     Some(cust) => get_bootstrap_arrow_char(cust),
-                    None => get_bootstrap_arrow_char(IpgButtonArrows::ArrowBarRight),
+                    None => get_bootstrap_arrow_char(IpgButtonArrow::ArrowBarRight),
                 };
                 let size = if arrow_size.is_some() {
                     Some(Pixels(arrow_size.unwrap())) 

@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgColumnAlignment, IpgColor
-from icedpygui import IpgWindowThemes, IpgStyleStandard
+from icedpygui import IpgWindowTheme, IpgStyleStandard
 
 #  Required to instantiate IPG
 ipg = IPG()
@@ -97,7 +97,7 @@ add_checkboxes()
 # to see how things look
 ipg.add_window("main2", "CheckBox Demo",
                600, 600,  pos_x=750, pos_y=25,
-               theme=IpgWindowThemes.SolarizedLight)
+               theme=IpgWindowTheme.SolarizedLight)
 
 ipg.add_container(window_id="main2", container_id="cont", width_fill=True,
                   height_fill=True, center_xy=True)

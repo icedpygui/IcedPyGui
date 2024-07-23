@@ -1,4 +1,6 @@
 
+use pyo3::pyclass;
+
 use super::ipg_button::IpgButton;
 use super::ipg_card::IpgCard;
 use super::ipg_checkbox::IpgCheckBox;
@@ -66,4 +68,29 @@ pub enum IpgWidgets {
     IpgTextInput(IpgTextInput),
     IpgTimer(IpgTimer),
     IpgToggler(IpgToggler),
+}
+
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgAlignment {
+    Start,
+    Center,
+    End,
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgHorizontalAlignment {
+    Left,
+    Center,
+    Right,
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgVerticalAlignment {
+    Top,
+    Center,
+    Bottom,
 }

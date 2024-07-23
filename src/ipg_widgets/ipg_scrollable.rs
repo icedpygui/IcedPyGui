@@ -260,7 +260,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgScrollableParams {
+pub enum IpgScrollableParam {
     Width,
     Height,
     HBarWidth,
@@ -282,46 +282,46 @@ pub fn scrollable_item_update(scroll: &mut IpgScrollable,
     let update = try_extract_scrollable_update(item);
 
     match update {
-        IpgScrollableParams::Width => {
+        IpgScrollableParam::Width => {
             let val = try_extract_f64(value);
             scroll.width = get_width(Some(val as f32), false);
         },
-        IpgScrollableParams::Height => {
+        IpgScrollableParam::Height => {
             let val = try_extract_f64(value);
             scroll.height = get_height(Some(val as f32), false);
         },
-        IpgScrollableParams::HBarWidth => {
+        IpgScrollableParam::HBarWidth => {
             scroll.h_bar_width = try_extract_f64(value) as f32;
         },
-        IpgScrollableParams::HBarMargin => {
+        IpgScrollableParam::HBarMargin => {
             scroll.h_bar_margin = try_extract_f64(value) as f32;
         },
-        IpgScrollableParams::HScrollerWidth => {
+        IpgScrollableParam::HScrollerWidth => {
             scroll.h_scroller_width = try_extract_f64(value) as f32;
         },
-        IpgScrollableParams::HBarAlignment => {
+        IpgScrollableParam::HBarAlignment => {
             scroll.h_bar_alignment = try_extract_alignment(value);
         },
-        IpgScrollableParams::VBarWidth => {
+        IpgScrollableParam::VBarWidth => {
             scroll.v_bar_width = try_extract_f64(value) as f32;
         },
-        IpgScrollableParams::VBarMargin => {
+        IpgScrollableParam::VBarMargin => {
             scroll.v_bar_margin = try_extract_f64(value) as f32;
         },
-        IpgScrollableParams::VScrollerWidth => {
+        IpgScrollableParam::VScrollerWidth => {
             scroll.v_scroller_width = try_extract_f64(value) as f32;
         },
-        IpgScrollableParams::VBarAlignment => {
+        IpgScrollableParam::VBarAlignment => {
             scroll.v_bar_alignment = try_extract_alignment(value);
         },
     }
 }
 
 
-pub fn try_extract_scrollable_update(update_obj: PyObject) -> IpgScrollableParams {
+pub fn try_extract_scrollable_update(update_obj: PyObject) -> IpgScrollableParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgScrollableParams>(py);
+        let res = update_obj.extract::<IpgScrollableParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Scrollable update extraction failed"),

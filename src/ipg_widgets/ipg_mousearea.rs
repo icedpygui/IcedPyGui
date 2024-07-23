@@ -174,7 +174,7 @@ fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgMouseAreaParams {
+pub enum IpgMouseAreaParam {
     Show,
 }
 
@@ -188,16 +188,16 @@ pub fn mousearea_item_update(img: &mut IpgMouseArea,
     let update = try_extract_MouseArea_update(item);
 
     match update {
-        IpgMouseAreaParams::Show => {
+        IpgMouseAreaParam::Show => {
             img.show = try_extract_boolean(value);
         },
     }
 }
 
-pub fn try_extract_MouseArea_update(update_obj: PyObject) -> IpgMouseAreaParams {
+pub fn try_extract_MouseArea_update(update_obj: PyObject) -> IpgMouseAreaParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgMouseAreaParams>(py);
+        let res = update_obj.extract::<IpgMouseAreaParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("MouseArea update extraction failed"),

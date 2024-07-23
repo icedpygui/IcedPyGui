@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgMenuType, IpgWindowThemes, IpgTextParams, IpgMenuParam
+from icedpygui import IPG, IpgMenuType, IpgWindowTheme, IpgTextParam, IpgMenuParam
 from icedpygui import IpgColor, IpgStyleStandard, IpgMenuSeparatorType
 from collections import OrderedDict
 
@@ -7,15 +7,15 @@ ipg = IPG()
 
 
 def bar_spacing(sld_id: int, value):
-    ipg.update_item(slider_1_text, IpgTextParams.Content, str(value))
+    ipg.update_item(slider_1_text, IpgTextParam.Content, str(value))
     ipg.update_item(menu_id, IpgMenuParam.BarSpacing, value)
 
 def bar_height(sld_id: int, value):
-    ipg.update_item(slider_2_text, IpgTextParams.Content, str(value))
+    ipg.update_item(slider_2_text, IpgTextParam.Content, str(value))
     ipg.update_item(menu_id, IpgMenuParam.BarHeight, value)
 
 def bar_padding(sld_id: int, value):
-    ipg.update_item(slider_3_text, IpgTextParams.Content, str(value))
+    ipg.update_item(slider_3_text, IpgTextParam.Content, str(value))
     ipg.update_item(menu_id, IpgMenuParam.BarPadding, [value])
 
 # The menu callback requires 4 parameters and an optional user_data
@@ -38,7 +38,7 @@ ipg.add_window("main-dark", "Menu",
 ipg.add_window("main-light", "Menu", 
                500, 600,  
                pos_x=600, pos_y=25,
-               theme=IpgWindowThemes.GruvboxLight,
+               theme=IpgWindowTheme.GruvboxLight,
                debug=True)
 
 # Add a column container to to each window

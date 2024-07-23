@@ -1,7 +1,9 @@
 use iced::{Alignment, Padding, Length, Element};
 use iced::widget::Row;
-use pyo3::pyclass;
+
 use crate::app::Message;
+
+use super::ipg_enums::IpgAlignment;
 
 
 #[derive(Debug, Clone)]
@@ -13,7 +15,7 @@ pub struct IpgRow {
     pub padding: Padding,
     pub width: Length,
     pub height: Length,
-    pub align_items: IpgRowAlignment,
+    pub align_items: IpgAlignment,
     pub clip: bool,
 }
 
@@ -25,7 +27,7 @@ impl IpgRow {
         padding: Padding,
         width: Length,
         height: Length,
-        align_items: IpgRowAlignment,
+        align_items: IpgAlignment,
         clip: bool,
     ) -> Self {
         Self {
@@ -56,20 +58,14 @@ pub fn construct_row(row: &IpgRow, content: Vec<Element<'static, Message>>) -> E
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgRowAlignment {
-    Start,
-    Center,
-    End,
-}
 
 
-fn get_alignment(align: IpgRowAlignment) -> Alignment {
+
+fn get_alignment(align: IpgAlignment) -> Alignment {
 
     match align {
-        IpgRowAlignment::Start => Alignment::Start,
-        IpgRowAlignment::Center => Alignment::Center,
-        IpgRowAlignment::End => Alignment::End,
+        IpgAlignment::Start => Alignment::Start,
+        IpgAlignment::Center => Alignment::Center,
+        IpgAlignment::End => Alignment::End,
     }
 }

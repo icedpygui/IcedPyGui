@@ -300,7 +300,7 @@ fn process_callback(wco: WidgetCallbackOut)
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgSvgParams {
+pub enum IpgSvgParam {
     Height,
     HeightFill,
     ImagePath,
@@ -321,60 +321,46 @@ pub fn svg_item_update(img: &mut IpgSvg,
     let update = try_extract_svg_update(item);
 
     match update {
-        IpgSvgParams::Height => {
+        IpgSvgParam::Height => {
             let val = try_extract_f64(value);
             img.height = get_height(Some(val as f32), false);
         },
-        IpgSvgParams::HeightFill => {
+        IpgSvgParam::HeightFill => {
             let val = try_extract_boolean(value);
             img.height = get_height(None, val);
         },
-        IpgSvgParams::ImagePath => {
+        IpgSvgParam::ImagePath => {
             img.svg_path = try_extract_string(value);
         },
-        IpgSvgParams::Show => {
+        IpgSvgParam::Show => {
             img.show = try_extract_boolean(value);
         },
-        IpgSvgParams::Width => {
+        IpgSvgParam::Width => {
             let val = try_extract_f64(value);
             img.width = get_width(Some(val as f32), false);
         },
-        IpgSvgParams::WidthFill => {
+        IpgSvgParam::WidthFill => {
             let val = try_extract_boolean(value);
             img.width = get_width(None, val);
         },
-        IpgSvgParams::RotationRadians => {
+        IpgSvgParam::RotationRadians => {
             let val = try_extract_f64(value);
             img.rotation_radians = val as f32;
         },
-        IpgSvgParams::Opacity => {
+        IpgSvgParam::Opacity => {
             let val = try_extract_f64(value);
             img.opacity = val as f32;
         },
     }
 }
 
-pub fn try_extract_svg_update(update_obj: PyObject) -> IpgSvgParams {
+pub fn try_extract_svg_update(update_obj: PyObject) -> IpgSvgParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgSvgParams>(py);
+        let res = update_obj.extract::<IpgSvgParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Svg update extraction failed"),
         }
     })
 }
-
-
-// #[derive(Debug, Clone)]
-// pub enum IpgSvgStyle {
-//     Default,
-//     // Custom,
-// }
-
-// fn get_style(st: IpgSvgStyle) -> theme::Svg {
-//     match st {
-//         IpgSvgStyle::Default => theme::Svg::Default,
-//         // IpgSvgStyle::Custom => todo!(),
-//     }
-// }
