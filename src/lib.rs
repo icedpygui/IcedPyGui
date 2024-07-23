@@ -47,7 +47,7 @@ use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScro
                                     IpgScrollableDirection, IpgScrollableParams};
 use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText, 
     IpgSelectableTextHorAlign, IpgSelectableTextParams, IpgSelectableTextVertAlign};
-use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParams};
+use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParams, IpgSliderStyle};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParams, IpgSvgRotation};
 use ipg_widgets::ipg_table::{IpgTable, TableRowHighLight, TableWidget};
@@ -60,7 +60,9 @@ use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWind
     IpgWindowParams, IpgWindowThemes};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
 
-use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_horizontal_alignment, get_line_height, get_padding_f32, get_padding_f64, get_shaping, get_vertical_alignment, get_width};
+use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_horizontal_alignment, 
+    get_line_height, get_padding_f32, get_padding_f64, get_shaping, 
+    get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
 use style::styling::{readable, IpgPalette, IpgStyleParam, IpgStyleStandard, 
@@ -126,6 +128,7 @@ pub struct State {
     pub progress_bar_style: Lazy<HashMap<String, IpgProgressBarStyle>>,
     pub radio_style:  Lazy<HashMap<String, IpgRadioStyle>>,
     pub rule_style:  Lazy<HashMap<String, IpgRuleStyle>>,
+    pub slider_style:  Lazy<HashMap<String, IpgSliderStyle>>,
 
     pub styling_color: Lazy<HashMap<String, IpgPalette>>,
     pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
@@ -171,6 +174,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         progress_bar_style: Lazy::new(||HashMap::new()),
         radio_style: Lazy::new(||HashMap::new()),
         rule_style: Lazy::new(||HashMap::new()),
+        slider_style: Lazy::new(||HashMap::new()),
         
         styling_color: Lazy::new(||HashMap::new()),
         styling_standard: Lazy::new(||HashMap::new()),
@@ -2261,7 +2265,8 @@ impl IPG {
     #[pyo3(signature = (parent_id, min, max, step, value, 
                         gen_id=None, width=None, height=None, 
                         width_fill=false, on_change=None, 
-                        on_release=None, user_data=None, show=true, 
+                        on_release=None, style=None,
+                        user_data=None, show=true, 
                         ))]
     fn add_slider(&mut self,
                         parent_id: String,
@@ -2275,6 +2280,7 @@ impl IPG {
                         width_fill: bool,
                         on_change: Option<PyObject>,
                         on_release: Option<PyObject>,
+                        style: Option<String>,
                         user_data: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
@@ -2309,8 +2315,98 @@ impl IPG {
                                                 value,
                                                 width,
                                                 height,
+                                                style,
                                                 )));
         drop(state);
+        Ok(id)
+    }
+
+    #[pyo3(signature = (style_id,
+                        rail_colors_base=None,
+                        rail_rgba_base=None,
+                        rail_color_strong=None,
+                        rail_rgba_strong=None,
+                        rail_strong_factor=None,
+                        rail_width=None,
+                        rail_border_radius=None,
+                        handle_circle_radius=None,
+                        handle_rectangle_width=None,
+                        handle_rectangle_border_radius=None,
+                        handle_color_base=None,
+                        handle_rgba_base=None,
+                        handle_color_strong=None,
+                        handle_rgba_strong=None,
+                        handle_strong_factor=None,
+                        handle_border_width=None,
+                        handle_border_color=None,
+                        handle_border_rgba=None,
+                        gen_id=None,
+                        ))]
+    fn add_slider_style(&mut self,
+                        style_id: String,
+                        rail_colors_base: Option<(IpgColor, IpgColor)>,
+                        rail_rgba_base: Option<([f32; 4], [f32; 4])>,
+                        rail_color_strong: Option<IpgColor>,
+                        rail_rgba_strong: Option<[f32; 4]>,
+                        rail_strong_factor: Option<f32>,
+                        rail_width: Option<f32>,
+                        rail_border_radius: Option<Vec<f32>>,
+                        handle_circle_radius: Option<f32>,
+                        handle_rectangle_width: Option<u16>,
+                        handle_rectangle_border_radius: Option<Vec<f32>>,
+                        handle_color_base: Option<IpgColor>,
+                        handle_rgba_base: Option<[f32; 4]>,
+                        handle_color_strong: Option<IpgColor>,
+                        handle_rgba_strong: Option<[f32; 4]>,
+                        handle_strong_factor: Option<f32>,
+                        handle_border_width: Option<f32>,
+                        handle_border_color: Option<IpgColor>,
+                        handle_border_rgba: Option<[f32; 4]>,
+                        gen_id: Option<usize>,
+                        )  -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let mut state = access_state();
+
+        let rail_colors = if rail_rgba_base.is_some() {
+            let rail = rail_rgba_base.unwrap();
+            let color1 = get_color(Some(rail.0), None, 1.0, false).unwrap();
+            let color2 = get_color(Some(rail.1), None, 1.0, false).unwrap();
+            Some((color1, color2))
+        } else if rail_colors_base.is_some() {
+            let colors = rail_colors_base.unwrap();
+            let color1 = get_color(None, Some(colors.0), 1.0, false).unwrap();
+            let color2 = get_color(None, Some(colors.1), 1.0, false).unwrap();
+            Some((color1, color2))
+        } else {
+            None
+        };
+
+        let rail_color_strong = get_color(rail_rgba_strong, rail_color_strong, 1.0, false);
+        let handle_color_base = get_color(handle_rgba_base, handle_color_base, 1.0, false);
+        let handle_color_strong = get_color(handle_rgba_strong, handle_color_strong, 1.0, false);
+        let handle_border_color = get_color(handle_border_rgba,handle_border_color,1.0, false);
+        
+        state.slider_style.insert(style_id, IpgSliderStyle::new( 
+                                                    id,
+                                                    rail_colors,
+                                                    rail_color_strong,
+                                                    rail_strong_factor,
+                                                    rail_width,
+                                                    rail_border_radius,
+                                                    handle_circle_radius,
+                                                    handle_rectangle_width,
+                                                    handle_rectangle_border_radius,
+                                                    handle_color_base,
+                                                    handle_color_strong,
+                                                    handle_strong_factor,
+                                                    handle_border_width,
+                                                    handle_border_color,
+                                                    ));
+        
+        drop(state);
+
         Ok(id)
     }
 

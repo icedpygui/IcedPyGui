@@ -1720,7 +1720,8 @@ class IPG:
                    user_data: Union[None | any]=None, 
                    width: float=100.0,
                    width_fill: bool=False,
-                   height: float=20.0
+                   height: float=20.0,
+                   style: Union[None | str]=None,
                   ) -> int:
         """
         Adds a slider widget which changes value as the mouse moves the slider.
@@ -1756,10 +1757,92 @@ class IPG:
                 Height of the widget.
             width_fill: bool 
                 Fills the available space horizontally.
+            style: str
+                Id from the add_slider_style()
         Returns
         -------
         id: int
             Internal id of widget and can be used by user if equated.
+        """
+
+    def add_slider_style(self,
+                        style_id: str,
+                        rail_colors_base: Union[None | (IpgColor, IpgColor)]=None,
+                        rail_rgba_base: Union[None | ([float, 4], [float, 4])]=None,
+                        rail_color_strong: Union[None | IpgColor]=None,
+                        rail_rgba_strong: Union[None | list[float, 4]]=None,
+                        rail_strong_factor: Union[None | float]=None,
+                        rail_width: Union[None | float]=None,
+                        rail_border_radius: Union[None | list[float]]=None,
+                        handle_circle_radius: Union[None | float]=None,
+                        handle_rectangle_width: Union[None | uint2]=None,
+                        handle_rectangle_border_radius: Union[None | list[float]]=None,
+                        handle_color_base: Union[None | IpgColor]=None,
+                        handle_rgba_base: Union[None | list[float, 4]]=None,
+                        handle_color_strong: Union[None | IpgColor]=None,
+                        handle_rgba_strong: Union[None | list[float, 4]]=None,
+                        handle_strong_factor: Union[None | float]=None,
+                        handle_border_width: Union[None | float]=None,
+                        handle_border_color: Union[None | IpgColor]=None,
+                        handle_border_rgba: Union[None | list[float, 4]]=None,
+                        gen_id: Union[None, int]=None,
+                         ) -> int:
+        """
+        Add styling to the Slider.
+
+        Parameters
+        ----------
+            style_id: str
+                The id used in the add_slider style parameter.
+            rail_colors_base: Union[None | (IpgColor, IpgColor)]=None
+                The base colors of the rail with IpgColor class.
+                The first color used with mouse hover.
+            rail_rgba_base: Union[None | ([float, 4], [float, 4])]=None
+                The base colors of the rail in rgba format.
+                The first color used with mouse hover.
+            rail_color_strong: Union[None | IpgColor]=None
+                The color used for active and dragged with IpgColor class.
+            rail_rgba_strong: Union[None | list[float, 4]]=None
+                The color used for active and dragged in rgba format.
+            rail_strong_factor: Union[None | float]=None
+                If strong color not defined, factor used to generate the  
+                the strong color using the base.
+            rail_width: Union[None | float]=None
+                Rail width
+            rail_border_radius: Union[None | list[float]]=None
+                rail border radius use either a single list item or a list of 4
+            handle_circle_radius: Union[None | float]=None
+                The circle is the default shape.
+                The handle circle radius default=7.0
+            handle_rectangle_width: Union[None | uint2]=None
+                Defining either the width or radius, activates this shape.
+                handle width, default=12
+            handle_rectangle_border_radius: Union[None | list[float]]=None
+                handle rectangle border radius default=1.0
+            handle_color_base: Union[None | IpgColor]=None
+                The handle color used during mouse hover with IpgColor class.
+            handle_rgba_base: Union[None | list[float, 4]]=None
+                The handle color used during mouse hover in rgba format.
+            handle_color_strong: Union[None | IpgColor]=None
+                The color used for active and dragged with IpgColor class.
+            handle_rgba_strong: Union[None | list[float, 4]]=None
+                The color used for active and dragged in rgba format.
+            handle_strong_factor: Union[None | float]=None
+                If strong color not defined, factor used to generate the  
+                the strong color using the base.
+            handle_border_width: Union[None | float]=None
+                Handle border width, default=0.0
+            handle_border_color: Union[None | IpgColor]=None
+                Handle border color, default=transparent.
+            handle_border_rgba: Union[None | list[float, 4]]=None
+                Handle border color in rgba format, default=transparent.
+            gen_id: Union[None, int]=None
+                The only allowable entry for this id is that generated by ipg.generate_id().
+        Returns
+        -------
+            id: int
+            Internal id of widget and can be used by user if equated.
+        
         """
 
     def add_space(self,
@@ -3090,6 +3173,7 @@ class IpgSliderParams:
     Width=0
     WidthFill=0
     Height=0
+    Style=0
     Show=0
 
 
