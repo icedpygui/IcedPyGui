@@ -5,9 +5,7 @@ use crate::ipg_widgets::helpers::try_extract_boolean;
 use crate::style::styling::{self, get_text_pair, lighten, strong};
 use crate::{access_state, access_callbacks};
 use crate::app;
-use super::helpers::{get_height, get_line_height, get_padding_f64, get_width, 
-    try_extract_f64, try_extract_f64_option, try_extract_i64, try_extract_i64_option, 
-    try_extract_option_string, try_extract_vec_f64, try_extract_vec_str};
+use super::helpers::{get_height, get_line_height, get_padding_f64, get_width, try_extract_f64, try_extract_f64_option, try_extract_i64, try_extract_i64_option, try_extract_option_string, try_extract_u16, try_extract_vec_f64, try_extract_vec_str};
 use super::ipg_enums::IpgWidgets;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
@@ -16,7 +14,7 @@ use super::ipg_theme_colors::is_dark;
 
 use iced::theme::palette::Pair;
 use iced::widget::radio::{self, Status};
-use iced::{Background, Color, Element, Length, Padding, Theme, theme};
+use iced::{theme, Background, Color, Element, Length, Padding, Pixels, Theme};
 use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{Column, Radio, Row, Space};
 
@@ -399,7 +397,8 @@ pub enum IpgRadioParam {
     Style,
     TextSpacing,
     TextSize,
-    TextLineHeight,
+    TextLineHeightPixels,
+    TextLineHeightRelative,
     UserData,
     Width,
     WidthFill,
@@ -461,9 +460,13 @@ pub fn radio_item_update(rd: &mut IpgRadio,
         IpgRadioParam::TextSize => {
             rd.text_size = try_extract_f64(value) as f32;
         },
-        IpgRadioParam::TextLineHeight => {
-            let tlh = try_extract_f64(value) as f32;
-            rd.text_line_height = get_line_height(Some(tlh));
+        IpgRadioParam::TextLineHeightPixels => {
+            let val = try_extract_u16(value);
+            rd.text_line_height = LineHeight::Absolute(Pixels(val.into()));
+        },
+        IpgRadioParam::TextLineHeightRelative => {
+            let val = try_extract_f64(value) as f32;
+            rd.text_line_height = LineHeight::Relative(val);
         },
         IpgRadioParam::UserData => {
             rd.user_data = Some(value);

@@ -52,7 +52,7 @@ use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParam, IpgSvgRotation};
 use ipg_widgets::ipg_table::{IpgTable, TableRowHighLight, TableWidget};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
-use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInput, IpgTextInputParam};
+use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParam};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
@@ -130,6 +130,7 @@ pub struct State {
     pub radio_style:  Lazy<HashMap<String, IpgRadioStyle>>,
     pub rule_style:  Lazy<HashMap<String, IpgRuleStyle>>,
     pub slider_style:  Lazy<HashMap<String, IpgSliderStyle>>,
+    pub text_input_style: Lazy<HashMap<String, IpgTextInputStyle>>,
 
     pub styling_color: Lazy<HashMap<String, IpgPalette>>,
     pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
@@ -176,6 +177,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         radio_style: Lazy::new(||HashMap::new()),
         rule_style: Lazy::new(||HashMap::new()),
         slider_style: Lazy::new(||HashMap::new()),
+        text_input_style: Lazy::new(||HashMap::new()),
         
         styling_color: Lazy::new(||HashMap::new()),
         styling_standard: Lazy::new(||HashMap::new()),
@@ -1909,7 +1911,9 @@ impl IPG {
                         on_select=None, selected_index=None, 
                         size=20.0, style=None,
                         text_spacing=15.0, text_size=16.0,
-                        text_line_height=1.3, text_shaping="basic".to_string(), 
+                        text_line_height_pixels=None,
+                        text_line_height_relative=None, 
+                        text_shaping="basic".to_string(), 
                         user_data=None, show=true, 
                         ))]
     fn add_radio(&mut self,
@@ -1930,7 +1934,8 @@ impl IPG {
                     style: Option<String>,
                     text_spacing: f32,
                     text_size: f32,
-                    text_line_height: f32,
+                    text_line_height_pixels: Option<u16>,
+                    text_line_height_relative: Option<f32>,
                     text_shaping: String,
                     user_data: Option<PyObject>,
                     show: bool,
@@ -1956,7 +1961,7 @@ impl IPG {
             add_callback_to_mutex(id, "on_select".to_string(), on_select);
         }
 
-        let text_line_height = text::LineHeight::Relative(text_line_height);
+        let text_line_height = get_line_height(text_line_height_pixels, text_line_height_relative);
         
         let text_shaping = get_shaping(text_shaping);
 
@@ -3143,8 +3148,11 @@ impl IPG {
                         on_input=None, on_submit=None, 
                         on_paste=None, width=None, width_fill=false, 
                         padding=vec![10.0], 
-                        size=20.0, line_height=None, 
-                        user_data=None, is_secure=false, show=true,
+                        size=20.0, 
+                        line_height_pixels=None,
+                        line_height_relative=None, 
+                        user_data=None, is_secure=false, 
+                        style=None, show=true,
                         ))]
     fn add_text_input(&mut self,
                             parent_id: String,
@@ -3158,9 +3166,11 @@ impl IPG {
                             width_fill: bool,
                             padding: Vec<f64>,
                             size: f32,
-                            line_height: Option<f32>,
+                            line_height_pixels: Option<u16>,
+                            line_height_relative: Option<f32>,
                             user_data: Option<PyObject>,
                             is_secure: bool,
+                            style: Option<String>,
                             show: bool,
                         ) -> PyResult<usize> 
     {
@@ -3182,7 +3192,7 @@ impl IPG {
 
         let width = get_width(width, width_fill);
 
-        let line_height = get_line_height(line_height);
+        let line_height = get_line_height(line_height_pixels, line_height_relative);
 
         set_state_of_widget(id, parent_id);
 
@@ -3198,9 +3208,103 @@ impl IPG {
                                                                 size,
                                                                 line_height,
                                                                 user_data,
+                                                                style,
                                                                 show,
                                                                 )));
         drop(state);
+        Ok(id)
+    }
+
+    #[pyo3(signature = (style_id, 
+                        background_color=None,
+                        background_rgba=None,
+                        background_color_strong=None,
+                        background_rgba_strong=None,
+                        background_strong_factor=None,
+                        background_color_weak=None,
+                        background_rgba_weak=None,
+                        background_weak_factor=None,
+                        border_color=None,
+                        border_rgba=None,
+                        border_color_hovered=None,
+                        border_rgba_hovered=None,
+                        border_color_focused=None,
+                        border_rgba_focused=None,
+                        border_width=None,
+                        border_radius=None,
+                        icon_color=None,
+                        icon_rgba=None,
+                        placeholder_color=None,
+                        placeholder_rgba=None,
+                        value_color=None,
+                        value_rgba=None,
+                        selection_color=None,
+                        selection_rgba=None,
+                        gen_id=None))]
+    fn add_text_input_style(&mut self,
+                                style_id: String,
+                                background_color: Option<IpgColor>,
+                                background_rgba: Option<[f32; 4]>,
+                                background_color_strong: Option<IpgColor>,
+                                background_rgba_strong: Option<[f32; 4]>,
+                                background_strong_factor: Option<f32>,
+                                background_color_weak: Option<IpgColor>,
+                                background_rgba_weak: Option<[f32; 4]>,
+                                background_weak_factor: Option<f32>,
+                                border_color: Option<IpgColor>,
+                                border_rgba: Option<[f32; 4]>,
+                                border_color_hovered: Option<IpgColor>,
+                                border_rgba_hovered: Option<[f32; 4]>,
+                                border_color_focused: Option<IpgColor>,
+                                border_rgba_focused: Option<[f32; 4]>,
+                                border_width: Option<f32>,
+                                border_radius: Option<Vec<f32>>,
+                                icon_color: Option<IpgColor>,
+                                icon_rgba: Option<[f32; 4]>,
+                                placeholder_color: Option<IpgColor>,
+                                placeholder_rgba: Option<[f32; 4]>,
+                                value_color: Option<IpgColor>,
+                                value_rgba: Option<[f32; 4]>,
+                                selection_color: Option<IpgColor>,
+                                selection_rgba: Option<[f32; 4]>,
+                                gen_id: Option<usize>,
+                                ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let background_color = get_color(background_rgba, background_color, 1.0, false);
+        let background_color_strong = get_color(background_rgba_strong, background_color_strong, 1.0, false);
+        let background_color_weak = get_color(background_rgba_weak, background_color_weak, 1.0, false);
+        let border_color = get_color(border_rgba, border_color, 1.0, false);
+        let border_color_hovered = get_color(border_rgba_hovered, border_color_hovered, 1.0, false);
+        let border_color_focused = get_color(border_rgba_focused, border_color_focused, 1.0, false);
+        let icon_color = get_color(icon_rgba, icon_color, 1.0, false);
+        let placeholder_color = get_color(placeholder_rgba, placeholder_color, 1.0, false);
+        let value_color = get_color(value_rgba, value_color, 1.0, false);
+        let selection_color = get_color(selection_rgba, selection_color, 1.0, false);
+
+        let mut state = access_state();
+       
+        state.text_input_style.insert(style_id, IpgTextInputStyle::new( 
+                                                id,
+                                                background_color,
+                                                background_color_strong,
+                                                background_strong_factor,
+                                                background_color_weak,
+                                                background_weak_factor,
+                                                border_color,
+                                                border_color_hovered,
+                                                border_color_focused,
+                                                border_width,
+                                                border_radius,
+                                                icon_color,
+                                                placeholder_color,
+                                                value_color,
+                                                selection_color,
+                                                ));
+
+        drop(state);
+
         Ok(id)
     }
 

@@ -1392,7 +1392,8 @@ class IPG:
                     style_border: Union[None | str]=None,
                     text_spacing: float=15.0,
                     text_size: float=16.0,
-                    text_line_height: float=1.3,
+                    text_line_height_pixels: Union[None | int],
+                    text_line_height_relative: Union[None | float]=None,
                     text_shaping: str="basic",
                     user_data: Union[None, any]=None,
                     show: bool=True,
@@ -1425,7 +1426,9 @@ class IPG:
                 Function executed when radio button selected.
             selected_index: int
                 A pre-selected label index to be selected.
-            line_height:float
+            text_line_height_pixels:int
+                Sets the line height for the box around the radio labels in pixels.
+            text_line_height_relative:float
                 Sets the line height for the box around the radio labels.
             show: bool
                 Shows or hides the widget.
@@ -2149,7 +2152,8 @@ class IPG:
                        line_height: str="default",
                        width_fill: bool=False,
                        padding: List=[10.0],
-                       size: Union[None, float],
+                       size: Union[None | float]=20.0,
+                       style: Union[None | str]=None,
                        user_data: Union[None | any]=None,
                        is_secure: bool=False,
                        ) -> int:
@@ -2185,6 +2189,8 @@ class IPG:
                 use [float, float, float, float] for [top, right, bottom, left]
             size: float
                 Sets the text size.
+            style: Union[None | str]=None
+                The string style_id of add_text_input_style().
             user_data: any
                 Any data that might be needed in the callback function.
             is_secure: bool
@@ -2194,6 +2200,69 @@ class IPG:
         -------
         id: int
             The id of the event which can be used to modify the event through update_item.
+        """
+
+    def add_text_input_style(self,
+                                style_id: str,
+                                background_color: Union[None | IpgColor]=None,
+                                background_rgba: Union[None | list[float, 4]]=None,
+                                background_color_strong: Union[None | IpgColor]=None,
+                                background_rgba_strong: Union[None | list[float, 4]]=None,
+                                background_strong_factor: Union[None | float]=None,
+                                background_color_weak: Union[None | IpgColor]=None,
+                                background_rgba_weak: Union[None | list[float, 4]]=None,
+                                background_weak_factor: Union[None | float]=None,
+                                border_color: Union[None | IpgColor]=None,
+                                border_rgba: Union[None | list[float, 4]]=None,
+                                border_color_hovered: Union[None | IpgColor]=None,
+                                border_rgba_hovered: Union[None | list[float, 4]]=None,
+                                border_color_focused: Union[None | IpgColor]=None,
+                                border_rgba_focused: Union[None | list[float, 4]]=None,
+                                border_width: Union[None | float]=None,
+                                border_radius: Union[None | list[float]]=None,
+                                icon_color: Union[None | IpgColor]=None,
+                                icon_rgba: Union[None | list[float, 4]]=None,
+                                placeholder_color: Union[None | IpgColor]=None,
+                                placeholder_rgba: Union[None | list[float, 4]]=None,
+                                value_color: Union[None | IpgColor]=None,
+                                value_rgba: Union[None | list[float, 4]]=None,
+                                selection_color: Union[None | IpgColor]=None,
+                                selection_rgba: Union[None | list[float, 4]]=None,
+                                gen_id: Union[None, int]=None,
+                             ) -> int:
+        """
+        Add textInput styling.
+
+            Parameters
+            ----------
+                style_id: str
+                    Id used in the add_text_input() parameter style.
+                background_color: Union[None | IpgColor]=None
+
+                background_rgba: Union[None | list[float, 4]]=None
+                background_color_strong: Union[None | IpgColor]=None
+                background_rgba_strong: Union[None | list[float, 4]]=None
+                background_strong_factor: Union[None | float]=None
+                background_color_weak: Union[None | IpgColor]=None
+                background_rgba_weak: Union[None | list[float, 4]]=None
+                background_weak_factor: Union[None | float]=None
+                border_color: Union[None | IpgColor]=None
+                border_rgba: Union[None | list[float, 4]]=None
+                border_color_hovered: Union[None | IpgColor]=None
+                border_rgba_hovered: Union[None | list[float, 4]]=None
+                border_color_focused: Union[None | IpgColor]=None
+                border_rgba_focused: Union[None | list[float, 4]]=None
+                border_width: Union[None | float]=None
+                border_radius: Union[None | list[float]]=None
+                icon_color: Union[None | IpgColor]=None
+                icon_rgba: Union[None | list[float, 4]]=None
+                placeholder_color: Union[None | IpgColor]=None
+                placeholder_rgba: Union[None | list[float, 4]]=None
+                value_color: Union[None | IpgColor]=None
+                value_rgba: Union[None | list[float, 4]]=None
+                selection_color: Union[None | IpgColor]=None
+                selection_rgba: Union[None | list[float, 4]]=None
+                gen_id: Union[None, int]=None
         """
 
     def add_timer(self,
@@ -2838,7 +2907,8 @@ class IpgRadioParam:
     Style=0
     TextSpacing=0
     TextSize=0
-    TextLineHeight=0
+    LineHeightPixels=0
+    LineHeightRelative=0
     UserData=0
     Width=0
     WidthFill=0
@@ -2948,7 +3018,8 @@ class IpgTextInputParam:
     Width=0
     Padding=0
     Size=0
-    LineHeight=0
+    LineHeightPixels=0
+    LineHeightRelative=0
 
 
 class IpgTextParam:

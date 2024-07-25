@@ -5,7 +5,7 @@ use crate::graphics::colors::IpgColor;
 use crate::style::styling::IpgStyleStandard;
 use crate::access_state;
 use iced::border::Radius;
-use iced::window;
+use iced::{window, Pixels};
 use iced::{alignment::{Horizontal, Vertical}, Length, Padding};
 use iced::widget::text::{Shaping, LineHeight};
 
@@ -193,12 +193,15 @@ pub fn get_shaping(shape: String) -> Shaping {
     }
 }
 
-// TODO: Need to figure out pixel vs f32, just using f32 for now.
-pub fn get_line_height(line_height: Option<f32>) -> LineHeight {
-    match line_height {
-        Some(lh) => LineHeight::Relative(lh),
-        None => LineHeight::default(),
+pub fn get_line_height(pixels: Option<u16>, relative: Option<f32>) -> LineHeight {
+    if pixels.is_some() {
+        return LineHeight::Absolute(Pixels(pixels.unwrap().into()))
     }
+    if relative.is_some() {
+        return LineHeight::Relative(relative.unwrap())
+    }
+    
+    LineHeight::default()
 }
 
 
@@ -277,6 +280,15 @@ pub fn try_extract_i64_option(value: PyObject) -> Option<i64> {
     })  
 }
 
+pub fn try_extract_u16(value: PyObject) -> u16 {
+    Python::with_gil(|py| {
+        let res = value.extract::<u16>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract u16"),
+        }
+    })  
+}
 
 pub fn try_extract_f64_option(value: PyObject) -> Option<f64> {
     Python::with_gil(|py| {
