@@ -138,11 +138,8 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
 
     let mut column_elements: Vec<Element<Message>> = vec![];
 
-    // initializing the rows
     let mut data_rows: Vec<Vec<String>> = vec![];
-    for _ in 0..table.table_length {
-        data_rows.push(vec![]);
-    }
+    let mut table_length: usize = 0;
 
     Python::with_gil(|py| {
 
@@ -159,6 +156,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
 
                         // dt.values are the columns in the table
                         for value in dt.values() {
+                            if table_length == 0 {
+                                table_length = value.len();
+                                for _ in 0..table_length {
+                                    data_rows.push(vec![])
+                                }
+                            }
                             for (i, v) in value.iter().enumerate() {
 
                                 let mut label = "False".to_string();
@@ -182,9 +185,14 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         }
 
                         for value in dt.values() {
+                            if table_length == 0 {
+                                table_length = value.len();
+                                for _ in 0..table_length {
+                                    data_rows.push(vec![])
+                                }
+                            }
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
-
                                 data_rows[i].push(label);
                             }
                         }
@@ -195,7 +203,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
             }
 
             let data: Result<HashMap<String, Vec<f64>>, _> = py_data.extract::<HashMap<String, Vec<f64>>>(py);
-            if !data.is_err() { 
+            if !data.is_err() {
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
@@ -203,6 +211,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         }
 
                         for value in dt.values() {
+                            if table_length == 0 {
+                                table_length = value.len();
+                                for _ in 0..table_length {
+                                    data_rows.push(vec![])
+                                }
+                            }
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
 
@@ -224,6 +238,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         }
 
                         for value in dt.values() {
+                            if table_length == 0 {
+                                table_length = value.len();
+                                for _ in 0..table_length {
+                                    data_rows.push(vec![])
+                                }
+                            }
                             for (i, v) in value.iter().enumerate() {
                                 let label = v.to_string();
 
@@ -390,6 +410,7 @@ fn add_row_container(content: Element<Message>, row_index: usize,
             .style(move|theme| table_row_theme(theme, row_index.clone(), 
                         highlight_amount.clone(),
                         row_highlight))
+            .clip(true)
             .into()
 }
 
