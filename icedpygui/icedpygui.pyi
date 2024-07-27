@@ -2,6 +2,8 @@ from pickletools import uint2
 from types import Callable, Union, List
 from typing import OrderedDict, Tuple
 
+from polars import Float64, UInt32, UInt64
+
 
 
 class IPG:
@@ -1970,32 +1972,32 @@ class IPG:
     def add_table(self,
                     parent_id: str,
                     title: str,
-                    data: List,
-                    width: float,
-                    height: float,
+                    data: list[dict],
+                    data_length: UInt32,
+                    width: Float64,
+                    height: Float64,
                     *,
-                    row_highlight: Union[None | TableRowHighLight]=None,
-                    highlight_amount: float=0.15,
-                    table_length: int=0,
-                    column_widths: List=[20.0],
+                    row_highlight: TableRowHighLight=Union[None | TableRowHighLight],
+                    highlight_amount: Float64=0.15,
+                    column_widths: list=[20.0],
                     button_style: dict=Union[None | {int: IpgStyleStandard}],
-                    widgets_using_columns: Union[None | dict]=None,
-                    gen_id: Union[None | int]=None,
-                    on_press_button: Union[None | Callable]=None,
-                    on_toggle_checkbox: Union[None | Callable]=None,
-                    on_press: Union[None | Callable]=None,
-                    on_release: Union[None | Callable]=None,
-                    on_rightPress: Union[None | Callable]=None,
-                    on_rightRelease: Union[None | Callable]=None,
-                    on_middlePress: Union[None | Callable]=None,
-                    on_middleRelease: Union[None | Callable]=None,
-                    on_enter: Union[None | Callable]=None,
-                    on_move: Union[None | Callable]=None,
-                    on_exit: Union[None | Callable]=None,
-                    image_width: Union[None | List[float]]=None,
-                    image_height: Union[None | List[float]]=None,
+                    widgets_using_columns: dict=Union[None | dict],
+                    gen_id: UInt64=Union[None | int],
+                    on_press_button: callable=Union[None | callable],
+                    on_toggle_checkbox: callable=Union[None | Callable],
+                    on_press: callable=Union[None | Callable],
+                    on_release: callable=Union[None | Callable],
+                    on_rightPress: callable=Union[None | Callable],
+                    on_rightRelease: callable=Union[None | Callable],
+                    on_middlePress: callable=Union[None | Callable],
+                    on_middleRelease: callable=Union[None | Callable],
+                    on_enter: callable=Union[None | Callable],
+                    on_move: callable=Union[None | Callable],
+                    on_exit: callable=Union[None | Callable],
+                    image_width: callable=Union[None | List[float]],
+                    image_height: callable=Union[None | List[float]],
                     show: bool=True, 
-                    user_data: Union[None | any]=None,
+                    user_data: any=Union[None | any],
                   ) -> int:
 
         """
@@ -2009,6 +2011,8 @@ class IPG:
                 Title used for table.
             data: List[Dict]
                 A list of dictionaries, each dictionary contains only one type.
+            data_length: int
+                The length of the data.
             width: float
                 Width of the table.
             height: float

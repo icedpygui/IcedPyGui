@@ -46,7 +46,7 @@ class Books:
         columns = self.df.columns
         for column in columns:
             self.book_list.append({column: self.df.get_column(column).to_list()})
-
+        # print(self.df)
     def create_table(self):
         self.ipg.add_window(window_id="main", title="Books",
                             width=1200, height=600,
@@ -59,8 +59,9 @@ class Books:
         self.ipg.add_table(parent_id="table",
                            title="Books",
                            data=self.book_list,
+                           data_length=len(self.df),
                            width=1100.0, height=600.0)
-
+        
     # def edit(self, _sender, _data, user_data):
     #     dpg.show_item(self.popup_tag)
     #     dpg.delete_item(self.popup_tag, children_only=True)

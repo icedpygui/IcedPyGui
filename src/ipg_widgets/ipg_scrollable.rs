@@ -2,12 +2,16 @@
 use crate::access_callbacks;
 use crate::access_state;
 use crate::app;
+use crate::TABLE_INTERNAL_IDS_END;
+use crate::TABLE_INTERNAL_IDS_START;
 use super::callbacks::get_set_container_callback_data;
 use super::callbacks::WidgetCallbackIn;
 use super::callbacks::WidgetCallbackOut;
 use super::helpers::get_height;
 use super::helpers::get_width;
 use super::helpers::try_extract_f64;
+use super::ipg_table::table_callback;
+use super::ipg_table::TableMessage;
 
 use iced::widget::scrollable;
 use iced::widget::scrollable::{Alignment, Direction, Properties, 
@@ -128,7 +132,7 @@ pub fn construct_scrollable(scroll: IpgScrollable, content: Vec<Element<'static,
     Scrollable::with_direction(content, direction)
                     .width(scroll.width)
                     .height(scroll.height)
-                    .on_scroll(move|b| app::Message::Scrolled(b, scroll.id))
+                    .on_scroll(move|vp| app::Message::Scrolled(vp, scroll.id))
                     .style(move|theme, status| {
                         get_styling(theme, status,
                                     scroll.style_color.clone(),
@@ -187,6 +191,11 @@ fn get_direction(direction: IpgScrollableDirection,
 }
 
 pub fn scrollable_callback(id: usize, vp: Viewport) {
+
+    if id >= TABLE_INTERNAL_IDS_START && id <= TABLE_INTERNAL_IDS_END {
+        table_callback(id, TableMessage::TableScrolled(vp, id));
+        return
+    }
 
     let mut wci = WidgetCallbackIn::default();
     wci.id = id;

@@ -10,6 +10,7 @@ use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 use super::ipg_button;
 use crate::style::styling::{lighten, darken};
 
+use iced::widget::scrollable::{RelativeOffset, Viewport};
 use iced::{Border, Point, Shadow};
 use iced::mouse::Interaction;
 use iced::widget::text::{LineHeight, Style};
@@ -37,12 +38,12 @@ pub struct IpgTable {
         pub id: usize,
         pub title: String,
         pub data: Vec<PyObject>,
+        pub data_length: usize,
         pub width: f32,
         pub height: f32,
         pub row_highlight: Option<TableRowHighLight>,
         pub highlight_amount: f32,
         pub column_widths: Vec<f32>,
-        pub table_length: u32,
         pub button_style: Option<HashMap<usize, IpgStyleStandard>>,
         pub button_ids: Vec<(usize, usize, usize, bool)>,
         pub check_ids: Vec<(usize, usize, usize, bool)>,
@@ -51,6 +52,7 @@ pub struct IpgTable {
         pub user_data: Option<PyObject>,
         pub container_id: usize,
         pub window_id: usize,
+        pub scroller_id: usize,
 }
 
 impl IpgTable {
@@ -58,12 +60,12 @@ impl IpgTable {
         id: usize,
         title: String,
         data: Vec<PyObject>,
+        data_length: usize,
         width: f32,
         height: f32,
         row_highlight: Option<TableRowHighLight>,
         highlight_amount: f32,
         column_widths: Vec<f32>,
-        table_length: u32,
         button_style:  Option<HashMap<usize, IpgStyleStandard>>,
         button_ids: Vec<(usize, usize, usize, bool)>,
         check_ids: Vec<(usize, usize, usize, bool)>,
@@ -72,17 +74,18 @@ impl IpgTable {
         user_data: Option<PyObject>,
         container_id: usize,
         window_id: usize,
+        scroller_id: usize,
         ) -> Self {
         Self {
             id,
             title,
             data,
+            data_length,
             width,
             height,
             row_highlight,
             highlight_amount,
             column_widths,
-            table_length,
             button_style,
             button_ids,
             check_ids,
@@ -91,6 +94,7 @@ impl IpgTable {
             user_data,
             container_id,
             window_id,
+            scroller_id,
         }
     }
 }
@@ -100,6 +104,7 @@ pub enum TableMessage {
     TableButton((usize, usize)),
     TableCheckbox(bool, (usize, usize)),
     TableToggler(bool, (usize, usize)),
+    TableScrolled(Viewport, usize),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -131,6 +136,31 @@ struct Data {
     data: Vec<DataTypes>
 }
 
+#[derive(Debug, Clone)]
+pub struct TableScrollerPosition {
+    pub table_id: usize,
+    pub relative_offset_x: f32,
+    pub relative_offset_y: f32,
+    pub absolute_offset_x: f32,
+    pub absolute_offset_y: f32,
+    pub content_bound_height: f32,
+    pub bounds_height: f32,
+}
+
+impl Default for TableScrollerPosition {
+    fn default() -> Self {
+        Self { 
+            table_id: 0, 
+            relative_offset_x: 0.0, 
+            relative_offset_y: 0.0,
+            absolute_offset_x: 0.0,
+            absolute_offset_y: 0.0,
+            content_bound_height: 0.0,
+            bounds_height: 0.0,
+        }
+    }
+}
+
 
 pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
 
@@ -139,7 +169,29 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
     let mut column_elements: Vec<Element<Message>> = vec![];
 
     let mut data_rows: Vec<Vec<String>> = vec![];
-    let mut table_length: usize = 0;
+
+    let mut state = access_state();
+    let mut scroller_pos_opt = state.table_internal_ids.get(&table.scroller_id);
+    let scroller_pos = if scroller_pos_opt.is_some() {
+        scroller_pos_opt.unwrap()
+    } else {
+        panic!("Table: Scroller id '{}' not found", table.scroller_id)
+    };
+
+    let display_rows = (table.height/60.0).floor() as usize;
+
+    let start_row = (scroller_pos.relative_offset_y*table.data_length as f32).floor() as usize;
+    let mut end_row = start_row + display_rows;
+    while end_row > table.data_length {
+        end_row -= 1;
+    }
+    end_row -= 1;
+    drop(state);
+
+    // Need to initialize because pushing all displayed value on each row at once.
+    for _ in start_row..=end_row {
+        data_rows.push(vec![]);
+    }
 
     Python::with_gil(|py| {
 
@@ -155,19 +207,16 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         }
 
                         // dt.values are the columns in the table
-                        for value in dt.values() {
-                            if table_length == 0 {
-                                table_length = value.len();
-                                for _ in 0..table_length {
-                                    data_rows.push(vec![])
-                                }
-                            }
-                            for (i, v) in value.iter().enumerate() {
-
-                                let mut label = "False".to_string();
-                                    if *v {label = "True".to_string()}
-
-                                data_rows[i].push(label);
+                        for values in dt.values() {
+                            let mut counter = 0;
+                            for i in start_row..=end_row {
+                                let mut label = if values[i] {
+                                    "True".to_string()
+                                } else {
+                                    "False".to_string()
+                                };
+                                data_rows[counter].push(label);
+                                counter += 1;
                             }
                         }
                     },
@@ -184,16 +233,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                             headers.push(add_header_text(key.to_owned()));  
                         }
 
-                        for value in dt.values() {
-                            if table_length == 0 {
-                                table_length = value.len();
-                                for _ in 0..table_length {
-                                    data_rows.push(vec![])
-                                }
-                            }
-                            for (i, v) in value.iter().enumerate() {
-                                let label = v.to_string();
-                                data_rows[i].push(label);
+                        for values in dt.values() {
+                            let mut counter = 0;
+                            for i in start_row..=end_row {
+                                let label = values[i].to_string();
+                                data_rows[counter].push(label);
+                                counter += 1;
                             }
                         }
                     },
@@ -210,17 +255,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                             headers.push(add_header_text(key.to_owned()));  
                         }
 
-                        for value in dt.values() {
-                            if table_length == 0 {
-                                table_length = value.len();
-                                for _ in 0..table_length {
-                                    data_rows.push(vec![])
-                                }
-                            }
-                            for (i, v) in value.iter().enumerate() {
-                                let label = v.to_string();
-
-                                data_rows[i].push(label);
+                        for values in dt.values() {
+                            let mut counter = 0;
+                            for i in start_row..=end_row {
+                                let label = values[i].to_string();
+                                data_rows[counter].push(label);
+                                counter += 1;
                             }
                         }
                     },
@@ -237,17 +277,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                             headers.push(add_header_text(key.to_owned()));  
                         }
 
-                        for value in dt.values() {
-                            if table_length == 0 {
-                                table_length = value.len();
-                                for _ in 0..table_length {
-                                    data_rows.push(vec![])
-                                }
-                            }
-                            for (i, v) in value.iter().enumerate() {
-                                let label = v.to_string();
-
-                                data_rows[i].push(label);
+                        for values in dt.values() {
+                            let mut counter = 0;
+                            for i in start_row..=end_row {
+                                let label = values[i].to_string();
+                                data_rows[counter].push(label);
+                                counter += 1;
 
                             }
                         }
@@ -330,13 +365,15 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
         
         body_column_vec.push(row_widget.into());
     }
-
-    let body_column: Element<Message> = Column::with_children(body_column_vec).into();
+ 
+    let body_column: Element<Message> = Column::with_children(body_column_vec)
+                                            .height(Length::Fixed(table.data_length as f32 * 60.0))
+                                            .into();
 
     let title: Element<Message> = Text::new(table.title.clone()).into();
 
     let table_title: Element<Message> = Container::new(title)
-                                            // .style(theme::Container::Box)
+                                            // .style()
                                             .width(Length::Fixed(table.width))
                                             .height(Length::Shrink)
                                             .align_x(Horizontal::Center)
@@ -356,7 +393,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                 .padding(Padding::from([0, 0, 5, 0])) //bottom only
                 .into(),
         // table body
-        add_scroll(body_column, table.height),
+        add_scroll(body_column, table.height, table.scroller_id),
     ])
         .width(Length::Fixed(table.width))
         .height(Length::Fixed(table.height))
@@ -374,9 +411,13 @@ fn fill_column(col_values: Vec<Element<'static, Message>>) -> Element<'static, M
                                             .into()
 }
 
-fn add_scroll(body: Element<'static, Message>, height: f32) -> Element<'static, Message>{
+fn add_scroll(body: Element<'static, Message>, 
+                height: f32,
+                scroller_id: usize,
+                ) -> Element<'static, Message>{
     
     Scrollable::new(body)
+                    .on_scroll(move|vp| app::Message::Scrolled(vp, scroller_id))
                     .height(Length::Fixed(height))
                     .into()
     
@@ -512,6 +553,23 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             wco.on_toggle = Some(on_toggle);
             wco.index_table = Some((row_index, col_index));
             process_callback(wco);
+        },
+        TableMessage::TableScrolled(vp, scroller_id ) => {
+            let mut state = access_state();
+            let scroller_pos_opt = state.table_internal_ids.get_mut(&scroller_id);
+            let mut scroller_pos = if scroller_pos_opt.is_some() {
+                scroller_pos_opt.unwrap()
+            } else {
+                panic!("Table: Scroller id '{}' not found", scroller_id)
+            };
+            
+            scroller_pos.relative_offset_x = vp.relative_offset().x;
+            scroller_pos.relative_offset_y = vp.relative_offset().y;
+            scroller_pos.absolute_offset_x = vp.absolute_offset().x;
+            scroller_pos.absolute_offset_y = vp.absolute_offset().y;
+            scroller_pos.content_bound_height = vp.content_bounds().height;
+            scroller_pos.bounds_height = vp.bounds().height;
+            drop(state);
         }
     }
 }

@@ -50,7 +50,7 @@ use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectabl
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParam, IpgSliderStyle};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParam, IpgSvgRotation};
-use ipg_widgets::ipg_table::{IpgTable, TableRowHighLight, TableWidget};
+use ipg_widgets::ipg_table::{IpgTable, TableRowHighLight, TableScrollerPosition, TableWidget};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
@@ -75,6 +75,8 @@ const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
 use std::sync::{Mutex, MutexGuard};
 use once_cell::sync::Lazy;
 
+pub const TABLE_INTERNAL_IDS_START: usize = 4_000_000_000;
+pub const TABLE_INTERNAL_IDS_END: usize = 4_000_000_999;
 
 #[derive(Debug, Clone)]
 pub struct CallBackEvent {
@@ -108,6 +110,9 @@ pub struct State {
     pub container_str_ids: Lazy<HashMap<String, usize>>, // get container usize id based on container string
     pub container_wnd_str_ids: Lazy<HashMap<String, String>>, // get window string id based on container string id
     pub container_window_usize_ids: Lazy<HashMap<usize, usize>>, //get window usize id based on container usize id
+
+    pub table_internal_ids: Lazy<HashMap<usize, TableScrollerPosition>>, // table_internal_id, TableScrollPosition
+    pub table_internal_ids_counter: usize,
 
     pub widgets: Lazy<HashMap<usize, IpgWidgets>>,
     pub widget_container_ids: Lazy<HashMap<usize, String>>, //widget_id=usize, container_id=String
@@ -154,6 +159,9 @@ pub static STATE: Mutex<State> = Mutex::new(
         container_str_ids: Lazy::new(||HashMap::new()),
         container_wnd_str_ids: Lazy::new(||HashMap::new()),
         container_window_usize_ids: Lazy::new(||HashMap::new()),
+
+        table_internal_ids: Lazy::new(||HashMap::new()),
+        table_internal_ids_counter: TABLE_INTERNAL_IDS_START,
 
         widgets: Lazy::new(||HashMap::new()),
         widget_container_ids: Lazy::new(||HashMap::new()),
@@ -2967,9 +2975,10 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, title, data, width, height,
+    #[pyo3(signature = (parent_id, title, data, 
+                        data_length, width, height,
                         row_highlight=None, highlight_amount=0.15,
-                        column_widths=vec![], table_length=0, 
+                        column_widths=vec![],
                         widgets_using_columns=None, gen_id=None, 
                         on_button=None, on_checkbox=None,
                         on_toggler=None, button_style=None,
@@ -2978,13 +2987,13 @@ impl IPG {
                     parent_id: String,
                     title: String,
                     data: Vec<PyObject>,
+                    data_length: usize,
                     width: f32,
                     height: f32,
                     // **above required
                     row_highlight: Option<TableRowHighLight>,
                     highlight_amount: f32,
                     column_widths: Vec<f32>,
-                    table_length: u32,
                     widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>,
                     gen_id: Option<usize>,
                     on_button: Option<PyObject>,
@@ -3054,16 +3063,24 @@ impl IPG {
             None => panic!("add_table: Unable to find window_id")
         };
 
+        let scroller_id = state.table_internal_ids_counter + 1;
+        state.table_internal_ids_counter = scroller_id;
+
+        let mut scroller_position = TableScrollerPosition::default();
+        scroller_position.table_id = id;
+
+        state.table_internal_ids.insert(scroller_id, scroller_position);
+
         state.widgets.insert(id, IpgWidgets::IpgTable(IpgTable::new( 
                                                     id,
                                                     title,
                                                     data,
+                                                    data_length,
                                                     width,
                                                     height,
                                                     row_highlight,
                                                     highlight_amount,
                                                     column_widths,
-                                                    table_length,
                                                     button_style,
                                                     button_ids,
                                                     check_ids,
@@ -3072,6 +3089,7 @@ impl IPG {
                                                     user_data,
                                                     container_id,
                                                     window_id,
+                                                    scroller_id,
                                                     )));
         drop(state);
         Ok(id)
