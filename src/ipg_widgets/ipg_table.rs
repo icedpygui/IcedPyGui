@@ -177,15 +177,16 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
     } else {
         panic!("Table: Scroller id '{}' not found", table.scroller_id)
     };
-
-    let display_rows = (table.height/60.0).floor() as usize;
-
-    let start_row = (scroller_pos.relative_offset_y*table.data_length as f32).floor() as usize;
+    dbg!(&scroller_pos);
+    let display_rows = (table.height/30.0 + scroller_pos.absolute_offset_y/30.0).floor() as usize;
+    dbg!(&display_rows);
+    let start_row = 0; //(scroller_pos.relative_offset_y*table.data_length as f32).floor() as usize;
+    
     let mut end_row = start_row + display_rows;
-    while end_row > table.data_length {
-        end_row -= 1;
+    if end_row >= table.data_length {
+        end_row = table.data_length-1;
     }
-    end_row -= 1;
+
     drop(state);
 
     // Need to initialize because pushing all displayed value on each row at once.
@@ -202,8 +203,10 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
             if !data.is_err() { 
                 match data {
                     Ok(dt) => {
+                        //Only pushes the one header
                         for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned()));                                          
+                            headers.push(add_header_text(key.to_owned(), 
+                                                        table.column_widths[col_index]));                                          
                         }
 
                         // dt.values are the columns in the table
@@ -230,7 +233,8 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned()));  
+                            headers.push(add_header_text(key.to_owned(), 
+                                                        table.column_widths[col_index]));  
                         }
 
                         for values in dt.values() {
@@ -252,7 +256,8 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned()));  
+                            headers.push(add_header_text(key.to_owned(),
+                                                        table.column_widths[col_index]));  
                         }
 
                         for values in dt.values() {
@@ -274,7 +279,8 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned()));  
+                            headers.push(add_header_text(key.to_owned(), 
+                                                        table.column_widths[col_index]));  
                         }
 
                         for values in dt.values() {
@@ -348,7 +354,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
             }
 
             if !widget_found {
-                row_element = add_text_widget(label.clone());
+                row_element = add_text_widget(label.clone(), table.column_widths[col_index]);
             }
             
             let cnt = add_row_container(
@@ -368,6 +374,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
  
     let body_column: Element<Message> = Column::with_children(body_column_vec)
                                             .height(Length::Fixed(table.data_length as f32 * 60.0))
+                                            .padding([0, 5, 0, 5])
                                             .into();
 
     let title: Element<Message> = Text::new(table.title.clone()).into();
@@ -390,13 +397,14 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
         // table header row
         Row::with_children(headers)
                 .width(Length::Fill)
-                .padding(Padding::from([0, 0, 5, 0])) //bottom only
+                .padding(Padding::from([0, 5, 5, 2])) //bottom only
                 .into(),
         // table body
         add_scroll(body_column, table.height, table.scroller_id),
     ])
         .width(Length::Fixed(table.width))
         .height(Length::Fixed(table.height))
+        .padding([5.0, 10.0, 2.0, 5.0])
         .into();
     
     final_col
@@ -423,19 +431,21 @@ fn add_scroll(body: Element<'static, Message>,
     
 }
 
-fn add_header_text (header: String) -> Element<'static, Message> {
+fn add_header_text (header: String, width: f32) -> Element<'static, Message> {
     let txt : Element<Message> = text(header)
-                                    .width(Length::Fill)
+                                    .width(Length::Fixed(width))
                                     .horizontal_alignment(Horizontal::Center)
                                     .into();
     txt
 }
 
-fn add_text_widget(label: String) -> Element<'static, Message> {
-    let txt: Element<Message> = text(label)
-        .width(Length::Fill)
-        .horizontal_alignment(Horizontal::Center
-        ).into();
+fn add_text_widget(label: String, width: f32) -> Element<'static, Message> {
+
+    let txt: Element<Message> = Text::new(label)
+        .width(Length::Fixed(width))
+        .height(Length::Fixed(30.0))
+        .horizontal_alignment(Horizontal::Center)
+        .into();
 
     txt
 }
@@ -445,7 +455,7 @@ fn add_row_container(content: Element<Message>, row_index: usize,
                     -> Element<Message> {
     // Using container because text has no background 
     Container::new(content)
-            .width(Length::Fill)
+            .width(Length::Shrink)
             .align_x(alignment::Horizontal::Center)
             .align_y(alignment::Vertical::Center)
             .style(move|theme| table_row_theme(theme, row_index.clone(), 

@@ -1,4 +1,4 @@
-row_nr,Title,Series,Num,Author,Status,Returned,Source,Url
+row,Title,Series,Num,Author,Status,Returned,Source,Url
 0,Columbus Day,Expeditionary Force,01,Alanson Craig,Read,2016-10-01,Amazon Unlimited,https://smile.amazon.com/gp/product/B01AIGC31E?notRedirectToSDP=1&ref_=dbs_mng_calw_0&storeType=ebooks
 1,SpecOps,Expeditionary Force,02,Alanson Craig,Read,2016-10-01,Amazon Unlimited,""
 2,Paradise,Expeditionary Force,03,Alanson Craig,Read,2016-11-07,Amazon Unlimited,""

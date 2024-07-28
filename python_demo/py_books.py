@@ -12,8 +12,8 @@ class Books:
         self.df = pl.DataFrame
         self.book_list = []
         self.table_list = pl.DataFrame()
-        #          row_nr,Title,Series,Num,Author,Status,Returned,Source,Url
-        self.widths = [35, 200, 200, 25, 150, 100, 100, 150, 100]
+        #          row,Title,Series,Num,Author,Status,Returned,Source,Url
+        self.widths = [35, 200, 200, 40, 150, 100, 100, 150, 100]
         self.popup_tag = None
         self.book = []
         self.changed_book = []
@@ -50,7 +50,8 @@ class Books:
     def create_table(self):
         self.ipg.add_window(window_id="main", title="Books",
                             width=1200, height=600,
-                            pos_x=100, pos_y=50)
+                            pos_x=100, pos_y=50,
+                            )
 
         self.ipg.add_container(window_id="main", container_id="table")
 
@@ -60,7 +61,8 @@ class Books:
                            title="Books",
                            data=self.book_list,
                            data_length=len(self.df),
-                           width=1100.0, height=600.0)
+                           width=1100.0, height=600.0,
+                           column_widths=self.widths)
         
     # def edit(self, _sender, _data, user_data):
     #     dpg.show_item(self.popup_tag)
