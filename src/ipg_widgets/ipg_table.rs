@@ -41,7 +41,7 @@ pub struct IpgTable {
         pub data_length: usize,
         pub width: f32,
         pub height: f32,
-        pub row_highlight: Option<TableRowHighLight>,
+        pub row_highlight: Option<IpgTableRowHighLight>,
         pub highlight_amount: f32,
         pub column_widths: Vec<f32>,
         pub button_style: Option<HashMap<usize, IpgStyleStandard>>,
@@ -63,7 +63,7 @@ impl IpgTable {
         data_length: usize,
         width: f32,
         height: f32,
-        row_highlight: Option<TableRowHighLight>,
+        row_highlight: Option<IpgTableRowHighLight>,
         highlight_amount: f32,
         column_widths: Vec<f32>,
         button_style:  Option<HashMap<usize, IpgStyleStandard>>,
@@ -116,14 +116,14 @@ enum DataTypes {
 
 #[derive(Debug, Clone, Copy)]
 #[pyclass]
-pub enum TableRowHighLight {
+pub enum IpgTableRowHighLight {
     Darker,
     Lighter,
 }
 
 #[derive(Debug, Clone, Copy)]
 #[pyclass]
-pub enum TableWidget {
+pub enum IpgTableWidget {
     Button,
     Checkbox,
     Toggler,
@@ -177,20 +177,11 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
     } else {
         panic!("Table: Scroller id '{}' not found", table.scroller_id)
     };
-    dbg!(&scroller_pos);
-    let display_rows = (table.height/30.0 + scroller_pos.absolute_offset_y/30.0).floor() as usize;
-    dbg!(&display_rows);
-    let start_row = 0; //(scroller_pos.relative_offset_y*table.data_length as f32).floor() as usize;
-    
-    let mut end_row = start_row + display_rows;
-    if end_row >= table.data_length {
-        end_row = table.data_length-1;
-    }
 
     drop(state);
 
     // Need to initialize because pushing all displayed value on each row at once.
-    for _ in start_row..=end_row {
+    for _ in 0..table.data_length {
         data_rows.push(vec![]);
     }
 
@@ -211,15 +202,13 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
 
                         // dt.values are the columns in the table
                         for values in dt.values() {
-                            let mut counter = 0;
-                            for i in start_row..=end_row {
-                                let mut label = if values[i] {
+                            for (i, v) in values.iter().enumerate() {
+                                let mut label = if *v {
                                     "True".to_string()
                                 } else {
                                     "False".to_string()
                                 };
-                                data_rows[counter].push(label);
-                                counter += 1;
+                                data_rows[i].push(label);
                             }
                         }
                     },
@@ -238,11 +227,9 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         }
 
                         for values in dt.values() {
-                            let mut counter = 0;
-                            for i in start_row..=end_row {
-                                let label = values[i].to_string();
-                                data_rows[counter].push(label);
-                                counter += 1;
+                            for (i, v) in values.iter().enumerate() {
+                                let label = v.to_string();
+                                data_rows[i].push(label);
                             }
                         }
                     },
@@ -261,11 +248,9 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         }
 
                         for values in dt.values() {
-                            let mut counter = 0;
-                            for i in start_row..=end_row {
-                                let label = values[i].to_string();
-                                data_rows[counter].push(label);
-                                counter += 1;
+                            for (i, v) in values.iter().enumerate() {
+                                let label = v.to_string();
+                                data_rows[i].push(label);
                             }
                         }
                     },
@@ -284,12 +269,9 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                         }
 
                         for values in dt.values() {
-                            let mut counter = 0;
-                            for i in start_row..=end_row {
-                                let label = values[i].to_string();
-                                data_rows[counter].push(label);
-                                counter += 1;
-
+                            for (i, v) in values.iter().enumerate() {
+                                let label = v.to_string();
+                                data_rows[i].push(label);
                             }
                         }
                     },
@@ -316,11 +298,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
             if index.is_some() {
                 widget_found = true;
                 let (wid_id, row, col, bl) = table.button_ids[index.unwrap()];
-                row_element = add_widget(TableWidget::Button,
+                row_element = add_widget(IpgTableWidget::Button,
                                     table.id, 
                                     label.clone(), 
                                     row, 
-                                    col, 
+                                    col,
+                                    table.column_widths[col], 
                                     bl,
                                     table.button_style.clone());
             }
@@ -329,11 +312,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
             if index.is_some() {
                 widget_found = true;
                 let (wid_id, row, col, bl) = table.check_ids[index.unwrap()];
-                row_element = add_widget(TableWidget::Checkbox,
+                row_element = add_widget(IpgTableWidget::Checkbox,
                                     table.id, 
                                     label.clone(), 
                                     row, 
-                                    col, 
+                                    col,
+                                    table.column_widths[col], 
                                     bl,
                                     None, 
                                     );
@@ -343,11 +327,12 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
             if index.is_some() {
                 widget_found = true;
                 let (wid_id, row, col, bl) = table.toggler_ids[index.unwrap()];
-                row_element = add_widget(TableWidget::Toggler,
+                row_element = add_widget(IpgTableWidget::Toggler,
                                     table.id, 
                                     label.clone(), 
                                     row, 
-                                    col, 
+                                    col,
+                                    table.column_widths[col], 
                                     bl,
                                     None, 
                                     );
@@ -373,7 +358,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
     }
  
     let body_column: Element<Message> = Column::with_children(body_column_vec)
-                                            .height(Length::Fixed(table.data_length as f32 * 60.0))
+                                            .height(Length::Shrink)
                                             .padding([0, 5, 0, 5])
                                             .into();
 
@@ -451,7 +436,7 @@ fn add_text_widget(label: String, width: f32) -> Element<'static, Message> {
 }
 
 fn add_row_container(content: Element<Message>, row_index: usize,
-                    highlight_amount: f32, row_highlight: Option<TableRowHighLight>) 
+                    highlight_amount: f32, row_highlight: Option<IpgTableRowHighLight>) 
                     -> Element<Message> {
     // Using container because text has no background 
     Container::new(content)
@@ -465,21 +450,22 @@ fn add_row_container(content: Element<Message>, row_index: usize,
             .into()
 }
 
-fn add_widget(widget_type: TableWidget, 
+fn add_widget(widget_type: IpgTableWidget, 
                 table_id: usize, 
                 label: String, 
                 row_index: usize, 
-                col_index: usize, 
+                col_index: usize,
+                column_width: f32,
                 is_toggled: bool,
                 button_style:  Option<HashMap<usize, IpgStyleStandard>>,) 
                 -> Element<'static, Message> {
 
     match widget_type {
-        TableWidget::Button => {
+        IpgTableWidget::Button => {
             let txt = 
                     Text::new(label)
                                 .horizontal_alignment(Horizontal::Center)
-                                .width(Length::Fill);
+                                .width(Length::Fixed(column_width));
 
             let btn_style: Option<IpgStyleStandard> = if button_style.is_some() {
                 let style = button_style.unwrap();
@@ -494,7 +480,7 @@ fn add_widget(widget_type: TableWidget,
             let btn: Element<TableMessage> = 
                     Button::new(txt)
                                 .padding(Padding::ZERO)
-                                .width(Length::Fill)
+                                .width(Length::Shrink)
                                 .on_press(TableMessage::TableButton((row_index, col_index))) 
                                 .style(move|theme, status|
                                     ipg_button::get_standard_style(theme, status, btn_style.clone(), 
@@ -502,18 +488,19 @@ fn add_widget(widget_type: TableWidget,
                                 .into(); 
             btn.map(move |message| app::Message::Table(table_id, message))
         },
-        TableWidget::Checkbox => {
+        IpgTableWidget::Checkbox => {
             let chk: Element<TableMessage> = 
                     Checkbox::new(label, is_toggled)
-                                .width(Length::Shrink)
+                                .width(Length::Fixed(column_width))
                                 .on_toggle(move|b| TableMessage::TableCheckbox(b, (row_index, col_index)))
                                 .into();
             chk.map(move |message| app::Message::Table(table_id, message))
         },
         
-        TableWidget::Toggler => {
+        IpgTableWidget::Toggler => {
             let tog: Element<TableMessage> = Toggler::new(Some(label), is_toggled,
                                     move|b| TableMessage::TableToggler(b, (row_index, col_index)))
+                                    .width(Length::Fixed(column_width))
                                     .into();
 
 
@@ -717,7 +704,7 @@ fn check_for_widget(widgets: &Vec<(usize, usize, usize, bool)>, row_index: usize
 }
 
 fn table_row_theme(theme: &Theme, idx: usize, amount: f32, 
-                        highlighter: Option<TableRowHighLight>) -> container::Style {
+                        highlighter: Option<IpgTableRowHighLight>) -> container::Style {
 
     let mut background = get_theme_color(theme);
 
@@ -725,8 +712,8 @@ fn table_row_theme(theme: &Theme, idx: usize, amount: f32,
         background = match highlighter {
                 Some(hl) => 
                     match hl {
-                        TableRowHighLight::Darker => darken(background, amount),
-                        TableRowHighLight::Lighter => lighten(background, amount),
+                        IpgTableRowHighLight::Darker => darken(background, amount),
+                        IpgTableRowHighLight::Lighter => lighten(background, amount),
                         },
                 None => background,
             }

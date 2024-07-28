@@ -1,6 +1,7 @@
 //!lib for all of the python callable functions using pyo3
 #![allow(non_snake_case)]
 
+use ipg_widgets::ipg_modal::IpgModal;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -50,7 +51,7 @@ use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectabl
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParam, IpgSliderStyle};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParam, IpgSvgRotation};
-use ipg_widgets::ipg_table::{IpgTable, TableRowHighLight, TableScrollerPosition, TableWidget};
+use ipg_widgets::ipg_table::{IpgTable, IpgTableRowHighLight, TableScrollerPosition, IpgTableWidget};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
@@ -589,6 +590,76 @@ impl IPG {
                                     )));
     drop(state);
     Ok(self.id)
+
+    }
+
+    #[pyo3(signature = (window_id, container_id, label,
+                        parent_id=None, on_open=None,
+                        align_items=IpgAlignment::Start, 
+                        width=None, height=None,
+                        width_fill=false, height_fill=false,
+                        max_width=f32::INFINITY, padding=vec![0.0], 
+                        spacing=10.0, clip=false, show=false,
+                        user_data=None,
+                        ))]
+    fn add_modal(&mut self,
+                        window_id: String,
+                        container_id: String,
+                        label: String,
+                        // **above required
+                        parent_id: Option<String>,
+                        on_open: Option<PyObject>,
+                        align_items: IpgAlignment,
+                        width: Option<f32>,
+                        height: Option<f32>,
+                        width_fill: bool,
+                        height_fill: bool,
+                        max_width: f32,
+                        padding: Vec<f64>,
+                        spacing: f32,
+                        clip: bool,
+                        show: bool,
+                        user_data: Option<PyObject>,
+                        ) -> PyResult<usize> 
+    {
+
+        self.id += 1;
+
+        if on_open.is_some() {
+            add_callback_to_mutex(self.id, "on_open".to_string(), on_open);
+        }
+        
+        let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
+
+        let padding = get_padding_f64(padding);
+
+        let prt_id = match parent_id {
+            Some(id) => id,
+            None => window_id.clone(),
+        };
+
+        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
+
+        let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_column".to_string());
+
+        state.containers.insert(self.id, IpgContainers::IpgModal(IpgModal::new(
+                                                                self.id,
+                                                                label,  
+                                                                show, 
+                                                                spacing, 
+                                                                padding, 
+                                                                width, 
+                                                                height, 
+                                                                max_width, 
+                                                                align_items,
+                                                                clip,
+                                                                user_data,
+                                                            )));
+        drop(state);
+        Ok(self.id)
 
     }
 
@@ -2991,10 +3062,10 @@ impl IPG {
                     width: f32,
                     height: f32,
                     // **above required
-                    row_highlight: Option<TableRowHighLight>,
+                    row_highlight: Option<IpgTableRowHighLight>,
                     highlight_amount: f32,
                     column_widths: Vec<f32>,
-                    widgets_using_columns: Option<HashMap<usize, Vec<TableWidget>>>,
+                    widgets_using_columns: Option<HashMap<usize, Vec<IpgTableWidget>>>,
                     gen_id: Option<usize>,
                     on_button: Option<PyObject>,
                     on_checkbox: Option<PyObject>,
@@ -3019,13 +3090,13 @@ impl IPG {
             for (col, table_widgets) in table_widgets_hash.iter() {
                 for (row, widget) in table_widgets.iter().enumerate() {
                     match widget {
-                        TableWidget::Button => {
+                        IpgTableWidget::Button => {
                             button_ids.push((self.get_id(None), row, col.clone(), false));
                         },
-                        TableWidget::Checkbox => {
+                        IpgTableWidget::Checkbox => {
                             check_ids.push((self.get_id(None), row, col.clone(), false));
                         },
-                        TableWidget::Toggler => {
+                        IpgTableWidget::Toggler => {
                             tog_ids.push((self.get_id(None), row, col.clone(), false));
                         },
                     }
@@ -3799,6 +3870,7 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
     match container {
         IpgContainers::IpgColumn(_) => {},
         IpgContainers::IpgContainer(_) => {},
+        IpgContainers::IpgModal(_) => {},
         IpgContainers::IpgMouseArea(m_area) => {
             mousearea_item_update(m_area, item, value);
         },
@@ -3812,9 +3884,11 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
 }
 
 fn check_if_window(container: &mut IpgContainers) -> usize {
+    
     match container {
         IpgContainers::IpgColumn(_) => 0,
         IpgContainers::IpgContainer(_) => 0,
+        IpgContainers::IpgModal(_) => 0,
         IpgContainers::IpgMouseArea(_) => 0,
         IpgContainers::IpgRow(_) => 0,
         IpgContainers::IpgScrollable(_) => 0,
@@ -3875,8 +3949,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgStyleParam>()?;
     m.add_class::<IpgStyleStandard>()?;
     m.add_class::<IpgSvgParam>()?;
-    m.add_class::<TableRowHighLight>()?;
-    m.add_class::<TableWidget>()?;
+    m.add_class::<IpgTableRowHighLight>()?;
+    m.add_class::<IpgTableWidget>()?;
     m.add_class::<IpgTextInputParam>()?;
     m.add_class::<IpgTextParam>()?;
     m.add_class::<IpgTimerParams>()?;

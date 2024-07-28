@@ -2,21 +2,188 @@
 use iced::advanced::layout::{self, Layout};
 use iced::advanced::overlay;
 use iced::advanced::renderer;
-use iced::advanced::widget::{self, Widget};
+use iced::advanced::widget::{self, Widget, Text};
 use iced::advanced::{self, Clipboard, Shell};
 use iced::alignment::Alignment;
-use iced::event;
+use iced::{event, Padding, Renderer, Theme};
 use iced::mouse;
+use iced::widget::{Button, Column};
 use iced::{Color, Element, Event, Length, Point, Rectangle, Size, Vector};
+use pyo3::{PyObject, Python};
+
+use crate::access_callbacks;
+use crate::app::{self, Message};
+
+use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::helpers::get_alignment;
+use super::ipg_enums::IpgAlignment;
+
+
+#[derive(Debug, Clone)]
+pub struct IpgModal {
+    pub id: usize,
+    pub label: String,
+    pub show: bool,
+    pub spacing: f32,
+    pub padding: Padding,
+    pub width: Length,
+    pub height: Length,
+    pub max_width: f32,
+    pub align_items: IpgAlignment,
+    pub clip: bool,
+    pub user_data: Option<PyObject>,
+}
+
+impl IpgModal {
+    pub fn new(
+        id: usize,
+        label: String,
+        show: bool,
+        spacing: f32,
+        padding: Padding,
+        width: Length,
+        height: Length,
+        max_width: f32,
+        align_items: IpgAlignment,
+        clip: bool,
+        user_data: Option<PyObject>,
+    ) -> Self {
+        Self {
+            id,
+            label,
+            show,
+            spacing,
+            padding,
+            width,
+            height,
+            max_width,
+            align_items,
+            clip,
+            user_data,
+        }
+    }
+}
+
+
+#[derive(Debug, Clone)]
+pub enum ModalMessage {
+    OnOpen,
+}
+
+
+pub fn construct_modal(modal: IpgModal, content: Vec<Element<'static, Message>> ) 
+            -> Element<'static, Message, Theme, Renderer> {
+
+    let label = Text::new(modal.label.clone());            
+    let button: Element<ModalMessage> = Button::new(label)
+                                        .on_press(ModalMessage::OnOpen)
+                                        .into();
+
+
+    let btn: Element<Message, Theme, Renderer> = button.map(move |message| 
+                                                    app::Message::Modal(modal.id, message));
+                                                    
+    if modal.show {
+    let align_items = get_alignment(modal.align_items.clone());
+
+    let column: Element<Message, Theme, Renderer> = Column::with_children(content)
+                                        .align_items(align_items)
+                                        .height(modal.height)
+                                        .padding(modal.padding)
+                                        .spacing(modal.spacing)
+                                        .width(modal.width)
+                                        .clip(modal.clip)
+                                        .into();
+    
+    
+    let modal: Element<'static, Message, Theme, Renderer> = 
+                                    Modal::new(
+                                        btn, 
+                                        column
+                                    )
+                                    .into();
+    modal
+    } else {
+        btn
+    }            
+
+}
+
+
+pub fn modal_callback(id: usize, message: ModalMessage) {
+
+    let mut wci = WidgetCallbackIn::default();
+    wci.id = id;
+
+    match message {
+        ModalMessage::OnOpen => {
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
+            wci.id = id;
+            let mut wco = get_set_widget_callback_data(wci);
+            wco.id = id;
+            wco.event_name = "on_open".to_string();
+            process_callback(wco);
+        }
+    }
+}
+
+pub fn process_callback(wco: WidgetCallbackOut) 
+{
+    dbg!("process cb");
+    let app_cbs = access_callbacks();
+
+    let callback_present = 
+        app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+
+    let callback_opt = match callback_present {
+        Some(cb) => cb,
+        None => return,
+    };
+
+    let callback = match callback_opt {
+        Some(cb) => cb,
+        None => panic!("Modal callback could not be found with id {}", wco.id),
+    };
+
+    Python::with_gil(|py| {
+            if wco.user_data.is_some() {
+                let user_data = match wco.user_data {
+                    Some(ud) => ud,
+                    None => panic!("User Data could not be found in Modal callback"),
+                };
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),  
+                                                                    user_data
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Modal: 2 parameters (id, user_data) are required or a python error in this function. {er}"),
+                }
+            } else {
+                let res = callback.call1(py, (
+                                                                    wco.id.clone(),  
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Modal: 1 parameter (id) is required or possibly a python error in this function. {er}"),
+                }
+            } 
+    });
+    
+    drop(app_cbs);
+         
+}
+
+
 
 /// A widget that centers a modal element over some base element
-pub struct IpgModal<'a, Message, Theme, Renderer> {
+pub struct Modal<'a, Message, Theme, Renderer> {
     base: Element<'a, Message, Theme, Renderer>,
     modal: Element<'a, Message, Theme, Renderer>,
     on_blur: Option<Message>,
 }
 
-impl<'a, Message, Theme, Renderer> IpgModal<'a, Message, Theme, Renderer> {
+impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
     /// Returns a new [`Modal`]
     pub fn new(
         base: impl Into<Element<'a, Message, Theme, Renderer>>,
@@ -40,7 +207,7 @@ impl<'a, Message, Theme, Renderer> IpgModal<'a, Message, Theme, Renderer> {
 }
 
 impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
-    for IpgModal<'a, Message, Theme, Renderer>
+    for Modal<'a, Message, Theme, Renderer>
 where
     Renderer: advanced::Renderer,
     Message: Clone,
@@ -309,14 +476,14 @@ where
     }
 }
 
-impl<'a, Message, Theme, Renderer> From<IpgModal<'a, Message, Theme, Renderer>>
+impl<'a, Message, Theme, Renderer> From<Modal<'a, Message, Theme, Renderer>>
     for Element<'a, Message, Theme, Renderer>
 where
     Theme: 'a,
     Message: 'a + Clone,
     Renderer: 'a + advanced::Renderer,
 {
-    fn from(modal: IpgModal<'a, Message, Theme, Renderer>) -> Self {
+    fn from(modal: Modal<'a, Message, Theme, Renderer>) -> Self {
         Element::new(modal)
     }
 }

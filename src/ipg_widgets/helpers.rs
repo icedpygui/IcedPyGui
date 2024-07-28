@@ -5,7 +5,7 @@ use crate::graphics::colors::IpgColor;
 use crate::style::styling::IpgStyleStandard;
 use crate::access_state;
 use iced::border::Radius;
-use iced::{window, Pixels};
+use iced::{window, Alignment, Pixels};
 use iced::{alignment::{Horizontal, Vertical}, Length, Padding};
 use iced::widget::text::{Shaping, LineHeight};
 
@@ -165,6 +165,15 @@ fn vec_to_array2_f32(arr: &[f32]) -> [f32; 2] {
 
 fn vec_to_array4_f32(arr: &[f32]) -> [f32; 4] {
     [arr[0], arr[1], arr[2], arr[3]]
+}
+
+pub fn get_alignment(align: IpgAlignment) -> Alignment {
+
+    match align {
+        IpgAlignment::Start => Alignment::Start,
+        IpgAlignment::Center => Alignment::Center,
+        IpgAlignment::End => Alignment::End,
+    }
 }
 
 pub fn get_horizontal_alignment(align: &str) -> Horizontal {

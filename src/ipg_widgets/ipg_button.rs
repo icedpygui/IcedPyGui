@@ -176,7 +176,8 @@ pub fn process_callback(wco: WidgetCallbackOut)
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = 
+        app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,

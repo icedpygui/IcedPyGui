@@ -14,6 +14,7 @@ use iced::Color;
 
 
 use crate::ipg_widgets;
+use crate::ipg_widgets::ipg_modal::{construct_modal, modal_callback, ModalMessage};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
@@ -46,7 +47,7 @@ use ipg_widgets::helpers::get_usize_of_id;
 use crate::{access_state, IpgIds};
 
 
-use iced::widget::scrollable;
+use iced::widget::{scrollable, Space};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -58,6 +59,7 @@ pub enum Message {
     DatePicker(usize, DPMessage),
     Image(usize, ImageMessage),
     Menu(usize, MenuMessage),
+    Modal(usize, ModalMessage),
     PickList(usize, PLMessage),
     Radio(usize, RDMessage),
     Scrolled(scrollable::Viewport, usize),
@@ -171,6 +173,10 @@ impl multi_window::Application for App {
             },
             Message::Menu(id, message) => {
                 menu_callback(id, message);
+                Command::none()
+            },
+            Message::Modal(id, message) => {
+                modal_callback(id, message);
                 Command::none()
             },
             Message::MouseAreaOnPress(id) => {
@@ -443,6 +449,9 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                     }
                     return construct_container(con.clone(), content)
                 },
+                IpgContainers::IpgModal(modal) => {
+                    return construct_modal(modal.clone(), content)
+                }
                 IpgContainers::IpgMouseArea(m_area) => {
                     return construct_mousearea(m_area.clone(), content)
                 },
@@ -494,12 +503,12 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                     let image = img.clone();
                     drop(state);
                     return construct_image(image)
-                }
+                },
                 IpgWidgets::IpgMenu(mn) => {
                     let menu = mn.clone();
                     drop(state);
 ;                    return construct_menu(menu)
-                }
+                },
                 IpgWidgets::IpgDatePicker(dp) => {
                     let d_picker = dp.clone();
                     drop(state);

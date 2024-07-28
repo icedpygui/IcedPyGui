@@ -16,7 +16,7 @@ from .icedpygui import IpgSelectableTextParam
 from .icedpygui import IpgSliderParam
 from .icedpygui import IpgStyleParam, IpgStyleStandard
 from .icedpygui import IpgSvgParam
-from .icedpygui import TableRowHighLight, TableWidget
+from .icedpygui import IpgTableRowHighLight, IpgTableWidget
 from .icedpygui import IpgTextInputParam
 from .icedpygui import IpgTextParam
 from .icedpygui import IpgTogglerParam

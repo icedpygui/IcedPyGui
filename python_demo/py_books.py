@@ -1,6 +1,6 @@
 import random
 
-from icedpygui import IPG
+from icedpygui import IPG, IpgTableRowHighLight, IpgTableWidget
 import polars as pl
 from datetime import datetime, date
 
@@ -12,8 +12,8 @@ class Books:
         self.df = pl.DataFrame
         self.book_list = []
         self.table_list = pl.DataFrame()
-        #          row,Title,Series,Num,Author,Status,Returned,Source,Url
-        self.widths = [35, 200, 200, 40, 150, 100, 100, 150, 100]
+        #          Edit,Title,Series,Num,Author,Status,Returned,Source,Url
+        self.widths = [100, 200, 200, 40, 150, 100, 100, 150, 100]
         self.popup_tag = None
         self.book = []
         self.changed_book = []
@@ -44,9 +44,10 @@ class Books:
         self.df = pl.read_csv("python_demo/resources/books.csv")
         self.book_list = []
         columns = self.df.columns
-        for column in columns:
-            self.book_list.append({column: self.df.get_column(column).to_list()})
-        # print(self.df)
+
+        for name in columns:
+            self.book_list.append({name: self.df.get_column(name).to_list()})
+
     def create_table(self):
         self.ipg.add_window(window_id="main", title="Books",
                             width=1200, height=600,
@@ -55,15 +56,25 @@ class Books:
 
         self.ipg.add_container(window_id="main", container_id="table")
 
-        # self.table_list = self.check_what_to_display()
+        buttons = []
+        for _ in range(0, len(self.df)):
+            buttons.append(IpgTableWidget.Button)
 
         self.ipg.add_table(parent_id="table",
                            title="Books",
                            data=self.book_list,
                            data_length=len(self.df),
                            width=1100.0, height=600.0,
-                           column_widths=self.widths)
-        
+                           column_widths=self.widths,
+                           row_highlight=IpgTableRowHighLight.Lighter,
+                           highlight_amount=0.1,
+                           widgets_using_columns={0: buttons},
+                           on_button=self.edit_button,
+                           )
+    
+    def edit_button(self, tbl_id: int, wid_index: tuple[int, int]):
+        print(tbl_id, wid_index)
+
     # def edit(self, _sender, _data, user_data):
     #     dpg.show_item(self.popup_tag)
     #     dpg.delete_item(self.popup_tag, children_only=True)

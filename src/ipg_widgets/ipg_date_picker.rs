@@ -2,7 +2,7 @@
 
 use crate::app::{Message, self};
 use crate::access_callbacks;
-use super::ipg_modal::IpgModal;
+use super::ipg_modal::Modal;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
@@ -164,7 +164,7 @@ pub fn construct_date_picker(dp: IpgDatePicker) -> Element<'static, Message, The
                                                                     .into();
 
         let modal: Element<Message, Theme, Renderer> = 
-                                    IpgModal::new(content, cont)
+                                    Modal::new(content, cont)
                                         // .on_blur(Message::DatePicker(DPMessage::HideModal))
                                         .into();
         modal

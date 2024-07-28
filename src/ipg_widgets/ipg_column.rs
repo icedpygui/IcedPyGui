@@ -1,10 +1,10 @@
 //!Column Container
 use iced::{Element, Length, Padding};
-use iced::alignment::Alignment;
 use iced::widget::Column;
 
 use crate::app::Message;
 
+use super::helpers::get_alignment;
 use super::ipg_enums::IpgAlignment;
 
 
@@ -60,14 +60,4 @@ pub fn construct_column(col: &IpgColumn, content: Vec<Element<'static, Message>>
                         .width(col.width)
                         .clip(col.clip)
                         .into()
-}
-
-
-fn get_alignment(align: IpgAlignment) -> Alignment {
-
-    match align {
-        IpgAlignment::Start => Alignment::Start,
-        IpgAlignment::Center => Alignment::Center,
-        IpgAlignment::End => Alignment::End,
-    }
 }
