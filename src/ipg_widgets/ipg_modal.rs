@@ -129,7 +129,6 @@ pub fn modal_callback(id: usize, message: ModalMessage) {
 
 pub fn process_callback(wco: WidgetCallbackOut) 
 {
-    dbg!("process cb");
     let app_cbs = access_callbacks();
 
     let callback_present = 
