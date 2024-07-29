@@ -11,13 +11,12 @@ use super::ipg_button;
 use crate::style::styling::{lighten, darken};
 
 use iced::widget::scrollable::{RelativeOffset, Viewport};
-use iced::{Border, Point, Shadow};
+use iced::{Border, Color, Point, Shadow};
 use iced::mouse::Interaction;
 use iced::widget::text::{LineHeight, Style};
 use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, Theme};
 use iced::alignment::Alignment;
-use iced::widget::{Button, container, Checkbox, Column, Container, Image, 
-    MouseArea, Row, Scrollable, Space, Text, text, Toggler};
+use iced::widget::{center, container, mouse_area, opaque, stack, text, Button, Checkbox, Column, Container, Image, MouseArea, Row, Scrollable, Space, Text, Toggler};
 use iced::alignment::Horizontal;
 use iced::widget::svg;
 use iced::advanced::image;
@@ -44,14 +43,13 @@ pub struct IpgTable {
         pub row_highlight: Option<IpgTableRowHighLight>,
         pub highlight_amount: f32,
         pub column_widths: Vec<f32>,
-        pub button_style: Option<HashMap<usize, IpgStyleStandard>>,
+        pub widget_styles: Option<HashMap<usize, IpgStyleStandard>>,
         pub button_ids: Vec<(usize, usize, usize, bool)>,
         pub check_ids: Vec<(usize, usize, usize, bool)>,
+        pub modal_ids: Vec<(usize, usize, usize, bool)>,
         pub toggler_ids: Vec<(usize, usize, usize, bool)>,
         pub show: bool,
         pub user_data: Option<PyObject>,
-        pub container_id: usize,
-        pub window_id: usize,
         pub scroller_id: usize,
 }
 
@@ -66,14 +64,13 @@ impl IpgTable {
         row_highlight: Option<IpgTableRowHighLight>,
         highlight_amount: f32,
         column_widths: Vec<f32>,
-        button_style:  Option<HashMap<usize, IpgStyleStandard>>,
+        widget_styles:  Option<HashMap<usize, IpgStyleStandard>>,
         button_ids: Vec<(usize, usize, usize, bool)>,
         check_ids: Vec<(usize, usize, usize, bool)>,
+        modal_ids: Vec<(usize, usize, usize, bool)>,
         toggler_ids: Vec<(usize, usize, usize, bool)>,
         show: bool,
         user_data: Option<PyObject>,
-        container_id: usize,
-        window_id: usize,
         scroller_id: usize,
         ) -> Self {
         Self {
@@ -86,14 +83,13 @@ impl IpgTable {
             row_highlight,
             highlight_amount,
             column_widths,
-            button_style,
+            widget_styles,
             button_ids,
             check_ids,
+            modal_ids,
             toggler_ids,
             show,
             user_data,
-            container_id,
-            window_id,
             scroller_id,
         }
     }
@@ -126,6 +122,7 @@ pub enum IpgTableRowHighLight {
 pub enum IpgTableWidget {
     Button,
     Checkbox,
+    Modal,
     Toggler,
 }
 
@@ -162,7 +159,7 @@ impl Default for TableScrollerPosition {
 }
 
 
-pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
+pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
     let mut headers: Vec<Element<Message>>= vec![];
 
@@ -285,6 +282,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
 
     // construct the table elements and widgets.
     let mut body_column_vec: Vec<Element<Message>> = vec![];
+    let mut modal_open = false;
 
     for (row_index, row) in data_rows.iter().enumerate() {
 
@@ -305,7 +303,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     col,
                                     table.column_widths[col], 
                                     bl,
-                                    table.button_style.clone());
+                                    table.widget_styles.clone());
             }
 
             let index = check_for_widget(&table.check_ids, row_index, col_index);
@@ -321,6 +319,23 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                     bl,
                                     None, 
                                     );
+            }
+
+            let index = check_for_widget(&table.modal_ids, row_index, col_index);
+            if index.is_some() {
+                widget_found = true;
+                let (wid_id, row, col, bl) = table.modal_ids[index.unwrap()];
+                if bl {
+                    modal_open = true;
+                }
+                row_element = add_widget(IpgTableWidget::Modal,
+                                    table.id, 
+                                    label.clone(), 
+                                    row, 
+                                    col,
+                                    table.column_widths[col], 
+                                    bl,
+                                    table.widget_styles.clone());
             }
 
             let index = check_for_widget(&table.toggler_ids, row_index, col_index);
@@ -356,7 +371,7 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
         
         body_column_vec.push(row_widget.into());
     }
- 
+    
     let body_column: Element<Message> = Column::with_children(body_column_vec)
                                             .height(Length::Shrink)
                                             .padding([0, 5, 0, 5])
@@ -375,26 +390,63 @@ pub fn contruct_table(table: IpgTable) -> Element<'static, Message> {
                                         .width(Length::Fill)
                                         .spacing(5.0)
                                         .into();
+    let content: Element<Message> = Column::with_children(content).into();
+    let mousearea: Element<Message> =  mouse_area(center(
+                        opaque(content))
+                        .style(|_theme| {
+                        container::Style {
+                            background: Some(
+                                Color {
+                                    a: 0.8,
+                                    ..Color::BLACK
+                                }
+                                .into(),
+                            ),
+                            ..container::Style::default()
+                        }
+                    })).into();
+                    // .on_press(on_blur)
 
-    let final_col: Element<'_, Message> = Column::with_children(vec![
-        // set title
-        table_title,
-        // table header row
-        Row::with_children(headers)
+    let table_header_row: Element<Message> = Row::with_children(headers)
                 .width(Length::Fill)
                 .padding(Padding::from([0, 5, 5, 2])) //bottom only
-                .into(),
-        // table body
-        add_scroll(body_column, table.height, table.scroller_id),
-    ])
-        .width(Length::Fixed(table.width))
-        .height(Length::Fixed(table.height))
-        .padding([5.0, 10.0, 2.0, 5.0])
-        .into();
+                .into();
+
+        let scroller: Element<Message> = add_scroll(body_column, table.height, table.scroller_id);
+
+    let final_column: Element<Message> = if modal_open {
+        Column::with_children(vec![
+            // set title
+            table_title,
+            table_header_row,
+            // table body
+            stack![
+            scroller,
+            mousearea,
+        ]
+        .into(),
+        ])
+            .width(Length::Fixed(table.width))
+            .height(Length::Fixed(table.height))
+            .padding([5.0, 10.0, 2.0, 5.0])
+            .into()
+
+    } else {
+        Column::with_children(vec![
+            table_title,
+            table_header_row,
+            scroller,
+        ])
+            .width(Length::Fixed(table.width))
+            .height(Length::Fixed(table.height))
+            .padding([5.0, 10.0, 2.0, 5.0])
+            .into()
+    };
     
-    final_col
+    final_column
         
 }
+
 
 fn fill_column(col_values: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
@@ -496,7 +548,33 @@ fn add_widget(widget_type: IpgTableWidget,
                                 .into();
             chk.map(move |message| app::Message::Table(table_id, message))
         },
-        
+        IpgTableWidget::Modal => {
+            let txt = 
+                    Text::new(label)
+                                .horizontal_alignment(Horizontal::Center)
+                                .width(Length::Fixed(column_width));
+
+            let btn_style: Option<IpgStyleStandard> = if button_style.is_some() {
+                let style = button_style.unwrap();
+                match style.get(&col_index) {
+                    Some(st) => Some(st.clone()),
+                    None => None,
+                }
+            } else {
+                Some(IpgStyleStandard::Primary)
+            };
+
+            let btn: Element<TableMessage> = 
+                    Button::new(txt)
+                                .padding(Padding::ZERO)
+                                .width(Length::Shrink)
+                                .on_press(TableMessage::TableButton((row_index, col_index))) 
+                                .style(move|theme, status|
+                                    ipg_button::get_standard_style(theme, status, btn_style.clone(), 
+                                                                None, None))
+                                .into(); 
+            btn.map(move |message| app::Message::Table(table_id, message))
+        },
         IpgTableWidget::Toggler => {
             let tog: Element<TableMessage> = Toggler::new(Some(label), is_toggled,
                                     move|b| TableMessage::TableToggler(b, (row_index, col_index)))
@@ -644,49 +722,6 @@ pub fn process_callback(wco: WidgetCallbackOut)
          
 }
 
-
-fn table_item_update( 
-                    id: Option<usize>,
-                    title: Option<String>,
-                    headers: Option<Vec<String>>,
-                    data: Option<PyObject>,
-                    user_id: Option<String>,
-                    on_update: Option<PyObject>,
-                    ) 
-{
-    
-    let id: usize = match id {
-        Some(id) => id,
-        None => 0
-    };
-
-    let user_id = match user_id {
-        Some(id) => id,
-        None => "".to_string()
-    };
-    
-    if &id == &0 && &user_id == &"".to_string() {
-        panic!("You must supply either an id or user_id to update the table.")
-    }
-
-    let _title = match title {
-        Some(title) => title,
-        None => "".to_string(),
-    };
-
-    let _headers = match headers {
-        Some(hd) => hd,
-        None => vec![],
-    };
-    
-    // let _data = py_extract_list(data);
-    
-    if on_update.is_some() {
-        add_callback_to_mutex(id, "on_update".to_string(), on_update);
-    }
-    
-}
-
 // widgets = (id, row idx, col idx, bool)
 fn check_for_widget(widgets: &Vec<(usize, usize, usize, bool)>, row_index: usize, col_index: usize) -> Option<usize> {
     // if empty return
@@ -723,4 +758,22 @@ fn table_row_theme(theme: &Theme, idx: usize, amount: f32,
         background: Some(Background::Color(background)),
         ..Default::default()
     }
+}
+
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgTableParam {
+    Data,
+}
+
+pub fn table_item_update( 
+                    table: &IpgTable,
+                    item: PyObject,
+                    value: PyObject,
+                    ) 
+{
+    
+    
+    
 }

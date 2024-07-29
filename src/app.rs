@@ -455,6 +455,11 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                 IpgContainers::IpgMouseArea(m_area) => {
                     return construct_mousearea(m_area.clone(), content)
                 },
+                IpgContainers::IpgTable(table) => {
+                    let tbl = table.clone();
+                    drop(state);
+                    return contruct_table(tbl, content)
+                },
                 IpgContainers::IpgRow(row) => {
                     return construct_row(row, content)
                 },
@@ -469,7 +474,7 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                 }
             },
         
-        None => panic!("Container not found in fn get_container"),        
+        None => panic!("Container not found in fn get_container id={}", id),        
     }
     
 }
@@ -552,11 +557,6 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                     drop(state);
                     return construct_svg(svg)
                 },
-                IpgWidgets::IpgTable(table) => {
-                    let tbl = table.clone();
-                    drop(state);
-                    return contruct_table(tbl)
-                },
                 IpgWidgets::IpgText(text) => {
                     let txt = text.clone();
                     drop(state);
@@ -578,7 +578,7 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                     return construct_toggler(tg)           
                 },
             },
-        None => panic!("App: Widgets not found in fn get_widget")
+        None => panic!("App: Widgets not found in fn get_widget id={}", id)
     }
 }
 

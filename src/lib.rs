@@ -51,7 +51,7 @@ use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectabl
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParam, IpgSliderStyle};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParam, IpgSvgRotation};
-use ipg_widgets::ipg_table::{IpgTable, IpgTableRowHighLight, TableScrollerPosition, IpgTableWidget};
+use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableRowHighLight, IpgTableWidget, TableScrollerPosition};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
@@ -3046,31 +3046,35 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, title, data, 
-                        data_length, width, height,
+    #[pyo3(signature = (window_id, container_id, title, data, 
+                        data_length, width, height, parent_id=None,
                         row_highlight=None, highlight_amount=0.15,
                         column_widths=vec![],
-                        widgets_using_columns=None, gen_id=None, 
+                        widgets_columns=None, gen_id=None, 
                         on_button=None, on_checkbox=None,
-                        on_toggler=None, button_style=None,
+                        on_modal_open=None, on_toggler=None, 
+                        widget_styles=None,
                         show=true, user_data=None))]
     fn add_table(&mut self,
-                    parent_id: String,
+                    window_id: String,
+                    container_id: String,
                     title: String,
                     data: Vec<PyObject>,
                     data_length: usize,
                     width: f32,
                     height: f32,
                     // **above required
+                    parent_id: Option<String>,
                     row_highlight: Option<IpgTableRowHighLight>,
                     highlight_amount: f32,
                     column_widths: Vec<f32>,
-                    widgets_using_columns: Option<HashMap<usize, Vec<IpgTableWidget>>>,
+                    widgets_columns: Option<HashMap<usize, Vec<IpgTableWidget>>>,
                     gen_id: Option<usize>,
                     on_button: Option<PyObject>,
                     on_checkbox: Option<PyObject>,
+                    on_modal_open: Option<PyObject>,
                     on_toggler: Option<PyObject>,
-                    button_style: Option<HashMap<usize, IpgStyleStandard>>,
+                    widget_styles: Option<HashMap<usize, IpgStyleStandard>>,
                     show: bool,
                     user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
@@ -3078,15 +3082,26 @@ impl IPG {
 
         let id = self.get_id(gen_id);
 
+        let prt_id = match parent_id {
+            Some(id) => id,
+            None => window_id.clone(),
+        };
+
+        set_state_of_container(id, window_id.clone(), Some(container_id.clone()), prt_id);
+
+        let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, id, "add_table".to_string());
 
         // Need to generate the ids for the widgets and the boolean values
         // Keeping the ids organized in a hashmap for now, may need only a vec.
         let mut button_ids: Vec<(usize, usize, usize, bool)> = vec![]; // (id, row, col, bool)
         let mut check_ids: Vec<(usize, usize, usize, bool)> = vec![];
+        let mut modal_ids: Vec<(usize, usize, usize, bool)> = vec![];
         let mut tog_ids: Vec<(usize, usize, usize, bool)> = vec![];
             
-        if widgets_using_columns.is_some() {
-            let table_widgets_hash = widgets_using_columns.unwrap();
+        if widgets_columns.is_some() {
+            let table_widgets_hash = widgets_columns.unwrap();
             for (col, table_widgets) in table_widgets_hash.iter() {
                 for (row, widget) in table_widgets.iter().enumerate() {
                     match widget {
@@ -3095,6 +3110,9 @@ impl IPG {
                         },
                         IpgTableWidget::Checkbox => {
                             check_ids.push((self.get_id(None), row, col.clone(), false));
+                        },
+                        IpgTableWidget::Modal => {
+                            modal_ids.push((self.get_id(None), row, col.clone(), false))
                         },
                         IpgTableWidget::Toggler => {
                             tog_ids.push((self.get_id(None), row, col.clone(), false));
@@ -3112,27 +3130,13 @@ impl IPG {
             add_callback_to_mutex(id, "on_checkbox".to_string(), on_checkbox);
         }
 
+        if on_modal_open.is_some() {
+            add_callback_to_mutex(id, "on_modal_open".to_string(), on_modal_open);
+        }
+
         if on_toggler.is_some() {
             add_callback_to_mutex(id, "on_toggler".to_string(), on_toggler);
         }
-
-        set_state_of_widget(id, parent_id.clone());
-
-        let mut state = access_state();
-
-        let container_id_opt = state.container_str_ids.get(&parent_id);
-
-        let container_id = match container_id_opt {
-            Some(ci) => *ci,
-            None => panic!("add_table: Unable to find container_id")
-        };
-
-        let window_id_opt = state.container_window_usize_ids.get(&container_id);
-
-        let window_id = match window_id_opt {
-            Some(wnd_id) => *wnd_id,
-            None => panic!("add_table: Unable to find window_id")
-        };
 
         let scroller_id = state.table_internal_ids_counter + 1;
         state.table_internal_ids_counter = scroller_id;
@@ -3142,7 +3146,7 @@ impl IPG {
 
         state.table_internal_ids.insert(scroller_id, scroller_position);
 
-        state.widgets.insert(id, IpgWidgets::IpgTable(IpgTable::new( 
+        state.containers.insert(id, IpgContainers::IpgTable(IpgTable::new( 
                                                     id,
                                                     title,
                                                     data,
@@ -3152,14 +3156,13 @@ impl IPG {
                                                     row_highlight,
                                                     highlight_amount,
                                                     column_widths,
-                                                    button_style,
+                                                    widget_styles,
                                                     button_ids,
                                                     check_ids,
+                                                    modal_ids,
                                                     tog_ids,
                                                     show,
                                                     user_data,
-                                                    container_id,
-                                                    window_id,
                                                     scroller_id,
                                                     )));
         drop(state);
@@ -3849,7 +3852,6 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgSvg(sg) => {
             svg_item_update(sg, item, value);
         },
-        IpgWidgets::IpgTable(_) => (),
         IpgWidgets::IpgText(txt) => {
             text_item_update(txt, item, value);
         },
@@ -3874,6 +3876,9 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
         IpgContainers::IpgMouseArea(m_area) => {
             mousearea_item_update(m_area, item, value);
         },
+        IpgContainers::IpgTable(table) =>{
+            table_item_update(table, item, value);
+        },
         IpgContainers::IpgRow(_) => {},
         IpgContainers::IpgScrollable(scroll) => {
             scrollable_item_update(scroll, item, value);
@@ -3891,6 +3896,7 @@ fn check_if_window(container: &mut IpgContainers) -> usize {
         IpgContainers::IpgModal(_) => 0,
         IpgContainers::IpgMouseArea(_) => 0,
         IpgContainers::IpgRow(_) => 0,
+        IpgContainers::IpgTable(_) => 0,
         IpgContainers::IpgScrollable(_) => 0,
         IpgContainers::IpgToolTip(_) => 0,
         IpgContainers::IpgWindow(wnd_cnt) => wnd_cnt.id.clone(),

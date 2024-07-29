@@ -262,53 +262,6 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                 drop(state);
                 return wco
             },
-            IpgWidgets::IpgTable(tbl) => {
-                let mut wco = WidgetCallbackOut::default();
-                wco.user_data = tbl.user_data.clone();
-                let (row_index, col_index) = if wci.index_table.is_some() {
-                        wci.index_table.unwrap()
-                } else {
-                    return wco;
-                };
-
-                if wci.value_str == Some("checkbox".to_string()) {
-                    let mut found_idx: Option<usize> = None;
-                    for (idx, (_id, row, col, _bl)) in tbl.check_ids.iter().enumerate() {
-                        // dbg!(row, col, _bl, &wci.on_toggle);
-                        if col_index != *col {
-                            break;
-                        }
-                        if row_index == *row {
-                            found_idx = Some(idx);
-                            break;
-                        }
-                    }
-                    if found_idx.is_some() {
-                        dbg!("here found");
-                        tbl.check_ids[found_idx.unwrap()].3 = wci.on_toggle.unwrap();
-                        return wco;
-                    }
-                }
-
-                if wci.value_str == Some("toggler".to_string()) {
-                    let mut found_idx: Option<usize> = None;
-                    for (idx, (_id, row, col, _bl)) in tbl.toggler_ids.iter().enumerate() {
-                        if col_index != *col {
-                            break;
-                        }
-                        if row_index == *row {
-                            found_idx = Some(idx);
-                            break;
-                        }
-                    }
-                    if found_idx.is_some() {
-                        tbl.toggler_ids[found_idx.unwrap()].3 = wci.on_toggle.unwrap();
-                        return wco;
-                    }
-                }
-                
-                return wco
-            },
             IpgWidgets::IpgText(_) => {
                 return WidgetCallbackOut::default()
             },
@@ -381,6 +334,53 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     return wco
                 },
                 IpgContainers::IpgMouseArea(_) => todo!(),
+                IpgContainers::IpgTable(tbl) => {
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.user_data = tbl.user_data.clone();
+                    let (row_index, col_index) = if wci.index_table.is_some() {
+                            wci.index_table.unwrap()
+                    } else {
+                        return wco;
+                    };
+    
+                    if wci.value_str == Some("checkbox".to_string()) {
+                        let mut found_idx: Option<usize> = None;
+                        for (idx, (_id, row, col, _bl)) in tbl.check_ids.iter().enumerate() {
+                            // dbg!(row, col, _bl, &wci.on_toggle);
+                            if col_index != *col {
+                                break;
+                            }
+                            if row_index == *row {
+                                found_idx = Some(idx);
+                                break;
+                            }
+                        }
+                        if found_idx.is_some() {
+                            dbg!("here found");
+                            tbl.check_ids[found_idx.unwrap()].3 = wci.on_toggle.unwrap();
+                            return wco;
+                        }
+                    }
+    
+                    if wci.value_str == Some("toggler".to_string()) {
+                        let mut found_idx: Option<usize> = None;
+                        for (idx, (_id, row, col, _bl)) in tbl.toggler_ids.iter().enumerate() {
+                            if col_index != *col {
+                                break;
+                            }
+                            if row_index == *row {
+                                found_idx = Some(idx);
+                                break;
+                            }
+                        }
+                        if found_idx.is_some() {
+                            tbl.toggler_ids[found_idx.unwrap()].3 = wci.on_toggle.unwrap();
+                            return wco;
+                        }
+                    }
+                    
+                    return wco
+                },
                 IpgContainers::IpgRow(_) => todo!(),
                 IpgContainers::IpgScrollable(_) => todo!(),
                 IpgContainers::IpgToolTip(_) => todo!(),
@@ -426,14 +426,12 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
             drop(state);
             return wco
         },
-        // IpgContainers::IpgPaneGrid(_) => {
-        //     let wco = WidgetCallbackOut::default();
-        //     return wco
-        // },
-        // IpgContainers::IpgPane(_) => {
-        //     let wco = WidgetCallbackOut::default();
-        //     return wco
-        // },
+        IpgContainers::IpgTable(table) => {
+            let mut wco = WidgetCallbackOut::default();
+            wco.user_data = table.user_data.clone();
+            drop(state);
+            return wco
+        }
         IpgContainers::IpgRow(_) => {
             let wco = WidgetCallbackOut::default();
             drop(state);

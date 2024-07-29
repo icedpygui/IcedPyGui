@@ -54,13 +54,12 @@ class Books:
                             pos_x=100, pos_y=50,
                             )
 
-        self.ipg.add_container(window_id="main", container_id="table")
-
         buttons = []
         for _ in range(0, len(self.df)):
             buttons.append(IpgTableWidget.Button)
 
-        self.ipg.add_table(parent_id="table",
+        self.ipg.add_table(window_id="main",
+                           container_id="table",
                            title="Books",
                            data=self.book_list,
                            data_length=len(self.df),
@@ -68,7 +67,7 @@ class Books:
                            column_widths=self.widths,
                            row_highlight=IpgTableRowHighLight.Lighter,
                            highlight_amount=0.1,
-                           widgets_using_columns={0: buttons},
+                           widgets_columns={0: buttons},
                            on_button=self.edit_button,
                            )
     
