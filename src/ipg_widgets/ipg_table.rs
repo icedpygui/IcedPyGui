@@ -48,6 +48,7 @@ pub struct IpgTable {
         pub check_ids: Vec<(usize, usize, usize, bool)>,
         pub modal_ids: Vec<(usize, usize, usize, bool)>,
         pub toggler_ids: Vec<(usize, usize, usize, bool)>,
+        pub modal_show: bool,
         pub show: bool,
         pub user_data: Option<PyObject>,
         pub scroller_id: usize,
@@ -88,6 +89,7 @@ impl IpgTable {
             check_ids,
             modal_ids,
             toggler_ids,
+            modal_show: false,
             show,
             user_data,
             scroller_id,
@@ -99,6 +101,7 @@ impl IpgTable {
 pub enum TableMessage {
     TableButton((usize, usize)),
     TableCheckbox(bool, (usize, usize)),
+    TableModal((usize, usize)),
     TableToggler(bool, (usize, usize)),
     TableScrolled(Viewport, usize),
 }
@@ -325,6 +328,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
             if index.is_some() {
                 widget_found = true;
                 let (wid_id, row, col, bl) = table.modal_ids[index.unwrap()];
+                
                 if bl {
                     modal_open = true;
                 }
@@ -568,7 +572,7 @@ fn add_widget(widget_type: IpgTableWidget,
                     Button::new(txt)
                                 .padding(Padding::ZERO)
                                 .width(Length::Shrink)
-                                .on_press(TableMessage::TableButton((row_index, col_index))) 
+                                .on_press(TableMessage::TableModal((row_index, col_index))) 
                                 .style(move|theme, status|
                                     ipg_button::get_standard_style(theme, status, btn_style.clone(), 
                                                                 None, None))
@@ -616,6 +620,15 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             wco.event_name = "on_checkbox".to_string();
             wco.on_toggle = Some(on_toggle);
             wco.index_table = Some((row_index, col_index));
+            process_callback(wco);
+        },
+        TableMessage::TableModal((row_index, col_index)) => {
+            wci.value_str = Some("modal".to_string());
+            wci.index_table = Some((row_index, col_index));
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = table_id; 
+            wco.index_table = Some((row_index, col_index));
+            wco.event_name = "on_modal".to_string();
             process_callback(wco);
         },
         TableMessage::TableToggler(on_toggle, (row_index, col_index)) => {

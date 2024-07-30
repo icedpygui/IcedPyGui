@@ -3052,7 +3052,7 @@ impl IPG {
                         column_widths=vec![],
                         widgets_columns=None, gen_id=None, 
                         on_button=None, on_checkbox=None,
-                        on_modal_open=None, on_toggler=None, 
+                        on_modal=None, on_toggler=None, 
                         widget_styles=None,
                         show=true, user_data=None))]
     fn add_table(&mut self,
@@ -3072,7 +3072,7 @@ impl IPG {
                     gen_id: Option<usize>,
                     on_button: Option<PyObject>,
                     on_checkbox: Option<PyObject>,
-                    on_modal_open: Option<PyObject>,
+                    on_modal: Option<PyObject>,
                     on_toggler: Option<PyObject>,
                     widget_styles: Option<HashMap<usize, IpgStyleStandard>>,
                     show: bool,
@@ -3130,8 +3130,8 @@ impl IPG {
             add_callback_to_mutex(id, "on_checkbox".to_string(), on_checkbox);
         }
 
-        if on_modal_open.is_some() {
-            add_callback_to_mutex(id, "on_modal_open".to_string(), on_modal_open);
+        if on_modal.is_some() {
+            add_callback_to_mutex(id, "on_modal".to_string(), on_modal);
         }
 
         if on_toggler.is_some() {

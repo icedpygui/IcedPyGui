@@ -55,6 +55,7 @@ pub struct WidgetCallbackOut {
     pub bar_index: Option<usize>,
     pub menu_index: Option<usize>,
     pub on_toggle: Option<bool>,
+    pub on_modal_open: Option<bool>,
     pub points: Option<Vec<(String, f32)>>,
     pub scroll_pos: Vec<(String, f32)>, 
     pub selected_index: Option<usize>,
@@ -345,8 +346,9 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
     
                     if wci.value_str == Some("checkbox".to_string()) {
                         let mut found_idx: Option<usize> = None;
-                        for (idx, (_id, row, col, _bl)) in tbl.check_ids.iter().enumerate() {
-                            // dbg!(row, col, _bl, &wci.on_toggle);
+                        for (idx, (_id, row, col, _bl)) 
+                            in tbl.check_ids.iter().enumerate() 
+                        {
                             if col_index != *col {
                                 break;
                             }
@@ -356,15 +358,36 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                             }
                         }
                         if found_idx.is_some() {
-                            dbg!("here found");
                             tbl.check_ids[found_idx.unwrap()].3 = wci.on_toggle.unwrap();
+                            return wco;
+                        }
+                    }
+
+                    if wci.value_str == Some("modal".to_string()) {
+                        let mut found_idx: Option<usize> = None;
+                        for (idx, (_id, row, col, _bl)) 
+                            in tbl.modal_ids.iter().enumerate() 
+                        {
+                            if col_index != *col {
+                                break;
+                            }
+                            if row_index == *row {
+                                found_idx = Some(idx);
+                                break;
+                            }
+                        }
+                        if found_idx.is_some() {
+                            let index = found_idx.unwrap();
+                            tbl.modal_ids[index].3 = !tbl.modal_ids[index].3;
                             return wco;
                         }
                     }
     
                     if wci.value_str == Some("toggler".to_string()) {
                         let mut found_idx: Option<usize> = None;
-                        for (idx, (_id, row, col, _bl)) in tbl.toggler_ids.iter().enumerate() {
+                        for (idx, (_id, row, col, _bl)) 
+                            in tbl.toggler_ids.iter().enumerate() 
+                        {
                             if col_index != *col {
                                 break;
                             }

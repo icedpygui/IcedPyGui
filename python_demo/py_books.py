@@ -54,9 +54,9 @@ class Books:
                             pos_x=100, pos_y=50,
                             )
 
-        buttons = []
+        modals = []
         for _ in range(0, len(self.df)):
-            buttons.append(IpgTableWidget.Button)
+            modals.append(IpgTableWidget.Modal)
 
         self.ipg.add_table(window_id="main",
                            container_id="table",
@@ -67,12 +67,13 @@ class Books:
                            column_widths=self.widths,
                            row_highlight=IpgTableRowHighLight.Lighter,
                            highlight_amount=0.1,
-                           widgets_columns={0: buttons},
-                           on_button=self.edit_button,
+                           widgets_columns={0: modals},
+                           on_modal=self.on_modal,
                            )
     
-    def edit_button(self, tbl_id: int, wid_index: tuple[int, int]):
+    def on_modal(self, tbl_id: int, wid_index: tuple[int, int], open: bool):
         print(tbl_id, wid_index)
+
 
     # def edit(self, _sender, _data, user_data):
     #     dpg.show_item(self.popup_tag)
