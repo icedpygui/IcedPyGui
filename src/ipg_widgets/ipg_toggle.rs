@@ -1,7 +1,5 @@
 
-
-use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, app};
+use crate::{access_callbacks, access_state, app};
 use super::helpers::{get_width, try_extract_boolean, try_extract_f64, 
     try_extract_ipg_horizontal_alignment, try_extract_string};
 use super::callbacks::{
@@ -12,11 +10,11 @@ use super::ipg_enums::IpgHorizontalAlignment;
 
 
 use iced::widget::text::LineHeight;
-use iced::widget::toggler;
+use iced::widget::toggler::{self, Status};
 use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{Space, Toggler};
-use iced::{alignment, Element, Length, Theme};
+use iced::{alignment, Color, Element, Length, Theme};
 
 
 
@@ -34,6 +32,7 @@ pub struct IpgToggler {
     pub text_line_height: LineHeight,
     pub text_alignment: IpgHorizontalAlignment,
     pub spacing: f32,
+    pub style: Option<String>,
 }
 
 impl IpgToggler {
@@ -49,6 +48,7 @@ impl IpgToggler {
         text_line_height: LineHeight,
         text_alignment: IpgHorizontalAlignment,
         spacing: f32,
+        style: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -62,9 +62,50 @@ impl IpgToggler {
             text_line_height,
             text_alignment,
             spacing,
+            style,
         }
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct IpgTogglerStyle {
+    pub id: usize,
+    pub background_color: Option<Color>,
+    pub background_color_toggled: Option<Color>,
+    pub background_border_color: Option<Color>,
+    pub background_border_width: Option<f32>,
+    pub foreground_color: Option<Color>,
+    pub foreground_color_toggled: Option<Color>,
+    pub foreground_border_color: Option<Color>,
+    pub foreground_border_width: Option<f32>,
+}
+
+impl IpgTogglerStyle {
+    pub fn new(
+        id: usize,
+        background_color: Option<Color>,
+        background_color_toggled: Option<Color>,
+        background_border_color: Option<Color>,
+        background_border_width: Option<f32>,
+        foreground_color: Option<Color>,
+        foreground_color_toggled: Option<Color>,
+        foreground_border_color: Option<Color>,
+        foreground_border_width: Option<f32>,
+    ) -> Self {
+        Self {
+            id,
+            background_color,
+            background_color_toggled,
+            background_border_color,
+            background_border_width,
+            foreground_color,
+            foreground_color_toggled,
+            foreground_border_color,
+            foreground_border_width,
+        }
+    }
+}
+    
 
 #[derive(Debug, Clone)]
 pub enum TOGMessage {
@@ -87,6 +128,10 @@ pub fn construct_toggler(tog: IpgToggler) -> Element<'static, app::Message> {
                                                     .text_line_height(tog.text_line_height)
                                                     .text_alignment(text_alignment)
                                                     .spacing(tog.spacing)
+                                                    .style(move|theme: &Theme, status| {     
+                                                        get_styling(theme, status, 
+                                                                    tog.style.clone()) 
+                                                    })
                                                     .into();
 
     ipg_tog.map(move |message| app::Message::Toggler(tog.id, message))
@@ -162,7 +207,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass]
 pub enum IpgTogglerParam {
-    Alignment,
+    HorizontalAlignment,
     Label,
     LineHeight,
     Show,
@@ -195,7 +240,7 @@ pub fn toggler_item_update(tog: &mut IpgToggler,
             let val = try_extract_boolean(value);
             tog.width = get_width(None, val);
         },
-        IpgTogglerParam::Alignment => {
+        IpgTogglerParam::HorizontalAlignment => {
             let val: IpgHorizontalAlignment = try_extract_ipg_horizontal_alignment(value);
             tog.text_alignment = val;
         },
@@ -235,10 +280,87 @@ fn get_text_alignment(ta: IpgHorizontalAlignment) -> alignment::Horizontal {
     }
 }
 
-pub fn get_styling(theme: &Theme, status: toggler::Status,
-                    _style: Option<String>,
-                    _style_standard: Option<IpgStyleStandard>,  
-                    ) -> toggler::Style 
-{
-    toggler::default(theme, status)
+
+
+pub fn get_styling(theme: &Theme, status: Status, 
+                    style_str: Option<String>,
+                    ) -> toggler::Style {
+    
+    let mut tog_style = toggler::default(theme, status);
+
+    let state = access_state();
+
+    if style_str.is_none() {
+        return tog_style
+    }
+
+    let style_opt = state.toggler_style.get(&style_str.clone().unwrap());
+    
+    let style = match style_opt {
+        Some(st) => st,
+        None => panic!("Toggler: The style_id '{}' for add_toggler_style could not be found", style_str.unwrap())
+    };
+
+    // The background color for active or hovered can have two colors, one for untoggled and toggled.
+    // The relationship of the bg and fg colors is:
+    // Untoggled: bg=color.strong & fg=color.base
+    // Toggled: bg=color & fg=contrasting color  
+    if style.background_color.is_some() {
+        tog_style.background = style.background_color.unwrap().into();
+    }
+
+    if style.foreground_color.is_some() {
+        tog_style.foreground = style.foreground_color.unwrap().into();
+    }
+    
+    // background and foreground border color is the same for active, hover and toggled
+    if style.background_border_color.is_some() {
+        tog_style.background_border_color = style.background_border_color.unwrap();
+    }
+
+    if style.background_border_width.is_some() {
+        tog_style.background_border_width = style.background_border_width.unwrap();
+    }
+    
+    if style.foreground_border_color.is_some() {
+        tog_style.foreground_border_color = style.foreground_border_color.unwrap();
+    }
+
+    if style.foreground_border_width.is_some() {
+        tog_style.foreground_border_width = style.foreground_border_width.unwrap();
+    }
+        
+    match status {
+        Status::Active { is_toggled } | Status::Hovered { is_toggled } => {
+            if is_toggled {
+                if style.background_color_toggled.is_some() {
+                    tog_style.background = style.background_color_toggled.unwrap().into();
+                }
+            }
+        }
+    }
+
+    match status {
+        Status::Active { is_toggled } => {
+            if is_toggled {
+                if style.foreground_color_toggled.is_some() {
+                    tog_style.foreground = style.foreground_color_toggled.unwrap().into();
+                }
+            }
+        }
+        Status::Hovered { is_toggled } => {
+            if is_toggled {
+                if style.foreground_color_toggled.is_some() {
+                    tog_style.foreground = Color {
+                                                    a: 0.5,
+                                                    ..style.foreground_color_toggled.unwrap().into()
+                                                };
+                }
+                
+            }
+        }
+    }
+
+    tog_style
+
 }

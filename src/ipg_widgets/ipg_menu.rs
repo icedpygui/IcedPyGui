@@ -49,8 +49,8 @@ pub struct IpgMenu {
     pub dot_item_style_all: Option<String>,
     pub label_item_style_all: Option<String>,
     pub line_item_style_all: Option<String>,
-    pub text_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-    pub toggler_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
+    pub text_item_style_all: Option<String>,
+    pub toggler_item_style_all: Option<String>,
     pub item_styles: Option<Vec<(usize, usize, Option<IpgStyleStandard>, Option<String>)>>,
     pub theme: Theme,
     pub show: bool,
@@ -83,8 +83,8 @@ impl IpgMenu {
         dot_item_style_all: Option<String>,
         label_item_style_all: Option<String>,
         line_item_style_all: Option<String>,
-        text_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-        toggler_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
+        text_item_style_all: Option<String>,
+        toggler_item_style_all: Option<String>,
         item_styles: Option<Vec<(usize, usize, Option<IpgStyleStandard>, Option<String>)>>,
         theme: Theme,
         show: bool,
@@ -679,8 +679,8 @@ fn get_menu_item(label: Option<String>,
                 dot_item_style_all: Option<String>,
                 label_item_style_all: Option<String>,
                 line_item_style_all: Option<String>,
-                text_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-                toggler_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
+                text_item_style_all: Option<String>,
+                toggler_item_style_all: Option<String>,
                 is_checked: bool,
                 is_toggled: bool,
                 theme: Theme,
@@ -746,20 +746,14 @@ fn get_menu_item(label: Option<String>,
         },
         IpgMenuType::Text => {
             if text_item_style_all.is_some(){
-                (style_standard, style) = text_item_style_all.unwrap();
-                // Need a default style if only using style
-                if style_standard.is_none() && style.is_some() {
-                    style_standard = Some(IpgStyleStandard::Text);
-                }
+                style = text_item_style_all;
+                
             }
         }
         IpgMenuType::Toggler => {
             if toggler_item_style_all.is_some(){
-                (style_standard, style) = toggler_item_style_all.unwrap();
-                // Need a default style if only using style
-                if style_standard.is_none() && style.is_some() {
-                    style_standard = Some(IpgStyleStandard::Primary);
-                }
+                style = toggler_item_style_all;
+                
             }
         },
     }
@@ -822,8 +816,7 @@ fn match_menu_item(item_type: IpgMenuType,
                             MenuMessage::ItemTogToggled(b, (bar_index, item_index)))
                             .style(move|theme: &Theme, status| {     
                                 ipg_toggle::get_styling(theme, status, 
-                                                        style.clone(),
-                                                        style_standard.clone()) 
+                                                        style.clone()) 
                             })
                                 .into();
             Item::new(tog)

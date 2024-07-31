@@ -55,7 +55,7 @@ use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableRowHighLight, 
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
-use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParam};
+use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParam, IpgTogglerStyle};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
 use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, 
     IpgWindowParam, IpgWindowTheme};
@@ -137,6 +137,7 @@ pub struct State {
     pub rule_style:  Lazy<HashMap<String, IpgRuleStyle>>,
     pub slider_style:  Lazy<HashMap<String, IpgSliderStyle>>,
     pub text_input_style: Lazy<HashMap<String, IpgTextInputStyle>>,
+    pub toggler_style: Lazy<HashMap<String, IpgTogglerStyle>>,
 
     pub styling_color: Lazy<HashMap<String, IpgPalette>>,
     pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
@@ -187,6 +188,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         rule_style: Lazy::new(||HashMap::new()),
         slider_style: Lazy::new(||HashMap::new()),
         text_input_style: Lazy::new(||HashMap::new()),
+        toggler_style: Lazy::new(||HashMap::new()),
         
         styling_color: Lazy::new(||HashMap::new()),
         styling_standard: Lazy::new(||HashMap::new()),
@@ -1443,8 +1445,8 @@ impl IPG {
                     dot_item_style_all: Option<String>,
                     label_item_style_all: Option<String>,
                     line_item_style_all: Option<String>,
-                    text_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-                    toggler_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
+                    text_item_style_all: Option<String>,
+                    toggler_item_style_all: Option<String>,
                     item_styles: Option<Vec<(usize, usize, Option<IpgStyleStandard>, Option<String>)>>,
                     show: bool,
                     user_data: Option<PyObject>,
@@ -3467,7 +3469,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, label=None, gen_id=None, toggled=None, 
                         width=None, width_fill=false, size=20.0, text_size=16.0,
                         text_line_height=1.3, text_alignment=IpgHorizontalAlignment::Center, 
-                        spacing=10.0, user_data=None, show=true, 
+                        spacing=10.0, user_data=None, show=true, style=None, 
                         ))]
     fn add_toggler(&mut self,
                         parent_id: String,
@@ -3484,6 +3486,7 @@ impl IPG {
                         spacing: f32,
                         user_data: Option<PyObject>,
                         show: bool,
+                        style: Option<String>,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -3510,11 +3513,77 @@ impl IPG {
                                                 text_size,
                                                 text_line_height,
                                                 text_alignment,
-                                                spacing,                           
+                                                spacing,
+                                                style,                           
                                                 )));
         drop(state);
         Ok(id)
     
+    }
+
+    #[pyo3(signature = (style_id, 
+                        background_color=None,
+                        background_rgba=None,
+                        background_color_toggled=None,
+                        background_rgba_toggled=None,
+                        background_border_color=None,
+                        background_border_rgba=None,
+                        background_border_width=None,
+                        foreground_color=None,
+                        foreground_rgba=None,
+                        foreground_color_toggled=None,
+                        foreground_rgba_toggled=None,
+                        foreground_border_color=None,
+                        foreground_border_rgba=None,
+                        foreground_border_width=None,
+                        gen_id=None,
+                        ))]
+    fn add_toggler_style(&mut self,
+                        style_id: String, 
+                        background_color: Option<IpgColor>,
+                        background_rgba: Option<[f32; 4]>,
+                        background_color_toggled: Option<IpgColor>,
+                        background_rgba_toggled: Option<[f32; 4]>,
+                        background_border_color: Option<IpgColor>,
+                        background_border_rgba: Option<[f32; 4]>,
+                        background_border_width: Option<f32>,
+                        foreground_color: Option<IpgColor>,
+                        foreground_rgba: Option<[f32; 4]>,
+                        foreground_color_toggled: Option<IpgColor>,
+                        foreground_rgba_toggled: Option<[f32; 4]>,
+                        foreground_border_color: Option<IpgColor>,
+                        foreground_border_rgba: Option<[f32; 4]>,
+                        foreground_border_width: Option<f32>,
+                        gen_id: Option<usize>,
+                        ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let background_color = get_color(background_rgba, background_color, 1.0, false);
+        let background_color_toggled = get_color(background_rgba_toggled, background_color_toggled, 1.0, false);
+        let background_border_color = get_color(background_border_rgba, background_border_color, 1.0, false);
+        let foreground_color = get_color(foreground_rgba, foreground_color, 1.0, false);
+        let foreground_color_toggled = get_color(foreground_rgba_toggled, foreground_color_toggled, 1.0, false);
+        let foreground_border_color = get_color(foreground_border_rgba, foreground_border_color, 1.0, false);
+        
+
+        let mut state = access_state();
+       
+        state.toggler_style.insert(style_id, IpgTogglerStyle::new( 
+                                                id,
+                                                background_color,
+                                                background_color_toggled,
+                                                background_border_color,
+                                                background_border_width,
+                                                foreground_color,
+                                                foreground_color_toggled,
+                                                foreground_border_color,
+                                                foreground_border_width,
+                                                ));
+
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (enabled=false, on_key_press=None, on_key_release=None,

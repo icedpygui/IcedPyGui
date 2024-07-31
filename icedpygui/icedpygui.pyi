@@ -1,8 +1,5 @@
 from pickletools import uint2
-from types import Callable, Union, List
-from typing import OrderedDict, Tuple
-
-from polars import Float64, UInt32, UInt64
+from typing import Any, Callable, Dict, List, OrderedDict, Optional, Tuple, Union
 
 
 
@@ -37,8 +34,8 @@ class IPG:
                     title: str,
                     width: int,
                     height: int,
-                    pos_x: Union[None | float]=None,
-                    pos_y: Union[None | float]=None,
+                    pos_x: Optional[float]=None,
+                    pos_y: Optional[float]=None,
                     pos_centered: bool=False,
                     resizable: bool=True,
                     theme: IpgWindowTheme=IpgWindowTheme.Dark,
@@ -85,9 +82,9 @@ class IPG:
                         window_id: str,
                         container_id: str,
                         *,
-                        parent_id: Union[None | str]=None,
-                        width: Union[None | float]=None,
-                        height: Union[None | float]=None,
+                        parent_id: Optional[str]=None,
+                        width: Optional[float]=None,
+                        height: Optional[float]=None,
                         width_fill: bool=False,
                         height_fill: bool=False,
                         max_height: float=float('inf'),
@@ -98,8 +95,8 @@ class IPG:
                         padding: List=[10.0],
                         clip: bool=False,
                         show: bool=True,
-                        style: Union[None | str]=None,
-                        style_standard: Union[None | IpgStyleStandard]=None
+                        style: Optional[str]=None,
+                        style_standard: Optional[IpgStyleStandard]=None
                         ) -> int:
         """
         Adds a generic container to the gui
@@ -158,23 +155,23 @@ class IPG:
     def add_container_style(self,
                             style_id: str, 
                             *,
-                            base_color: Union[None | IpgColor]=None,
-                            base_rgba: Union[None | list]=None,
-                            weak_color: Union[None | IpgColor]=None,
-                            weak_rgba: Union[None | list]=None,
+                            base_color: Optional[IpgColor]=None,
+                            base_rgba: Optional[list[float, 4]]=None,
+                            weak_color: Optional[IpgColor]=None,
+                            weak_rgba: Optional[list]=None,
                             strong_factor: float=0.40, 
                             weak_factor: float=0.15, 
-                            border_color: Union[None | IpgColor]=None, 
-                            border_rgba: Union[None | list]=None,
+                            border_color: Optional[IpgColor]=None, 
+                            border_rgba: Optional[list[float, 4]]=None,
                             border_radius: list=[0.0], 
                             border_width: float=1.0,
-                            shadow_color: Union[None | IpgColor]=None, 
-                            shadow_rgba: Union[None | list]=None,
+                            shadow_color: Optional[IpgColor]=None, 
+                            shadow_rgba: Optional[list]=None,
                             shadow_offset_x: float=0.0, 
                             shadow_offset_y: float=0.0,
                             shadow_blur_radius: float=1.0,
-                            text_color: Union[None | IpgColor]=None, 
-                            text_rgba: Union[None | list]=None
+                            text_color: Optional[IpgColor]=None, 
+                            text_rgba: Optional[list[float, 4]]=None,
                         ) -> int:
         """
         Adds styling to container
@@ -224,14 +221,14 @@ class IPG:
                     window_id: str,
                     container_id: str,
                     *,
-                    parent_id: Union[None | str]=None,
+                    parent_id: Optional[str]=None,
                     align_items: IpgAlignment=IpgAlignment.Start,
-                    width: Union[None | float]=None,
-                    height: Union[None | float]=None,
+                    width: Optional[float]=None,
+                    height: Optional[float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False,
                     max_width: float=float('inf'),
-                    padding: List=[10.0], 
+                    padding: list=[10.0], 
                     spacing: float=20.0,
                     clip: bool=False,
                     show: bool=True,
@@ -249,7 +246,7 @@ class IPG:
             parent_id: str
                 If parent_id == window_id then not required, 
                 If another container then required.
-            align_items: IpgColumnAlignment
+            align_items: IpgAlignment
                 Sets the vertical alignment of the items in the column; Start, Center, End.
             width: float
                 Sets the width of the widget.
@@ -284,11 +281,11 @@ class IPG:
                     container_id: str,
                     label: str,
                     *,
-                    parent_id: str=Union[None | str],
-                    on_open: callable=Union[None | callable],
+                    parent_id: Optional[str]=None,
+                    on_open: Optional[Callable]=None,
                     align_items: IpgAlignment=IpgAlignment.Start,
-                    width: float=Union[None | float],
-                    height: float=Union[None | float],
+                    width: Optional[float]=None,
+                    height: Optional[float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False,
                     max_width: float=float('inf'),
@@ -346,19 +343,19 @@ class IPG:
                         window_id: str,
                         container_id: str,
                         *,
-                        parent_id: Union[None | str]=None,
-                        gen_id: Union[None | int]=None,
-                        on_press: Union[None | Callable]=None, 
-                        on_release: Union[None | Callable]=None, 
-                        on_right_press: Union[None | Callable]=None, 
-                        on_right_release: Union[None | Callable]=None, 
-                        on_middle_press: Union[None | Callable]=None, 
-                        on_middle_release: Union[None | Callable]=None,
-                        on_enter: Union[None | Callable]=None,
-                        on_move: Union[None | Callable]=None,
-                        on_exit: Union[None | Callable]=None,  
+                        parent_id: Optional[str]=None,
+                        gen_id: Optional[int]=None,
+                        on_press: Optional[Callable]=None, 
+                        on_release: Optional[Callable]=None, 
+                        on_right_press: Optional[Callable]=None, 
+                        on_right_release: Optional[Callable]=None, 
+                        on_middle_press: Optional[Callable]=None, 
+                        on_middle_release: Optional[Callable]=None,
+                        on_enter: Optional[Callable]=None,
+                        on_move: Optional[Callable]=None,
+                        on_exit: Optional[Callable]=None,  
                         show: bool=True,  
-                        user_data: Union[None | any]=None,
+                        user_data: Optional[any]=None,
                       ) -> int:
         """
         Adds a mouse area where the mouse actions have a callback.  
@@ -409,10 +406,10 @@ class IPG:
                 window_id: str,
                 container_id: str,
                 *,
-                parent_id: Union[None | str]=None,
+                parent_id: Optional[str]=None,
                 align_items: IpgAlignment=IpgAlignment.Start,
-                width: Union[None | float]=None,
-                height: Union[None | float]=None,
+                width: Optional[float]=None,
+                height: Optional[float]=None,
                 width_fill: bool=False,
                 height_fill: bool=False,
                 padding: List=[10.0], 
@@ -464,8 +461,8 @@ class IPG:
                         container_id: str,
                         *,
                         parent_id: str=None,
-                        width: Union[None | float]=None,
-                        height: Union[None | float]=None,
+                        width: Optional[float]=None,
+                        height: Optional[float]=None,
                         width_fill: bool=False,
                         height_fill: bool=False,
                         direction: IpgScrollableDirection=IpgScrollableDirection.Vertical,
@@ -477,15 +474,15 @@ class IPG:
                         v_bar_margin: float=0.0,
                         v_scroller_width: float=10.0,
                         v_bar_alignment: IpgAlignment=IpgAlignment.Start,
-                        on_scroll: Union[None | Callable]=None,
-                        scroll_bar_style_background: Union[None | str]=None,
-                        scroll_bar_style_border: Union[None | str]=None,
-                        scroller_style_background: Union[None | str]=None,
-                        scroller_style_border: Union[None | str]=None,
-                        container_style_background: Union[None | str]=None,
-                        container_style_border: Union[None | str]=None,
-                        container_style_text_color: Union[None | str]=None,
-                        user_data: Union[None | any]=None,
+                        on_scroll: Optional[Callable]=None,
+                        scroll_bar_style_background: Optional[str]=None,
+                        scroll_bar_style_border: Optional[str]=None,
+                        scroller_style_background: Optional[str]=None,
+                        scroller_style_border: Optional[str]=None,
+                        container_style_background: Optional[str]=None,
+                        container_style_border: Optional[str]=None,
+                        container_style_text_color: Optional[str]=None,
+                        user_data: Optional[any]=None,
                         ) -> int:
         """
         Wraps a scrollable widget around a container.
@@ -558,7 +555,7 @@ class IPG:
                         position: str,
                         text_to_display: str,
                         *,
-                        parent_id: Union[None | str]=None,
+                        parent_id: Optional[str]=None,
                         gap: int=10,
                         style: str="box",
                      ) -> int:
@@ -593,18 +590,18 @@ class IPG:
                     parent_id: str,
                     label: str,
                     *,
-                    gen_id: Union[None | int]=None,
-                    on_press: Union[None | Callable]=None,
-                    width: Union[None | float]=None,
-                    height: Union[None | float]=None,
+                    gen_id: Optional[int]=None,
+                    on_press: Optional[Callable]=None,
+                    width: Optional[float]=None,
+                    height: Optional[float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False,
                     padding: List=[10.0],
                     clip: bool=False, 
-                    style: Union[None | str]=None,
-                    style_standard: Union[None | IpgStyleStandard]=None,
-                    style_arrow: Union[None | IpgButtonArrow]=None,
-                    user_data: Union[None | any]=None,
+                    style: Optional[str]=None,
+                    style_standard: Optional[IpgStyleStandard]=None,
+                    style_arrow: Optional[IpgButtonArrow]=None,
+                    user_data: Optional[any]=None,
                     show: bool=True, 
                     ) -> int:
         """
@@ -654,22 +651,22 @@ class IPG:
     def add_button_style(self,
                             style_id: str, 
                             *,
-                            base_color: Union[None | IpgColor]=None,
-                            base_rgba: Union[None | list]=None,
-                            strong_color:  Union[None | IpgColor]=None,
-                            strong_rgba:  Union[None | list]=None,
+                            base_color: Optional[IpgColor]=None,
+                            base_rgba: Optional[list]=None,
+                            strong_color:  Optional[IpgColor]=None,
+                            strong_rgba:  Optional[list]=None,
                             strong_factor: float=0.40, 
-                            border_color: Union[None | IpgColor]=None, 
-                            border_rgba: Union[None | list]=None,
+                            border_color: Optional[IpgColor]=None, 
+                            border_rgba: Optional[list]=None,
                             border_radius: list=[0.0], 
                             border_width: float=1.0,
-                            shadow_color: Union[None | IpgColor]=None, 
-                            shadow_rgba: Union[None | list]=None,
+                            shadow_color: Optional[IpgColor]=None, 
+                            shadow_rgba: Optional[list]=None,
                             shadow_offset_x: float=0.0, 
                             shadow_offset_y: float=0.0,
                             shadow_blur_radius: float=1.0,
-                            text_color: Union[None | IpgColor]=None, 
-                            text_rgba: Union[None | list]=None
+                            text_color: Optional[IpgColor]=None, 
+                            text_rgba: Optional[list]=None
                         ) -> int:
         """
         Adds styling to container
@@ -718,13 +715,13 @@ class IPG:
                     parent_id, 
                     head, 
                     body, 
-                    foot: Union[None | str]=None,
-                    gen_id: Union[None | int]=None,
+                    foot: Optional[str]=None,
+                    gen_id: Optional[int]=None,
                     is_open: bool=True, 
                     close_size: float=0.0, 
-                    on_close: Union[None | Callable]=None,
-                    width: Union[None | float]=None, 
-                    height: Union[None | float]=None, 
+                    on_close: Optional[Callable]=None,
+                    width: Optional[float]=None, 
+                    height: Optional[float]=None, 
                     max_width: float="inf",
                     max_height: float="inf", 
                     padding_head: float=5.0, 
@@ -732,7 +729,7 @@ class IPG:
                     padding_foot: float=5.0,
                     show: bool=True,
                     style: IpgCardStyle=IpgCardStyle.Primary, 
-                    user_data: Union[None | any]=None, 
+                    user_data: Optional[any]=None, 
                 ) -> int:
         """
         Adds a card to hold text strings.  No widgets can be added at this time.
@@ -753,11 +750,11 @@ class IPG:
                 Determines if the card is opened or minimized.
             close_size: float
                 The size of the close icon.
-            on_close: Union[None | Callable]
+            on_close: Optional[Callable]
                 The callback function called when the card is minimized.
-            width: Union[None | float]
+            width: Optional[float]
                 Sets the width of the card 
-            height: Union[None | float]
+            height: Optional[float]
                 Sets the height of the card.
             max_width: float
                 Sets the maximum width of the card.
@@ -785,11 +782,11 @@ class IPG:
     def add_checkbox(self,
                     parent_id: str,
                     *,
-                    on_toggle: Union[None | Callable] = None,
+                    on_toggle: Optional[Callable]=None,
                     is_checked: bool=False,
-                    label: Union[None | str]=None,
-                    gen_id: Union[None | int]=None,
-                    width: Union[None | float]=None,
+                    label: Optional[str]=None,
+                    gen_id: Optional[int]=None,
+                    width: Optional[float]=None,
                     width_fill: bool=False,
                     size: float=16.0,
                     spacing: float = 15.0,
@@ -798,9 +795,9 @@ class IPG:
                     text_size: float=16.0,
                     icon_x: bool=False,
                     icon_size: float=25.0,
-                    style: Union[None | str]=None,
-                    style_standard: Union[None | IpgStyleStandard]=None,
-                    user_data: Union[None | any]=None,
+                    style: Optional[str]=None,
+                    style_standard: Optional[IpgStyleStandard]=None,
+                    user_data: Optional[Any]=None,
                     show: bool=True,
                     ) -> int:
         """
@@ -858,20 +855,20 @@ class IPG:
     def add_checkbox_style(self,
                             style_id: str, 
                             *,
-                            base_color: Union[None | IpgColor]=None,
-                            base_rgba: Union[None | list]=None,
-                            strong_color:  Union[None | IpgColor]=None,
-                            strong_rgba:  Union[None | list]=None,
-                            weak_color:  Union[None | IpgColor]=None,
-                            weak_rgba:  Union[None | list]=None,
+                            base_color: Optional[IpgColor]=None,
+                            base_rgba: Optional[list]=None,
+                            strong_color:  Optional[IpgColor]=None,
+                            strong_rgba:  Optional[list]=None,
+                            weak_color:  Optional[IpgColor]=None,
+                            weak_rgba:  Optional[list]=None,
                             strong_factor: float=0.40,
                             weak_factor: float=0.15, 
-                            border_color: Union[None | IpgColor]=None, 
-                            border_rgba: Union[None | list]=None,
+                            border_color: Optional[IpgColor]=None, 
+                            border_rgba: Optional[list]=None,
                             border_radius: list=[0.0], 
                             border_width: float=1.0,
-                            text_color: Union[None | IpgColor]=None, 
-                            text_rgba: Union[None | list]=None
+                            text_color: Optional[IpgColor]=None, 
+                            text_rgba: Optional[list]=None
                         ) -> int:
         """
         Adds styling to container
@@ -917,16 +914,16 @@ class IPG:
                         parent_id: str,
                         *,
                         label: str="Set Color",
-                        gen_id: Union[None | int]=None,
-                        on_submit: Union[None | Callable]=None,
-                        width: Union[None | float]=None,
-                        height: Union[None | float]=None,
+                        gen_id: Optional[int]=None,
+                        on_submit: Optional[Callable]=None,
+                        width: Optional[float]=None,
+                        height: Optional[float]=None,
                         width_fill: bool=False,
                         height_fill: bool=False,
                         padding: List=[10.0],
                         corner_radius: float=0.0,
                         style: str="primary",
-                        user_data: Union[None | any]=None,
+                        user_data: Optional[Any]=None,
                         show: bool=True, 
                         ) -> int:
         """
@@ -975,11 +972,11 @@ class IPG:
                         parent_id: str,
                         *,
                         label: str="Calendar",
-                        gen_id: Union[None | int]=None,
+                        gen_id: Optional[int]=None,
                         size_factor: float=1.0,
                         padding: List=[5.0],
-                        on_submit: Union[None | Callable]=None,
-                        user_data: Union[None | any]=None,
+                        on_submit: Optional[Callable]=None,
+                        user_data: Optional[Any]=None,
                         show=False, 
                         )  -> int:
         
@@ -1019,17 +1016,17 @@ class IPG:
                     image_path: str,
                     *,
                     gen_id: int=None, 
-                    on_press: Union[None | Callable]=None, 
-                    on_release: Union[None | Callable]=None, 
-                    on_right_press: Union[None | Callable]=None, 
-                    on_right_release: Union[None | Callable]=None, 
-                    on_middle_press: Union[None | Callable]=None, 
-                    on_middle_release: Union[None | Callable]=None,
-                    on_enter: Union[None | Callable]=None,
-                    on_move: Union[None | Callable]=None,
-                    on_exit: Union[None | Callable]=None, 
-                    width: Union[None | float]=None,
-                    height: Union[None | float]=None,
+                    on_press: Optional[Callable]=None, 
+                    on_release: Optional[Callable]=None, 
+                    on_right_press: Optional[Callable]=None, 
+                    on_right_release: Optional[Callable]=None, 
+                    on_middle_press: Optional[Callable]=None, 
+                    on_middle_release: Optional[Callable]=None,
+                    on_enter: Optional[Callable]=None,
+                    on_move: Optional[Callable]=None,
+                    on_exit: Optional[Callable]=None, 
+                    width: Optional[float]=None,
+                    height: Optional[float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False,
                     content_fit: IpgImageContentFit=IpgImageContentFit.Contain,
@@ -1038,7 +1035,7 @@ class IPG:
                     rotation_radians: float=0.0,
                     opacity: float=1.0,
                     show: bool=True,  
-                    user_data: Union[None | any]=None,
+                    user_data: Optional[Any]=None,
                     ) -> int:
         """
         Adds an image widget.  The image is selectable using callbacks for all 3 mouse buttons.
@@ -1110,27 +1107,27 @@ class IPG:
                 bar_widths: list[float],
                 item_widths: list[float],  
                 *,
-                on_select: Union[None | Callable]=None,
-                bar_spacing: Union[None | float]=None,
-                bar_padding: Union[None | list[float] | list[float, 4]]=None,
-                bar_height: Union[None | float]=None,
+                on_select: Optional[Callable]=None,
+                bar_spacing: Optional[float]=None,
+                bar_padding: Optional[list[float] | list[float, 4]]=None,
+                bar_height: Optional[float]=None,
                 bar_check_bounds_width=None,
-                item_spacings: Union[None | list[float]]=None,
-                item_offsets: Union[None | list[float]]=None,
-                menu_bar_style: Union[None | str]=None,
-                menu_style: Union[None |str]=None,
-                button_bar_style_all: Union[None|tuple(Union[None|IpgStyleStandard], Union[None|str])]=None,
-                button_item_style_all: Union[None|tuple(Union[None|IpgStyleStandard], Union[None|str])]=None,
-                checkbox_item_style_all: Union[None|tuple(Union[None|IpgStyleStandard], Union[None|str])]=None,
-                circle_item_style_all: Union[None|str]=None,
-                dot_item_style_all: Union[None|str]=None,
-                label_item_style_all: Union[None|str]=None,
-                line_item_style_all: Union[None|str]=None,
-                text_item_style_all: Union[None|tuple(Union[None|IpgStyleStandard], Union[None|str])]=None,
-                toggler_item_style_all:Union[None|tuple(Union[None|IpgStyleStandard], Union[None|str])]=None,
-                item_styles: Union[None, List[tuple(int, int, IpgMenuType, Union[None|IpgStyleStandard], Union[None|str])]]=None, 
-                gen_id: Union[None | int]=None,
-                user_data: Union[None | any]=None,
+                item_spacings: Optional[list[float]]=None,
+                item_offsets: Optional[list[float]]=None,
+                menu_bar_style: Optional[str]=None,
+                menu_style: Optional[str]=None,
+                button_bar_style_all: Optional[Tuple]=None,
+                button_item_style_all: Optional[Tuple[IpgStyleStandard, str]]=None,
+                checkbox_item_style_all: Optional[Tuple[IpgStyleStandard, str]]=None,
+                circle_item_style_all: Optional[str]=None,
+                dot_item_style_all: Optional[str]=None,
+                label_item_style_all: Optional[str]=None,
+                line_item_style_all: Optional[str]=None,
+                text_item_style_all: Optional[Tuple[IpgStyleStandard, str]]=None,
+                toggler_item_style_all:Optional[Tuple[IpgStyleStandard, str]]=None,
+                item_styles: Optional[List[Tuple[int, int, IpgMenuType, IpgStyleStandard]]]=None, 
+                gen_id: Optional[int]=None,
+                user_data: Optional[Any]=None,
                 ) -> int:
         """
         Add a menu dropdown list to the gui.
@@ -1188,18 +1185,18 @@ class IPG:
     def add_menu_bar_style(self,
                             style_id: str,
                             *,
-                            base_color: Union[None | IpgColor]=None,
-                            base_rgba: Union[None | list[float, 4]]=None,
-                            border_color: Union[None | IpgColor]=None,
-                            border_rgba: Union[None | list[float, 4]]=None,
-                            border_radius: Union[None | list[float] | list[float, 4]]=None,
-                            border_width: Union[None | float]=None,
-                            shadow_color: Union[None | IpgColor]=None,
-                            shadow_rgba: Union[None | list[float, 4]]=None,
-                            shadow_offset_x: Union[None | float]=None,
-                            shadow_offset_y:Union[None | float]=None,
-                            shadow_blur_radius: Union[None | float]=None,
-                            gen_id: Union[None | int]=None,
+                            base_color: Optional[IpgColor]=None,
+                            base_rgba: Optional[list[float, 4]]=None,
+                            border_color: Optional[IpgColor]=None,
+                            border_rgba: Optional[list[float, 4]]=None,
+                            border_radius: Optional[list[float] | list[float, 4]]=None,
+                            border_width: Optional[float]=None,
+                            shadow_color: Optional[IpgColor]=None,
+                            shadow_rgba: Optional[list[float, 4]]=None,
+                            shadow_offset_x: Optional[float]=None,
+                            shadow_offset_y:Optional[float]=None,
+                            shadow_blur_radius: Optional[float]=None,
+                            gen_id: Optional[int]=None,
                        ) -> int:
         """
         Adds style in the menu itself, not the menu items or bar items
@@ -1208,24 +1205,24 @@ class IPG:
     def add_menu_style(self,
                        style_id: str,
                         *,
-                        base_color: Union[None | IpgColor]=None,
-                        base_rgba: Union[None | list[float, 4]]=None,
-                        border_color: Union[None | IpgColor]=None,
-                        border_rgba: Union[None | list[float, 4]]=None,
-                        border_radius: Union[None | list[float] | list[float, 4]]=None,
-                        border_width: Union[None | float]=None,
-                        shadow_color: Union[None | IpgColor]=None,
-                        shadow_rgba: Union[None | list[float, 4]]=None,
-                        shadow_offset_x: Union[None | float]=None,
-                        shadow_offset_y:Union[None | float]=None,
-                        shadow_blur_radius: Union[None | float]=None,
-                        path_base_color: Union[None | IpgColor]=None,
-                        path_base_rgba: Union[None | list[float, 4]]=None,
-                        path_border_color: Union[None | IpgColor]=None,
-                        path_border_rgba: Union[None | list[float, 4]]=None,
-                        path_border_radius: Union[None | list[float] | list[float, 4]]=None,
-                        path_border_width: Union[None | float]=None,
-                        gen_id: Union[None | int]=None,
+                        base_color: Optional[IpgColor]=None,
+                        base_rgba: Optional[list[float, 4]]=None,
+                        border_color: Optional[IpgColor]=None,
+                        border_rgba: Optional[list[float, 4]]=None,
+                        border_radius: Optional[list[float] | list[float, 4]]=None,
+                        border_width: Optional[float]=None,
+                        shadow_color: Optional[IpgColor]=None,
+                        shadow_rgba: Optional[list[float, 4]]=None,
+                        shadow_offset_x: Optional[float]=None,
+                        shadow_offset_y:Optional[float]=None,
+                        shadow_blur_radius: Optional[float]=None,
+                        path_base_color: Optional[IpgColor]=None,
+                        path_base_rgba: Optional[list[float, 4]]=None,
+                        path_border_color: Optional[IpgColor]=None,
+                        path_border_rgba: Optional[list[float, 4]]=None,
+                        path_border_radius: Optional[list[float] | list[float, 4]]=None,
+                        path_border_width: Optional[float]=None,
+                        gen_id: Optional[int]=None,
                        ) -> int:
         """
         Adds style in the menu itself, not the menu items or bar items
@@ -1237,30 +1234,30 @@ class IPG:
                                 *,
                                 height: float=20.0,
                                 height_fill: bool=False,
-                                width: Union[None | float]=None,
+                                width: Optional[float]=None,
                                 width_fill: bool=True,
-                                quad_ratios: Union[None | list[float]]=[0.98, 0.2],
-                                separator_color: Union[None | IpgColor]=None,
-                                separator_rgba: Union[None | list[float]]=None,
-                                separator_border_color: Union[None | IpgColor]=None,
-                                separator_border_rgba: Union[None | list[float]]=None,
-                                separator_border_width: Union[None | float]=None,
-                                separator_border_radius: Union[None | list[float]]=None,
-                                separator_shadow_color: Union[None | IpgColor]=None,
-                                separator_shadow_rgba: Union[None | list[float]]=None,
-                                separator_shadow_offset: Union[None | list[float]]=None,
-                                separator_shadow_blur_radius: Union[None | float]=None,
-                                background_color: Union[None | IpgColor]=None,
-                                background_rgba: Union[None | list[float]]=None,
-                                background_border_color: Union[None | IpgColor]=None,
-                                background_border_rgba: Union[None | list[float]]=None,
-                                background_border_width: Union[None | float]=None,
-                                background_border_radius: Union[None | list[float]]=None,
-                                background_shadow_color: Union[None | IpgColor]=None,
-                                background_shadow_rgba: Union[None | list[float]]=None,
-                                background_shadow_offset: Union[None | list[float]]=None,
-                                background_shadow_blur_radius: Union[None | float]=None,
-                                gen_id: Union[None | int]=None,
+                                quad_ratios: Optional[list[float]]=[0.98, 0.2],
+                                separator_color: Optional[IpgColor]=None,
+                                separator_rgba: Optional[list[float]]=None,
+                                separator_border_color: Optional[IpgColor]=None,
+                                separator_border_rgba: Optional[list[float]]=None,
+                                separator_border_width: Optional[float]=None,
+                                separator_border_radius: Optional[list[float]]=None,
+                                separator_shadow_color: Optional[IpgColor]=None,
+                                separator_shadow_rgba: Optional[list[float]]=None,
+                                separator_shadow_offset: Optional[list[float]]=None,
+                                separator_shadow_blur_radius: Optional[float]=None,
+                                background_color: Optional[IpgColor]=None,
+                                background_rgba: Optional[list[float]]=None,
+                                background_border_color: Optional[IpgColor]=None,
+                                background_border_rgba: Optional[list[float]]=None,
+                                background_border_width: Optional[float]=None,
+                                background_border_radius: Optional[list[float]]=None,
+                                background_shadow_color: Optional[IpgColor]=None,
+                                background_shadow_rgba: Optional[list[float]]=None,
+                                background_shadow_offset: Optional[list[float]]=None,
+                                background_shadow_blur_radius: Optional[float]=None,
+                                gen_id: Optional[int]=None,
                                 ) -> int:
         """
         
@@ -1270,24 +1267,24 @@ class IPG:
                         parent_id: str,
                         options: List=[str],
                         *,
-                        gen_id: Union[None | int]=None,
-                        on_select: Union[None | Callable]=None,
-                        width: Union[None | float]=None,
+                        gen_id: Optional[int]=None,
+                        on_select: Optional[Callable]=None,
+                        width: Optional[float]=None,
                         width_fill: bool=False,
                         padding: List=[5.0],
-                        placeholder: Union[None | str]=None,
-                        selected: Union[None | str]=None,
+                        placeholder: Optional[str]=None,
+                        selected: Optional[str]=None,
                         text_size: float=15.0,
                         text_line_height: float="default",
                         text_shaping: str="basic",
-                        handle: Union[None | IpgPickListHandle]=None,
-                        arrow_size: Union[None | float]=None,
+                        handle: Optional[IpgPickListHandle]=None,
+                        arrow_size: Optional[float]=None,
                         dynamic_closed: Union[None| IpgButtonArrow]=None,
-                        dynamic_opened: Union[None | IpgButtonArrow]=None,
-                        custom_static: Union[None | IpgButtonArrow]=None,
+                        dynamic_opened: Optional[IpgButtonArrow]=None,
+                        custom_static: Optional[IpgButtonArrow]=None,
                         style_color: Union[None, str]=None,
                         style_border: Union[None, str]=None,
-                        user_data: Union[None | any]=None,
+                        user_data: Optional[any]=None,
                         show: bool=True,
                       ) -> int:
         """
@@ -1350,25 +1347,25 @@ class IPG:
     def add_pick_list_style(self,
                             style_id: str,
                             *,
-                            base_color: Union[None | IpgColor]=None,
-                            base_rgba: Union[None | list[float, 4]]=None,
-                            strong_color: Union[None | IpgColor]=None,
-                            strong_rgba: Union[None | list[float, 4]]=None,
-                            weak_color: Union[None | IpgColor]=None,
-                            weak_rgba: Union[None | list[float, 4]]=None,
-                            strong_factor: Union[None | float]=None,
-                            weak_factor: Union[None | float]=None,
-                            text_color: Union[None | IpgColor]=None,
-                            text_rgba: Union[None | list[float, 4]]=None,
-                            handle_color: Union[None | IpgColor]=None,
-                            handle_rgba: Union[None | list[float, 4]]=None,
-                            placeholder_color: Union[None | IpgColor]=None,
-                            placeholder_rgba: Union[None | list[float, 4]]=None,
-                            border_color: Union[None | IpgColor]=None,
-                            border_rgba: Union[None | list[float, 4]]=None,
-                            border_radius: Union[None | list[float]]=None,
-                            border_width: Union[None | float]=None,
-                            gen_id: Union[None | int]=None,
+                            base_color: Optional[IpgColor]=None,
+                            base_rgba: Optional[list[float, 4]]=None,
+                            strong_color: Optional[IpgColor]=None,
+                            strong_rgba: Optional[list[float, 4]]=None,
+                            weak_color: Optional[IpgColor]=None,
+                            weak_rgba: Optional[list[float, 4]]=None,
+                            strong_factor: Optional[float]=None,
+                            weak_factor: Optional[float]=None,
+                            text_color: Optional[IpgColor]=None,
+                            text_rgba: Optional[list[float, 4]]=None,
+                            handle_color: Optional[IpgColor]=None,
+                            handle_rgba: Optional[list[float, 4]]=None,
+                            placeholder_color: Optional[IpgColor]=None,
+                            placeholder_rgba: Optional[list[float, 4]]=None,
+                            border_color: Optional[IpgColor]=None,
+                            border_rgba: Optional[list[float, 4]]=None,
+                            border_radius: Optional[list[float]]=None,
+                            border_width: Optional[float]=None,
+                            gen_id: Optional[int]=None,
                             ) -> int:
         """
         Add PickList styling.
@@ -1380,11 +1377,11 @@ class IPG:
                         max: float,
                         *,
                         value: float=0.0,
-                        gen_id: Union[None | int]=None,
-                        width: Union[None | float]=None,
+                        gen_id: Optional[int]=None,
+                        width: Optional[float]=None,
                         width_fill: bool=False,
                         height: float=1.0,
-                        style_standard: Union[None | IpgStyleStandard]=None,
+                        style_standard: Optional[IpgStyleStandard]=None,
                         style: Union[None, str]=None,
                         user_data: Union[None, any]=None,
                         show: bool=True,
@@ -1426,15 +1423,15 @@ class IPG:
     def add_progress_bar_style(self,
                                 style_id: str,
                                 *,
-                                base_color: Union[None | IpgColor]=None,
-                                base_rgba: Union[None | list[float, 4]]=None,
-                                bar_color: Union[None | IpgColor]=None,
-                                bar_rgba: Union[None | list[float, 4]]=None,
-                                border_color: Union[None | IpgColor]=None,
-                                border_rgba: Union[None | list[float, 4]]=None,
-                                border_radius: Union[None | list[float, 4]]=None,
-                                border_width: Union[None | float]=None,
-                                gen_id: Union[None | int]=None,
+                                base_color: Optional[IpgColor]=None,
+                                base_rgba: Optional[list[float, 4]]=None,
+                                bar_color: Optional[IpgColor]=None,
+                                bar_rgba: Optional[list[float, 4]]=None,
+                                border_color: Optional[IpgColor]=None,
+                                border_rgba: Optional[list[float, 4]]=None,
+                                border_radius: Optional[list[float, 4]]=None,
+                                border_width: Optional[float]=None,
+                                gen_id: Optional[int]=None,
                                ) -> int:
         """
         Add ProgressBar style.
@@ -1444,21 +1441,21 @@ class IPG:
                     parent_id: str,
                     labels: List=[str],
                     *,
-                    gen_id: Union[None | int]=None,
+                    gen_id: Optional[int]=None,
                     direction: IpgRadioDirection=IpgRadioDirection.Vertical,
                     spacing: float=10.0,
                     padding: List=[10.0],
-                    width: Union[None | float]=None,
+                    width: Optional[float]=None,
                     width_fill: bool=False,
-                    on_select: Union[None | Callable]=None,
-                    selected_index: Union[None | int]=None,
+                    on_select: Optional[Callable]=None,
+                    selected_index: Optional[int]=None,
                     size: float=20.0,
-                    style_color: Union[None | str]=None,
-                    style_border: Union[None | str]=None,
+                    style_color: Optional[str]=None,
+                    style_border: Optional[str]=None,
                     text_spacing: float=15.0,
                     text_size: float=16.0,
-                    text_line_height_pixels: Union[None | int],
-                    text_line_height_relative: Union[None | float]=None,
+                    text_line_height_pixels: Optional[int],
+                    text_line_height_relative: Optional[float]=None,
                     text_shaping: str="basic",
                     user_data: Union[None, any]=None,
                     show: bool=True,
@@ -1523,18 +1520,18 @@ class IPG:
     def add_radio_style(self,
                         style_id: str,
                         *,
-                        circle_inner_color: Union[None | IpgColor]=None,
-                        circle_inner_rgba: Union[None | list[float, 4]]=None,
-                        circle_inner_hover_color: Union[None | IpgColor]=None,
-                        hover_color_factor: Union[None | float]=None,
-                        border_color: Union[None | IpgColor]=None,
-                        border_rgba: Union[None | list[float, 4]]=None,
-                        border_width: Union[None | float]=None,
-                        dot_color: Union[None | IpgColor]=None,
-                        dot_rgba: Union[None | list[float, 4]]=None,
-                        text_color: Union[None | IpgColor]=None,
-                        text_rgba: Union[None | list[float, 4]]=None,
-                        gen_id: Union[None | int]=None,
+                        circle_inner_color: Optional[IpgColor]=None,
+                        circle_inner_rgba: Optional[list[float, 4]]=None,
+                        circle_inner_hover_color: Optional[IpgColor]=None,
+                        hover_color_factor: Optional[float]=None,
+                        border_color: Optional[IpgColor]=None,
+                        border_rgba: Optional[list[float, 4]]=None,
+                        border_width: Optional[float]=None,
+                        dot_color: Optional[IpgColor]=None,
+                        dot_rgba: Optional[list[float, 4]]=None,
+                        text_color: Optional[IpgColor]=None,
+                        text_rgba: Optional[list[float, 4]]=None,
+                        gen_id: Optional[int]=None,
                         ) -> int:
         """
         Add Radio style.
@@ -1543,41 +1540,41 @@ class IPG:
         ---------
             style_id: str,
                 The id of the stle to use in ipg.add_radio.
-            circle_inner_color: Union[None | IpgColor]=None,
+            circle_inner_color: Optional[IpgColor]=None,
                 The color of the inner circle of the radio button.
                 Defaults to background transparent.
-            circle_inner_rgba: Union[None | list[float, 4]]=None,
+            circle_inner_rgba: Optional[list[float, 4]]=None,
                 The color of the inner circle of the radio button.
                 Defaults to background transparent.
-            circle_inner_hover_color: Union[None | IpgColor]=None,
+            circle_inner_hover_color: Optional[IpgColor]=None,
                 The color of the inner circle when mouse hovers.
                 Defaults to background weak color.
-            hover_color_factor: Union[None | float]=None,
+            hover_color_factor: Optional[float]=None,
                 if only the inner color defined, then can be used to
                 enhance the hover color of the defined inner color.
                 Defaults to 0.1.
-            border_color: Union[None | IpgColor]=None,
+            border_color: Optional[IpgColor]=None,
                 The color of the circle border.
                 Defaults to primary.
-            border_rgba: Union[None | list[float, 4]]=None,
+            border_rgba: Optional[list[float, 4]]=None,
                 The color of the circle border.
                 Defaults to primary.
-            border_width: Union[None | float]=None,
+            border_width: Optional[float]=None,
                 The border width of the circle.
                 defaults to 1.0
-            dot_color: Union[None | IpgColor]=None,
+            dot_color: Optional[IpgColor]=None,
                 The color of the dot.
                 Defaults to primary.
-            dot_rgba: Union[None | list[float, 4]]=None,
+            dot_rgba: Optional[list[float, 4]]=None,
                 The color of the dot.
                 Defaults to primary.
-            text_color: Union[None | IpgColor]=None,
+            text_color: Optional[IpgColor]=None,
                 The color of the text.
                 Defaults to a contrast color of the background.
-            text_rgba: Union[None | list[float, 4]]=None,
+            text_rgba: Optional[list[float, 4]]=None,
                 The color of the text.
                 Defaults to a contrast color of the background.
-            gen_id: Union[None | int]=None,
+            gen_id: Optional[int]=None,
                 The only allowable entry for this id is that generated by ipg.generate_id().
 
         Returns
@@ -1589,11 +1586,11 @@ class IPG:
     def add_rule_horizontal(self, 
                             parent_id, 
                             *,
-                            width: Union[None | float]=None, 
+                            width: Optional[float]=None, 
                             width_fill: bool=True,
                             thickness: int=1,
-                            style: Union[None | str]=None,
-                            gen_id: Union[None | int]=None,
+                            style: Optional[str]=None,
+                            gen_id: Optional[int]=None,
                             ) -> int:
         """
         Add a horizontal line divider.
@@ -1602,7 +1599,7 @@ class IPG:
         ----------
             parent_id: str
                 Id of another container to place the widget in.
-            width: Union[None | float]=None
+            width: Optional[float]=None
                 Defines the horizontal length of the dividing line.
             width_fill: bool=True
                 If set, fills the available space for the horizontal length, overides width.
@@ -1610,7 +1607,7 @@ class IPG:
                 The thickness of the rule.
             style: str
                 The id of the add_rule_style.
-            gen_id: Union[None | int]=None,
+            gen_id: Optional[int]=None,
                 The only allowable entry for this id is that generated by ipg.generate_id().
         Returns
         -------
@@ -1621,11 +1618,11 @@ class IPG:
     def add_rule_vertical(self, 
                             parent_id,
                             *, 
-                            height: Union[None | float]=None, 
+                            height: Optional[float]=None, 
                             height_fill: bool=True,
                             thickness: int=1,
-                            style: Union[None | str]=None,
-                            gen_id: Union[None | int]=None,
+                            style: Optional[str]=None,
+                            gen_id: Optional[int]=None,
                           ) -> int:
         """
         Add a vertical line divider.
@@ -1634,15 +1631,15 @@ class IPG:
         ----------
             parent_id: str
                 Id of another container to place the widget in.
-            height: Union[None | float]=None
+            height: Optional[float]=None
                 Defines the vertical length of the dividing line.
             height_fill: bool=True
                 If set, fills the available space for the vertical length, overides height.
             thickness: int=1
                 The thickness of the rule.
-            style: Union[None | str]=None,
+            style: Optional[str]=None,
                 The id of the add_rule_style.
-            gen_id: Union[None | int]=None,
+            gen_id: Optional[int]=None,
                 The only allowable entry for this id is that generated by ipg.generate_id().
 
         Returns
@@ -1653,13 +1650,13 @@ class IPG:
 
     def add_rule_style(self,
                         style_id: str,
-                        color: Union[None | IpgColor],
-                        color_rgba: Union[None | list[float, 4]],
-                        border_radius: Union[None | list[float, 4]],
-                        fillmode_percent: Union[None | float],
-                        fillmode_padded: Union[None | uint2],
-                        fillmode_asymmetric_padding: Union[None | list[uint2, 2]],
-                        gen_id: Union[None | int],
+                        color: Optional[IpgColor],
+                        color_rgba: Optional[list[float, 4]],
+                        border_radius: Optional[list[float, 4]],
+                        fillmode_percent: Optional[float],
+                        fillmode_padded: Optional[int],
+                        fillmode_asymmetric_padding: Optional[list[int, 2]],
+                        gen_id: Optional[int],
                         ) -> int:
         """
         Add Rule styling.
@@ -1668,19 +1665,19 @@ class IPG:
         -----------
             style_id: str
                 The id used in the add_rule style parameter.
-            color: Union[None | IpgColor],
+            color: Optional[IpgColor],
                 The color of the rule, background weak if not defined.
-            color_rgba: Union[None | list[float, 4]]
+            color_rgba: Optional[list[float, 4]]
                 The color of the rule
-            border_radius: Union[None | list[float, 4]],
+            border_radius: Optional[list[float, 4]],
                 The border radius of the rule.
-            fillmode_percent: Union[None | float],
+            fillmode_percent: Optional[float],
                 Fills the color of the rule to a percent
-            fillmode_padded: Union[None | uint2],
+            fillmode_padded: Optional[uint2],
                 Fills the rule with the color container padding on each end.
-            fillmode_asymmetric_padding: Union[None | list[uint2, 2]],
+            fillmode_asymmetric_padding: Optional[list[uint2, 2]],
                 Fills the rule with the color asymetrically.
-            gen_id: Union[None | int],
+            gen_id: Optional[int],
                 The only allowable entry for this id is that generated by ipg.generate_id().
     Returns
     -------
@@ -1693,18 +1690,18 @@ class IPG:
                             parent_id, 
                             text,
                             *,
-                            gen_id: Union[None | int]=None, 
-                            on_press: Union[None | Callable]=None, 
-                            on_release: Union[None | Callable]=None, 
-                            on_right_press: Union[None | Callable]=None, 
-                            on_right_release: Union[None | Callable]=None, 
-                            on_middle_press: Union[None | Callable]=None, 
-                            on_middle_release: Union[None | Callable]=None,
-                            on_enter: Union[None | Callable]=None,
-                            on_move: Union[None | Callable]=None,
-                            on_exit: Union[None | Callable]=None, 
-                            width: Union[None | float]=None,
-                            height: Union[None | float]=None,
+                            gen_id: Optional[int]=None, 
+                            on_press: Optional[Callable]=None, 
+                            on_release: Optional[Callable]=None, 
+                            on_right_press: Optional[Callable]=None, 
+                            on_right_release: Optional[Callable]=None, 
+                            on_middle_press: Optional[Callable]=None, 
+                            on_middle_release: Optional[Callable]=None,
+                            on_enter: Optional[Callable]=None,
+                            on_move: Optional[Callable]=None,
+                            on_exit: Optional[Callable]=None, 
+                            width: Optional[float]=None,
+                            height: Optional[float]=None,
                             width_fill: bool=False,
                             height_fill: bool=False, 
                             h_align: str="left",
@@ -1713,7 +1710,7 @@ class IPG:
                             shaping: str="basic",
                             size: float=16.0, 
                             show: bool=True,  
-                            user_data: Union[None | any]=None,
+                            user_data: Optional[any]=None,
                             ) -> int:
         """
         Adds a selectable text widget.  This selectable text allows more mouse interaction than
@@ -1781,15 +1778,15 @@ class IPG:
                    step: float, 
                    value: float,
                    *,
-                   gen_id: Union[None | int]=None, 
+                   gen_id: Optional[int]=None, 
                    show: bool=True, 
-                   on_change: Union[None | Callable]=None, 
-                   on_release: Union[None | Callable]=None, 
-                   user_data: Union[None | any]=None, 
+                   on_change: Optional[Callable]=None, 
+                   on_release: Optional[Callable]=None, 
+                   user_data: Optional[any]=None, 
                    width: float=100.0,
                    width_fill: bool=False,
                    height: float=20.0,
-                   style: Union[None | str]=None,
+                   style: Optional[str]=None,
                   ) -> int:
         """
         Adds a slider widget which changes value as the mouse moves the slider.
@@ -1835,24 +1832,24 @@ class IPG:
 
     def add_slider_style(self,
                         style_id: str,
-                        rail_colors_base: Union[None | (IpgColor, IpgColor)]=None,
-                        rail_rgba_base: Union[None | ([float, 4], [float, 4])]=None,
-                        rail_color_strong: Union[None | IpgColor]=None,
-                        rail_rgba_strong: Union[None | list[float, 4]]=None,
-                        rail_strong_factor: Union[None | float]=None,
-                        rail_width: Union[None | float]=None,
-                        rail_border_radius: Union[None | list[float]]=None,
-                        handle_circle_radius: Union[None | float]=None,
-                        handle_rectangle_width: Union[None | uint2]=None,
-                        handle_rectangle_border_radius: Union[None | list[float]]=None,
-                        handle_color_base: Union[None | IpgColor]=None,
-                        handle_rgba_base: Union[None | list[float, 4]]=None,
-                        handle_color_strong: Union[None | IpgColor]=None,
-                        handle_rgba_strong: Union[None | list[float, 4]]=None,
-                        handle_strong_factor: Union[None | float]=None,
-                        handle_border_width: Union[None | float]=None,
-                        handle_border_color: Union[None | IpgColor]=None,
-                        handle_border_rgba: Union[None | list[float, 4]]=None,
+                        rail_colors_base: Optional[Tuple[IpgColor, IpgColor]]=None,
+                        rail_rgba_base: Optional[Tuple[float, float]]=None,
+                        rail_color_strong: Optional[IpgColor]=None,
+                        rail_rgba_strong: Optional[list[float, 4]]=None,
+                        rail_strong_factor: Optional[float]=None,
+                        rail_width: Optional[float]=None,
+                        rail_border_radius: Optional[list[float]]=None,
+                        handle_circle_radius: Optional[float]=None,
+                        handle_rectangle_width: Optional[int]=None,
+                        handle_rectangle_border_radius: Optional[list[float]]=None,
+                        handle_color_base: Optional[IpgColor]=None,
+                        handle_rgba_base: Optional[list[float, 4]]=None,
+                        handle_color_strong: Optional[IpgColor]=None,
+                        handle_rgba_strong: Optional[list[float, 4]]=None,
+                        handle_strong_factor: Optional[float]=None,
+                        handle_border_width: Optional[float]=None,
+                        handle_border_color: Optional[IpgColor]=None,
+                        handle_border_rgba: Optional[list[float, 4]]=None,
                         gen_id: Union[None, int]=None,
                          ) -> int:
         """
@@ -1862,47 +1859,47 @@ class IPG:
         ----------
             style_id: str
                 The id used in the add_slider style parameter.
-            rail_colors_base: Union[None | (IpgColor, IpgColor)]=None
+            rail_colors_base: Optional[(IpgColor, IpgColor)]=None
                 The base colors of the rail with IpgColor class.
                 The first color used with mouse hover.
-            rail_rgba_base: Union[None | ([float, 4], [float, 4])]=None
+            rail_rgba_base: Optional[([float, 4], [float, 4])]=None
                 The base colors of the rail in rgba format.
                 The first color used with mouse hover.
-            rail_color_strong: Union[None | IpgColor]=None
+            rail_color_strong: Optional[IpgColor]=None
                 The color used for active and dragged with IpgColor class.
-            rail_rgba_strong: Union[None | list[float, 4]]=None
+            rail_rgba_strong: Optional[list[float, 4]]=None
                 The color used for active and dragged in rgba format.
-            rail_strong_factor: Union[None | float]=None
+            rail_strong_factor: Optional[float]=None
                 If strong color not defined, factor used to generate the  
                 the strong color using the base.
-            rail_width: Union[None | float]=None
+            rail_width: Optional[float]=None
                 Rail width
-            rail_border_radius: Union[None | list[float]]=None
+            rail_border_radius: Optional[list[float]]=None
                 rail border radius use either a single list item or a list of 4
-            handle_circle_radius: Union[None | float]=None
+            handle_circle_radius: Optional[float]=None
                 The circle is the default shape.
                 The handle circle radius default=7.0
-            handle_rectangle_width: Union[None | uint2]=None
+            handle_rectangle_width: Optional[uint2]=None
                 Defining either the width or radius, activates this shape.
                 handle width, default=12
-            handle_rectangle_border_radius: Union[None | list[float]]=None
+            handle_rectangle_border_radius: Optional[list[float]]=None
                 handle rectangle border radius default=1.0
-            handle_color_base: Union[None | IpgColor]=None
+            handle_color_base: Optional[IpgColor]=None
                 The handle color used during mouse hover with IpgColor class.
-            handle_rgba_base: Union[None | list[float, 4]]=None
+            handle_rgba_base: Optional[list[float, 4]]=None
                 The handle color used during mouse hover in rgba format.
-            handle_color_strong: Union[None | IpgColor]=None
+            handle_color_strong: Optional[IpgColor]=None
                 The color used for active and dragged with IpgColor class.
-            handle_rgba_strong: Union[None | list[float, 4]]=None
+            handle_rgba_strong: Optional[list[float, 4]]=None
                 The color used for active and dragged in rgba format.
-            handle_strong_factor: Union[None | float]=None
+            handle_strong_factor: Optional[float]=None
                 If strong color not defined, factor used to generate the  
                 the strong color using the base.
-            handle_border_width: Union[None | float]=None
+            handle_border_width: Optional[float]=None
                 Handle border width, default=0.0
-            handle_border_color: Union[None | IpgColor]=None
+            handle_border_color: Optional[IpgColor]=None
                 Handle border color, default=transparent.
-            handle_border_rgba: Union[None | list[float, 4]]=None
+            handle_border_rgba: Optional[list[float, 4]]=None
                 Handle border color in rgba format, default=transparent.
             gen_id: Union[None, int]=None
                 The only allowable entry for this id is that generated by ipg.generate_id().
@@ -1916,9 +1913,9 @@ class IPG:
     def add_space(self,
                   parent_id: str,
                   *,
-                  gen_id: Union[None | int]=None,
-                  width: Union[None | float]=None,
-                  height: Union[None | float]=None,
+                  gen_id: Optional[int]=None,
+                  width: Optional[float]=None,
+                  height: Optional[float]=None,
                   width_fill: bool=False,
                   height_fill: bool=False,
                   ) -> int:
@@ -1951,17 +1948,17 @@ class IPG:
                     svg_path: str,
                     *,
                     gen_id: int=None, 
-                    on_press: Union[None | Callable]=None, 
-                    on_release: Union[None | Callable]=None, 
-                    on_right_press: Union[None | Callable]=None, 
-                    on_right_release: Union[None | Callable]=None, 
-                    on_middle_press: Union[None | Callable]=None, 
-                    on_middle_release: Union[None | Callable]=None,
-                    on_enter: Union[None | Callable]=None,
-                    on_move: Union[None | Callable]=None,
-                    on_exit: Union[None | Callable]=None, 
-                    width: Union[None | float]=None,
-                    height: Union[None | float]=None,
+                    on_press: Optional[Callable]=None, 
+                    on_release: Optional[Callable]=None, 
+                    on_right_press: Optional[Callable]=None, 
+                    on_right_release: Optional[Callable]=None, 
+                    on_middle_press: Optional[Callable]=None, 
+                    on_middle_release: Optional[Callable]=None,
+                    on_enter: Optional[Callable]=None,
+                    on_move: Optional[Callable]=None,
+                    on_exit: Optional[Callable]=None, 
+                    width: Optional[float]=None,
+                    height: Optional[float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False,
                     content_fit: IpgSvgContentFit=IpgSvgContentFit.Contain,
@@ -1969,7 +1966,7 @@ class IPG:
                     rotation_radians: float=0.0,
                     opacity: float=1.0, 
                     show: bool=True,  
-                    user_data: Union[None | any]=None,
+                    user_data: Optional[Any]=None,
                     ) -> int:
         """
         Adds an image widget.  The image is selectable using callbacks for all 3 mouse buttons.
@@ -2037,34 +2034,23 @@ class IPG:
                     table_id: str,
                     title: str,
                     data: list[dict],
-                    data_length: UInt32,
-                    width: Float64,
-                    height: Float64,
+                    data_length: int,
+                    width: float,
+                    height: float,
                     *,
-                    parent_id: str=Union[None | str],
-                    row_highlight: IpgTableRowHighLight=Union[None | IpgTableRowHighLight],
-                    highlight_amount: Float64=0.15,
+                    parent_id: Optional[str]=None,
+                    row_highlight: Optional[IpgTableRowHighLight]=None,
+                    highlight_amount: float=0.15,
                     column_widths: list=[20.0],
-                    button_style: dict=Union[None | {int: IpgStyleStandard}],
-                    widgets_columns: dict=Union[None | dict],
-                    gen_id: UInt64=Union[None | int],
-                    on_button: callable=Union[None | callable],
-                    on_checkbox: callable=Union[None | Callable],
-                    on_modal: callable=Union[None | Callable],
-                    on_toggler: callable=Union[None | Callable],
-                    on_press: callable=Union[None | Callable],
-                    on_release: callable=Union[None | Callable],
-                    on_rightPress: callable=Union[None | Callable],
-                    on_rightRelease: callable=Union[None | Callable],
-                    on_middlePress: callable=Union[None | Callable],
-                    on_middleRelease: callable=Union[None | Callable],
-                    on_enter: callable=Union[None | Callable],
-                    on_move: callable=Union[None | Callable],
-                    on_exit: callable=Union[None | Callable],
-                    image_width: callable=Union[None | List[float]],
-                    image_height: callable=Union[None | List[float]],
+                    button_style: Optional[Dict[int: IpgStyleStandard]]=None,
+                    widgets_columns: Optional[Dict[int: list[IpgTableWidget]]]=None,
+                    gen_id: Optional[int]=None,
+                    on_button: Optional[Callable]=None,
+                    on_checkbox: Optional[Callable]=None,
+                    on_modal: Optional[Callable]=None,
+                    on_toggler: Optional[Callable]=None,
                     show: bool=True, 
-                    user_data: any=Union[None | any],
+                    user_data: Optional[Any]=None,
                   ) -> int:
 
         """
@@ -2086,13 +2072,16 @@ class IPG:
                 Width of the table.
             height: float
                 Height of the table.
-            parent_id: Union[None | str]
+            parent_id: Optional[str]
                 If parent_id == window_id then not required, 
                 If another container then required.
             row_highlight: TableRowHighLight
                 Highlights alternate row by either drkening or lightening them up.
             highligh_amount: float
                 Amount of highlighting to use if row_highlight is set.
+            column_widths: List[float]
+                A list of value for the column widths, if only one value is supplied then it will 
+                be the default for all columns.
             widgets_columns: dict{int, List[IpgTableWidget]}
                 The column where the values are converted to text and used as labels for the widget.
             gen_id: int
@@ -2105,31 +2094,6 @@ class IPG:
                 Callback when a modal is pressed.
             on_toggler: Callable
                 Callback when a toggler is toggled.
-            on_press: Callable,
-                Callback for when a selectable is mouse left pressed.
-            on_release: Callable,
-                Callback for when a selectable is mouse left released.
-            on_right_press: Callable,
-                Callback for when a selectable is mouse right pressed.
-            on_right_release: Callable,
-                Callback for when a selectable is mouse right released.
-            on_middle_press: Callable],
-                Callback for when a selectable is mouse middle pressed.
-            on_middle_release: Callable],
-                Callback for when a selectable is mouse middle released.
-            on_enter: Callable,
-                Callback when mouse enters a selectable.
-            on_move: Callable,
-                Callback when mouse moves over a selectable.
-            on_exit: Callable,
-                Callback when a mouse exits a selectable.
-            image_width: List[float]
-                A list of column widths for each column of images.  If only a single item in list then it applies to all.
-            image_height: List[float]
-                A list of column heights for each column of images.  If only a single item in list then it applies to all.
-            column_widths: List[float]
-                A list of value for the column widths, if only one value is supplied then it will 
-                be the default for all columns.
             user_data: any
                 Any data that might be needed in the callback function.
             show:: bool
@@ -2146,9 +2110,9 @@ class IPG:
                  parent_id: str,
                  content: str,
                  *,
-                 gen_id: Union[None | int]=None,
-                 width: Union[None | float]=None,
-                 height: Union[None | float]=None,
+                 gen_id: Optional[int]=None,
+                 width: Optional[float]=None,
+                 height: Optional[float]=None,
                  width_fill: bool=False,
                  height_fill: bool=False,
                  h_align: str="Left",
@@ -2200,7 +2164,7 @@ class IPG:
     def add_text_editor(self,
                         parent_id: str,
                         file_name: str,
-                        gen_id: Union[None | str]=None,
+                        gen_id: Optional[str]=None,
                         ) -> int:
         """
         Adds a text editor widget to the gui.
@@ -2221,21 +2185,23 @@ class IPG:
         """
 
     def add_text_input(self,
-                       parent_id: str,
-                       placeholder: str,
-                       width: float,
-                       *,
-                       gen_id: Union[None | int]=None,
-                       on_submit: Union[None | Callable]=None,
-                       on_input: Union[None | Callable]=None,
-                       on_paste: Union[None | Callable]=None,
-                       line_height: str="default",
-                       width_fill: bool=False,
-                       padding: List=[10.0],
-                       size: Union[None | float]=20.0,
-                       style: Union[None | str]=None,
-                       user_data: Union[None | any]=None,
-                       is_secure: bool=False,
+                        parent_id: str,
+                        placeholder: str,
+                        *,
+                        gen_id: Optional[int]=None,
+                        on_submit: Optional[Callable]=None,
+                        on_input: Optional[Callable]=None,
+                        on_paste: Optional[Callable]=None,
+                        width: Optional[float]=None,
+                        width_fill: bool=False,
+                        padding: List=[10.0],
+                        size: Optional[float]=20.0,
+                        line_height_pixels: Optional[int],
+                        line_height_relative: Optional[float],
+                        user_data: Optional[any]=None,
+                        is_secure: bool=False,
+                        style: Optional[str]=None,
+                        show: bool=True,
                        ) -> int:
         """
         Adds a text_input widget to the gui.  Callbacks on_input and on_submit are
@@ -2256,12 +2222,10 @@ class IPG:
                 Calls a function each time a letter is enter into the text box.
             on_paste: Callable
                 Calls a function when the text is pasted into the text box, pressing enter will also submit.
-            line_height: float
-                Sets the line height of the text.
-            width: float
-                Sets the width of the text box..   
+            width: Optional[float]
+                Sets the width to a specific value.
             width_fill: bool
-                Sets the width to fill available space, overrides width.
+                Sets the width to fill available space, overrides width, Default=shrink.
             padding: List[float]
                 Sets the padding for widget.
                 use [float] for all sides,
@@ -2269,13 +2233,18 @@ class IPG:
                 use [float, float, float, float] for [top, right, bottom, left]
             size: float
                 Sets the text size.
-            style: Union[None | str]=None
-                The string style_id of add_text_input_style().
+            line_height_pixels: Optional[int],
+                Sets the height of the text box in pixels.
+            line_height_relative: Optional[float],
+                Sets the height of the text box with a float.  
             user_data: any
                 Any data that might be needed in the callback function.
             is_secure: bool
                 Hides the entered text, for passwords, etc.
-            
+            style: Optional[str]=None
+                The string style_id of add_text_input_style().
+            show: bool=True
+                Shows or hides the widget.
         Returns
         -------
         id: int
@@ -2284,31 +2253,31 @@ class IPG:
 
     def add_text_input_style(self,
                                 style_id: str,
-                                background_color: Union[None | IpgColor]=None,
-                                background_rgba: Union[None | list[float, 4]]=None,
-                                background_color_strong: Union[None | IpgColor]=None,
-                                background_rgba_strong: Union[None | list[float, 4]]=None,
-                                background_strong_factor: Union[None | float]=None,
-                                background_color_weak: Union[None | IpgColor]=None,
-                                background_rgba_weak: Union[None | list[float, 4]]=None,
-                                background_weak_factor: Union[None | float]=None,
-                                border_color: Union[None | IpgColor]=None,
-                                border_rgba: Union[None | list[float, 4]]=None,
-                                border_color_hovered: Union[None | IpgColor]=None,
-                                border_rgba_hovered: Union[None | list[float, 4]]=None,
-                                border_color_focused: Union[None | IpgColor]=None,
-                                border_rgba_focused: Union[None | list[float, 4]]=None,
-                                border_width: Union[None | float]=None,
-                                border_radius: Union[None | list[float]]=None,
-                                icon_color: Union[None | IpgColor]=None,
-                                icon_rgba: Union[None | list[float, 4]]=None,
-                                placeholder_color: Union[None | IpgColor]=None,
-                                placeholder_rgba: Union[None | list[float, 4]]=None,
-                                value_color: Union[None | IpgColor]=None,
-                                value_rgba: Union[None | list[float, 4]]=None,
-                                selection_color: Union[None | IpgColor]=None,
-                                selection_rgba: Union[None | list[float, 4]]=None,
-                                gen_id: Union[None, int]=None,
+                                background_color: Optional[IpgColor]=None,
+                                background_rgba: Optional[list[float, 4]]=None,
+                                background_color_strong: Optional[IpgColor]=None,
+                                background_rgba_strong: Optional[list[float, 4]]=None,
+                                background_strong_factor: Optional[float]=None,
+                                background_color_weak: Optional[IpgColor]=None,
+                                background_rgba_weak: Optional[list[float, 4]]=None,
+                                background_weak_factor: Optional[float]=None,
+                                border_color: Optional[IpgColor]=None,
+                                border_rgba: Optional[list[float, 4]]=None,
+                                border_color_hovered: Optional[IpgColor]=None,
+                                border_rgba_hovered: Optional[list[float, 4]]=None,
+                                border_color_focused: Optional[IpgColor]=None,
+                                border_rgba_focused: Optional[list[float, 4]]=None,
+                                border_width: Optional[float]=None,
+                                border_radius: Optional[list[float]]=None,
+                                icon_color: Optional[IpgColor]=None,
+                                icon_rgba: Optional[list[float, 4]]=None,
+                                placeholder_color: Optional[IpgColor]=None,
+                                placeholder_rgba: Optional[list[float, 4]]=None,
+                                value_color: Optional[IpgColor]=None,
+                                value_rgba: Optional[list[float, 4]]=None,
+                                selection_color: Optional[IpgColor]=None,
+                                selection_rgba: Optional[list[float, 4]]=None,
+                                gen_id: Optional[int]=None,
                              ) -> int:
         """
         Add textInput styling.
@@ -2317,53 +2286,53 @@ class IPG:
             ----------
                 style_id: str
                     Id used in the add_text_input() parameter style.
-                background_color: Union[None | IpgColor]=None
+                background_color: Optional[IpgColor]=None
 
-                background_rgba: Union[None | list[float, 4]]=None
-                background_color_strong: Union[None | IpgColor]=None
-                background_rgba_strong: Union[None | list[float, 4]]=None
-                background_strong_factor: Union[None | float]=None
-                background_color_weak: Union[None | IpgColor]=None
-                background_rgba_weak: Union[None | list[float, 4]]=None
-                background_weak_factor: Union[None | float]=None
-                border_color: Union[None | IpgColor]=None
-                border_rgba: Union[None | list[float, 4]]=None
-                border_color_hovered: Union[None | IpgColor]=None
-                border_rgba_hovered: Union[None | list[float, 4]]=None
-                border_color_focused: Union[None | IpgColor]=None
-                border_rgba_focused: Union[None | list[float, 4]]=None
-                border_width: Union[None | float]=None
-                border_radius: Union[None | list[float]]=None
-                icon_color: Union[None | IpgColor]=None
-                icon_rgba: Union[None | list[float, 4]]=None
-                placeholder_color: Union[None | IpgColor]=None
-                placeholder_rgba: Union[None | list[float, 4]]=None
-                value_color: Union[None | IpgColor]=None
-                value_rgba: Union[None | list[float, 4]]=None
-                selection_color: Union[None | IpgColor]=None
-                selection_rgba: Union[None | list[float, 4]]=None
-                gen_id: Union[None, int]=None
+                background_rgba: Optional[list[float, 4]]=None
+                background_color_strong: Optional[IpgColor]=None
+                background_rgba_strong: Optional[list[float, 4]]=None
+                background_strong_factor: Optional[float]=None
+                background_color_weak: Optional[IpgColor]=None
+                background_rgba_weak: Optional[list[float, 4]]=None
+                background_weak_factor: Optional[float]=None
+                border_color: Optional[IpgColor]=None
+                border_rgba: Optional[list[float, 4]]=None
+                border_color_hovered: Optional[IpgColor]=None
+                border_rgba_hovered: Optional[list[float, 4]]=None
+                border_color_focused: Optional[IpgColor]=None
+                border_rgba_focused: Optional[list[float, 4]]=None
+                border_width: Optional[float]=None
+                border_radius: Optional[list[float]]=None
+                icon_color: Optional[IpgColor]=None
+                icon_rgba: Optional[list[float, 4]]=None
+                placeholder_color: Optional[IpgColor]=None
+                placeholder_rgba: Optional[list[float, 4]]=None
+                value_color: Optional[IpgColor]=None
+                value_rgba: Optional[list[float, 4]]=None
+                selection_color: Optional[IpgColor]=None
+                selection_rgba: Optional[list[float, 4]]=None
+                gen_id: Optional[int]=None
         """
 
     def add_timer(self,
                         parent_id: str,
                         duration_ms: int,
                         *,
-                        on_start: Union[None | Callable]=None,
-                        on_stop: Union[None | Callable]=None,
-                        on_tick: Union[None | Callable]=None,
+                        on_start: Optional[Callable]=None,
+                        on_stop: Optional[Callable]=None,
+                        on_tick: Optional[Callable]=None,
                         start_label: str="Start Timer",
                         stop_label: str="Stop Timer",
-                        width: Union[None | float]=None,
-                        height: Union[None | float]=None,
+                        width: Optional[float]=None,
+                        height: Optional[float]=None,
                         width_fill: bool=False,
                         height_fill: bool=False,
                         padding: list=[10.0],
-                        style_background: Union[None | str]=None,
-                        style_border: Union[None | str]=None,
-                        style_shadow: Union[None | str]=None,
-                        style_text_color: Union[None | str]=None,
-                        arrow_style: Union[None | IpgButtonArrow]=None,
+                        style_background: Optional[str]=None,
+                        style_border: Optional[str]=None,
+                        style_shadow: Optional[str]=None,
+                        style_text_color: Optional[str]=None,
+                        arrow_style: Optional[IpgButtonArrow]=None,
                         user_data: any=None,
                         ) -> int:
         """
@@ -2375,19 +2344,19 @@ class IPG:
             Id of another container.
         duration_ms: int
             The time when the on_tick function fires.
-        on_start: Union[None | Callable]
+        on_start: Optional[Callable]
             The optional function that execute when the timer starts.
-        on_stop: Union[None | Callable]
+        on_stop: Optional[Callable]
             The optional function that executes when the timer stops.
-        on_tick: Union[None | Callable]
+        on_tick: Optional[Callable]
             The optional function that executes on every timer tick as indicated by duration_ms.
         start_label: str="Start Timer"
             The default start label of the timer button.
         stop_label: str="Stop Timer"
             The default stop label of the timer button.
-        width: Union[None | float]
+        width: Optional[float]
             Width of the button, the default is the size of the label.
-        height: Union[None | float]
+        height: Optional[float]
             Height of the button, the default is the size of the label.
         width_fill: bool
             Sets the width to fill the container, overrides width.
@@ -2406,7 +2375,7 @@ class IPG:
             style_id of the add_shadow_style.
         style_text_color: str
             style_id of the add_text_color_style.
-        arrow_style: Union[None | IpgButtonArrows]
+        arrow_style: Optional[IpgButtonArrows]
             Determines if the button is an arrow.
         user_data: any
             Any data the user may need during a callback.
@@ -2420,13 +2389,19 @@ class IPG:
     def add_toggler(self,
                     parent_id: str,
                     *,
-                    label: Union[None | str]=None,
-                    gen_id: Union[None | str]=None,
-                    toggled: Union[None | Callable]=None,
-                    width: Union[None | float]=None,
+                    label: Optional[str]=None,
+                    gen_id: Optional[str]=None,
+                    toggled: Optional[Callable]=None,
+                    width: Optional[float]=None,
                     width_fill: bool=False,
-                    user_data: Union[None | any]=None,
-                    show: bool=True, 
+                    size: float=20.0,
+                    text_size: float=16.0,
+                    text_line_height: float=1.3,
+                    text_alignment: IpgHorizontalAlignment=IpgHorizontalAlignment.Center,
+                    spacing: float=10.0,
+                    user_data: Optional[Any]=None,
+                    show: bool=True,
+                    style: Optional[str]=None,
                     ) -> int:
         """
         Adds a toggler to the gui
@@ -2444,26 +2419,76 @@ class IPG:
             width: float
                 Sets the width of the widget.
             width_fill: bool
-                Sets the width to fill the available space, overrides width.
-            height: float
-                Sets the height of the widget.   
+                Sets the width to fill the available space, overrides width, defaults to shrink.
+            size: float
+                Size of the toggler.
+            text_size: float
+                Size of the text label.
+            text_line_height: float
+                Height of the box containing the text.
+            text_alignment: IpgHorizontalAlignment,
+                Text alignment within the text box, left, center, right
+            spacing: float
+                Spacing between the toggler and the text label
             user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
             show: bool
                 Shows or hides widget.
+            style: str
+                style_id of the add_toggler_style().
             
         Return:
         ------- 
             int: internal id of widget and can be used by user if equated.
         """
-    
+    def add_toggler_style(self,
+                            style_id: str,
+                            background_color: Optional[IpgColor]=None,
+                            background_rgba: Optional[list[float, 4]]=None,
+                            background_color_toggled: Optional[IpgColor]=None,
+                            background_rgba_toggled: Optional[list[float, 4]]=None,
+                            background_border_color: Optional[IpgColor]=None,
+                            background_border_rgba: Optional[list[float, 4]]=None,
+                            background_border_width: Optional[float]=None,
+                            foreground_color: Optional[IpgColor]=None,
+                            foreground_rgba: Optional[list[float, 4]]=None,
+                            foreground_color_toggled: Optional[IpgColor]=None,
+                            foreground_rgba_toggled: Optional[list[float, 4]]=None,
+                            foreground_border_color: Optional[IpgColor]=None,
+                            foreground_border_rgba: Optional[list[float, 4]]=None,
+                            foreground_border_width: Optional[IpgColor]=None,
+                          ) -> int:
+        """
+        Adds a toggler to the gui
+        
+        Parameters
+        ----------
+            style_id: str,
+            background_color: Optional[IpgColor]
+            background_rgba: Optional[list[float, 4]]
+            background_color_toggled: Optional[IpgColor]
+            background_rgba_toggled: Optional[list[float, 4]]
+            background_border_color: Optional[IpgColor]
+            background_border_rgba: Optional[list[float, 4]]
+            background_border_width: Optional[float]
+            foreground_color: Optional[IpgColor]
+            foreground_rgba: Optional[list[float, 4]]
+            foreground_color_toggled: Optional[IpgColor]
+            foreground_rgba_toggled: Optional[list[float, 4]]
+            foreground_border_color: Optional[IpgColor]
+            foreground_border_rgba: Optional[list[float, 4]]
+            foreground_border_width: Optional[IpgColor]
+
+        """
+        
+
     # *******************************events*************************************************************
     def add_event_keyboard(self,
                             enabled: bool,
                             *,
-                            on_key_press: Union[None | Callable]=None,
-                            on_key_release: Union[None | Callable]=None,
-                            user_data: Union[None | any]=None, 
+                            on_key_press: Optional[Callable]=None,
+                            on_key_release: Optional[Callable]=None,
+                            user_data: Optional[any]=None, 
                            ) -> int:
         """
         Add a keyboard event handler to process keyboard actions.
@@ -2488,15 +2513,15 @@ class IPG:
     def add_event_mouse(self,
                             enabled: bool,
                             *,
-                            on_move: Union[None | Callable]=None,
-                            on_left_press: Union[None | Callable]=None,
-                            on_left_release: Union[None | Callable]=None,
-                            on_middle_press: Union[None | Callable]=None,
-                            on_middle_release: Union[None | Callable]=None,
-                            on_right_press: Union[None | Callable]=None,
-                            on_right_release: Union[None | Callable]=None,
-                            on_middle_scroll: Union[None | Callable]=None,
-                            user_data: Union[None | any]=None,
+                            on_move: Optional[Callable]=None,
+                            on_left_press: Optional[Callable]=None,
+                            on_left_release: Optional[Callable]=None,
+                            on_middle_press: Optional[Callable]=None,
+                            on_middle_release: Optional[Callable]=None,
+                            on_right_press: Optional[Callable]=None,
+                            on_right_release: Optional[Callable]=None,
+                            on_middle_scroll: Optional[Callable]=None,
+                            user_data: Optional[Any]=None,
                           ) ->int:
         """
         Add a mouse button handlers to process mouse actions.
@@ -2533,11 +2558,11 @@ class IPG:
     def add_event_window(self,
                          enabled: bool,
                          *,
-                        on_open: Union[None | Callable]=None,
-                        on_close: Union[None | Callable]=None,
-                        on_moved: Union[None | Callable]=None,
-                        on_resized: Union[None | Callable]=None,
-                        user_data: Union[None | any]=None,
+                        on_open: Optional[Callable]=None,
+                        on_close: Optional[Callable]=None,
+                        on_moved: Optional[Callable]=None,
+                        on_resized: Optional[Callable]=None,
+                        user_data: Optional[Any]=None,
                          ) -> int:
         """
         Adds event to the window other than those in the add_window method.
