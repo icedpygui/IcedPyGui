@@ -348,17 +348,20 @@ fn get_styling(theme: &Theme,
     }
 
     if style.rail_border_radius.is_some() {
-        base_style.rail.border_radius = get_radius(style.rail_border_radius.clone().unwrap());
+        base_style.rail.border_radius = get_radius(style.rail_border_radius.clone().unwrap(),
+                                            "Slider".to_string());
     }
 
     if style.handle_circle_radius.is_some() {
         base_style.handle.shape = HandleShape::Circle{radius: style.handle_circle_radius.unwrap() };
     }
 
-    let mut shape_rect: (u16, Radius) = (14, get_radius(vec![1.0])); 
+    let mut shape_rect: (u16, Radius) = (14, get_radius(vec![1.0],
+                                                "Slider".to_string())); 
 
     if style.handle_rectangle_border_radius.is_some() {
-        shape_rect.1 = get_radius(style.handle_rectangle_border_radius.clone().unwrap());
+        shape_rect.1 = get_radius(style.handle_rectangle_border_radius.clone().unwrap(),
+                                "Slider".to_string());
     }
 
     if style.handle_rectangle_width.is_some() {

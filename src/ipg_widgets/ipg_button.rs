@@ -1,7 +1,7 @@
 // #![allow(dead_code)]
 #![allow(unused_assignments)]
 
-use crate::style::styling::{get_text_pair, IpgColorPalette, IpgStyleStandard};
+use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, access_state, app};
 use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_style_standard, try_extract_vec_f64};
 use super::callbacks::{
@@ -14,7 +14,6 @@ use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{Button, Space, Text};
 use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector };
-use iced::theme::palette::Pair;
 
 use crate::graphics::bootstrap::{self, icon_to_char, icon_to_string};
 
@@ -30,7 +29,7 @@ pub struct IpgButton {
     pub height: Length,
     pub padding: Padding,
     pub clip: bool,
-    pub style: Option<String>,
+    pub style_id: Option<String>,
     pub style_standard: Option<IpgStyleStandard>,
     pub style_arrow: Option<PyObject>,
 }
@@ -46,7 +45,7 @@ impl IpgButton {
         height: Length,
         padding: Padding,
         clip: bool,
-        style: Option<String>,
+        style_id: Option<String>,
         style_standard: Option<IpgStyleStandard>,
         style_arrow: Option<PyObject>,
         ) -> Self {
@@ -59,7 +58,7 @@ impl IpgButton {
             height,
             padding,
             clip,
-            style,
+            style_id,
             style_standard,
             style_arrow,
         }
@@ -69,47 +68,44 @@ impl IpgButton {
 #[derive(Debug, Clone, Default)]
 pub struct IpgButtonStyle {
     pub id: usize,
-    pub base: Option<Color>,
-    pub strong: Option<Color>,
-    pub strong_factor: Option<f32>,
-    pub border: Option<Color>,
+    pub background_color: Option<Color>,
+    pub background_color_hovered: Option<Color>,
+    pub border_color: Option<Color>,
     pub border_radius: Vec<f32>,
     pub border_width: f32,
-    pub shadow: Option<Color>,
+    pub shadow_color: Option<Color>,
     pub shadow_offset_x: f32,
     pub shadow_offset_y: f32,
     pub shadow_blur_radius: f32,
-    pub text: Option<Color>,
+    pub text_color: Option<Color>,
 }
 
 impl IpgButtonStyle {
     pub fn new(
         id: usize,
-        base: Option<Color>,
-        strong: Option<Color>,
-        strong_factor: Option<f32>,
-        border: Option<Color>,
+        background_color: Option<Color>,
+        background_color_hovered: Option<Color>,
+        border_color: Option<Color>,
         border_radius: Vec<f32>,
         border_width: f32,
-        shadow: Option<Color>,
+        shadow_color: Option<Color>,
         shadow_offset_x: f32,
         shadow_offset_y: f32,
         shadow_blur_radius: f32,
-        text: Option<Color>,
+        text_color: Option<Color>,
     ) -> Self {
         Self {
             id,
-            base,
-            strong,
-            strong_factor,
-            border,
+            background_color,
+            background_color_hovered,
+            border_color,
             border_radius,
             border_width,
-            shadow,
+            shadow_color,
             shadow_offset_x,
             shadow_offset_y,
             shadow_blur_radius,
-            text,
+            text_color,
         }
     }
 }
@@ -144,7 +140,7 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
                                 .clip(btn.clip)
                                 .style(move|theme: &Theme, status| {   
                                     get_styling(theme, status,
-                                        btn.style.clone(),
+                                        btn.style_id.clone(),
                                         btn.style_standard.clone(),
                                     )  
                                     })
@@ -266,7 +262,7 @@ pub fn button_item_update(btn: &mut IpgButton,
         },
         IpgButtonParam::Style => {
             let val = try_extract_string(value);
-            btn.style = Some(val);
+            btn.style_id = Some(val);
         },
         IpgButtonParam::StyleStandard => {
             let val = try_extract_style_standard(value);
@@ -326,21 +322,25 @@ pub fn get_standard_style(theme: &Theme, status: Status,
 }
 
 pub fn get_styling(theme: &Theme, status: Status,
-                    style: Option<String>,
+                    style_id: Option<String>,
                     style_standard: Option<IpgStyleStandard>,  
                     ) -> button::Style 
 {
-    if style_standard.is_none() && style.is_none() {
+    if style_standard.is_none() && style_id.is_none() {
         return button::primary(theme, status)
     }
 
     let state = access_state();
 
-    let style_opt = if style.is_some() {
-        state.button_style.get(&style.unwrap())
+    let style_opt = if style_id.is_some() {
+        state.button_style.get(&style_id.clone().unwrap())
     } else {
         None
     };
+
+    if style_id.is_some() && style_opt.is_none() {
+        panic!("Button: Unable to find style_id {}", style_id.unwrap())
+    }
 
     if style_opt.is_none() && style_standard.is_some() {
             return get_standard_style(theme, status, style_standard, None, None)
@@ -358,15 +358,16 @@ pub fn get_styling(theme: &Theme, status: Status,
         style = style_opt.unwrap().clone();
     }
 
-    if style.border.is_some() {
-        border.color = style.border.unwrap();
+    if style.border_color.is_some() {
+        border.color = style.border_color.unwrap();
     }
 
-    border.radius = get_radius(style.border_radius.clone());
+    border.radius = get_radius(style.border_radius.clone(), 
+                                "Button".to_string());
     border.width = style.border_width;
 
-    if style.shadow.is_some() {
-        shadow.color = style.shadow.unwrap();
+    if style.shadow_color.is_some() {
+        shadow.color = style.shadow_color.unwrap();
         shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
         shadow.blur_radius = style.shadow_blur_radius;
     }
@@ -378,48 +379,12 @@ pub fn get_styling(theme: &Theme, status: Status,
                                     Some(border), Some(shadow))
     }
 
-    if style.base.is_none() && style.strong.is_some() {
-        panic!("Button style: if you define style.strong, you must define style.base too")
+    if style.background_color.is_some() {
+        base_style.background = Some(style.background_color.unwrap().into());
     }
 
-    // all custom colors
-    if style.base.is_some() && style.strong.is_some() {
-        let text = if style.text.is_some() {
-            style.text.unwrap()
-        } else {
-            let text = get_text_pair(style.text, style.base.unwrap());
-            let pair = Pair::new(style.base.unwrap(), text);
-            pair.text
-        };
-
-        let base_pair = Pair::new(style.base.unwrap(), text);
-        let strong_pair = Pair::new(style.strong.unwrap(), text);
-
-        base_style = styled(base_pair, border, shadow);
-
-        hover_style = styled(strong_pair, border, shadow);
-
-    }
-
-    // if only base is defined, generate strong and weak
-    if style.base.is_some() && style.strong.is_none() {
-        let text = if style.text.is_some() {
-            style.text.unwrap()
-        } else {
-            let text = get_text_pair(style.text, style.base.unwrap());
-            let pair = Pair::new(style.base.unwrap(), text);
-            pair.text
-        };
-        let background = theme.palette().background;
-        let palette = IpgColorPalette::generate(style.base.unwrap(),
-                                                                background,
-                                                                text, 
-                                                                style.strong_factor,
-                                                                None);
-        
-        base_style = styled(palette.base, border, shadow);
-
-        hover_style = styled(palette.strong, border, shadow);
+    if style.background_color_hovered.is_some() {
+        hover_style.background = Some(style.background_color_hovered.unwrap().into());
     }
 
 
@@ -431,15 +396,6 @@ pub fn get_styling(theme: &Theme, status: Status,
     
     style
 
-}
-
-fn styled(pair: Pair, border: Border, shadow: Shadow) -> Style {
-    Style {
-        background: Some(iced::Background::Color(pair.color)),
-        text_color: pair.text,
-        border,
-        shadow,
-    }
 }
 
 fn disabled(style: Style) -> Style {

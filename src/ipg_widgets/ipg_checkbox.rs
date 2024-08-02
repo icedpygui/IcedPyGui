@@ -1,8 +1,6 @@
-#![allow(unused_imports)]
 
-use crate::graphics::colors::{get_color, match_ipg_color, IpgColor};
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_f64, try_extract_string};
-use crate::style::styling::{darken, get_text_pair, lighten, IpgColorPalette, IpgStyleStandard, IpgStylingStandard, StyleBorder};
+use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, access_state};
 use crate::app;
 use super::helpers::{get_radius, get_shaping, get_width, try_extract_style_standard};
@@ -15,12 +13,10 @@ use crate::graphics::BOOTSTRAP_FONT;
 use crate::graphics::bootstrap_icon::{Icon, icon_to_char};
 
 use iced::advanced::text;
-use iced::border::Radius;
-use iced::{Border, Color, Element, Font, Length, Pixels, Theme};
-use iced::theme::palette::{Background, Pair};
+use iced::{Color, Element, Length, Theme};
 use iced::widget::text::{LineHeight, Shaping};
 use iced::widget::{Checkbox, Space};
-use iced::widget::checkbox::{self, primary, Status};
+use iced::widget::checkbox::{self, Status};
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -42,7 +38,7 @@ pub struct IpgCheckBox {
     // font: Option<Font>,
     pub icon_x: bool,
     pub icon_size: f32,
-    pub style: Option<String>,
+    pub style_id: Option<String>,
     pub style_standard: Option<IpgStyleStandard>,
 }
 
@@ -62,7 +58,7 @@ impl IpgCheckBox {
         text_shaping: Shaping,
         icon_x: bool,
         icon_size: f32,
-        style: Option<String>,
+        style_id: Option<String>,
         style_standard: Option<IpgStyleStandard>,
         ) -> Self {
             Self {
@@ -79,7 +75,7 @@ impl IpgCheckBox {
                 text_shaping,
                 icon_x,
                 icon_size,
-                style,
+                style_id,
                 style_standard,
             }
     }
@@ -89,27 +85,25 @@ impl IpgCheckBox {
 #[derive(Debug, Clone, Default)]
 pub struct IpgCheckboxStyle {
     pub id: usize,
-    pub base: Option<Color>,
-    pub strong: Option<Color>,
-    pub strong_factor: Option<f32>,
-    pub weak: Option<Color>,
-    pub weak_factor: Option<f32>,
-    pub border: Option<Color>,
+    pub background_color: Option<Color>,
+    pub background_color_hovered: Option<Color>,
+    pub accent_color: Option<Color>,
+    pub accent_color_hovered: Option<Color>,
+    pub border_color: Option<Color>,
     pub border_radius: Vec<f32>,
     pub border_width: f32,
     pub icon_color: Option<Color>,
-    pub text: Option<Color>,
+    pub text_color: Option<Color>,
 }
 
 impl IpgCheckboxStyle {
     pub fn new(
         id: usize,
-        base: Option<Color>,
-        strong: Option<Color>,
-        strong_factor: Option<f32>,
-        weak: Option<Color>,
-        weak_factor: Option<f32>,
-        border: Option<Color>,
+        background_color: Option<Color>,
+        background_color_hovered: Option<Color>,
+        accent_color: Option<Color>,
+        accent_color_hovered: Option<Color>,
+        border_color: Option<Color>,
         border_radius: Vec<f32>,
         border_width: f32,
         icon_color: Option<Color>,
@@ -117,16 +111,15 @@ impl IpgCheckboxStyle {
     ) -> Self {
         Self {
             id,
-            base,
-            strong,
-            strong_factor,
-            weak,
-            weak_factor,
-            border,
+            background_color,
+            background_color_hovered,
+            accent_color,
+            accent_color_hovered,
+            border_color,
             border_radius,
             border_width,
             icon_color,
-            text,
+            text_color: text,
         }
     }
 }
@@ -171,8 +164,9 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
                             )
                             .style(move|theme: &Theme, status| {   
                                 get_styling(theme, status,
-                                    chk.style.clone(), 
+                                    chk.style_id.clone(), 
                                     chk.style_standard.clone(),
+                                    chk.is_checked,
                                     )  
                                 })
                             .into();
@@ -304,7 +298,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
             chk.text_size = try_extract_f64(value) as f32;
         },
         IpgCheckboxParam::Style => {
-            chk.style = Some(try_extract_string(value))
+            chk.style_id = Some(try_extract_string(value))
         },
         IpgCheckboxParam::StyleStandard => {
             let val = try_extract_style_standard(value);
@@ -335,41 +329,28 @@ pub fn try_extract_checkbox_update(update_obj: PyObject) -> IpgCheckboxParam {
 }
 
 pub fn get_styling(theme: &Theme, status: Status,
-                    style: Option<String>,
-                    style_standard: Option<IpgStyleStandard>, 
+                    style_id: Option<String>,
+                    style_standard: Option<IpgStyleStandard>,
+                    is_checked: bool, 
                     ) -> checkbox::Style 
 {
 
-    // Scenarios
-    // 1. No styling => return primary
-    // 2. Check if style_id can be found
-    // 3. Style_standard => return a std_style
-    // 4. Standard styling with border changes => return std_style with border updated
-    // 5. No color styling return any border changes => primary with border changes
-    // 6. style colors are defined, base only
-    // 7. style colors defined, all.
-
-    // Scenario #1
-    if style_standard.is_none() && style.is_none() {
+    if style_standard.is_none() && style_id.is_none() {
         return checkbox::primary(theme, status)
     }
     
     let state = access_state();
 
-    // Scenario #2
-    let style_opt = if style.is_some() {
-        let style_str = style.unwrap();
-        let check = state.checkbox_style.get(&style_str);
-        if check.is_none() {
-            panic!("Checkbox style: Unable to find style_id '{}'", style_str)
-        } else {
-            check
-        }
+    let style_opt = if style_id.is_some() {
+        state.checkbox_style.get(&style_id.clone().unwrap())
     } else {
         None
     };
     
-    // Scenario #3
+    if style_id.is_some() && style_opt.is_none() {
+        panic!("Checkbox: Unable to find style_id {}", style_id.unwrap())
+    }
+
     if style_standard.is_some() {
         let style_std = style_standard.clone().unwrap();
 
@@ -386,175 +367,71 @@ pub fn get_styling(theme: &Theme, status: Status,
             IpgStyleStandard::Text => panic!("StandardStyle::Text not valid for checkbox"),
         };
 
-        // Scenario #4
         if style_opt.is_some() {
             let style = style_opt.unwrap();
             std_style.border.width = style.border_width;
-            std_style.border.radius = get_radius(style.border_radius.clone());
+            std_style.border.radius = get_radius(style.border_radius.clone(), 
+                            "Checkbox".to_string());
         }
        
         return std_style
     }
 
-    // Repeat of Screnario 1
     if style_opt.is_none() {
         return checkbox::primary(theme, status)
     }
 
     let style = style_opt.unwrap();
 
-    // Get the border first for remaining scenarios
-    let mut border = Border::default();
-    border.radius = get_radius(style.border_radius.clone());
-    border.width = style.border_width;
-
-    // Scenario #5
-    if style.base.is_none() {
-        let mut p_style = checkbox::primary(theme, status);
-        if style.border.is_some() {
-            p_style.border.color = style.border.unwrap();
-        }
-        p_style.border.width = border.width;
-        p_style.border.radius = border.radius;
-        return p_style
+    let mut border_style = checkbox::primary(theme, Status::Active { is_checked }).border;
+    
+    if style.border_color.is_some() {
+        border_style.color = style.border_color.unwrap();
     }
 
-    if style.base.is_none() && (style.strong.is_some() || style.weak.is_some()) {
-        panic!("Checkbox style: if you define style.strong or style.weak, you must define style.base too")
-    }
-
-    if (style.strong.is_some() && style.weak.is_none()) || 
-        (style.strong.is_none() && style.weak.is_some()) {
-        panic!("Checkbox style: if you define style.strong or style.weak, you must define both strong and weak")
-    }
-
-    // Initialize the 3 states
-    let mut base_active = Color::default();
-    let mut base_hovered = Color::default();
-    let mut base_disabled = Color::default();
-
-    let mut accent_active = Color::default();
-    let mut accent_hovered = Color::default();
-    let mut accent_disabled = Color::default();
-
-    // bordeer width and radius defined earlier
-    let mut border_active = border.clone();
-    let mut border_hovered = border.clone();
-    let mut border_disabled = border.clone();
-
-    // Add the color if present to the border
-    if style.border.is_some() {
-        border_active.color = style.border.unwrap();
-        border_hovered.color = style.border.unwrap();
-        border_disabled.color = style.border.unwrap();
-    }
-
-    // Initialize the icon color
-    let mut icon_color = Color::default();
-
-    // Get the palette for use when only base defined
-    let palette = theme.extended_palette();
-
-    // all custom colors
-    if style.base.is_some() && style.strong.is_some() && style.weak.is_some() {
-        // Since all colors defined, just modified the 3 style states
-        base_active = palette.background.base.color;
-        base_hovered = palette.background.weak.color;
-        base_disabled = palette.background.weak.color;
-
-        accent_active = style.base.unwrap();
-        accent_hovered = style.base.unwrap();
-        accent_disabled = style.weak.unwrap();
-
-        if style.icon_color.is_some() {
-            icon_color = style.icon_color.unwrap();
-        } else {
-            icon_color = get_text_pair(style.icon_color, style.strong.unwrap());
-        }
-
-        // Prevents over writong if defined earlier
-        if style.border.is_none() {
-            border_active.color = accent_active;
-            border_hovered.color = accent_hovered;
-            border_disabled.color = accent_disabled;
-        }
-    }
-
-    // Generate strong and weak
-    if style.base.is_some() && style.strong.is_none() && style.weak.is_none() {
-        let text_color = get_text_pair(style.text, style.base.unwrap());
-        
-        let ipg_palette = IpgColorPalette::generate(style.base.unwrap(),
-                                                                palette.background.base.color,
-                                                                text_color, 
-                                                                style.strong_factor,
-                                                                style.weak_factor);
-        base_active = palette.background.base.color;
-        base_hovered = palette.background.weak.color;
-        base_disabled = palette.background.weak.color;
-
-        accent_active = ipg_palette.base.color;
-        accent_hovered = ipg_palette.base.color;
-        accent_disabled = ipg_palette.weak.color;
-
-        if style.icon_color.is_some() {
-            icon_color = style.icon_color.unwrap();
-        } else {
-            icon_color = ipg_palette.strong.text;
-        }
-
-        if style.border.is_none() {
-            border_active.color = accent_active;
-            border_hovered.color = accent_hovered;
-            border_disabled.color = accent_disabled;
-        }
-    }
+    border_style.radius = get_radius(style.border_radius.clone(), "Checkbox".to_string());
+    border_style.width = style.border_width;
 
     match status {
-        Status::Active { is_checked } => return styled(
-            icon_color,
-            base_active,
-            accent_active,
-            is_checked,
-            border_active,
-            style.text,
-        ),
-        Status::Hovered { is_checked } => return styled(
-            icon_color,
-            base_hovered,
-            accent_hovered,
-            is_checked,
-            border_hovered,
-            style.text,
-        ),
-        Status::Disabled { is_checked } => return styled(
-            icon_color,
-            base_disabled,
-            accent_disabled,
-            is_checked,
-            border_disabled,
-            style.text,
-        ),
-    }
+        Status::Active { is_checked } => {
+            let mut active_style = checkbox::primary(theme, Status::Active { is_checked });
+            if style.background_color.is_some() && !is_checked {
+                active_style.background = iced::Background::Color(style.background_color.unwrap());
+            } else if style.accent_color.is_some() && is_checked {
+                active_style.background = iced::Background::Color(style.accent_color.unwrap());
+            }
+            if style.icon_color.is_some() {
+                active_style.icon_color = style.icon_color.unwrap();
+            }
 
-}
+            if style.text_color.is_some() {
+                active_style.text_color = style.text_color;
+            }
+            active_style.border = border_style;
 
-fn styled(
-    icon_color: Color,
-    base: Color,
-    accent: Color,
-    is_checked: bool,
-    border: Border,
-    text_color: Option<Color>,
-) -> checkbox::Style {
-    checkbox::Style {
-        background: iced::Background::Color(if is_checked {
-            accent
-        } else {
-            base
-        }),
-        icon_color,
-        border,
-        text_color,
+            active_style
+        },
+        Status::Hovered { is_checked } => {
+            let mut hovered_style = checkbox::primary(theme, Status::Hovered { is_checked });
+            if style.background_color_hovered.is_some() && !is_checked {
+                hovered_style.background = iced::Background::Color(style.background_color_hovered.unwrap());
+            } else if style.accent_color_hovered.is_some() && is_checked {
+                hovered_style.background = iced::Background::Color(style.accent_color_hovered.unwrap());
+            }
+            if style.icon_color.is_some() {
+                hovered_style.icon_color = style.icon_color.unwrap();
+            }
+
+            if style.text_color.is_some() {
+                hovered_style.text_color = style.text_color;
+            }
+            hovered_style.border = border_style;
+
+            hovered_style
+        },
+        Status::Disabled { is_checked } => {
+            checkbox::danger(theme, Status::Disabled { is_checked })
+        },
     }
+    
 }

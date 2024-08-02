@@ -54,7 +54,7 @@ ipg.add_container(window_id=main_1, container_id="cont2",
                   parent_id="col",
                   width=200.0, height=100.0,
                   center_xy=True,
-                  style="theme_bkg")
+                  style_id="theme_bkg")
 
 # Add some text for info
 ipg.add_text(parent_id="cont2", content="Theme Background")
@@ -64,7 +64,7 @@ ipg.add_container(window_id=main_1, container_id="cont3",
                     parent_id="col",
                     width=200.0, height=100.0,
                     center_xy=True,
-                    style="cont_color",
+                    style_id="cont_color",
                     )
 
 # Add some text for info
@@ -97,7 +97,7 @@ ipg.add_container(window_id=main_2, container_id="cont2",
                   parent_id="col",
                   width=200.0, height=100.0,
                   center_xy=True,
-                  style="theme_bkg")
+                  style_id="theme_bkg")
 
 # Add some text for info
 ipg.add_text(parent_id="cont2", content="Theme Background")
@@ -107,7 +107,7 @@ ipg.add_container(window_id=main_2, container_id="cont3",
                     parent_id="col",
                     width=200.0, height=100.0,
                     center_xy=True,
-                    style="cont_color",
+                    style_id="cont_color",
                     )
 
 # Add some text for info

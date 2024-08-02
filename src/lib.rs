@@ -1,6 +1,4 @@
 //!lib for all of the python callable functions using pyo3
-#![allow(non_snake_case)]
-
 use ipg_widgets::ipg_modal::IpgModal;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
@@ -8,10 +6,8 @@ use pyo3::PyObject;
 
 use iced::multi_window::Application;
 use iced::window::{self, Position};
-use iced::{theme, Color, Font, Length, Padding, Point, Settings, Size, Theme};
+use iced::{Color, Font, Length, Padding, Point, Settings, Size, Theme};
 use iced::widget::text::{self, LineHeight};
-use iced::border::Radius;
-use style::ipg_palette::IpgPaletteSet;
 
 use core::panic;
 use std::iter::Iterator;
@@ -25,7 +21,7 @@ mod iced_widgets;
 mod iced_aw_widgets;
 mod graphics;
 mod style;
-
+use style::ipg_palette::IpgPaletteSet;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyle, IpgCardParam};
@@ -45,7 +41,7 @@ use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, Ipg
 use ipg_widgets::ipg_row::IpgRow;
 use ipg_widgets::ipg_rule::{IpgRule, IpgRuleStyle};
 use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, 
-                                    IpgScrollableDirection, IpgScrollableParam};
+                                    IpgScrollableDirection, IpgScrollableParam, IpgScrollableStyle};
 use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText, 
                                         IpgSelectableTextParam};
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParam, IpgSliderStyle};
@@ -67,9 +63,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_horizont
     get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{readable, IpgPalette, IpgStyleParam, IpgStyleStandard, 
-    IpgStylingStandard, StyleBarColor, StyleBorder, StyleDotColor, StyleFillMode, 
-    StyleHandleColor, StyleIconColor, StyleShadow, StyleTextColor};
+use style::styling::{IpgStyleParam, IpgStyleStandard};
 
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
 
@@ -138,17 +132,18 @@ pub struct State {
     pub slider_style:  Lazy<HashMap<String, IpgSliderStyle>>,
     pub text_input_style: Lazy<HashMap<String, IpgTextInputStyle>>,
     pub toggler_style: Lazy<HashMap<String, IpgTogglerStyle>>,
+    pub scrollable_style: Lazy<HashMap<String, IpgScrollableStyle>>,
 
-    pub styling_color: Lazy<HashMap<String, IpgPalette>>,
-    pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
-    pub styling_bar_color: Lazy<HashMap<String, StyleBarColor>>,
-    pub styling_border: Lazy<HashMap<String, StyleBorder>>,
-    pub styling_dot_color: Lazy<HashMap<String, StyleDotColor>>,
-    pub styling_fill_mode: Lazy<HashMap<String, StyleFillMode>>,
-    pub styling_handle_color: Lazy<HashMap<String, StyleHandleColor>>,
-    pub styling_icon_color: Lazy<HashMap<String, StyleIconColor>>,
-    pub styling_shadow: Lazy<HashMap<String, StyleShadow>>,
-    pub styling_text_color: Lazy<HashMap<String, StyleTextColor>>,
+    // pub styling_color: Lazy<HashMap<String, IpgPalette>>,
+    // pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
+    // pub styling_bar_color: Lazy<HashMap<String, StyleBarColor>>,
+    // pub styling_border: Lazy<HashMap<String, StyleBorder>>,
+    // pub styling_dot_color: Lazy<HashMap<String, StyleDotColor>>,
+    // pub styling_fill_mode: Lazy<HashMap<String, StyleFillMode>>,
+    // pub styling_handle_color: Lazy<HashMap<String, StyleHandleColor>>,
+    // pub styling_icon_color: Lazy<HashMap<String, StyleIconColor>>,
+    // pub styling_shadow: Lazy<HashMap<String, StyleShadow>>,
+    // pub styling_text_color: Lazy<HashMap<String, StyleTextColor>>,
     
 }
 
@@ -189,17 +184,18 @@ pub static STATE: Mutex<State> = Mutex::new(
         slider_style: Lazy::new(||HashMap::new()),
         text_input_style: Lazy::new(||HashMap::new()),
         toggler_style: Lazy::new(||HashMap::new()),
+        scrollable_style: Lazy::new(||HashMap::new()),
         
-        styling_color: Lazy::new(||HashMap::new()),
-        styling_standard: Lazy::new(||HashMap::new()),
-        styling_bar_color: Lazy::new(||HashMap::new()),
-        styling_border: Lazy::new(||HashMap::new()),
-        styling_dot_color: Lazy::new(||HashMap::new()),
-        styling_fill_mode: Lazy::new(||HashMap::new()),
-        styling_handle_color: Lazy::new(||HashMap::new()),
-        styling_icon_color: Lazy::new(||HashMap::new()),
-        styling_shadow: Lazy::new(||HashMap::new()),
-        styling_text_color: Lazy::new(||HashMap::new()),
+        // styling_color: Lazy::new(||HashMap::new()),
+        // styling_standard: Lazy::new(||HashMap::new()),
+        // styling_bar_color: Lazy::new(||HashMap::new()),
+        // styling_border: Lazy::new(||HashMap::new()),
+        // styling_dot_color: Lazy::new(||HashMap::new()),
+        // styling_fill_mode: Lazy::new(||HashMap::new()),
+        // styling_handle_color: Lazy::new(||HashMap::new()),
+        // styling_icon_color: Lazy::new(||HashMap::new()),
+        // styling_shadow: Lazy::new(||HashMap::new()),
+        // styling_text_color: Lazy::new(||HashMap::new()),
     }
 );
 
@@ -399,9 +395,10 @@ impl IPG {
     }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
-                        width=None, height=None, width_fill=false, height_fill=false, 
-                        center_xy=false, clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
-                        align_x=IpgHorizontalAlignment::Left, align_y=IpgVerticalAlignment::Top,
+                        width=None, width_fill=false, 
+                        height=None, height_fill=false, 
+                        clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
+                        horizontal_alignment=None, vertical_alignment=None,
                         padding=vec![0.0], show=true, style=None, 
                         
                        ))]
@@ -411,18 +408,17 @@ impl IPG {
                         // **above reuired
                         parent_id: Option<String>,
                         width: Option<f32>,
-                        height: Option<f32>,
                         width_fill: bool,
+                        height: Option<f32>,
                         height_fill: bool,
-                        center_xy: bool,
                         clip: bool,
                         max_height: f32,
                         max_width: f32,
-                        align_x: IpgHorizontalAlignment,
-                        align_y: IpgVerticalAlignment, 
+                        horizontal_alignment: Option<IpgHorizontalAlignment>,
+                        vertical_alignment: Option<IpgVerticalAlignment>, 
                         padding: Vec<f64>, 
                         show: bool,
-                        style: Option<String>,
+                        style_id: Option<String>,
                         ) -> PyResult<usize>
     {
         self.id += 1;
@@ -450,11 +446,10 @@ impl IPG {
                                                 height,
                                                 max_width,
                                                 max_height,
-                                                align_x,
-                                                align_y,
-                                                center_xy,
+                                                horizontal_alignment,
+                                                vertical_alignment,
                                                 clip,
-                                                style, 
+                                                style_id, 
                                             )));
 
         drop(state);
@@ -463,10 +458,8 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
-                        strong_color=None, strong_rgba=None,
-                        weak_color=None, weak_rgba=None,
-                        strong_factor=0.40, weak_factor=0.15, 
+    #[pyo3(signature = (style_id, 
+                        background_color=None, background_rgba=None,
                         border_color=None, border_rgba=None,
                         border_radius = vec![0.0], border_width=1.0,
                         shadow_color=None, shadow_rgba=None,
@@ -476,14 +469,8 @@ impl IPG {
                         gen_id=None))]
     fn add_container_style(&mut self,
                             style_id: String,
-                            base_color: Option<IpgColor>,
-                            base_rgba: Option<[f32; 4]>,
-                            strong_color: Option<IpgColor>,
-                            strong_rgba: Option<[f32; 4]>,
-                            weak_color: Option<IpgColor>,
-                            weak_rgba: Option<[f32; 4]>,
-                            strong_factor: Option<f32>,
-                            weak_factor: Option<f32>,
+                            background_color: Option<IpgColor>,
+                            background_rgba: Option<[f32; 4]>,
                             border_color: Option<IpgColor>,
                             border_rgba: Option<[f32; 4]>,
                             border_radius: Vec<f32>,
@@ -502,34 +489,22 @@ impl IPG {
 
         let mut state = access_state();
 
-        let mut use_background = false;
-        if base_color == Some(IpgColor::BACKGROUND_THEME) {
-            use_background = true;
-        }
-
-        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
-        let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
-        let weak: Option<Color> = get_color(weak_rgba, weak_color, 1.0, false);
-        let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
         let shadow: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
-        let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+        let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
 
         state.container_style.insert(style_id, IpgContainerStyle::new( 
                                                     id,
-                                                    base,
-                                                    strong,
-                                                    weak,
-                                                    strong_factor,
-                                                    weak_factor,
-                                                    border,
+                                                    background_color,
+                                                    border_color,
                                                     border_radius,
                                                     border_width,
                                                     shadow,
                                                     shadow_offset_x,
                                                     shadow_offset_y,
                                                     shadow_blur_radius,
-                                                    text,
-                                                    use_background,
+                                                    text_color,
                                                     ));
         
         drop(state);
@@ -808,15 +783,17 @@ impl IPG {
     }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
-                        width=None, height=None, width_fill=false, height_fill=false, 
-                        direction=IpgScrollableDirection::Vertical, h_bar_width=10.0, 
-                        h_bar_margin=0.0, h_scroller_width=10.0, 
+                        width=None, height=None, 
+                        width_fill=false, height_fill=false, 
+                        direction=IpgScrollableDirection::Vertical, 
+                        h_bar_width=10.0, h_bar_margin=0.0, 
+                        h_scroller_width=10.0, 
                         h_bar_alignment=IpgScrollableAlignment::Start,
-                        v_bar_width=10.0, v_bar_margin=0.0, v_scroller_width=10.0, 
+                        v_bar_width=10.0, v_bar_margin=0.0, 
+                        v_scroller_width=10.0, 
                         v_bar_alignment=IpgScrollableAlignment::Start,
-                        on_scroll=None, style_color=None,
-                        style_border=None,
-                        user_data=None,
+                        on_scroll=None, user_data=None,
+                        style_id=None,
                         ))]
     fn add_scrollable(&mut self,
                             window_id: String,
@@ -837,9 +814,8 @@ impl IPG {
                             v_scroller_width: f32,
                             v_bar_alignment: IpgScrollableAlignment,
                             on_scroll: Option<PyObject>,
-                            style_color: Option<String>,
-                            style_border: Option<String>,
                             user_data: Option<PyObject>,
+                            style_id: Option<String>,
                             ) -> PyResult<usize>
     {
         self.id += 1;
@@ -878,13 +854,98 @@ impl IPG {
                                                     v_bar_margin,
                                                     v_scroller_width,
                                                     v_bar_alignment,
-                                                    style_color,
-                                                    style_border,
                                                     user_data,
+                                                    style_id,
                                                     )));
         drop(state);
         Ok(self.id)
 
+    }
+
+    #[pyo3(signature = (style_id, 
+                        background_color=None, background_rgba=None,
+                        border_color=None, border_rgba=None,
+                        border_radius = vec![0.0], border_width=1.0,
+                        shadow_color=None, shadow_rgba=None,
+                        shadow_offset_x=0.0, shadow_offset_y=0.0,
+                        shadow_blur_radius=1.0,
+                        text_color=None, text_rgba=None,
+                        scrollbar_color=None,
+                        scrollbar_rgba=None,
+                        scrollbar_border_radius=vec![2.0],
+                        scrollbar_border_width=1.0,
+                        scrollbar_border_color=None,
+                        scrollbar_border_rgba=None,
+                        scroller_color=None,
+                        scroller_rgba=None,
+                        scroller_color_hovered=None,
+                        scroller_rgba_hovered=None,
+                        gen_id=None))]
+    fn add_scrollable_style(&mut self,
+                            style_id: String,
+                            background_color: Option<IpgColor>,
+                            background_rgba: Option<[f32; 4]>,
+                            border_color: Option<IpgColor>,
+                            border_rgba: Option<[f32; 4]>,
+                            border_radius: Vec<f32>,
+                            border_width: f32,
+                            shadow_color: Option<IpgColor>,
+                            shadow_rgba: Option<[f32; 4]>,
+                            shadow_offset_x: f32,
+                            shadow_offset_y: f32,
+                            shadow_blur_radius: f32,
+                            text_color: Option<IpgColor>,
+                            text_rgba: Option<[f32; 4]>,
+                            scrollbar_color: Option<IpgColor>,
+                            scrollbar_rgba: Option<[f32; 4]>,
+                            scrollbar_border_radius: Vec<f32>,
+                            scrollbar_border_width: f32,
+                            scrollbar_border_color: Option<IpgColor>,
+                            scrollbar_border_rgba: Option<[f32; 4]>,
+                            scroller_color: Option<IpgColor>,
+                            scroller_rgba: Option<[f32; 4]>,
+                            scroller_color_hovered: Option<IpgColor>,
+                            scroller_rgba_hovered: Option<[f32; 4]>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let mut state = access_state();
+
+        let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
+        let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+
+        let scrollbar_color: Option<Color> = get_color(scrollbar_rgba, scrollbar_color, 1.0, false);
+        let scrollbar_border_color: Option<Color> = get_color(scrollbar_border_rgba, scrollbar_border_color, 1.0, false);
+        
+        let scroller_color: Option<Color> = get_color(scroller_rgba, scroller_color, 1.0, false);
+        let scroller_color_hovered: Option<Color> = get_color(scroller_rgba_hovered, scroller_color_hovered, 1.0, false);
+
+        state.scrollable_style.insert(style_id, IpgScrollableStyle::new( 
+                                                    id,
+                                                    background_color,
+                                                    border_color,
+                                                    border_radius,
+                                                    border_width,
+                                                    shadow_color,
+                                                    shadow_offset_x,
+                                                    shadow_offset_y,
+                                                    shadow_blur_radius,
+                                                    text_color,
+                                                    scrollbar_color,
+                                                    scrollbar_border_radius,
+                                                    scrollbar_border_width,
+                                                    scrollbar_border_color,
+                                                    scroller_color,
+                                                    scroller_color_hovered,
+                                                    ));
+        
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (window_id, container_id, position, text_to_display, 
@@ -936,7 +997,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
                         height_fill=false, padding=vec![10.0], clip=false, 
-                        style=None, style_standard=None, 
+                        style_id=None, style_standard=None, 
                         style_arrow=None, user_data=None, show=true, 
                         ))]
     fn add_button(&mut self,
@@ -951,7 +1012,7 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         clip: bool,
-                        style: Option<String>,
+                        style_id: Option<String>,
                         style_standard: Option<IpgStyleStandard>,
                         style_arrow: Option<PyObject>,
                         user_data: Option<PyObject>,
@@ -982,7 +1043,7 @@ impl IPG {
                                                 height,
                                                 padding,
                                                 clip,
-                                                style,
+                                                style_id,
                                                 style_standard,
                                                 style_arrow,                              
                                                 )));
@@ -991,9 +1052,9 @@ impl IPG {
     
     }
 
-    #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
-                        strong_color=None, strong_rgba=None,
-                        strong_factor=0.40, 
+    #[pyo3(signature = (style_id, 
+                        background_color=None, background_rgba=None,
+                        background_color_hovered=None, background_rgba_hovered=None,
                         border_color=None, border_rgba=None,
                         border_radius = vec![0.0], border_width=1.0,
                         shadow_color=None, shadow_rgba=None,
@@ -1003,11 +1064,10 @@ impl IPG {
                         gen_id=None))]
     fn add_button_style(&mut self,
                             style_id: String,
-                            base_color: Option<IpgColor>,
-                            base_rgba: Option<[f32; 4]>,
-                            strong_color: Option<IpgColor>,
-                            strong_rgba: Option<[f32; 4]>,
-                            strong_factor: Option<f32>,
+                            background_color: Option<IpgColor>,
+                            background_rgba: Option<[f32; 4]>,
+                            background_color_hovered: Option<IpgColor>,
+                            background_rgba_hovered: Option<[f32; 4]>,
                             border_color: Option<IpgColor>,
                             border_rgba: Option<[f32; 4]>,
                             border_radius: Vec<f32>,
@@ -1026,25 +1086,24 @@ impl IPG {
 
         let mut state = access_state();
 
-        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
-        let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
-        let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
-        let shadow: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
-        let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+        let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
+        let background_color_hovered: Option<Color> = get_color(background_rgba_hovered, background_color_hovered, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
+        let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
 
         state.button_style.insert(style_id, IpgButtonStyle::new( 
                                                     id,
-                                                    base,
-                                                    strong,
-                                                    strong_factor,
-                                                    border,
+                                                    background_color,
+                                                    background_color_hovered,
+                                                    border_color,
                                                     border_radius,
                                                     border_width,
-                                                    shadow,
+                                                    shadow_color,
                                                     shadow_offset_x,
                                                     shadow_offset_y,
                                                     shadow_blur_radius,
-                                                    text,
+                                                    text_color,
                                                     ));
         
         drop(state);
@@ -1127,7 +1186,7 @@ impl IPG {
                         size=16.0, spacing=10.0, text_line_height=1.3, 
                         text_shaping="basic".to_string(),text_size=16.0, 
                         icon_x=false, icon_size=25.0, user_data=None, 
-                        show=true, style=None, style_standard=None, 
+                        show=true, style_id=None, style_standard=None, 
                         ))] 
     fn add_checkbox(&mut self,
                         parent_id: String,
@@ -1147,7 +1206,7 @@ impl IPG {
                         icon_size: f32,
                         user_data: Option<PyObject>,
                         show: bool,
-                        style: Option<String>,
+                        style_id: Option<String>,
                         style_standard: Option<IpgStyleStandard>,
                         ) -> PyResult<usize> 
     {
@@ -1181,7 +1240,7 @@ impl IPG {
                                                     text_shaping,
                                                     icon_x,
                                                     icon_size,
-                                                    style,
+                                                    style_id,
                                                     style_standard,
                                                     )));
         drop(state);
@@ -1189,25 +1248,34 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
-                        strong_color=None, strong_rgba=None,
-                        weak_color=None, weak_rgba=None,
-                        strong_factor=None, weak_factor=None,
-                        border_color=None, border_rgba=None,
-                        border_radius = vec![2.0], border_width=1.0,
-                        icon_color=None, icon_rgba=None,
-                        text_color=None, text_rgba=None,
+    #[pyo3(signature = (style_id, 
+                        background_color=None, 
+                        background_rgba=None,
+                        background_color_hovered=None,
+                        background_rgba_hovered=None,
+                        accent_color=None,
+                        accent_rgba=None,
+                        accent_color_hovered=None,
+                        accent_rgba_hovered=None,
+                        border_color=None, 
+                        border_rgba=None,
+                        border_radius=vec![2.0], 
+                        border_width=1.0,
+                        icon_color=None, 
+                        icon_rgba=None,
+                        text_color=None, 
+                        text_rgba=None,
                         gen_id=None))]
     fn add_checkbox_style(&mut self,
                             style_id: String,
-                            base_color: Option<IpgColor>,
-                            base_rgba: Option<[f32; 4]>,
-                            strong_color: Option<IpgColor>,
-                            strong_rgba: Option<[f32; 4]>,
-                            weak_color: Option<IpgColor>,
-                            weak_rgba: Option<[f32; 4]>,
-                            strong_factor: Option<f32>,
-                            weak_factor: Option<f32>,
+                            background_color: Option<IpgColor>,
+                            background_rgba: Option<[f32; 4]>,
+                            background_color_hovered: Option<IpgColor>,
+                            background_rgba_hovered: Option<[f32; 4]>,
+                            accent_color: Option<IpgColor>,
+                            accent_rgba: Option<[f32; 4]>,
+                            accent_color_hovered: Option<IpgColor>,
+                            accent_rgba_hovered: Option<[f32; 4]>,
                             border_color: Option<IpgColor>,
                             border_rgba: Option<[f32; 4]>,
                             border_radius: Vec<f32>,
@@ -1223,25 +1291,25 @@ impl IPG {
 
         let mut state = access_state();
 
-        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
-        let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
-        let weak: Option<Color> = get_color(weak_rgba, weak_color, 1.0, false);
-        let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
+        let background_color_hovered: Option<Color> = get_color(background_rgba_hovered, background_color_hovered, 1.0, false);
+        let accent_color: Option<Color> = get_color(accent_rgba, accent_color, 1.0, false);
+        let accent_color_hovered: Option<Color> = get_color(accent_rgba_hovered, accent_color_hovered, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
         let icon_color: Option<Color> = get_color(icon_rgba, icon_color, 1.0, false);
-        let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+        let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
 
         state.checkbox_style.insert(style_id, IpgCheckboxStyle::new( 
                                                     id,
-                                                    base,
-                                                    strong,
-                                                    strong_factor,
-                                                    weak,
-                                                    weak_factor,
-                                                    border,
+                                                    background_color,
+                                                    background_color_hovered,
+                                                    accent_color,
+                                                    accent_color_hovered,
+                                                    border_color,
                                                     border_radius,
                                                     border_width,
                                                     icon_color,
-                                                    text,
+                                                    text_color,
                                                     ));
         
         drop(state);
@@ -1822,14 +1890,8 @@ impl IPG {
     }
 
 #[pyo3(signature = (style_id,
-                    base_color=None,
-                    base_rgba=None,
-                    strong_color=None,
-                    strong_rgba=None,
-                    weak_color=None,
-                    weak_rgba=None,
-                    strong_factor=None,
-                    weak_factor=None,
+                    background_color=None,
+                    background_rgba=None,
                     text_color=None,
                     text_rgba=None,
                     handle_color=None,
@@ -1838,19 +1900,15 @@ impl IPG {
                     placeholder_rgba=None,
                     border_color=None,
                     border_rgba=None,
-                    border_radius=None,
-                    border_width=None,
+                    border_color_hovered=None,
+                    border_rgba_hovered=None,
+                    border_radius=vec![2.0],
+                    border_width=1.0,
                     gen_id=None))]
     fn add_pick_list_style(&mut self,
                             style_id: String,
-                            base_color: Option<IpgColor>,
-                            base_rgba: Option<[f32; 4]>,
-                            strong_color: Option<IpgColor>,
-                            strong_rgba: Option<[f32; 4]>,
-                            weak_color: Option<IpgColor>,
-                            weak_rgba: Option<[f32; 4]>,
-                            strong_factor: Option<f32>,
-                            weak_factor: Option<f32>,
+                            background_color: Option<IpgColor>,
+                            background_rgba: Option<[f32; 4]>,
                             text_color: Option<IpgColor>,
                             text_rgba: Option<[f32; 4]>,
                             handle_color: Option<IpgColor>,
@@ -1859,17 +1917,18 @@ impl IPG {
                             placeholder_rgba: Option<[f32; 4]>,
                             border_color: Option<IpgColor>,
                             border_rgba: Option<[f32; 4]>,
-                            border_radius: Option<Vec<f32>>,
-                            border_width: Option<f32>,
+                            border_color_hovered: Option<IpgColor>,
+                            border_rgba_hovered: Option<[f32; 4]>,
+                            border_radius: Vec<f32>,
+                            border_width: f32,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
         
-        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
-        let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
-        let weak: Option<Color> = get_color(weak_rgba, weak_color, 1.0, false);
+        let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
         let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let border_color_hovered: Option<Color> = get_color(border_rgba_hovered, border_color_hovered, 1.0, false);
         let handle_color: Option<Color> = get_color(handle_rgba, handle_color, 1.0, false);
         let placeholder_color = get_color(placeholder_rgba, placeholder_color, 1.0, false);
         let text_color = get_color(text_rgba, text_color, 1.0, false);
@@ -1878,15 +1937,12 @@ impl IPG {
 
         state.pick_list_style.insert(style_id, IpgPickListStyle::new( 
                                                     id,
-                                                    base,
-                                                    strong,
-                                                    weak,
-                                                    strong_factor,
-                                                    weak_factor,
+                                                    background_color,
                                                     text_color,
                                                     handle_color,
                                                     placeholder_color,
                                                     border_color,
+                                                    border_color_hovered,
                                                     border_radius,
                                                     border_width,
                                                     ));
@@ -2538,417 +2594,6 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id, 
-                        standard, 
-                        gen_id=None))]
-    fn add_styling_standard(&mut self,
-                            style_id: String,
-                            standard: IpgStyleStandard,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        let mut state = access_state();
-       
-        state.styling_standard.insert(style_id, IpgStylingStandard::new( 
-                                                    id,
-                                                    standard,
-                                                    ));
-        
-        drop(state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (style_id, base_color=None, base_rgba=None,
-                        strong_color=None, strong_rgba=None,
-                        weak_color=None, weak_rgba=None,
-                        strong_factor=0.15, weak_factor=0.40, 
-                        bar_color=None, bar_rgba=None, 
-                        border_color=None, border_rgba=None, 
-                        blur_color=None, blur_rgba=None, 
-                        dot_color=None, dot_rgba=None,
-                        handle_color=None, handle_rgba=None, 
-                        icon_color=None, icon_rgba=None,
-                        placeholder_color=None, placeholder_rgba=None,
-                        scroller_color=None, scroller_rgba=None,
-                        scrollbar_color=None, scrollbar_rgba=None, 
-                        shadow_color=None, shadow_rgba=None,
-                        text_color=None, text_rgba=None,
-                        gen_id=None))]
-    fn add_styling_color(&mut self,
-                            style_id: String,
-                            base_color: Option<IpgColor>,
-                            base_rgba: Option<[f32; 4]>,
-                            strong_color: Option<IpgColor>,
-                            strong_rgba: Option<[f32; 4]>,
-                            weak_color: Option<IpgColor>,
-                            weak_rgba: Option<[f32; 4]>,
-                            strong_factor: f32,
-                            weak_factor: f32,
-                            bar_color: Option<IpgColor>,
-                            bar_rgba: Option<[f32; 4]>,
-                            border_color: Option<IpgColor>,
-                            border_rgba: Option<[f32; 4]>,
-                            blur_color: Option<IpgColor>,
-                            blur_rgba: Option<[f32; 4]>,
-                            dot_color: Option<IpgColor>,
-                            dot_rgba: Option<[f32; 4]>,
-                            handle_color: Option<IpgColor>,
-                            handle_rgba: Option<[f32; 4]>,
-                            icon_color: Option<IpgColor>,
-                            icon_rgba: Option<[f32; 4]>,
-                            placeholder_color: Option<IpgColor>,
-                            placeholder_rgba: Option<[f32; 4]>,
-                            scroller_color: Option<IpgColor>,
-                            scroller_rgba: Option<[f32; 4]>,
-                            scrollbar_color: Option<IpgColor>,
-                            scrollbar_rgba: Option<[f32; 4]>,
-                            shadow_color: Option<IpgColor>,
-                            shadow_rgba: Option<[f32; 4]>,
-                            text_color: Option<IpgColor>,
-                            text_rgba: Option<[f32; 4]>,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        let mut state = access_state();
-
-        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
-        let strong: Option<Color> = get_color(strong_rgba, strong_color, 1.0, false);
-        let weak: Option<Color> = get_color(weak_rgba, weak_color, 1.0, false);
-        let bar: Option<Color> = get_color(bar_rgba, bar_color, 1.0, false);
-        let blur: Option<Color> = get_color(blur_rgba, blur_color, 1.0, false);
-        let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
-        let dot: Option<Color> = get_color(dot_rgba, dot_color, 1.0, false);
-        let handle: Option<Color> = get_color(handle_rgba, handle_color, 1.0, false);
-        let icon: Option<Color> = get_color(icon_rgba, icon_color, 1.0, false);
-        let placeholder: Option<Color> = get_color(placeholder_rgba, placeholder_color, 1.0, false);
-        let scroller: Option<Color> = get_color(scroller_rgba, scroller_color, 1.0, false);
-        let scrollbar: Option<Color> = get_color(scrollbar_rgba, scrollbar_color, 1.0, false);
-        let shadow: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
-        let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
-        
-        state.styling_color.insert(style_id, IpgPalette::new( 
-                                                    id,
-                                                    base,
-                                                    strong,
-                                                    weak,
-                                                    strong_factor,
-                                                    weak_factor,
-                                                    bar,
-                                                    border,
-                                                    blur,
-                                                    dot,
-                                                    handle,
-                                                    icon,
-                                                    placeholder,
-                                                    scroller,
-                                                    scrollbar,
-                                                    shadow,
-                                                    text,
-                                                    ));
-        
-        drop(state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (base_color=None, base_rgba=None))]
-    fn get_color_palette(&mut self, 
-                            base_color: Option<IpgColor>,
-                            base_rgba: Option<[f32; 4]>,
-                        ) -> PyResult<([f32; 4], [f32; 4], [f32; 4])>
-    {
-        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
-
-        let text_color = readable(base.unwrap(), Color::WHITE);
-
-        let palette = theme::palette::Background::new(base.unwrap(), text_color);
-
-        let color = palette.strong.color;
-        let strong = [color.r, color.g, color.b, color.a];
-        let color = palette.weak.color;
-        let weak = [color.r, color.g, color.b, color.a];
-        let color = text_color;
-        let text = [color.r, color.g, color.b, color.a];
-
-        Ok((strong, weak, text)) 
-    }
-
-    #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, scale_alpha=1.0, 
-                        accent=0.05, gen_id=None))]
-    fn add_styling_bar_color(&mut self,
-                            style_id: String,
-                            rgba: Option<[f32; 4]>,
-                            color: Option<IpgColor>,
-                            invert: bool,
-                            scale_alpha: f32,
-                            accent: f32,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        let color: Color = if rgba.is_some() | color.is_some() {
-            get_color(rgba, color, scale_alpha, invert).unwrap()
-        } else {
-            Color::BLACK
-        };
-
-        let mut state = access_state();
-       
-        state.styling_bar_color.insert(style_id, StyleBarColor::new( 
-                                                    id,
-                                                    color,
-                                                    accent,
-                                                    ));
-        
-        drop(state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (style_id, width=1.0, radius=vec![2.0], 
-                        scroller_radius=vec![2.0], scrollbar_radius=vec![2.0], 
-                        gen_id=None
-                        ))]
-    fn add_styling_border(&mut self,
-                            style_id: String,
-                            width: f32,
-                            radius: Vec<f32>,
-                            scroller_radius: Vec<f32>,
-                            scrollbar_radius: Vec<f32>,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        let radius: Radius = if radius.len() == 1 {
-            Radius::from([radius[0]; 4])
-        } else if radius.len() == 4 {
-            Radius::from([radius[0], radius[1], radius[2], radius[3]])
-        } else {
-            panic!("Radius must have a type of list with either 1 or 4 items")
-        };
-
-        let scrollbar_radius: Radius = if scrollbar_radius.len() == 1 {
-            Radius::from([scrollbar_radius[0]; 4])
-        } else if scroller_radius.len() == 4 {
-            Radius::from([scroller_radius[0], scroller_radius[1], scroller_radius[2], scroller_radius[3]])
-        } else {
-            panic!("Radius must have a type of list with either 1 or 4 items")
-        };
-
-        let scroller_radius: Radius = if scroller_radius.len() == 1 {
-            Radius::from([scroller_radius[0]; 4])
-        } else if scroller_radius.len() == 4 {
-            Radius::from([scroller_radius[0], scroller_radius[1], scroller_radius[2], scroller_radius[3]])
-        } else {
-            panic!("Radius must have a type of list with either 1 or 4 items")
-        };
-
-        let mut state = access_state();
-       
-        state.styling_border.insert(style_id, StyleBorder::new( 
-                                                id,
-                                                radius,
-                                                width,
-                                                scroller_radius,
-                                                scrollbar_radius,
-                                                ));
-
-        drop(state);
-
-        Ok(id) 
-    }
-
-    #[pyo3(signature = (style_id, full=None, percent=None, 
-                        padded=None, asymmetric_padding=None, gen_id=None))]
-    fn add_styling_fill_mode(&mut self,
-                            style_id: String,
-                            full: Option<bool>,
-                            percent: Option<f32>,
-                            padded: Option<u16>,
-                            asymmetric_padding: Option<(u16, u16)>,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-        
-        let mut state = access_state();
-       
-        state.styling_fill_mode.insert(style_id, StyleFillMode::new( 
-                                                    id,
-                                                    full,
-                                                    percent,
-                                                    padded,
-                                                    asymmetric_padding,
-                                                    ));
-        drop(state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, scale_alpha=1.0, 
-                        accent=0.05, gen_id=None))]
-    fn add_styling_dot_color(&mut self,
-                            style_id: String,
-                            rgba: Option<[f32; 4]>,
-                            color: Option<IpgColor>,
-                            invert: bool,
-                            scale_alpha: f32,
-                            accent: f32,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        let color: Color = if rgba.is_some() | color.is_some() {
-            get_color(rgba, color, scale_alpha, invert).unwrap()
-        } else {
-            Color::BLACK
-        };
-
-        let mut state = access_state();
-       
-        state.styling_dot_color.insert(style_id, StyleDotColor::new( 
-                                                    id,
-                                                    color,
-                                                    accent,
-                                                    ));
-        
-        drop(state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, alpha=1.0, 
-                        accent=0.05, gen_id=None))]
-    fn add_styling_handle_color(&mut self,
-                                style_id: String,
-                                rgba: Option<[f32; 4]>,
-                                color: Option<IpgColor>,
-                                invert: bool,
-                                alpha: f32,
-                                accent: f32,
-                                gen_id: Option<usize>,
-                                ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        let color: Color = if rgba.is_some() | color.is_some() {
-            get_color(rgba, color, alpha, invert).unwrap()
-        } else {
-            Color::BLACK
-        };
-
-        let mut state = access_state();
-       
-        state.styling_handle_color.insert(style_id, StyleHandleColor::new( 
-                                                id,
-                                                color,
-                                                accent,
-                                                ));
-
-        drop(state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, alpha=1.0, gen_id=None))]
-    fn add_styling_icon_color(&mut self,
-                                style_id: String,
-                                rgba: Option<[f32; 4]>,
-                                color: Option<IpgColor>,
-                                invert: bool,
-                                alpha: f32,
-                                gen_id: Option<usize>,
-                                ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        let color: Color = if rgba.is_some() | color.is_some() {
-            get_color(rgba, color, alpha, invert).unwrap()
-        } else {
-            Color::WHITE
-        };
-
-        let mut state = access_state();
-       
-        state.styling_icon_color.insert(style_id, StyleIconColor::new( 
-                                                id,
-                                                color,
-                                                ));
-
-        drop(state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (style_id, offset_x=0.0, offset_y=0.0, 
-                        blur_radius=0.0, gen_id=None))]
-    fn add_styling_shadow(&mut self,
-                            style_id: String,
-                            offset_x: f32,
-                            offset_y: f32,
-                            blur_radius: f32,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        let mut state = access_state();
-       
-        state.styling_shadow.insert(style_id, StyleShadow::new( 
-                                                id,
-                                                offset_x,
-                                                offset_y,
-                                                blur_radius,
-                                                ));
-
-        drop(state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (style_id, rgba=None, color=None, 
-                        invert=false, alpha=1.0, gen_id=None))]
-    fn add_styling_text_color(&mut self,
-                                style_id: String,
-                                rgba: Option<[f32; 4]>,
-                                color: Option<IpgColor>,
-                                invert: bool,
-                                alpha: f32,
-                                gen_id: Option<usize>,
-                                ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        let color: Color = if rgba.is_some() | color.is_some() {
-            get_color(rgba, color, alpha, invert).unwrap()
-        } else {
-            Color::WHITE
-        };
-
-        let mut state = access_state();
-       
-        state.styling_text_color.insert(style_id, StyleTextColor::new( 
-                                                id,
-                                                color,
-                                                ));
-
-        drop(state);
-
-        Ok(id)
-    }
-
     #[pyo3(signature = (parent_id, svg_path, gen_id=None, 
                         width=None, width_fill=false, 
                         height=None, height_fill=false,
@@ -3048,7 +2693,7 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (window_id, container_id, title, data, 
+    #[pyo3(signature = (window_id, table_id, title, data, 
                         data_length, width, height, parent_id=None,
                         row_highlight=None, highlight_amount=0.15,
                         column_widths=vec![],
@@ -3059,7 +2704,7 @@ impl IPG {
                         show=true, user_data=None))]
     fn add_table(&mut self,
                     window_id: String,
-                    container_id: String,
+                    table_id: String,
                     title: String,
                     data: Vec<PyObject>,
                     data_length: usize,
@@ -3089,11 +2734,11 @@ impl IPG {
             None => window_id.clone(),
         };
 
-        set_state_of_container(id, window_id.clone(), Some(container_id.clone()), prt_id);
+        set_state_of_container(id, window_id.clone(), Some(table_id.clone()), prt_id);
 
         let mut state = access_state();
 
-        set_state_cont_wnd_ids(&mut state, &window_id, container_id, id, "add_table".to_string());
+        set_state_cont_wnd_ids(&mut state, &window_id, table_id, id, "add_table".to_string());
 
         // Need to generate the ids for the widgets and the boolean values
         // Keeping the ids organized in a hashmap for now, may need only a vec.
@@ -3172,9 +2817,11 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (parent_id, content, gen_id=None, width=None, 
-                        height=None, width_fill=false, height_fill=false, 
-                        h_align="left".to_string(), v_align="top".to_string(),
+    #[pyo3(signature = (parent_id, content, gen_id=None, 
+                        width=None, width_fill=false, 
+                        height=None, height_fill=false,
+                        horizontal_alignment=None, 
+                        vertical_alignment=None,
                         line_height=1.3, size=16.0, 
                         shaping="basic".to_string(), 
                         text_color=None, text_rgba=None,
@@ -3186,11 +2833,11 @@ impl IPG {
                     // ** above required
                     gen_id: Option<usize>,
                     width: Option<f32>,
-                    height: Option<f32>,
                     width_fill: bool,
+                    height: Option<f32>,
                     height_fill: bool,
-                    h_align: String,
-                    v_align: String,
+                    horizontal_alignment: Option<IpgHorizontalAlignment>,
+                    vertical_alignment: Option<IpgVerticalAlignment>,
                     line_height: f32,
                     size: f32,
                     shaping: String,
@@ -3205,13 +2852,12 @@ impl IPG {
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
 
-        let horizontal_alignment = get_horizontal_alignment(&h_align);
-
+        let horizontal_alignment =  get_horizontal_alignment(horizontal_alignment);
+        let vertical_alignment = get_vertical_alignment(vertical_alignment);
+        
         let line_height = LineHeight::Relative(line_height);
 
         let shaping = get_shaping(shaping);
-
-        let vertical_alignment = get_vertical_alignment(&v_align);
 
         let style = get_color(text_rgba, text_color, 1.0, false);
 

@@ -80,6 +80,37 @@ pub fn convert_vecs<T, U>(vector: Vec<T>) -> Vec<U>
 		.collect()
 }
 
+pub fn get_alignment(align: IpgAlignment) -> Alignment {
+
+    match align {
+        IpgAlignment::Start => Alignment::Start,
+        IpgAlignment::Center => Alignment::Center,
+        IpgAlignment::End => Alignment::End,
+    }
+}
+
+pub fn get_horizontal_alignment(h_align: Option<IpgHorizontalAlignment>) -> Horizontal {
+
+    if h_align.is_none() {return Horizontal::Center}
+
+    match h_align.unwrap() {
+        IpgHorizontalAlignment::Left => Horizontal::Left,
+        IpgHorizontalAlignment::Center => Horizontal::Center,
+        IpgHorizontalAlignment::Right => Horizontal::Right,
+    }
+}
+
+pub fn get_vertical_alignment(v_align: Option<IpgVerticalAlignment>,) -> Vertical {
+    
+    if v_align.is_none() {return Vertical::Center}
+
+    match v_align.unwrap() {
+        IpgVerticalAlignment::Top => Vertical::Top,
+        IpgVerticalAlignment::Center => Vertical::Center,
+        IpgVerticalAlignment::Bottom => Vertical::Bottom,
+    }
+}
+
 // Standard method for Length using Width
 pub fn get_width(width: Option<f32>, width_fill: bool)-> Length {
     // width overrides width_fill
@@ -139,7 +170,7 @@ pub fn get_padding_f32(padding: Vec<f32>)-> Padding {
     }
 }
 
-pub fn get_radius(border_radius: Vec<f32>) -> Radius {
+pub fn get_radius(border_radius: Vec<f32>, widget_name: String) -> Radius {
     if border_radius.len() == 1 {
         Radius::from(border_radius[0])
     } else if border_radius.len() == 4 {
@@ -147,7 +178,7 @@ pub fn get_radius(border_radius: Vec<f32>) -> Radius {
                                 border_radius[2], border_radius[3]];
         Radius::from(radius)
     } else {
-        panic!("Button style: Border radius must be a list of 1 or 4 items")
+        panic!("{} style: Border radius must be a list of 1 or 4 items", widget_name)
     }
 }
 
@@ -165,33 +196,6 @@ fn vec_to_array2_f32(arr: &[f32]) -> [f32; 2] {
 
 fn vec_to_array4_f32(arr: &[f32]) -> [f32; 4] {
     [arr[0], arr[1], arr[2], arr[3]]
-}
-
-pub fn get_alignment(align: IpgAlignment) -> Alignment {
-
-    match align {
-        IpgAlignment::Start => Alignment::Start,
-        IpgAlignment::Center => Alignment::Center,
-        IpgAlignment::End => Alignment::End,
-    }
-}
-
-pub fn get_horizontal_alignment(align: &str) -> Horizontal {
-    match align {
-        "left" => Horizontal::Left,
-        "center" => Horizontal::Center,
-        "right" => Horizontal::Right,
-        _ => panic!("Incorrect Horizontal Alignment found {}", align)
-    }
-}
-
-pub fn get_vertical_alignment(align: &str) -> Vertical {
-    match align {
-        "top" => Vertical::Top,
-        "center" => Vertical::Center,
-        "bottom" => Vertical::Bottom,
-        _ => panic!("Incorrect Vertical Alignment found {}", align)
-    }
 }
 
 pub fn get_shaping(shape: String) -> Shaping {

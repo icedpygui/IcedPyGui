@@ -212,7 +212,8 @@ pub fn get_styling(theme: &Theme,
                  std_style.border.width = custom.border_width.unwrap();
             }
             if custom.border_radius.is_some() {
-                std_style.border.radius = get_radius(custom.border_radius.clone().unwrap());
+                std_style.border.radius = get_radius(custom.border_radius.clone().unwrap(),
+                                            "ProgressBar".to_string());
             }
         }
         return std_style
@@ -239,7 +240,8 @@ pub fn get_styling(theme: &Theme,
          custom.border.width = style.border_width.unwrap();
     }
     if style.border_radius.is_some() {
-        custom.border.radius = get_radius(style.border_radius.clone().unwrap());
+        custom.border.radius = get_radius(style.border_radius.clone().unwrap(),
+                                    "ProgressBar".to_string());
     }
 
     custom

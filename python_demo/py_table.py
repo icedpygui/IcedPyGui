@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgAlignment, TableRowHighLight, TableWidget
+from icedpygui import IPG, IpgAlignment, IpgTableRowHighLight, IpgTableWidget
 import random, os
 
 
@@ -79,17 +79,18 @@ togglers = []
 selectables = []
 
 for _ in range(0, len(col0)):
-    buttons.append(TableWidget.Button)
-    checkboxes.append(TableWidget.Checkbox)
-    togglers.append(TableWidget.Toggler)
+    buttons.append(IpgTableWidget.Button)
+    checkboxes.append(IpgTableWidget.Checkbox)
+    togglers.append(IpgTableWidget.Toggler)
 
 # The table is added.
-ipg.add_table("col", "My Table", data, 
+ipg.add_table(window_id="main", table_id="table", 
+                title="My Table", data=data,
+                data_length=len(col1), 
                 width=800.0, height=300.0, 
-                row_highlight=TableRowHighLight.Lighter,
-                table_length=len(col1),
-                widgets_using_columns= {0: buttons, 1: checkboxes, 2: togglers},
-                button_style={0: IpgButtonStyle.Secondary},
+                row_highlight=IpgTableRowHighLight.Lighter,
+                widgets_columns= {0: buttons, 1: checkboxes, 2: togglers},
+                # button_style={0: IpgButtonStyle.Secondary},
                 on_button=widget_button,
                 on_checkbox=widget_checkbox,
                 on_toggler=widget_toggler,

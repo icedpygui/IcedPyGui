@@ -406,7 +406,8 @@ fn get_mb_styling(theme: &Theme,
         }
 
         if b_style.border_radius.is_some() {
-            menu_style.bar_border.radius = get_radius(b_style.border_radius.clone().unwrap()).into();
+            menu_style.bar_border.radius = get_radius(b_style.border_radius.clone().unwrap(),
+                                                "Menu".to_string()).into();
         }
 
         if b_style.shadow_color.is_some() {
@@ -452,7 +453,8 @@ fn get_mb_styling(theme: &Theme,
         }
 
         if m_style.border_radius.is_some() {
-            menu_style.menu_border.radius = get_radius(m_style.border_radius.clone().unwrap()).into();
+            menu_style.menu_border.radius = get_radius(m_style.border_radius.clone().unwrap(),
+                                    "Menu".to_string()).into();
         }
 
         if m_style.shadow_color.is_some() {
@@ -490,7 +492,8 @@ fn get_mb_styling(theme: &Theme,
         }
 
         if m_style.path_border_radius.is_some() {
-            menu_style.path_border.radius = get_radius(m_style.path_border_radius.clone().unwrap()).into();
+            menu_style.path_border.radius = get_radius(m_style.path_border_radius.clone().unwrap(),
+                                    "Menu".to_string()).into();
         }
     }
 
@@ -805,7 +808,8 @@ fn match_menu_item(item_type: IpgMenuType,
                             .style(move|theme: &Theme, status| {
                                 ipg_checkbox::get_styling(theme, status, 
                                                         style.clone(),
-                                                        style_standard.clone()) 
+                                                        style_standard.clone(),
+                                                        is_checked) 
                             })
                             .into();
             Item::new(chkbx)
@@ -1051,7 +1055,8 @@ pub fn get_separator(theme: &Theme,
     }
 
     if sep_style.separator_border_radius.is_some() {
-        quad.quad_border.radius = get_radius(sep_style.separator_border_radius.clone().unwrap());
+        quad.quad_border.radius = get_radius(sep_style.separator_border_radius.clone().unwrap(),
+                                    "Menu".to_string());
     }
 
     if sep_style.separator_shadow_color.is_some() {
@@ -1076,7 +1081,8 @@ pub fn get_separator(theme: &Theme,
     }
 
     if sep_style.background_border_radius.is_some() {
-        quad.bg_border.radius = get_radius(sep_style.background_border_radius.clone().unwrap());
+        quad.bg_border.radius = get_radius(sep_style.background_border_radius.clone().unwrap(),
+                                    "Menu".to_string());
     }
 
     if sep_style.background_shadow_color.is_some() {

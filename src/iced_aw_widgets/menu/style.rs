@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! Change the appearance of menu bars and their menus.
 use iced::{Background, Border, Color, Padding, Shadow, Theme, Vector};
 

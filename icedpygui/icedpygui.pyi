@@ -89,13 +89,12 @@ class IPG:
                         height_fill: bool=False,
                         max_height: float=float('inf'),
                         max_width: float=float('inf'),
-                        align_x: IpgAlignment=IpgAlignment.Start,
-                        align_y: IpgAlignment=IpgAlignment.Start,
-                        center_xy: bool,
+                        horizontal_alignment: Optional[IpgAlignment]=None,
+                        vertical_alignment: Optional[IpgAlignment]=None,
                         padding: List=[10.0],
                         clip: bool=False,
                         show: bool=True,
-                        style: Optional[str]=None,
+                        style_id: Optional[str]=None,
                         style_standard: Optional[IpgStyleStandard]=None
                         ) -> int:
         """
@@ -126,12 +125,10 @@ class IPG:
                 Sets the maximum width the container is allowed to be.
             max_height: float
                 Sets a maximum height the container is allowed to be.
-            align_x: IpgContainerAlignment
-                Aligns the container horizontally; Start, Center, End
-            align_y: IpgContainerAlignment
-                Aligns the container vertically; Start, Center, End
-                center_xy: bool
-                Centers items in container
+            horizontal_alignment: IpgHorizontalAlignment
+                Aligns the container horizontally; Start, Center=default, End
+            vertical_alignment: IpgVerticalAlignment
+                Aligns the container vertically; Start, Center=default, End
             padding: List[float]
                 Sets the padding for container.
                 use [float] for all sides,
@@ -141,7 +138,7 @@ class IPG:
                 Whether to clip any text if size > container.
             show: bool
                 Shows or hides container and all of its contents.
-            style: str
+            style_id: str
                 style_id of the add_container_style.
             style_Standard: str
                 IpgStyleStandard class.
@@ -155,15 +152,11 @@ class IPG:
     def add_container_style(self,
                             style_id: str, 
                             *,
-                            base_color: Optional[IpgColor]=None,
-                            base_rgba: Optional[list[float, 4]]=None,
-                            weak_color: Optional[IpgColor]=None,
-                            weak_rgba: Optional[list]=None,
-                            strong_factor: float=0.40, 
-                            weak_factor: float=0.15, 
+                            background_color: Optional[IpgColor]=None,
+                            background_rgba: Optional[list[float, 4]]=None,
                             border_color: Optional[IpgColor]=None, 
                             border_rgba: Optional[list[float, 4]]=None,
-                            border_radius: list=[0.0], 
+                            border_radius: list[float]=[0.0], 
                             border_width: float=1.0,
                             shadow_color: Optional[IpgColor]=None, 
                             shadow_rgba: Optional[list]=None,
@@ -180,18 +173,10 @@ class IPG:
         ----------
             style_id: str
                 Id of container_style. 
-            base_color: IpgColor]
-                The theme background and base are used to calculate the weak and/or strong for the widget.
-            base_rgba: list,
+            background_color: IpgColor]
+                The Color::TRANSPARENT is used unless defined.
+            background_rgba: list,
                 The color in rgba format [float; 4] used as state above.
-            weak_color: IpgColor
-                The color used for the container background of the container.
-            weak_rgba: list
-                The color in rgba format [float; 4] used as state above.
-            strong_factor: float
-                Used to calculate the strong color.  
-            weak_factor: float
-                Used to calculate the weak color.
             border_color: IpgColor
                 Color used for the border.
             border_rgba: list
@@ -475,13 +460,7 @@ class IPG:
                         v_scroller_width: float=10.0,
                         v_bar_alignment: IpgAlignment=IpgAlignment.Start,
                         on_scroll: Optional[Callable]=None,
-                        scroll_bar_style_background: Optional[str]=None,
-                        scroll_bar_style_border: Optional[str]=None,
-                        scroller_style_background: Optional[str]=None,
-                        scroller_style_border: Optional[str]=None,
-                        container_style_background: Optional[str]=None,
-                        container_style_border: Optional[str]=None,
-                        container_style_text_color: Optional[str]=None,
+                        style_id: Optional[str]=None,
                         user_data: Optional[any]=None,
                         ) -> int:
         """
@@ -524,20 +503,8 @@ class IPG:
                 Sets the vertical bar alignment Start or End
             on_scroll: Callable
                 The callback function that is called when scrolling occurs
-            scroll_bar_style_background: str
-                Background color of the scroll bar.
-            scroll_bar_style_border: str
-                Border color, width and radius of the scroll bar.
-            scroller_style_background: str
-                Background color of the scroller.
-            scroller_style_border: str
-                Border color, width and radius of the scroller.
-            container_style_background: str
-                The background color of the container to be scrolled.
-            container_style_border: str
-                 Border color, width and radius of the container to be scrolled.
-            container_style_text_color: str
-                The text color of the container to be scrolled.
+            style_id: str
+                Style_id from add_scrollable_style
             user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
             show: bool
@@ -547,6 +514,90 @@ class IPG:
         -------
         id: int
             Internal id of widget and can be used by user if equated.
+        """
+
+    def add_scrollable_style(self,
+                            style_id: str,
+                            background_color: Optional[IpgColor]=None,
+                            background_rgba: Optional[list[float, 4]]=None,
+                            border_color: Optional[IpgColor]=None,
+                            border_rgba: Optional[list[float, 4]]=None,
+                            border_radius: list[float]=0.0,
+                            border_width: float=1.0,
+                            shadow_color: Optional[IpgColor]=None,
+                            shadow_rgba: Optional[list[float, 4]]=None,
+                            shadow_offset_x: float=0.0,
+                            shadow_offset_y: float=0.0,
+                            shadow_blur_radius: float=2.0,
+                            text_color: Optional[IpgColor]=None,
+                            text_rgba: Optional[list[float, 4]]=None,
+                            scrollbar_color: Optional[IpgColor]=None,
+                            scrollbar_rgba: Optional[list[float, 4]]=None,
+                            scrollbar_border_radius: list[float]=[2.0],
+                            scrollbar_border_width: float=1.0,
+                            scrollbar_border_color: Optional[IpgColor]=None,
+                            scrollbar_border_rgba: Optional[list[float, 4]]=None,
+                            scroller_color: Optional[IpgColor]=None,
+                            scroller_rgba: Optional[list[float, 4]]=None,
+                            scroller_color_hovered: Optional[IpgColor]=None,
+                            scroller_rgba_hovered: Optional[list[float, 4]]=None,
+                            gen_id: Optional[int]=None,
+                            ) -> int:
+        """
+        Add styling to the Scrollable widget.
+
+        Parameters
+        ----------
+        style_id: str,
+            Id used in the add_scrollable widget
+        background_color: Optional[IpgColor]=None
+            Background color of the container.
+        background_rgba: Optional[list[float, 4]]=None
+            Background color of the container in rgba format.
+        border_color: Optional[IpgColor]=None
+            Color of the border.
+        border_rgba: Optional[list[float, 4]]=None
+            Color of the border in rgba format.
+        border_radius: list[float]=0.0
+            Radius a list of 1=all or 4=[top-left, top-right, bottom-right, bottom-left]
+        border_width: float=1.0
+            Width of border.
+        shadow_color: Optional[IpgColor]=None
+            Color of shadow.
+        shadow_rgba: Optional[list[float, 4]]=None
+            Color of shadow in rgba format.
+        shadow_offset_x: float=0.0
+            The offset of the show in the x direction.
+        shadow_offset_y: float=0.0
+            The offset of the show in the y direction.
+        shadow_blur_radius: float=2.0
+            How much to blur the shadow.
+        text_color: Optional[IpgColor]=None
+            Color of the text.
+        text_rgba: Optional[list[float, 4]]=None
+            Color of the text in rgba format.
+        scrollbar_color: Optional[IpgColor]=None
+            Color of the scrollbar.
+        scrollbar_rgba: Optional[list[float, 4]]=None
+            Color of the scrollbar in rgba format.
+        scrollbar_border_radius: list[float]=[2.0]
+            Radius a list of 1=all or 4=[top-left, top-right, bottom-right, bottom-left]
+        scrollbar_border_width: float=1.0
+            Width of the scrollbar.
+        scrollbar_border_color: Optional[IpgColor]=None
+            Color of the scrollbar.
+        scrollbar_border_rgba: Optional[list[float, 4]]=None
+            Color of the scrollbar in rgba format.
+        scroller_color: Optional[IpgColor]=None
+            Color of the scroller
+        scroller_rgba: Optional[list[float, 4]]=None
+            Color of the scroller in rgba format.
+        scroller_color_hovered: Optional[IpgColor]=None
+            Color of the scroller when the mouse hovers.
+        scroller_rgba_hovered: Optional[list[float, 4]]=None
+            Color of the scroller when the mouse hovers in rgba format.
+        gen_id: Optional[int]=None
+            The only allowable entry for this id is the value generated by ipg.generate_id().
         """
 
     def add_tool_tip(self,
@@ -614,7 +665,7 @@ class IPG:
             label: str
                 label of button, this field is ignored when style_arrow is used.
             gen_id: int
-                The only allowable entry for this id is the one generated by ipg.generate_id().
+                The only allowable entry for this id is the value generated by ipg.generate_id().
             on_press: Callable
                 The function called when the button is pressed.
             width: float
@@ -651,14 +702,13 @@ class IPG:
     def add_button_style(self,
                             style_id: str, 
                             *,
-                            base_color: Optional[IpgColor]=None,
-                            base_rgba: Optional[list]=None,
-                            strong_color:  Optional[IpgColor]=None,
-                            strong_rgba:  Optional[list]=None,
-                            strong_factor: float=0.40, 
+                            background_color: Optional[IpgColor]=None,
+                            background_rgba: Optional[list[float, 4]]=None,
+                            background_color_hovered: Optional[IpgColor]=None,
+                            background_rgba_hovered: Optional[list[float, 4]]=None,
                             border_color: Optional[IpgColor]=None, 
-                            border_rgba: Optional[list]=None,
-                            border_radius: list=[0.0], 
+                            border_rgba: Optional[list[float, 4]]=None,
+                            border_radius: list[float | float, 4]=[0.0], 
                             border_width: float=1.0,
                             shadow_color: Optional[IpgColor]=None, 
                             shadow_rgba: Optional[list]=None,
@@ -666,7 +716,7 @@ class IPG:
                             shadow_offset_y: float=0.0,
                             shadow_blur_radius: float=1.0,
                             text_color: Optional[IpgColor]=None, 
-                            text_rgba: Optional[list]=None
+                            text_rgba: Optional[list[float, 4]]=None
                         ) -> int:
         """
         Adds styling to container
@@ -675,24 +725,17 @@ class IPG:
         ----------
             style_id: str
                 Id of container_style. 
-            base_color: IpgColor]
-                The theme background and base are used to calculate the weak and/or strong for the widget,
-                if not defined by user.
-            base_rgba: list,
-                The color in rgba format [float; 4] used as state above.
-            strong_color: IpgColor
-                The color used for the mouse hover over the button.
-            strong_rgba: list
-                The color in rgba format [float; 4] used as state above.
-            strong_factor: float
-                Used to calculate the strong color, if strong_color not defined.  
-            border_color: IpgColor
+            background_color: Optional[IpgColor]=None
+                Color of the background.
+            background_rgba: Optional[list[float, 4]]=None
+                Color of the background in rgba format.
+            border_color: Optional[IpgColor]=None
                 Color used for the border.
-            border_rgba: list
-                The color in rgba format [float; 4] used as state above.
-            border_radius: list
-                The radius of the 4 corners, [float]=all corners, 
-                [floate;4] top-left, top-right, bottom-right, bottom-left.
+            border_rgba: list[float; 4]=None
+                Color of the border in rgba format.
+            border_radius: Optional[list[float]]=None
+                The radius border, [float]=all corners, 
+                [float, 4] top-left, top-right, bottom-right, bottom-left.
             border_width: float
                 Border width.
             shadow_color: IpgColor
@@ -855,14 +898,10 @@ class IPG:
     def add_checkbox_style(self,
                             style_id: str, 
                             *,
-                            base_color: Optional[IpgColor]=None,
-                            base_rgba: Optional[list]=None,
-                            strong_color:  Optional[IpgColor]=None,
-                            strong_rgba:  Optional[list]=None,
-                            weak_color:  Optional[IpgColor]=None,
-                            weak_rgba:  Optional[list]=None,
-                            strong_factor: float=0.40,
-                            weak_factor: float=0.15, 
+                            background_color: Optional[IpgColor]=None,
+                            background_rgba: Optional[list]=None,
+                            accent_color: Optional[IpgColor]=None,
+                            accent_color_hovered: Optional[IpgColor]=None,
                             border_color: Optional[IpgColor]=None, 
                             border_rgba: Optional[list]=None,
                             border_radius: list=[0.0], 

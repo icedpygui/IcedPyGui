@@ -59,7 +59,7 @@ class Books:
             modals.append(IpgTableWidget.Modal)
 
         self.ipg.add_table(window_id="main",
-                           container_id="table",
+                           table_id="table",
                            title="Books",
                            data=self.book_list,
                            data_length=len(self.df),

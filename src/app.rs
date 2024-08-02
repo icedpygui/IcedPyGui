@@ -8,7 +8,7 @@ use iced::{font, window};
 use iced::event::Event;
 use iced::{Command, Element, Subscription, Theme};
 use iced::executor;
-use iced::widget::Column;
+use iced::widget::{focus_next, Column};
 use iced::time;
 use iced::Color;
 
@@ -177,7 +177,7 @@ impl multi_window::Application for App {
             },
             Message::Modal(id, message) => {
                 modal_callback(id, message);
-                Command::none()
+                focus_next()
             },
             Message::MouseAreaOnPress(id) => {
                 mousearea_callback(id, "on_press".to_string());

@@ -185,7 +185,7 @@ pub fn mousearea_item_update(img: &mut IpgMouseArea,
                                 )
 {
 
-    let update = try_extract_MouseArea_update(item);
+    let update = try_extract_mousearea_update(item);
 
     match update {
         IpgMouseAreaParam::Show => {
@@ -194,7 +194,7 @@ pub fn mousearea_item_update(img: &mut IpgMouseArea,
     }
 }
 
-pub fn try_extract_MouseArea_update(update_obj: PyObject) -> IpgMouseAreaParam {
+pub fn try_extract_mousearea_update(update_obj: PyObject) -> IpgMouseAreaParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgMouseAreaParam>(py);

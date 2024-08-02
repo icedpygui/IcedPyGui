@@ -137,7 +137,8 @@ fn get_styling(theme: &Theme,
 
 
     if style.border_radius.is_some() {
-        base_style.radius = get_radius(style.border_radius.clone().unwrap()); 
+        base_style.radius = get_radius(style.border_radius.clone().unwrap(),
+                                "Rule".to_string()); 
     }
 
     let fillmode = 

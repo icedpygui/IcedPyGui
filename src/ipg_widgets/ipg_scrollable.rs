@@ -1,4 +1,4 @@
-
+#![allow(unused_assignments)]
 use crate::access_callbacks;
 use crate::access_state;
 use crate::app;
@@ -8,17 +8,19 @@ use super::callbacks::get_set_container_callback_data;
 use super::callbacks::WidgetCallbackIn;
 use super::callbacks::WidgetCallbackOut;
 use super::helpers::get_height;
+use super::helpers::get_radius;
 use super::helpers::get_width;
 use super::helpers::try_extract_f64;
 use super::ipg_table::table_callback;
 use super::ipg_table::TableMessage;
 
+use iced::widget::container;
 use iced::widget::scrollable;
+use iced::widget::scrollable::Scrollbar;
+use iced::widget::scrollable::Scroller;
 use iced::widget::scrollable::{Alignment, Direction, Properties, 
     Scrollable, Viewport, Status, Style};
-use iced::Color;
-use iced::{Theme, theme};
-use iced::{Element, Length};
+use iced::{Border, Color, Element, Length, Shadow, Vector, Theme};
 use iced::widget::Column;
 
 use pyo3::pyclass;
@@ -41,9 +43,8 @@ pub struct IpgScrollable {
     pub v_bar_margin: f32,
     pub v_scroller_width: f32,
     pub v_bar_alignment: IpgScrollableAlignment,
-    pub style_color: Option<String>,
-    pub style_border: Option<String>,
     pub user_data: Option<PyObject>,
+    pub style_id: Option<String>,
 }
 
 impl IpgScrollable {
@@ -60,9 +61,8 @@ impl IpgScrollable {
         v_bar_margin: f32,
         v_scroller_width: f32,
         v_bar_alignment: IpgScrollableAlignment,
-        style_color: Option<String>,
-        style_border: Option<String>,
         user_data: Option<PyObject>,
+        style_id: Option<String>,
     ) -> Self {
         Self {
             id,
@@ -77,13 +77,75 @@ impl IpgScrollable {
             v_bar_margin,
             v_scroller_width,
             v_bar_alignment,
-            style_color,
-            style_border,
             user_data,
+            style_id,
         }
     }
 }
 
+
+#[derive(Debug, Clone)]
+pub struct IpgScrollableStyle {
+    pub id: usize,
+    pub background_color: Option<Color>,
+    pub border_color: Option<Color>,
+    pub border_radius: Vec<f32>,
+    pub border_width: f32,
+    pub shadow_color: Option<Color>,
+    pub shadow_offset_x: f32,
+    pub shadow_offset_y: f32,
+    pub shadow_blur_radius: f32,
+    pub text_color: Option<Color>,
+    // above container style
+    pub scrollbar_color: Option<Color>,
+    pub scrollbar_border_radius: Vec<f32>,
+    pub scrollbar_border_width: f32,
+    pub scrollbar_border_color: Option<Color>,
+    pub scroller_color: Option<Color>,
+    pub scroller_color_hovered: Option<Color>,
+}
+
+impl IpgScrollableStyle {
+    pub fn new(
+        id: usize,
+        background_color: Option<Color>,
+        border_color: Option<Color>,
+        border_radius: Vec<f32>,
+        border_width: f32,
+        shadow: Option<Color>,
+        shadow_offset_x: f32,
+        shadow_offset_y: f32,
+        shadow_blur_radius: f32,
+        text_color: Option<Color>,
+        // above container style
+        scrollbar_color: Option<Color>,
+        scrollbar_border_radius: Vec<f32>,
+        scrollbar_border_width: f32,
+        scrollbar_border_color: Option<Color>,
+        scroller_color: Option<Color>,
+        scroller_color_hovered: Option<Color>,
+    ) -> Self {
+        Self {
+            id,
+            background_color,
+            border_color,
+            border_radius,
+            border_width,
+            shadow_color: shadow,
+            shadow_offset_x,
+            shadow_offset_y,
+            shadow_blur_radius,
+            text_color,
+            // above container style
+            scrollbar_color,
+            scrollbar_border_radius,
+            scrollbar_border_width,
+            scrollbar_border_color,
+            scroller_color,
+            scroller_color_hovered,
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 #[pyclass]
@@ -117,17 +179,6 @@ pub fn construct_scrollable(scroll: IpgScrollable, content: Vec<Element<'static,
                                                         scroll.v_scroller_width,
                                                         scroll.v_bar_alignment.clone()
                                                     );
-    let mut horizontal = false;
-    let mut vertical = false;
-
-    match scroll.direction {
-        IpgScrollableDirection::Vertical => vertical = true,
-        IpgScrollableDirection::Horizontal => horizontal = true,
-        IpgScrollableDirection::Both => {
-            horizontal = true;
-            vertical = true;
-        },
-    }
 
     Scrollable::with_direction(content, direction)
                     .width(scroll.width)
@@ -135,10 +186,7 @@ pub fn construct_scrollable(scroll: IpgScrollable, content: Vec<Element<'static,
                     .on_scroll(move|vp| app::Message::Scrolled(vp, scroll.id))
                     .style(move|theme, status| {
                         get_styling(theme, status,
-                                    scroll.style_color.clone(),
-                                    scroll.style_border.clone(),
-                                    horizontal,
-                                    vertical,
+                                    scroll.style_id.clone(),
                                     )
                     })
                     .into()
@@ -351,94 +399,154 @@ pub fn try_extract_alignment(direct_obj: PyObject) -> IpgScrollableAlignment {
 }
 
 fn get_styling(theme: &Theme, status: Status,
-                style_color: Option<String>,
-                style_border: Option<String>,
-                horizontal: bool,
-                vertical: bool,
+                style_id: Option<String>,
                 ) -> Style 
 {
-    
-    let mut base_style = scrollable::default(theme, Status::Active);
-    let mut hover_style = scrollable::default(theme, Status::Hovered 
-        { is_horizontal_scrollbar_hovered: horizontal, is_vertical_scrollbar_hovered: vertical });
-    let mut dragged_style = scrollable::default(theme, Status::Dragged 
-        { is_horizontal_scrollbar_dragged: horizontal, is_vertical_scrollbar_dragged: vertical });
-
     let state = access_state();
 
-    let border_opt = if style_border.is_some() {
-        state.styling_border.get(&style_border.unwrap())
-    } else {
-        None
-    };
-    
-    if border_opt.is_some() {
-        let border = border_opt.unwrap();
-        base_style.horizontal_scrollbar.border.radius = border.radius;
-        base_style.horizontal_scrollbar.border.width = border.width;
-        base_style.vertical_scrollbar.border.radius = border.radius;
-        base_style.vertical_scrollbar.border.width = border.width;
-
-        hover_style.horizontal_scrollbar.border.radius = border.radius;
-        hover_style.horizontal_scrollbar.border.width = border.width;
-        hover_style.vertical_scrollbar.border.radius = border.radius;
-        hover_style.vertical_scrollbar.border.width = border.width;
-
-        dragged_style.horizontal_scrollbar.border.radius = border.radius;
-        dragged_style.horizontal_scrollbar.border.width = border.width;
-        dragged_style.vertical_scrollbar.border.radius = border.radius;
-        dragged_style.vertical_scrollbar.border.width = border.width;
+    if style_id.is_none() {
+        return scrollable::default(theme, status);
     }
 
-    let palette = theme.extended_palette();
+    let style_opt = state.scrollable_style.get(&style_id.unwrap());
 
-    let color_palette_opt = if style_color.is_some() {
-        state.styling_color.get(&style_color.unwrap())
+    let style = if style_opt.is_some() {
+        style_opt.unwrap()
     } else {
-        None
+        panic!("Container style: style_id not found.")
     };
 
-    if color_palette_opt.is_some() {
-        let text = if palette.is_dark {
-            Color::WHITE
-        } else {
-            Color::BLACK
+    let background_color = if style.background_color.is_some() {
+        style.background_color.unwrap()
+    } else {
+        Color::TRANSPARENT
+    };
+
+    let mut border = Border::default();
+    let mut shadow = Shadow::default();
+
+    if style.border_color.is_some() {
+        border.color = style.border_color.unwrap();
+    }
+
+    border.radius = get_radius(style.border_radius.clone(), "Container".to_string());
+    
+    border.width = style.border_width;
+    
+    if style.shadow_color.is_some() {
+        shadow.color = style.shadow_color.unwrap();
+        shadow.blur_radius = style.shadow_blur_radius;
+        shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y }
+    }
+
+    let container_style = container::Style {
+            background: Some(background_color.into()),
+            border,
+            shadow,
+            text_color: style.text_color,
         };
 
-        let color_palette = color_palette_opt.unwrap().clone();
+    let palette = theme.extended_palette();
+    
+    let scrollbar_color = if style.scrollbar_color.is_some() {
+        Some(style.scrollbar_color.unwrap().into())
+    } else {
+        Some(palette.background.weak.color.into())
+    };
 
-        if color_palette.scrollbar.is_some() {
-            let background = theme::palette::Background::new(color_palette.scrollbar.unwrap(), text);
-            base_style.horizontal_scrollbar.background = Some(iced::Background::Color(background.weak.color));
-            base_style.vertical_scrollbar.background = Some(iced::Background::Color(background.weak.color));
-            
-            hover_style.horizontal_scrollbar.background = Some(iced::Background::Color(background.strong.color));
-            hover_style.vertical_scrollbar.background = Some(iced::Background::Color(background.strong.color));
-            
-            dragged_style.horizontal_scrollbar.background = Some(iced::Background::Color(background.base.color));
-            dragged_style.vertical_scrollbar.background = Some(iced::Background::Color(background.base.color));
-        }
+    let border_radius = get_radius(style.scrollbar_border_radius.clone(), "Scrollable".to_string());
+    let border_color = if style.scrollbar_border_color.is_some() {
+        style.scrollbar_border_color.unwrap()
+    } else {
+        Color::TRANSPARENT
+    };
+    let border = Border{ color: border_color, width: style.border_width, radius: border_radius };
 
-        if color_palette.scroller.is_some() {
-            let background = theme::palette::Background::new(color_palette.scroller.unwrap(), text);
-            base_style.horizontal_scrollbar.scroller.color = background.weak.color;
-            base_style.vertical_scrollbar.scroller.color = background.weak.color;
+    let scroller_color = if style.scroller_color.is_some() {
+        style.scroller_color.unwrap()
+    } else {
+        palette.background.strong.color
+    };
+    
+    let scroller_color_hovered = if style.scroller_color_hovered.is_some() {
+        style.scroller_color_hovered.unwrap()
+    } else {
+        palette.primary.strong.color
+    };
 
-            hover_style.horizontal_scrollbar.scroller.color = background.strong.color;
-            hover_style.vertical_scrollbar.scroller.color = background.strong.color;
+    let scrollbar = Scrollbar {
+        background: scrollbar_color,
+        border,
+        scroller: Scroller {
+            color: scroller_color,
+            border,
+        },
+    };
 
-            dragged_style.horizontal_scrollbar.scroller.color = background.base.color;
-            dragged_style.vertical_scrollbar.scroller.color = background.base.color;
+    let scrollbar_hovered = Scrollbar {
+        scroller: Scroller {
+            color: scroller_color_hovered,
+            ..scrollbar.scroller
+        },
+        ..scrollbar
+    };
 
-        }
+    let scrollbar_dragged = Scrollbar {
+        scroller: Scroller {
+            color: palette.primary.base.color,
+            ..scrollbar.scroller
+        },
+        ..scrollbar
+    };
 
-        // Needs a bit of work still, drag colors
-    }
 
     match status {
-        Status::Active => base_style,
-        Status::Hovered {..} => hover_style,
-        Status::Dragged {..} => dragged_style,
+        Status::Active => Style {
+            container: container_style,
+            vertical_scrollbar: scrollbar,
+            horizontal_scrollbar: scrollbar,
+            gap: None,
+        },
+        Status::Hovered {
+            is_horizontal_scrollbar_hovered,
+            is_vertical_scrollbar_hovered,
+        } => {
+
+            Style {
+                container: container_style,
+                vertical_scrollbar: if is_vertical_scrollbar_hovered {
+                    scrollbar_hovered
+                } else {
+                    scrollbar
+                },
+                horizontal_scrollbar: if is_horizontal_scrollbar_hovered {
+                    scrollbar_hovered
+                } else {
+                    scrollbar
+                },
+                gap: None,
+            }
+        }
+        Status::Dragged {
+            is_horizontal_scrollbar_dragged,
+            is_vertical_scrollbar_dragged,
+        } => {
+    
+            Style {
+                container: container_style,
+                vertical_scrollbar: if is_vertical_scrollbar_dragged {
+                    scrollbar_dragged
+                } else {
+                    scrollbar
+                },
+                horizontal_scrollbar: if is_horizontal_scrollbar_dragged {
+                    scrollbar_dragged
+                } else {
+                    scrollbar
+                },
+                gap: None,
+            }
+        }
     }
     
 }

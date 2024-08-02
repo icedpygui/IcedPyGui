@@ -1,4 +1,4 @@
-
+#![allow(dead_code)]
 use crate::access_state;
 use super::ipg_enums::IpgContainers;
 use super::{helpers::{format_date, MONTH_NAMES}, ipg_enums::IpgWidgets, ipg_radio::Choice};

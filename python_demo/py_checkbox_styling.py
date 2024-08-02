@@ -1,10 +1,10 @@
-from icedpygui import IPG, IpgColumnAlignment, IpgColor
+from icedpygui import IPG, IpgAlignment, IpgColor
 from icedpygui import IpgWindowTheme, IpgStyleStandard
 
 #  Required to instantiate IPG
 ipg = IPG()
 
-# Add some stard styled checkboxes
+# Add some standard styled checkboxes
 def add_checkboxes():
     ipg.add_checkbox(parent_id="row", label="Primary",
                     style_standard=IpgStyleStandard.Primary,
@@ -17,22 +17,23 @@ def add_checkboxes():
     ipg.add_checkbox(parent_id="row", label="Danger",
                     style_standard=IpgStyleStandard.Danger,
                     )
+    
     # Add a checkbox with custom styling.
     ipg.add_checkbox(parent_id="col", 
-                    label="I have custon styling",
-                    style="colors_no_border",
+                    label="I have custom styling",
+                    style_id="colors_no_border",
                     )
     
     # Add a checkbox with custom styling.
     ipg.add_checkbox(parent_id="col", 
                     label="I have custon styling with ugly border",
-                    style="colors_with_border",
+                    style_id="colors_with_border",
                     )
     
     # Add a checkbox with border styling.
     ipg.add_checkbox(parent_id="col", 
                     label="I have custon border styling with rounded and thicker border",
-                    style="border",
+                    style_id="border",
                     )
     
     # Add a checkbox with no styling, should get primary
@@ -53,13 +54,13 @@ def add_info():
 # No border color is set here so the unchecked box border 
 # should be the base color.
 ipg.add_checkbox_style(style_id="colors_no_border", 
-                      base_color=IpgColor.BLUE,
+                      background_color=IpgColor.BLUE,
                       icon_color=IpgColor.LIGHT_BLUE,
                       text_color=IpgColor.BLUE)
 
 # Border color defined here.
 ipg.add_checkbox_style(style_id="colors_with_border", 
-                      base_color=IpgColor.BLUE,
+                      background_color=IpgColor.BLUE,
                       border_color=IpgColor.YELLOW,
                       icon_color=IpgColor.LIGHT_BLUE,
                       text_color=IpgColor.BLUE)
@@ -73,15 +74,16 @@ ipg.add_window("main", "CheckBox Demo",
                600, 600,  pos_x=100, pos_y=25)
 
 # Add a container to center the widgets in the middle
-ipg.add_container(window_id="main", container_id="cont", width_fill=True,
-                  height_fill=True, center_xy=True)
+ipg.add_container(window_id="main", container_id="cont", 
+                  width_fill=True,
+                  height_fill=True)
 
 # Since a container can only hold one widget, use a column to hold the
 # two checkboxes.  We let the width and height default to shrink, so no entry.
 # The alignment defaults to Start but for demonstration purpose, we
 # added the IpgColumnAlignment.Start
 ipg.add_column(window_id="main", container_id="col", parent_id="cont",
-               align_items=IpgColumnAlignment.Center)
+               align_items=IpgAlignment.Center)
 
 add_info()
 
@@ -99,11 +101,12 @@ ipg.add_window("main2", "CheckBox Demo",
                600, 600,  pos_x=750, pos_y=25,
                theme=IpgWindowTheme.SolarizedLight)
 
-ipg.add_container(window_id="main2", container_id="cont", width_fill=True,
-                  height_fill=True, center_xy=True)
+ipg.add_container(window_id="main2", container_id="cont",
+                  width_fill=True,
+                  height_fill=True)
 
 ipg.add_column(window_id="main2", container_id="col", parent_id="cont",
-               align_items=IpgColumnAlignment.Center)
+               align_items=IpgAlignment.Center)
 
 add_info()
 

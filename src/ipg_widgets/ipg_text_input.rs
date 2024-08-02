@@ -371,7 +371,8 @@ fn get_styling(theme: &Theme,
     }
 
     if style.border_radius.is_some() {
-        active_style.border.radius = get_radius(style.border_radius.clone().unwrap());
+        active_style.border.radius = get_radius(style.border_radius.clone().unwrap(),
+                                        "TextInput".to_string());
     }
 
     // Icon color is the weak color of the background for active.

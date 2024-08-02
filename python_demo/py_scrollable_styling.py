@@ -16,7 +16,7 @@ ipg.add_container(window_id="main", container_id="cont",
 
 # Let's add some styling for the scrollable before adding it.
 # Let's style the bar first with a dark color
-ipg.add_styling_color("color",
+ipg.add_scrollable_style("color",
                     scrollbar_color=IpgColor.LIGHT_BLUE,
                     scroller_color=IpgColor.BLUE)
 
