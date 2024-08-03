@@ -399,7 +399,7 @@ impl IPG {
                         height=None, height_fill=false, 
                         clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
                         horizontal_alignment=None, vertical_alignment=None,
-                        padding=vec![0.0], show=true, style=None, 
+                        padding=vec![0.0], show=true, style_id=None, 
                         
                        ))]
     fn add_container(&mut self,
@@ -880,6 +880,8 @@ impl IPG {
                         scroller_rgba=None,
                         scroller_color_hovered=None,
                         scroller_rgba_hovered=None,
+                        scroller_color_dragged=None,
+                        scroller_rgba_dragged=None,
                         gen_id=None))]
     fn add_scrollable_style(&mut self,
                             style_id: String,
@@ -906,6 +908,8 @@ impl IPG {
                             scroller_rgba: Option<[f32; 4]>,
                             scroller_color_hovered: Option<IpgColor>,
                             scroller_rgba_hovered: Option<[f32; 4]>,
+                            scroller_color_dragged: Option<IpgColor>,
+                            scroller_rgba_dragged: Option<[f32; 4]>,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize>
     {
@@ -923,6 +927,7 @@ impl IPG {
         
         let scroller_color: Option<Color> = get_color(scroller_rgba, scroller_color, 1.0, false);
         let scroller_color_hovered: Option<Color> = get_color(scroller_rgba_hovered, scroller_color_hovered, 1.0, false);
+        let scroller_color_dragged: Option<Color> = get_color(scroller_rgba_dragged, scroller_color_dragged, 1.0, false);
 
         state.scrollable_style.insert(style_id, IpgScrollableStyle::new( 
                                                     id,
@@ -941,6 +946,7 @@ impl IPG {
                                                     scrollbar_border_color,
                                                     scroller_color,
                                                     scroller_color_hovered,
+                                                    scroller_color_dragged,
                                                     ));
         
         drop(state);
@@ -1319,7 +1325,8 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, label="Calendar".to_string(), gen_id=None,
                         size_factor=1.0, padding=vec![5.0], on_submit=None, 
-                        user_data=None, show=false,
+                        user_data=None, show=false, 
+                        button_style_standard=IpgStyleStandard::Primary
                         ))]
     fn add_date_picker(&mut self,
                         parent_id: String,
@@ -1331,6 +1338,7 @@ impl IPG {
                         on_submit: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
+                        button_style_standard: IpgStyleStandard,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -1355,7 +1363,8 @@ impl IPG {
                                                     size_factor,
                                                     padding,
                                                     show,
-                                                    user_data,                            
+                                                    user_data,
+                                                    button_style_standard,
                                                     )));
         drop(state);
         Ok(id)
@@ -2001,15 +2010,15 @@ impl IPG {
     }
 
     #[pyo3(signature = (style_id, 
-                        base_color=None, base_rgba=None,
+                        background_color=None, background_rgba=None,
                         bar_color=None, bar_rgba=None,
                         border_color=None, border_rgba=None,
                         border_radius=None, border_width=None,
                         gen_id=None))]
     fn add_progress_bar_style(&mut self,
                                 style_id: String,
-                                base_color: Option<IpgColor>,
-                                base_rgba: Option<[f32; 4]>,
+                                background_color: Option<IpgColor>,
+                                background_rgba: Option<[f32; 4]>,
                                 bar_color: Option<IpgColor>,
                                 bar_rgba: Option<[f32; 4]>,
                                 border_color: Option<IpgColor>,
@@ -2023,14 +2032,14 @@ impl IPG {
 
         let mut state = access_state();
 
-        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
-        let bar: Option<Color> = get_color(bar_rgba, bar_color, 1.0, false);
+        let background: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
+        let bar_color: Option<Color> = get_color(bar_rgba, bar_color, 1.0, false);
         let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
 
         state.progress_bar_style.insert(style_id, IpgProgressBarStyle::new( 
                                                     id,
-                                                    base,
-                                                    bar,
+                                                    background,
+                                                    bar_color,
                                                     border_color,
                                                     border_radius,
                                                     border_width,
@@ -2476,21 +2485,17 @@ impl IPG {
     }
 
     #[pyo3(signature = (style_id,
-                        rail_colors_base=None,
-                        rail_rgba_base=None,
-                        rail_color_strong=None,
-                        rail_rgba_strong=None,
-                        rail_strong_factor=None,
+                        rail_color=None,
+                        rail_rgba=None,
+                        rail_color_dragged=None,
+                        rail_rgba_dragged=None,
                         rail_width=None,
                         rail_border_radius=None,
                         handle_circle_radius=None,
                         handle_rectangle_width=None,
                         handle_rectangle_border_radius=None,
-                        handle_color_base=None,
-                        handle_rgba_base=None,
-                        handle_color_strong=None,
-                        handle_rgba_strong=None,
-                        handle_strong_factor=None,
+                        handle_color=None,
+                        handle_rgba=None,
                         handle_border_width=None,
                         handle_border_color=None,
                         handle_border_rgba=None,
@@ -2498,21 +2503,17 @@ impl IPG {
                         ))]
     fn add_slider_style(&mut self,
                         style_id: String,
-                        rail_colors_base: Option<(IpgColor, IpgColor)>,
-                        rail_rgba_base: Option<([f32; 4], [f32; 4])>,
-                        rail_color_strong: Option<IpgColor>,
-                        rail_rgba_strong: Option<[f32; 4]>,
-                        rail_strong_factor: Option<f32>,
+                        rail_color: Option<IpgColor>,
+                        rail_rgba: Option<[f32; 4]>,
+                        rail_color_dragged: Option<IpgColor>,
+                        rail_rgba_dragged: Option<[f32; 4]>,
                         rail_width: Option<f32>,
                         rail_border_radius: Option<Vec<f32>>,
                         handle_circle_radius: Option<f32>,
                         handle_rectangle_width: Option<u16>,
                         handle_rectangle_border_radius: Option<Vec<f32>>,
-                        handle_color_base: Option<IpgColor>,
-                        handle_rgba_base: Option<[f32; 4]>,
-                        handle_color_strong: Option<IpgColor>,
-                        handle_rgba_strong: Option<[f32; 4]>,
-                        handle_strong_factor: Option<f32>,
+                        handle_color: Option<IpgColor>,
+                        handle_rgba: Option<[f32; 4]>,
                         handle_border_width: Option<f32>,
                         handle_border_color: Option<IpgColor>,
                         handle_border_rgba: Option<[f32; 4]>,
@@ -2523,38 +2524,22 @@ impl IPG {
 
         let mut state = access_state();
 
-        let rail_colors = if rail_rgba_base.is_some() {
-            let rail = rail_rgba_base.unwrap();
-            let color1 = get_color(Some(rail.0), None, 1.0, false).unwrap();
-            let color2 = get_color(Some(rail.1), None, 1.0, false).unwrap();
-            Some((color1, color2))
-        } else if rail_colors_base.is_some() {
-            let colors = rail_colors_base.unwrap();
-            let color1 = get_color(None, Some(colors.0), 1.0, false).unwrap();
-            let color2 = get_color(None, Some(colors.1), 1.0, false).unwrap();
-            Some((color1, color2))
-        } else {
-            None
-        };
-
-        let rail_color_strong = get_color(rail_rgba_strong, rail_color_strong, 1.0, false);
-        let handle_color_base = get_color(handle_rgba_base, handle_color_base, 1.0, false);
-        let handle_color_strong = get_color(handle_rgba_strong, handle_color_strong, 1.0, false);
+        
+        let rail_color = get_color(rail_rgba, rail_color, 1.0, false);
+        let rail_color_dragged = get_color(rail_rgba_dragged, rail_color_dragged, 1.0, false);
+        let handle_color = get_color(handle_rgba, handle_color, 1.0, false);
         let handle_border_color = get_color(handle_border_rgba,handle_border_color,1.0, false);
         
         state.slider_style.insert(style_id, IpgSliderStyle::new( 
                                                     id,
-                                                    rail_colors,
-                                                    rail_color_strong,
-                                                    rail_strong_factor,
+                                                    rail_color,
+                                                    rail_color_dragged,
                                                     rail_width,
                                                     rail_border_radius,
                                                     handle_circle_radius,
                                                     handle_rectangle_width,
                                                     handle_rectangle_border_radius,
-                                                    handle_color_base,
-                                                    handle_color_strong,
-                                                    handle_strong_factor,
+                                                    handle_color,
                                                     handle_border_width,
                                                     handle_border_color,
                                                     ));

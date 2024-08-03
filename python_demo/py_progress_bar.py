@@ -142,7 +142,7 @@ ipg.add_progress_bar_style("border",
                            border_radius=[8.0], 
                            border_color=IpgColor.BLUE,
                            border_width=3.0,
-                           base_color=IpgColor.LIGHT_BLUE,
+                           background_color=IpgColor.LIGHT_BLUE,
                            bar_color=IpgColor.ALICE_BLUE)
 
 
@@ -150,7 +150,7 @@ ipg.add_progress_bar_style("border",
 ipg.add_progress_bar("col2", 0.0, 100.0, 50.0,
                      style="border")
 
-ipg.add_text(parent_id="col2", content="Styling with a new bar color, base color, and border")
+ipg.add_text(parent_id="col2", content="Styling with a new bar color, background color, and border")
 
 # Ading another bar with just a standard styling.
 ipg.add_progress_bar("col2", 0.0, 100.0, 50.0,

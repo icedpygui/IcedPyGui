@@ -106,12 +106,12 @@ def change_text_size(chk_id: int, checked: bool, radio_ids: list[int]):
     ipg.update_item(radio_ids[1], IpgRadioParam.TextSize, ts)
 
 
-def change_text_line_heigth(chk_id: int, checked: bool, radio_ids: list[int]):
+def change_line_height_relative(chk_id: int, checked: bool, radio_ids: list[int]):
     tlh = 1.3
     if checked:
         tlh = 3.0
-    ipg.update_item(radio_ids[0], IpgRadioParam.TextLineHeight, tlh)
-    ipg.update_item(radio_ids[1], IpgRadioParam.TextLineHeight, tlh)
+    ipg.update_item(radio_ids[0], IpgRadioParam.LineHeightRelative, tlh)
+    ipg.update_item(radio_ids[1], IpgRadioParam.LineHeightRelative, tlh)
 
 
 def change_width(chk_id: int, checked: bool, radio_ids: list[int]):
@@ -231,8 +231,8 @@ ipg.add_checkbox("chk_col", label="Change the TextSpacing", user_data=[rd_left_i
 ipg.add_checkbox("chk_col", label="Change the TextSize", user_data=[rd_left_id, rd_right_id],
                  on_toggle=change_text_size)
 
-ipg.add_checkbox("chk_col", label="Change the TextLineHeight", user_data=[rd_left_id, rd_right_id],
-                 on_toggle=change_text_line_heigth)
+ipg.add_checkbox("chk_col", label="Change the LineHeightRelative", user_data=[rd_left_id, rd_right_id],
+                 on_toggle=change_line_height_relative)
 
 ipg.add_checkbox("chk_col", label="Change the Width", user_data=[rd_left_id, rd_right_id],
                  on_toggle=change_width)

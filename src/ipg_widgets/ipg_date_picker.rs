@@ -2,6 +2,7 @@
 
 use crate::app::{Message, self};
 use crate::access_callbacks;
+use crate::style::styling::IpgStyleStandard;
 use super::ipg_modal::Modal;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
@@ -10,9 +11,10 @@ use crate::ICON_FONT_BOOT;
 use super::helpers::{get_padding_f64, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f64, 
     DATE_FORMATS, DAYS, MONTH_NAMES, WEEKDAYS};
+use super::ipg_button::get_standard_style;
 
 use iced::advanced::graphics::core::Element;
-use iced::widget::button::{self, Status};
+use iced::widget::button;
 use iced::{Background, Border, Color, Length, Padding, Renderer, Theme};
 use iced::alignment::{self, Alignment};
 use iced::widget::{container, Button, Column, Container, PickList, Row, Space, Text};
@@ -43,6 +45,7 @@ pub struct IpgDatePicker {
     hide_width: Length,
     hide_height: Length,
     pub is_submitted: bool,
+    pub button_style_standard: IpgStyleStandard,
 }
 
 impl IpgDatePicker {
@@ -53,6 +56,7 @@ impl IpgDatePicker {
         padding: Padding,
         show: bool,
         user_data: Option<PyObject>,
+        button_style_standard: IpgStyleStandard,
         ) -> Self {
         Self {
             id,
@@ -74,6 +78,7 @@ impl IpgDatePicker {
             hide_width: Length::Fixed(100.0),
             hide_height: Length::Fixed(50.0),
             is_submitted: false,
+            button_style_standard,
         }
     }
 }
@@ -219,7 +224,8 @@ fn calendar_show_button(dp: IpgDatePicker) -> Element<'static, Message, Theme, R
                                     .on_press(DPMessage::ShowModal)
                                     .height(Length::Shrink)
                                     .width(Length::Shrink)
-                                    .style(move|theme, status| button::primary(theme, status))
+                                    .style(move|theme, status| get_standard_style(theme, status, 
+                                        Some(dp.button_style_standard.clone()), None, None))
                                     .into();
 
     let s_btn: Element<Message, Theme, Renderer> = 
@@ -378,9 +384,9 @@ fn get_calendar_days(id: usize, selected_year: i32,
                                     .padding(0)
                                     .style(move|theme: &Theme, status| {
                                             if day == selected_day {
-                                                get_styling(theme, status, "success".to_string())
+                                                get_standard_style(theme, status, Some(IpgStyleStandard::Success), None, None)
                                             } else {
-                                                get_styling(theme, status, "primary".to_string())
+                                                get_standard_style(theme, status, Some(IpgStyleStandard::Primary), None, None)
                                             }}
                                         )
                                     .into();
@@ -646,18 +652,6 @@ pub fn try_extract_date_picker_update(update_obj: PyObject) -> IpgDatePickerPara
     })
 }
 
-
-fn get_styling(theme: &Theme, status: Status, style: String) -> button::Style {
-    // just using 2 standard stylings, calendar days are primary
-    // and the selected day is success.
-    match style.as_str() {
-        "primary" => button::primary(theme, status),
-        "success" => button::success(theme, status),
-        _ => button::primary(theme, status),
-    }
-    
-}
-    
 
 pub fn date_picker_container(_theme: &Theme) -> container::Style {
     container::Style {

@@ -51,8 +51,8 @@ impl IpgProgressBar {
 #[derive(Debug, Clone, Default)]
 pub struct IpgProgressBarStyle {
     pub id: usize,
-    pub base: Option<Color>,
-    pub bar: Option<Color>,
+    pub background_color: Option<Color>,
+    pub bar_color: Option<Color>,
     pub border_color: Option<Color>,
     pub border_radius: Option<Vec<f32>>,
     pub border_width: Option<f32>,
@@ -61,16 +61,16 @@ pub struct IpgProgressBarStyle {
 impl IpgProgressBarStyle {
     pub fn new(
         id: usize,
-        base: Option<Color>,
-        bar: Option<Color>,
+        background_color: Option<Color>,
+        bar_color: Option<Color>,
         border_color: Option<Color>,
         border_radius: Option<Vec<f32>>,
         border_width: Option<f32>,
     ) -> Self {
         Self {
             id,
-            base,
-            bar,
+            background_color,
+            bar_color,
             border_color,
             border_radius,
             border_width,
@@ -225,12 +225,12 @@ pub fn get_styling(theme: &Theme,
     //tested above so should unwrap()
     let style = style_opt.unwrap();
     
-    if style.base.is_some() {
-        custom.background = style.base.unwrap().into();
+    if style.background_color.is_some() {
+        custom.background = style.background_color.unwrap().into();
     }
 
-    if style.bar.is_some() {
-        custom.bar = style.bar.unwrap().into();
+    if style.bar_color.is_some() {
+        custom.bar = style.bar_color.unwrap().into();
     }
 
     if style.border_color.is_some() {

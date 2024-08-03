@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgTextParam, IpgButtonParam, IpgDatePickerParam
-from icedpygui import IpgAlignment
+from icedpygui import IpgAlignment, IpgStyleStandard
 
 
 ipg = IPG()
@@ -50,10 +50,11 @@ ipg.add_date_picker(parent_id="col", size_factor=1.2, on_submit=date_selected)
 # text widget id needed for callback.
 selected_date_id = ipg.add_text(parent_id="col", content="No selection")
 
-# Another date picker to test the user_data
+# Another date picker to test the user_data abd button style
 dp2_id = ipg.add_date_picker(parent_id="col", size_factor=1.2,
                              on_submit=date_selected_with_ud,
-                             user_data="Some user data")
+                             user_data="Some user data",
+                             button_style_standard=IpgStyleStandard.Success)
 
 # text widget id needed for callback.
 selected_with_ud_id = ipg.add_text(parent_id="col", content="No selection")

@@ -3,7 +3,6 @@
 use crate::access_state;
 use crate::app;
 use crate::access_callbacks;
-use crate::style::styling;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
@@ -38,7 +37,7 @@ pub struct IpgSlider {
     pub value: f32,
     pub width: Length,
     pub height: f32,
-    pub style: Option<String>,
+    pub style_id: Option<String>,
 }
 
 impl IpgSlider {
@@ -52,7 +51,7 @@ impl IpgSlider {
         value: f32,
         width: Length,
         height: f32,
-        style: Option<String>,
+        style_id: Option<String>,
     ) -> Self {
         Self {
             id,
@@ -64,7 +63,7 @@ impl IpgSlider {
             value,
             width,
             height,
-            style,
+            style_id,
         }
     }
 }
@@ -72,17 +71,14 @@ impl IpgSlider {
 #[derive(Debug, Clone)]
 pub struct IpgSliderStyle {
     pub id: usize,
-    pub rail_colors: Option<(Color, Color)>,
-    pub rail_color_strong: Option<Color>,
-    pub rail_strong_factor: Option<f32>,
+    pub rail_color: Option<Color>,
+    pub rail_color_dragged: Option<Color>,
     pub rail_width: Option<f32>,
     pub rail_border_radius: Option<Vec<f32>>,
     pub handle_circle_radius: Option<f32>,
     pub handle_rectangle_width: Option<u16>,
     pub handle_rectangle_border_radius: Option<Vec<f32>>,
-    pub handle_color_base: Option<Color>,
-    pub handle_color_strong: Option<Color>,
-    pub handle_strong_factor: Option<f32>,
+    pub handle_color: Option<Color>,
     pub handle_border_width: Option<f32>,
     pub handle_border_color: Option<Color>,
 }
@@ -90,33 +86,27 @@ pub struct IpgSliderStyle {
 impl IpgSliderStyle {
     pub fn new( 
         id: usize,
-        rail_colors: Option<(Color, Color)>,
-        rail_color_strong: Option<Color>,
-        rail_strong_factor: Option<f32>,
+        rail_color: Option<Color>,
+        rail_color_dragged: Option<Color>,
         rail_width: Option<f32>,
         rail_border_radius: Option<Vec<f32>>,
         handle_circle_radius: Option<f32>,
         handle_rectangle_width: Option<u16>,
         handle_rectangle_border_radius: Option<Vec<f32>>,
-        handle_color_base: Option<Color>,
-        handle_color_strong: Option<Color>,
-        handle_color_strong_factor: Option<f32>,
+        handle_color: Option<Color>,
         handle_border_width: Option<f32>,
         handle_border_color: Option<Color>,
     ) -> Self {
         Self {
             id,
-            rail_colors,
-            rail_color_strong,
-            rail_strong_factor,
+            rail_color,
+            rail_color_dragged,
             rail_width,
             rail_border_radius,
             handle_circle_radius,
             handle_rectangle_width,
             handle_rectangle_border_radius,
-            handle_color_base,
-            handle_color_strong,
-            handle_strong_factor: handle_color_strong_factor,
+            handle_color,
             handle_border_width,
             handle_border_color,
         }
@@ -146,7 +136,7 @@ pub fn construct_slider(slider: IpgSlider) -> Element<'static, app::Message> {
                                                     .height(slider.height)
                                                     .style(move|theme, status|
                                                     get_styling(theme, status,
-                                                        slider.style.clone()
+                                                        slider.style_id.clone()
                                                     ))
                                                     .into();
 
@@ -271,8 +261,7 @@ pub fn slider_item_update(sldr: &mut IpgSlider, item: PyObject, value: PyObject)
             sldr.height = try_extract_f64(value) as f32;
         },
         IpgSliderParam::Style => {
-
-            sldr.style = Some(try_extract_string(value));
+            sldr.style_id = Some(try_extract_string(value));
         }
         IpgSliderParam::Show => {
             sldr.show = try_extract_boolean(value);
@@ -294,53 +283,30 @@ fn try_extract_slider_update(update_obj: PyObject) -> IpgSliderParam {
 
 fn get_styling(theme: &Theme, 
                 status: Status,
-                style_str: Option<String>) -> Style {
+                style_id: Option<String>) -> Style {
 
-    if style_str.is_none() {
+    if style_id.is_none() {
         return slider::default(theme, status)
     }     
 
     let state = access_state();
 
-    let style_opt = state.slider_style.get(&style_str.clone().unwrap());
+    let style_opt = state.slider_style.get(&style_id.clone().unwrap());
 
     let style = match style_opt {
         Some(st) => st,
-        None => panic!("Slider styling: Unable to find the style_id '{}'.", style_str.unwrap())
+        None => panic!("Slider styling: Unable to find the style_id '{}'.", style_id.unwrap())
     };
 
-    let palette = theme.extended_palette();
     let mut base_style = slider::default(theme, status);
 
-    let mut handle_base = palette.primary.base.color;
-    if style.handle_color_base.is_some() {
-        handle_base = style.handle_color_base.unwrap();
-    }
+    if style.handle_color.is_some() {
+        base_style.handle.color = style.handle_color.unwrap()
+    };
 
-    let mut handle_strong = palette.primary.strong.color;
-    if style.handle_color_strong.is_some() {
-        handle_strong = style.handle_color_strong.unwrap();
-    }
 
-    if style.handle_color_base.is_some() && style.handle_color_strong.is_none() {
-        handle_strong = styling::strong(style.handle_color_base.unwrap(), style.handle_strong_factor)
-    }
-
-    let mut rail_strong = palette.primary.strong.color;
-    let mut rail_base = palette.primary.base.color;
-
-    if style.rail_color_strong.is_some() {
-        rail_strong = style.rail_color_strong.unwrap();
-    }
-
-    if style.rail_colors.is_some() {
-        let colors = style.rail_colors.unwrap();
-        base_style.rail.colors = colors;
-        rail_base = colors.0;
-        
-        if style.rail_color_strong.is_none() {
-            rail_strong = styling::strong(rail_base, style.rail_strong_factor);
-        }
+    if style.rail_color.is_some() {
+        base_style.rail.colors.0 = style.rail_color.unwrap();
     }
 
     if style.rail_width.is_some() {
@@ -380,22 +346,18 @@ fn get_styling(theme: &Theme,
         base_style.handle.border_width = style.handle_border_width.unwrap();
     }
 
-    
-    let rail_color = match status {
-                    Status::Active => rail_strong,
-                    Status::Hovered => rail_base,
-                    Status::Dragged => rail_strong,
-                };
+    let mut dragged_style = base_style.clone();
+
+    if style.rail_color_dragged.is_some() {
+        dragged_style.rail.colors.1 = style.rail_color_dragged.unwrap();
+    }
+
+    match status 
+    {
+        Status::Active => base_style,
+        Status::Hovered => dragged_style,
+        Status::Dragged => base_style, // active and drag are same
+    }
 
 
-    let handle_color = match status {
-                    Status::Active => handle_strong,
-                    Status::Hovered => handle_base,
-                    Status::Dragged => handle_strong,
-                };
-
-    base_style.rail.colors.0 = rail_color;
-    base_style.handle.color = handle_color;
-
-    base_style
 }

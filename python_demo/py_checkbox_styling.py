@@ -44,17 +44,17 @@ def add_info():
     text = "Using the mouse, check, uncheck, and hover to see the style changes\n" 
     text += "The standard style colors depends on the window theme color\n"
     text += "The custom style colors will not change based on the theme color\n"
-    text +="For the checkbox, the base color will be the border color if it's not defined\n"
 
     ipg.add_text(parent_id="col", content=text)
 
-
-
 # The styling can be added at any time before use.
 # No border color is set here so the unchecked box border 
-# should be the base color.
+# should be the base color. The accent color is the background
+# color when the ceckbox is checked.
 ipg.add_checkbox_style(style_id="colors_no_border", 
                       background_color=IpgColor.BLUE,
+                      accent_color=IpgColor.YELLOW,
+                      accent_color_hovered=IpgColor.DARK_SALMON,
                       icon_color=IpgColor.LIGHT_BLUE,
                       text_color=IpgColor.BLUE)
 

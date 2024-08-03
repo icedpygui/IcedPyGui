@@ -103,6 +103,7 @@ pub struct IpgScrollableStyle {
     pub scrollbar_border_color: Option<Color>,
     pub scroller_color: Option<Color>,
     pub scroller_color_hovered: Option<Color>,
+    pub scroller_color_dragged: Option<Color>,
 }
 
 impl IpgScrollableStyle {
@@ -124,6 +125,7 @@ impl IpgScrollableStyle {
         scrollbar_border_color: Option<Color>,
         scroller_color: Option<Color>,
         scroller_color_hovered: Option<Color>,
+        scroller_color_dragged: Option<Color>,
     ) -> Self {
         Self {
             id,
@@ -143,6 +145,7 @@ impl IpgScrollableStyle {
             scrollbar_border_color,
             scroller_color,
             scroller_color_hovered,
+            scroller_color_dragged,
         }
     }
 }
@@ -474,6 +477,12 @@ fn get_styling(theme: &Theme, status: Status,
         palette.primary.strong.color
     };
 
+    let scroller_color_dragged = if style.scroller_color_dragged.is_some() {
+        style.scroller_color_dragged.unwrap()
+    } else {
+        palette.primary.base.color
+    };
+
     let scrollbar = Scrollbar {
         background: scrollbar_color,
         border,
@@ -493,7 +502,7 @@ fn get_styling(theme: &Theme, status: Status,
 
     let scrollbar_dragged = Scrollbar {
         scroller: Scroller {
-            color: palette.primary.base.color,
+            color: scroller_color_dragged,
             ..scrollbar.scroller
         },
         ..scrollbar
