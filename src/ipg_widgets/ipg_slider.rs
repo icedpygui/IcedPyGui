@@ -72,7 +72,7 @@ impl IpgSlider {
 pub struct IpgSliderStyle {
     pub id: usize,
     pub rail_color: Option<Color>,
-    pub rail_color_dragged: Option<Color>,
+    pub rail_color_hovered: Option<Color>,
     pub rail_width: Option<f32>,
     pub rail_border_radius: Option<Vec<f32>>,
     pub handle_circle_radius: Option<f32>,
@@ -87,7 +87,7 @@ impl IpgSliderStyle {
     pub fn new( 
         id: usize,
         rail_color: Option<Color>,
-        rail_color_dragged: Option<Color>,
+        rail_color_hovered: Option<Color>,
         rail_width: Option<f32>,
         rail_border_radius: Option<Vec<f32>>,
         handle_circle_radius: Option<f32>,
@@ -100,7 +100,7 @@ impl IpgSliderStyle {
         Self {
             id,
             rail_color,
-            rail_color_dragged,
+            rail_color_hovered,
             rail_width,
             rail_border_radius,
             handle_circle_radius,
@@ -346,16 +346,16 @@ fn get_styling(theme: &Theme,
         base_style.handle.border_width = style.handle_border_width.unwrap();
     }
 
-    let mut dragged_style = base_style.clone();
+    let mut hovered_style = base_style.clone();
 
-    if style.rail_color_dragged.is_some() {
-        dragged_style.rail.colors.1 = style.rail_color_dragged.unwrap();
+    if style.rail_color_hovered.is_some() {
+        hovered_style.rail.colors.0 = style.rail_color_hovered.unwrap();
     }
 
     match status 
     {
         Status::Active => base_style,
-        Status::Hovered => dragged_style,
+        Status::Hovered => hovered_style,
         Status::Dragged => base_style, // active and drag are same
     }
 

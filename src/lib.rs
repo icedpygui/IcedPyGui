@@ -2487,8 +2487,8 @@ impl IPG {
     #[pyo3(signature = (style_id,
                         rail_color=None,
                         rail_rgba=None,
-                        rail_color_dragged=None,
-                        rail_rgba_dragged=None,
+                        rail_color_hovered=None,
+                        rail_rgba_hovered=None,
                         rail_width=None,
                         rail_border_radius=None,
                         handle_circle_radius=None,
@@ -2505,8 +2505,8 @@ impl IPG {
                         style_id: String,
                         rail_color: Option<IpgColor>,
                         rail_rgba: Option<[f32; 4]>,
-                        rail_color_dragged: Option<IpgColor>,
-                        rail_rgba_dragged: Option<[f32; 4]>,
+                        rail_color_hovered: Option<IpgColor>,
+                        rail_rgba_hovered: Option<[f32; 4]>,
                         rail_width: Option<f32>,
                         rail_border_radius: Option<Vec<f32>>,
                         handle_circle_radius: Option<f32>,
@@ -2526,14 +2526,14 @@ impl IPG {
 
         
         let rail_color = get_color(rail_rgba, rail_color, 1.0, false);
-        let rail_color_dragged = get_color(rail_rgba_dragged, rail_color_dragged, 1.0, false);
+        let rail_color_hovered = get_color(rail_rgba_hovered, rail_color_hovered, 1.0, false);
         let handle_color = get_color(handle_rgba, handle_color, 1.0, false);
         let handle_border_color = get_color(handle_border_rgba,handle_border_color,1.0, false);
         
         state.slider_style.insert(style_id, IpgSliderStyle::new( 
                                                     id,
                                                     rail_color,
-                                                    rail_color_dragged,
+                                                    rail_color_hovered,
                                                     rail_width,
                                                     rail_border_radius,
                                                     handle_circle_radius,

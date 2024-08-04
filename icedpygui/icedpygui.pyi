@@ -1929,8 +1929,8 @@ class IPG:
                         style_id: str,
                         rail_color: Optional[IpgColor]=None,
                         rail_rgba: Optional[list[float, 4]]=None,
-                        rail_color_dragged: Optional[IpgColor]=None,
-                        rail_rgba_dragged: Optional[list[float, 4]]=None,
+                        rail_color_hovered: Optional[IpgColor]=None,
+                        rail_rgba_hovered: Optional[list[float, 4]]=None,
                         rail_width: Optional[float]=None,
                         rail_border_radius: Optional[list[float]]=None,
                         handle_circle_radius: Optional[float]=None,
@@ -1954,10 +1954,10 @@ class IPG:
                 The color of the rail.
             rail_rgba_base: Optional[list[float, 4]]=None
                 The color of the rail in rgba format.
-            rail_color_dragged: Optional[IpgColor]=None
-                The color of the rail when dragged.
-            rail_rgba_strong: Optional[list[float, 4]]=None
-                The color of the rail when dragged in rgba format.
+            rail_color_hovered: Optional[IpgColor]=None
+                The color of the rail when mouse hovered.
+            rail_rgba_hovered: Optional[list[float, 4]]=None
+                The color of the rail when mouse hovered in rgba format.
             rail_width: Optional[float]=None
                 The width of the rail.
             rail_border_radius: Optional[list[float]]=None

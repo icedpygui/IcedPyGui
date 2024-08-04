@@ -64,7 +64,7 @@ def toggle_show(btn_id):
 # Add a slider style for the colors
 ipg.add_slider_style(style_id="color",
                      rail_color=IpgColor.GREEN, 
-                     rail_color_dragged=IpgColor.GREEN_YELLOW,
+                     rail_color_hovered=IpgColor.GREEN_YELLOW,
                      handle_color=IpgColor.DARK_GREEN,
                      rail_width=10.0,
                      rail_border_radius=[8.0],
