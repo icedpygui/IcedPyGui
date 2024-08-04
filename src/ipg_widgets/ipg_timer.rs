@@ -25,9 +25,9 @@ pub struct IpgTimer {
     pub width: Length,
     pub height: Length,
     pub padding: Padding,
-    pub style: Option<String>,
-    pub style_standard: Option<IpgStyleStandard>,
-    pub style_arrow: Option<PyObject>,
+    pub button_style_id: Option<String>,
+    pub button_style_standard: Option<IpgStyleStandard>,
+    pub button_style_arrow: Option<PyObject>,
     pub user_data: Option<PyObject>,
     pub counter: u64,
     pub started: bool,
@@ -43,9 +43,9 @@ impl IpgTimer {
         width: Length,
         height: Length,
         padding: Padding,
-        style: Option<String>,
-        style_standard: Option<IpgStyleStandard>,
-        style_arrow: Option<PyObject>,
+        button_style_id: Option<String>,
+        button_style_standard: Option<IpgStyleStandard>,
+        button_style_arrow: Option<PyObject>,
         user_data: Option<PyObject>,
         ) -> Self {
         Self {
@@ -56,9 +56,9 @@ impl IpgTimer {
             width,
             height,
             padding,
-            style,
-            style_standard,
-            style_arrow,
+            button_style_id,
+            button_style_standard,
+            button_style_arrow,
             user_data,
             counter: 0,
             started: false,
@@ -90,8 +90,8 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
         label = Text::new(tim.stop_label.clone());
     }
 
-    if tim.style_arrow.is_some() {
-        let style_arrow = try_extract_button_arrow(tim.style_arrow);
+    if tim.button_style_arrow.is_some() {
+        let style_arrow = try_extract_button_arrow(tim.button_style_arrow);
         label = match style_arrow {
             Some(ar) => Text::new(ar).font(ICON_FONT),
             None => panic!("Timer: Could not get extract style_arrow")
@@ -105,8 +105,8 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
                                 .on_press(on_press)
                                 .style(move|theme: &Theme, status| {
                                     get_styling(theme, status,
-                                        tim.style.clone(),
-                                        tim.style_standard.clone(),
+                                        tim.button_style_id.clone(),
+                                        tim.button_style_standard.clone(),
                                     )  })
                                 .into();
     

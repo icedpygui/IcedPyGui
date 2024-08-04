@@ -3019,8 +3019,8 @@ impl IPG {
                         start_label="Start Timer".to_string(), 
                         stop_label="Stop Timer".to_string(), width=None, height=None, 
                         width_fill=false, height_fill=false, padding=vec![10.0], 
-                        style=None, style_standard=None, style_arrow=None, 
-                        user_data=None))]
+                        button_style_id=None, button_style_standard=None, button_style_arrow=None, 
+                        user_data=None, gen_id=None))]
     fn add_timer(&mut self,
                         parent_id: String,
                         duration_ms: u64,
@@ -3034,13 +3034,14 @@ impl IPG {
                         width_fill: bool,
                         height_fill: bool,
                         padding: Vec<f64>,
-                        style: Option<String>,
-                        style_standard: Option<IpgStyleStandard>,
-                        style_arrow: Option<PyObject>,
-                        user_data: Option<PyObject>
+                        button_style_id: Option<String>,
+                        button_style_standard: Option<IpgStyleStandard>,
+                        button_style_arrow: Option<PyObject>,
+                        user_data: Option<PyObject>,
+                        gen_id: Option<usize>,
                     ) -> PyResult<usize>
     {
-        self.id += 1;
+        let id = self.get_id(gen_id);
 
         if on_start.is_some() {
             add_callback_to_mutex(self.id, "on_start".to_string(), on_start);
@@ -3063,16 +3064,16 @@ impl IPG {
         let mut state = access_state();
 
         state.widgets.insert(self.id, IpgWidgets::IpgTimer(IpgTimer::new(
-                                                            self.id,
+                                                            id,
                                                             duration_ms,
                                                             start_label,
                                                             stop_label,
                                                             width,
                                                             height,
                                                             padding,
-                                                            style,
-                                                            style_standard,
-                                                            style_arrow,
+                                                            button_style_id,
+                                                            button_style_standard,
+                                                            button_style_arrow,
                                                             user_data, 
                                                             )));
         drop(state);

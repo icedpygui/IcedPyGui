@@ -2419,11 +2419,7 @@ class IPG:
                         width_fill: bool=False,
                         height_fill: bool=False,
                         padding: list=[10.0],
-                        style_background: Optional[str]=None,
-                        style_border: Optional[str]=None,
-                        style_shadow: Optional[str]=None,
-                        style_text_color: Optional[str]=None,
-                        arrow_style: Optional[IpgButtonArrow]=None,
+                        button_style_standard_id: Optional[str]=None,
                         user_data: any=None,
                         ) -> int:
         """
@@ -2458,7 +2454,8 @@ class IPG:
                 use [float] for all sides,
                 use [float, float] for [top&bottom, left&right]
                 use [float, float, float, float] for [top, right, bottom, left]
-        style_background: str
+        button_style_standard_id: Optional[str]=None
+            The style id of the button
                 style_id of the add_background_style.
         style_border: str
             style_id of the add_border_style.
