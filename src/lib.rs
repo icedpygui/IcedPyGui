@@ -2055,7 +2055,7 @@ impl IPG {
                         spacing= 10.0, padding=vec![10.0], 
                         width=None, width_fill=false, height=None, height_fill=false,
                         on_select=None, selected_index=None, 
-                        size=20.0, style=None,
+                        size=20.0, style_id=None,
                         text_spacing=15.0, text_size=16.0,
                         text_line_height_pixels=None,
                         text_line_height_relative=None, 
@@ -2077,7 +2077,7 @@ impl IPG {
                     on_select: Option<PyObject>,
                     selected_index: Option<usize>,
                     size: f32,
-                    style: Option<String>,
+                    style_id: Option<String>,
                     text_spacing: f32,
                     text_size: f32,
                     text_line_height_pixels: Option<u16>,
@@ -2135,7 +2135,7 @@ impl IPG {
                                         text_line_height,
                                         text_shaping,
                                         self.group_index,
-                                        style,
+                                        style_id,
                                     )));
         self.group_index += 1;
         drop(state);                                      

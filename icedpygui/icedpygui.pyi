@@ -3097,7 +3097,7 @@ class IpgRadioParam:
     Show=0
     Size=0
     Spacing=0
-    Style=0
+    StyleId=0
     TextSpacing=0
     TextSize=0
     LineHeightPixels=0

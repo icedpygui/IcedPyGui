@@ -45,7 +45,7 @@ pub struct IpgRadio {
     pub text_shaping: Shaping,
     pub group_index: usize,
     // pub font: Option<Font>,
-    pub style: Option<String>,
+    pub style_id: Option<String>,
 }
 
 impl IpgRadio {
@@ -68,7 +68,7 @@ impl IpgRadio {
         text_shaping: Shaping,
         radio_index: usize,
         // font: Option<Font>,
-        style: Option<String>,
+        style_id: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -89,7 +89,7 @@ impl IpgRadio {
             text_shaping,
             group_index: radio_index,
             // font: None,
-            style,
+            style_id,
         }
     }
 }
@@ -161,7 +161,7 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
     // Due to the closure in the style, had to covert to array of strings
     let mut style: Vec<Option<String>> = vec![];
     for i in 0..radio.labels.len() {
-        style.push(radio.style.clone())
+        style.push(radio.style_id.clone())
     }
 
     for (i, label) in  radio.labels.iter().enumerate() {
@@ -397,7 +397,7 @@ pub enum IpgRadioParam {
     Show,
     Size,
     Spacing,
-    Style,
+    StyleId,
     TextSpacing,
     TextSize,
     LineHeightPixels,
@@ -454,8 +454,8 @@ pub fn radio_item_update(rd: &mut IpgRadio,
         IpgRadioParam::Spacing => {
             rd.spacing = try_extract_f64(value) as f32;
         },
-        IpgRadioParam::Style => {
-            rd.style = try_extract_option_string(value);
+        IpgRadioParam::StyleId => {
+            rd.style_id = try_extract_option_string(value);
         },
         IpgRadioParam::TextSpacing => {
             rd.text_spacing = try_extract_f64(value) as f32;
@@ -531,7 +531,7 @@ pub fn try_extract_radio_direction(direct_obj: PyObject) -> IpgRadioDirection {
 }
 
 pub fn get_styling(theme: &Theme, status: Status, 
-                    style_str: String,
+                    style_id: String,
                     ) -> radio::Style {
     
     let mut active_style = radio::default(theme, status);
@@ -539,18 +539,18 @@ pub fn get_styling(theme: &Theme, status: Status,
 
     let state = access_state();
 
-    if style_str == "none".to_string() {
+    if style_id == "none".to_string() {
         return match status {
             Status::Active{..} => active_style,
             Status::Hovered{..}  => hover_style,
         }
     }
 
-    let style_opt = state.radio_style.get(&style_str.clone());
+    let style_opt = state.radio_style.get(&style_id.clone());
     
     let style = match style_opt {
         Some(st) => st,
-        None => panic!("Radio: The style_id '{}' for add_radio_style could not be found", style_str)
+        None => panic!("Radio: The style_id '{}' for add_radio_style could not be found", style_id)
     };
 
     let text_opt: Option<Color> = if style.text_color.is_some() {
