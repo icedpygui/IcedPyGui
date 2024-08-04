@@ -2877,7 +2877,7 @@ impl IPG {
                         line_height_pixels=None,
                         line_height_relative=None, 
                         user_data=None, is_secure=false, 
-                        style=None, show=true,
+                        style_id=None, show=true,
                         ))]
     fn add_text_input(&mut self,
                             parent_id: String,
@@ -2895,7 +2895,7 @@ impl IPG {
                             line_height_relative: Option<f32>,
                             user_data: Option<PyObject>,
                             is_secure: bool,
-                            style: Option<String>,
+                            style_id: Option<String>,
                             show: bool,
                         ) -> PyResult<usize> 
     {
@@ -2933,7 +2933,7 @@ impl IPG {
                                                                 size,
                                                                 line_height,
                                                                 user_data,
-                                                                style,
+                                                                style_id,
                                                                 show,
                                                                 )));
         drop(state);
@@ -2943,12 +2943,6 @@ impl IPG {
     #[pyo3(signature = (style_id, 
                         background_color=None,
                         background_rgba=None,
-                        background_color_strong=None,
-                        background_rgba_strong=None,
-                        background_strong_factor=None,
-                        background_color_weak=None,
-                        background_rgba_weak=None,
-                        background_weak_factor=None,
                         border_color=None,
                         border_rgba=None,
                         border_color_hovered=None,
@@ -2957,8 +2951,8 @@ impl IPG {
                         border_rgba_focused=None,
                         border_width=None,
                         border_radius=None,
-                        icon_color=None,
-                        icon_rgba=None,
+                        // icon_color=None,
+                        // icon_rgba=None,
                         placeholder_color=None,
                         placeholder_rgba=None,
                         value_color=None,
@@ -2970,12 +2964,6 @@ impl IPG {
                                 style_id: String,
                                 background_color: Option<IpgColor>,
                                 background_rgba: Option<[f32; 4]>,
-                                background_color_strong: Option<IpgColor>,
-                                background_rgba_strong: Option<[f32; 4]>,
-                                background_strong_factor: Option<f32>,
-                                background_color_weak: Option<IpgColor>,
-                                background_rgba_weak: Option<[f32; 4]>,
-                                background_weak_factor: Option<f32>,
                                 border_color: Option<IpgColor>,
                                 border_rgba: Option<[f32; 4]>,
                                 border_color_hovered: Option<IpgColor>,
@@ -2984,8 +2972,8 @@ impl IPG {
                                 border_rgba_focused: Option<[f32; 4]>,
                                 border_width: Option<f32>,
                                 border_radius: Option<Vec<f32>>,
-                                icon_color: Option<IpgColor>,
-                                icon_rgba: Option<[f32; 4]>,
+                                // icon_color: Option<IpgColor>,
+                                // icon_rgba: Option<[f32; 4]>,
                                 placeholder_color: Option<IpgColor>,
                                 placeholder_rgba: Option<[f32; 4]>,
                                 value_color: Option<IpgColor>,
@@ -2998,12 +2986,10 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         let background_color = get_color(background_rgba, background_color, 1.0, false);
-        let background_color_strong = get_color(background_rgba_strong, background_color_strong, 1.0, false);
-        let background_color_weak = get_color(background_rgba_weak, background_color_weak, 1.0, false);
         let border_color = get_color(border_rgba, border_color, 1.0, false);
         let border_color_hovered = get_color(border_rgba_hovered, border_color_hovered, 1.0, false);
         let border_color_focused = get_color(border_rgba_focused, border_color_focused, 1.0, false);
-        let icon_color = get_color(icon_rgba, icon_color, 1.0, false);
+        // let icon_color = get_color(icon_rgba, icon_color, 1.0, false);
         let placeholder_color = get_color(placeholder_rgba, placeholder_color, 1.0, false);
         let value_color = get_color(value_rgba, value_color, 1.0, false);
         let selection_color = get_color(selection_rgba, selection_color, 1.0, false);
@@ -3013,16 +2999,12 @@ impl IPG {
         state.text_input_style.insert(style_id, IpgTextInputStyle::new( 
                                                 id,
                                                 background_color,
-                                                background_color_strong,
-                                                background_strong_factor,
-                                                background_color_weak,
-                                                background_weak_factor,
                                                 border_color,
                                                 border_color_hovered,
                                                 border_color_focused,
                                                 border_width,
                                                 border_radius,
-                                                icon_color,
+                                                // icon_color,
                                                 placeholder_color,
                                                 value_color,
                                                 selection_color,

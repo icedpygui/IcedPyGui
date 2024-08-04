@@ -2,9 +2,6 @@
 use crate::access_callbacks;
 use crate::access_state;
 use crate::app;
-use crate::style::styling::is_dark;
-use crate::style::styling::strong;
-use crate::style::styling::weak;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
@@ -17,11 +14,9 @@ use super::helpers::try_extract_string;
 use super::helpers::try_extract_u16;
 use super::helpers::try_extract_vec_f64;
 
-use iced::theme::palette::Pair;
 use iced::widget::text::LineHeight;
 use iced::widget::text_input;
 use iced::widget::text_input::{Style, Status};
-use iced::Border;
 use iced::Color;
 use iced::Pixels;
 use iced::Theme;
@@ -45,7 +40,7 @@ pub struct IpgTextInput {
     pub line_height: LineHeight,
     pub user_data: Option<PyObject>,
     // icon: Option<Message>,
-    style: Option<String>,
+    style_id: Option<String>,
     show: bool,
 }
 
@@ -61,7 +56,7 @@ impl IpgTextInput {
         line_height: LineHeight,
         user_data: Option<PyObject>,
         // icon: Option<Message>,
-        style: Option<String>,
+        style_id: Option<String>,
         show: bool,
         ) -> Self {
         Self {
@@ -76,7 +71,7 @@ impl IpgTextInput {
             line_height,
             user_data,
             // icon,
-            style,
+            style_id,
             show,
         }
     }
@@ -86,16 +81,12 @@ impl IpgTextInput {
 pub struct IpgTextInputStyle {
     pub id: usize,
     pub background_color: Option<Color>,
-    pub background_color_strong: Option<Color>,
-    pub background_strong_factor: Option<f32>,
-    pub background_color_weak: Option<Color>,
-    pub background_weak_factor: Option<f32>,
     pub border_color: Option<Color>,
     pub border_color_hovered: Option<Color>,
     pub border_color_focused: Option<Color>,
     pub border_width: Option<f32>,
     pub border_radius: Option<Vec<f32>>,
-    pub icon_color: Option<Color>,
+    // pub icon_color: Option<Color>,
     pub placeholder_color: Option<Color>,
     pub value_color: Option<Color>,
     pub selection_color: Option<Color>,
@@ -105,16 +96,12 @@ impl IpgTextInputStyle {
     pub fn new(
         id: usize,
         background_color: Option<Color>,
-        background_color_strong: Option<Color>,
-        background_strong_factor: Option<f32>,
-        background_color_weak: Option<Color>,
-        background_weak_factor: Option<f32>,
         border_color: Option<Color>,
         border_color_hovered: Option<Color>,
         border_color_focused: Option<Color>,
         border_width: Option<f32>,
         border_radius: Option<Vec<f32>>,
-        icon_color: Option<Color>,
+        // icon_color: Option<Color>,
         placeholder_color: Option<Color>,
         value_color: Option<Color>,
         selection_color: Option<Color>,
@@ -122,16 +109,12 @@ impl IpgTextInputStyle {
         Self {
             id,
             background_color,
-            background_color_strong,
-            background_strong_factor,
-            background_color_weak,
-            background_weak_factor,
             border_color,
             border_color_hovered,
             border_color_focused,
             border_width,
             border_radius,
-            icon_color,
+            // icon_color,
             placeholder_color,
             value_color,
             selection_color,
@@ -144,7 +127,7 @@ impl IpgTextInputStyle {
 pub enum TIMessage {
     OnInput(String),
     OnSubmit(String),
-    OnPast(String),
+    OnPaste(String),
 }
 
 pub fn construct_text_input(input: IpgTextInput) -> Element<'static, app::Message> {
@@ -158,15 +141,22 @@ pub fn construct_text_input(input: IpgTextInput) -> Element<'static, app::Messag
                                             )
                                             .on_input(TIMessage::OnInput)
                                             .on_submit(TIMessage::OnSubmit(input.value))
-                                            .on_paste(TIMessage::OnPast)
+                                            .on_paste(TIMessage::OnPaste)
                                             .secure(input.is_secure)
                                             .width(input.width)
                                             .padding(input.padding)
                                             .size(input.size)
                                             .line_height(input.line_height)
+                                            // .icon(text_input::Icon {
+                                            //     font: BOOTSTRAP_FONT,
+                                            //     code_point: required::icon_to_char(required::Icon::CaretRightFill),
+                                            //     size: Some(Pixels(60.0)),
+                                            //     spacing: 5.0,
+                                            //     side: text_input::Side::Right,
+                                            // })
                                             .style(move|theme, status|
                                                 get_styling(theme, status, 
-                                                    input.style.clone()
+                                                    input.style_id.clone()
                                                 ))
                                             .into();
 
@@ -197,7 +187,7 @@ pub fn text_input_callback(id: usize, message: TIMessage) {
             wco.value_str = Some(value);
             process_callback(wco);
         }
-        TIMessage::OnPast(value) => {
+        TIMessage::OnPaste(value) => {
             wci.value_str = Some(value.clone());
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = id;
@@ -273,6 +263,7 @@ pub enum IpgTextInputParam {
     Size,
     LineHeightPixels,
     LineHeightRelative,
+    StyleId,
 }
 
 pub fn text_input_item_update(ti: &mut IpgTextInput,
@@ -311,6 +302,9 @@ pub fn text_input_item_update(ti: &mut IpgTextInput,
             let val = try_extract_f64(value) as f32;
             ti.line_height = LineHeight::Relative(val);
         },
+        IpgTextInputParam::StyleId => {
+            ti.style_id = Some(try_extract_string(value));
+        },
     }
 }
 
@@ -328,174 +322,83 @@ fn try_extract_text_input_update(update_obj: PyObject) -> IpgTextInputParam {
 
 fn get_styling(theme: &Theme, 
                 status: Status, 
-                style_str: Option<String>
+                style_id: Option<String>
                 ) -> Style {
 
-    if style_str.is_none() {
+    if style_id.is_none() {
         return text_input::default(theme, status)
     }     
 
     let state = access_state();
 
-    let style_opt = state.text_input_style.get(&style_str.clone().unwrap());
+    let style_opt = state.text_input_style.get(&style_id.clone().unwrap());
 
     let style = match style_opt {
         Some(st) => st,
-        None => panic!("TextInput styling: Unable to find the style_id '{}'.", style_str.unwrap())
+        None => panic!("TextInput styling: Unable to find the style_id '{}'.", style_id.unwrap())
     };
 
-    let mut active_style = text_input::default(theme, status);
+    let mut style_base = text_input::default(theme, Status::Active);
 
     if style.background_color.is_some() {
-        active_style.background = style.background_color.unwrap().into();
-    }
-
-    // Border color is the strong color of the background for active.
-    // Therefore, if background color is defined then a strong color 
-    // is calculated unless the background strong color is defined.
-    if style.border_color.is_some() {
-        active_style.border.color = style.border_color.unwrap();
-    } else {
-        if style.background_color.is_some() && style.background_color_strong.is_none() {
-            active_style.border.color = strong(style.background_color.unwrap(), 
-                                                style.background_strong_factor);
-        }
-
-        if style.background_color_strong.is_some() {
-            active_style.border.color = style.background_color_strong.unwrap()
-        }
+        style_base.background = style.background_color.unwrap().into();
     }
 
     if style.border_width.is_some() {
-        active_style.border.width = style.border_width.unwrap();
+        style_base.border.width = style.border_width.unwrap();
     }
 
     if style.border_radius.is_some() {
-        active_style.border.radius = get_radius(style.border_radius.clone().unwrap(),
+        style_base.border.radius = get_radius(style.border_radius.clone().unwrap(),
                                         "TextInput".to_string());
     }
 
-    // Icon color is the weak color of the background for active.
-    // Therefore, if background color is defined then a weak color 
-    // is calculated unless the background weak color is defined.
-    if style.icon_color.is_some() {
-        active_style.icon = style.icon_color.unwrap();
-    } else {
-        if style.background_color.is_some() && style.background_color_weak.is_none() {
-            active_style.border.color = weak(style.background_color.unwrap(),
-                                                theme.palette().background, 
-                                                style.background_weak_factor);
-        }
-
-        if style.background_color_weak.is_some() {
-            active_style.border.color = style.background_color_weak.unwrap()
-        } 
+    if style.border_color.is_some() {
+        style_base.border.color = style.border_color.unwrap();
     }
 
-    // Placeholder color is the strong color of the background for active.
-    // Therefore, if background color is defined then a strong color 
-    // is calculated unless the background strong color is defined.
+    // if style.icon_color.is_some() {
+    //     style_base.icon = style.icon_color.unwrap();
+    // }
+
     if style.placeholder_color.is_some() {
-        active_style.placeholder = style.placeholder_color.unwrap();
-    } else {
-        if style.background_color.is_some() && style.background_color_strong.is_none() {
-            active_style.placeholder = strong(style.background_color.unwrap(), 
-                                                style.background_strong_factor);
-        }
-
-        if style.background_color_strong.is_some() {
-            active_style.placeholder = style.background_color_strong.unwrap()
-        }
+        style_base.placeholder = style.placeholder_color.unwrap();
     }
 
-    // Value color is the background color, therefore, if the value color
-    // is not defined and the background color is defined, the the value
-    // color equals the background color.
     if style.value_color.is_some() {
-        active_style.value = style.value_color.unwrap();
-    } else if style.background_color.is_some() {
-        active_style.value = style.background_color.unwrap();
+        style_base.value = style.value_color.unwrap();
     }
 
-    // Selection color is the weak color of the background for active.
-    // Therefore, if background color is defined then a weak color 
-    // is calculated unless the background weak color is defined.
     if style.selection_color.is_some() {
-        active_style.selection = style.selection_color.unwrap();
-    } else {
-        if style.background_color.is_some() && style.background_color_weak.is_none() {
-            active_style.selection = weak(style.background_color.unwrap(),
-                                                theme.palette().background, 
-                                                style.background_weak_factor);
-        }
-
-        if style.background_color_weak.is_some() {
-            active_style.selection = style.background_color_weak.unwrap()
-        } 
+        style_base.selection = style.selection_color.unwrap();
     }
 
     let palette = theme.extended_palette();
 
-    let mut hovered_style = Style {
-        border: Border {
-            color: palette.background.base.text,
-            ..active_style.border
-        },
-        ..active_style
-    };
-
-
-    // For hover, the border color goes from background strong
-    // to background text color
-    if style.border_color_hovered.is_some() {
-        hovered_style.border.color = style.border_color_hovered.unwrap();
-    } else if style.background_color.is_some() {
-        let bg_color = style.background_color.unwrap();
-        let text_color = if is_dark(bg_color) {
-            Color::WHITE
-        } else {
-            Color::BLACK
-        };
-        
-        let pair = Pair::new(bg_color, text_color);
-        hovered_style.border.color = pair.text;
-    }
-
-    let mut focused_style = Style {
-        border: Border {
-            color: palette.primary.strong.color,
-            ..active_style.border
-        },
-        ..active_style
-    };
-
-    if style.border_color_focused.is_some() {
-        focused_style.border.color = style.border_color_focused.unwrap();
-    } else if style.background_color_strong.is_some() {
-        focused_style.border.color = style.background_color_strong.unwrap();
-    }
-
-    let mut disabled_style = Style {
-        background: palette.background.weak.color.into(),
-        value: active_style.placeholder,
-        ..active_style
-    };
-
-    if style.background_color_weak.is_some() {
-        disabled_style.background = style.background_color_weak.unwrap().into();
-    } else if style.background_color.is_some() {
-        let bg_color_weak = weak(style.background_color.unwrap(),
-                                        theme.palette().background, 
-                                        style.background_weak_factor);
-        disabled_style.background = bg_color_weak.into();
-    }
-
-
     match status {
-        Status::Active =>active_style,
-        Status::Hovered => hovered_style,
-        Status::Focused => focused_style,
-        Status::Disabled => disabled_style,
+        Status::Active =>style_base,
+        Status::Hovered => {
+            if style.border_color_hovered.is_some() {
+                style_base.border.color = style.border_color_hovered.unwrap();
+            } else {
+                style_base.border.color = palette.background.base.text;
+            }
+            style_base
+        },
+        Status::Focused => {
+            if style.border_color_focused.is_some() {
+                style_base.border.color = style.border_color_focused.unwrap();
+            } else {
+                style_base.border.color = palette.primary.strong.color;
+            }
+            style_base
+        },
+        Status::Disabled => {
+            style_base.value = style_base.placeholder;
+            style_base.background = palette.background.weak.color.into();
+            
+            style_base
+        }
     }
 
 
