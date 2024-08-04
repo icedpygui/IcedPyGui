@@ -32,7 +32,7 @@ pub struct IpgToggler {
     pub text_line_height: LineHeight,
     pub text_alignment: IpgHorizontalAlignment,
     pub spacing: f32,
-    pub style: Option<String>,
+    pub style_id: Option<String>,
 }
 
 impl IpgToggler {
@@ -48,7 +48,7 @@ impl IpgToggler {
         text_line_height: LineHeight,
         text_alignment: IpgHorizontalAlignment,
         spacing: f32,
-        style: Option<String>,
+        style_id: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -62,7 +62,7 @@ impl IpgToggler {
             text_line_height,
             text_alignment,
             spacing,
-            style,
+            style_id,
         }
     }
 }
@@ -130,7 +130,7 @@ pub fn construct_toggler(tog: IpgToggler) -> Element<'static, app::Message> {
                                                     .spacing(tog.spacing)
                                                     .style(move|theme: &Theme, status| {     
                                                         get_styling(theme, status, 
-                                                                    tog.style.clone()) 
+                                                                    tog.style_id.clone()) 
                                                     })
                                                     .into();
 
@@ -283,22 +283,22 @@ fn get_text_alignment(ta: IpgHorizontalAlignment) -> alignment::Horizontal {
 
 
 pub fn get_styling(theme: &Theme, status: Status, 
-                    style_str: Option<String>,
+                    style_id: Option<String>,
                     ) -> toggler::Style {
     
     let mut tog_style = toggler::default(theme, status);
 
     let state = access_state();
 
-    if style_str.is_none() {
+    if style_id.is_none() {
         return tog_style
     }
 
-    let style_opt = state.toggler_style.get(&style_str.clone().unwrap());
+    let style_opt = state.toggler_style.get(&style_id.clone().unwrap());
     
     let style = match style_opt {
         Some(st) => st,
-        None => panic!("Toggler: The style_id '{}' for add_toggler_style could not be found", style_str.unwrap())
+        None => panic!("Toggler: The style_id '{}' for add_toggler_style could not be found", style_id.unwrap())
     };
 
     // The background color for active or hovered can have two colors, one for untoggled and toggled.

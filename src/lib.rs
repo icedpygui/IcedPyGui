@@ -3083,7 +3083,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, label=None, gen_id=None, toggled=None, 
                         width=None, width_fill=false, size=20.0, text_size=16.0,
                         text_line_height=1.3, text_alignment=IpgHorizontalAlignment::Center, 
-                        spacing=10.0, user_data=None, show=true, style=None, 
+                        spacing=10.0, user_data=None, show=true, style_id=None, 
                         ))]
     fn add_toggler(&mut self,
                         parent_id: String,
@@ -3100,7 +3100,7 @@ impl IPG {
                         spacing: f32,
                         user_data: Option<PyObject>,
                         show: bool,
-                        style: Option<String>,
+                        style_id: Option<String>,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -3128,7 +3128,7 @@ impl IPG {
                                                 text_line_height,
                                                 text_alignment,
                                                 spacing,
-                                                style,                           
+                                                style_id,                           
                                                 )));
         drop(state);
         Ok(id)
