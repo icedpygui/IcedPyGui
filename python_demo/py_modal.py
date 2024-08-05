@@ -13,7 +13,7 @@ ipg.add_window(window_id="main", title="Main",
 
 ipg.add_container(window_id="main", container_id="cont", 
                   width_fill=True, height_fill=True,
-                  center_xy=True)
+                  )
 
 ipg.add_modal(window_id="main", container_id="modal", 
               label="Modal", parent_id="cont",

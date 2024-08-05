@@ -29,7 +29,7 @@ tog_id = ipg.add_toggler("col",
                          label="Some Toggler Label",
                          size=40.0,
                          text_size=25.0,
-                         style="tog_style"
+                         style_id="tog_style"
                          )
 
 

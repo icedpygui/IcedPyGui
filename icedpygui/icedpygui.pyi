@@ -2134,7 +2134,7 @@ class IPG:
                     parent_id: Optional[str]=None,
                     row_highlight: Optional[IpgTableRowHighLight]=None,
                     highlight_amount: float=0.15,
-                    column_widths: list=[20.0],
+                    column_widths: list=[50.0],
                     button_style: Optional[Dict[int: IpgStyleStandard]]=None,
                     widgets_columns: Optional[Dict[int: list[IpgTableWidget]]]=None,
                     gen_id: Optional[int]=None,
@@ -2683,6 +2683,25 @@ class IPG:
             The id of the event which can be used to modify the event through update_item.
         """
 
+    def get_color_palette(self,
+                          base_color: Optional[IpgColor],
+                          base_rgba: Optional[list[float, 4]],
+                          ) -> list[list[float], list[float, 4], list[float, 4]]:
+        """
+        Gets the colors strong, weak, and text in rgba format
+
+        Parameters:
+        -----------
+
+            base_color: Optional[IpgColor],
+                The color with class IpgColor
+            base_rgba: Optional[list[float, 4]],
+                The color in rgba format
+
+        Return:
+        -------
+            list of 3 lists of rgba colors (strong, weak, text)
+        """
 
     # *******************************all item ops**************************************
         

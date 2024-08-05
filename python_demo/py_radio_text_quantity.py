@@ -2,14 +2,17 @@ from icedpygui import IPG, IpgRadioParam, IpgRadioDirection, IpgTextParam
 from icedpygui import IpgAlignment, IpgHorizontalAlignment, IpgColor
 
 
+
+# Simple demo to show that the limit of the radios
+# is 26 groups of 26 radio buttons.
+# If you need more, request an increase.
+
 ipg = IPG()
 
 def radio_cb(id: int, selected: tuple):
     radio_index = selected[0]
     radio_label=selected[1]
     print(id, radio_index, radio_label)
-
-# **************Window Constructions Starts Here*************************
 
 ipg.add_window("main", "Radio Demo", 1400, 600,
                 pos_x=100, pos_y=25)

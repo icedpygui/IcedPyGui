@@ -70,8 +70,6 @@ class DemoScrollable:
         self.v_bar_margin: float = 0.0
         self.h_scroller_width: float = 10.0
         self.v_scroller_width: float = 10.0
-        self.h_alignmnet = IpgAlignment.Start
-        self.v_alignmnet = IpgAlignment.Start
 
     # start_session must be the last function called
     def create_gui(self):
@@ -258,11 +256,6 @@ class DemoScrollable:
 
         self.ipg.add_row(window_id=self.wnd_b, container_id="row_7", parent_id="col")
 
-        self.ipg.add_button(parent_id="row_7", label="Press to Toggle H Alignment",
-                            on_press=self.toggle_h_alignment, padding=[5])
-        self.ipg.add_button(parent_id="row_7", label="Press to Toggle V Alignment",
-                            on_press=self.toggle_v_alignment, padding=[5])
-
     def inc_dec_h_bar_width(self, btn_id, inc_dec):
         self.h_bar_width += inc_dec
         self.ipg.update_item(self.scroll_id_3, IpgScrollableParam.HBarWidth, self.h_bar_width)
@@ -286,21 +279,6 @@ class DemoScrollable:
     def inc_dec_v_scroller_width(self, btn_id, inc_dec):
         self.v_scroller_width += inc_dec
         self.ipg.update_item(self.scroll_id_3, IpgScrollableParam.VScrollerWidth, self.v_scroller_width)
-
-    # Only start and end alignment are allowed    
-    def toggle_h_alignment(self, btn_id):
-        if self.h_alignmnet == IpgAlignment.Start:
-            self.h_alignmnet = IpgAlignment.End
-        else:
-            self.h_alignmnet = IpgAlignment.Start
-        self.ipg.update_item(self.scroll_id_3, IpgScrollableParam.HBarAlignment, self.h_alignmnet)
-
-    def toggle_v_alignment(self, btn_id):
-        if self.v_alignmnet == IpgAlignment.Start:
-            self.v_alignmnet = IpgAlignment.End
-        else:
-            self.v_alignmnet = IpgAlignment.Start
-        self.ipg.update_item(self.scroll_id_3, IpgScrollableParam.VBarAlignment, self.v_alignmnet)
 
 
 # instantiate the class

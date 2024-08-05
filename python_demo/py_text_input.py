@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgTextParam
-from icedpygui import IpgAlignment, IpgTextInputParam
+from icedpygui import IpgAlignment, IpgTextInputParam, IpgColor
 
 ipg = IPG()
 
@@ -90,7 +90,12 @@ def change_line_height(_btn_id):
     ipg.update_item(ti_id, IpgTextInputParam.Value, "A Value for the LineHeight")
     # let's make it bigger to hold the text
     ipg.update_item(ti_id, IpgTextInputParam.Width, 450.0)
-    ipg.update_item(ti_id, IpgTextInputParam.LineHeight, 3.0)
+    ipg.update_item(ti_id, IpgTextInputParam.LineHeightRelative, 3.0)
+
+
+# Add some styling
+def add_style(_btn_id):
+    ipg.update_item(ti_id, IpgTextInputParam.StyleId, "ti_style")
 
 
 # add the window
@@ -100,7 +105,7 @@ ipg.add_window("main", "Text Input Demo", 600, 600,
 # add the column for the widgets, centered
 ipg.add_column("main", container_id="col",
                align_items=IpgAlignment.Center,
-               height_fill=True, width_fill=True, spacing=10.0)
+               height_fill=True, width_fill=True, spacing=10)
 
 # Add some instructions
 ipg.add_text(parent_id="col", content="It's best to see the effects by pressing the buttons left to right and top to "
@@ -137,6 +142,22 @@ ipg.add_button(parent_id="row_3", label="Press Me to Change the Size", on_press=
 
 ipg.add_row(window_id="main", container_id="row_4", parent_id="col")
 ipg.add_button(parent_id="row_4", label="Press Me to Change the LineHeight", on_press=change_line_height)
+
+ipg.add_row(window_id="main", container_id="row_5", parent_id="col")
+ipg.add_button(parent_id="row_5", label="Press Me to Add Some Styling", on_press=add_style)
+
+# the add style functions can be place anywhere as long as they are before the start_session
+ipg.add_text_input_style(style_id="ti_style", 
+                         background_color=IpgColor.CADET_BLUE,
+                         border_color=IpgColor.YELLOW,
+                         border_color_focused=IpgColor.PALE_GOLDEN_ROD,
+                         border_color_hovered=IpgColor.CHARTREUSE,
+                         border_width=5.0,
+                         border_radius=[8.0],
+                         placeholder_color=IpgColor.BLACK,
+                         value_color=IpgColor.LIGHT_STEEL_BLUE,
+                         selection_color=IpgColor.DARK_SLATE_GRAY
+                         )
 
 
 # Required to be the last widget sent to Iced,  If you start the program

@@ -1,7 +1,7 @@
-from icedpygui import IPG, IpgTextParam, IpgRadioDirection, IpgRadioParam
+from icedpygui import IPG, IpgTextParam, IpgRadioDirection
 from icedpygui import IpgButtonParam, IpgProgressBarParam
 from icedpygui import IpgAlignment
-from icedpygui import TableWidget, TableRowHighLight
+from icedpygui import IpgTableWidget, IpgTableRowHighLight
 import random
 
 """
@@ -55,20 +55,16 @@ import random
     There are some non-obvious containers like Scrollable.  It's not only a 
     container but a widget too, because it has callbacks. 
 
-    Besides width and height, the Container has a centering option which
+    Besides width and height, the Container defaults to centering which
     aligns the item in the center of the Container.  This is very handy
-    for the centering of your Column or Row.
+    for the centering of your Column or Row.  Ohter options are available.
 
-    A Column aligns your widget vetically.  So as you add widgets, they are
+    A Column aligns your widget vertically.  So as you add widgets, they are
     placed top to bottom.  The Column has a spacing parameter but you can add
     the spacing widget, if you have other spacing requirements.
 
     A Row is like the Column except it aligns the widgets horizontally.
     As you place your widgets into a row, they are placed left to right.
-
-    A Column and Row have alignment options, start, center, and end.
-    Start and center are obvious but end means basically align right 
-    for Row or align at the bottom for Column.
 
     The alignment depends a lot on the width and height of the container.
     The 3 basic options for setting the width and height are:
@@ -151,11 +147,11 @@ import random
         text_id = ipg.add_text(parent_id="col", content="Some text")
 
     Your callback function
-    def button_pressed(btn_ id):
+    def button_pressed(btn_id):
         ipg.update(text_id, IpgTextParam.Content, "Button was Pressed")
 
     In this callback function you only have one returning parameter, btn_id.
-    Most other widgets have a second data paramter.  The user_data parameters 
+    Most other widgets have a second data parameter.  The user_data parameters 
     depends on if you use the user_data option on the widget.  If you don't use 
     the user_data option,make sure and not to put that parameter in the callback function 
     or you'll get an error.  You'll also get an error if you use the user_data and forget 
@@ -164,9 +160,9 @@ import random
     calling widget id, data(if present), user_data.
 
     It's important to look through all the demos to get a feel for how things operate.
-    I tried to vary up things a bit to include different ideas.  However, a demo doesn't
-    really do mutch just use a lot of text widgets to show the results.  Give it a try with
-    with a real program and let me know through the git repository if you have problems, 
+    I tried to vary up things to include different ideas.  However, a demo doesn't
+    really do much just use a lot of text widgets to show the results.  Give it a try with
+    with a real program and let me know through the git repository or discord if you have problems, 
     questions, or suggestions.
     
     Have fun with IPG!! 
@@ -413,13 +409,11 @@ class Demo:
             col0.append("Button")
             # labels for the checkboxes
             col1.append("")
-            # make a selectable text
-            col2.append("Select Me")
             # make a float random number
-            col3.append(random.randrange(10, 99) + random.randrange(10, 99) / 100)
-            col4.append(random.choice(["one", "two", "three", "four", "five", "six", "seven"]))
-            col5.append(random.randrange(10, 99))
-            col6.append(random.choice([True, False]))
+            col2.append(random.randrange(10, 99) + random.randrange(10, 99) / 100)
+            col3.append(random.choice(["one", "two", "three", "four", "five", "six", "seven"]))
+            col4.append(random.randrange(10, 99))
+            col5.append(random.choice([True, False]))
 
         # Create the table, the requirement is a list of dictionaries.
         # Rust does not have dictionaries but a similar type is called a HashMap.
@@ -434,33 +428,34 @@ class Demo:
         # the list to a string.  When the final version is displayed, it's converted to  a string anyway.
         data = [{"Button": col0},
                 {"ChkBox": col1},
-                {"Selectable": col2},
+                {"Col2": col2},
                 {"Col3": col3},
                 {"Col4": col4},
-                {"Col5": col5},
-                {"Col6": col6}]
+                {"Col5": col5}]
 
-
+    
         # The column widgets are prepared
         btn_widgets = []
         chkbox_widgets = []
-        selectable = []
 
         for _ in range(0, len(col0)):
-            btn_widgets.append(TableWidget.Button)
-            chkbox_widgets.append(TableWidget.Checkbox)
-            selectable.append(TableWidget.Text)
+            btn_widgets.append(IpgTableWidget.Button)
+            chkbox_widgets.append(IpgTableWidget.Checkbox)
+            
 
         # The table is added.
-        self.ipg.add_table(self.l_col_2, "My Table", data, 
-                    width=600.0, height=300.0, 
-                    row_highlight=TableRowHighLight.Lighter,
-                    table_length=len(col1),
-                    widgets_using_columns= {0: btn_widgets, 1: chkbox_widgets, 2: selectable},
-                    on_press_button=self.widget_button,
-                    on_toggle_checkbox=self.widget_checkbox,
-                    on_enter=self.on_text_enter,
-                    )
+        self.ipg.add_table(window_id=self.wnd_2,
+                            table_id="table", 
+                            title="My Table", 
+                            data=data,
+                            column_widths=[75.0, 50.0, 100.0, 100.0, 100.0, 100.0],
+                            width=600.0, height=300.0, 
+                            row_highlight=IpgTableRowHighLight.Lighter,
+                            data_length=len(col0),
+                            widgets_columns= {0: btn_widgets, 1: chkbox_widgets},
+                            on_button=self.widget_button,
+                            on_checkbox=self.widget_checkbox,
+                            )
 
     def widget_button(self, tbl_id: int, wid_index: tuple[int, int]):
         print(tbl_id, wid_index)

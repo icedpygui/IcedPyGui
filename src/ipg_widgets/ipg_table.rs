@@ -190,14 +190,19 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
         // Gets the entire column at each iteration
         for (col_index, py_data) in table.data.iter().enumerate() {
 
+            let width = if col_index >= table.column_widths.len() {
+                                    table.column_widths[0]
+                                } else {
+                                    table.column_widths[col_index]
+                                };
+
             let data: Result<HashMap<String, Vec<bool>>, _> = py_data.extract::<HashMap<String, Vec<bool>>>(py);
             if !data.is_err() { 
                 match data {
                     Ok(dt) => {
                         //Only pushes the one header
                         for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned(), 
-                                                        table.column_widths[col_index]));                                          
+                            headers.push(add_header_text(key.to_owned(), width));                                         
                         }
 
                         // dt.values are the columns in the table
@@ -222,8 +227,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned(), 
-                                                        table.column_widths[col_index]));  
+                            headers.push(add_header_text(key.to_owned(), width));  
                         }
 
                         for values in dt.values() {
@@ -243,8 +247,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned(),
-                                                        table.column_widths[col_index]));  
+                            headers.push(add_header_text(key.to_owned(), width));  
                         }
 
                         for values in dt.values() {
@@ -264,8 +267,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned(), 
-                                                        table.column_widths[col_index]));  
+                            headers.push(add_header_text(key.to_owned(), width));  
                         }
 
                         for values in dt.values() {
@@ -295,6 +297,12 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
             let mut row_element: Element<Message> = Space::new(0.0, 0.0).into();
             let mut widget_found = false;
 
+            let col_width = if col_index >= table.column_widths.len() {
+                                        table.column_widths[0]
+                                    } else {
+                                        table.column_widths[col_index]
+                                    };
+
             let index = check_for_widget(&table.button_ids, row_index, col_index);
             if index.is_some() {
                 widget_found = true;
@@ -304,7 +312,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                                     label.clone(), 
                                     row, 
                                     col,
-                                    table.column_widths[col], 
+                                    col_width, 
                                     bl,
                                     table.widget_styles.clone());
             }
@@ -318,7 +326,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                                     label.clone(), 
                                     row, 
                                     col,
-                                    table.column_widths[col], 
+                                    col_width, 
                                     bl,
                                     None, 
                                     );
@@ -337,7 +345,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                                     label.clone(), 
                                     row, 
                                     col,
-                                    table.column_widths[col], 
+                                    col_width, 
                                     bl,
                                     table.widget_styles.clone());
             }
@@ -351,14 +359,14 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                                     label.clone(), 
                                     row, 
                                     col,
-                                    table.column_widths[col], 
+                                    col_width, 
                                     bl,
                                     None, 
                                     );
             }
 
             if !widget_found {
-                row_element = add_text_widget(label.clone(), table.column_widths[col_index]);
+                row_element = add_text_widget(label.clone(), col_width);
             }
             
             let cnt = add_row_container(

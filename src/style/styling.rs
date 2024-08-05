@@ -3,7 +3,7 @@ use iced::theme::palette::Pair;
 use iced::{Color, Theme};
 use palette::{FromColor, Hsl, Mix};
 use palette::rgb::Rgb;
-
+use palette::color_difference::Wcag21RelativeContrast;
 use pyo3::pyclass;
 
 
@@ -146,34 +146,34 @@ fn from_hsl(hsl: Hsl) -> Color {
     Rgb::from_color(hsl).into()
 }
 
-// pub fn readable(background: Color, text: Color) -> Color {
-//     if is_readable(background, text) {
-//         text
-//     } else {
-//         let white_contrast = relative_contrast(background, Color::WHITE);
-//         let black_contrast = relative_contrast(background, Color::BLACK);
+pub fn readable(background: Color, text: Color) -> Color {
+    if is_readable(background, text) {
+        text
+    } else {
+        let white_contrast = relative_contrast(background, Color::WHITE);
+        let black_contrast = relative_contrast(background, Color::BLACK);
 
-//         if white_contrast >= black_contrast {
-//             Color::WHITE
-//         } else {
-//             Color::BLACK
-//         }
-//     }
-// }
+        if white_contrast >= black_contrast {
+            Color::WHITE
+        } else {
+            Color::BLACK
+        }
+    }
+}
 
-// fn is_readable(a: Color, b: Color) -> bool {
-//     let a_srgb = Rgb::from(a);
-//     let b_srgb = Rgb::from(b);
+fn is_readable(a: Color, b: Color) -> bool {
+    let a_srgb = Rgb::from(a);
+    let b_srgb = Rgb::from(b);
 
-//     a_srgb.has_enhanced_contrast_text(b_srgb)
-// }
+    a_srgb.has_enhanced_contrast_text(b_srgb)
+}
 
-// fn relative_contrast(a: Color, b: Color) -> f32 {
-//     let a_srgb = Rgb::from(a);
-//     let b_srgb = Rgb::from(b);
+fn relative_contrast(a: Color, b: Color) -> f32 {
+    let a_srgb = Rgb::from(a);
+    let b_srgb = Rgb::from(b);
 
-//     a_srgb.relative_contrast(b_srgb)
-// }
+    a_srgb.relative_contrast(b_srgb)
+}
 
 #[derive(Debug, Clone)]
 #[pyclass]

@@ -21,7 +21,6 @@ mod iced_widgets;
 mod iced_aw_widgets;
 mod graphics;
 mod style;
-use style::ipg_palette::IpgPaletteSet;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyle, IpgCardParam};
@@ -63,7 +62,7 @@ use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_horizont
     get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{IpgStyleParam, IpgStyleStandard};
+use style::styling::{readable, IpgStyleParam, IpgStyleStandard};
 
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
 
@@ -2688,7 +2687,7 @@ impl IPG {
     #[pyo3(signature = (window_id, table_id, title, data, 
                         data_length, width, height, parent_id=None,
                         row_highlight=None, highlight_amount=0.15,
-                        column_widths=vec![],
+                        column_widths=vec![50.0],
                         widgets_columns=None, gen_id=None, 
                         on_button=None, on_checkbox=None,
                         on_modal=None, on_toggler=None, 
@@ -3479,6 +3478,29 @@ impl IPG {
         };
     }
 
+    #[pyo3(signature = (base_color=None, base_rgba=None))]
+    fn get_color_palette(&mut self, 
+                            base_color: Option<IpgColor>,
+                            base_rgba: Option<[f32; 4]>,
+                        ) -> PyResult<([f32; 4], [f32; 4], [f32; 4])>
+    {
+        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+
+        let text_color = readable(base.unwrap(), Color::WHITE);
+
+        let palette = iced::theme::palette::Background::new(base.unwrap(), text_color);
+
+        let color = palette.strong.color;
+        let strong = [color.r, color.g, color.b, color.a];
+        let color = palette.weak.color;
+        let weak = [color.r, color.g, color.b, color.a];
+        let color = text_color;
+        let text = [color.r, color.g, color.b, color.a];
+
+        Ok((strong, weak, text)) 
+    }
+
+
 
     fn get_id(&mut self, gen_id: Option<usize>) -> usize
     {
@@ -3632,7 +3654,6 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgMenuSeparatorType>()?;
     m.add_class::<IpgMenuType>()?;
     m.add_class::<IpgMouseAreaParam>()?;
-    m.add_class::<IpgPaletteSet>()?;
     m.add_class::<IpgPickListParam>()?;
     m.add_class::<IpgPickListHandle>()?;
     m.add_class::<IpgProgressBarParam>()?;

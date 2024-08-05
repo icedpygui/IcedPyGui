@@ -49,7 +49,7 @@ ipg.add_window(window_id="main", title="Main", width=400, height=400,
 
 ipg.add_container(window_id="main", container_id="cont", 
                   width_fill=True, height_fill=True,
-                  center_xy=True)
+                  )
 
 ipg.add_mousearea(window_id="main", container_id="ma", parent_id="cont",
                   on_enter=on_enter,
