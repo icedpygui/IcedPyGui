@@ -149,16 +149,16 @@ def change_height(chk_id: int, checked: bool, radio_ids: list[int]):
 
 def change_right_radio_colors(chk_id: int, checked: bool, radio_right_id: int):
     if checked:
-        ipg.update_item(radio_right_id, IpgRadioParam.Style, "color")
+        ipg.update_item(radio_right_id, IpgRadioParam.StyleId, "color")
     else:
-        ipg.update_item(radio_right_id, IpgRadioParam.Style, None)
+        ipg.update_item(radio_right_id, IpgRadioParam.StyleId, None)
 
 
 
 # Define the styling that's used later
 # See the hint for the color discussion.
 ipg.add_radio_style(style_id="color",
-                    circle_inner_color=IpgColor.YELLOW,
+                    background_color=IpgColor.YELLOW,
                     border_color=IpgColor.DARK_ORANGE,
                     dot_color=IpgColor.DARK_ORANGE, 
                     text_color=IpgColor.YELLOW,

@@ -80,29 +80,29 @@ fn deviate(color: Color, amount: f32) -> Color {
     }
 }
 
-pub fn weak(base: Color, background: Color, mut factor: Option<f32>) -> Color {
+// pub fn weak(base: Color, background: Color, mut factor: Option<f32>) -> Color {
 
-    if factor.is_none() {
-        factor = Some(0.4);
-    }
+//     if factor.is_none() {
+//         factor = Some(0.4);
+//     }
 
-    let a_hsl = to_hsl(base);
-    let b_hsl = to_hsl(background);
+//     let a_hsl = to_hsl(base);
+//     let b_hsl = to_hsl(background);
 
-    let mixed = a_hsl.mix(b_hsl, factor.unwrap());
-    from_hsl(mixed)
-}
+//     let mixed = a_hsl.mix(b_hsl, factor.unwrap());
+//     from_hsl(mixed)
+// }
 
-pub fn strong(color: Color, mut amount: Option<f32>) -> Color {
-    if amount.is_none() {
-        amount = Some(0.1)
-    }
-    if is_dark(color) {
-        lighten(color, amount.unwrap())
-    } else {
-        darken(color, amount.unwrap())
-    }
-}
+// pub fn strong(color: Color, mut amount: Option<f32>) -> Color {
+//     if amount.is_none() {
+//         amount = Some(0.1)
+//     }
+//     if is_dark(color) {
+//         lighten(color, amount.unwrap())
+//     } else {
+//         darken(color, amount.unwrap())
+//     }
+// }
 
 pub fn get_theme_color(wnd_theme: &Theme) -> Color {
     let palette = Theme::palette(wnd_theme);

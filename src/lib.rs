@@ -2144,27 +2144,33 @@ impl IPG {
     }
 
     #[pyo3(signature = (style_id,
-                    circle_inner_color=None, circle_inner_rgba=None,
-                    circle_inner_hover_color=None,
-                    circle_inner_hover_rgba=None,
-                    hover_color_factor=None,
-                    border_color=None, border_rgba=None,
-                    border_width=None,
-                    dot_color=None, dot_rgba=None,
-                    text_color=None, text_rgba=None,
-                    gen_id=None))]
+                        background_color=None,
+                        background_rgba=None,
+                        background_color_hovered=None,
+                        background_rgba_hovered=None,
+                        border_color=None, 
+                        border_rgba=None,
+                        border_width=None,
+                        dot_color=None, 
+                        dot_rgba=None,
+                        dot_color_hovered=None, 
+                        dot_rgba_hovered=None,
+                        text_color=None, 
+                        text_rgba=None,
+                        gen_id=None))]
     fn add_radio_style(&mut self,
                             style_id: String,
-                            circle_inner_color: Option<IpgColor>,
-                            circle_inner_rgba: Option<[f32; 4]>,
-                            circle_inner_hover_color: Option<IpgColor>,
-                            circle_inner_hover_rgba: Option<[f32; 4]>,
-                            hover_color_factor: Option<f32>,
+                            background_color: Option<IpgColor>,
+                            background_rgba: Option<[f32; 4]>,
+                            background_color_hovered: Option<IpgColor>,
+                            background_rgba_hovered: Option<[f32; 4]>,
                             border_color: Option<IpgColor>,
                             border_rgba: Option<[f32; 4]>,
                             border_width: Option<f32>,
                             dot_color: Option<IpgColor>,
                             dot_rgba: Option<[f32; 4]>,
+                            dot_color_hovered: Option<IpgColor>,
+                            dot_rgba_hovered: Option<[f32; 4]>,
                             text_color: Option<IpgColor>,
                             text_rgba: Option<[f32; 4]>,
                             gen_id: Option<usize>,
@@ -2174,21 +2180,22 @@ impl IPG {
 
         let mut state = access_state();
 
-        let circle_inner_color = get_color(circle_inner_rgba, circle_inner_color, 1.0, false);
-        let circle_inner_hover_color = get_color(circle_inner_hover_rgba, circle_inner_hover_color, 1.0, false);
-        let dot: Option<Color> = get_color(dot_rgba, dot_color, 1.0, false);
-        let border: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
-        let text: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+        let background_color = get_color(background_rgba, background_color, 1.0, false);
+        let background_color_hovered = get_color(background_rgba_hovered, background_color_hovered, 1.0, false);
+        let dot_color: Option<Color> = get_color(dot_rgba, dot_color, 1.0, false);
+        let dot_color_hovered: Option<Color> = get_color(dot_rgba_hovered, dot_color_hovered, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
 
         state.radio_style.insert(style_id, IpgRadioStyle::new( 
                                                     id,
-                                                    circle_inner_color,
-                                                    circle_inner_hover_color,
-                                                    hover_color_factor,
-                                                    dot,
-                                                    border,
+                                                    background_color,
+                                                    background_color_hovered,
+                                                    dot_color,
+                                                    dot_color_hovered,
+                                                    border_color,
                                                     border_width,
-                                                    text,
+                                                    text_color,
                                                     ));
         
         drop(state);

@@ -450,7 +450,7 @@ class IPG:
                         height: Optional[float]=None,
                         width_fill: bool=False,
                         height_fill: bool=False,
-                        direction: IpgScrollableDirection=IpgScrollableDirection.Vertical,
+                        direction: IpgScrollableDirection=IpgScrollableDirection.Horizontal,
                         h_bar_width: float=10.0,
                         h_bar_margin: float=0.0,
                         h_scroller_width: float=10.0,
@@ -1615,15 +1615,17 @@ class IPG:
     def add_radio_style(self,
                         style_id: str,
                         *,
-                        circle_inner_color: Optional[IpgColor]=None,
-                        circle_inner_rgba: Optional[list[float, 4]]=None,
-                        circle_inner_hover_color: Optional[IpgColor]=None,
-                        hover_color_factor: Optional[float]=None,
+                        background_color: Optional[IpgColor]=None,
+                        background_rgba: Optional[list[float, 4]]=None,
+                        background_color_hover: Optional[IpgColor]=None,
+                        background_color_hovered: Optional[list[float, 4]]=None,
                         border_color: Optional[IpgColor]=None,
                         border_rgba: Optional[list[float, 4]]=None,
                         border_width: Optional[float]=None,
                         dot_color: Optional[IpgColor]=None,
                         dot_rgba: Optional[list[float, 4]]=None,
+                        dot_color_hovered: Optional[IpgColor]=None,
+                        dot_rgba_hovered: Optional[list[float, 4]]=None,
                         text_color: Optional[IpgColor]=None,
                         text_rgba: Optional[list[float, 4]]=None,
                         gen_id: Optional[int]=None,
@@ -1635,19 +1637,18 @@ class IPG:
         ---------
             style_id: str,
                 The id of the stle to use in ipg.add_radio.
-            circle_inner_color: Optional[IpgColor]=None,
-                The color of the inner circle of the radio button.
+            background_color: Optional[IpgColor]=None,
+                The color of the background of the radio button.
                 Defaults to background transparent.
-            circle_inner_rgba: Optional[list[float, 4]]=None,
-                The color of the inner circle of the radio button.
+            background_rgba: Optional[list[float, 4]]=None,
+                The color of the background of the radio button in rgba format.
                 Defaults to background transparent.
-            circle_inner_hover_color: Optional[IpgColor]=None,
+            background_color_hovered: Optional[IpgColor]=None,
                 The color of the inner circle when mouse hovers.
                 Defaults to background weak color.
-            hover_color_factor: Optional[float]=None,
-                if only the inner color defined, then can be used to
-                enhance the hover color of the defined inner color.
-                Defaults to 0.1.
+            background_rgba_hovered: Optional[list[float, 4]]=None,
+                The color of the inner circle when mouse hovers in rgba format.
+                Defaults to background weak color.
             border_color: Optional[IpgColor]=None,
                 The color of the circle border.
                 Defaults to primary.
@@ -1663,6 +1664,12 @@ class IPG:
             dot_rgba: Optional[list[float, 4]]=None,
                 The color of the dot.
                 Defaults to primary.
+            dot_color_hovered: Optional[IpgColor]=None,
+                The color of the dot when mouse hoveres.
+                Defaults to primary.strong.color.
+            dot_rgba_hovered: Optional[list[float, 4]]=None,
+                The color of the dot when the mouse hovers in rgba format.
+                Defaults to primary.strong.color.
             text_color: Optional[IpgColor]=None,
                 The color of the text.
                 Defaults to a contrast color of the background.
