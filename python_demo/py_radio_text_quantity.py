@@ -21,7 +21,7 @@ ipg.add_column(window_id="main", container_id="col",
                align_items=IpgAlignment.Start, 
                padding=[5])
 
-# The radio button limits are 25 groups with 25 items
+# The radio button limits are 26 groups with 26 items
 for i in range(0, 25):
     ipg.add_row(window_id="main", container_id=f"row{i}", parent_id="col")
     ipg.add_text(parent_id=f"row{i}", content=F"Row-{i}")
