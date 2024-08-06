@@ -17,7 +17,7 @@ use crate::iced_aw_widgets::menu::style_status::Status;
 use crate::iced_aw_widgets::menu::menu_bar_style::{primary, Style};
 
 use crate::graphics::colors::{get_color, match_ipg_color, IpgColor};
-use crate::style::styling::{get_text_pair, is_dark, lighten, IpgColorPalette, IpgStyleStandard};
+use crate::style::styling::{get_text_pair, is_dark, lighten, IpgStyleStandard};
 use pyo3::{pyclass, PyObject, Python};
 use crate::{access_callbacks, access_state, app};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
