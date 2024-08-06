@@ -46,7 +46,7 @@ use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectabl
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParam, IpgSliderStyle};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParam, IpgSvgRotation};
-use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableRowHighLight, IpgTableWidget, TableScrollerPosition};
+use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam, IpgTableRowHighLight, IpgTableWidget, TableScrollerPosition};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
@@ -2690,8 +2690,7 @@ impl IPG {
                         column_widths=vec![50.0],
                         widgets_columns=None, gen_id=None, 
                         on_button=None, on_checkbox=None,
-                        on_modal=None, on_toggler=None, 
-                        widget_styles=None,
+                        on_toggler=None, 
                         show=true, user_data=None))]
     fn add_table(&mut self,
                     window_id: String,
@@ -2710,9 +2709,7 @@ impl IPG {
                     gen_id: Option<usize>,
                     on_button: Option<PyObject>,
                     on_checkbox: Option<PyObject>,
-                    on_modal: Option<PyObject>,
                     on_toggler: Option<PyObject>,
-                    widget_styles: Option<HashMap<usize, IpgStyleStandard>>,
                     show: bool,
                     user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
@@ -2735,7 +2732,6 @@ impl IPG {
         // Keeping the ids organized in a hashmap for now, may need only a vec.
         let mut button_ids: Vec<(usize, usize, usize, bool)> = vec![]; // (id, row, col, bool)
         let mut check_ids: Vec<(usize, usize, usize, bool)> = vec![];
-        let mut modal_ids: Vec<(usize, usize, usize, bool)> = vec![];
         let mut tog_ids: Vec<(usize, usize, usize, bool)> = vec![];
             
         if widgets_columns.is_some() {
@@ -2748,9 +2744,6 @@ impl IPG {
                         },
                         IpgTableWidget::Checkbox => {
                             check_ids.push((self.get_id(None), row, col.clone(), false));
-                        },
-                        IpgTableWidget::Modal => {
-                            modal_ids.push((self.get_id(None), row, col.clone(), false))
                         },
                         IpgTableWidget::Toggler => {
                             tog_ids.push((self.get_id(None), row, col.clone(), false));
@@ -2766,10 +2759,6 @@ impl IPG {
 
         if on_checkbox.is_some() {
             add_callback_to_mutex(id, "on_checkbox".to_string(), on_checkbox);
-        }
-
-        if on_modal.is_some() {
-            add_callback_to_mutex(id, "on_modal".to_string(), on_modal);
         }
 
         if on_toggler.is_some() {
@@ -2794,10 +2783,8 @@ impl IPG {
                                                     row_highlight,
                                                     highlight_amount,
                                                     column_widths,
-                                                    widget_styles,
                                                     button_ids,
                                                     check_ids,
-                                                    modal_ids,
                                                     tog_ids,
                                                     show,
                                                     user_data,
@@ -2878,8 +2865,8 @@ impl IPG {
     #[pyo3(signature = (parent_id, placeholder, gen_id=None,
                         on_input=None, on_submit=None, 
                         on_paste=None, width=None, width_fill=false, 
-                        padding=vec![10.0], 
-                        size=20.0, 
+                        padding=vec![0.0], 
+                        size=16.0, 
                         line_height_pixels=None,
                         line_height_relative=None, 
                         user_data=None, is_secure=false, 
@@ -3468,7 +3455,7 @@ impl IPG {
                             drop(state);
                             window_item_update(wnd_id, item, value);
                         } else {
-                            match_container(cnt, item.clone(), value.clone());
+                            match_container(cnt, item.clone(), value.clone(), None);
                             drop(state);
                         }
                     },
@@ -3476,6 +3463,20 @@ impl IPG {
                 }
             },
         };
+    }
+
+    #[pyo3(signature = (wid, item, value, value_vec))]
+    fn update_table(&self, wid: usize, item: PyObject, value: PyObject, value_vec: Option<Vec<PyObject>>) {
+
+        let mut state = access_state();
+
+        match state.containers.get_mut(&wid) {
+            Some(cnt) => {
+                match_container(cnt, item.clone(), value.clone(), value_vec);
+                drop(state);
+            },
+            None => panic!("Item_update: Table, or Window with id {wid} not found.")
+        }
     }
 
     #[pyo3(signature = (base_color=None, base_rgba=None))]
@@ -3579,7 +3580,7 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
     }
 }
 
-fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject) {
+fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject, value_vec: Option<Vec<PyObject>>) {
     // TODO: Update containers
     match container {
         IpgContainers::IpgColumn(_) => {},
@@ -3589,7 +3590,7 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
             mousearea_item_update(m_area, item, value);
         },
         IpgContainers::IpgTable(table) =>{
-            table_item_update(table, item, value);
+            table_item_update(table, item, value, value_vec);
         },
         IpgContainers::IpgRow(_) => {},
         IpgContainers::IpgScrollable(scroll) => {
@@ -3667,6 +3668,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgStyleStandard>()?;
     m.add_class::<IpgSvgParam>()?;
     m.add_class::<IpgTableRowHighLight>()?;
+    m.add_class::<IpgTableParam>()?;
     m.add_class::<IpgTableWidget>()?;
     m.add_class::<IpgTextInputParam>()?;
     m.add_class::<IpgTextParam>()?;

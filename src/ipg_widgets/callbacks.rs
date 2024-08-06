@@ -363,26 +363,6 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                         }
                     }
 
-                    if wci.value_str == Some("modal".to_string()) {
-                        let mut found_idx: Option<usize> = None;
-                        for (idx, (_id, row, col, _bl)) 
-                            in tbl.modal_ids.iter().enumerate() 
-                        {
-                            if col_index != *col {
-                                break;
-                            }
-                            if row_index == *row {
-                                found_idx = Some(idx);
-                                break;
-                            }
-                        }
-                        if found_idx.is_some() {
-                            let index = found_idx.unwrap();
-                            tbl.modal_ids[index].3 = !tbl.modal_ids[index].3;
-                            return wco;
-                        }
-                    }
-    
                     if wci.value_str == Some("toggler".to_string()) {
                         let mut found_idx: Option<usize> = None;
                         for (idx, (_id, row, col, _bl)) 

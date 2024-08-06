@@ -303,6 +303,16 @@ pub fn try_extract_u16(value: PyObject) -> u16 {
     })  
 }
 
+pub fn try_extract_u64(value: PyObject) -> u64 {
+    Python::with_gil(|py| {
+        let res = value.extract::<u64>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract u64"),
+        }
+    })  
+}
+
 pub fn try_extract_f64_option(value: PyObject) -> Option<f64> {
     Python::with_gil(|py| {
         let res = value.extract::<f64>(py);

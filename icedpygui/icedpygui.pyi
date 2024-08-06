@@ -2140,7 +2140,6 @@ class IPG:
                     gen_id: Optional[int]=None,
                     on_button: Optional[Callable]=None,
                     on_checkbox: Optional[Callable]=None,
-                    on_modal: Optional[Callable]=None,
                     on_toggler: Optional[Callable]=None,
                     show: bool=True, 
                     user_data: Optional[Any]=None,
@@ -2183,8 +2182,6 @@ class IPG:
                 Callback when a button is pressed.
             on_checkbox: Callable
                 Callback when a checkbox is toggled.
-            on_modal: Callable
-                Callback when a modal is pressed.
             on_toggler: Callable
                 Callback when a toggler is toggled.
             user_data: any
@@ -2208,9 +2205,9 @@ class IPG:
                  height: Optional[float]=None,
                  width_fill: bool=False,
                  height_fill: bool=False,
-                 h_align: str="Left",
-                 v_align: str="Top",
-                 line_height: str="default",
+                 horizontal_alignment: IpgHorizontalAlignment=IpgHorizontalAlignment.Center,
+                 vertical_alignment: IpgVerticalAlignment=IpgVerticalAlignment.Center,
+                 line_height: float=1.3,
                  size: float=16.0,
                  shaping: str="basic",
                  show: bool=True,
@@ -2234,10 +2231,10 @@ class IPG:
                 Sets the height of the widget.   
             height_fill: bool
                 Sets the heigth to fill the available space, overrides height.
-            h_align: str
-                Aligns text horizontally "Left", "Center", or "Right", width needs to be larger than text.
-            v_align: str
-                Aligns text vertically "Left", "Center", or "Right", height needs to be larger than text.
+            horizontal_alignment: IpgHorizontalAlignment
+                Aligns text horizontally "Left", "Center"(default), or "Right", width needs to be larger than text.
+            vertical_alignment: IpgVerticalAlignment
+                Aligns text vertically "Left", "Center"(default), or "Right", height needs to be larger than text.
             line_height: float
                 Sets the line height of the text.
             size: float
@@ -2287,8 +2284,8 @@ class IPG:
                         on_paste: Optional[Callable]=None,
                         width: Optional[float]=None,
                         width_fill: bool=False,
-                        padding: List=[10.0],
-                        size: Optional[float]=20.0,
+                        padding: List=[0.0],
+                        size: Optional[float]=16.0,
                         line_height_pixels: Optional[int],
                         line_height_relative: Optional[float],
                         user_data: Optional[any]=None,
@@ -2723,7 +2720,7 @@ class IPG:
 
     def update_item(self, 
                     wid: int, 
-                    param: str, 
+                    param: any, 
                     value: any,
                     ):
         """
@@ -2735,10 +2732,34 @@ class IPG:
         wid: int
             The widget id of the widget to be updated.
         param: class property
-            Example: a button has a style class IpgButtonParams with properties of Primary, ...
+            Example: a button has a style class IpgButtonParam with properties of Primary, ...
         value: any 
             Any value which matches that used by the widget.  For example, to set a checkbox to true,
-            param=IpgCheckboxParams.IsChecked, value=True  
+            param=IpgCheckboxParam.IsChecked, value=True  
+
+        Returns
+        -------
+        None
+        """
+
+    def update_table(self, 
+                    table_id: int, 
+                    param: IpgTableParam, 
+                    value: any,
+                    value_vec: any,
+                    ):
+        """
+        Update a widget by supplying the widget id, wid, the parameter to update, 
+        a class property value, and a value based on the type of value used by the widget.
+        
+        Parameters
+        ----------
+        wid: int
+            The id of the table to be updated.
+        param: class property
+            The class IpgTableParam, I.e. IpgTableParam.Width
+        value: any 
+            The value that match the tyle in IpgTable, i.e. IpgTableParam.Width, value=200.0
 
         Returns
         -------
@@ -3224,10 +3245,21 @@ class IpgTableRowHighLight:
     Lighter=0
 
 
+class IpgTableParam:
+    Title=0
+    DataLength=0
+    Width=0
+    Height=0
+    RowHighlight=0
+    HighlightAmount=0
+    ColumnWidths=0
+    ModalShow=0
+    Show=0
+
+
 class IpgTableWidget:
     Button=0
     Checkbox=0
-    Modal=0
     Toggler=0
 
 

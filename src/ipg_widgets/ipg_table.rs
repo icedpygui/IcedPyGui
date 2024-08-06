@@ -6,6 +6,7 @@ use crate::app::{self, Message};
 use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_uid};
 use crate::style::styling::{get_theme_color, IpgStyleStandard};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::helpers::{try_extract_boolean, try_extract_f64, try_extract_string, try_extract_u64, try_extract_vec_f32};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 use super::ipg_button;
 use crate::style::styling::{lighten, darken};
@@ -43,10 +44,8 @@ pub struct IpgTable {
         pub row_highlight: Option<IpgTableRowHighLight>,
         pub highlight_amount: f32,
         pub column_widths: Vec<f32>,
-        pub widget_styles: Option<HashMap<usize, IpgStyleStandard>>,
         pub button_ids: Vec<(usize, usize, usize, bool)>,
         pub check_ids: Vec<(usize, usize, usize, bool)>,
-        pub modal_ids: Vec<(usize, usize, usize, bool)>,
         pub toggler_ids: Vec<(usize, usize, usize, bool)>,
         pub modal_show: bool,
         pub show: bool,
@@ -65,10 +64,8 @@ impl IpgTable {
         row_highlight: Option<IpgTableRowHighLight>,
         highlight_amount: f32,
         column_widths: Vec<f32>,
-        widget_styles:  Option<HashMap<usize, IpgStyleStandard>>,
         button_ids: Vec<(usize, usize, usize, bool)>,
         check_ids: Vec<(usize, usize, usize, bool)>,
-        modal_ids: Vec<(usize, usize, usize, bool)>,
         toggler_ids: Vec<(usize, usize, usize, bool)>,
         show: bool,
         user_data: Option<PyObject>,
@@ -84,10 +81,8 @@ impl IpgTable {
             row_highlight,
             highlight_amount,
             column_widths,
-            widget_styles,
             button_ids,
             check_ids,
-            modal_ids,
             toggler_ids,
             modal_show: false,
             show,
@@ -101,7 +96,6 @@ impl IpgTable {
 pub enum TableMessage {
     TableButton((usize, usize)),
     TableCheckbox(bool, (usize, usize)),
-    TableModal((usize, usize)),
     TableToggler(bool, (usize, usize)),
     TableScrolled(Viewport, usize),
 }
@@ -125,7 +119,6 @@ pub enum IpgTableRowHighLight {
 pub enum IpgTableWidget {
     Button,
     Checkbox,
-    Modal,
     Toggler,
 }
 
@@ -287,7 +280,6 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
 
     // construct the table elements and widgets.
     let mut body_column_vec: Vec<Element<Message>> = vec![];
-    let mut modal_open = false;
 
     for (row_index, row) in data_rows.iter().enumerate() {
 
@@ -314,7 +306,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                                     col,
                                     col_width, 
                                     bl,
-                                    table.widget_styles.clone());
+                                    );
             }
 
             let index = check_for_widget(&table.check_ids, row_index, col_index);
@@ -328,26 +320,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                                     col,
                                     col_width, 
                                     bl,
-                                    None, 
                                     );
-            }
-
-            let index = check_for_widget(&table.modal_ids, row_index, col_index);
-            if index.is_some() {
-                widget_found = true;
-                let (wid_id, row, col, bl) = table.modal_ids[index.unwrap()];
-                
-                if bl {
-                    modal_open = true;
-                }
-                row_element = add_widget(IpgTableWidget::Modal,
-                                    table.id, 
-                                    label.clone(), 
-                                    row, 
-                                    col,
-                                    col_width, 
-                                    bl,
-                                    table.widget_styles.clone());
             }
 
             let index = check_for_widget(&table.toggler_ids, row_index, col_index);
@@ -360,8 +333,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                                     row, 
                                     col,
                                     col_width, 
-                                    bl,
-                                    None, 
+                                    bl, 
                                     );
             }
 
@@ -426,7 +398,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
 
         let scroller: Element<Message> = add_scroll(body_column, table.height, table.scroller_id);
 
-    let final_column: Element<Message> = if modal_open {
+    let final_column: Element<Message> = if table.modal_show {
         Column::with_children(vec![
             // set title
             table_title,
@@ -520,8 +492,7 @@ fn add_widget(widget_type: IpgTableWidget,
                 row_index: usize, 
                 col_index: usize,
                 column_width: f32,
-                is_toggled: bool,
-                button_style:  Option<HashMap<usize, IpgStyleStandard>>,) 
+                is_toggled: bool,) 
                 -> Element<'static, Message> {
 
     match widget_type {
@@ -531,15 +502,7 @@ fn add_widget(widget_type: IpgTableWidget,
                                 .horizontal_alignment(Horizontal::Center)
                                 .width(Length::Fixed(column_width));
 
-            let btn_style: Option<IpgStyleStandard> = if button_style.is_some() {
-                let style = button_style.unwrap();
-                match style.get(&col_index) {
-                    Some(st) => Some(st.clone()),
-                    None => None,
-                }
-            } else {
-                Some(IpgStyleStandard::Primary)
-            };
+            let btn_style: Option<IpgStyleStandard> = Some(IpgStyleStandard::Primary);
 
             let btn: Element<TableMessage> = 
                     Button::new(txt)
@@ -559,33 +522,6 @@ fn add_widget(widget_type: IpgTableWidget,
                                 .on_toggle(move|b| TableMessage::TableCheckbox(b, (row_index, col_index)))
                                 .into();
             chk.map(move |message| app::Message::Table(table_id, message))
-        },
-        IpgTableWidget::Modal => {
-            let txt = 
-                    Text::new(label)
-                                .horizontal_alignment(Horizontal::Center)
-                                .width(Length::Fixed(column_width));
-
-            let btn_style: Option<IpgStyleStandard> = if button_style.is_some() {
-                let style = button_style.unwrap();
-                match style.get(&col_index) {
-                    Some(st) => Some(st.clone()),
-                    None => None,
-                }
-            } else {
-                Some(IpgStyleStandard::Primary)
-            };
-
-            let btn: Element<TableMessage> = 
-                    Button::new(txt)
-                                .padding(Padding::ZERO)
-                                .width(Length::Shrink)
-                                .on_press(TableMessage::TableModal((row_index, col_index))) 
-                                .style(move|theme, status|
-                                    ipg_button::get_standard_style(theme, status, btn_style.clone(), 
-                                                                None, None))
-                                .into(); 
-            btn.map(move |message| app::Message::Table(table_id, message))
         },
         IpgTableWidget::Toggler => {
             let tog: Element<TableMessage> = Toggler::new(Some(label), is_toggled,
@@ -628,15 +564,6 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             wco.event_name = "on_checkbox".to_string();
             wco.on_toggle = Some(on_toggle);
             wco.index_table = Some((row_index, col_index));
-            process_callback(wco);
-        },
-        TableMessage::TableModal((row_index, col_index)) => {
-            wci.value_str = Some("modal".to_string());
-            wci.index_table = Some((row_index, col_index));
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
-            wco.id = table_id; 
-            wco.index_table = Some((row_index, col_index));
-            wco.event_name = "on_modal".to_string();
             process_callback(wco);
         },
         TableMessage::TableToggler(on_toggle, (row_index, col_index)) => {
@@ -785,16 +712,75 @@ fn table_row_theme(theme: &Theme, idx: usize, amount: f32,
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum IpgTableParam {
-    Data,
+    Title,
+    DataLength,
+    Width,
+    Height,
+    RowHighlight,
+    HighlightAmount,
+    ColumnWidths,
+    ModalShow,
+    Show,
 }
 
 pub fn table_item_update( 
-                    table: &IpgTable,
+                    table: &mut IpgTable,
                     item: PyObject,
                     value: PyObject,
+                    value_vec: Option<Vec<PyObject>>,
                     ) 
 {
     
+    let update = try_extract_table_update(item);
     
-    
+    match update {
+        IpgTableParam::Title => {
+            table.title = try_extract_string(value);
+        },
+        IpgTableParam::DataLength => {
+            table.data_length = try_extract_u64(value) as usize;
+        },
+        IpgTableParam::Width => {
+            table.width = try_extract_f64(value) as f32;
+        },
+        IpgTableParam::Height => {
+            table.height = try_extract_f64(value) as f32;
+        },
+        IpgTableParam::RowHighlight => {
+            table.row_highlight = Some(try_extract_row_highlight(value));
+        },
+        IpgTableParam::HighlightAmount => {
+            table.highlight_amount = try_extract_f64(value) as f32;
+        },
+        IpgTableParam::ColumnWidths => {
+            table.column_widths = try_extract_vec_f32(value);
+        },
+        IpgTableParam::ModalShow => {
+            table.modal_show = try_extract_boolean(value);
+        },
+        IpgTableParam::Show => {
+            table.show = try_extract_boolean(value);
+        },
+    }
+}
+
+pub fn try_extract_table_update(update_obj: PyObject) -> IpgTableParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgTableParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Table update extraction failed"),
+        }
+    })
+}
+
+fn try_extract_row_highlight(value: PyObject) -> IpgTableRowHighLight {
+    Python::with_gil(|py| {
+        let res = value.extract::<IpgTableRowHighLight>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Table update extraction of IpgTableRowHighLight failed"),
+        }
+    })
 }
