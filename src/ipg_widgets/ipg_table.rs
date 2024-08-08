@@ -23,7 +23,7 @@ use iced::widget::svg;
 use iced::advanced::image;
 
 
-use pyo3::{PyObject, Python, pyclass};
+use pyo3::{pyclass, PyErr, PyObject, Python};
 
 
 #[derive(Debug, Clone)]
@@ -37,16 +37,20 @@ pub enum TableData {
 pub struct IpgTable {
         pub id: usize,
         pub title: String,
-        pub data: Vec<PyObject>,
+        pub data: PyObject,
         pub data_length: usize,
         pub width: f32,
         pub height: f32,
         pub row_highlight: Option<IpgTableRowHighLight>,
         pub highlight_amount: f32,
         pub column_widths: Vec<f32>,
-        pub button_ids: Vec<(usize, usize, usize, bool)>,
-        pub check_ids: Vec<(usize, usize, usize, bool)>,
+        pub button_ids: Vec<(usize, usize, usize, bool)>, // id, row, column, toggled
+        pub checkbox_ids: Vec<(usize, usize, usize, bool)>,
         pub toggler_ids: Vec<(usize, usize, usize, bool)>,
+        pub button_fill_style_id: Option<String>,
+        pub checkbox_fill_style_id: Option<String>,
+        pub toggler_fill_style_id: Option<String>,
+        pub mixed_widgets_column_style_ids: Option<HashMap<usize, Vec<String>>>,
         pub modal_show: bool,
         pub show: bool,
         pub user_data: Option<PyObject>,
@@ -57,7 +61,7 @@ impl IpgTable {
     pub fn new( 
         id: usize,
         title: String,
-        data: Vec<PyObject>,
+        data: PyObject,
         data_length: usize,
         width: f32,
         height: f32,
@@ -65,8 +69,12 @@ impl IpgTable {
         highlight_amount: f32,
         column_widths: Vec<f32>,
         button_ids: Vec<(usize, usize, usize, bool)>,
-        check_ids: Vec<(usize, usize, usize, bool)>,
+        checkbox_ids: Vec<(usize, usize, usize, bool)>,
         toggler_ids: Vec<(usize, usize, usize, bool)>,
+        button_fill_style_id: Option<String>,
+        checkbox_fill_style_id: Option<String>,
+        toggler_fill_style_id: Option<String>,
+        mixed_widgets_column_style_ids: Option<HashMap<usize, Vec<String>>>,
         show: bool,
         user_data: Option<PyObject>,
         scroller_id: usize,
@@ -82,8 +90,12 @@ impl IpgTable {
             highlight_amount,
             column_widths,
             button_ids,
-            check_ids,
+            checkbox_ids,
             toggler_ids,
+            button_fill_style_id,
+            checkbox_fill_style_id,
+            toggler_fill_style_id,
+            mixed_widgets_column_style_ids,
             modal_show: false,
             show,
             user_data,
@@ -162,6 +174,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
     let mut column_elements: Vec<Element<Message>> = vec![];
 
     let mut data_rows: Vec<Vec<String>> = vec![];
+    data_rows.push(vec![]);
 
     let mut state = access_state();
     let mut scroller_pos_opt = state.table_internal_ids.get(&table.scroller_id);
@@ -173,90 +186,93 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
 
     drop(state);
 
-    // Need to initialize because pushing all displayed value on each row at once.
-    for _ in 0..table.data_length {
-        data_rows.push(vec![]);
-    }
-
     Python::with_gil(|py| {
-
+        let table_data = match table.data.extract::<Vec<PyObject>>(py) {
+            Ok(dt) => dt,
+            Err(e) => panic!("Table: Unable to extract Table data {e}"),
+        };
         // Gets the entire column at each iteration
-        for (col_index, py_data) in table.data.iter().enumerate() {
-
+        for (col_index, py_data) in table_data.iter().enumerate() {
+            
             let width = if col_index >= table.column_widths.len() {
                                     table.column_widths[0]
                                 } else {
                                     table.column_widths[col_index]
                                 };
-
+            let mut error: Option<PyErr> = None;
             let data: Result<HashMap<String, Vec<bool>>, _> = py_data.extract::<HashMap<String, Vec<bool>>>(py);
-            if !data.is_err() { 
-                match data {
-                    Ok(dt) => {
-                        //Only pushes the one header
-                        for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned(), width));                                         
-                        }
 
-                        // dt.values are the columns in the table
-                        for values in dt.values() {
-                            for (i, v) in values.iter().enumerate() {
-                                let mut label = if *v {
-                                    "True".to_string()
-                                } else {
-                                    "False".to_string()
-                                };
-                                data_rows[i].push(label);
+            match data {
+                Ok(dt) => {
+                    //Only pushes the one header
+                    for key in dt.keys() {
+                        dbg!(&key);
+                        headers.push(add_header_text(key.to_owned(), width));                                         
+                    }
+
+                    // dt.values are the columns in the table
+                    for values in dt.values() {
+                        for (i, v) in values.iter().enumerate() {
+                            let mut label = if *v {
+                                "True".to_string()
+                            } else {
+                                "False".to_string()
+                            };
+                            if data_rows.len() <= i {
+                                data_rows.push(vec![])
                             }
+                            data_rows[i].push(label);
                         }
-                    },
-                    Err(_) => (),
-                };
-                continue; 
-            }
+                    }
+                    continue;
+                },
+                Err(e) => error = Some(e),
+            };
+                 
+            let data: Result<HashMap<String, Vec<i64>>, _> = py_data.extract::<HashMap<String, Vec<i64>>>(py); 
+            match data {
+                Ok(dt) => {
+                    for key in dt.keys() {
+                        headers.push(add_header_text(key.to_owned(), width));  
+                    }
 
-            let data: Result<HashMap<String, Vec<i64>>, _> = py_data.extract::<HashMap<String, Vec<i64>>>(py);
-            if !data.is_err() { 
-                match data {
-                    Ok(dt) => {
-                        for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned(), width));  
-                        }
-
-                        for values in dt.values() {
-                            for (i, v) in values.iter().enumerate() {
-                                let label = v.to_string();
-                                data_rows[i].push(label);
+                    for values in dt.values() {
+                        for (i, v) in values.iter().enumerate() {
+                            let label = v.to_string();
+                            if data_rows.len() <= i {
+                                data_rows.push(vec![])
                             }
+                            data_rows[i].push(label);
                         }
-                    },
-                    Err(_) => (),
-                };
-                continue; 
-            }
-
+                    }
+                    continue;
+                },
+                Err(e) => error = Some(e),
+            };
+                 
             let data: Result<HashMap<String, Vec<f64>>, _> = py_data.extract::<HashMap<String, Vec<f64>>>(py);
-            if !data.is_err() {
-                match data {
-                    Ok(dt) => {
-                        for key in dt.keys() {
-                            headers.push(add_header_text(key.to_owned(), width));  
-                        }
+            match data {
+                Ok(dt) => {
+                    for key in dt.keys() {
+                        dbg!(&key);
+                        headers.push(add_header_text(key.to_owned(), width));  
+                    }
 
-                        for values in dt.values() {
-                            for (i, v) in values.iter().enumerate() {
-                                let label = v.to_string();
-                                data_rows[i].push(label);
+                    for values in dt.values() {
+                        for (i, v) in values.iter().enumerate() {
+                            let label = v.to_string();
+                            if data_rows.len() <= i {
+                                data_rows.push(vec![])
                             }
+                            data_rows[i].push(label);
                         }
-                    },
-                    Err(_) => (),
-                };
-                continue; 
-            }
-
+                    }
+                    continue;
+                },
+                Err(e) => error = Some(e),
+            };
+             
             let data: Result<HashMap<String, Vec<String>>, _> = py_data.extract::<HashMap<String, Vec<String>>>(py);
-            if !data.is_err() { 
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {
@@ -266,14 +282,16 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                         for values in dt.values() {
                             for (i, v) in values.iter().enumerate() {
                                 let label = v.to_string();
+                                if data_rows.len() <= i {
+                                    data_rows.push(vec![])
+                                }
                                 data_rows[i].push(label);
                             }
                         }
+                        continue; 
                     },
-                    Err(_) => (),
+                    Err(e) => error = Some(e),
                 };
-                continue; 
-            }
         }
         
     });
@@ -306,13 +324,14 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                                     col,
                                     col_width, 
                                     bl,
+                                    table.button_fill_style_id.clone(),
                                     );
             }
 
-            let index = check_for_widget(&table.check_ids, row_index, col_index);
+            let index = check_for_widget(&table.checkbox_ids, row_index, col_index);
             if index.is_some() {
                 widget_found = true;
-                let (wid_id, row, col, bl) = table.check_ids[index.unwrap()];
+                let (wid_id, row, col, bl) = table.checkbox_ids[index.unwrap()];
                 row_element = add_widget(IpgTableWidget::Checkbox,
                                     table.id, 
                                     label.clone(), 
@@ -320,6 +339,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                                     col,
                                     col_width, 
                                     bl,
+                                    table.checkbox_fill_style_id.clone(),
                                     );
             }
 
@@ -333,7 +353,8 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                                     row, 
                                     col,
                                     col_width, 
-                                    bl, 
+                                    bl,
+                                    table.toggler_fill_style_id.clone(),
                                     );
             }
 
@@ -492,7 +513,8 @@ fn add_widget(widget_type: IpgTableWidget,
                 row_index: usize, 
                 col_index: usize,
                 column_width: f32,
-                is_toggled: bool,) 
+                is_toggled: bool,
+                style_id: Option<String>) 
                 -> Element<'static, Message> {
 
     match widget_type {
@@ -713,7 +735,7 @@ fn table_row_theme(theme: &Theme, idx: usize, amount: f32,
 #[pyclass]
 pub enum IpgTableParam {
     Title,
-    DataLength,
+    Data,
     Width,
     Height,
     RowHighlight,
@@ -727,7 +749,6 @@ pub fn table_item_update(
                     table: &mut IpgTable,
                     item: PyObject,
                     value: PyObject,
-                    value_vec: Option<Vec<PyObject>>,
                     ) 
 {
     
@@ -737,8 +758,8 @@ pub fn table_item_update(
         IpgTableParam::Title => {
             table.title = try_extract_string(value);
         },
-        IpgTableParam::DataLength => {
-            table.data_length = try_extract_u64(value) as usize;
+        IpgTableParam::Data => {
+            table.data = value;
         },
         IpgTableParam::Width => {
             table.width = try_extract_f64(value) as f32;

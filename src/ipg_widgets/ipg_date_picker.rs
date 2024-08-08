@@ -11,7 +11,7 @@ use crate::ICON_FONT_BOOT;
 use super::helpers::{get_padding_f64, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f64, 
     DATE_FORMATS, DAYS, MONTH_NAMES, WEEKDAYS};
-use super::ipg_button::get_standard_style;
+use super::ipg_button::{get_standard_style, get_styling};
 
 use iced::advanced::graphics::core::Element;
 use iced::widget::button;
@@ -45,7 +45,8 @@ pub struct IpgDatePicker {
     hide_width: Length,
     hide_height: Length,
     pub is_submitted: bool,
-    pub button_style_standard: IpgStyleStandard,
+    pub button_style_standard: Option<IpgStyleStandard>,
+    pub button_style_id: Option<String>,
 }
 
 impl IpgDatePicker {
@@ -56,7 +57,8 @@ impl IpgDatePicker {
         padding: Padding,
         show: bool,
         user_data: Option<PyObject>,
-        button_style_standard: IpgStyleStandard,
+        button_style_standard: Option<IpgStyleStandard>,
+        button_style_id: Option<String>,
         ) -> Self {
         Self {
             id,
@@ -75,10 +77,11 @@ impl IpgDatePicker {
 
             show_width: 145.0,
             show_height: 180.0,
-            hide_width: Length::Fixed(100.0),
-            hide_height: Length::Fixed(50.0),
+            hide_width: Length::Shrink,
+            hide_height: Length::Shrink,
             is_submitted: false,
             button_style_standard,
+            button_style_id,
         }
     }
 }
@@ -224,8 +227,11 @@ fn calendar_show_button(dp: IpgDatePicker) -> Element<'static, Message, Theme, R
                                     .on_press(DPMessage::ShowModal)
                                     .height(Length::Shrink)
                                     .width(Length::Shrink)
-                                    .style(move|theme, status| get_standard_style(theme, status, 
-                                        Some(dp.button_style_standard.clone()), None, None))
+                                    .style(move|theme, status|
+                                        get_styling(theme, status,
+                                            dp.button_style_id.clone(), 
+                                            dp.button_style_standard.clone()
+                                        ))
                                     .into();
 
     let s_btn: Element<Message, Theme, Renderer> = 
@@ -384,9 +390,11 @@ fn get_calendar_days(id: usize, selected_year: i32,
                                     .padding(0)
                                     .style(move|theme: &Theme, status| {
                                             if day == selected_day {
-                                                get_standard_style(theme, status, Some(IpgStyleStandard::Success), None, None)
+                                                get_standard_style(theme, status, 
+                                                    Some(IpgStyleStandard::Success), None, None)
                                             } else {
-                                                get_standard_style(theme, status, Some(IpgStyleStandard::Primary), None, None)
+                                                get_standard_style(theme, status, 
+                                                    Some(IpgStyleStandard::Primary), None, None)
                                             }}
                                         )
                                     .into();

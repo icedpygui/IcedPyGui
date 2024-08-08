@@ -98,7 +98,8 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
 
 pub struct State {
     pub ids: Lazy<HashMap<usize, Vec<IpgIds>>>,  // <window_id=usize, Vec<IpgIds=structure>>
-    
+    pub last_id: usize,
+
     pub containers: Lazy<HashMap<usize, IpgContainers>>,
     pub container_ids: Lazy<HashMap<usize, Vec<usize>>>,  // <window_id=usize, vec<container_id=usize>>
     pub container_str_ids: Lazy<HashMap<String, usize>>, // get container usize id based on container string
@@ -133,22 +134,12 @@ pub struct State {
     pub toggler_style: Lazy<HashMap<String, IpgTogglerStyle>>,
     pub scrollable_style: Lazy<HashMap<String, IpgScrollableStyle>>,
 
-    // pub styling_color: Lazy<HashMap<String, IpgPalette>>,
-    // pub styling_standard: Lazy<HashMap<String, IpgStylingStandard>>,
-    // pub styling_bar_color: Lazy<HashMap<String, StyleBarColor>>,
-    // pub styling_border: Lazy<HashMap<String, StyleBorder>>,
-    // pub styling_dot_color: Lazy<HashMap<String, StyleDotColor>>,
-    // pub styling_fill_mode: Lazy<HashMap<String, StyleFillMode>>,
-    // pub styling_handle_color: Lazy<HashMap<String, StyleHandleColor>>,
-    // pub styling_icon_color: Lazy<HashMap<String, StyleIconColor>>,
-    // pub styling_shadow: Lazy<HashMap<String, StyleShadow>>,
-    // pub styling_text_color: Lazy<HashMap<String, StyleTextColor>>,
-    
 }
 
 pub static STATE: Mutex<State> = Mutex::new(
     State {
         ids: Lazy::new(||HashMap::new()),
+        last_id: 0,
         
         containers: Lazy::new(||HashMap::new()),
         container_ids: Lazy::new(||HashMap::new()),
@@ -184,17 +175,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         text_input_style: Lazy::new(||HashMap::new()),
         toggler_style: Lazy::new(||HashMap::new()),
         scrollable_style: Lazy::new(||HashMap::new()),
-        
-        // styling_color: Lazy::new(||HashMap::new()),
-        // styling_standard: Lazy::new(||HashMap::new()),
-        // styling_bar_color: Lazy::new(||HashMap::new()),
-        // styling_border: Lazy::new(||HashMap::new()),
-        // styling_dot_color: Lazy::new(||HashMap::new()),
-        // styling_fill_mode: Lazy::new(||HashMap::new()),
-        // styling_handle_color: Lazy::new(||HashMap::new()),
-        // styling_icon_color: Lazy::new(||HashMap::new()),
-        // styling_shadow: Lazy::new(||HashMap::new()),
-        // styling_text_color: Lazy::new(||HashMap::new()),
+    
     }
 );
 
@@ -277,6 +258,7 @@ impl IPG {
                 ..Default::default()
             },
             flags,
+            antialiasing: true,
             ..Default::default()
         });
     }
@@ -286,6 +268,9 @@ impl IPG {
     {
         self.id += 1;
         self.gen_ids.push(self.id);
+        let mut state = access_state();
+        state.last_id = self.id;
+        drop(state);
         Ok(self.id)
     }
 
@@ -385,6 +370,7 @@ impl IPG {
                                         debug,
                                         user_data,
                                         ));
+        state.last_id = self.id;
         drop(state);
 
         self.window_id += 1;
@@ -450,7 +436,7 @@ impl IPG {
                                                 clip,
                                                 style_id, 
                                             )));
-
+        state.last_id = self.id;
         drop(state);
 
         Ok(self.id)
@@ -505,7 +491,7 @@ impl IPG {
                                                     shadow_blur_radius,
                                                     text_color,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
 
         Ok(id)
@@ -564,6 +550,7 @@ impl IPG {
                                         align_items,
                                         clip,
                                     )));
+    state.last_id = self.id;
     drop(state);
     Ok(self.id)
 
@@ -634,6 +621,7 @@ impl IPG {
                                                                 clip,
                                                                 user_data,
                                                             )));
+        state.last_id = self.id;
         drop(state);
         Ok(self.id)
 
@@ -664,8 +652,6 @@ impl IPG {
                         user_data: Option<PyObject>,
                         ) -> PyResult<usize>
     {
-        self.id += 1;
-
         let id = self.get_id(gen_id);
 
         let prt_id = match parent_id {
@@ -720,8 +706,9 @@ impl IPG {
                                     show, 
                                     user_data
                                 )));
+        state.last_id = id;
         drop(state);
-        Ok(self.id)
+        Ok(id)
 
     }
 
@@ -776,6 +763,7 @@ impl IPG {
                                     align_items,
                                     clip,
                                 )));
+        state.last_id = self.id;
         drop(state);         
         Ok(self.id)
 
@@ -856,6 +844,7 @@ impl IPG {
                                                     user_data,
                                                     style_id,
                                                     )));
+        state.last_id = self.id;
         drop(state);
         Ok(self.id)
 
@@ -947,7 +936,7 @@ impl IPG {
                                                     scroller_color_hovered,
                                                     scroller_color_dragged,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
 
         Ok(id)
@@ -994,6 +983,7 @@ impl IPG {
                                                             snap_within_viewport,
                                                             style,
                                                             )));
+        state.last_id = self.id;
         drop(state);
         Ok(self.id)
 
@@ -1001,7 +991,7 @@ impl IPG {
     
     #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
-                        height_fill=false, padding=vec![10.0], clip=false, 
+                        height_fill=false, padding=vec![5.0], clip=false, 
                         style_id=None, style_standard=None, 
                         style_arrow=None, user_data=None, show=true, 
                         ))]
@@ -1052,6 +1042,7 @@ impl IPG {
                                                 style_standard,
                                                 style_arrow,                              
                                                 )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     
@@ -1110,9 +1101,8 @@ impl IPG {
                                                     shadow_blur_radius,
                                                     text_color,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
-
         Ok(id)
     }
 
@@ -1181,6 +1171,7 @@ impl IPG {
                                                     foot,
                                                     style,
                                                 )));
+        state.last_id = id;
         drop(state);
         Ok(id)
 
@@ -1248,6 +1239,7 @@ impl IPG {
                                                     style_id,
                                                     style_standard,
                                                     )));
+        state.last_id = id;
         drop(state);
         Ok(id)
 
@@ -1316,16 +1308,16 @@ impl IPG {
                                                     icon_color,
                                                     text_color,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
-
         Ok(id)
     }
 
     #[pyo3(signature = (parent_id, label="Calendar".to_string(), gen_id=None,
-                        size_factor=1.0, padding=vec![5.0], on_submit=None, 
+                        size_factor=1.0, padding=vec![0.0], on_submit=None, 
                         user_data=None, show=false, 
-                        button_style_standard=IpgStyleStandard::Primary
+                        button_style_standard=None,
+                        button_style_id=None,
                         ))]
     fn add_date_picker(&mut self,
                         parent_id: String,
@@ -1337,7 +1329,8 @@ impl IPG {
                         on_submit: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
-                        button_style_standard: IpgStyleStandard,
+                        button_style_standard: Option<IpgStyleStandard>,
+                        button_style_id: Option<String>,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -1364,7 +1357,9 @@ impl IPG {
                                                     show,
                                                     user_data,
                                                     button_style_standard,
+                                                    button_style_id,
                                                     )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -1471,6 +1466,7 @@ impl IPG {
                                                 show,
                                                 user_data,
                                             )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -1586,6 +1582,7 @@ impl IPG {
                                                                 show,
                                                                 user_data,
                                                                 )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -1638,9 +1635,8 @@ impl IPG {
                                                     shadow_offset_y,
                                                     shadow_blur_radius,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
-
         Ok(id)
     }
 
@@ -1710,9 +1706,8 @@ impl IPG {
                                                     path_border_radius,
                                                     path_border_width,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
-
         Ok(id)
     }
 
@@ -1819,6 +1814,7 @@ impl IPG {
                                                 background_shadow_offset,
                                                 background_shadow_blur_radius,
                                                 ));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -1826,7 +1822,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, options, gen_id=None, on_select=None, 
                         width=None, width_fill=false, padding=vec![5.0],  
                         placeholder=None, selected=None, text_size=None, 
-                        text_line_height=1.3, text_shaping="basic".to_string(), 
+                        text_line_height=1.2, text_shaping="basic".to_string(), 
                         handle=IpgPickListHandle::Default, arrow_size=None, 
                         dynamic_closed=None, dynamic_opened=None, custom_static=None,
                         style=None, user_data=None, show=true,
@@ -1893,6 +1889,7 @@ impl IPG {
                                                         custom_static,
                                                         style,
                                                     )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -1954,9 +1951,8 @@ impl IPG {
                                                     border_radius,
                                                     border_width,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
-
         Ok(id)
     }
 
@@ -2003,6 +1999,7 @@ impl IPG {
                                                 style_standard,
                                                 style,
                                             )));
+        state.last_id = id;
         drop(state);
         Ok(id)
 
@@ -2043,9 +2040,8 @@ impl IPG {
                                                     border_radius,
                                                     border_width,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
-
         Ok(id)
     }
 
@@ -2137,6 +2133,7 @@ impl IPG {
                                         style_id,
                                     )));
         self.group_index += 1;
+        state.last_id = id;
         drop(state);                                      
         Ok(id)
 
@@ -2196,9 +2193,8 @@ impl IPG {
                                                     border_width,
                                                     text_color,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
-
         Ok(id)
     }
 
@@ -2236,6 +2232,7 @@ impl IPG {
                                                         rule_type,
                                                         style,
                                                         )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -2272,6 +2269,7 @@ impl IPG {
                                                         rule_type,
                                                         style, 
                                                         )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -2309,9 +2307,8 @@ impl IPG {
                                                     fillmode_padded,
                                                     fillmode_asymmetric_padding,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
-
         Ok(id)
     }
 
@@ -2426,6 +2423,7 @@ impl IPG {
                                                     text_color,
                                                     user_data,
                                                     )));
+        state.last_id = id;
         drop(state);
         Ok(id)
 
@@ -2486,6 +2484,7 @@ impl IPG {
                                                 height,
                                                 style,
                                                 )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -2549,9 +2548,8 @@ impl IPG {
                                                     handle_border_width,
                                                     handle_border_color,
                                                     ));
-        
+        state.last_id = id;
         drop(state);
-
         Ok(id)
     }
 
@@ -2581,6 +2579,7 @@ impl IPG {
                                                     width,
                                                     height,
                                                     )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -2680,6 +2679,7 @@ impl IPG {
                                                 show,
                                                 user_data,
                                             )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -2688,15 +2688,24 @@ impl IPG {
                         data_length, width, height, parent_id=None,
                         row_highlight=None, highlight_amount=0.15,
                         column_widths=vec![50.0],
-                        widgets_columns=None, gen_id=None, 
-                        on_button=None, on_checkbox=None,
+                        button_fill_columns=None,
+                        checkbox_fill_columns=None,
+                        toggler_fill_columns=None,
+                        mixed_widgets_columns=None,
+                        button_fill_style_id=None,
+                        checkbox_fill_style_id=None,
+                        toggler_fill_style_id=None,
+                        mixed_widgets_column_style_ids=None,
+                        gen_id=None, 
+                        on_button=None, 
+                        on_checkbox=None,
                         on_toggler=None, 
                         show=true, user_data=None))]
     fn add_table(&mut self,
                     window_id: String,
                     table_id: String,
                     title: String,
-                    data: Vec<PyObject>,
+                    data: PyObject,
                     data_length: usize,
                     width: f32,
                     height: f32,
@@ -2705,7 +2714,14 @@ impl IPG {
                     row_highlight: Option<IpgTableRowHighLight>,
                     highlight_amount: f32,
                     column_widths: Vec<f32>,
-                    widgets_columns: Option<HashMap<usize, Vec<IpgTableWidget>>>,
+                    button_fill_columns: Option<Vec<usize>>,
+                    checkbox_fill_columns: Option<Vec<usize>>,
+                    toggler_fill_columns: Option<Vec<usize>>,
+                    mixed_widgets_columns: Option<HashMap<usize, Vec<IpgTableWidget>>>,
+                    button_fill_style_id: Option<String>,
+                    checkbox_fill_style_id: Option<String>,
+                    toggler_fill_style_id: Option<String>,
+                    mixed_widgets_column_style_ids: Option<HashMap<usize, Vec<String>>>,
                     gen_id: Option<usize>,
                     on_button: Option<PyObject>,
                     on_checkbox: Option<PyObject>,
@@ -2731,11 +2747,11 @@ impl IPG {
         // Need to generate the ids for the widgets and the boolean values
         // Keeping the ids organized in a hashmap for now, may need only a vec.
         let mut button_ids: Vec<(usize, usize, usize, bool)> = vec![]; // (id, row, col, bool)
-        let mut check_ids: Vec<(usize, usize, usize, bool)> = vec![];
-        let mut tog_ids: Vec<(usize, usize, usize, bool)> = vec![];
+        let mut checkbox_ids: Vec<(usize, usize, usize, bool)> = vec![];
+        let mut toggler_ids: Vec<(usize, usize, usize, bool)> = vec![];
             
-        if widgets_columns.is_some() {
-            let table_widgets_hash = widgets_columns.unwrap();
+        if mixed_widgets_columns.is_some() {
+            let table_widgets_hash = mixed_widgets_columns.unwrap();
             for (col, table_widgets) in table_widgets_hash.iter() {
                 for (row, widget) in table_widgets.iter().enumerate() {
                     match widget {
@@ -2743,12 +2759,36 @@ impl IPG {
                             button_ids.push((self.get_id(None), row, col.clone(), false));
                         },
                         IpgTableWidget::Checkbox => {
-                            check_ids.push((self.get_id(None), row, col.clone(), false));
+                            checkbox_ids.push((self.get_id(None), row, col.clone(), false));
                         },
                         IpgTableWidget::Toggler => {
-                            tog_ids.push((self.get_id(None), row, col.clone(), false));
+                            toggler_ids.push((self.get_id(None), row, col.clone(), false));
                         },
                     }
+                }
+            }
+        }
+
+        if button_fill_columns.is_some() {
+            for col in button_fill_columns.unwrap() {
+                for row in 0..data_length {
+                    button_ids.push((self.get_id(None), row, col, false));
+                }
+            }
+        }
+
+        if checkbox_fill_columns.is_some() {
+            for col in checkbox_fill_columns.unwrap() {
+                for row in 0..data_length {
+                    checkbox_ids.push((self.get_id(None), row, col, false));
+                }
+            }
+        }
+
+        if toggler_fill_columns.is_some() {
+            for col in toggler_fill_columns.unwrap() {
+                for row in 0..data_length {
+                    toggler_ids.push((self.get_id(None), row, col, false));
                 }
             }
         }
@@ -2784,12 +2824,17 @@ impl IPG {
                                                     highlight_amount,
                                                     column_widths,
                                                     button_ids,
-                                                    check_ids,
-                                                    tog_ids,
+                                                    checkbox_ids,
+                                                    toggler_ids,
+                                                    button_fill_style_id,
+                                                    checkbox_fill_style_id,
+                                                    toggler_fill_style_id,
+                                                    mixed_widgets_column_style_ids,
                                                     show,
                                                     user_data,
                                                     scroller_id,
                                                     )));
+        state.last_id = self.id;
         drop(state);
         Ok(id)
 
@@ -2857,6 +2902,7 @@ impl IPG {
                                         show,
                                         style,
                                     )));
+        state.last_id = id;
         drop(state);
         Ok(id)
 
@@ -2929,6 +2975,7 @@ impl IPG {
                                                                 style_id,
                                                                 show,
                                                                 )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     }
@@ -3002,9 +3049,8 @@ impl IPG {
                                                 value_color,
                                                 selection_color,
                                                 ));
-
+        state.last_id = id;                                        
         drop(state);
-
         Ok(id)
     }
 
@@ -3069,8 +3115,9 @@ impl IPG {
                                                             button_style_arrow,
                                                             user_data, 
                                                             )));
+        state.last_id = id;
         drop(state);
-        Ok(self.id)
+        Ok(id)
     }
 
     #[pyo3(signature = (parent_id, label=None, gen_id=None, toggled=None, 
@@ -3123,6 +3170,7 @@ impl IPG {
                                                 spacing,
                                                 style_id,                           
                                                 )));
+        state.last_id = id;
         drop(state);
         Ok(id)
     
@@ -3187,9 +3235,8 @@ impl IPG {
                                                 foreground_border_color,
                                                 foreground_border_width,
                                                 ));
-
+        state.last_id = id;
         drop(state);
-
         Ok(id)
     }
 
@@ -3227,6 +3274,7 @@ impl IPG {
                                                                     self.id,
                                                                     enabled, 
                                                                     )));
+        state.last_id = self.id;
         drop(state);
         Ok(self.id)
     }
@@ -3333,6 +3381,7 @@ impl IPG {
                                                             self.id,
                                                             enabled, 
                                                             )));
+        state.last_id = self.id;
         drop(state);
         Ok(self.id)
     }
@@ -3387,6 +3436,7 @@ impl IPG {
                                                             self.id,
                                                             enabled, 
                                                             )));
+        state.last_id = self.id;
         drop(state);
         Ok(self.id)
     }
@@ -3455,7 +3505,7 @@ impl IPG {
                             drop(state);
                             window_item_update(wnd_id, item, value);
                         } else {
-                            match_container(cnt, item.clone(), value.clone(), None);
+                            match_container(cnt, item.clone(), value.clone());
                             drop(state);
                         }
                     },
@@ -3463,20 +3513,6 @@ impl IPG {
                 }
             },
         };
-    }
-
-    #[pyo3(signature = (wid, item, value, value_vec))]
-    fn update_table(&self, wid: usize, item: PyObject, value: PyObject, value_vec: Option<Vec<PyObject>>) {
-
-        let mut state = access_state();
-
-        match state.containers.get_mut(&wid) {
-            Some(cnt) => {
-                match_container(cnt, item.clone(), value.clone(), value_vec);
-                drop(state);
-            },
-            None => panic!("Item_update: Table, or Window with id {wid} not found.")
-        }
     }
 
     #[pyo3(signature = (base_color=None, base_rgba=None))]
@@ -3580,7 +3616,7 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
     }
 }
 
-fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject, value_vec: Option<Vec<PyObject>>) {
+fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject) {
     // TODO: Update containers
     match container {
         IpgContainers::IpgColumn(_) => {},
@@ -3589,8 +3625,8 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
         IpgContainers::IpgMouseArea(m_area) => {
             mousearea_item_update(m_area, item, value);
         },
-        IpgContainers::IpgTable(table) =>{
-            table_item_update(table, item, value, value_vec);
+        IpgContainers::IpgTable(table) => {
+            table_item_update(table, item, value);
         },
         IpgContainers::IpgRow(_) => {},
         IpgContainers::IpgScrollable(scroll) => {

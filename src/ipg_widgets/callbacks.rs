@@ -347,7 +347,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     if wci.value_str == Some("checkbox".to_string()) {
                         let mut found_idx: Option<usize> = None;
                         for (idx, (_id, row, col, _bl)) 
-                            in tbl.check_ids.iter().enumerate() 
+                            in tbl.checkbox_ids.iter().enumerate() 
                         {
                             if col_index != *col {
                                 break;
@@ -358,7 +358,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                             }
                         }
                         if found_idx.is_some() {
-                            tbl.check_ids[found_idx.unwrap()].3 = wci.on_toggle.unwrap();
+                            tbl.checkbox_ids[found_idx.unwrap()].3 = wci.on_toggle.unwrap();
                             return wco;
                         }
                     }

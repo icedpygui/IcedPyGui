@@ -2,7 +2,7 @@ import random
 
 from icedpygui import IPG, IpgTableRowHighLight, IpgTableWidget, IpgTableParam, IpgColor
 from icedpygui import IpgTextParam, IpgAlignment, IpgHorizontalAlignment, IpgVerticalAlignment, IpgTextInputParam
-from icedpygui import IpgButtonParam
+from icedpygui import IpgButtonParam, IpgPickListParam, IpgDatePickerParam
 import polars as pl
 from datetime import datetime, date
 
@@ -25,7 +25,7 @@ class Books:
         self.book_list = []
         self.column_names = []
         self.table_list = pl.DataFrame()
-        #          Edit,Title,Series,Num,Author,Status,Returned,Source,Url
+        #          index,Title,Series,Num,Author,Status,Returned,Source,Url
         self.widths = [75, 200, 200, 40, 150, 100, 100, 150, 100]
 
         self.table_id=0
@@ -33,7 +33,9 @@ class Books:
         self.modal_col_ids = []
         self.current_modal_row = -1
         self.modal_row = {}
+        self.modal_btns = []
         self.delete_count = 0
+        self.dp_id = 0
 
         self.sort_list = ["None", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
                           "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
@@ -49,11 +51,14 @@ class Books:
 
     def load(self):
         self.df = pl.read_csv("./python_demo/resources/books.csv", try_parse_dates=False)
+        self.df.sort(["Author", "Series", "Num"])
+        
         self.book_list = []
         self.column_names = self.df.columns
 
         for name in self.column_names:
             self.book_list.append({name: self.df.get_column(name).to_list()})
+            
         
     def create_table(self):
         self.ipg.add_window(window_id="main", title="Books",
@@ -61,10 +66,7 @@ class Books:
                             pos_x=100, pos_y=50,
                             )
 
-        modals = []
-        for _ in range(0, len(self.df)):
-            modals.append(IpgTableWidget.Button)
-
+        # add the table
         self.table_id = self.ipg.add_table(window_id="main",
                                             table_id="table",
                                             title="Books",
@@ -74,23 +76,24 @@ class Books:
                                             column_widths=self.widths,
                                             row_highlight=IpgTableRowHighLight.Lighter,
                                             highlight_amount=0.1,
-                                            widgets_columns={0: modals},
+                                            button_fill_columns=[0],
                                             on_button=self.open_modal,
                                             )
-        
+    # create the modal
     def create_modal(self):
-
+        # add some styling to the modal container
         self.ipg.add_container_style(style_id="modal_style", 
                                      background_color=IpgColor.DARK_GRAY,
                                      text_color=IpgColor.BLACK,
                                      )
-
+        # add the container to hold everything
         self.ipg.add_container(window_id="main", 
                                container_id="modal",
                                parent_id="table",
                                width=400.0, height=400.0,
                                style_id="modal_style")
         
+        # add a column for the rows to be added from top to bottom
         self.ipg.add_column(window_id="main", 
                             container_id="modal_column",
                             parent_id="modal", spacing=2.0,
@@ -99,19 +102,37 @@ class Books:
         
         # create all of the text items in left and right columns
         for i, name in enumerate(self.column_names):
+            # add a row to help in alignment
             self.ipg.add_row(window_id="main", 
                                 container_id=f"row_{i}",
                                 parent_id="modal_column", 
                                 align_items=IpgAlignment.Start)
+            
+            # add the column name to the row
             self.ipg.add_text(parent_id=f"row_{i}", 
                                 content=f"{name}:",
                                 width=75.0,
                                 horizontal_alignment=IpgHorizontalAlignment.Left
                                 )
-            if name == "row" or name== "Returned":
+            # based on the name and what's needed, add a widget
+            # the labels and such will be added when the modal opens
+            if name == "index":
                 id = self.ipg.add_text(parent_id=f"row_{i}",
                                     content="",
                                     )
+            elif name == "Returned":
+                id = self.ipg.add_date_picker(parent_id=f"row_{i}", label=name, on_submit=self.change_date)
+                self.dp_id = id
+            elif name == "Status":
+                id = self.ipg.add_pick_list(parent_id=f"row_{i}", 
+                                            options=self.status_list,
+                                            placeholder="Status",
+                                            user_data=name)
+            elif name == "Source":
+                id = self.ipg.add_pick_list(parent_id=f"row_{i}", 
+                                            options=self.source_list,
+                                            placeholder="Source",
+                                            user_data=name)
             else:
                 id = self.ipg.add_text_input(parent_id=f"row_{i}", 
                                             placeholder=name,
@@ -121,28 +142,52 @@ class Books:
                                             padding=[0.0, 0.0, 0.0, 5.0],
                                             user_data=name
                                             )
+            # need to keep the id's for later use in the modal
             self.modal_col_ids.append(id)
+        
+        # Once all the fields have been added, add the buttons a the bottom
+        self.ipg.add_button(parent_id="modal_column", 
+                            label="Exit & Discard Any Changes", 
+                            on_press=self.exit_modal,)
+        self.ipg.add_button(parent_id="modal_column", 
+                            label="Exit & Save", 
+                            on_press=self.exit_and_save)
+        self.ipg.add_button(parent_id="modal_column", 
+                            label="Insert New", 
+                            on_press=self.insert_new)
+        self.ipg.add_button(parent_id="modal_column", 
+                            label="Delete Book", 
+                            on_press=self.delete_book)
 
-        self.ipg.add_button(parent_id="modal_column", label="Exit & Discard Any Changes", on_press=self.exit_modal)
-        self.ipg.add_button(parent_id="modal_column", label="Exit & Save", on_press=self.exit_and_save)
-        self.ipg.add_button(parent_id="modal_column", label="Insert New", on_press=self.insert_new)
-        self.ipg.add_button(parent_id="modal_column", label="Delete Book", on_press=self.delete_book)
-
+    # The modal button returns the table_id and the row, column tuple
     def open_modal(self, tbl_id: int, index: tuple[int, int]):
-        self.modal_row = self.df.filter(pl.col("row") == index[0]).to_dict()
+        # get the row by filtering it out and converting to  a dictionary, for ease of use
+        self.modal_row = self.df.filter(pl.col("index") == index[0]).to_dict()
+        # Get the row index for leter use
         self.current_modal_row = index[0]
 
+        #  get each field and update the corresponding widget
         for i, name in enumerate(self.column_names):
             item = self.modal_row.get(name)[0]
-            if name == "row" or name == "Returned":
+            if name == "index":
                 self.ipg.update_item(self.modal_col_ids[i], IpgTextParam.Content, f"{item}")
+            elif name == "Status":
+                self.ipg.update_item(self.modal_col_ids[i], IpgPickListParam.Selected, f"{item}")
+            elif name == "Source":
+                self.ipg.update_item(self.modal_col_ids[i], IpgPickListParam.Selected, f"{item}")
+            elif name == "Returned":
+                self.ipg.update_item(self.modal_col_ids[i], IpgDatePickerParam.Label, f"{item}")
             else:
                 self.ipg.update_item(self.modal_col_ids[i], IpgTextInputParam.Value, f"{item}")
-            
-        self.ipg.update_table(self.table_id, IpgTableParam.ModalShow, True, None)
+
+        # update the table's modal_show value to show the modal
+        # The table update is different than the item_update, the last
+        # parameter is for when the data needs updating
+        self.ipg.update_item(self.table_id, IpgTableParam.ModalShow, True)
 
     def exit_modal(self, btn_id: int):
-        self.ipg.update_table(self.table_id, IpgTableParam.ModalShow, False, None)
+        # update the tables modal_show value to hide the modal
+        self.ipg.update_item(self.table_id, IpgTableParam.ModalShow, False)
 
     def exit_and_save(self, btn_id: int):
         print("save")
@@ -151,18 +196,40 @@ class Books:
         print("insert")
 
     def delete_book(self, btn_id: int):
+        # a way of ensuring the user wants to delete is to give 2 chances 
+        # or alternately make another modal
         if self.delete_count == 0:
             self.delete_count += 1
             self.ipg.update_item(btn_id, IpgButtonParam.Label, "Press Again to Delete")
             return
+        # This if is probably not needed
         if self.current_modal_row != -1:
+            # make a backup copy
             self.df.write_csv("./python_demo/resources/books_bkup.csv")
-            self.df = self.df.filter(pl.col("row") != self.current_modal_row)
-            self.df.drop_in_place("row")
-            self.df = self.df.with_row_count()
+            # filters out the deleted row
+            self.df = self.df.filter(pl.col("index") != self.current_modal_row)
+            # reindex the df
+            self.df.drop_in_place("index")
+            self.df = self.df.with_row_index()
+            # save the file
             self.df.write_csv("./python_demo/resources/books.csv")
             self.current_modal_row = -1
-            self.exit_modal()
+            self.update_table()
+            self.exit_modal(btn_id)
+            # let's update the table
+            self.update_table()
+    
+    def change_date(self, submit_btn_id: int, return_date):
+        self.ipg.update_item(self.dp_id, IpgDatePickerParam.Label, return_date)
+
+    def update_table(self):
+        self.book_list = []
+        self.column_names = self.df.columns
+
+        for name in self.column_names:
+            self.book_list.append({name: self.df.get_column(name).to_list()})
+
+        self.ipg.update_item(self.table_id, IpgTableParam.Data, self.book_list)
 
 books = Books()
 books.start()

@@ -311,6 +311,7 @@ pub enum IpgPickListParam {
     Options,
     Placeholder,
     Padding,
+    Selected,
     Show,
     Style,
     TextSize,
@@ -340,6 +341,9 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
             let val = try_extract_vec_f64(value);
             pl.padding =  get_padding_f64(val);
         },
+        IpgPickListParam::Selected => {
+            pl.selected = Some(try_extract_string(value));
+        }
         IpgPickListParam::Show => {
             pl.show = try_extract_boolean(value);
         },
@@ -374,7 +378,7 @@ pub fn try_extract_pick_list_update(update_obj: PyObject) -> IpgPickListParam {
         let res = update_obj.extract::<IpgPickListParam>(py);
         match res {
             Ok(update) => update,
-            Err(_) => panic!("PickList update extraction failed"),
+            Err(error) => panic!("PickList update extraction failed {}", error),
         }
     })
 }
