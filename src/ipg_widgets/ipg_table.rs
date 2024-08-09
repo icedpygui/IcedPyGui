@@ -11,6 +11,7 @@ use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 use super::ipg_button;
 use crate::style::styling::{lighten, darken};
 
+use chrono::{NaiveDate};
 use iced::widget::scrollable::{RelativeOffset, Viewport};
 use iced::{Border, Color, Point, Shadow};
 use iced::mouse::Interaction;
@@ -272,7 +273,28 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                 Err(e) => error = Some(e),
             };
              
-            let data: Result<HashMap<String, Vec<String>>, _> = py_data.extract::<HashMap<String, Vec<String>>>(py);
+            // let data: Result<HashMap<String, Vec<NaiveDate>>, _> = py_data.extract::<HashMap<String, Vec<NaiveDate>>>(py);
+            //     match data {
+            //         Ok(dt) => {
+            //             for key in dt.keys() {
+            //                 headers.push(add_header_text(key.to_owned(), width));  
+            //             }
+
+            //             for values in dt.values() {
+            //                 for (i, v) in values.iter().enumerate() {
+            //                     let label = v.to_string();
+            //                     if data_rows.len() <= i {
+            //                         data_rows.push(vec![])
+            //                     }
+            //                     data_rows[i].push(label);
+            //                 }
+            //             }
+            //             continue; 
+            //         },
+            //         Err(e) => error = Some(e),
+            //     };
+
+                let data: Result<HashMap<String, Vec<String>>, _> = py_data.extract::<HashMap<String, Vec<String>>>(py);
                 match data {
                     Ok(dt) => {
                         for key in dt.keys() {

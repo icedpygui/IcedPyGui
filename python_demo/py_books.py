@@ -43,6 +43,10 @@ class Books:
                             "Won't Finish", "Checked"]
         self.source_list = ["None", "Amazon Unlimited", "Amazon", "Library"]
 
+        self.book_list_types = {"index": pl.UInt32, "Title":pl.Utf8, "Series": pl.Utf8,
+                                "Num": pl.Utf8, "Author": pl.Utf8, "Status": pl.Utf8,
+                                "Returned": pl.Date, "Source": pl.Utf8, "Url": pl.Utf8}
+
     def start(self):
         self.load()
         self.create_table()
@@ -50,14 +54,24 @@ class Books:
         self.ipg.start_session()
 
     def load(self):
-        self.df = pl.read_csv("./python_demo/resources/books.csv", try_parse_dates=False)
+        self.df = pl.read_csv("./python_demo/resources/books.csv",
+                              try_parse_dates=False,
+                              missing_utf8_is_empty_string=True)
         self.df.sort(["Author", "Series", "Num"])
+        self.df.cast({"Returned": pl.Utf8})
         
         self.book_list = []
         self.column_names = self.df.columns
 
         for name in self.column_names:
-            self.book_list.append({name: self.df.get_column(name).to_list()})
+            if name == "Returned":
+                str_dates = []
+                for n in self.df.get_column(name).to_list():
+                    str_dates.append(f"{n}")
+                
+                self.book_list.append({name: str_dates})
+            else:
+                self.book_list.append({name: self.df.get_column(name).to_list()})
             
         
     def create_table(self):
