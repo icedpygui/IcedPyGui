@@ -2150,6 +2150,7 @@ class IPG:
                     on_button: Optional[Callable]=None,
                     on_checkbox: Optional[Callable]=None,
                     on_toggler: Optional[Callable]=None,
+                    on_scroll: Optional[Callable]=None,
                     show: bool=True, 
                     user_data: Optional[Any]=None,
                   ) -> int:
@@ -2207,6 +2208,8 @@ class IPG:
                 Callback when a checkbox is toggled.
             on_toggler: Callable
                 Callback when a toggler is toggled.
+            on_scroll: Callable
+                Callback when a scroller is scrolled.
             user_data: any
                 Any data that might be needed in the callback function.
             show:: bool

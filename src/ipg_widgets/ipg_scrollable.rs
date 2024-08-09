@@ -20,6 +20,7 @@ use iced::widget::scrollable::Scrollbar;
 use iced::widget::scrollable::Scroller;
 use iced::widget::scrollable::{Alignment, Direction, Properties, 
     Scrollable, Viewport, Status, Style};
+use iced::Rectangle;
 use iced::{Border, Color, Element, Length, Shadow, Vector, Theme};
 use iced::widget::Column;
 
@@ -45,6 +46,11 @@ pub struct IpgScrollable {
     pub v_bar_alignment: IpgScrollableAlignment,
     pub user_data: Option<PyObject>,
     pub style_id: Option<String>,
+    pub scroll_y_pos: f32,
+    pub scroll_x_pos: f32,
+    pub bounds: Rectangle,
+    pub content_bounds: Rectangle,
+
 }
 
 impl IpgScrollable {
@@ -79,6 +85,10 @@ impl IpgScrollable {
             v_bar_alignment,
             user_data,
             style_id,
+            scroll_y_pos: 0.0,
+            scroll_x_pos: 0.0,
+            bounds: Rectangle { x: 0.0, y: 0.0, width: 0.0, height: 0.0 },
+            content_bounds: Rectangle { x: 0.0, y: 0.0, width: 0.0, height: 0.0 },
         }
     }
 }
@@ -331,6 +341,8 @@ pub enum IpgScrollableParam {
     VBarMargin,
     VScrollerWidth,
     VBarAlignment,
+    ScrollXTo,
+    ScrollYTo,
 }
 
 
@@ -374,6 +386,8 @@ pub fn scrollable_item_update(scroll: &mut IpgScrollable,
         IpgScrollableParam::VBarAlignment => {
             scroll.v_bar_alignment = try_extract_alignment(value);
         },
+        IpgScrollableParam::ScrollXTo => todo!(),
+        IpgScrollableParam::ScrollYTo => todo!(),
     }
 }
 

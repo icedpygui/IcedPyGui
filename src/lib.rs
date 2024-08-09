@@ -46,7 +46,7 @@ use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectabl
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParam, IpgSliderStyle};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParam, IpgSvgRotation};
-use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam, IpgTableRowHighLight, IpgTableWidget, TableScrollerPosition};
+use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam, IpgTableRowHighLight, IpgTableWidget,};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
@@ -106,7 +106,6 @@ pub struct State {
     pub container_wnd_str_ids: Lazy<HashMap<String, String>>, // get window string id based on container string id
     pub container_window_usize_ids: Lazy<HashMap<usize, usize>>, //get window usize id based on container usize id
 
-    pub table_internal_ids: Lazy<HashMap<usize, TableScrollerPosition>>, // table_internal_id, TableScrollPosition
     pub table_internal_ids_counter: usize,
 
     pub widgets: Lazy<HashMap<usize, IpgWidgets>>,
@@ -147,7 +146,6 @@ pub static STATE: Mutex<State> = Mutex::new(
         container_wnd_str_ids: Lazy::new(||HashMap::new()),
         container_window_usize_ids: Lazy::new(||HashMap::new()),
 
-        table_internal_ids: Lazy::new(||HashMap::new()),
         table_internal_ids_counter: TABLE_INTERNAL_IDS_START,
 
         widgets: Lazy::new(||HashMap::new()),
@@ -2699,8 +2697,14 @@ impl IPG {
                         gen_id=None, 
                         on_button=None, 
                         on_checkbox=None,
-                        on_toggler=None, 
-                        show=true, user_data=None))]
+                        on_toggler=None,
+                        on_scroll=None, 
+                        show=true,
+                        button_user_data=None,
+                        checkbox_user_data=None,
+                        toggler_user_data=None,
+                        scroller_user_data=None,
+                        ))]
     fn add_table(&mut self,
                     window_id: String,
                     table_id: String,
@@ -2726,8 +2730,12 @@ impl IPG {
                     on_button: Option<PyObject>,
                     on_checkbox: Option<PyObject>,
                     on_toggler: Option<PyObject>,
+                    on_scroll: Option<PyObject>,
                     show: bool,
-                    user_data: Option<PyObject>,
+                    button_user_data: Option<PyObject>,
+                    checkbox_user_data: Option<PyObject>,
+                    toggler_user_data: Option<PyObject>,
+                    scroller_user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
     {
 
@@ -2805,13 +2813,11 @@ impl IPG {
             add_callback_to_mutex(id, "on_toggler".to_string(), on_toggler);
         }
 
-        let scroller_id = state.table_internal_ids_counter + 1;
-        state.table_internal_ids_counter = scroller_id;
+        if on_scroll.is_some() {
+            add_callback_to_mutex(id, "on_scroll".to_string(), on_scroll);
+        }
 
-        let mut scroller_position = TableScrollerPosition::default();
-        scroller_position.table_id = id;
-
-        state.table_internal_ids.insert(scroller_id, scroller_position);
+        let scroller_id = TABLE_INTERNAL_IDS_START + id;
 
         state.containers.insert(id, IpgContainers::IpgTable(IpgTable::new( 
                                                     id,
@@ -2831,7 +2837,10 @@ impl IPG {
                                                     toggler_fill_style_id,
                                                     mixed_widgets_column_style_ids,
                                                     show,
-                                                    user_data,
+                                                    button_user_data,
+                                                    checkbox_user_data,
+                                                    toggler_user_data,
+                                                    scroller_user_data,
                                                     scroller_id,
                                                     )));
         state.last_id = self.id;

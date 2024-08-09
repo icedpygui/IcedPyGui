@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::result::Result;
 
 use crate::app::{self, Message};
-use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_uid};
+use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_uid, TABLE_INTERNAL_IDS_START};
 use crate::style::styling::{get_theme_color, IpgStyleStandard};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{try_extract_boolean, try_extract_f64, try_extract_string, try_extract_u64, try_extract_vec_f32};
@@ -24,6 +24,7 @@ use iced::widget::svg;
 use iced::advanced::image;
 
 
+use pyo3::types::IntoPyDict;
 use pyo3::{pyclass, PyErr, PyObject, Python};
 
 
@@ -54,8 +55,12 @@ pub struct IpgTable {
         pub mixed_widgets_column_style_ids: Option<HashMap<usize, Vec<String>>>,
         pub modal_show: bool,
         pub show: bool,
-        pub user_data: Option<PyObject>,
+        pub button_user_data: Option<PyObject>,
+        pub checkbox_user_data: Option<PyObject>,
+        pub toggler_user_data: Option<PyObject>,
+        pub scroller_user_data: Option<PyObject>,
         pub scroller_id: usize,
+        scroller_pos: Vec<(String, f32)>,
 }
 
 impl IpgTable {
@@ -77,7 +82,10 @@ impl IpgTable {
         toggler_fill_style_id: Option<String>,
         mixed_widgets_column_style_ids: Option<HashMap<usize, Vec<String>>>,
         show: bool,
-        user_data: Option<PyObject>,
+        button_user_data: Option<PyObject>,
+        checkbox_user_data: Option<PyObject>,
+        toggler_user_data: Option<PyObject>,
+        scroller_user_data: Option<PyObject>,
         scroller_id: usize,
         ) -> Self {
         Self {
@@ -99,8 +107,12 @@ impl IpgTable {
             mixed_widgets_column_style_ids,
             modal_show: false,
             show,
-            user_data,
+            button_user_data,
+            checkbox_user_data,
+            toggler_user_data,
+            scroller_user_data,
             scroller_id,
+            scroller_pos: vec![],
         }
     }
 }
@@ -110,7 +122,7 @@ pub enum TableMessage {
     TableButton((usize, usize)),
     TableCheckbox(bool, (usize, usize)),
     TableToggler(bool, (usize, usize)),
-    TableScrolled(Viewport, usize),
+    TableScrolled(Viewport, usize)
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -142,31 +154,6 @@ struct Data {
     data: Vec<DataTypes>
 }
 
-#[derive(Debug, Clone)]
-pub struct TableScrollerPosition {
-    pub table_id: usize,
-    pub relative_offset_x: f32,
-    pub relative_offset_y: f32,
-    pub absolute_offset_x: f32,
-    pub absolute_offset_y: f32,
-    pub content_bound_height: f32,
-    pub bounds_height: f32,
-}
-
-impl Default for TableScrollerPosition {
-    fn default() -> Self {
-        Self { 
-            table_id: 0, 
-            relative_offset_x: 0.0, 
-            relative_offset_y: 0.0,
-            absolute_offset_x: 0.0,
-            absolute_offset_y: 0.0,
-            content_bound_height: 0.0,
-            bounds_height: 0.0,
-        }
-    }
-}
-
 
 pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
@@ -176,16 +163,6 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
 
     let mut data_rows: Vec<Vec<String>> = vec![];
     data_rows.push(vec![]);
-
-    let mut state = access_state();
-    let mut scroller_pos_opt = state.table_internal_ids.get(&table.scroller_id);
-    let scroller_pos = if scroller_pos_opt.is_some() {
-        scroller_pos_opt.unwrap()
-    } else {
-        panic!("Table: Scroller id '{}' not found", table.scroller_id)
-    };
-
-    drop(state);
 
     Python::with_gil(|py| {
         let table_data = match table.data.extract::<Vec<PyObject>>(py) {
@@ -593,6 +570,7 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
 
     match message {
         TableMessage::TableButton((row_index, col_index)) => {
+            wci.value_str = Some("button".to_string());
             let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
             wco.id = table_id; 
             wco.index_table = Some((row_index, col_index));
@@ -622,21 +600,21 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             process_callback(wco);
         },
         TableMessage::TableScrolled(vp, scroller_id ) => {
-            let mut state = access_state();
-            let scroller_pos_opt = state.table_internal_ids.get_mut(&scroller_id);
-            let mut scroller_pos = if scroller_pos_opt.is_some() {
-                scroller_pos_opt.unwrap()
-            } else {
-                panic!("Table: Scroller id '{}' not found", scroller_id)
-            };
-            
-            scroller_pos.relative_offset_x = vp.relative_offset().x;
-            scroller_pos.relative_offset_y = vp.relative_offset().y;
-            scroller_pos.absolute_offset_x = vp.absolute_offset().x;
-            scroller_pos.absolute_offset_y = vp.absolute_offset().y;
-            scroller_pos.content_bound_height = vp.content_bounds().height;
-            scroller_pos.bounds_height = vp.bounds().height;
-            drop(state);
+            wci.id = scroller_id - TABLE_INTERNAL_IDS_START;
+            wci.value_str = Some("scroller".to_string());
+            let mut offsets: Vec<(String, f32)> = vec![];
+            offsets.push(("abs_offset_x".to_string(), vp.absolute_offset().x));
+            offsets.push(("abs_offset_y".to_string(), vp.absolute_offset().y));
+            offsets.push(("rel_offset_x".to_string(), vp.relative_offset().x));
+            offsets.push(("rel_offset_y".to_string(), vp.relative_offset().y));
+            offsets.push(("rev_offset_x".to_string(), vp.absolute_offset_reversed().x));
+            offsets.push(("rev_offset_y".to_string(), vp.absolute_offset_reversed().y));
+
+            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            wco.id = table_id;
+            wco.event_name = "on_scroll".to_string();
+            wco.scroll_pos = offsets;
+            process_callback(wco);
         }
     }
 }
@@ -668,21 +646,29 @@ pub fn process_callback(wco: WidgetCallbackOut)
         if wco.user_data.is_some() {
             let user_data = wco.user_data.unwrap();
             let res = 
-                    if wco.event_name == "on_button" {
-                                callback.call1(py, (
-                                            wco.id.clone(),
-                                            table_index, 
-                                            user_data
-                                            ))
-                                }
-                                else {
-                                    callback.call1(py, (
-                                        wco.id.clone(),
-                                        table_index,
-                                        wco.on_toggle,  
-                                        user_data
-                                        ))
-                                };
+                if wco.event_name == "on_button" {
+                    callback.call1(py, (
+                                wco.id.clone(),
+                                table_index, 
+                                user_data
+                                ))
+                    } else if wco.event_name == "on_checkbox" || wco.event_name == "on_toggler" {
+                        callback.call1(py, (
+                            wco.id.clone(),
+                            table_index,
+                            wco.on_toggle,  
+                            user_data
+                            ))
+                    } else if wco.event_name == "on_scroll" {
+                        callback.call1(py, (
+                            wco.id.clone(),
+                            wco.scroll_pos.into_py_dict_bound(py),  
+                            user_data
+                            ))
+                    } else {
+                        panic!("Table callback: Event name {} could not be found", wco.event_name)
+                    };
+                    
             match res {
                 Ok(_) => (),
                 Err(er) => panic!("Table: 4 parameters (id, widget_index, on_toggle, user_data) are required or a python error in this function. {er}"),
@@ -690,22 +676,28 @@ pub fn process_callback(wco: WidgetCallbackOut)
         } else {
             
             let res = 
-                                if wco.event_name == "on_button" {
-                                    callback.call1(py, (
-                                                wco.id.clone(),
-                                                table_index, 
-                                                ))
-                                    }
-                                    else {
-                                        callback.call1(py, (
-                                            wco.id.clone(),
-                                            table_index,
-                                            wco.on_toggle,  
-                                            ))
-                                    };
+                if wco.event_name == "on_button" {
+                    callback.call1(py, (
+                                wco.id.clone(),
+                                table_index, 
+                                ))
+                    } else if wco.event_name == "on_checkbox" || wco.event_name == "on_toggler" {
+                        callback.call1(py, (
+                            wco.id.clone(),
+                            table_index,
+                            wco.on_toggle,  
+                            ))
+                    } else if wco.event_name == "on_scroll" {
+                        callback.call1(py, (
+                            wco.id.clone(),
+                            wco.scroll_pos.into_py_dict_bound(py),  
+                            ))
+                    } else {
+                        panic!("Table callback: Event name {} could not be found", wco.event_name)
+                };
             match res {
                 Ok(_) => (),
-                Err(er) => panic!("Table: 3 parameter (id, widget_index, on_toggle) are required or possibly a python error in this function. {er}"),
+                Err(er) => panic!("Table: if on_scroll, 2 parameters (id, scroll_pos), else 3 parameter (id, widget_index, on_toggle) are required or possibly a python error in this function. {er}"),
             }
         }
     });

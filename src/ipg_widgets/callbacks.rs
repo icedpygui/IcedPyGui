@@ -57,11 +57,15 @@ pub struct WidgetCallbackOut {
     pub on_toggle: Option<bool>,
     pub on_modal_open: Option<bool>,
     pub points: Option<Vec<(String, f32)>>,
-    pub scroll_pos: Vec<(String, f32)>, 
+    pub scroll_pos: Vec<(String, f32)>,
     pub selected_index: Option<usize>,
     pub selected_label: Option<String>,
     pub selected_date: Option<String>,
     pub user_data: Option<PyObject>,
+    pub button_user_data: Option<PyObject>,
+    pub checkbox_user_data: Option<PyObject>,
+    pub toggler_user_data: Option<PyObject>,
+    pub scroller_user_data: Option<PyObject>,
     pub value_bool: Option<bool>,
     pub value_float: Option<f64>,
     pub value_str: Option<String>,
@@ -337,13 +341,22 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                 IpgContainers::IpgMouseArea(_) => todo!(),
                 IpgContainers::IpgTable(tbl) => {
                     let mut wco = WidgetCallbackOut::default();
-                    wco.user_data = tbl.user_data.clone();
+                    if wci.value_str == Some("button".to_string()) {
+                         wco.user_data = tbl.button_user_data.clone();
+                         return wco;
+                    }
+
+                    if wci.value_str == Some("scroller".to_string()) {
+                        wco.user_data = tbl.scroller_user_data.clone();
+                        return wco;
+                    }
+
                     let (row_index, col_index) = if wci.index_table.is_some() {
-                            wci.index_table.unwrap()
+                        wci.index_table.unwrap()
                     } else {
                         return wco;
                     };
-    
+
                     if wci.value_str == Some("checkbox".to_string()) {
                         let mut found_idx: Option<usize> = None;
                         for (idx, (_id, row, col, _bl)) 
@@ -431,7 +444,10 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
         },
         IpgContainers::IpgTable(table) => {
             let mut wco = WidgetCallbackOut::default();
-            wco.user_data = table.user_data.clone();
+            wco.button_user_data = table.button_user_data.clone();
+            wco.checkbox_user_data = table.checkbox_user_data.clone();
+            wco.toggler_user_data = table.toggler_user_data.clone();
+            wco.scroller_user_data = table.scroller_user_data.clone();
             drop(state);
             return wco
         }

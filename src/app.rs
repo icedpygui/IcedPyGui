@@ -242,7 +242,7 @@ impl multi_window::Application for App {
             Message::Table(id, message) => {
                 table_callback(id, message);
                 Command::none()
-            }
+            },
             Message::TextInput(id, message) => {
                 text_input_callback(id, message);
                 Command::none()

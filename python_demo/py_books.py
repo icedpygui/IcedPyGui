@@ -43,10 +43,6 @@ class Books:
                             "Won't Finish", "Checked"]
         self.source_list = ["None", "Amazon Unlimited", "Amazon", "Library"]
 
-        self.book_list_types = {"index": pl.UInt32, "Title":pl.Utf8, "Series": pl.Utf8,
-                                "Num": pl.Utf8, "Author": pl.Utf8, "Status": pl.Utf8,
-                                "Returned": pl.Date, "Source": pl.Utf8, "Url": pl.Utf8}
-
     def start(self):
         self.load()
         self.create_table()
@@ -57,8 +53,7 @@ class Books:
         self.df = pl.read_csv("./python_demo/resources/books.csv",
                               try_parse_dates=False,
                               missing_utf8_is_empty_string=True)
-        self.df.sort(["Author", "Series", "Num"])
-        self.df.cast({"Returned": pl.Utf8})
+        self.df = self.df.sort(["Author", "Series", "Num"])
         
         self.book_list = []
         self.column_names = self.df.columns
@@ -66,8 +61,12 @@ class Books:
         for name in self.column_names:
             if name == "Returned":
                 str_dates = []
+                # trying to ensure that the string that looks like a date is in fact kept a string
+                # Currently, dates are not extracted to strings in ipg.  Strings are needed to display
+                # the data.  This appears to be needed in this case or the column will be skipped
+                # over and not displayed.
                 for n in self.df.get_column(name).to_list():
-                    str_dates.append(f"{n}")
+                    str_dates.append(f"{n}") 
                 
                 self.book_list.append({name: str_dates})
             else:
@@ -140,13 +139,17 @@ class Books:
             elif name == "Status":
                 id = self.ipg.add_pick_list(parent_id=f"row_{i}", 
                                             options=self.status_list,
-                                            placeholder="Status",
-                                            user_data=name)
+                                            placeholder=name,
+                                            user_data=name,
+                                            on_select=self.on_select,
+                                            )
             elif name == "Source":
                 id = self.ipg.add_pick_list(parent_id=f"row_{i}", 
                                             options=self.source_list,
-                                            placeholder="Source",
-                                            user_data=name)
+                                            placeholder=name,
+                                            user_data=name,
+                                            on_select=self.on_select,
+                                            )
             else:
                 id = self.ipg.add_text_input(parent_id=f"row_{i}", 
                                             placeholder=name,
@@ -154,6 +157,8 @@ class Books:
                                             size=16.0,
                                             line_height_relative=1.3,
                                             padding=[0.0, 0.0, 0.0, 5.0],
+                                            on_input=self.input_changed,
+                                            on_submit=self.on_submit,
                                             user_data=name
                                             )
             # need to keep the id's for later use in the modal
@@ -175,7 +180,7 @@ class Books:
 
     # The modal button returns the table_id and the row, column tuple
     def open_modal(self, tbl_id: int, index: tuple[int, int]):
-        # get the row by filtering it out and converting to  a dictionary, for ease of use
+        # get the row by filtering it out and converting to a dictionary, for ease of use
         self.modal_row = self.df.filter(pl.col("index") == index[0]).to_dict()
         # Get the row index for leter use
         self.current_modal_row = index[0]
@@ -204,7 +209,25 @@ class Books:
         self.ipg.update_item(self.table_id, IpgTableParam.ModalShow, False)
 
     def exit_and_save(self, btn_id: int):
-        print("save")
+        self.save_table_backup()
+        # delete the row to be updated
+        self.df = self.df.filter(pl.col("index") != self.modal_row["index"])
+        # make the modal row a df
+        modal_df = pl.DataFrame(self.modal_row)
+        # drop the index row on both dfs
+        self.df.drop_in_place("index")
+        modal_df.drop_in_place("index")
+        # concat the dfs
+        self.df = pl.concat([self.df, modal_df])
+        # sort it
+        self.df = self.df.sort(["Author", "Series", "Num"])
+        # add in the index row
+        self.df = self.df.with_row_index()
+        self.save_table()
+        # update the table
+        self.update_table()
+        # exit
+        self.exit_modal(0)
 
     def insert_new(self, btn_id: int):
         print("insert")
@@ -218,23 +241,51 @@ class Books:
             return
         # This if is probably not needed
         if self.current_modal_row != -1:
-            # make a backup copy
-            self.df.write_csv("./python_demo/resources/books_bkup.csv")
+            self.save_table_backup()
             # filters out the deleted row
             self.df = self.df.filter(pl.col("index") != self.current_modal_row)
             # reindex the df
             self.df.drop_in_place("index")
             self.df = self.df.with_row_index()
-            # save the file
-            self.df.write_csv("./python_demo/resources/books.csv")
+            self.save_table()
             self.current_modal_row = -1
             self.update_table()
             self.exit_modal(btn_id)
-            # let's update the table
-            self.update_table()
-    
+            # reset the button
+            self.delete_count == 0
+            self.ipg.update_item(btn_id, IpgButtonParam.Label, "Delete Book")
+  
+    def save_table_backup(self):
+        self.df.write_csv("./python_demo/resources/books_bkup.csv")
+
+    def save_table(self):
+        self.df.write_csv("./python_demo/resources/books.csv")
+
+    # The name parameter is the user_data
+    def on_submit(self, ti_id: int, value: str, name: str):
+        print(value)
+        # update the text_input widget so the title shows otherwise the return clears the field
+        self.ipg.update_item(ti_id, IpgTextInputParam.Value, value)
+        # since the modal row was updated by the input changed, no need here
+        
+
+    # user_data not used here but still needs to be in the parameter list
+    def input_changed(self, ti_id: int, value: str, name: str):
+        # Update the text_input value as it's typed
+        self.ipg.update_item(ti_id, IpgTextInputParam.Value, value)
+        # update the modal row
+        self.modal_row[name] = value
+
+    def on_select(self, pl_id: int, value: str, name: str):
+        # update the picklist widget
+        self.ipg.update_item(pl_id, IpgPickListParam.Selected, value)
+        # update the modal row
+        self.modal_row[name] = value
+
     def change_date(self, submit_btn_id: int, return_date):
         self.ipg.update_item(self.dp_id, IpgDatePickerParam.Label, return_date)
+        # update the modal row
+        self.modal_row["Returned"] = return_date
 
     def update_table(self):
         self.book_list = []
