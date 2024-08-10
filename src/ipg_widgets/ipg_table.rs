@@ -11,7 +11,7 @@ use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 use super::ipg_button;
 use crate::style::styling::{lighten, darken};
 
-use chrono::{NaiveDate};
+use chrono::NaiveDate;
 use iced::widget::scrollable::{RelativeOffset, Viewport};
 use iced::{Border, Color, Point, Shadow};
 use iced::mouse::Interaction;
@@ -184,7 +184,6 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                 Ok(dt) => {
                     //Only pushes the one header
                     for key in dt.keys() {
-                        dbg!(&key);
                         headers.push(add_header_text(key.to_owned(), width));                                         
                     }
 
@@ -232,7 +231,6 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
             match data {
                 Ok(dt) => {
                     for key in dt.keys() {
-                        dbg!(&key);
                         headers.push(add_header_text(key.to_owned(), width));  
                     }
 
@@ -249,7 +247,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                 },
                 Err(e) => error = Some(e),
             };
-             
+            // TODO! add support for dates
             // let data: Result<HashMap<String, Vec<NaiveDate>>, _> = py_data.extract::<HashMap<String, Vec<NaiveDate>>>(py);
             //     match data {
             //         Ok(dt) => {
@@ -291,6 +289,9 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
                     },
                     Err(e) => error = Some(e),
                 };
+            if error.is_some() {
+                panic!("Table: Column extraction failed for for column {} with error {}.", col_index, error.unwrap())
+            }
         }
         
     });

@@ -419,13 +419,13 @@ class Demo:
         # Rust does not have dictionaries but a similar type is called a HashMap.
         # The reason for the list of dictionaries is that you cannot extract a
         # mixed dictionary into a Rust HashMap.  The HashMap has to have predefined
-        # types.  In this case they are <>String, Vec<Widgets>, <String, Vec<f64>>, <String, Vec<String>>,
-        # <String, Vec<i64>>, and <String, Vec<bool>>.  As one iterates through the list,
-        # each type is tested to see if it can be extracted in one of the types above.  If found,
-        # the extraction occurs and life is wonderful.  If no existing type is found, then an error occurs.
+        # types.  In this case they are types dict[str, list[Widgets]], dict[str, list[float or int]], 
+        # list[str, list[str]], and list[str], list[bool].
+        # Each column is extracted based on a single type.  If a mixed column occurs, then an error
+        # will be generated.  If no existing type is found, then an error occurs or just skipped.
         # Currently, not every variation is covered but that can be improved in future versions.
         # This probably covers the vast majority of needs.  If you need that mixed column, convert
-        # the list to a string.  When the final version is displayed, it's converted to  a string anyway.
+        # the list to a string.  When the final version is displayed, it's converted to a string anyway.
         data = [{"Button": col0},
                 {"ChkBox": col1},
                 {"Col2": col2},
@@ -434,15 +434,6 @@ class Demo:
                 {"Col5": col5}]
 
     
-        # The column widgets are prepared
-        btn_widgets = []
-        chkbox_widgets = []
-
-        for _ in range(0, len(col0)):
-            btn_widgets.append(IpgTableWidget.Button)
-            chkbox_widgets.append(IpgTableWidget.Checkbox)
-            
-
         # The table is added.
         self.ipg.add_table(window_id=self.wnd_2,
                             table_id="table", 
@@ -452,7 +443,8 @@ class Demo:
                             width=600.0, height=300.0, 
                             row_highlight=IpgTableRowHighLight.Lighter,
                             data_length=len(col0),
-                            widgets_columns= {0: btn_widgets, 1: chkbox_widgets},
+                            button_fill_columns=[0],
+                            checkbox_fill_columns=[1],
                             on_button=self.widget_button,
                             on_checkbox=self.widget_checkbox,
                             )
