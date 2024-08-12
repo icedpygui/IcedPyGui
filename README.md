@@ -59,7 +59,7 @@ Python wrapper for Rust Iced Gui
 * IPG widgets
   * DatePicker - compact and resizable
   * SelectableText - all mouse buttons supported
-  * Table - Easily loaded with a list of py dictionaries, supports adding buttons, checkboxs, and togglers, continually updating code
+  * Table - Easily loaded with a list of py dictionaries, supports adding buttons, checkboxes, and togglers, continually updating code
 
 * Python issues to be addressed
   * Need to incorporate using with statement in python.  Using with would allow one to not have to supply the window or parent id if those follow closely.  For example:
@@ -131,7 +131,7 @@ Each widget in IPG has a used data parameter which passes any additional informa
 
 * Instantiate the Rust structure then add your containers and widgets.
 
-* The last line of code to execute must be ipg.start_seesion().  Any code after that will not be executed because Iced is now running.  You can place it anywhere, just make sure its last executed.  If you start your program and nothing happens, it might mean that you aren't executing start_session() or you forgot to add it in, been there, done that.
+* The last line of code to execute must be ipg.start_session().  Any code after that will not be executed because Iced is now running.  You can place it anywhere, just make sure its last executed.  If you start your program and nothing happens, it might mean that you aren't executing start_session() or you forgot to add it in, been there, done that.
 
 * Every widget needs to have a parent container previously defined and every container needs to have a window and optionally a parent container defined.  If the container is placed into a window then no parent_id is required.
 
