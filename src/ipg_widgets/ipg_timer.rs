@@ -3,16 +3,13 @@ use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, app};
 
 use iced::widget::{Button, Text};
-use iced::{Element, Length, Font, Padding, Theme};
-
-// use iced_aw::BOOTSTRAP_FONT;
-const ICON_FONT: Font = Font::with_name("icons");
+use iced::{Element, Length, Padding, Theme};
 
 use pyo3::{pyclass, PyObject, Python};
 
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::try_extract_i64;
-use super::ipg_button::{get_styling, try_extract_button_arrow};
+use super::ipg_button::{get_bootstrap_arrow, get_styling, IpgButtonArrow};
 
 
 
@@ -27,7 +24,7 @@ pub struct IpgTimer {
     pub padding: Padding,
     pub button_style_id: Option<String>,
     pub button_style_standard: Option<IpgStyleStandard>,
-    pub button_style_arrow: Option<PyObject>,
+    pub button_style_arrow: Option<IpgButtonArrow>,
     pub user_data: Option<PyObject>,
     pub counter: u64,
     pub started: bool,
@@ -45,7 +42,7 @@ impl IpgTimer {
         padding: Padding,
         button_style_id: Option<String>,
         button_style_standard: Option<IpgStyleStandard>,
-        button_style_arrow: Option<PyObject>,
+        button_style_arrow: Option<IpgButtonArrow>,
         user_data: Option<PyObject>,
         ) -> Self {
         Self {
@@ -91,11 +88,8 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
     }
 
     if tim.button_style_arrow.is_some() {
-        let style_arrow = try_extract_button_arrow(tim.button_style_arrow);
-        label = match style_arrow {
-            Some(ar) => Text::new(ar).font(ICON_FONT),
-            None => panic!("Timer: Could not get extract style_arrow")
-        };
+        let arrow = get_bootstrap_arrow(tim.button_style_arrow.unwrap());
+        label = Text::new(arrow).font(iced::Font::with_name("bootstrap-icons"));
     }
     
     let timer_btn: Element<TIMMessage> = Button::new(label)

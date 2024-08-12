@@ -31,7 +31,7 @@ pub struct IpgButton {
     pub clip: bool,
     pub style_id: Option<String>,
     pub style_standard: Option<IpgStyleStandard>,
-    pub style_arrow: Option<PyObject>,
+    pub style_arrow: Option<IpgButtonArrow>,
 }
 
 impl IpgButton {
@@ -47,7 +47,7 @@ impl IpgButton {
         clip: bool,
         style_id: Option<String>,
         style_standard: Option<IpgStyleStandard>,
-        style_arrow: Option<PyObject>,
+        style_arrow: Option<IpgButtonArrow>,
         ) -> Self {
         Self {
             id,
@@ -125,13 +125,10 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
     let mut label = Text::new(btn.label.clone());
 
     if btn.style_arrow.is_some() {
-        let arrow_style = try_extract_button_arrow(btn.style_arrow);
-        label = match arrow_style {
-            Some(ar) => Text::new(ar).font(iced::Font::with_name("bootstrap-icons")),
-            None => panic!("Button: Could not get extract arrow_style")
-        };
+        let arrow = get_bootstrap_arrow(btn.style_arrow.unwrap());
+        label = Text::new(arrow).font(iced::Font::with_name("bootstrap-icons"));
     }
-
+        
     let ipg_btn: Element<BTNMessage> = Button::new(label)
                                 .height(btn.height)
                                 .padding(btn.padding)
@@ -240,7 +237,7 @@ pub fn button_item_update(btn: &mut IpgButton,
 
     match update {
        IpgButtonParam::ArrowStyle => {
-            btn.style_arrow = Some(value);
+            btn.style_arrow = Some(try_extract_button_arrow(value));
         },
         IpgButtonParam::Label => {
             btn.label = try_extract_string(value);
@@ -408,24 +405,6 @@ fn disabled(style: Style) -> Style {
     }
 }
 
-pub fn try_extract_button_arrow(arrow_opt: Option<PyObject>) -> Option<String> {
-
-    let arrow_obj = match arrow_opt {
-        Some(ar) => ar,
-        None => return None,
-    };
-
-    Python::with_gil(|py| {
-        let res = arrow_obj.extract::<IpgButtonArrow>(py);
-
-        match res {
-            Ok(ar) => return Some(get_bootstrap_arrow(ar)),
-            Err(_) => panic!("Button arrow extraction failed"),
-        }
-    })
-}
-
-
 pub fn try_extract_button_update(update_obj: PyObject) -> IpgButtonParam {
 
     Python::with_gil(|py| {
@@ -433,6 +412,17 @@ pub fn try_extract_button_update(update_obj: PyObject) -> IpgButtonParam {
         match res {
             Ok(update) => update,
             Err(_) => panic!("Button update extraction failed"),
+        }
+    })
+}
+
+pub fn try_extract_button_arrow(update_obj: PyObject) -> IpgButtonArrow {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgButtonArrow>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Button arrow extraction failed"),
         }
     })
 }

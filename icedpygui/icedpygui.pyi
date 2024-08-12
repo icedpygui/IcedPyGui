@@ -1,6 +1,4 @@
-from pickletools import uint2
-from typing import Any, Callable, Optional, Union
-
+from typing import Any, Callable, Dict, List, OrderedDict, Optional, Tuple, Union
 
 
 class IPG:
@@ -91,7 +89,7 @@ class IPG:
                         max_width: float=float('inf'),
                         horizontal_alignment: Optional[IpgAlignment]=None,
                         vertical_alignment: Optional[IpgAlignment]=None,
-                        padding: list=[10.0],
+                        padding: list[float]=[10.0],
                         clip: bool=False,
                         show: bool=True,
                         style_id: Optional[str]=None,
@@ -120,7 +118,7 @@ class IPG:
             height: float
                 Sets the height of the widget.   
             height_fill: bool
-                Sets the heigth to fill the available space, overrides height.
+                Sets the height to fill the available space, overrides height.
             max_width: float
                 Sets the maximum width the container is allowed to be.
             max_height: float
@@ -132,21 +130,22 @@ class IPG:
             padding: List[float]
                 Sets the padding for container.
                 use [float] for all sides,
-                or use [top&bottom, left&right]
-                or use [top, right, bottom, left]
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
             clip: bool
                 Whether to clip any text if size > container.
             show: bool
                 Shows or hides container and all of its contents.
             style_id: str
                 style_id of the add_container_style.
-            style_Standard: str
+            style_Standard: IpgStyleStandard
                 IpgStyleStandard class.
             
         Returns
         -------
         id: int
             Internal id of widget and can be used by user if equated.
+
         """
 
     def add_container_style(self,
@@ -183,7 +182,7 @@ class IPG:
                 The color in rgba format [float; 4] used as state above.
             border_radius: list
                 The radius of the 4 corners, [float]=all corners, 
-                [floate;4] top-left, top-right, bottom-right, bottom-left.
+                [float;4] top-left, top-right, bottom-right, bottom-left.
             border_width: float
                 Border width.
             shadow_color: IpgColor
@@ -240,14 +239,14 @@ class IPG:
             height: float
                 Sets the height of the widget.   
             height_fill: bool
-                Sets the heigth to fill the available space, overrides height.
+                Sets the height to fill the available space, overrides height.
             max_width: float
                 Sets the maximum width the container is allowed to be.
             padding: List[float]
                 Sets the padding for container.
                 use [float] for all sides,
-                or use [top&bottom, left&right]
-                or use [top, right, bottom, left]
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
             spacing: float
                 Sets the spacing between items in column.
             clip: bool
@@ -267,14 +266,14 @@ class IPG:
                     label: str,
                     *,
                     parent_id: Optional[str]=None,
-                    on_open: Optional[Callable[[], None]]=None,
+                    on_open: Optional[Callable]=None,
                     align_items: IpgAlignment=IpgAlignment.Start,
                     width: Optional[float]=None,
                     height: Optional[float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False,
                     max_width: float=float('inf'),
-                    padding: list=[10.0], 
+                    padding: List=[10.0], 
                     spacing: float=20.0,
                     clip: bool=False,
                     show: bool=True,
@@ -294,6 +293,8 @@ class IPG:
             parent_id: str
                 If parent_id == window_id then not required, 
                 If another container then required.
+            on_open: Optional[Callable]=None
+
             align_items: IpgColumnAlignment
                 Sets the vertical alignment of the items in the column; Start, Center, End.
             width: float
@@ -309,8 +310,8 @@ class IPG:
             padding: List[float]
                 Sets the padding for container.
                 use [float] for all sides,
-                or use [top&bottom, left&right]
-                or use [top, right, bottom, left]
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
             spacing: float
                 Sets the spacing between items in column.
             clip: bool
@@ -330,15 +331,15 @@ class IPG:
                         *,
                         parent_id: Optional[str]=None,
                         gen_id: Optional[int]=None,
-                        on_press: Optional[Callable[[], None]]=None, 
-                        on_release: Optional[Callable[[], None]]=None, 
-                        on_right_press: Optional[Callable[[], None]]=None, 
-                        on_right_release: Optional[Callable[[], None]]=None, 
-                        on_middle_press: Optional[Callable[[], None]]=None, 
-                        on_middle_release: Optional[Callable[[], None]]=None,
-                        on_enter: Optional[Callable[[], None]]=None,
-                        on_move: Optional[Callable[[], None]]=None,
-                        on_exit: Optional[Callable[[], None]]=None,  
+                        on_press: Optional[Callable]=None, 
+                        on_release: Optional[Callable]=None, 
+                        on_right_press: Optional[Callable]=None, 
+                        on_right_release: Optional[Callable]=None, 
+                        on_middle_press: Optional[Callable]=None, 
+                        on_middle_release: Optional[Callable]=None,
+                        on_enter: Optional[Callable]=None,
+                        on_move: Optional[Callable]=None,
+                        on_exit: Optional[Callable]=None,  
                         show: bool=True,  
                         user_data: Optional[any]=None,
                       ) -> int:
@@ -352,10 +353,15 @@ class IPG:
 
         Parameters
         ----------
+            window_id: str
+
+            window_id: str
+                Id of the window to place container in.
+            container_id: str
+                The id of the container.
             parent_id: str
-                Id of another container to place the widget in.
-            image_path: str
-                Path to where the image is.
+                If parent_id == window_id then not required,
+                If another container then required.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
             on_press: Callable
@@ -397,7 +403,7 @@ class IPG:
                 height: Optional[float]=None,
                 width_fill: bool=False,
                 height_fill: bool=False,
-                padding: list=[10.0], 
+                padding: List=[10.0], 
                 spacing: float=20.0,
                 clip: bool=False,
                 show: bool=True,
@@ -424,14 +430,16 @@ class IPG:
             height: float
                 Sets the height of the widget.   
             height_fill: bool
-                Sets the heigth to fill the available space, overrides height.
+                Sets the height to fill the available space, overrides height.
             padding: List[float]
                 Sets the padding for container.
                 use [float] for all sides,
-                use [top&bottom, left&right]
-                use [top, right, bottom, left]
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
             spacing: float
                 Sets the spacing between items in row.
+            clip: bool
+                Whether to clip the content or not.
             show: bool
                 Shows or hides widget.
             
@@ -459,7 +467,7 @@ class IPG:
                         v_bar_margin: float=0.0,
                         v_scroller_width: float=10.0,
                         v_bar_alignment: IpgAlignment=IpgAlignment.Start,
-                        on_scroll: Optional[Callable[[], None]]=None,
+                        on_scroll: Optional[Callable]=None,
                         style_id: Optional[str]=None,
                         user_data: Optional[any]=None,
                         ) -> int:
@@ -482,7 +490,7 @@ class IPG:
             height: float
                 Sets the height of the widget.   
             height_fill: bool
-                Sets the heigth to fill the available space, overrides height.
+                Sets the height to fill the available space, overrides height.
             direction: IpgScrollableDirection
                 Sets the direction of the scrollable, Vertical, Horizontal, Both.
             h_bar_width: float
@@ -648,12 +656,12 @@ class IPG:
                     label: str,
                     *,
                     gen_id: Optional[int]=None,
-                    on_press: Optional[Callable[[], None]]=None,
+                    on_press: Optional[Callable]=None,
                     width: Optional[float]=None,
                     height: Optional[float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False,
-                    padding: list=[5.0],
+                    padding: List=[10.0],
                     clip: bool=False, 
                     style: Optional[str]=None,
                     style_standard: Optional[IpgStyleStandard]=None,
@@ -681,12 +689,12 @@ class IPG:
             height: float
                 Sets the height of the widget.   
             height_fill: bool
-                Sets the heigth to fill the available space, overrides height.
+                Sets the height to fill the available space, overrides height.
             padding: List[float]
                 Sets the padding for widget.
                 use [float] for all sides,
-                use [top&bottom, left&right]
-                use [top, right, bottom, left]
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
             clip: bool
                 Whether to clip the label if width exceeded.
             style: str
@@ -735,6 +743,10 @@ class IPG:
                 Color of the background.
             background_rgba: Optional[list[float, 4]]=None
                 Color of the background in rgba format.
+            background_color_hovered: Optional[IpgColor]=None,
+                Color to use when the mouse hovers.
+            background_rgba_hovered: Optional[list[float, 4]]=None,
+                Color to use when the mouse hovers in rgba format.
             border_color: Optional[IpgColor]=None
                 Color used for the border.
             border_rgba: list[float; 4]=None
@@ -768,7 +780,7 @@ class IPG:
                     gen_id: Optional[int]=None,
                     is_open: bool=True, 
                     close_size: float=0.0, 
-                    on_close: Optional[Callable[[], None]]=None,
+                    on_close: Optional[Callable]=None,
                     width: Optional[float]=None, 
                     height: Optional[float]=None, 
                     max_width: float="inf",
@@ -831,7 +843,7 @@ class IPG:
     def add_checkbox(self,
                     parent_id: str,
                     *,
-                    on_toggle: Optional[Callable[[], None]]=None,
+                    on_toggle: Optional[Callable]=None,
                     is_checked: bool=False,
                     label: Optional[str]=None,
                     gen_id: Optional[int]=None,
@@ -844,7 +856,7 @@ class IPG:
                     text_size: float=16.0,
                     icon_x: bool=False,
                     icon_size: float=25.0,
-                    style: Optional[str]=None,
+                    style_id: Optional[str]=None,
                     style_standard: Optional[IpgStyleStandard]=None,
                     user_data: Optional[Any]=None,
                     show: bool=True,
@@ -884,12 +896,10 @@ class IPG:
                 If true, uses the x versus the checkmark icon.
             icon_size: float
                 Sets the size of either the check or x icon.
-            style: str
+            style_id: str
                 style_id of the add_checkbox_style.
             style_standard: class
                 IpgStyleStandard: Primary, Success, Danger, Text(not valid)
-            style_border: str
-                style_id of the add_styling_border, radius, width.
             user_data: any 
                 Any data in any form needed by user to be passed through as a callback. 
             show: bool
@@ -907,7 +917,9 @@ class IPG:
                             background_color: Optional[IpgColor]=None,
                             background_rgba: Optional[list]=None,
                             accent_color: Optional[IpgColor]=None,
+                            accent_rgba: Optional[list[float, 4]]=None,
                             accent_color_hovered: Optional[IpgColor]=None,
+                            accent_rgba_hovered: Optional[list[float, 4]]=None,
                             border_color: Optional[IpgColor]=None, 
                             border_rgba: Optional[list]=None,
                             border_radius: list=[0.0], 
@@ -940,7 +952,7 @@ class IPG:
                 The color of the border in rgba format used as state above.
             border_radius: list
                 The radius of the 4 corners, [float]=all corners, 
-                [floate;4] top-left, top-right, bottom-right, bottom-left.
+                [float, 4] top-left, top-right, bottom-right, bottom-left.
             border_width: float
                 The border width.
             text_color: Optional[IpgColor]=None
@@ -991,8 +1003,8 @@ class IPG:
     #         padding: List[float]
     #             Sets the padding for the widget.
     #             use [float] for all sides,
-    #             use [top&bottom, left&right]
-    #             use [top, right, bottom, left]
+    #             use [float, float] for [top&bottom, left&right]
+    #             use [float, float, float, float] for [top, right, bottom, left]
     #         corner_radius: float
     #             Sets the roundness of the corners of the button.
     #         style: IpgStyleStandard
@@ -1015,11 +1027,10 @@ class IPG:
                         gen_id: Optional[int]=None,
                         size_factor: float=1.0,
                         padding: list=[5.0],
-                        on_submit: Optional[Callable[[], None]]=None,
+                        on_submit: Optional[Callable]=None,
                         user_data: Optional[Any]=None,
                         show=False,
-                        button_style_standard=None,
-                        buton_style_id=None,
+                        button_style_standard,
                         )  -> int:
         
         """
@@ -1038,18 +1049,16 @@ class IPG:
             padding: List[float]
                 The padding around the calendar.
                 use [float] for all sides,
-                use [top&bottom, left&right]
-                use [top, right, bottom, left]
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
             on_submit: Callable
                 Callback function selected date is submitted.
             show: bool
                 To show the widget or not.
             user_data: any
                 Any data that might be needed in the callback function.
-            button_style_standard: Optional[IpgStyle_standard]=None
+            button_style_standard: IpgStyle_standard
                 One of the standard button styles for the starting button.
-            button_style_id: Optional[str]=None
-                The style id of ipg.add_button_style()
 
         Returns
         -------
@@ -1062,15 +1071,15 @@ class IPG:
                     image_path: str,
                     *,
                     gen_id: int=None, 
-                    on_press: Optional[Callable[[], None]]=None, 
-                    on_release: Optional[Callable[[], None]]=None, 
-                    on_right_press: Optional[Callable[[], None]]=None, 
-                    on_right_release: Optional[Callable[[], None]]=None, 
-                    on_middle_press: Optional[Callable[[], None]]=None, 
-                    on_middle_release: Optional[Callable[[], None]]=None,
-                    on_enter: Optional[Callable[[], None]]=None,
-                    on_move: Optional[Callable[[], None]]=None,
-                    on_exit: Optional[Callable[[], None]]=None, 
+                    on_press: Optional[Callable]=None, 
+                    on_release: Optional[Callable]=None, 
+                    on_right_press: Optional[Callable]=None, 
+                    on_right_release: Optional[Callable]=None, 
+                    on_middle_press: Optional[Callable]=None, 
+                    on_middle_release: Optional[Callable]=None,
+                    on_enter: Optional[Callable]=None,
+                    on_move: Optional[Callable]=None,
+                    on_exit: Optional[Callable]=None, 
                     width: Optional[float]=None,
                     height: Optional[float]=None,
                     width_fill: bool=False,
@@ -1119,7 +1128,7 @@ class IPG:
             height: float
                 Sets the height of the widget.   
             height_fill: bool
-                Sets the heigth to fill the available space, overrides height.
+                Sets the height to fill the available space, overrides height.
             content_fit: IpgImageContentFit
                 Contain - The image will be scaled (preserving aspect ratio) so that it just fits within the window.
                 Cover - Scale the image to cover all of the bounding box, cropping if needed.
@@ -1127,10 +1136,10 @@ class IPG:
                 IpgNone - Don't resize or scale the image at all.  This is best for when you've sized the image yourself.
                 ScaleDown - Scale the image down if it's too big for the space, but never scale it up.
             filter_method: IpgImageMethodFilter
-                Linear - Bilinear interpolation image filtering strategy.
+                Linear - Bi-linear interpolation image filtering strategy.
                 Nearest - Nearest neighbor image filtering strategy.
             rotation: IpgImageRotation
-                Floating - When image is roated, it floats above the container, not distoring it.
+                Floating - When image is rotated, it floats above the container, not distorting it.
                 Solid - When the image is rotated, the container resizes to fit.
             rotation_radians: float
                 Amount to rotate, 180 degrees = 3.14159 radians.
@@ -1149,15 +1158,15 @@ class IPG:
 
     def add_menu(self, 
                 parent_id: str,  
-                items: dict[str, list[str]],
+                items: OrderedDict[str, list[str]],
                 bar_widths: list[float],
                 item_widths: list[float],  
                 *,
-                on_select: Optional[Callable[[], None]]=None,
+                on_select: Optional[Callable]=None,
                 bar_spacing: Optional[float]=None,
                 bar_padding: Optional[list[float] | list[float, 4]]=None,
                 bar_height: Optional[float]=None,
-                bar_check_bounds_width=None,
+                bar_check_bounds_width: Optional[float]=None,
                 item_spacings: Optional[list[float]]=None,
                 item_offsets: Optional[list[float]]=None,
                 menu_bar_style: Optional[str]=None,
@@ -1165,13 +1174,13 @@ class IPG:
                 button_bar_style_all: Optional[tuple]=None,
                 button_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None,
                 checkbox_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None,
+                toggler_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None,
                 circle_item_style_all: Optional[str]=None,
                 dot_item_style_all: Optional[str]=None,
                 label_item_style_all: Optional[str]=None,
                 line_item_style_all: Optional[str]=None,
                 text_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None,
-                toggler_item_style_all:Optional[tuple[IpgStyleStandard, str]]=None,
-                item_styles: Optional[list[tuple[int, int, IpgMenuType, IpgStyleStandard]]]=None, 
+                item_styles: Optional[list[tuple[int, int, IpgMenuType, IpgStyleStandard]]]=None,
                 gen_id: Optional[int]=None,
                 user_data: Optional[Any]=None,
                 ) -> int:
@@ -1184,12 +1193,30 @@ class IPG:
                 Id of another container to place the widget in.
             items: OrderedDict[str, list[str]]
                 Sets the menu items with the key being the bar item and values the menu items.
+            bar_widths: list[float]
+                Widths of the bars.
             item_widths: list[float]
                 The widths of the bar items.
             item_spacings: list[float]
                 The space between labels
+            item_offsets: Optional[list[float]]=None
+                Offsets from the bar of the dropdown items.
+            menu_bar_style: Optional[str]=None
+                Style_id of the menu bars.
+            menu_style: Optional[str]=None
+                menu_style id.
+            button_bar_style_all: Optional[tuple]=None
+                Button style id from the add_button_style() method.
             on_select: Callable
-                The cllback for when the menu item is selected.
+                The callback for when the menu item is selected.
+            bar_spacing: Optional[float]=None
+                Spacing betweens bars.
+            bar_padding: Optional[list[float] | list[float, 4]]=None
+                Padding between bars.
+            bar_height: Optional[float]=None
+                Height of bars.
+            bar_check_bounds_width: Optional[float]=None
+                Widths of the dropdowns.
             bar_style_all: IpgStandardStyle or style_id
                 Styles all of the menu bar items.
                 if using custom style_id, use add_menu_bar_style()
@@ -1199,24 +1226,25 @@ class IPG:
             checkbox_item_style_all: IpgStandardStyle or style_id
                 Styles all of the checkboxes used in the menu items, if added.
                 if using custom style_id, use the add_checkbox_style()
-            circle_item_style_all: tyle_id
-                Styles all of the circles used in the menu items, if added.
+            toggler_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None
+                Style all of the toggler used in the menu items.
+            circle_item_style_all: style_id
+                Styles all the circles used in the menu items, if added.
                 if using custom style_id, use the add_menu_separator_style()
             dot_item_style_all: style_id
-                Styles all of the dotted line separators used in the menu items, if added.
+                Styles all the dotted line separators used in the menu items, if added.
                 if using custom style_id, use the add_menu_separator_style()
             label_item_style_all: style_id
-                Styles all of the label separators used in the menu items, if added.
+                Styles all the label separators used in the menu items, if added.
                 if using custom style_id, use the add_menu_separator_style()
             line_item_style_all: style_id
-                Styles all of the line separators used in the menu items, if added.
+                Styles all the line separators used in the menu items, if added.
                 if using custom style_id, use the add_menu_separator_style()
             text_item_style_all: IpgStandardStyle or style_id
-                Styles all of the text used in the menu.
+                Styles all the text used in the menu.
                 if using custom style_id, use the add_menu_text_style()
-            toggler_item_style_all: IpgStandardStyle or style_id
-                Styles all of the togglers used in the menu items, if added.
-                if using custom style_id, use the add_toggler_style()
+            item_styles: Optional[list[tuple[int, int, IpgMenuType, IpgStyleStandard]]]=None
+                Styling individual items, row, col, type, or standard style.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
             user_data: any
@@ -1246,6 +1274,40 @@ class IPG:
                        ) -> int:
         """
         Adds style in the menu itself, not the menu items or bar items
+
+        Parameters
+        ----------
+            style_id: str,
+                Style id use in add_menu(menu_bar_style=style_id)
+            base_color: Optional[IpgColor]=None,
+                Base color of the menu bar
+            base_rgba: Optional[list[float, 4]]=None,
+                Base color in rgba format.
+            border_color: Optional[IpgColor]=None,
+                Border color.
+            border_rgba: Optional[list[float, 4]]=None,
+                Border color in rgba format.
+            border_radius: Optional[list[float] | list[float, 4]]=None,
+                border radius [all] and [top-left, top-right, bottom-right, bottom-left
+            border_width: Optional[float]=None,
+                Border width
+            shadow_color: Optional[IpgColor]=None,
+                Shadow color.
+            shadow_rgba: Optional[list[float, 4]]=None,
+                Shadow color in rgba format.
+            shadow_offset_x: Optional[float]=None,
+                Shadow offset in x direction.
+            shadow_offset_y:Optional[float]=None,
+                Shadow offset in y direction.
+            shadow_blur_radius: Optional[float]=None,
+                Radius of the blur.
+            gen_id: Optional[int]=None,
+                The only allowable entry for this id is that generated by ipg.generate_id().
+
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_menu_style(self,
@@ -1272,6 +1334,53 @@ class IPG:
                        ) -> int:
         """
         Adds style in the menu itself, not the menu items or bar items
+
+        Parameters
+        ----------
+
+            style_id: str
+                Style id used in add_menu(menu_style=style_id
+            base_color: Optional[IpgColor]=None
+                Base color of menu.
+            base_rgba: Optional[list[float, 4]]=None
+                Base color of menu in rgba format.
+            border_color: Optional[IpgColor]=None
+                Border color of menu.
+            border_rgba: Optional[list[float, 4]]=None
+                Border color of menu in rgba format.
+            border_radius: Optional[list[float] | list[float, 4]]=None
+                Radius of border, [all] or [top-left, top-right, bottom-right, bottom-left].
+            border_width: Optional[float]=None
+                Width of border.
+            shadow_color: Optional[IpgColor]=None
+                Color of the shadow.
+            shadow_rgba: Optional[list[float, 4]]=None
+                Color of the shadow in rgba format.
+            shadow_offset_x: Optional[float]=None
+                Offset of the show in the x direction.
+            shadow_offset_y:Optional[float]=None
+                Offset of the show in the y direction.
+            shadow_blur_radius: Optional[float]=None
+                The radius of the blur.
+            path_base_color: Optional[IpgColor]=None
+                The base color of the dropdown list.
+            path_base_rgba: Optional[list[float, 4]]=None
+                The base color of the dropdown list in rgba format.
+            path_border_color: Optional[IpgColor]=None
+                The border color of the dropdown list.
+            path_border_rgba: Optional[list[float, 4]]=None
+                The border color of the dropdown list in rgba format.
+            path_border_radius: Optional[list[float] | list[float, 4]]=None
+                The radius of the border of the dropdown list, [all] or [top-left, top-right, bottom-right, bottom-left].
+            path_border_width: Optional[float]=None
+                The width of the border of the dropdown list.
+            gen_id: Optional[int]=None
+                The only allowable entry for this id is that generated by ipg.generate_id().
+
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
         """
 
     def add_menu_separator_style(self,
@@ -1282,7 +1391,7 @@ class IPG:
                                 height_fill: bool=False,
                                 width: Optional[float]=None,
                                 width_fill: bool=True,
-                                quad_ratios: Optional[list[float]]=[0.98, 0.2],
+                                quad_ratios: Optional[list[float]]=None,
                                 separator_color: Optional[IpgColor]=None,
                                 separator_rgba: Optional[list[float]]=None,
                                 separator_border_color: Optional[IpgColor]=None,
@@ -1306,22 +1415,53 @@ class IPG:
                                 gen_id: Optional[int]=None,
                                 ) -> int:
         """
-        
+        The styling of the separators, if used, in the menu.
+
+        Parameters
+        ----------
+            style_id: str
+            separator_type: IpgMenuSeparatorType
+            height: float=20.0
+            height_fill: bool=False
+            width: Optional[float]=None
+            width_fill: bool=True
+            quad_ratios: Optional[list[float]]=None
+            separator_color: Optional[IpgColor]=None
+            separator_rgba: Optional[list[float]]=None
+            separator_border_color: Optional[IpgColor]=None
+            separator_border_rgba: Optional[list[float]]=None
+            separator_border_width: Optional[float]=None
+            separator_border_radius: Optional[list[float]]=None
+            separator_shadow_color: Optional[IpgColor]=None
+            separator_shadow_rgba: Optional[list[float]]=None
+            separator_shadow_offset: Optional[list[float]]=None
+            separator_shadow_blur_radius: Optional[float]=None
+            background_color: Optional[IpgColor]=None
+            background_rgba: Optional[list[float]]=None
+            background_border_color: Optional[IpgColor]=None
+            background_border_rgba: Optional[list[float]]=None
+            background_border_width: Optional[float]=None
+            background_border_radius: Optional[list[float]]=None
+            background_shadow_color: Optional[IpgColor]=None
+            background_shadow_rgba: Optional[list[float]]=None
+            background_shadow_offset: Optional[list[float]]=None
+            background_shadow_blur_radius: Optional[float]=None
+            gen_id: Optional[int]=None
         """
 
     def add_pick_list(self,
                         parent_id: str,
-                        options: list=[str],
+                        options: List=[str],
                         *,
                         gen_id: Optional[int]=None,
-                        on_select: Optional[Callable[[], None]]=None,
+                        on_select: Optional[Callable]=None,
                         width: Optional[float]=None,
                         width_fill: bool=False,
-                        padding: list=[5.0],
+                        padding: List=[5.0],
                         placeholder: Optional[str]=None,
                         selected: Optional[str]=None,
                         text_size: float=15.0,
-                        text_line_height: float=1.2,
+                        text_line_height: float="default",
                         text_shaping: str="basic",
                         handle: Optional[IpgPickListHandle]=None,
                         arrow_size: Optional[float]=None,
@@ -1353,8 +1493,8 @@ class IPG:
             padding: List[float]
                 Sets the padding for widget.
                 use [float] for all sides,
-                or use [top&bottom, left&right]
-                or use [top, right, bottom, left]
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
             placeholder: str
                 Sets the dimmed text in the box for user info.
             selected: str
@@ -1366,7 +1506,7 @@ class IPG:
             text_shaping: str
                 Sets the shape of the text.
             handle: IpgPickListHandle
-                What type of indicatpr to use for the dropdown list, arrrow, ...
+                What type of indicator to use for the dropdown list, arrow, ...
             arrow_size: float,
                 Size of the arrow indicator, default 16.0
             dynamic_closed: IpgArrows,
@@ -1484,6 +1624,8 @@ class IPG:
                 If set, the widget fills the available space.
             height: float
                 Sets the height of the bar.
+            style_standard: Optional[IpgStyleStandard]=None
+                A standard style for the widget.
             style: str
                 style_id of the add_progress_bar_style.
             user_data: any
@@ -1515,6 +1657,8 @@ class IPG:
 
         Parameters
         ----------
+            style_id: str
+                The style id used in add_progress_bar(style_id=style_id)
             background_color: Optional[IpgColor]=None
                 Color of the background.
             background_rgba: Optional[list[float, 4]]=None
@@ -1528,7 +1672,7 @@ class IPG:
             border_rgba: Optional[list[float, 4]]=None
                 Color of the border in rgba format.
             border_radius: Optional[list[float, 4]]=None
-                The radius of the corners, [one value]=all cormers, [4 values]=[top-left, top-right, bottom-right, bottom-left]
+                The radius of the corners, [one value] or [top-left, top-right, bottom-right, bottom-left]
             border_width: Optional[float]=None
                 Width of the border
             gen_id: Optional[int]=None
@@ -1537,19 +1681,17 @@ class IPG:
 
     def add_radio(self,
                     parent_id: str,
-                    labels: list=[str],
+                    labels: List=[str],
                     *,
                     gen_id: Optional[int]=None,
                     direction: IpgRadioDirection=IpgRadioDirection.Vertical,
                     spacing: float=10.0,
-                    padding: list=[10.0],
+                    padding: List=[10.0],
                     width: Optional[float]=None,
                     width_fill: bool=False,
-                    on_select: Optional[Callable[[], None]]=None,
+                    on_select: Optional[Callable]=None,
                     selected_index: Optional[int]=None,
                     size: float=20.0,
-                    style_color: Optional[str]=None,
-                    style_border: Optional[str]=None,
                     text_spacing: float=15.0,
                     text_size: float=16.0,
                     text_line_height_pixels: Optional[int],
@@ -1557,6 +1699,7 @@ class IPG:
                     text_shaping: str="basic",
                     user_data: Union[None, any]=None,
                     show: bool=True,
+                    style_id: Optional[str]=None,
                   ) -> int:
         """
         Adds a radio button to the gui
@@ -1576,8 +1719,8 @@ class IPG:
             padding: List[float]
                 Sets the padding around the radio group..
                 use [float] for all sides,
-                or use [top&bottom, left&right]
-                or use [top, right, bottom, left]
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
             width: float
                 Sets the width of the widget.
             width_fill: bool
@@ -1594,12 +1737,10 @@ class IPG:
                 Shows or hides the widget.
             size: float,
                 Radius of the round radio button.
+            text_spacing: f32
+                Spacing between radio and text label.
             spacing: float
                 Spacing between the radio buttons.
-            style_color: str
-                style_id of the add_styling_color.
-            style_border: str
-                style_id of the add_styling_border.
             text_shaping: str
                 Sets the text shape.
             text_size: float
@@ -1608,6 +1749,8 @@ class IPG:
                 Any data that might be needed in the callback function.
             show: bool
                 Shows or hides the widget.
+            style_id: Optional[str]
+                Style if of add_radio_style(
     
         Returns
         -------
@@ -1639,7 +1782,7 @@ class IPG:
         Parameter
         ---------
             style_id: str,
-                The id of the stle to use in ipg.add_radio.
+                The id of the style to use in ipg.add_radio.
             background_color: Optional[IpgColor]=None,
                 The color of the background of the radio button.
                 Defaults to background transparent.
@@ -1668,7 +1811,7 @@ class IPG:
                 The color of the dot.
                 Defaults to primary.
             dot_color_hovered: Optional[IpgColor]=None,
-                The color of the dot when mouse hoveres.
+                The color of the dot when mouse hovers.
                 Defaults to primary.strong.color.
             dot_rgba_hovered: Optional[list[float, 4]]=None,
                 The color of the dot when the mouse hovers in rgba format.
@@ -1707,7 +1850,7 @@ class IPG:
             width: Optional[float]=None
                 Defines the horizontal length of the dividing line.
             width_fill: bool=True
-                If set, fills the available space for the horizontal length, overides width.
+                If set, fills the available space for the horizontal length, overrides width.
             thickness: int=1
                 The thickness of the rule.
             style: str
@@ -1739,7 +1882,7 @@ class IPG:
             height: Optional[float]=None
                 Defines the vertical length of the dividing line.
             height_fill: bool=True
-                If set, fills the available space for the vertical length, overides height.
+                If set, fills the available space for the vertical length, overrides height.
             thickness: int=1
                 The thickness of the rule.
             style: Optional[str]=None,
@@ -1781,7 +1924,7 @@ class IPG:
             fillmode_padded: Optional[uint2],
                 Fills the rule with the color container padding on each end.
             fillmode_asymmetric_padding: Optional[list[uint2, 2]],
-                Fills the rule with the color asymetrically.
+                Fills the rule with the color asymmetrically.
             gen_id: Optional[int],
                 The only allowable entry for this id is that generated by ipg.generate_id().
     Returns
@@ -1796,15 +1939,15 @@ class IPG:
                             text,
                             *,
                             gen_id: Optional[int]=None, 
-                            on_press: Optional[Callable[[], None]]=None, 
-                            on_release: Optional[Callable[[], None]]=None, 
-                            on_right_press: Optional[Callable[[], None]]=None, 
-                            on_right_release: Optional[Callable[[], None]]=None, 
-                            on_middle_press: Optional[Callable[[], None]]=None, 
-                            on_middle_release: Optional[Callable[[], None]]=None,
-                            on_enter: Optional[Callable[[], None]]=None,
-                            on_move: Optional[Callable[[], None]]=None,
-                            on_exit: Optional[Callable[[], None]]=None, 
+                            on_press: Optional[Callable]=None, 
+                            on_release: Optional[Callable]=None, 
+                            on_right_press: Optional[Callable]=None, 
+                            on_right_release: Optional[Callable]=None, 
+                            on_middle_press: Optional[Callable]=None, 
+                            on_middle_release: Optional[Callable]=None,
+                            on_enter: Optional[Callable]=None,
+                            on_move: Optional[Callable]=None,
+                            on_exit: Optional[Callable]=None, 
                             width: Optional[float]=None,
                             height: Optional[float]=None,
                             width_fill: bool=False,
@@ -1885,8 +2028,8 @@ class IPG:
                    *,
                    gen_id: Optional[int]=None, 
                    show: bool=True, 
-                   on_change: Optional[Callable[[], None]]=None, 
-                   on_release: Optional[Callable[[], None]]=None, 
+                   on_change: Optional[Callable]=None, 
+                   on_release: Optional[Callable]=None, 
                    user_data: Optional[any]=None, 
                    width: float=100.0,
                    width_fill: bool=False,
@@ -1927,7 +2070,7 @@ class IPG:
                 Height of the widget.
             width_fill: bool 
                 Fills the available space horizontally.
-            style: str
+            style_id: str
                 Id from the add_slider_style()
         Returns
         -------
@@ -1962,7 +2105,7 @@ class IPG:
                 The id used in the add_slider style parameter.
             rail_color: Optional[IpgColor]=None
                 The color of the rail.
-            rail_rgba_base: Optional[list[float, 4]]=None
+            rail_rgba: Optional[list[float, 4]]=None
                 The color of the rail in rgba format.
             rail_color_hovered: Optional[IpgColor]=None
                 The color of the rail when mouse hovered.
@@ -1980,17 +2123,10 @@ class IPG:
                 handle width, default=12
             handle_rectangle_border_radius: Optional[list[float]]=None
                 handle rectangle border radius default=1.0
-            handle_color_base: Optional[IpgColor]=None
+            handle_color: Optional[IpgColor]=None
                 The handle color used during mouse hover with IpgColor class.
-            handle_rgba_base: Optional[list[float, 4]]=None
+            handle_rgba: Optional[list[float, 4]]=None
                 The handle color used during mouse hover in rgba format.
-            handle_color_strong: Optional[IpgColor]=None
-                The color used for active and dragged with IpgColor class.
-            handle_rgba_strong: Optional[list[float, 4]]=None
-                The color used for active and dragged in rgba format.
-            handle_strong_factor: Optional[float]=None
-                If strong color not defined, factor used to generate the  
-                the strong color using the base.
             handle_border_width: Optional[float]=None
                 Handle border width, default=0.0
             handle_border_color: Optional[IpgColor]=None
@@ -2044,15 +2180,15 @@ class IPG:
                     svg_path: str,
                     *,
                     gen_id: int=None, 
-                    on_press: Optional[Callable[[], None]]=None, 
-                    on_release: Optional[Callable[[], None]]=None, 
-                    on_right_press: Optional[Callable[[], None]]=None, 
-                    on_right_release: Optional[Callable[[], None]]=None, 
-                    on_middle_press: Optional[Callable[[], None]]=None, 
-                    on_middle_release: Optional[Callable[[], None]]=None,
-                    on_enter: Optional[Callable[[], None]]=None,
-                    on_move: Optional[Callable[[], None]]=None,
-                    on_exit: Optional[Callable[[], None]]=None, 
+                    on_press: Optional[Callable]=None, 
+                    on_release: Optional[Callable]=None, 
+                    on_right_press: Optional[Callable]=None, 
+                    on_right_release: Optional[Callable]=None, 
+                    on_middle_press: Optional[Callable]=None, 
+                    on_middle_release: Optional[Callable]=None,
+                    on_enter: Optional[Callable]=None,
+                    on_move: Optional[Callable]=None,
+                    on_exit: Optional[Callable]=None, 
                     width: Optional[float]=None,
                     height: Optional[float]=None,
                     width_fill: bool=False,
@@ -2071,7 +2207,7 @@ class IPG:
         ----------
             parent_id: str
                 Id of another container to place the widget in.
-            image_path: str
+            svg_path: str
                 Path to where the image is.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
@@ -2100,7 +2236,7 @@ class IPG:
             height: float
                 Sets the height of the widget.   
             height_fill: bool
-                Sets the heigth to fill the available space, overrides height.
+                Sets the height to fill the available space, overrides height.
             content_fit: IpgImageContentFit
                 Contain - The image will be scaled (preserving aspect ratio) so that it just fits within the window.
                 Cover - Scale the image to cover all of the bounding box, cropping if needed.
@@ -2108,7 +2244,7 @@ class IPG:
                 IpgNone - Don't resize or scale the image at all.  This is best for when you've sized the image yourself.
                 ScaleDown - Scale the image down if it's too big for the space, but never scale it up.
             rotation: IpgImageRotation
-                Floating - When image is roated, it floats above the container, not distoring it.
+                Floating - When image is rotated, it floats above the container, not distorting it.
                 Solid - When the image is rotated, the container resizes to fit.
             rotation_radians: float
                 Amount to rotate, 180 degrees = 3.14159 radians.
@@ -2138,19 +2274,13 @@ class IPG:
                     row_highlight: Optional[IpgTableRowHighLight]=None,
                     highlight_amount: float=0.15,
                     column_widths: list=[50.0],
-                    button_fill_columns: Optional[list[int]]=None,
-                    checkbox_fill_columns: Optional[list[int]]=None,
-                    toggler_fill_columns: Optional[list[int]]=None,
-                    button_fill_style_id: Optional[str]=None,
-                    checkbox_fill_style_id: Optional[str]=None,
-                    toggler_fill_style_id: Optional[str]=None,
-                    mixed_widgets_columns: Optional[dict[int, list[IpgTableWidget]]]=None,
-                    mixed_widgets_columns_style_ids: Optional[int: list[str]]=None,
+                    button_style: Optional[Dict[int: IpgStyleStandard]]=None,
+                    widgets_columns: Optional[Dict[int: list[IpgTableWidget]]]=None,
                     gen_id: Optional[int]=None,
-                    on_button: Optional[Callable[[], None]]=None,
-                    on_checkbox: Optional[Callable[[], None]]=None,
-                    on_toggler: Optional[Callable[[], None]]=None,
-                    on_scroll: Optional[Callable[[], None]]=None,
+                    on_button: Optional[Callable]=None,
+                    on_checkbox: Optional[Callable]=None,
+                    on_modal: Optional[Callable]=None,
+                    on_toggler: Optional[Callable]=None,
                     show: bool=True, 
                     user_data: Optional[Any]=None,
                   ) -> int:
@@ -2162,7 +2292,7 @@ class IPG:
         ----------
             window_id: str
                 Id of the window to place container in.
-            container_id: str
+            table_id: str
                 The id of the container.
             title: str
                 Title used for table.
@@ -2178,38 +2308,24 @@ class IPG:
                 If parent_id == window_id then not required, 
                 If another container then required.
             row_highlight: TableRowHighLight
-                Highlights alternate row by either drkening or lightening them up.
-            highligh_amount: float
+                Highlights alternate row by either darkening or lightening them up.
+            highlight_amount: float
                 Amount of highlighting to use if row_highlight is set.
             column_widths: List[float]
                 A list of value for the column widths, if only one value is supplied then it will 
                 be the default for all columns.
-            button_fill_columns: Optional[list[int]]=None
-                List of column indexes to fill with a button.
-            checkbox_fill_columns: Optional[list[int]]=None
-                List of column indexes to fill with a checkbox.
-            toggler_fill_columns: Optional[list[int]]=None
-                List of column indexs to fill with a toggler.
-            button_fill_style_id: Optional[str]=None
-                Button style_id for the button fills.
-            checkbox_fill_style_id: Optional[str]=None
-                Checkbox style_id for the checkbox fills.
-            toggler_fill_style_id: Optional[str]=None
-                Toggler style_id for the toggler fills.
-            mixed_widgets_columns: Optional[Dict[int, list[IpgTableWidget]]]=None
-                A dictionary key=column index, value=list of the above types of widgets to be used.  The list length needs to match the data length.
-            mixed_widgets_columns_style_ids: Optional[Dict[int, List[str]]]=None
-                The style ids of the mized widgets, key = column index, values=list of style_ids
+            widgets_columns: dict{int, List[IpgTableWidget]}
+                The column where the values are converted to text and used as labels for the widget.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
             on_button: Callable
                 Callback when a button is pressed.
             on_checkbox: Callable
                 Callback when a checkbox is toggled.
+            on_modal: Callable
+                Callback when a modal is pressed.
             on_toggler: Callable
                 Callback when a toggler is toggled.
-            on_scroll: Callable
-                Callback when a scroller is scrolled.
             user_data: any
                 Any data that might be needed in the callback function.
             show:: bool
@@ -2231,9 +2347,9 @@ class IPG:
                  height: Optional[float]=None,
                  width_fill: bool=False,
                  height_fill: bool=False,
-                 horizontal_alignment: IpgHorizontalAlignment=IpgHorizontalAlignment.Center,
-                 vertical_alignment: IpgVerticalAlignment=IpgVerticalAlignment.Center,
-                 line_height: float=1.3,
+                 horizontal_alignment: Optional[IpgHorizontalAlignment]=None,
+                 vertical_alignment: Optional[IpgVerticalAlignment]=None,
+                 line_height: str="default",
                  size: float=16.0,
                  shaping: str="basic",
                  show: bool=True,
@@ -2256,11 +2372,11 @@ class IPG:
             height: float
                 Sets the height of the widget.   
             height_fill: bool
-                Sets the heigth to fill the available space, overrides height.
-            horizontal_alignment: IpgHorizontalAlignment
-                Aligns text horizontally "Left", "Center"(default), or "Right", width needs to be larger than text.
-            vertical_alignment: IpgVerticalAlignment
-                Aligns text vertically "Left", "Center"(default), or "Right", height needs to be larger than text.
+                Sets the height to fill the available space, overrides height.
+            horizontal_alignment: str
+                Aligns text horizontally "Left", "Center", or "Right", width needs to be larger than text.
+            vertical_alignment: str
+                Aligns text vertically "Left", "Center", or "Right", height needs to be larger than text.
             line_height: float
                 Sets the line height of the text.
             size: float
@@ -2305,13 +2421,13 @@ class IPG:
                         placeholder: str,
                         *,
                         gen_id: Optional[int]=None,
-                        on_submit: Optional[Callable[[], None]]=None,
-                        on_input: Optional[Callable[[], None]]=None,
-                        on_paste: Optional[Callable[[], None]]=None,
+                        on_submit: Optional[Callable]=None,
+                        on_input: Optional[Callable]=None,
+                        on_paste: Optional[Callable]=None,
                         width: Optional[float]=None,
                         width_fill: bool=False,
-                        padding: list=[0.0],
-                        size: Optional[float]=16.0,
+                        padding: list[float]=[10.0],
+                        size: Optional[float]=20.0,
                         line_height_pixels: Optional[int],
                         line_height_relative: Optional[float],
                         user_data: Optional[any]=None,
@@ -2330,7 +2446,7 @@ class IPG:
                 id of another container to place the widget in.
             placeholder: str
                 text used for instructions in the input box.
-           gen_id: int
+            gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
             on_submit: Callable
                 Calls a function when the enter key is pressed, submitting the text.
@@ -2345,8 +2461,8 @@ class IPG:
             padding: List[float]
                 Sets the padding for widget.
                 use [float] for all sides,
-                or use [top&bottom, left&right]
-                or use [top, right, bottom, left]
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
             size: float
                 Sets the text size.
             line_height_pixels: Optional[int],
@@ -2433,23 +2549,29 @@ class IPG:
                     The color of the text selected by dragging the cursor over, in rgba format.
                 gen_id: Optional[int]=None
                     The only allowable entry for this id is that generated by ipg.generate_id().
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
         """
 
     def add_timer(self,
                         parent_id: str,
                         duration_ms: int,
                         *,
-                        on_start: Optional[Callable[[], None]]=None,
-                        on_stop: Optional[Callable[[], None]]=None,
-                        on_tick: Optional[Callable[[], None]]=None,
+                        on_start: Optional[Callable]=None,
+                        on_stop: Optional[Callable]=None,
+                        on_tick: Optional[Callable]=None,
                         start_label: str="Start Timer",
                         stop_label: str="Stop Timer",
                         width: Optional[float]=None,
                         height: Optional[float]=None,
                         width_fill: bool=False,
                         height_fill: bool=False,
-                        padding: list=[10.0],
-                        button_style_standard_id: Optional[str]=None,
+                        padding: list[float]=[10.0],
+                        button_style_id: Optional[str],
+                        button_style_standard: Optional[IpgStyleStandard]=None,
+                        button_style_arrow: Optional[IpgButtonArrow]=None,
                         user_data: any=None,
                         ) -> int:
         """
@@ -2478,29 +2600,25 @@ class IPG:
         width_fill: bool
             Sets the width to fill the container, overrides width.
         height_fill: bool
-            Sets the heigth to fill the container, overrides height.
+            Sets the height to fill the container, overrides height.
         padding: list
             Sets the padding for widget.
-            use [float] for all sides,
-            use [top&bottom, left&right]
-            use [top, right, bottom, left]
-        button_style_standard_id: Optional[str]=None
-            The style id of the button
-                style_id of the add_background_style.
-        style_border: str
-            style_id of the add_border_style.
-        style_shadow: str
-            style_id of the add_shadow_style.
-        style_text_color: str
-            style_id of the add_text_color_style.
-        arrow_style: Optional[IpgButtonArrows]
-            Determines if the button is an arrow.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+        button_style_id: Option<String>
+            Id of add_button_style
+        button_style_standard: Option<IpgStyleStandard>
+            One of the class IpgStyleStandard items.
+        button_style_arrow: Option<IpgButtonArrow>
+            One of the class of the IpgButtonArrow
         user_data: any
             Any data the user may need during a callback.
 
-        Return:
-        ------- 
-            int: internal id of widget and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
         """
 
 
@@ -2509,7 +2627,7 @@ class IPG:
                     *,
                     label: Optional[str]=None,
                     gen_id: Optional[str]=None,
-                    toggled: Optional[Callable[[], None]]=None,
+                    toggled: Optional[Callable]=None,
                     width: Optional[float]=None,
                     width_fill: bool=False,
                     size: float=20.0,
@@ -2555,9 +2673,10 @@ class IPG:
             style: str
                 style_id of the add_toggler_style().
             
-        Return:
-        ------- 
-            int: internal id of widget and can be used by user if equated.
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
         """
     def add_toggler_style(self,
                             style_id: str,
@@ -2596,7 +2715,10 @@ class IPG:
             foreground_border_color: Optional[IpgColor]
             foreground_border_rgba: Optional[list[float, 4]]
             foreground_border_width: Optional[IpgColor]
-
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
         """
         
 
@@ -2604,8 +2726,8 @@ class IPG:
     def add_event_keyboard(self,
                             enabled: bool,
                             *,
-                            on_key_press: Optional[Callable[[], None]]=None,
-                            on_key_release: Optional[Callable[[], None]]=None,
+                            on_key_press: Optional[Callable]=None,
+                            on_key_release: Optional[Callable]=None,
                             user_data: Optional[any]=None, 
                            ) -> int:
         """
@@ -2631,14 +2753,14 @@ class IPG:
     def add_event_mouse(self,
                             enabled: bool,
                             *,
-                            on_move: Optional[Callable[[], None]]=None,
-                            on_left_press: Optional[Callable[[], None]]=None,
-                            on_left_release: Optional[Callable[[], None]]=None,
-                            on_middle_press: Optional[Callable[[], None]]=None,
-                            on_middle_release: Optional[Callable[[], None]]=None,
-                            on_right_press: Optional[Callable[[], None]]=None,
-                            on_right_release: Optional[Callable[[], None]]=None,
-                            on_middle_scroll: Optional[Callable[[], None]]=None,
+                            on_move: Optional[Callable]=None,
+                            on_left_press: Optional[Callable]=None,
+                            on_left_release: Optional[Callable]=None,
+                            on_middle_press: Optional[Callable]=None,
+                            on_middle_release: Optional[Callable]=None,
+                            on_right_press: Optional[Callable]=None,
+                            on_right_release: Optional[Callable]=None,
+                            on_middle_scroll: Optional[Callable]=None,
                             user_data: Optional[Any]=None,
                           ) ->int:
         """
@@ -2676,10 +2798,10 @@ class IPG:
     def add_event_window(self,
                          enabled: bool,
                          *,
-                        on_open: Optional[Callable[[], None]]=None,
-                        on_close: Optional[Callable[[], None]]=None,
-                        on_moved: Optional[Callable[[], None]]=None,
-                        on_resized: Optional[Callable[[], None]]=None,
+                        on_open: Optional[Callable]=None,
+                        on_close: Optional[Callable]=None,
+                        on_moved: Optional[Callable]=None,
+                        on_resized: Optional[Callable]=None,
                         user_data: Optional[Any]=None,
                          ) -> int:
         """
@@ -2721,7 +2843,7 @@ class IPG:
             base_rgba: Optional[list[float, 4]],
                 The color in rgba format
 
-        Return:
+        Returns:
         -------
             list of 3 lists of rgba colors (strong, weak, text)
         """
@@ -2746,7 +2868,7 @@ class IPG:
 
     def update_item(self, 
                     wid: int, 
-                    param: any, 
+                    param: str, 
                     value: any,
                     ):
         """
@@ -2758,34 +2880,10 @@ class IPG:
         wid: int
             The widget id of the widget to be updated.
         param: class property
-            Example: a button has a style class IpgButtonParam with properties of Primary, ...
+            Example: a button has a style class IpgButtonParams with properties of Primary, ...
         value: any 
             Any value which matches that used by the widget.  For example, to set a checkbox to true,
-            param=IpgCheckboxParam.IsChecked, value=True  
-
-        Returns
-        -------
-        None
-        """
-
-    def update_table(self, 
-                    table_id: int, 
-                    param: IpgTableParam, 
-                    value: any,
-                    value_vec: any,
-                    ):
-        """
-        Update a widget by supplying the widget id, wid, the parameter to update, 
-        a class property value, and a value based on the type of value used by the widget.
-        
-        Parameters
-        ----------
-        wid: int
-            The id of the table to be updated.
-        param: class property
-            The class IpgTableParam, I.e. IpgTableParam.Width
-        value: any 
-            The value that match the tyle in IpgTable, i.e. IpgTableParam.Width, value=200.0
+            param=IpgCheckboxParams.IsChecked, value=True  
 
         Returns
         -------
@@ -3125,7 +3223,6 @@ class IpgPickListParam:
     Options=0
     Placeholder=0
     Padding=0
-    Selected=0
     Show=0
     StyleBackground=0
     StyleBorder=0
@@ -3272,21 +3369,10 @@ class IpgTableRowHighLight:
     Lighter=0
 
 
-class IpgTableParam:
-    Title=0
-    Data=0
-    Width=0
-    Height=0
-    RowHighlight=0
-    HighlightAmount=0
-    ColumnWidths=0
-    ModalShow=0
-    Show=0
-
-
 class IpgTableWidget:
     Button=0
     Checkbox=0
+    Modal=0
     Toggler=0
 
 

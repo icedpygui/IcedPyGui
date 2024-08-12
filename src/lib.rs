@@ -1007,7 +1007,7 @@ impl IPG {
                         clip: bool,
                         style_id: Option<String>,
                         style_standard: Option<IpgStyleStandard>,
-                        style_arrow: Option<PyObject>,
+                        style_arrow: Option<IpgButtonArrow>,
                         user_data: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
@@ -3084,7 +3084,7 @@ impl IPG {
                         padding: Vec<f64>,
                         button_style_id: Option<String>,
                         button_style_standard: Option<IpgStyleStandard>,
-                        button_style_arrow: Option<PyObject>,
+                        button_style_arrow: Option<IpgButtonArrow>,
                         user_data: Option<PyObject>,
                         gen_id: Option<usize>,
                     ) -> PyResult<usize>
