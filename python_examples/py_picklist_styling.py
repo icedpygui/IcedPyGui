@@ -66,7 +66,7 @@ pl_id = ipg.add_pick_list(parent_id="row3", options=options,
                             on_select=picked_item
                             )
 
-ipg.add_text(parent_id="row3", content="Arrow Style with rigth and down arrow sized to 20")
+ipg.add_text(parent_id="row3", content="Arrow Style with right and down arrow sized to 20")
 
 # add another row for picklist
 ipg.add_row("main", "row4", parent_id="col")

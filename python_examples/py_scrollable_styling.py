@@ -5,7 +5,7 @@ from icedpygui import IpgAlignment
 ipg = IPG()
 
 
-ipg.add_window("main", "Scollable - Styling",
+ipg.add_window("main", "Scrollable - Styling",
                             600, 600,
                             pos_centered=True)
 
@@ -30,7 +30,7 @@ ipg.add_scrollable_style("color",
                         text_color=IpgColor.RED)
 
 # Add the scrollable restricting the width so it can center and height 
-# wich is less than the length of the data in the column for scrolling.
+# which is less than the length of the data in the column for scrolling.
 scroll_id_1 = ipg.add_scrollable(window_id="main", 
                                  container_id="scroll",
                                  parent_id="cont",

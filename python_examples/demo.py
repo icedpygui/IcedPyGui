@@ -23,7 +23,7 @@ import random
     that has to be strictly defined in rust like (int, string) or (string, int).
     The user data is special because it is only passed through to rust and 
     back out as a PyObject or PyAny.  Therefore any python data can be used
-    since it is never extracted into a rusr type.     
+    since it is never extracted into a rust type.     
     
     A few simple rules need to be followed.   
         import IPG as indicated above in this demo.      
@@ -57,7 +57,7 @@ import random
 
     Besides width and height, the Container defaults to centering which
     aligns the item in the center of the Container.  This is very handy
-    for the centering of your Column or Row.  Ohter options are available.
+    for the centering of your Column or Row.  Other options are available.
 
     A Column aligns your widget vertically.  So as you add widgets, they are
     placed top to bottom.  The Column has a spacing parameter but you can add
@@ -71,7 +71,7 @@ import random
         1. Shrink (default): container shrinks to the size of the largest widget. 
         2. Specific value using a float.
         3. Setting the width_fill  or height_fill parameters to True which 
-            overides the float, fills available space container its in.
+            overrides the float, fills available space container its in.
 
     The interaction of the above setting can be a bit difficult to figure out
     sometimes.  However, by using the debug=True option in the window parameters, 
@@ -357,7 +357,7 @@ class Demo:
 
         self.text_input_id = self.ipg.add_text(self.r_col_1, "Will fill while typing")
 
-        # Only one callback used in this case (two could be used). Determing which callback is based on name.
+        # Only one callback used in this case (two could be used). Determining which callback is based on name.
         # Maybe helpful in some cases where callbacks are similar or there are many.
 
     def text_input_submitted(self, _input_id, data):

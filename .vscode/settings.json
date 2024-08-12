@@ -5,9 +5,12 @@
     "rust-analyzer.showUnlinkedFileNotification": false,
     "rust-analyzer.cargo.features": "all",
     "cSpell.words": [
+        "chkbox",
         "dataclass",
+        "dearpygui",
         "icedpygui",
         "maturin",
+        "picklist",
         "Rizen",
         "staticmethod",
         "venv"

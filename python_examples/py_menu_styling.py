@@ -44,14 +44,14 @@ ipg.add_window("main-light", "Menu",
 # Add a column container to to each window
 # If border is used in the menu and the menu 
 # is aligned next to the window border, a little 
-# bit of padding will neeed to be added to the 
+# bit of padding will need to be added to the 
 # container so that the menu border is not cut off.
 ipg.add_column("main-dark", 
                container_id="col-dark",
                padding=[5.0],
                spacing=125.0,)
 
-# Add a contatiner and text at top for info
+# Add a container and text at top for info
 ipg.add_container("main-light", "cont")
 ipg.add_text(parent_id="cont", content="The window debug flag is set to better show the changes that occur when the sliders are changed and the offsets for the menu items.")
 
@@ -83,7 +83,7 @@ items = OrderedDict({"Menu0": [(None, IpgMenuType.Dot),
                                ]})
 
 # Add styling to all the buttons
-# To add styling to any widget, use that widgets stle command.
+# To add styling to any widget, use that widgets style command.
 ipg.add_button_style("btn", border_radius=[10.0])
 ipg.add_button_style("bar-btn-dark", border_radius=[10.0], 
                      border_color=IpgColor.LIGHT_BLUE,
@@ -217,7 +217,7 @@ ipg.add_slider(parent_id="slider-2",
 slider_2_text = ipg.add_text(parent_id="slider-2", content=f"{32.0}")
 
 # adding some controls to see the effect of bar parameters
-ipg.add_text(parent_id="controls", content="Reset the height to zero then see padding effect. \n Otherwise, the surrounding padding will quish to bar items when big enough")
+ipg.add_text(parent_id="controls", content="Reset the height to zero then see padding effect. \n Otherwise, the surrounding padding will quash to bar items when big enough")
 ipg.add_row(window_id="main-light", container_id="slider-3", 
             parent_id="controls")
 

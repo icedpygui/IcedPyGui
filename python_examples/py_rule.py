@@ -15,7 +15,7 @@ ipg.add_window("main", "Rule Demo",
 ipg.add_container("main", "cont", 
                   width_fill=True, height_fill=True)
 
-# Add a column to hold the wigets
+# Add a column to hold the widgets
 ipg.add_column("main", container_id="col", parent_id="cont",
                align_items=IpgAlignment.Center)
 
@@ -41,7 +41,7 @@ ipg.add_rule_style("fill_50",
 
 # The padding is almost like percent except it gives you
 # an unsymmetrical ability. It can be seen better if you uncomment the 
-# degug mode in the window.
+# debug mode in the window.
 ipg.add_rule_style("pad",
                    color=IpgColor.BLUE,
                    fillmode_asymmetric_padding=(10, 50))

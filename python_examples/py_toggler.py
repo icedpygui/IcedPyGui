@@ -50,7 +50,7 @@ ipg.add_window("main", "Rule Demo", 700, 625,  pos_x=100, pos_y=25)
 ipg.add_column("main", "col", width_fill=True, height_fill=True,
                align_items=IpgAlignment.Center, spacing=5.0)
 
-# Add a column at the top for the toggler and a texy widget
+# Add a column at the top for the toggler and a text widget
 ipg.add_column("main", container_id="col_top", parent_id="col",
                align_items=IpgAlignment.Center,
                height=110.0, spacing=5.0, padding=[5.0], width_fill=True)

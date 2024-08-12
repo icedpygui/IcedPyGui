@@ -68,7 +68,7 @@ def hide_bar(_btn_id: int, pg_id: any):
 ipg.add_window("main", "CheckBox Demo",
                600, 600, 100, 25)
 
-# Add the container to help with aligment
+# Add the container to help with alignment
 ipg.add_container(window_id="main", container_id="cont", width_fill=True,
                   height_fill=True)
 
@@ -146,13 +146,13 @@ ipg.add_progress_bar_style("border",
                            bar_color=IpgColor.ALICE_BLUE)
 
 
-# Ading another bar and styling with a new background, bar color, and border.
+# Adding another bar and styling with a new background, bar color, and border.
 ipg.add_progress_bar("col2", 0.0, 100.0, 50.0,
                      style="border")
 
 ipg.add_text(parent_id="col2", content="Styling with a new bar color, background color, and border")
 
-# Ading another bar with just a standard styling.
+# Adding another bar with just a standard styling.
 ipg.add_progress_bar("col2", 0.0, 100.0, 50.0,
                      style_standard=IpgStyleStandard.Danger)
 

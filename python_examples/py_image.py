@@ -58,7 +58,7 @@ def on_mouse_exit(image_id):
 
 
 # On right_press, ferris shows
-# We need to try both because the image_id could be either the tiget or ferris
+# We need to try both because the image_id could be either the tiger or ferris
 def toggle_images(image_id):
     global show_ferris, show_tiger
 
@@ -132,7 +132,7 @@ for i in range(0, 4):
                                    show=False))
     
     # Spacing was added last because because the two images occupy the same space
-    # So spacing is btween the pairs
+    # So spacing is between the pairs
     ipg.add_space(parent_id="row1", width=10.0)
 
 # add a row for the information
