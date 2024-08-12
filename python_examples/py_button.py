@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgColor, IpgWindowTheme, IpgAlignment, IpgStyleStandard
+from icedpygui import IPG, IpgColor, IpgWindowTheme, IpgAlignment, IpgStyleStandard, IpgButtonArrow
 
 ipg = IPG()
 
@@ -40,6 +40,10 @@ def add_buttons(window: str):
     ipg.add_button(parent_id="row_btn", label="Text", 
                 on_press=on_press,
                 style_standard=IpgStyleStandard.Text)
+    
+    ipg.add_button(parent_id="row_btn", label="",
+                   on_press=on_press,
+                   style_arrow=IpgButtonArrow.ArrowRight)
 
     ipg.add_row(window_id=window, container_id="row_btn2", parent_id="col",
                 align_items=IpgAlignment.Center)

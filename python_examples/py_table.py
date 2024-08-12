@@ -1,8 +1,6 @@
 from icedpygui import IPG, IpgAlignment, IpgTableRowHighLight, IpgTableWidget
 import random, os
 
-
-
 ipg = IPG()
 
 
@@ -20,14 +18,12 @@ def widget_toggler(tbl_id: int, index: tuple[int, int], on_toggle: bool):
 
 # Add the window
 ipg.add_window(window_id="main", title="Table Demo", width=800, height=800,
-                pos_x=100, pos_y=25, debug=False)
+               pos_x=100, pos_y=25)
 
 # Add the container, since the table requires a width and height,
 # the container can shrink(default) to fit.
-ipg.add_column(window_id="main", container_id="col",
-                  width_fill=True, height_fill=True,
-                  align_items=IpgAlignment.Center,
-                  spacing=75)
+ipg.add_container(window_id="main", container_id="cont",
+                  width_fill=True, height_fill=True)
 
 # Initialize the lists.
 col0 = []
@@ -71,7 +67,6 @@ data = [{"Button": col0},
         {"Col5": col5},
         {"Col6": col6}]
 
-
 # The column widgets are prepared
 buttons = []
 checkboxes = []
@@ -83,20 +78,28 @@ for _ in range(0, len(col0)):
     checkboxes.append(IpgTableWidget.Checkbox)
     togglers.append(IpgTableWidget.Toggler)
 
+# It's best to make them the same,
+col_widths = [75, 75, 150, 75, 75, 75, 75]
+table_width = sum(col_widths)
+
 # The table is added.
-ipg.add_table(window_id="main", table_id="table", 
-                title="My Table", data=data,
-                data_length=len(col1), 
-                width=800.0, height=300.0, 
-                row_highlight=IpgTableRowHighLight.Lighter,
-                widgets_columns= {0: buttons, 1: checkboxes, 2: togglers},
-                # button_style={0: IpgButtonStyle.Secondary},
-                on_button=widget_button,
-                on_checkbox=widget_checkbox,
-                on_toggler=widget_toggler,
+ipg.add_table(window_id="main",
+              table_id="table",
+              parent_id="cont",
+              title="My Table",
+              data=data,
+              data_length=len(col1),
+              column_widths=col_widths,
+              width=table_width,
+              height=300.0,
+              row_highlight=IpgTableRowHighLight.Lighter,
+              button_fill_columns=[0],
+              checkbox_fill_columns=[1],
+              toggler_fill_columns=[2],
+              on_button=widget_button,
+              on_checkbox=widget_checkbox,
+              on_toggler=widget_toggler,
               )
-
-
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.
