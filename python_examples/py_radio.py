@@ -8,7 +8,7 @@ from icedpygui import IpgAlignment, IpgColor
 # more, you could used checkboxes and just uncheck the all on a callback, keeping the
 # one you selected as checked.
 
-# On some of this demo, seeing the changes that occur will be better if you set the debub=True
+# On some of this demo, seeing the changes that occur will be better if you set the debug=True
 # for the window.
 
 ipg = IPG()

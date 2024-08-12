@@ -108,7 +108,7 @@ def toggle_debug(btn_id):
 
 
 # Add window must be the first widget. Other windows can be added
-# at anytime, as long as their widgts follow.
+# at anytime, as long as their widgets follow.
 wnd_id = ipg.add_window(window_id="main", title="Selectable Text Demo",
                         width=800, height=600,  pos_x=100, pos_y=25)
 
@@ -128,7 +128,7 @@ ipg.add_space(parent_id="col", height=20.0)
 #                height=50.0, align_items=IpgRowAlignment.Center)
 # A selectable is a bit more versatile than using a button styled as text.
 # In this case, you can detect the left, right, and muddle buttons of the mouse.
-# A single callback was used in this case but you could use indiviual ones also.
+# A single callback was used in this case but you could use individual ones also.
 # Any are none of these callbacks can be used.
 st_id = ipg.add_selectable_text(parent_id="col", text="Click Me With Your Mouse Buttons!! To see the changes below.",
                                 on_press=on_press,

@@ -14,11 +14,11 @@ def add_buttons(window: str):
     # Add a column to hold multiple widgets, vertically.
     ipg.add_column(window_id=window, container_id="col", parent_id="cont")
 
-    # Add a row to hold widgtes, horizontally.
+    # Add a row to hold widgets, horizontally.
     ipg.add_row(window_id=window, container_id="row_btn", parent_id="col",
                 align_items=IpgAlignment.Center)
 
-    # Add buttoms
+    # Add buttons
     ipg.add_button(parent_id="row_btn", label="Default", 
                 on_press=on_press)
 

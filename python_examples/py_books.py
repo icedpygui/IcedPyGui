@@ -8,12 +8,12 @@ from datetime import datetime, date
 
 # Just to demo how one might use a large table, I have supplied my book list that
 # I have read over the last few years.  You may note that I'm a scifi reader but
-# am trying to exapnd more into thrillers and mystery with a touch of other genres.
+# am trying to expand more into thrillers and mystery with a touch of other genres.
 
 # Note:: The modal is not working at this time but should be up and going in about
 # a week after this is published.  When you press a button you will just get a dimmed
 # window for now.  I'll be adding a control row beneath the header for sorting and 
-# other types of actions or incoporate it into the her row itself.
+# other types of actions or incorporate it into the her row itself.
 
 # Note: You will need to install polars and have the resource folder with the csv books file.
 #  I use polars vs pandas because its much faster for larger tables.
@@ -182,7 +182,7 @@ class Books:
     def open_modal(self, tbl_id: int, index: tuple[int, int]):
         # get the row by filtering it out and converting to a dictionary, for ease of use
         self.modal_row = self.df.filter(pl.col("index") == index[0]).to_dict()
-        # Get the row index for leter use
+        # Get the row index for later use
         self.current_modal_row = index[0]
 
         #  get each field and update the corresponding widget

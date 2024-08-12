@@ -8,6 +8,7 @@
         "dataclass",
         "icedpygui",
         "maturin",
+        "picklist",
         "Rizen",
         "staticmethod",
         "venv"

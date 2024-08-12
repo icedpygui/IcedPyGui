@@ -7,11 +7,11 @@ ipg = IPG()
 main_1 = "main_1"
 main_2 = "main_2"
 
-ipg.add_window(main_1, "Scollable - Styling",
+ipg.add_window(main_1, "Container - Styling",
                             400, 500,
                             pos_x=100.0, pos_y=100.0)
 
-ipg.add_window(main_2, "Scollable - Styling",
+ipg.add_window(main_2, "Container - Styling",
                             400, 500,
                             pos_x=600.0, pos_y=100.0,
                             theme=IpgWindowTheme.SolarizedLight)
@@ -105,5 +105,5 @@ ipg.add_container(window_id=main_2, container_id="cont3",
 ipg.add_text(parent_id="cont3", content="Background Color, Border, Shadow Styling")
 
 
-# Start everthing up
+# Start everything up
 ipg.start_session()

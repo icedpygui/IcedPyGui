@@ -48,7 +48,7 @@ class DemoScrollable:
         self.wnd_h: str = "window_h"
         self.cont_h_top: str = "cont_h_top"
         self.scroll_h: str = "scroll_h"
-        self.cont_h_middle: str = "rcont_h_middle"
+        self.cont_h_middle: str = "cont_h_middle"
         self.cont_h_bottom: str = "cont_h_bottom"
 
         self.wnd_b: str = "window_b"
@@ -84,7 +84,7 @@ class DemoScrollable:
     # We will create 3 containers, a header, a scrollable, and an empty bottom container.
     def create_scroll_vertical(self):
 
-        self.ipg.add_window(self.wnd_v, "Scollable - Vertical",
+        self.ipg.add_window(self.wnd_v, "Scrollable - Vertical",
                             self.wnd_width, self.wnd_height,
                              pos_x=50, pos_y=25)
 
@@ -137,7 +137,7 @@ class DemoScrollable:
     # ************Window 2 scrolling a row container horizontally**********************************************
 
     def create_scroll_horizontal(self):
-        self.ipg.add_window(self.wnd_h, "Scollable - Horizontal", 200,
+        self.ipg.add_window(self.wnd_h, "Scrollable - Horizontal", 200,
                             self.wnd_height,
                             pos_x=500, pos_y=25)
 
@@ -185,7 +185,7 @@ class DemoScrollable:
 
     def create_scroll_both(self):
         # Add the 3rd window
-        self.ipg.add_window(window_id=self.wnd_b, title="Scollable - Both",
+        self.ipg.add_window(window_id=self.wnd_b, title="Scrollable - Both",
                             width=self.wnd_width + 100, height=self.wnd_height,
                             pos_x=760, pos_y=25)
 
