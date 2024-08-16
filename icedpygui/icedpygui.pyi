@@ -30,12 +30,19 @@ class IPG:
     def add_window(self,
                     window_id: str,
                     title: str,
-                    width: int,
-                    height: int,
+                    width: float,
+                    height: float,
+                    max_width: Optional[float],
+                    max_height: Optional[float],
+                    min_width: Optional[float],
+                    min_height: Optional[float],
                     pos_x: Optional[float]=None,
                     pos_y: Optional[float]=None,
                     pos_centered: bool=False,
                     resizable: bool=True,
+                    decorations: bool=True,
+                    transparent: bool=False,
+                    level: IpgWindowLevel = IpgWindowLevel.Normal,
                     theme: IpgWindowTheme=IpgWindowTheme.Dark,
                     debug: bool=False,
                     show: bool=True,
@@ -53,6 +60,14 @@ class IPG:
                 Sets the width of the window.
             height: int
                 Sets the height of the window.
+            max_width: Optional[float],
+                Sets the maximum width of the window.
+            max_height: Optional[float],
+                Sets the maximum height of the window.
+            min_width: Optional[float],
+                Sets the minimum width of the window.
+            min_height: Optional[float],
+                Sets the minimum height of the window.
             pos_x: float
                 Sets the x position of window.  The window position will be defaulted to 
                 a system default unless position is set.
@@ -63,6 +78,12 @@ class IPG:
                 Sets the position of window to be centered.
             resizable: bool
                 Sets whether the window can be resized.
+            decorations: bool=True,
+                Whether the window should have a border, a title bar, etc. or not.
+            transparent: bool=False
+                Whether the window should be transparent.
+            level: IpgWindowLevel.Normal
+                Whether the window should be Normal, AlwaysOnBottom, AlwaysOnTop
             theme: IpgWindowThemes
                 Sets the style of the window.
             show: bool
@@ -3421,6 +3442,12 @@ class IpgTogglerParam:
 class IpgWindowParam:
     Debug=0
     Theme=0
+
+
+class IpgWindowLevel:
+    Normal=0
+    AlwaysOnBottom=0
+    AlwaysOnTop=0
 
 
 class IpgButtonArrow:

@@ -5,7 +5,7 @@ use pyo3::types::PyModule;
 use pyo3::PyObject;
 
 use iced::window::{self, Position};
-use iced::{Color, Font, Length, Padding, Point, Theme};
+use iced::{Color, Font, Length, Padding, Point, Size, Theme};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
@@ -51,8 +51,7 @@ use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInputStyle, Ipg
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParam, IpgTogglerStyle};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
-use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, 
-    IpgWindowParam, IpgWindowTheme};
+use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, IpgWindowLevel, IpgWindowParam, IpgWindowTheme};
 use ipg_widgets::ipg_enums::{IpgAlignment, IpgContainers, IpgHorizontalAlignment, 
     IpgVerticalAlignment, IpgWidgets};
 
@@ -259,19 +258,34 @@ impl IPG {
         Ok(self.id)
     }
 
-    #[pyo3(signature = (window_id, title, width, height, pos_x=None, pos_y=None,
-                        pos_centered=false, resizable=true, 
-                        theme=IpgWindowTheme::Dark, exit_on_close=true, on_resize=None, 
+    #[pyo3(signature = (window_id, title, width, height,
+                        max_width=None, max_height=None,
+                        min_width=None, min_height=None,
+                        pos_x=None, pos_y=None,
+                        pos_centered=false, resizable=true,
+                        decorations=true, transparent=false,
+                        level=IpgWindowLevel::Normal,
+                        scale_factor=1.0,
+                        theme=IpgWindowTheme::Dark, 
+                        exit_on_close=true, on_resize=None, 
                         show=true, debug=false, user_data=None))]
     fn add_window(&mut self,
                         window_id: String, 
                         title: String, 
                         width: f32, 
-                        height: f32, 
+                        height: f32,
+                        max_width: Option<f32>,
+                        max_height: Option<f32>,
+                        min_width: Option<f32>,
+                        min_height: Option<f32>, 
                         pos_x: Option<f32>,
                         pos_y: Option<f32>,
                         pos_centered: bool,
                         resizable: bool,
+                        decorations: bool,
+                        transparent: bool,
+                        level: IpgWindowLevel,
+                        scale_factor: f64,
                         theme: IpgWindowTheme,
                         exit_on_close: bool,
                         on_resize: Option<PyObject>,
@@ -283,6 +297,27 @@ impl IPG {
         self.id += 1;
 
         let mut window_position = Position::Default;
+
+        let size = Size::new(width, height);
+
+        let mut max_size = Size::INFINITY;
+
+        if max_width.is_some() {
+            max_size.width = max_width.unwrap();
+        }
+        if max_height.is_some() {
+            max_size.height = max_height.unwrap();
+        }
+
+        let mut min_size = Size::ZERO;
+
+        if min_width.is_some() {
+            min_size.width = min_width.unwrap();
+        }
+
+        if min_height.is_some() {
+            min_size.height = min_height.unwrap();
+        }
 
         if pos_x.is_some() && pos_y.is_some() {
             let pos_x = match pos_x {
@@ -327,13 +362,18 @@ impl IPG {
         state.containers.insert(self.id, IpgContainers::IpgWindow(IpgWindow::new(
                                             self.id,
                                             title.clone(), 
-                                            width, 
-                                            height, 
+                                            size,
+                                            Some(min_size),
+                                            Some(max_size),
                                             window_position,
                                             exit_on_close,
                                             iced_theme.clone(), 
                                             resizable,
                                             visible,
+                                            decorations,
+                                            transparent,
+                                            level.clone(),
+                                            scale_factor,
                                             debug,
                                             user_data.clone(),
                                             )));
@@ -341,13 +381,18 @@ impl IPG {
         state.windows.push(IpgWindow::new(
                                         self.id,
                                         title, 
-                                        width, 
-                                        height, 
+                                        size,
+                                        Some(min_size),
+                                        Some(max_size),
                                         window_position,
                                         exit_on_close,
                                         iced_theme, 
                                         resizable,
-                                        show,
+                                        visible,
+                                        decorations,
+                                        transparent,
+                                        level,
+                                        scale_factor,
                                         debug,
                                         user_data,
                                         ));
@@ -3701,6 +3746,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgTimerParams>()?;
     m.add_class::<IpgTogglerParam>()?;
     m.add_class::<IpgWindowParam>()?;
+    m.add_class::<IpgWindowLevel>()?;
     m.add_class::<IpgWindowTheme>()?;
     Ok(())
 }

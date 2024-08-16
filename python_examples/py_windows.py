@@ -14,8 +14,12 @@ wnd1 = ipg.add_window(window_id="main1",
                       pos_x=100, pos_y=25,
                       )
 
-ipg.add_container(window_id="main1", container_id="cont")
-ipg.add_text_input(parent_id="cont", placeholder="Input scale factor", on_submit=change_scale)
+ipg.add_column(window_id="main1", container_id="col")
+ipg.add_text(parent_id="col", content="Some Text")
+ipg.add_text_input(parent_id="col",
+                   width=150.0,
+                   placeholder="Input scale factor", 
+                   on_submit=change_scale)
 
 
 # Add the 2nd window
@@ -26,5 +30,5 @@ wnd2 = ipg.add_window(window_id="main2",
                         )
 
 ipg.add_container(window_id="main2", container_id="cont")
-
+ipg.add_text(parent_id="cont", content="Some Text")
 ipg.start_session()

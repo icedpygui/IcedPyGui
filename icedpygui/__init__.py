@@ -20,4 +20,4 @@ from .icedpygui import IpgTableRowHighLight, IpgTableWidget, IpgTableParam
 from .icedpygui import IpgTextInputParam
 from .icedpygui import IpgTextParam
 from .icedpygui import IpgTogglerParam
-from .icedpygui import IpgWindowTheme, IpgWindowParam
+from .icedpygui import IpgWindowLevel, IpgWindowTheme, IpgWindowParam
