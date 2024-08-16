@@ -127,11 +127,16 @@ impl App {
         )
     }
 
-    pub fn title(&self, window: window::Id) -> String {
-        self.windows
+    pub fn title(&self, iced_window_id: window::Id) -> String {
+        let state = access_state();
+
+        let ipg_window_id = state.windows_iced_ipg_ids.get(&iced_window_id);
+
+        let title = state.windows
             .get(&window)
             .map(|window| window.title.clone())
-            .unwrap_or("IcePyGui".to_string())
+            .unwrap_or("IcePyGui".to_string());
+        title
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -285,19 +290,16 @@ impl App {
 
         let content = create_content(window);
 
-        let wnd_state = access_state();
-        
-        let debug = wnd_state.window_debug
+        let debug = self.windows
                             .get(&window)
-                            .map(|window| window.1.clone())
-                            .unwrap_or(false);
-        
-        let theme = wnd_state.window_theme
-                            .get(&window)
-                            .map(|window|window.1.clone())
+                            .map(|window| window.debug.clone())
                             .unwrap();
-        drop(wnd_state);
-
+        
+        let theme = self.windows
+                                .get(&window)
+                                .map(|window| window.theme.clone())
+                                .unwrap();
+      
         if debug {
             let color = match_theme_with_color(theme);
                 content.explain(color)  
@@ -332,13 +334,18 @@ impl App {
     }
 
     pub fn theme(&self, window: window::Id) -> Theme {
-        let wnd_state = access_state();
-        let theme = wnd_state.window_theme
-                    .get(&window)
-                    .map(|window|window.1.clone())
-                    .unwrap();
-        drop(wnd_state);
-        theme
+
+        self.windows
+            .get(&window)
+            .map(|window| window.theme.clone())
+            .unwrap()
+    }
+
+    fn scale_factor(&self, window: window::Id) -> f64 {
+        self.windows
+            .get(&window)
+            .map(|window| window.scale_factor)
+            .unwrap()
     }
 
 }
@@ -418,7 +425,8 @@ fn get_combine_parents_and_children(parent_ids: &Vec<usize>, ids_opt: Option<&Ve
 fn get_children(parents: &Vec<ParentChildIds>, 
                 index: &usize, 
                 parent_ids: &Vec<usize>, 
-                ) -> Element<'static, Message> {
+                ) -> Element<'static, Message> 
+{
 
     let mut content: Vec<Element<'static, Message>> = vec![];
 

@@ -18,13 +18,18 @@ use super::helpers::try_extract_boolean;
 pub struct IpgWindow {
     pub id: usize,
     pub title: String,
-    pub width: f32,
-    pub height: f32,
+    pub size: Size,
+    pub min_size: Option<Size>,
+    pub max_size: Option<Size>,
     pub theme: Theme,
     pub position: window::Position,
     pub exit_on_close_request: bool,
     pub resizable: bool,
     pub visible: bool,
+    pub decorations: bool,
+    pub transparent: bool,
+    pub level: IpgWindowLevel,
+    pub scale_factor: f64,
     pub debug: bool,
     pub user_data: Option<PyObject>,
 }
@@ -33,26 +38,36 @@ impl IpgWindow {
     pub fn new(
         id: usize, 
         title: String,
-        width: f32,
-        height: f32,
+        size: Size,
+        min_size: Option<Size>,
+        max_size: Option<Size>,
         position: window::Position,
         exit_on_close_request: bool,
         theme: Theme,
         resizable: bool,
         visible: bool,
+        decorations: bool,
+        transparent: bool,
+        level: IpgWindowLevel,
+        scale_factor: f64,
         debug: bool,
         user_data: Option<PyObject>,
         ) -> Self {
         Self {
             id,
             title,
-            width,
-            height,
+            size,
+            min_size,
+            max_size,
             position,
             exit_on_close_request,
             theme,
             resizable,
             visible,
+            decorations,
+            transparent,
+            level,
+            scale_factor,
             debug,
             user_data,
         }
@@ -77,20 +92,25 @@ pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Task<app::Message>>
     let mut spawn_window: Vec<Task<app::Message>> = vec![];
 
     for i in 0..state.windows.len() {
-        let (id, open) = window::open(window::Settings {
-            size: Size::new(state.windows[i].width, state.windows[i].height),
+        let (iced_id, open) = window::open(window::Settings {
+            size: state.windows[i].size,
+            min_size: state.windows[i].min_size,
+            max_size: state.windows[i].max_size,
             position: state.windows[i].position,
             visible: state.windows[i].visible,
             resizable: state.windows[i].resizable,
+            decorations: state.windows[i].decorations,
+            transparent: state.windows[i].transparent,
+            level: get_level(&state.windows[i].level),
             exit_on_close_request: true,
             ..Default::default()
         });
 
         spawn_window.push(open.map(Message::WindowOpened));
 
-        windows.insert(id, state.windows[i].clone());
+        windows.insert(iced_id, state.windows[i].clone());
         let ipg_id = state.windows[i].id.clone();
-        state.windows_iced_ipg_ids.insert(id, ipg_id);
+        state.windows_iced_ipg_ids.insert(iced_id, ipg_id);
         
     }
     drop(state);
@@ -266,8 +286,8 @@ pub fn get_iced_window_theme(theme: IpgWindowTheme) -> Theme {
 pub enum IpgWindowParam {
     Debug,
     Theme,
+    ScaleFactor,
 }
-
 
 pub fn window_item_update(wid: usize,
                             item: PyObject,
@@ -306,6 +326,9 @@ pub fn window_item_update(wid: usize,
             }
             drop(state);
         },
+        IpgWindowParam::ScaleFactor => {
+            state.windows
+        },
     }
 
 }
@@ -331,4 +354,20 @@ fn try_extract_ipg_theme(theme: PyObject) -> IpgWindowTheme {
             Err(_) => panic!("Window theme extraction failed"),
         }
     })
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgWindowLevel {
+    Normal,
+    AlwaysOnBottom,
+    AlwaysOnTop,
+}
+
+fn get_level(level: &IpgWindowLevel) -> iced::window::Level {
+    match level {
+        IpgWindowLevel::Normal => window::Level::Normal,
+        IpgWindowLevel::AlwaysOnBottom => window::Level::AlwaysOnBottom,
+        IpgWindowLevel::AlwaysOnTop => window::Level::AlwaysOnTop,
+    }
 }
