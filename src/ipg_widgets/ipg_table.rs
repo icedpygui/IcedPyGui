@@ -6,7 +6,7 @@ use crate::app::{self, Message};
 use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_uid, TABLE_INTERNAL_IDS_START};
 use crate::style::styling::{get_theme_color, IpgStyleStandard};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
-use super::helpers::{try_extract_boolean, try_extract_f64, try_extract_string, try_extract_u64, try_extract_vec_f32};
+use super::helpers::{get_padding_f32, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_u64, try_extract_vec_f32};
 use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
 use super::ipg_button;
 use crate::style::styling::{lighten, darken};
@@ -379,7 +379,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
     
     let body_column: Element<Message> = Column::with_children(body_column_vec)
                                             .height(Length::Shrink)
-                                            .padding([0, 5, 0, 5])
+                                            .padding(get_padding_f32(vec![0.0, 5.0, 0.0, 5.0]))
                                             .into();
 
     let title: Element<Message> = Text::new(table.title.clone()).into();
@@ -414,7 +414,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
 
     let table_header_row: Element<Message> = Row::with_children(headers)
                 .width(Length::Fill)
-                .padding(Padding::from([0, 5, 5, 2])) //bottom only
+                .padding(get_padding_f32(vec![0.0, 5.0, 5.0, 2.0])) //bottom only
                 .into();
 
         let scroller: Element<Message> = add_scroll(body_column, table.height, table.scroller_id);
@@ -433,7 +433,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
         ])
             .width(Length::Fixed(table.width))
             .height(Length::Fixed(table.height))
-            .padding([5.0, 10.0, 2.0, 5.0])
+            .padding(get_padding_f32(vec![5.0, 10.0, 2.0, 5.0]))
             .into()
 
     } else {
@@ -444,7 +444,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
         ])
             .width(Length::Fixed(table.width))
             .height(Length::Fixed(table.height))
-            .padding([5.0, 10.0, 2.0, 5.0])
+            .padding(get_padding_f32(vec![5.0, 10.0, 2.0, 5.0]))
             .into()
     };
     
@@ -456,7 +456,7 @@ pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) 
 fn fill_column(col_values: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
     Column::with_children(col_values)
-                                            .align_items(Alignment::Center)
+                                            .align_x(Alignment::Center)
                                             .width(Length::Fill)
                                             .into()
 }
@@ -476,7 +476,7 @@ fn add_scroll(body: Element<'static, Message>,
 fn add_header_text (header: String, width: f32) -> Element<'static, Message> {
     let txt : Element<Message> = text(header)
                                     .width(Length::Fixed(width))
-                                    .horizontal_alignment(Horizontal::Center)
+                                    .align_x(Horizontal::Center)
                                     .into();
     txt
 }
@@ -486,7 +486,7 @@ fn add_text_widget(label: String, width: f32) -> Element<'static, Message> {
     let txt: Element<Message> = Text::new(label)
         .width(Length::Fixed(width))
         .height(Length::Fixed(30.0))
-        .horizontal_alignment(Horizontal::Center)
+        .align_x(Horizontal::Center)
         .into();
 
     txt
@@ -521,7 +521,7 @@ fn add_widget(widget_type: IpgTableWidget,
         IpgTableWidget::Button => {
             let txt = 
                     Text::new(label)
-                                .horizontal_alignment(Horizontal::Center)
+                                .align_x(Horizontal::Center)
                                 .width(Length::Fixed(column_width));
 
             let btn_style: Option<IpgStyleStandard> = Some(IpgStyleStandard::Primary);

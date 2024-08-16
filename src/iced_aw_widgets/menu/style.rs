@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 //! Change the appearance of menu bars and their menus.
-use iced::{Background, Border, Color, Padding, Shadow, Theme, Vector};
+use iced::{border::Radius, Background, Border, Color, Padding, Shadow, Theme, Vector};
 
 /// The appearance of a menu bar and its menus.
 #[derive(Debug, Clone, Copy)]
@@ -33,15 +33,15 @@ impl std::default::Default for Appearance {
         Self {
             bar_background: Color::from([0.85; 3]).into(),
             bar_border: Border {
-                radius: [8.0; 4].into(),
+                radius: Radius::new(8.0),
                 ..Default::default()
             },
             bar_shadow: Shadow::default(),
-            bar_background_expand: [5; 4].into(),
+            bar_background_expand: Padding::new(5.0),
 
             menu_background: Color::from([0.85; 3]).into(),
             menu_border: Border {
-                radius: [8.0; 4].into(),
+                radius: Radius::new(8.0),
                 ..Default::default()
             },
             menu_shadow: Shadow {
@@ -49,10 +49,10 @@ impl std::default::Default for Appearance {
                 offset: Vector::ZERO,
                 blur_radius: 10.0,
             },
-            menu_background_expand: [5; 4].into(),
+            menu_background_expand: Padding::new(5.0),
             path: Color::from([0.3; 3]).into(),
             path_border: Border {
-                radius: [6.0; 4].into(),
+                radius: Radius::new(6.0),
                 ..Default::default()
             },
         }

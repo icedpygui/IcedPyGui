@@ -50,10 +50,10 @@ impl IpgColumn {
 
 pub fn construct_column(col: &IpgColumn, content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
 
-    let align_items = get_alignment(col.align_items.clone());
+    let align_x = get_alignment(col.align_items.clone());
 
     Column::with_children(content)
-                        .align_items(align_items)
+                        .align_x(align_x)
                         .height(col.height)
                         .padding(col.padding)
                         .spacing(col.spacing)

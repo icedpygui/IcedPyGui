@@ -5,9 +5,7 @@ use iced::{
         renderer,
         widget::Tree,
         Layout, Widget,
-    },
-    mouse::Cursor,
-    Background, Border, Color, Element, Length, Rectangle, Shadow, Size,
+    }, border::Radius, mouse::Cursor, Background, Border, Color, Element, Length, Rectangle, Shadow, Size
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -45,7 +43,7 @@ impl Default for Quad {
             quad_border: Border {
                 color: Color::TRANSPARENT,
                 width: 0.0,
-                radius: [0.0, 0.0, 0.0, 0.0].into(),
+                radius: Radius::default(),
             },
             quad_shadow: Shadow::default(),
 
@@ -53,7 +51,7 @@ impl Default for Quad {
             bg_border: Border {
                 color: Color::TRANSPARENT,
                 width: 0.0,
-                radius: [0.0, 0.0, 0.0, 0.0].into(),
+                radius: Radius::default(),
             },
             bg_shadow: Shadow::default(),
         }

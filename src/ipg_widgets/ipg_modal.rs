@@ -87,7 +87,7 @@ pub fn construct_modal(modal: IpgModal, content: Vec<Element<'static, Message>> 
     let align_items = get_alignment(modal.align_items.clone());
 
     let column: Element<Message, Theme, Renderer> = Column::with_children(content)
-                                        .align_items(align_items)
+                                        .align_x(align_items)
                                         .height(modal.height)
                                         .padding(modal.padding)
                                         .spacing(modal.spacing)
@@ -321,7 +321,7 @@ where
         state: &mut widget::Tree,
         layout: Layout<'_>,
         renderer: &Renderer,
-        operation: &mut dyn widget::Operation<Message>,
+        operation: &mut dyn widget::Operation,
     ) {
         self.base.as_widget().operate(
             &mut state.children[0],
@@ -435,7 +435,7 @@ where
         &mut self,
         layout: Layout<'_>,
         renderer: &Renderer,
-        operation: &mut dyn widget::Operation<Message>,
+        operation: &mut dyn widget::Operation,
     ) {
         self.content.as_widget().operate(
             self.tree,

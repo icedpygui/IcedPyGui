@@ -289,7 +289,7 @@ pub fn process_events(ipg_event: Event,
                                         cb_name);
                 }
             },
-            Event::Window(id, wnd_event) => {
+            Event::Window(wnd_event) => {
                 if wnd_enabled.1 {
 
                     let mut event_name = "".to_string();
@@ -299,7 +299,7 @@ pub fn process_events(ipg_event: Event,
 
                     match wnd_event {
                         iced::window::Event::Opened { position, size } => {
-                            event_name = format!("Window {:?} Opened", id);
+                            event_name = format!("Window Opened");
                             match position {
                                 Some(pos) => {
                                     hmap_s_f = Some(HashMap::from([
@@ -319,22 +319,22 @@ pub fn process_events(ipg_event: Event,
                             cb_name = IpgEventCallbacks::WindowOnOpened;
                         },
                         iced::window::Event::Closed => {
-                            event_name = format!("window {:?} Closed", id);
+                            event_name = format!("window Closed");
                             cb_name = IpgEventCallbacks::WindowOnClosed;
                         },
-                        iced::window::Event::Moved { x, y } => {
-                            event_name = format!("Window {:?} Moved", id);
+                        iced::window::Event::Moved(point) => {
+                            event_name = format!("Window Moved");
                             hmap_s_f = Some(HashMap::from([
-                                                        ("x".to_string(), x as f32),
-                                                        ("y".to_string(), y as f32),
+                                                        ("x".to_string(), point.x),
+                                                        ("y".to_string(), point.y),
                                                         ]));
                             cb_name = IpgEventCallbacks::WindowOnMoved;
                         },
-                        iced::window::Event::Resized { width, height } => {
-                            event_name = format!("Window {:?} Resized", id);
+                        iced::window::Event::Resized (size) => {
+                            event_name = format!("Window Resized");
                             hmap_s_f = Some(HashMap::from([
-                                                        ("width".to_string(), width as f32),
-                                                        ("height".to_string(), height as f32),
+                                                        ("width".to_string(), size.width),
+                                                        ("height".to_string(), size.height),
                                                         ]));
                             cb_name = IpgEventCallbacks::WindowOnResized;
                         },
@@ -375,7 +375,6 @@ pub fn process_events(ipg_event: Event,
                 }
                 
             },
-            Event::PlatformSpecific(_) => (),
         }
 }
 

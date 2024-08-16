@@ -880,8 +880,8 @@ fn menu_bar_button(label: String,
 
     let label_txt: Element<'static, MenuMessage, Theme, Renderer> = 
                                 Text::new(label.clone())
-                                    .vertical_alignment(alignment::Vertical::Center)
-                                    .horizontal_alignment(alignment::Horizontal::Center)
+                                    .align_x(alignment::Horizontal::Center)
+                                    .align_y(alignment::Vertical::Center)
                                     .into();
 
     let btn: Element<'static, MenuMessage, Theme, Renderer> = 
@@ -983,7 +983,7 @@ fn separator() -> Quad {
     Quad {
         quad_color: Color::from([0.5; 3]).into(),
         quad_border: Border {
-            radius: [4.0; 4].into(),
+            radius: Radius::new(4.0),
             ..Default::default()
         },
         inner_bounds: InnerBounds::Ratio(0.98, 0.2),
@@ -1148,7 +1148,7 @@ fn default_separator(quad_type: IpgMenuSeparatorType, quad_color: Color, bg_colo
                 quad_color: Color::from([0.5; 3]).into(),
                 inner_bounds: InnerBounds::Square(radius * 2.0),
                 quad_border: Border {
-                    radius: [radius; 4].into(),
+                    radius: Radius::new(4.0),
                     ..Default::default()
                 },
                 
@@ -1160,7 +1160,7 @@ fn default_separator(quad_type: IpgMenuSeparatorType, quad_color: Color, bg_colo
                 Quad {
                     quad_color: Background::Color(Color::from([0.5; 3]).into()),
                     quad_border: Border {
-                        radius: [4.0; 4].into(),
+                        radius: Radius::new(4.0),
                         ..Default::default()
                     },
                     inner_bounds: InnerBounds::Square(4.0),
@@ -1216,7 +1216,7 @@ fn default_quad(quad_type: IpgMenuSeparatorType,
                 quad_color: quad_color.into(),
                 inner_bounds: InnerBounds::Square(radius * 2.0),
                 quad_border: Border {
-                    radius: [radius; 4].into(),
+                    radius: Radius::new(radius),
                     ..Default::default()
                 },
                 width: width,

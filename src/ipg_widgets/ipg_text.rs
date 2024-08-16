@@ -70,8 +70,8 @@ pub fn construct_text(text: IpgText) -> Element<'static, Message> {
                         .line_height(text.line_height)
                         .width(text.width)
                         .height(text.height)
-                        .horizontal_alignment(text.horizontal_alignment)
-                        .vertical_alignment(text.vertical_alignment)
+                        .align_x(text.horizontal_alignment)
+                        .align_y(text.vertical_alignment)
                         // .font()
                         .shaping(text.shaping)
                         .style(move|_theme|{

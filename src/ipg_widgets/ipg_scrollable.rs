@@ -16,10 +16,11 @@ use super::ipg_table::TableMessage;
 
 use iced::widget::container;
 use iced::widget::scrollable;
+use iced::widget::scrollable::Anchor;
+use iced::widget::scrollable::Rail;
 use iced::widget::scrollable::Scrollbar;
 use iced::widget::scrollable::Scroller;
-use iced::widget::scrollable::{Alignment, Direction, Properties, 
-    Scrollable, Viewport, Status, Style};
+use iced::widget::scrollable::{Direction, Scrollable, Viewport, Status, Style};
 use iced::Rectangle;
 use iced::{Border, Color, Element, Length, Shadow, Vector, Theme};
 use iced::widget::Column;
@@ -220,23 +221,23 @@ fn get_direction(direction: IpgScrollableDirection,
                 ) -> Direction {
 
     let h_alignment = match h_alignment {
-        IpgScrollableAlignment::Start => Alignment::Start,
-        IpgScrollableAlignment::End => Alignment::End,
+        IpgScrollableAlignment::Start => Anchor::Start,
+        IpgScrollableAlignment::End => Anchor::End,
     };
 
     let v_alignment = match v_alignment {
-        IpgScrollableAlignment::Start => Alignment::Start,
-        IpgScrollableAlignment::End => Alignment::End,
+        IpgScrollableAlignment::Start => Anchor::Start,
+        IpgScrollableAlignment::End => Anchor::End,
     };
 
-    let h_properties = Properties::new()
-                                    .alignment(h_alignment)
+    let h_properties = Scrollbar::new()
+                                    .anchor(h_alignment)
                                     .width(h_width)
                                     .margin(h_margin)
                                     .scroller_width(h_scroller_width);
 
-    let v_properties = Properties::new()
-                                    .alignment(v_alignment)
+    let v_properties = Scrollbar::new()
+                                    .anchor(v_alignment)
                                     .width(v_width)
                                     .margin(v_margin)
                                     .scroller_width(v_scroller_width);
@@ -466,9 +467,9 @@ fn get_styling(theme: &Theme, status: Status,
     let palette = theme.extended_palette();
     
     let scrollbar_color = if style.scrollbar_color.is_some() {
-        Some(style.scrollbar_color.unwrap().into())
+        style.scrollbar_color.unwrap().into()
     } else {
-        Some(palette.background.weak.color.into())
+        palette.background.weak.color.into()
     };
 
     let border_radius = get_radius(style.scrollbar_border_radius.clone(), "Scrollable".to_string());
@@ -497,8 +498,8 @@ fn get_styling(theme: &Theme, status: Status,
         palette.primary.base.color
     };
 
-    let scrollbar = Scrollbar {
-        background: scrollbar_color,
+    let scrollbar = Rail {
+        background: Some(scrollbar_color),
         border,
         scroller: Scroller {
             color: scroller_color,
@@ -506,44 +507,34 @@ fn get_styling(theme: &Theme, status: Status,
         },
     };
 
-    let scrollbar_hovered = Scrollbar {
-        scroller: Scroller {
-            color: scroller_color_hovered,
-            ..scrollbar.scroller
-        },
-        ..scrollbar
-    };
-
-    let scrollbar_dragged = Scrollbar {
-        scroller: Scroller {
-            color: scroller_color_dragged,
-            ..scrollbar.scroller
-        },
-        ..scrollbar
-    };
-
-
     match status {
         Status::Active => Style {
             container: container_style,
-            vertical_scrollbar: scrollbar,
-            horizontal_scrollbar: scrollbar,
+            vertical_rail: scrollbar,
+            horizontal_rail: scrollbar,
             gap: None,
         },
         Status::Hovered {
             is_horizontal_scrollbar_hovered,
             is_vertical_scrollbar_hovered,
         } => {
+            let hovered_scrollbar = Rail {
+                scroller: Scroller {
+                    color: scroller_color_hovered,
+                    ..scrollbar.scroller
+                },
+                ..scrollbar
+            };
 
             Style {
                 container: container_style,
-                vertical_scrollbar: if is_vertical_scrollbar_hovered {
-                    scrollbar_hovered
+                vertical_rail: if is_vertical_scrollbar_hovered {
+                    hovered_scrollbar
                 } else {
                     scrollbar
                 },
-                horizontal_scrollbar: if is_horizontal_scrollbar_hovered {
-                    scrollbar_hovered
+                horizontal_rail: if is_horizontal_scrollbar_hovered {
+                    hovered_scrollbar
                 } else {
                     scrollbar
                 },
@@ -554,16 +545,23 @@ fn get_styling(theme: &Theme, status: Status,
             is_horizontal_scrollbar_dragged,
             is_vertical_scrollbar_dragged,
         } => {
-    
+            let dragged_scrollbar = Rail {
+                scroller: Scroller {
+                    color: scroller_color_dragged,
+                    ..scrollbar.scroller
+                },
+                ..scrollbar
+            };
+
             Style {
                 container: container_style,
-                vertical_scrollbar: if is_vertical_scrollbar_dragged {
-                    scrollbar_dragged
+                vertical_rail: if is_vertical_scrollbar_dragged {
+                    dragged_scrollbar
                 } else {
                     scrollbar
                 },
-                horizontal_scrollbar: if is_horizontal_scrollbar_dragged {
-                    scrollbar_dragged
+                horizontal_rail: if is_horizontal_scrollbar_dragged {
+                    dragged_scrollbar
                 } else {
                     scrollbar
                 },
