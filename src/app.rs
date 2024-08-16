@@ -3,10 +3,9 @@
 use std::collections::HashMap;
 
 
-use iced::{multi_window, Point};
 use iced::{font, window};
 use iced::event::Event;
-use iced::{Command, Element, Subscription, Theme};
+use iced::{Element, Point, Subscription, Task, Theme};
 use iced::executor;
 use iced::widget::{focus_next, Column};
 use iced::time;
@@ -73,6 +72,8 @@ pub enum Message {
     Timer(usize, TIMMessage),
     FontLoaded(Result<(), font::Error>),
     Window(WndMessage),
+    WindowOpened(window::Id),
+    WindowClosed(window::Id),
 
     MouseAreaOnPress(usize),
     MouseAreaOnRelease(usize),
@@ -105,17 +106,12 @@ pub struct App {
 }
 
 
-impl multi_window::Application for App {
-    type Executor = executor::Default;
-    type Message = Message;
-    type Theme = Theme;
-    type Flags = Flags;
-
-
-    fn new(flags: Flags) -> (Self, Command<Message>) {
+impl App {
+    
+    pub fn new(flags: Flags) -> (Self, Task<Message>) {
         
-        let (windows, mut spawn) = add_windows();
-        spawn.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
+        let (windows, mut open) = add_windows();
+        open.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
 
         (
             Self {
@@ -127,53 +123,53 @@ impl multi_window::Application for App {
                 window_event_enabled: flags.window_event_enabled,
             },
             
-            Command::batch(spawn),
+            Task::batch(open),
         )
     }
 
-    fn title(&self, window: window::Id) -> String {
+    pub fn title(&self, window: window::Id) -> String {
         self.windows
             .get(&window)
             .map(|window| window.title.clone())
             .unwrap_or("IcePyGui".to_string())
     }
 
-    fn update(&mut self, message: Message) -> Command<Message> {
+    pub fn update(&mut self, message: Message) -> Task<Message> {
         
         match message {
             Message::FontLoaded(_) => {
-                Command::none()
+                Task::none()
             },
             Message::EventOccurred(ipg_event) => {
                 process_events(ipg_event, self.keyboard_event_enabled,
                                             self.mouse_event_enabled,
                                             self.window_event_enabled,
                                             self.timer_event_enabled);
-                Command::none()
+                Task::none()
             },
             Message::Button(id, message) => {
                 button_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Card(id, message) => {
                 card_callback(id, message);
-                 Command::none()
+                 Task::none()
             },
             Message::CheckBox(id, message) => {
                 checkbox_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::DatePicker(id, message) => {
                 date_picker_update(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Image(id, message) => {
                 image_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Menu(id, message) => {
                 menu_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Modal(id, message) => {
                 modal_callback(id, message);
@@ -181,75 +177,75 @@ impl multi_window::Application for App {
             },
             Message::MouseAreaOnPress(id) => {
                 mousearea_callback(id, "on_press".to_string());
-                Command::none()
+                Task::none()
             },
             Message::MouseAreaOnRelease(id) => {
                 mousearea_callback(id, "on_release".to_string());
-                Command::none()
+                Task::none()
             },
             Message::MouseAreaOnRightPress(id) => {
                 mousearea_callback(id, "on_right_press".to_string());
-                Command::none()
+                Task::none()
             },
             Message::MouseAreaOnRightRelease(id) => {
                 mousearea_callback(id, "on_right_release".to_string());
-                Command::none()
+                Task::none()
             },
             Message::MouseAreaOnMiddlePress(id) => {
                 mousearea_callback(id, "on_middle_press".to_string());
-                Command::none()
+                Task::none()
             },
             Message::MouseAreaOnMiddleRelease(id) => {
                 mousearea_callback(id, "on_middle_release".to_string());
-                Command::none()
+                Task::none()
             },
             Message::MouseAreaOnEnter(id) => {
                 mousearea_callback(id, "on_enter".to_string());
-                Command::none()
+                Task::none()
             },
             Message::MouseAreaOnMove(point, id) => {
                 mousearea_callback_point(id, point, "on_move".to_string());
-                Command::none()
+                Task::none()
             },
             Message::MouseAreaOnExit(id) => {
                 mousearea_callback(id, "on_exit".to_string());
-                Command::none()
+                Task::none()
             },
             Message::PickList(id, message) => {
                 pick_list_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Radio(id, message) => {
                 radio_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Scrolled(vp, id) => {
                 scrollable_callback(id, vp);
-                Command::none()
+                Task::none()
             },
             Message::SelectableText(id, message) => {
                 selectable_text_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Slider(id, message) => {
                 slider_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Svg(id, message) => {
                 svg_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Table(id, message) => {
                 table_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::TextInput(id, message) => {
                 text_input_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Tick => {
                 tick_callback(self.timer_event_enabled.0);
-                Command::none()
+                Task::none()
             }
             Message::Timer(id, message) => {
                 match message {
@@ -260,20 +256,32 @@ impl multi_window::Application for App {
                     TIMMessage::OnStop => self.timer_event_enabled.1 = false,
                 }
                 self.timer_duration = timer_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Toggler(id, message) => {
                 toggle_callback(id, message);
-                Command::none()
+                Task::none()
             },
             Message::Window(message) => {
                 window_callback(message)
+            },
+            Message::WindowOpened(_id) => {
+                Task::none()
+            },
+            Message::WindowClosed(id) => {
+                self.windows.remove(&id);
+
+                if self.windows.is_empty() {
+                    iced::exit()
+                } else {
+                    Task::none()
+                }
             },
         }
         
     }
 
-    fn view(&self, window: window::Id) -> Element<'_, self::Message> {
+    pub fn view(&self, window: window::Id) -> Element<'_, self::Message> {
 
         let content = create_content(window);
 
@@ -299,32 +307,31 @@ impl multi_window::Application for App {
 
     }
 
-    fn subscription(&self) -> Subscription<Message> {
+    pub fn subscription(&self) -> Subscription<Message> {
+
+        let mut subscriptions = vec![];
+
+        subscriptions.push(window::close_events().map(Message::WindowClosed));
+
+        if self.timer_event_enabled.1 {
+            subscriptions.push(time::every(iced::time::Duration::from_millis(self.timer_duration)).map(|_| Message::Tick));
+        } 
         
-        if self.timer_event_enabled.1 && (self.keyboard_event_enabled.1 || 
-                                        self.mouse_event_enabled.1 || 
-                                        self.window_event_enabled.1) {
+        if self.keyboard_event_enabled.1 || self.mouse_event_enabled.1 || self.window_event_enabled.1 {
 
-            let event = iced::event::listen().map(Message::EventOccurred);
-            let timer = time::every(iced::time::Duration::from_millis(self.timer_duration))
-                                                                    .map(|_| Message::Tick);
-            Subscription::batch(vec![event, timer])
-            
-        } else if self.timer_event_enabled.1 {
+            subscriptions.push(iced::event::listen().map(Message::EventOccurred));
 
-            time::every(iced::time::Duration::from_millis(self.timer_duration)).map(|_| Message::Tick)
-
-        } else if self.keyboard_event_enabled.1 || self.mouse_event_enabled.1 || self.window_event_enabled.1 {
-
-            iced::event::listen().map(Message::EventOccurred)
-
-        } else {
-
+        }
+        
+        if subscriptions.len() > 0 {
+            Subscription::batch(subscriptions)
+        }
+        else {
             Subscription::none()
         }
     }
 
-    fn theme(&self, window: window::Id) -> Theme {
+    pub fn theme(&self, window: window::Id) -> Theme {
         let wnd_state = access_state();
         let theme = wnd_state.window_theme
                     .get(&window)
@@ -339,19 +346,22 @@ impl multi_window::Application for App {
 
 // Central method to get the structures stored in the mutex and then the children 
 fn create_content(iced_id: window::Id) -> Element<'static, Message> {
-    // The window structures and other data are store in HashMaps where the key is id of usize type.
-    // Since multiwindows was added to Iced recently, I had to patch the code to implement many windows
-    // The current concept will be changed soon to better use the Iced window id.
-    let window_id = get_usize_of_id(iced_id);
-
+    
     let state = access_state();
 
+    let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_id);
+
+    let ipg_window_id = match ipg_window_id_opt {
+        Some(id) => id,
+        None => panic!("App::create_content: Unable to find ipg_window_id with iced_id {:?}.", iced_id),
+    };
+
     // First we find the unique containers in the window
-    let unique_parent_ids = get_unique_parents(state.container_ids.get(&window_id));
+    let unique_parent_ids = get_unique_parents(state.container_ids.get(&ipg_window_id));
 
     // The unique parent containers are combined with all the children ids held in a vec.
     let all_parent_ids = get_combine_parents_and_children(
-                            &unique_parent_ids, state.ids.get(&window_id));
+                            &unique_parent_ids, state.ids.get(&ipg_window_id));
     
     drop(state);
 

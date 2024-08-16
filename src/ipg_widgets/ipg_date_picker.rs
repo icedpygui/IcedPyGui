@@ -164,7 +164,7 @@ pub fn construct_date_picker(dp: IpgDatePicker) -> Element<'static, Message, The
             .spacing(3.0*dp.size_factor)
             .height(Length::Fill)
             .width(Length::Fill)
-            .align_items(Alignment::Center)
+            .align_x(Alignment::Center)
             .into();
  
         let cont: Element<Message, Theme, Renderer> = Container::new(col_content)
@@ -187,8 +187,8 @@ fn icon(unicode: char, size: f32) -> Text<'static> {
     Text::new(unicode.to_string())
         .font(ICON_FONT_BOOT)
         .size(size)
-        .horizontal_alignment(alignment::Horizontal::Center)
-        .vertical_alignment(alignment::Vertical::Center)
+        .align_x(alignment::Horizontal::Center)
+        .align_y(alignment::Vertical::Center)
 }
 
 fn left_arrow_icon(size: f32) -> Text<'static> {
@@ -329,9 +329,9 @@ fn create_first_row_arrows(id: usize, selected_month: String,
                             year_right_btn,
                         ])
                         .spacing(2)
-                        .align_items(Alignment::Center).into(),
+                        .align_y(Alignment::Center).into(),
     ])
-    .align_items(Alignment::Center)
+    .align_y(Alignment::Center)
     .width(Length::Fill)
     .into()
 
@@ -382,8 +382,8 @@ fn get_calendar_days(id: usize, selected_year: i32,
                 let btn: Element<DPMessage, Theme, Renderer> = 
                         Button::new(Text::new(day.to_string())
                                             .size(8.0*size_factor)
-                                            .horizontal_alignment(alignment::Horizontal::Center)
-                                            .vertical_alignment(alignment::Vertical::Center)
+                                            .align_x(alignment::Horizontal::Center)
+                                            .align_y(alignment::Vertical::Center)
                                             ).on_press(DPMessage::DayPressed(day))
                                     .height(15.0*size_factor)
                                     .width(15.0*size_factor)
@@ -407,7 +407,7 @@ fn get_calendar_days(id: usize, selected_year: i32,
 
     let col: Element<'static, Message, Theme, Renderer> = 
                     Column::with_children(calendar_days)
-                                .align_items(Alignment::Start)
+                                .align_x(Alignment::Start)
                                 .width(Length::Fill)
                                 .padding(0)
                                 .into();

@@ -101,8 +101,8 @@ pub fn construct_selectable_text(sl_text: IpgSelectableText) -> Element<'static,
                             .line_height(sl_text.line_height)
                             .width(sl_text.width)
                             .height(sl_text.height)
-                            .horizontal_alignment(hor_align)
-                            .vertical_alignment(vert_align)
+                            .align_x(hor_align)
+                            .align_y(vert_align)
                             // font: Font,
                             .shaping(sl_text.shaping)
                             .style(move|_theme|{

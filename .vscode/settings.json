@@ -13,4 +13,5 @@
         "staticmethod",
         "venv"
     ],
+    "editor.selectionClipboard": false
 }

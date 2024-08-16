@@ -48,7 +48,7 @@ pub fn construct_row(row: &IpgRow, content: Vec<Element<'static, Message>>) -> E
     let align = get_alignment(row.align_items.clone());
 
     Row::with_children(content)
-                        .align_items(align)
+                        .align_y(align)
                         .height(row.height)
                         .padding(row.padding)
                         .spacing(row.spacing)

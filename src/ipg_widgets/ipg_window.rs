@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
 
-use crate::app;
+use crate::app::{self, Message};
 use crate::{access_state, access_callbacks};
 
 use iced::window;
-use iced::{Command, Element, Theme, Size};
+use iced::{Element, Task, Theme, Size};
 use iced::widget::Column;
 
 use pyo3::{pyclass, PyObject, Python};
@@ -17,8 +17,6 @@ use super::helpers::try_extract_boolean;
 #[derive(Debug, Clone)]
 pub struct IpgWindow {
     pub id: usize,
-    pub window_index: usize,
-    pub window_id: String,
     pub title: String,
     pub width: f32,
     pub height: f32,
@@ -34,8 +32,6 @@ pub struct IpgWindow {
 impl IpgWindow {
     pub fn new(
         id: usize, 
-        window_index: usize,
-        window_id: String,
         title: String,
         width: f32,
         height: f32,
@@ -49,8 +45,6 @@ impl IpgWindow {
         ) -> Self {
         Self {
             id,
-            window_index,
-            window_id,
             title,
             width,
             height,
@@ -74,30 +68,30 @@ pub enum WndMessage {
     ScaleChanged(window::Id, String), 
 }
 
-pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Command<app::Message>>) {
+pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Task<app::Message>>) {
 
-    let state = access_state();
+    let mut state = access_state();
 
-    let mut windows = HashMap::from([(window::Id::MAIN, state.windows[0].clone())]);
+    let mut windows = HashMap::new();
 
-    let mut spawn_window: Vec<Command<app::Message>> = vec![];
+    let mut spawn_window: Vec<Task<app::Message>> = vec![];
 
     for i in 0..state.windows.len() {
-        // The first window i=0 is handled differently
-        if i > 0 {
-            let (id, spawn) = window::spawn(window::Settings {
-                size: Size::new(state.windows[i].width, state.windows[i].height),
-                position: state.windows[i].position,
-                visible: state.windows[i].visible,
-                resizable: state.windows[i].resizable,
-                exit_on_close_request: true,
-                ..Default::default()
-            }) as (window::Id, Command<app::Message>);
+        let (id, open) = window::open(window::Settings {
+            size: Size::new(state.windows[i].width, state.windows[i].height),
+            position: state.windows[i].position,
+            visible: state.windows[i].visible,
+            resizable: state.windows[i].resizable,
+            exit_on_close_request: true,
+            ..Default::default()
+        });
 
-            spawn_window.push(spawn);
+        spawn_window.push(open.map(Message::WindowOpened));
 
-            windows.insert(id, state.windows[i].clone());
-        }
+        windows.insert(id, state.windows[i].clone());
+        let ipg_id = state.windows[i].id.clone();
+        state.windows_iced_ipg_ids.insert(id, ipg_id);
+        
     }
     drop(state);
 
@@ -117,22 +111,22 @@ pub fn construct_window(content: Vec<Element<'static, app::Message>>) -> Element
     Column::with_children(content).into()
 }
 
-pub fn window_callback(message:WndMessage) -> Command<app::Message> {
+pub fn window_callback(message:WndMessage) -> Task<app::Message> {
     
     let mut _state = access_state();
 
     match message {
             WndMessage::TitleChanged(_id, _title) => {
-                Command::none()
+                Task::none()
             },
             WndMessage::NewWindow => {
-                Command::none()
+                Task::none()
             },
             WndMessage::ScaleInputChanged(_id, _something) => {
-                Command::none()
+                Task::none()
             },
             WndMessage::ScaleChanged(_id, _scale) => {
-                Command::none()
+                Task::none()
             }, 
     }
 

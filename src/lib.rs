@@ -4,9 +4,8 @@ use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
 
-use iced::multi_window::Application;
 use iced::window::{self, Position};
-use iced::{Color, Font, Length, Padding, Point, Settings, Size, Theme};
+use iced::{Color, Font, Length, Padding, Point, Theme};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
@@ -112,9 +111,10 @@ pub struct State {
     pub widget_container_ids: Lazy<HashMap<usize, String>>, //widget_id=usize, container_id=String
     
     pub windows: Vec<IpgWindow>,
-    pub windows_str_ids: Lazy<HashMap<String, usize>>,  // <window_id=str, window_id=usize>
-    pub window_debug: Lazy<HashMap<window::Id, (usize, bool)>>, // (usize, bool) = (wid, debug)
-    pub window_theme: Lazy<HashMap<window::Id, (usize, Theme)>>, //(usize, Theme) = (wid, window Theme)
+    pub windows_iced_ipg_ids: Lazy<HashMap<window::Id, usize>>, // <iced id, ipg id>
+    pub windows_str_ids: Lazy<HashMap<String, usize>>,  // <ipg_id=str, ipg id>
+    pub window_debug: Lazy<HashMap<window::Id, (usize, bool)>>, // (wid, debug)
+    pub window_theme: Lazy<HashMap<window::Id, (usize, Theme)>>, // (wid, window Theme)
     
     pub events: Vec<IpgEvents>,
     
@@ -153,6 +153,7 @@ pub static STATE: Mutex<State> = Mutex::new(
 
         
         windows: vec![],
+        windows_iced_ipg_ids: Lazy::new(||HashMap::new()),
         windows_str_ids: Lazy::new(||HashMap::new()),
         window_debug: Lazy::new(||HashMap::new()),
         window_theme: Lazy::new(||HashMap::new()),
@@ -195,7 +196,6 @@ pub struct IpgIds {
 #[pyclass]
 pub struct IPG {
     id: usize,
-    window_id: usize,
     gen_ids: Vec<usize>,
     group_index: usize,
     theme: Theme,
@@ -207,7 +207,6 @@ impl IPG {
     fn new() -> IPG {
         IPG {
             id: 0,
-            window_id: 0,
             gen_ids: vec![],
             group_index: 0,
             theme: Theme::Dark,
@@ -218,11 +217,6 @@ impl IPG {
     fn start_session(&self) {
 
         let state = access_state();
-        let size = Size::new(state.windows[0].width, state.windows[0].height);
-        let position = state.windows[0].position;
-        let visible = state.windows[0].visible;
-        let resizable = state.windows[0].resizable;
-        let exit_on_close_request = state.windows[0].exit_on_close_request;
         let mut flags = Flags {keyboard_event_enabled: (0, false),
                                         mouse_event_enabled: (0, false), 
                                         timer_event_enabled: (0, false), 
@@ -246,19 +240,12 @@ impl IPG {
 
         drop(state);
 
-        let _ = App::run(Settings {
-            window: window::Settings {
-                size,
-                position,
-                visible,
-                resizable,
-                exit_on_close_request,
-                ..Default::default()
-            },
-            flags,
-            antialiasing: true,
-            ..Default::default()
-        });
+        let _ = iced::daemon(App::title, App::update, App::view)
+                    .subscription(App::subscription)
+                    .theme(App::theme)
+                    // .scale_factor(App::scale_factor)
+                    .antialiasing(true)
+                    .run_with(||App::new(flags));
     }
 
     #[pyo3(signature = ())]
@@ -328,19 +315,17 @@ impl IPG {
             add_callback_to_mutex(self.id, "on_resize".to_string(), on_resize);
         }
 
-        state.windows_str_ids.insert(window_id.clone(), self.window_id);
+        state.windows_str_ids.insert(window_id.clone(), self.id);
 
-        state.ids.insert(self.window_id, vec![IpgIds{id: self.id, parent_uid: 0, container_id: Some(window_id.clone()),
+        state.ids.insert(self.id, vec![IpgIds{id: self.id, parent_uid: 0, container_id: Some(window_id.clone()),
                                                 parent_id: "".to_string(), is_container: true}]);
 
-        state.container_ids.insert(self.window_id, vec![self.id]);
+        state.container_ids.insert(self.id, vec![self.id]);
         // TODO: A windows container is probably not needed but some suttle issues arise when not used.
         // Will need to work through it in the near future.  At the onset, used only one window then
         // iced made multiwindow so sort of patch it to work but need to revisit it.
         state.containers.insert(self.id, IpgContainers::IpgWindow(IpgWindow::new(
                                             self.id,
-                                            self.window_id,
-                                            window_id.clone(),
                                             title.clone(), 
                                             width, 
                                             height, 
@@ -355,8 +340,6 @@ impl IPG {
         
         state.windows.push(IpgWindow::new(
                                         self.id,
-                                        self.window_id,
-                                        window_id.clone(),
                                         title, 
                                         width, 
                                         height, 
@@ -370,8 +353,6 @@ impl IPG {
                                         ));
         state.last_id = self.id;
         drop(state);
-
-        self.window_id += 1;
 
         Ok(self.id)
 
