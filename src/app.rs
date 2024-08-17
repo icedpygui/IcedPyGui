@@ -291,17 +291,19 @@ impl App {
         
     }
 
-    pub fn view(&self, window: window::Id) -> Element<'_, self::Message> {
+    pub fn view(&self, window_id: window::Id) -> Element<self::Message> {
+
+        let visible: bool = get_window_visibility(window_id);
  
-        let content = create_content(window);
+        let content = create_content(window_id);
 
         let debug = self.windows
-                            .get(&window)
+                            .get(&window_id)
                             .map(|window| window.debug.clone())
                             .unwrap();
         
         let theme = self.windows
-                                .get(&window)
+                                .get(&window_id)
                                 .map(|window| window.theme.clone())
                                 .unwrap();
       
@@ -367,6 +369,23 @@ impl App {
 
 }
 
+
+fn get_window_visibility(iced_window_id: window::Id) -> bool {
+    let state = access_state();
+
+    let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
+    let ipg_window_id = match ipg_window_id_opt {
+        Some(id) => id.clone(),
+        None => panic!("App: title, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
+    };
+    
+    let window_opt = state.containers.get(&ipg_window_id);
+    let ipg_window = get_window_container(window_opt);
+
+    let vis = ipg_window.visible;
+    drop(state);
+    vis
+}
 
 // Central method to get the structures stored in the mutex and then the children 
 fn create_content(iced_id: window::Id) -> Element<'static, Message> {

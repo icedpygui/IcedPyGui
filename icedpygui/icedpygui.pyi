@@ -3443,6 +3443,7 @@ class IpgWindowParam:
     Debug=0
     Theme=0
     ScaleFactor=0
+    Show=0
 
 
 class IpgWindowLevel:

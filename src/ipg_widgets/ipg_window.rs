@@ -287,6 +287,7 @@ pub enum IpgWindowParam {
     Debug,
     Theme,
     ScaleFactor,
+    Show,
 }
 
 pub fn window_item_update(wnd: &mut IpgWindow,
@@ -312,6 +313,9 @@ pub fn window_item_update(wnd: &mut IpgWindow,
                 Err(e) => panic!("Unable to extract input string to a float for scale_factor, error = {}", e),
             };
             wnd.scale_factor = num;
+        },
+        IpgWindowParam::Show => {
+            wnd.visible = try_extract_boolean(value);
         },
     }
 
