@@ -11,7 +11,7 @@ use iced::widget::Column;
 use pyo3::{pyclass, PyObject, Python};
 
 use super::callbacks::WidgetCallbackOut;
-use super::helpers::try_extract_boolean;
+use super::helpers::{try_extract_boolean, try_extract_string};
 
 
 #[derive(Debug, Clone)]
@@ -289,45 +289,29 @@ pub enum IpgWindowParam {
     ScaleFactor,
 }
 
-pub fn window_item_update(wid: usize,
+pub fn window_item_update(wnd: &mut IpgWindow,
                             item: PyObject,
                             value: PyObject
                             )
 {
     let update = try_extract_window_update(item);
 
-    let mut state = access_state();
-
     match update {
         IpgWindowParam::Debug => {
-            let val = try_extract_boolean(value);
-
-            for (wnd_id, (id, _debug)) in state.window_debug.iter_mut() {
-                if wid == *id {
-                    let wnd_id = wnd_id.clone();
-                    state.window_debug.entry(wnd_id).and_modify(|e| { e.1 = val });
-                    drop(state);
-                    return;
-                }
-            }
-            drop(state);
+            wnd.debug = try_extract_boolean(value);
         },
         IpgWindowParam::Theme => {
-            let ipg_theme = try_extract_ipg_theme(value);
-            let iced_theme = get_iced_window_theme(ipg_theme);
-
-            for (wnd_id, (id, _theme)) in state.window_theme.iter_mut() {
-                if wid == *id {
-                    let wnd_id = wnd_id.clone();
-                    state.window_theme.entry(wnd_id).and_modify(|e| { e.1 = iced_theme });
-                    drop(state);
-                    return;
-                }
-            }
-            drop(state);
+            let val = try_extract_ipg_theme(value);
+            wnd.theme = get_iced_window_theme(val);
         },
         IpgWindowParam::ScaleFactor => {
-            state.windows
+            let val_str = try_extract_string(value);
+            let num_result = &val_str.parse::< f64 >();
+            let num = match num_result {
+                Ok(n) => n.clone(),
+                Err(e) => panic!("Unable to extract input string to a float for scale_factor, error = {}", e),
+            };
+            wnd.scale_factor = num;
         },
     }
 

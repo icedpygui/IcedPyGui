@@ -242,7 +242,7 @@ impl IPG {
         let _ = iced::daemon(App::title, App::update, App::view)
                     .subscription(App::subscription)
                     .theme(App::theme)
-                    // .scale_factor(App::scale_factor)
+                    .scale_factor(App::scale_factor)
                     .antialiasing(true)
                     .run_with(||App::new(flags));
     }
@@ -3527,22 +3527,16 @@ impl IPG {
             },
             None => {
                 match state.containers.get_mut(&wid) {
-                    // Since multi windows implementation, the window container
-                    // is no longer used except for obtaining the id (usize type)
-                    // which in turn allows one to get the Id type.  The state needs 
-                    // to be dropped here before calling the window_update since it 
-                    // is opened again.
-                    // The window methods will be refactored later.
-                    
+
                     Some(cnt) => {
-                        let wnd_id = check_if_window(cnt);
-                        if wnd_id != 0 {
-                            drop(state);
-                            window_item_update(wnd_id, item, value);
-                        } else {
+                        // let wnd_id = check_if_window(cnt);
+                        // if wnd_id != 0 {
+                        //     drop(state);
+                        //     window_item_update(wnd_id, item, value);
+                        // } else {
                             match_container(cnt, item.clone(), value.clone());
-                            drop(state);
-                        }
+                            // drop(state);
+                        // }
                     },
                     None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
                 }
@@ -3668,22 +3662,9 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
             scrollable_item_update(scroll, item, value);
         },
         IpgContainers::IpgToolTip(_) => {},
-        IpgContainers::IpgWindow(_) => {},
-    }
-}
-
-fn check_if_window(container: &mut IpgContainers) -> usize {
-    
-    match container {
-        IpgContainers::IpgColumn(_) => 0,
-        IpgContainers::IpgContainer(_) => 0,
-        IpgContainers::IpgModal(_) => 0,
-        IpgContainers::IpgMouseArea(_) => 0,
-        IpgContainers::IpgRow(_) => 0,
-        IpgContainers::IpgTable(_) => 0,
-        IpgContainers::IpgScrollable(_) => 0,
-        IpgContainers::IpgToolTip(_) => 0,
-        IpgContainers::IpgWindow(wnd_cnt) => wnd_cnt.id.clone(),
+        IpgContainers::IpgWindow(wnd) => {
+            window_item_update(wnd, item, value);
+        },
     }
 }
 
