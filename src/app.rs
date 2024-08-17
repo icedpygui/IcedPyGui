@@ -130,12 +130,17 @@ impl App {
     pub fn title(&self, iced_window_id: window::Id) -> String {
         let state = access_state();
 
-        let ipg_window_id = state.windows_iced_ipg_ids.get(&iced_window_id);
+        let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
+        let ipg_window_id = match ipg_window_id_opt {
+            Some(id) => id.clone(),
+            None => panic!("App: title, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
+        };
+        
+        let window_opt = state.containers.get(&ipg_window_id);
+        let ipg_window = get_window_container(window_opt);
 
-        let title = state.windows
-            .get(&window)
-            .map(|window| window.title.clone())
-            .unwrap_or("IcePyGui".to_string());
+        let title = ipg_window.title.clone();
+        drop(state);
         title
     }
 
@@ -287,7 +292,7 @@ impl App {
     }
 
     pub fn view(&self, window: window::Id) -> Element<'_, self::Message> {
-
+ 
         let content = create_content(window);
 
         let debug = self.windows
@@ -341,11 +346,23 @@ impl App {
             .unwrap()
     }
 
-    fn scale_factor(&self, window: window::Id) -> f64 {
-        self.windows
-            .get(&window)
-            .map(|window| window.scale_factor)
-            .unwrap()
+    pub fn scale_factor(&self, iced_window_id: window::Id) -> f64 {
+
+        let state = access_state();
+
+        let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
+        let ipg_window_id = match ipg_window_id_opt {
+            Some(id) => id.clone(),
+            None => panic!("App: title, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
+        };
+        
+        let window_opt = state.containers.get(&ipg_window_id);
+        let ipg_window = get_window_container(window_opt);
+
+        let factor = ipg_window.scale_factor;
+        drop(state);
+        factor
+    
     }
 
 }
@@ -626,5 +643,27 @@ fn match_theme_with_color(theme: Theme) -> Color {
         Theme::Nightfly => Color::WHITE,
         Theme::Oxocarbon => Color::WHITE,
         Theme::Custom(_) => Color::WHITE,
+    }
+}
+
+fn get_window_container(container_opt: Option<&IpgContainers>) -> &IpgWindow {
+    
+    let container = match container_opt {
+        Some(cnt) => cnt,
+        None => panic!("App: get_window_container: Cannot find IpgContainer"),
+    };
+
+    match container {
+        IpgContainers::IpgColumn(_) => panic!("Wrong container"),
+        IpgContainers::IpgContainer(_) => panic!("Wrong container"),
+        IpgContainers::IpgModal(_) => panic!("Wrong container"),
+        IpgContainers::IpgMouseArea(_) => panic!("Wrong container"),
+        IpgContainers::IpgTable(_) => panic!("Wrong container"),
+        IpgContainers::IpgRow(_) => panic!("Wrong container"),
+        IpgContainers::IpgScrollable(_) => panic!("Wrong container"),
+        IpgContainers::IpgToolTip(_) => panic!("Wrong container"),
+        IpgContainers::IpgWindow(wnd) => {
+            wnd
+        },
     }
 }
