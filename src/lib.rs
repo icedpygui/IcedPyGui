@@ -94,6 +94,19 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
     CALLBACKS.lock().unwrap()
 }
 
+pub struct WindowMode {
+    pub mode: Option<(window::Mode, usize)>,
+}
+
+pub static WINDOWMODE: Mutex<WindowMode> = Mutex::new(WindowMode {
+    mode: None,
+    
+});
+
+pub fn access_window_mode() -> MutexGuard<'static, WindowMode> {
+    WINDOWMODE.lock().unwrap()
+}
+
 pub struct State {
     pub ids: Lazy<HashMap<usize, Vec<IpgIds>>>,  // <window_id=usize, Vec<IpgIds=structure>>
     pub last_id: usize,
@@ -3518,30 +3531,22 @@ impl IPG {
 
         let mut state = access_state();
 
-        let widget_opt = state.widgets.get_mut(&wid);
+        let widget = state.widgets.get_mut(&wid);
 
-        match widget_opt {
-            Some(w) => {
-                match_widget(w, item, value);
+        if widget.is_some() {
+            match_widget(widget.unwrap(), item, value);
                 drop(state);
-            },
-            None => {
-                match state.containers.get_mut(&wid) {
+        } else {
+            match state.containers.get_mut(&wid) {
 
-                    Some(cnt) => {
-                        // let wnd_id = check_if_window(cnt);
-                        // if wnd_id != 0 {
-                        //     drop(state);
-                        //     window_item_update(wnd_id, item, value);
-                        // } else {
-                            match_container(cnt, item.clone(), value.clone());
-                            // drop(state);
-                        // }
-                    },
-                    None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
-                }
-            },
-        };
+                Some(cnt) => {
+                    match_container(cnt, item.clone(), value.clone());
+                    drop(state);
+                },
+                None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
+            }
+        }
+
     }
 
     #[pyo3(signature = (base_color=None, base_rgba=None))]
@@ -3835,6 +3840,4 @@ pub fn find_parent_uid(ipg_ids: &Vec<IpgIds>, parent_id: String) -> usize {
     panic!("Parent id {:?} not found in function find_parent_uid()", parent_id)
 }
 
-pub fn delete_item(_id: usize) {
 
-}
