@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 
 use crate::app::{self, Message};
-use crate::{access_state, access_callbacks};
+use crate::{access_callbacks, access_state, access_window_mode};
 
 use iced::window;
 use iced::{Element, Task, Theme, Size};
@@ -11,7 +11,7 @@ use iced::widget::Column;
 use pyo3::{pyclass, PyObject, Python};
 
 use super::callbacks::WidgetCallbackOut;
-use super::helpers::{try_extract_boolean, try_extract_string};
+use super::helpers::{try_extract_boolean, try_extract_f64};
 
 
 #[derive(Debug, Clone)]
@@ -306,16 +306,18 @@ pub fn window_item_update(wnd: &mut IpgWindow,
             wnd.theme = get_iced_window_theme(val);
         },
         IpgWindowParam::ScaleFactor => {
-            let val_str = try_extract_string(value);
-            let num_result = &val_str.parse::< f64 >();
-            let num = match num_result {
-                Ok(n) => n.clone(),
-                Err(e) => panic!("Unable to extract input string to a float for scale_factor, error = {}", e),
-            };
-            wnd.scale_factor = num;
+            wnd.scale_factor = try_extract_f64(value);
         },
         IpgWindowParam::Show => {
-            wnd.visible = try_extract_boolean(value);
+            wnd.visible = !wnd.visible;
+            
+            let mut mode = window::Mode::Hidden;
+            if wnd.visible {
+                mode = window::Mode::Windowed;
+            }
+            let mut state = access_window_mode();
+            state.mode = Some((mode, wnd.id));
+            drop(state)
         },
     }
 

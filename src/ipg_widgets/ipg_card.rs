@@ -2,7 +2,7 @@
 
 use crate::app::Message;
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_string};
-use crate::{access_callbacks, delete_item};
+use crate::access_callbacks;
 use super::callbacks::{WidgetCallbackIn, 
 WidgetCallbackOut, get_set_widget_callback_data,
 };

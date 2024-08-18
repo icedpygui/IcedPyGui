@@ -31,33 +31,48 @@ pub fn check_for_dup_container_ids(id: usize, container_id: Option<String>) {
     drop(state);
 }
 
-
-pub fn get_usize_of_id(iced_id: window::Id) -> usize {
-
-    let iced_id_str = format!("{:?}", iced_id);
-
-    let mut numeric_vec: Vec<i32> = vec![];
-
-    for c in iced_id_str.chars() {
-        if c.is_numeric() {
-            numeric_vec.push(c as i32 - 0x30);
-        }
-    }
-
-    if numeric_vec.len() == 0 {
-        panic!("usize of Id could not be obtained")
-    }
-
-    let mut acc: i32 = 0;
-
-    for num in numeric_vec {
-        acc *= 10;
-        acc += num;
-    }
+pub fn find_key_for_value(value: usize) -> window::Id {
+    let state = access_state();
+    let map = &state.windows_iced_ipg_ids;
+    let id = map.iter()
+        .find_map(|(key, &val)| if val == value { Some(key) } else { None });
     
-    acc as usize
-    
+    match id {
+        Some(id) => {
+            let iced_id = id.clone();
+            drop(state);
+            iced_id
+        },
+        None => panic!("Unable to find the iced id via the ipg id {}.", value)
+    }
 }
+
+// pub fn get_usize_of_id(iced_id: window::Id) -> usize {
+
+//     let iced_id_str = format!("{:?}", iced_id);
+
+//     let mut numeric_vec: Vec<i32> = vec![];
+
+//     for c in iced_id_str.chars() {
+//         if c.is_numeric() {
+//             numeric_vec.push(c as i32 - 0x30);
+//         }
+//     }
+
+//     if numeric_vec.len() == 0 {
+//         panic!("usize of Id could not be obtained")
+//     }
+
+//     let mut acc: i32 = 0;
+
+//     for num in numeric_vec {
+//         acc *= 10;
+//         acc += num;
+//     }
+    
+//     acc as usize
+    
+// }
 
 
 pub fn convert_vecs<T, U>(vector: Vec<T>) -> Vec<U>

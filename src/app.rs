@@ -7,12 +7,14 @@ use iced::{font, window};
 use iced::event::Event;
 use iced::{Element, Point, Subscription, Task, Theme};
 use iced::executor;
-use iced::widget::{focus_next, Column};
+use iced::widget::{focus_next, horizontal_space, Column};
 use iced::time;
 use iced::Color;
+use once_cell::sync::Lazy;
 
 
-use crate::ipg_widgets;
+use crate::{access_window_mode, ipg_widgets};
+use crate::ipg_widgets::helpers::find_key_for_value;
 use crate::ipg_widgets::ipg_modal::{construct_modal, modal_callback, ModalMessage};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
@@ -42,7 +44,6 @@ use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage, tick_c
 use ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
 use ipg_widgets::ipg_tool_tip::construct_tool_tip;
 use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_window, window_callback};
-use ipg_widgets::helpers::get_usize_of_id;
 use crate::{access_state, IpgIds};
 
 
@@ -102,7 +103,10 @@ pub struct App {
     keyboard_event_enabled: (usize, bool),
     mouse_event_enabled: (usize, bool),
     timer_event_enabled: (usize, bool),
-    window_event_enabled: (usize, bool), 
+    window_event_enabled: (usize, bool),
+
+    window_show_hide: bool,
+    counter: i32, 
 }
 
 
@@ -121,6 +125,9 @@ impl App {
                 mouse_event_enabled: flags.mouse_event_enabled,
                 timer_event_enabled: flags.timer_event_enabled,
                 window_event_enabled: flags.window_event_enabled,
+
+                window_show_hide: false,
+                counter: 0,
             },
             
             Task::batch(open),
@@ -145,7 +152,6 @@ impl App {
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
-        
         match message {
             Message::FontLoaded(_) => {
                 Task::none()
@@ -159,7 +165,7 @@ impl App {
             },
             Message::Button(id, message) => {
                 button_callback(id, message);
-                Task::none()
+                get_tasks()
             },
             Message::Card(id, message) => {
                 card_callback(id, message);
@@ -167,7 +173,7 @@ impl App {
             },
             Message::CheckBox(id, message) => {
                 checkbox_callback(id, message);
-                Task::none()
+                get_tasks()
             },
             Message::DatePicker(id, message) => {
                 date_picker_update(id, message);
@@ -270,7 +276,7 @@ impl App {
             },
             Message::Toggler(id, message) => {
                 toggle_callback(id, message);
-                Task::none()
+                get_tasks()
             },
             Message::Window(message) => {
                 window_callback(message)
@@ -293,7 +299,11 @@ impl App {
 
     pub fn view(&self, window_id: window::Id) -> Element<self::Message> {
 
-        let visible: bool = get_window_visibility(window_id);
+        // let visible: bool = get_window_visibility(window_id);
+        
+        // if !visible { 
+        //     return horizontal_space().into();
+        // }
  
         let content = create_content(window_id);
 
@@ -385,6 +395,24 @@ fn get_window_visibility(iced_window_id: window::Id) -> bool {
     let vis = ipg_window.visible;
     drop(state);
     vis
+}
+
+fn get_tasks() -> Task<Message> {
+
+    let mut state = access_window_mode();
+
+    match state.mode {
+        Some(m) => {
+            let iced_id = find_key_for_value(m.1);
+            let change_mode = window::change_mode(iced_id, m.0);
+            drop(state);
+            Task::batch(vec![change_mode])
+        },
+        None => {
+            drop(state);
+            Task::none()
+        },
+    }
 }
 
 // Central method to get the structures stored in the mutex and then the children 
