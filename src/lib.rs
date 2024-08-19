@@ -51,7 +51,7 @@ use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInputStyle, Ipg
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParam, IpgTogglerStyle};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
-use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, IpgWindowLevel, IpgWindowParam, IpgWindowTheme};
+use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, IpgWindowLevel, IpgWindowMode, IpgWindowParam, IpgWindowTheme};
 use ipg_widgets::ipg_enums::{IpgAlignment, IpgContainers, IpgHorizontalAlignment, 
     IpgVerticalAlignment, IpgWidgets};
 
@@ -281,7 +281,8 @@ impl IPG {
                         scale_factor=1.0,
                         theme=IpgWindowTheme::Dark, 
                         exit_on_close=true, on_resize=None, 
-                        show=true, debug=false, user_data=None))]
+                        mode=IpgWindowMode::Windowed, 
+                        debug=false, user_data=None))]
     fn add_window(&mut self,
                         window_id: String, 
                         title: String, 
@@ -302,7 +303,7 @@ impl IPG {
                         theme: IpgWindowTheme,
                         exit_on_close: bool,
                         on_resize: Option<PyObject>,
-                        show: bool,
+                        mode: IpgWindowMode,
                         debug: bool,
                         user_data: Option<PyObject>,
                     ) -> PyResult<usize>
@@ -348,8 +349,6 @@ impl IPG {
             window_position = Position::Centered;
         }
 
-        let visible = show;
-
         self.theme = get_iced_window_theme(theme.clone()); // used later for menu
         let iced_theme = get_iced_window_theme(theme);
 
@@ -369,9 +368,9 @@ impl IPG {
                                                 parent_id: "".to_string(), is_container: true}]);
 
         state.container_ids.insert(self.id, vec![self.id]);
-        // TODO: A windows container is probably not needed but some suttle issues arise when not used.
+        // TODO: Only one of these below are needed but some suttle issues arise when not used together.
         // Will need to work through it in the near future.  At the onset, used only one window then
-        // iced made multiwindow so sort of patch it to work but need to revisit it.
+        // iced made multi-window so sort of patch it to work but need to revisit it.
         state.containers.insert(self.id, IpgContainers::IpgWindow(IpgWindow::new(
                                             self.id,
                                             title.clone(), 
@@ -382,7 +381,7 @@ impl IPG {
                                             exit_on_close,
                                             iced_theme.clone(), 
                                             resizable,
-                                            visible,
+                                            mode.clone(),
                                             decorations,
                                             transparent,
                                             level.clone(),
@@ -401,7 +400,7 @@ impl IPG {
                                         exit_on_close,
                                         iced_theme, 
                                         resizable,
-                                        visible,
+                                        mode,
                                         decorations,
                                         transparent,
                                         level,
@@ -3734,6 +3733,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgWindowParam>()?;
     m.add_class::<IpgWindowLevel>()?;
     m.add_class::<IpgWindowTheme>()?;
+    m.add_class::<IpgWindowMode>()?;
     Ok(())
 }
 

@@ -45,7 +45,7 @@ class IPG:
                     level: IpgWindowLevel = IpgWindowLevel.Normal,
                     theme: IpgWindowTheme=IpgWindowTheme.Dark,
                     debug: bool=False,
-                    show: bool=True,
+                    mode: IpgWindowMode=IpgWindowMode.Windowed,
                     ) -> int:
         """
         Adds a window to the gui.
@@ -86,8 +86,8 @@ class IPG:
                 Whether the window should be Normal, AlwaysOnBottom, AlwaysOnTop
             theme: IpgWindowThemes
                 Sets the style of the window.
-            show: bool
-                Sets whether the window is shown or hides, the first window is always shown.
+            mode: IpgWindowMode
+                Sets the window mode, Windowed(default), FullScreen, Hidden.
             debug: bool
                 If set, draws a box around widgets to see the layout.
         
@@ -3441,15 +3441,22 @@ class IpgTogglerParam:
 
 class IpgWindowParam:
     Debug=0
+    Mode=0
     Theme=0
     ScaleFactor=0.0
-    Show=True
+    
 
 
 class IpgWindowLevel:
     Normal=0
     AlwaysOnBottom=0
     AlwaysOnTop=0
+
+
+class IpgWindowMode:
+    Windowed=0
+    Fullscreen=0
+    Hidden=0
 
 
 class IpgButtonArrow:
