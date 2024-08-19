@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgWindowParam
+from icedpygui import IPG, IpgWindowParam, IpgWindowMode
 
 ipg = IPG()
 
@@ -8,18 +8,19 @@ def change_scale(input_id: int, value: str):
     ipg.update_item(wnd1, IpgWindowParam.ScaleFactor, float(value))
 
 
-# For a window, the show/hide is just toggle true/false, so
-# the Show param value can be anything because its ignored.
-# The show/hide parameter only works for button, toggler, and checkbox.
-def show_hide_window(tog_id: int):
-    ipg.update_item(wnd2, IpgWindowParam.Show, None)
+def show_window(btn_id: int):
+    ipg.update_item(wnd2, IpgWindowParam.Mode, IpgWindowMode.Windowed)
 
+
+def hide_window(btnid: int):
+    ipg.update_item(wnd2, IpgWindowParam.Mode, IpgWindowMode.Hidden)
 
 # Add the 1st window
 wnd1 = ipg.add_window(window_id="main1",
                       title="Window 1",
                       width=300.0, height=300.0, 
                       pos_x=100, pos_y=25,
+                      mode=IpgWindowMode.Fullscreen,
                       )
 
 # add a container to center things
@@ -44,10 +45,10 @@ ipg.add_text_input(parent_id="col",
                    placeholder="scale factor (float)", 
                    on_submit=change_scale)
 
-# add a toggler to show and hide the 2nd window
+# add a button to show the 2nd window
 ipg.add_button(parent_id="col",
-                label="Show/Hide Window",
-                on_press=show_hide_window,
+                label="Show Window",
+                on_press=show_window,
                 )
 
 
@@ -57,11 +58,11 @@ wnd2 = ipg.add_window(window_id="main2",
                         title="Window 2",
                         width=300.0, height=300.0,  
                         pos_x=500, pos_y=25,
-                        show=True,
+                        mode=IpgWindowMode.Hidden,
                         )
 
 ipg.add_container(window_id="main2", container_id="cont")
 ipg.add_button(parent_id="cont", 
                 label="Hide Window",
-                on_press=show_hide_window)
+                on_press=hide_window)
 ipg.start_session()

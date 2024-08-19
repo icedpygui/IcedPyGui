@@ -13,6 +13,7 @@ use iced::Color;
 use once_cell::sync::Lazy;
 
 
+use crate::ipg_widgets::ipg_window::IpgWindowMode;
 use crate::{access_window_mode, ipg_widgets};
 use crate::ipg_widgets::helpers::find_key_for_value;
 use crate::ipg_widgets::ipg_modal::{construct_modal, modal_callback, ModalMessage};
@@ -290,7 +291,18 @@ impl App {
                 if self.windows.is_empty() {
                     iced::exit()
                 } else {
-                    Task::none()
+                    let mut all_hidden = true;
+                    for (id, wnd) in self.windows.iter() {
+                        if wnd.mode != IpgWindowMode::Hidden {
+                            all_hidden = false;
+                            break;
+                        }
+                    }
+                    if all_hidden {
+                        iced::exit()
+                    } else {
+                        Task::none()
+                    }
                 }
             },
         }
@@ -392,7 +404,12 @@ fn get_window_visibility(iced_window_id: window::Id) -> bool {
     let window_opt = state.containers.get(&ipg_window_id);
     let ipg_window = get_window_container(window_opt);
 
-    let vis = ipg_window.visible;
+    let vis = match ipg_window.mode {
+        ipg_widgets::ipg_window::IpgWindowMode::Windowed => true,
+        ipg_widgets::ipg_window::IpgWindowMode::Fullscreen => true,
+        ipg_widgets::ipg_window::IpgWindowMode::Hidden => false,
+    };
+    
     drop(state);
     vis
 }
