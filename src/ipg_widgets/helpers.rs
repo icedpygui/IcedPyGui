@@ -1,6 +1,4 @@
 #![allow(dead_code)]
-use std::collections::BTreeMap;
-
 use crate::graphics::colors::IpgColor;
 use crate::style::styling::IpgStyleStandard;
 use crate::access_state;
@@ -429,18 +427,6 @@ pub fn try_extract_boolean(value: PyObject) -> bool {
     })  
 }
 
-
-pub fn try_extract_dict(items: PyObject) -> BTreeMap<String, Vec<String>> {
-    Python::with_gil(|py| {
-
-        let res = items.extract::<BTreeMap<String, Vec<String>>>(py);
-        match res {
-            Ok(val) => val,
-            Err(_) => panic!("Unable to extract python dict"),
-        }
-    })
-}
-
 pub fn try_extract_ipg_alignment(value: PyObject) -> IpgAlignment {
     Python::with_gil(|py| {
 
@@ -512,3 +498,8 @@ pub fn get_container_id_via_string(id: String) -> usize {
 
     container_id
 }
+
+// fn find_key_with_value(map: HashMap<window::Id, usize>, value: usize) -> Option<window::Id> {
+//     map.iter()
+//         .find_map(|(key, val)| if val == value { Some(key) } else { None })
+// }

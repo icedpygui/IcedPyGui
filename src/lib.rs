@@ -27,7 +27,7 @@ use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxPa
 use ipg_widgets::ipg_column::IpgColumn;
 use ipg_widgets::ipg_container::{IpgContainer, IpgContainerStyle};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParam};
-use ipg_widgets::ipg_events::{IpgEventCallbacks, IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
+use ipg_widgets::ipg_events::{IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, IpgImageFilterMethod, 
     IpgImageParam, IpgImageRotation};
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParam, IpgMenuSeparatorStyle, 
@@ -70,23 +70,17 @@ use once_cell::sync::Lazy;
 pub const TABLE_INTERNAL_IDS_START: usize = 4_000_000_000;
 pub const TABLE_INTERNAL_IDS_END: usize = 4_000_000_999;
 
-#[derive(Debug, Clone)]
-pub struct CallBackEvent {
-    id: usize,
-    cb: PyObject,
-    name: IpgEventCallbacks,
-}
 
 #[derive(Debug)]
 pub struct Callbacks {
     callbacks: Lazy<HashMap<(usize, String), Option<PyObject>>>,
-    cb_events: Vec<CallBackEvent>,
+    callback_events: Lazy<HashMap<(usize, String), PyObject>>,
     user_data: Vec<(usize, Option<PyObject>)>,
 }
 
 pub static CALLBACKS: Mutex<Callbacks> = Mutex::new(Callbacks {
     callbacks: Lazy::new(||HashMap::new()),
-    cb_events: vec![],
+    callback_events:  Lazy::new(||HashMap::new()),
     user_data: vec![],
 });
 
@@ -95,12 +89,11 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
 }
 
 pub struct WindowMode {
-    pub mode: Option<(window::Mode, usize)>,
+    pub mode: Vec<(window::Mode, usize)>,
 }
 
 pub static WINDOWMODE: Mutex<WindowMode> = Mutex::new(WindowMode {
-    mode: None,
-    
+    mode: vec![],
 });
 
 pub fn access_window_mode() -> MutexGuard<'static, WindowMode> {
@@ -233,6 +226,7 @@ impl IPG {
                                         mouse_event_enabled: (0, false), 
                                         timer_event_enabled: (0, false), 
                                         window_event_enabled: (0, false),
+                                        touch_event_enabled: (0, false),
                                         timer_duration: 0,
                                     };
 
@@ -282,7 +276,8 @@ impl IPG {
                         theme=IpgWindowTheme::Dark, 
                         exit_on_close=true, on_resize=None, 
                         mode=IpgWindowMode::Windowed, 
-                        debug=false, user_data=None))]
+                        debug=false, user_data=None,
+                        gen_id=None))]
     fn add_window(&mut self,
                         window_id: String, 
                         title: String, 
@@ -306,9 +301,10 @@ impl IPG {
                         mode: IpgWindowMode,
                         debug: bool,
                         user_data: Option<PyObject>,
+                        gen_id: Option<usize>,
                     ) -> PyResult<usize>
     {
-        self.id += 1;
+        let id = self.get_id(gen_id);
 
         let mut window_position = Position::Default;
 
@@ -359,20 +355,20 @@ impl IPG {
         };
 
         if on_resize.is_some() {
-            add_callback_to_mutex(self.id, "on_resize".to_string(), on_resize);
+            add_callback_to_mutex(id, "on_resize".to_string(), on_resize);
         }
 
-        state.windows_str_ids.insert(window_id.clone(), self.id);
+        state.windows_str_ids.insert(window_id.clone(), id);
 
-        state.ids.insert(self.id, vec![IpgIds{id: self.id, parent_uid: 0, container_id: Some(window_id.clone()),
+        state.ids.insert(id, vec![IpgIds{id: id, parent_uid: 0, container_id: Some(window_id.clone()),
                                                 parent_id: "".to_string(), is_container: true}]);
 
-        state.container_ids.insert(self.id, vec![self.id]);
+        state.container_ids.insert(id, vec![id]);
         // TODO: Only one of these below are needed but some suttle issues arise when not used together.
         // Will need to work through it in the near future.  At the onset, used only one window then
         // iced made multi-window so sort of patch it to work but need to revisit it.
-        state.containers.insert(self.id, IpgContainers::IpgWindow(IpgWindow::new(
-                                            self.id,
+        state.containers.insert(id, IpgContainers::IpgWindow(IpgWindow::new(
+                                            id,
                                             title.clone(), 
                                             size,
                                             Some(min_size),
@@ -391,7 +387,7 @@ impl IPG {
                                             )));
         
         state.windows.push(IpgWindow::new(
-                                        self.id,
+                                        id,
                                         title, 
                                         size,
                                         Some(min_size),
@@ -408,10 +404,10 @@ impl IPG {
                                         debug,
                                         user_data,
                                         ));
-        state.last_id = self.id;
+        state.last_id = id;
         drop(state);
 
-        Ok(self.id)
+        Ok(id)
 
     }
 
@@ -3298,22 +3294,24 @@ impl IPG {
     {
         self.id += 1;
 
+        let mut callbacks = access_callbacks();
+
         match on_key_press {
-            Some(kp) => {
-                let cb = CallBackEvent{id: self.id, cb:kp, name: IpgEventCallbacks::OnKeyPress};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "key press".to_string()), py);
             },
             None => (),
         }
         match on_key_release {
-            Some(kr) => {
-                let cb = CallBackEvent{id: self.id, cb:kr, name: IpgEventCallbacks::OnKeyRelease};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "key release".to_string()), py);
             },
             None => (),
         }
 
-        add_user_data_to_mutex(self.id, user_data);
+        callbacks.user_data.push((self.id, user_data));
+
+        drop(callbacks);
         
         let mut state = access_state();
 
@@ -3349,78 +3347,72 @@ impl IPG {
     {
         self.id += 1;
 
+        let mut callbacks = access_callbacks();
+
         match on_move {
-            Some(om) => {
-                let cb = CallBackEvent{id: self.id, cb: om, name: IpgEventCallbacks::OnMove};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "move".to_string()), py);
             },
             None => (),
         }
         match on_enter_window {
-            Some(ew) => {
-                let cb = CallBackEvent{id: self.id, cb: ew, name: IpgEventCallbacks::OnEnterWindow};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "enter window".to_string()), py);
             },
             None => (),
         }
         match on_exit_window {
-            Some(ew) => {
-                let cb = CallBackEvent{id: self.id, cb: ew, name: IpgEventCallbacks::OnExitWindow};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "exit window".to_string()), py);
             },
             None => (),
         }
         match on_left_press {
-            Some(lp) => {
-                let cb = CallBackEvent{id: self.id, cb: lp, name: IpgEventCallbacks::OnLeftPress};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "left press".to_string()), py);
             },
             None => (),
         }
         match on_left_release {
-            Some(lr) => {
-                let cb = CallBackEvent{id: self.id, cb: lr, name: IpgEventCallbacks::OnLeftRelease};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "left release".to_string()), py);
             },
             None => (),
         }
         match on_middle_press {
-            Some(mp) => {
-                let cb = CallBackEvent{id: self.id, cb: mp, name: IpgEventCallbacks::OnMiddlePress};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "middle press".to_string()), py);
             },
             None => (),
         }
         match on_middle_release {
-            Some(mr) => {
-                let cb = CallBackEvent{id: self.id, cb: mr, name: IpgEventCallbacks::OnMiddleRelease};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "middle release".to_string()), py);
             },
             None => (),
         }
         match on_right_press {
-            Some(rp) => {
-                let cb = CallBackEvent{id: self.id, cb: rp, name: IpgEventCallbacks::OnRightPress};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "right press".to_string()), py);
             },
             None => (),
         }
         match on_right_release {
-            Some(rr) => {
-                let cb = CallBackEvent{id: self.id, cb: rr, name: IpgEventCallbacks::OnRightRelease};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "right release".to_string()), py);
             },
             None => (),
         }
         match on_middle_scroll {
-            Some(ms) => {
-                let cb = CallBackEvent{id: self.id, cb: ms, name: IpgEventCallbacks::OnMiddleScrollLine};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "middle scrollLine".to_string()), py);
             },
             None => (),
         }
 
-        add_user_data_to_mutex(self.id, user_data);
+        callbacks.user_data.push((self.id, user_data));
+
+        drop(callbacks);
         
         let mut state = access_state();
 
@@ -3433,49 +3425,98 @@ impl IPG {
         Ok(self.id)
     }
 
-    #[pyo3(signature = (enabled=false, on_open=None, on_close=None, 
-                        on_moved=None, on_resized=None, user_data=None))]
+    #[pyo3(signature = (enabled=false, on_closed=None, 
+                        on_moved=None, on_resized=None,
+                        on_redraw_requested=None,
+                        on_close_requested=None,
+                        on_focused=None, on_unfocused=None,
+                        on_file_hovered=None,
+                        on_file_dropped=None,
+                        on_files_hovered_left=None,
+                        user_data=None))]
     fn add_event_window(&mut self,
                         enabled: bool,
-                        on_open: Option<PyObject>,
-                        on_close: Option<PyObject>,
+                        on_closed: Option<PyObject>,
                         on_moved: Option<PyObject>,
                         on_resized: Option<PyObject>,
+                        on_redraw_requested: Option<PyObject>,
+                        on_close_requested: Option<PyObject>,
+                        on_focused: Option<PyObject>,
+                        on_unfocused: Option<PyObject>,
+                        on_file_hovered: Option<PyObject>,
+                        on_file_dropped: Option<PyObject>,
+                        on_files_hovered_left: Option<PyObject>,
                         user_data: Option<PyObject>,
                         ) -> PyResult<usize>
     {
         self.id += 1;
 
-        match on_open {
-            Some(oo) => {
-                let cb = CallBackEvent{id: self.id, cb: oo, name: IpgEventCallbacks::WindowOnOpened};
-                add_callback_event_to_mutex(cb);
-            },
-            None => (),
-        }
-        match on_close {
-            Some(oc) => {
-                let cb = CallBackEvent{id: self.id, cb: oc, name: IpgEventCallbacks::WindowOnClosed};
-                add_callback_event_to_mutex(cb);
+        let mut callbacks = access_callbacks();
+
+        match on_closed {
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "closed".to_string()), py);
             },
             None => (),
         }
         match on_moved {
-            Some(om) => {
-                let cb = CallBackEvent{id: self.id, cb: om, name: IpgEventCallbacks::WindowOnMoved};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "moved".to_string()), py);
             },
             None => (),
         }
         match on_resized {
-            Some(or) => {
-                let cb = CallBackEvent{id: self.id, cb: or, name: IpgEventCallbacks::WindowOnResized};
-                add_callback_event_to_mutex(cb);
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "resized".to_string()), py);
+            },
+            None => (),
+        }
+        match on_redraw_requested {
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "redraw requested".to_string()), py);
+            },
+            None => (),
+        }
+        match on_close_requested {
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "close requested".to_string()), py);
+            },
+            None => (),
+        }
+        match on_focused {
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "focused".to_string()), py);
+            },
+            None => (),
+        }
+        match on_unfocused {
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "unfocused".to_string()), py);
+            },
+            None => (),
+        }
+        match on_file_hovered {
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "file hovered".to_string()), py);
+            },
+            None => (),
+        }
+        match on_file_dropped {
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "file dropped".to_string()), py);
+            },
+            None => (),
+        }
+        match on_files_hovered_left {
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "files hovered left".to_string()), py);
             },
             None => (),
         }
 
-        add_user_data_to_mutex(self.id, user_data);
+        callbacks.user_data.push((self.id, user_data));
+
+        drop(callbacks);
         
         let mut state = access_state();
 
@@ -3802,9 +3843,6 @@ fn set_state_of_widget(
     drop(state);
 }
 
-
-
-
 fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>) {
     let mut app_cbs = access_callbacks();
 
@@ -3812,23 +3850,6 @@ fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>
 
         drop(app_cbs);
 }
-
-fn add_callback_event_to_mutex(callback: CallBackEvent) {
-    let mut app_cbs = access_callbacks();
-
-        app_cbs.cb_events.push(callback);
-
-        drop(app_cbs);
-}
-
-fn add_user_data_to_mutex(id: usize, user_data: Option<PyObject>) {
-    let mut cb = access_callbacks();
-
-    cb.user_data.push((id, user_data));
-
-    drop(cb);
-}
-
 
 pub fn find_parent_uid(ipg_ids: &Vec<IpgIds>, parent_id: String) -> usize {
 

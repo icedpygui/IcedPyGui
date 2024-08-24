@@ -44,7 +44,7 @@ def update_line_height(_btn_id):
 
 
 # Add the window
-ipg.add_window("main", "Rule Demo", 700, 625,  pos_x=100, pos_y=25)
+ipg.add_window("main", "Toggler Demo", 700, 625,  pos_x=100, pos_y=25)
 
 # Add a main column to hold everything
 ipg.add_column("main", "col", width_fill=True, height_fill=True,

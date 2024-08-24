@@ -95,7 +95,7 @@ pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Task<app::Message>>
         let visible = match state.windows[i].mode {
             IpgWindowMode::Windowed => true,
             IpgWindowMode::Fullscreen => true,
-            IpgWindowMode::Hidden => false,
+            IpgWindowMode::Closed => false,
         };
         let (iced_id, open) = window::open(window::Settings {
             size: state.windows[i].size,
@@ -107,15 +107,15 @@ pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Task<app::Message>>
             decorations: state.windows[i].decorations,
             transparent: state.windows[i].transparent,
             level: get_level(&state.windows[i].level),
-            exit_on_close_request: true,
+            exit_on_close_request: state.windows[i].exit_on_close_request,
             ..Default::default()
         });
-
-        spawn_window.push(open.map(Message::WindowOpened));
 
         windows.insert(iced_id, state.windows[i].clone());
         let ipg_id = state.windows[i].id.clone();
         state.windows_iced_ipg_ids.insert(iced_id, ipg_id);
+        let size = state.windows[i].size.clone();
+        spawn_window.push(open.map(move|_|Message::WindowOpened(iced_id, None, size)));
         
     }
     drop(state);
@@ -289,9 +289,19 @@ pub fn get_iced_window_theme(theme: IpgWindowTheme) -> Theme {
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum IpgWindowParam {
+    DistroyWindow,
+    Decorations,
     Debug,
+    ExitOnCloseRequest,
+    Level,
+    MinSize,
+    MaxSize,
     Mode,
+    Position,
+    Resizable,
+    Size,
     Theme,
+    Transparent,
     ScaleFactor,
 }
 
@@ -320,9 +330,25 @@ pub fn window_item_update(wnd: &mut IpgWindow,
             let mode = get_mode(&ipg_mode);
             wnd.mode = ipg_mode;
             let mut state = access_window_mode();
-            state.mode = Some((mode, wnd.id));
+            state.mode.push((mode, wnd.id));
             drop(state)
         },
+        IpgWindowParam::Decorations => (),
+        IpgWindowParam::ExitOnCloseRequest => {
+           
+        },
+        IpgWindowParam::DistroyWindow => {
+
+        }
+        IpgWindowParam::Level => (),
+        IpgWindowParam::MinSize => (),
+        IpgWindowParam::MaxSize => (),
+        IpgWindowParam::Position => {
+
+        },
+        IpgWindowParam::Resizable => (),
+        IpgWindowParam::Size => (),
+        IpgWindowParam::Transparent => (),
     }
 
 }
@@ -350,9 +376,9 @@ fn try_extract_ipg_theme(theme: PyObject) -> IpgWindowTheme {
     })
 }
 
-fn try_extract_mode(theme: PyObject) -> IpgWindowMode {
+fn try_extract_mode(mode: PyObject) -> IpgWindowMode {
     Python::with_gil(|py| {
-        let res = theme.extract::<IpgWindowMode>(py);
+        let res = mode.extract::<IpgWindowMode>(py);
         match res {
             Ok(mode) => mode,
             Err(_) => panic!("Window mode extraction failed"),
@@ -381,13 +407,13 @@ fn get_level(level: &IpgWindowLevel) -> iced::window::Level {
 pub enum IpgWindowMode {
     Windowed,
     Fullscreen,
-    Hidden,
+    Closed,
 }
 
 fn get_mode(mode: &IpgWindowMode) -> window::Mode {
     match mode {
         IpgWindowMode::Windowed => window::Mode::Windowed,
         IpgWindowMode::Fullscreen => window::Mode::Fullscreen,
-        IpgWindowMode::Hidden => window::Mode::Hidden,
+        IpgWindowMode::Closed => window::Mode::Hidden,
     }
 }

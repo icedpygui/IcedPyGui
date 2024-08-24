@@ -3,8 +3,9 @@
 use std::collections::HashMap;
 
 
-use iced::{font, window};
-use iced::event::Event;
+use iced::window::Position;
+use iced::{font, window, Size};
+use iced::event::{Event, Status};
 use iced::{Element, Point, Subscription, Task, Theme};
 use iced::executor;
 use iced::widget::{focus_next, horizontal_space, Column};
@@ -13,6 +14,7 @@ use iced::Color;
 use once_cell::sync::Lazy;
 
 
+use crate::ipg_widgets::ipg_events::{process_keyboard_events, process_mouse_events, process_touch_events, process_window_event};
 use crate::ipg_widgets::ipg_window::IpgWindowMode;
 use crate::{access_window_mode, ipg_widgets};
 use crate::ipg_widgets::helpers::find_key_for_value;
@@ -24,7 +26,6 @@ use ipg_widgets::ipg_column::construct_column;
 use ipg_widgets::ipg_container::construct_container;
 use ipg_widgets::ipg_date_picker::{DPMessage, construct_date_picker, date_picker_update};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
-use ipg_widgets::ipg_events::process_events;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
 use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
 use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_point, construct_mousearea};
@@ -52,12 +53,14 @@ use iced::widget::{scrollable, Space};
 
 #[derive(Debug, Clone)]
 pub enum Message {
-    EventOccurred(Event),
-
     Button(usize, BTNMessage),
     Card(usize, CardMessage),
     CheckBox(usize, CHKMessage),
     DatePicker(usize, DPMessage),
+    EventKeyboard(Event),
+    EventMouse(Event),
+    EventWindow((window::Id, Event)),
+    EventTouch(Event),
     Image(usize, ImageMessage),
     Menu(usize, MenuMessage),
     Modal(usize, ModalMessage),
@@ -74,8 +77,7 @@ pub enum Message {
     Timer(usize, TIMMessage),
     FontLoaded(Result<(), font::Error>),
     Window(WndMessage),
-    WindowOpened(window::Id),
-    WindowClosed(window::Id),
+    WindowOpened(window::Id, Option<Point>, Size),
 
     MouseAreaOnPress(usize),
     MouseAreaOnRelease(usize),
@@ -94,6 +96,7 @@ pub struct Flags {
     pub mouse_event_enabled: (usize, bool),
     pub timer_event_enabled: (usize, bool),
     pub window_event_enabled: (usize, bool),
+    pub touch_event_enabled: (usize, bool),
     pub timer_duration: u64,
 }
 
@@ -105,7 +108,9 @@ pub struct App {
     mouse_event_enabled: (usize, bool),
     timer_event_enabled: (usize, bool),
     window_event_enabled: (usize, bool),
+    touch_event_enabled: (usize, bool),
 
+    window_event: Option<(Event, Status, window::Id)>,
     window_show_hide: bool,
     counter: i32, 
 }
@@ -126,7 +131,9 @@ impl App {
                 mouse_event_enabled: flags.mouse_event_enabled,
                 timer_event_enabled: flags.timer_event_enabled,
                 window_event_enabled: flags.window_event_enabled,
+                touch_event_enabled: flags.touch_event_enabled,
 
+                window_event: None,
                 window_show_hide: false,
                 counter: 0,
             },
@@ -157,13 +164,6 @@ impl App {
             Message::FontLoaded(_) => {
                 Task::none()
             },
-            Message::EventOccurred(ipg_event) => {
-                process_events(ipg_event, self.keyboard_event_enabled,
-                                            self.mouse_event_enabled,
-                                            self.window_event_enabled,
-                                            self.timer_event_enabled);
-                Task::none()
-            },
             Message::Button(id, message) => {
                 button_callback(id, message);
                 get_tasks()
@@ -178,6 +178,32 @@ impl App {
             },
             Message::DatePicker(id, message) => {
                 date_picker_update(id, message);
+                Task::none()
+            },
+            Message::EventKeyboard(event) => {
+                process_keyboard_events(event, self.keyboard_event_enabled.0);
+                Task::none()
+            },
+            Message::EventMouse(event) => {
+                process_mouse_events(event, self.mouse_event_enabled.0);
+                Task::none()
+            },
+            Message::EventWindow((window_id, event)) => {
+                // if all windows are closed, returns a true else false.
+                let is_empty = process_window_event(event, 
+                    self.window_event_enabled.0, 
+                    self.window_event_enabled.1, 
+                    window_id);
+
+                if is_empty {
+                    iced::exit()
+                } else {
+                    // check for any window mode changes
+                    get_tasks()
+                }
+            },
+            Message::EventTouch(event) => {
+                process_touch_events(event, self.touch_event_enabled.0);
                 Task::none()
             },
             Message::Image(id, message) => {
@@ -282,28 +308,8 @@ impl App {
             Message::Window(message) => {
                 window_callback(message)
             },
-            Message::WindowOpened(_id) => {
+            Message::WindowOpened(_id, _position, size) => {
                 Task::none()
-            },
-            Message::WindowClosed(id) => {
-                self.windows.remove(&id);
-
-                if self.windows.is_empty() {
-                    iced::exit()
-                } else {
-                    let mut all_hidden = true;
-                    for (id, wnd) in self.windows.iter() {
-                        if wnd.mode != IpgWindowMode::Hidden {
-                            all_hidden = false;
-                            break;
-                        }
-                    }
-                    if all_hidden {
-                        iced::exit()
-                    } else {
-                        Task::none()
-                    }
-                }
             },
         }
         
@@ -311,11 +317,11 @@ impl App {
 
     pub fn view(&self, window_id: window::Id) -> Element<self::Message> {
 
-        // let visible: bool = get_window_visibility(window_id);
+        let visible: bool = get_window_visibility(window_id);
         
-        // if !visible { 
-        //     return horizontal_space().into();
-        // }
+        if !visible { 
+            return horizontal_space().into();
+        }
  
         let content = create_content(window_id);
 
@@ -340,19 +346,28 @@ impl App {
 
     pub fn subscription(&self) -> Subscription<Message> {
 
+        
         let mut subscriptions = vec![];
-
-        subscriptions.push(window::close_events().map(Message::WindowClosed));
-
+        
         if self.timer_event_enabled.1 {
             subscriptions.push(time::every(iced::time::Duration::from_millis(self.timer_duration)).map(|_| Message::Tick));
         } 
         
-        if self.keyboard_event_enabled.1 || self.mouse_event_enabled.1 || self.window_event_enabled.1 {
-
-            subscriptions.push(iced::event::listen().map(Message::EventOccurred));
-
+        if self.keyboard_event_enabled.1 {
+            subscriptions.push(iced::event::listen().map(Message::EventKeyboard));
         }
+
+        if self.mouse_event_enabled.1 {
+            subscriptions.push(iced::event::listen().map(Message::EventMouse));
+        }
+        // window event is always enabled, since we are using iced::daemon, the windows
+        // closing need to be followed and iced exited when the last window is closed.
+        // The closing is the only evennt monitored unless the user enables the window events.
+        let w_event = window::events()
+            .map(|(id, event)| Message::EventWindow((id, iced::Event::Window(event))));
+
+        subscriptions.push(w_event);
+        
         
         if subscriptions.len() > 0 {
             Subscription::batch(subscriptions)
@@ -407,7 +422,7 @@ fn get_window_visibility(iced_window_id: window::Id) -> bool {
     let vis = match ipg_window.mode {
         ipg_widgets::ipg_window::IpgWindowMode::Windowed => true,
         ipg_widgets::ipg_window::IpgWindowMode::Fullscreen => true,
-        ipg_widgets::ipg_window::IpgWindowMode::Hidden => false,
+        ipg_widgets::ipg_window::IpgWindowMode::Closed => false,
     };
     
     drop(state);
@@ -418,18 +433,17 @@ fn get_tasks() -> Task<Message> {
 
     let mut state = access_window_mode();
 
-    match state.mode {
-        Some(m) => {
-            let iced_id = find_key_for_value(m.1);
-            let change_mode = window::change_mode(iced_id, m.0);
-            drop(state);
-            Task::batch(vec![change_mode])
-        },
-        None => {
-            drop(state);
-            Task::none()
-        },
+    if state.mode.is_empty() {return Task::none()}
+
+    let mut change_modes = vec![];
+
+    for mode in state.mode.iter() {
+        let iced_id = find_key_for_value(mode.1);
+        change_modes.push(window::change_mode(iced_id, mode.0));
     }
+    state.mode = vec![];
+    drop(state);
+    Task::batch(change_modes)
 }
 
 // Central method to get the structures stored in the mutex and then the children 
