@@ -110,8 +110,6 @@ pub struct App {
     window_event_enabled: (usize, bool),
     touch_event_enabled: (usize, bool),
 
-    window_event: Option<(Event, Status, window::Id)>,
-    window_show_hide: bool,
     counter: i32, 
 }
 
@@ -133,8 +131,6 @@ impl App {
                 window_event_enabled: flags.window_event_enabled,
                 touch_event_enabled: flags.touch_event_enabled,
 
-                window_event: None,
-                window_show_hide: false,
                 counter: 0,
             },
             
@@ -145,8 +141,7 @@ impl App {
     pub fn title(&self, iced_window_id: window::Id) -> String {
         let state = access_state();
 
-        let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
-        let ipg_window_id = match ipg_window_id_opt {
+        let ipg_window_id = match state.windows_iced_ipg_ids.get(&iced_window_id) {
             Some(id) => id.clone(),
             None => panic!("App: title, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
         };
@@ -317,24 +312,14 @@ impl App {
 
     pub fn view(&self, window_id: window::Id) -> Element<self::Message> {
 
-        let visible: bool = get_window_visibility(window_id);
+        let (visible, debug, theme) = get_window_values(window_id);
         
         if !visible { 
             return horizontal_space().into();
         }
  
         let content = create_content(window_id);
-
-        let debug = self.windows
-                            .get(&window_id)
-                            .map(|window| window.debug.clone())
-                            .unwrap();
         
-        let theme = self.windows
-                                .get(&window_id)
-                                .map(|window| window.theme.clone())
-                                .unwrap();
-      
         if debug {
             let color = match_theme_with_color(theme);
                 content.explain(color)  
@@ -407,7 +392,7 @@ impl App {
 }
 
 
-fn get_window_visibility(iced_window_id: window::Id) -> bool {
+fn get_window_values(iced_window_id: window::Id) -> (bool, bool, Theme) {
     let state = access_state();
 
     let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
@@ -424,9 +409,12 @@ fn get_window_visibility(iced_window_id: window::Id) -> bool {
         ipg_widgets::ipg_window::IpgWindowMode::Fullscreen => true,
         ipg_widgets::ipg_window::IpgWindowMode::Closed => false,
     };
-    
+    let debug = ipg_window.debug;
+    let theme = ipg_window.theme.clone();
+
     drop(state);
-    vis
+
+    (vis, debug, theme)
 }
 
 fn get_tasks() -> Task<Message> {
