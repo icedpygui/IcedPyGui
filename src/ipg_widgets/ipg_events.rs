@@ -3,10 +3,9 @@
 
 use std::collections::HashMap;
 
-use crate::{access_state, access_callbacks};
+use crate::{access_callbacks, access_state};
 
 use iced::event::Event;
-
 use iced::keyboard::Event::{KeyPressed, KeyReleased, ModifiersChanged};
 use iced::keyboard::{Key, Location, Modifiers};
 use iced::mouse::Event::{ButtonPressed, ButtonReleased, CursorEntered, 
@@ -14,9 +13,11 @@ use iced::mouse::Event::{ButtonPressed, ButtonReleased, CursorEntered,
 use iced::mouse::Button::{Left, Right, Middle, Back, Forward, Other,};
 use iced::mouse::ScrollDelta;
 
+use iced::window;
 use pyo3::{PyObject, Python};
 use pyo3::types::IntoPyDict;
 
+use super::ipg_window::IpgWindowMode;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct IpgKeyBoardEvent {
@@ -72,7 +73,6 @@ impl IpgWindowEvent {
     }
 }
 
-
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum IpgEvents {
     Keyboard(IpgKeyBoardEvent),
@@ -80,337 +80,455 @@ pub enum IpgEvents {
     Window(IpgWindowEvent),
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum IpgEventCallbacks {
-    OnKeyPress,
-    OnKeyRelease,
-    OnEnterWindow,
-    OnExitWindow,
-    OnMove,
-    OnLeftPress,
-    OnRightPress,
-    OnMiddlePress,
-    OnBackPress,
-    OnForwardPress,
-    OnOtherPress,
-    OnLeftRelease,
-    OnRightRelease,
-    OnMiddleRelease,
-    OnBackRelease,
-    OnForwardRelease,
-    OnOtherRelease,
-    OnMiddleScrollLine,
-    OnMiddleScrollPixel,
-    WindowOnOpened,
-    WindowOnClosed,
-    WindowOnMoved,
-    WindowOnResized,
-    None,
+// #[derive(Debug, Clone, PartialEq)]
+// pub enum IpgEventCallbacks {
+//     OnEnterWindow,
+//     OnExitWindow,
+//     OnMove,
+//     OnLeftPress,
+//     OnRightPress,
+//     OnMiddlePress,
+//     OnBackPress,
+//     OnForwardPress,
+//     OnOtherPress,
+//     OnLeftRelease,
+//     OnRightRelease,
+//     OnMiddleRelease,
+//     OnBackRelease,
+//     OnForwardRelease,
+//     OnOtherRelease,
+//     OnMiddleScrollLine,
+//     OnMiddleScrollPixel,
+//     WindowOnClosed,
+//     WindowOnMoved,
+//     WindowOnResized,
+//     None,
+// }
+
+pub fn process_keyboard_events(event: Event, event_id: usize) 
+{       
+    match event {    
+        Event::Keyboard(KeyPressed { key, location, modifiers, text: _ }) => {
+            
+            // dbg!("Pressed", &key, &location, &modifiers, &text);
+            let user_data = get_event_user_data(event_id);
+
+            let event_name = "key pressed".to_string();
+            
+            let cb = get_callback(event_id, event_name.clone());
+            
+            let key_str: String = process_key(key.as_ref());
+            
+            let mod_key = process_modifier(modifiers);
+
+            let location_str: String = process_location(location);
+
+            let hmap_s_s: HashMap<String, String> = 
+                HashMap::from([
+                    ("key".to_string(), key_str),
+                    ("modifier".to_string(), mod_key),
+                    ("location".to_string(), location_str)
+                ]);
+
+            process_keyboard_callback(event_id, 
+                                        cb,
+                                        event_name,
+                                        hmap_s_s,
+                                        user_data, 
+                                        );
+            
+        },
+        Event::Keyboard(KeyReleased { key, location, modifiers, }) => {
+            // dbg!("Released", &key, location, modifiers);
+            let user_data = get_event_user_data(event_id);
+
+            let event_name = "key released".to_string();
+            
+            let cb = get_callback(event_id, event_name.clone());
+            
+            let key_str: String = process_key(key.as_ref());
+
+            let mod_key = process_modifier(modifiers);
+
+            let location_str: String = process_location(location);
+
+            let hmap_s_s: HashMap<String, String> = HashMap::from([
+                ("key".to_string(), key_str),
+                ("modifier".to_string(), mod_key),
+                ("location".to_string(), location_str)
+            ]);
+
+            process_keyboard_callback(event_id,
+                                        cb,
+                                        event_name, 
+                                        hmap_s_s,
+                                        user_data, 
+                                        );
+            
+        },
+        // This event occurs when command keys are pressed but these 
+        // also show up under key pressed and release so not sure any advantage on using this.
+        Event::Keyboard(ModifiersChanged(_)) => (),
+        Event::Mouse(_) => (),
+        Event::Window(_) => (),
+        Event::Touch(_) => (),
+    }
 }
 
-pub fn process_events(ipg_event: Event, 
-                        key_enabled: (usize, bool), 
-                        mouse_enabled: (usize, bool),
-                        wnd_enabled: (usize, bool),
-                        touch_enabled: (usize, bool)) 
-    {   
-        match ipg_event {
-            Event::Keyboard(KeyPressed { key, 
-                                        location, 
-                                        modifiers, 
-                                        text: _ }) => {
-                if key_enabled.1 {
-                    // dbg!("Pressed", &key, &location, &modifiers, &text);
-                    let user_data = get_event_user_data(key_enabled.0);
-                    
-                    let key_str: String = process_key(key.as_ref());
-                    
-                    let mod_key = process_modifier(modifiers);
 
-                    let location_str: String = process_location(location);
+pub fn process_mouse_events(event: Event, event_id: usize)
+{
+    let user_data = get_event_user_data(event_id);
+    let mut hmap_s_f: Option<HashMap<String, f32>> = None;
+    let mut event_name = "".to_string();
 
-                    let hmap_s_s: Option<HashMap<String, String>> = Some(HashMap::from([
-                                                                            ("key".to_string(), key_str),
-                                                                            ("modifier".to_string(), mod_key),
-                                                                            ("location".to_string(), location_str)
-                                                                        ]));
+    match event {
+        Event::Mouse(m_event) => {
+            let cb = match m_event {
+                CursorEntered => {
+                    event_name = "enter window".to_string();
+                    get_callback(event_id, event_name.clone())
+                },
+                CursorLeft => {
+                    event_name = "exit window".to_string();
+                    get_callback(event_id, event_name.clone())
+                },
+                CursorMoved { position } => {
+                    hmap_s_f = Some(HashMap::from([("x".to_string(), position.x),
+                                    ("y".to_string(), position.y)]));
+                    event_name = "move".to_string();
+                    get_callback(event_id, event_name.clone())
+                },
+                ButtonPressed(btn) => {
+                    match btn {
+                        Left => {
+                            event_name = "left press".to_string();
+                            get_callback(event_id, event_name.clone())
+                        },
+                        Right => {
+                            event_name = "right press".to_string();
+                            get_callback(event_id, event_name.clone())
+                        },
+                        Middle => {
+                            event_name = "middle press".to_string();
+                            get_callback(event_id, event_name.clone())
+                        },
+                        Back => {
+                            event_name = "back press".to_string();
+                            get_callback(event_id, event_name.clone())
+                        },
+                        Forward => {
+                            event_name = "forward press".to_string();
+                            get_callback(event_id, event_name.clone())
+                        },
+                        Other(other) => {
+                            hmap_s_f = Some(HashMap::from([("other".to_string(), other as f32)]));
+                            event_name = "other press".to_string();
+                            get_callback(event_id, event_name.clone())
+                        },
+                    }
+                    },
+                    ButtonReleased(btn) => {
+                        match btn {
+                            Left => {
+                                event_name = "left release".to_string();
+                                get_callback(event_id, event_name.clone())
+                            },
+                            Right => {
+                                event_name = "right release".to_string();
+                                get_callback(event_id, event_name.clone())
+                            },
+                            Middle => {
+                                event_name = "middle release".to_string();
+                                get_callback(event_id, event_name.clone())
+                            },
+                            Back => {
+                                event_name = "back release".to_string();
+                                get_callback(event_id, event_name.clone())
+                            },
+                            Forward => {
+                                event_name = "forward release".to_string();
+                                get_callback(event_id, event_name.clone())
+                            },
+                            Other(other) => {
+                                hmap_s_f = Some(HashMap::from([("other".to_string(), other as f32)]));
+                                event_name = "other release".to_string();
+                                get_callback(event_id, event_name.clone())
+                            },
+                        }
+                    },
+                    WheelScrolled { delta } => {
+                        match delta {
+                            ScrollDelta::Lines { x:_, y } => {
+                                hmap_s_f = Some(HashMap::from([("y".to_string(), y)]));
+                                event_name = "middle scroll line".to_string();
+                                get_callback(event_id, event_name.clone())
+                            },
+                            ScrollDelta::Pixels { x, y } => {
+                                hmap_s_f = Some(HashMap::from([("x".to_string(), x),
+                                                                ("y".to_string(), y)]));
+                                event_name = "middle scroll pixel".to_string();
+                                get_callback(event_id, event_name.clone())
+                            },
+                        }
+                    }
+            };
+            process_mouse_callback(event_id,
+                                    cb,
+                                    event_name,
+                                    hmap_s_f,
+                                    user_data,
+                                    )
+        },
+        Event::Keyboard(_) => (),
+        Event::Window(_) => (),
+        Event::Touch(_) => (),
+    }
+        
+}
 
-                    process_callback(key_enabled.0, 
-                                    "KeyPressed".to_string(),
-                                    None,
+pub fn process_touch_events(event: Event, event_id: usize) {
+    let user_data = get_event_user_data(event_id);
+    let mut event_name = "".to_string();
+    match event {
+        Event::Touch(tch) => {
+            let (cb, hmap_s_fg, hmap_s_pt) = match tch {
+                iced::touch::Event::FingerPressed { id, position } => {
+                    let hmap_s_fg = HashMap::from([("finger".to_string(), id.0)]);
+                    let hmap_s_pt = HashMap::from([("position".to_string(), (position.x, position.y))]);
+                    event_name = "finger pressed".to_string();
+                    let cb = get_callback(event_id, event_name.clone());
+                    (cb, hmap_s_fg, hmap_s_pt)
+                },
+                iced::touch::Event::FingerMoved { id, position } => {
+                    let hmap_s_fg = HashMap::from([("finger".to_string(), id.0)]);
+                    let hmap_s_pt = HashMap::from([("position".to_string(), (position.x, position.y))]);
+                    event_name = "finger moved".to_string();
+                    let cb = get_callback(event_id, event_name.clone());
+                    (cb, hmap_s_fg, hmap_s_pt)
+                },
+                iced::touch::Event::FingerLifted { id, position } => {
+                    let hmap_s_fg = HashMap::from([("finger".to_string(), id.0)]);
+                    let hmap_s_pt =HashMap::from([("position".to_string(), (position.x, position.y))]);
+                    event_name = "finger lifted".to_string();
+                    let cb = get_callback(event_id, event_name.clone());
+                    (cb, hmap_s_fg, hmap_s_pt)
+                },
+                iced::touch::Event::FingerLost { id, position } => {
+                    let hmap_s_fg = HashMap::from([("finger".to_string(), id.0)]);
+                    let hmap_s_pt = HashMap::from([("position".to_string(), (position.x, position.y))]);
+                    event_name = "finger lost".to_string();
+                    let cb = get_callback(event_id, event_name.clone());
+                    (cb, hmap_s_fg, hmap_s_pt)
+                },
+            };
+            process_touch_callback(event_id,
+                                cb,
+                                event_name,
+                                hmap_s_fg,
+                                hmap_s_pt,
+                                user_data,
+                                )
+            
+        },
+        Event::Window(_) => (),
+        Event::Keyboard(_) => (),
+        Event::Mouse(_) => (),
+    }
+}
+
+
+pub fn process_window_event(event: Event,
+                            event_id: usize,
+                            event_enabled: bool,
+                            window_id: window::Id
+                        ) -> bool
+{
+    let mut hmap_s_f: Option<HashMap<String, f32>> = None;
+    let mut hmap_s_s: Option<HashMap<String, String>> = None;
+
+
+    let user_data = if event_enabled {
+        get_event_user_data(event_id)
+    } else {
+        None
+    };
+   
+    let state = access_state();
+
+    let ipg_window_id = match state.windows_iced_ipg_ids.get(&window_id) {
+        Some(id) => id,
+        None => panic!("Process window event: Unable to find the ipg window id using the iced id {:?}.", window_id)
+    };
+    let ipg_id = ipg_window_id.clone();
+    drop(state);
+
+    match event {
+        Event::Window(event) => {
+            if event == iced::window::Event::Closed && !event_enabled {
+                let is_empty = handle_window_closing(window_id);
+                return is_empty;
+            } else if !event_enabled {
+                return false
+            }
+            let (cb, event_name) = match event {
+                // Cannot use window open since a window need to be predefined.
+                // Py user will use show and hide to the same effect.
+                iced::window::Event::Opened { position: _, size: _ } => {
+                    let name = "opened".to_string();
+                   (None, name)
+                },
+                iced::window::Event::Closed => {
+                    let is_empty = handle_window_closing(window_id);
+                    if is_empty {
+                        return true;
+                    }
+                    let name = "closed".to_string();
+                    let cb = get_callback(event_id, name.clone());
+                    (cb, name)
+                },
+                iced::window::Event::Moved(point) => {
+                    let name = "moved".to_string();
+                    let cb = get_callback(event_id, name.clone());
+                    hmap_s_f = Some(HashMap::from([
+                                                ("x".to_string(), point.x),
+                                                ("y".to_string(), point.y),
+                                                ]));
+                    (cb, name)
+                },
+                iced::window::Event::Resized (size) => {
+                    let name = "resized".to_string();
+                    let cb = get_callback(event_id, name.clone());
+                    hmap_s_f = Some(HashMap::from([
+                                                ("width".to_string(), size.width),
+                                                ("height".to_string(), size.height),
+                                                ]));
+                    (cb, name)
+                },
+                iced::window::Event::RedrawRequested(_) => {
+                    let name = "redraw requested".to_string();
+                    let cb = get_callback(event_id, name.clone());
+                    (cb, name)
+                },
+                iced::window::Event::CloseRequested => {
+                    let name = "close requested".to_string();
+                    let cb = get_callback(event_id, name.clone());
+                    (cb, name)
+                },
+                iced::window::Event::Focused => {
+                    let name = "focused".to_string();
+                    let cb = get_callback(event_id, name.clone());
+                    (cb, name)
+                },
+                iced::window::Event::Unfocused => {
+                    let name = "unfocused".to_string();
+                    let cb = get_callback(event_id, name.clone());
+                    (cb, name)
+                },
+                iced::window::Event::FileHovered(path) => {
+                    let name = "file hovered".to_string();
+                    let cb = get_callback(event_id, name.clone());
+                    hmap_s_s = Some(HashMap::from([
+                                                ("file path".to_string(), path.display().to_string()),
+                                                ]));
+                    (cb, name)
+                },
+                iced::window::Event::FileDropped(path) => {
+                    let name = "file dropped".to_string();
+                    let cb = get_callback(event_id, name.clone());
+                    hmap_s_s = Some(HashMap::from([
+                                                ("file path".to_string(), path.display().to_string()),
+                                                ]));
+                    (cb, name)
+                },
+                iced::window::Event::FilesHoveredLeft => {
+                    let name = "files hovered left".to_string();
+                    let cb = get_callback(event_id, name.clone());
+                    (cb, name)
+                },
+            };
+
+            process_window_callback(ipg_id,
+                                    cb,
+                                    event_name, 
+                                    hmap_s_f,
                                     hmap_s_s,
-                                    user_data, 
-                                    IpgEventCallbacks::OnKeyPress);
+                                    user_data,
+                                    );
+        },
+        Event::Keyboard(_) => (),
+        Event::Mouse(_) => (),
+        Event::Touch(_) => (),   
+    }
+    return false
+}
+
+fn handle_window_closing(iced_id: window::Id) -> bool {
+    let mut state = access_state();
+
+    // remove the window
+    state.windows_iced_ipg_ids.remove(&iced_id);
+
+    if state.windows_iced_ipg_ids.is_empty() {
+        drop(state);
+        return true;
+    }
+
+    // if any of the remaining windows are visible, then return false
+    for (_iced_id, ipg_id) in state.windows_iced_ipg_ids.iter() {
+        match state.containers.get(ipg_id) {
+            Some(cnt) => {
+                match cnt {
+                    super::ipg_enums::IpgContainers::IpgColumn(_) => (),
+                    super::ipg_enums::IpgContainers::IpgContainer(_) => (),
+                    super::ipg_enums::IpgContainers::IpgModal(_) => (),
+                    super::ipg_enums::IpgContainers::IpgMouseArea(_) => (),
+                    super::ipg_enums::IpgContainers::IpgTable(_) => (),
+                    super::ipg_enums::IpgContainers::IpgRow(_) => (),
+                    super::ipg_enums::IpgContainers::IpgScrollable(_) => (),
+                    super::ipg_enums::IpgContainers::IpgToolTip(_) => (),
+                    super::ipg_enums::IpgContainers::IpgWindow(wnd) => {
+                        if wnd.mode == IpgWindowMode::Windowed || wnd.mode == IpgWindowMode::Fullscreen {
+                            drop(state);
+                            return false;
+                        }
+                    },
                 }
             },
-            Event::Keyboard(KeyReleased { key, 
-                                            location, 
-                                            modifiers, 
-                                            }) => {
-                if key_enabled.1 {
-                    // dbg!("Released", &key, location, modifiers);
-                    let user_data = get_event_user_data(key_enabled.0);
-                    
-                    let key_str: String = process_key(key.as_ref());
-
-                    let mod_key = process_modifier(modifiers);
-
-                    let location_str: String = process_location(location);
-
-                    let hmap_s_s: Option<HashMap<String, String>> = Some(HashMap::from([
-                        ("key".to_string(), key_str),
-                        ("modifier".to_string(), mod_key),
-                        ("location".to_string(), location_str)
-                    ]));
-
-                    process_callback(key_enabled.0, 
-                                    "KeyReleased".to_string(),
-                                    None,
-                                    hmap_s_s,
-                                    user_data, 
-                                    IpgEventCallbacks::OnKeyRelease);
-                                    }
-                                },
-            // This event occurs when command keys are pressed but these 
-            // also show up under key pressed and release so not sure any advantage on using this.
-            Event::Keyboard(ModifiersChanged(_)) => (), 
-            Event::Mouse(m_event) => {
-
-                    let mut event_name = "".to_string();
-                    let mut hmap_s_f: Option<HashMap<String, f32>> = None;
-
-                    let mut cb_name = IpgEventCallbacks::None;
-
-                    if mouse_enabled.1 {
-                        match m_event {
-                            CursorEntered => {
-                                event_name = "Mouse Enter".to_string();
-                                cb_name = IpgEventCallbacks::OnEnterWindow;
-                            },
-                            CursorLeft => {
-                                event_name = "Mouse Exit".to_string();
-                                cb_name = IpgEventCallbacks::OnExitWindow;
-                            },
-                            CursorMoved { position } => {
-                                event_name = "Mouse Moved".to_string();
-                                hmap_s_f = Some(HashMap::from([("x".to_string(), position.x),
-                                                ("y".to_string(), position.y)]));
-                                cb_name = IpgEventCallbacks::OnMove;
-                            },
-                            ButtonPressed(btn) => {
-                                match btn {
-                                    Left => {
-                                        event_name = "Left Press".to_string();
-                                        cb_name = IpgEventCallbacks::OnLeftPress;
-                                    },
-                                    Right => {
-                                        event_name = "Right Press".to_string();
-                                        cb_name = IpgEventCallbacks::OnRightPress;
-                                    },
-                                    Middle => {
-                                        event_name = "Middle Press".to_string();
-                                        cb_name = IpgEventCallbacks::OnMiddlePress;
-                                    },
-                                    Back => {
-                                        event_name = "Back Press".to_string();
-                                        cb_name = IpgEventCallbacks::OnBackPress;
-                                    },
-                                    Forward => {
-                                        event_name = "Forward Press".to_string();
-                                        cb_name = IpgEventCallbacks::OnForwardPress;
-                                    },
-                                    Other(other) => {
-                                        event_name = "Other Press".to_string();
-                                        hmap_s_f = Some(HashMap::from([("other".to_string(), other as f32)]));
-                                        cb_name = IpgEventCallbacks::OnOtherPress;
-                                    },
-                                }
-                            },
-                            ButtonReleased(btn) => {
-                                match btn {
-                                    Left => {
-                                        event_name = "Left Release".to_string();
-                                        cb_name = IpgEventCallbacks::OnLeftRelease;
-                                    },
-                                    Right => {
-                                        event_name = "Right Release".to_string();
-                                        cb_name = IpgEventCallbacks::OnRightRelease;
-                                    },
-                                    Middle => {
-                                        event_name = "Middle Release".to_string();
-                                        cb_name = IpgEventCallbacks::OnMiddleRelease;
-                                    },
-                                    Back => {
-                                        event_name = "Back Release".to_string();
-                                        cb_name = IpgEventCallbacks::OnBackRelease;
-                                    },
-                                    Forward => {
-                                        event_name = "Forward Release".to_string();
-                                        cb_name = IpgEventCallbacks::OnForwardRelease;
-                                    },
-                                    Other(other) => {
-                                        event_name = "Other Release".to_string();
-                                        hmap_s_f = Some(HashMap::from([("other".to_string(), other as f32)]));
-                                        cb_name = IpgEventCallbacks::OnOtherRelease;
-                                    },
-                                }
-                            },
-                            WheelScrolled { delta } => {
-                                match delta {
-                                    ScrollDelta::Lines { x:_, y } => {
-
-                                        event_name = "ScrollDelta Line".to_string();
-
-                                        hmap_s_f = Some(HashMap::from([("y".to_string(), y)]));
-
-                                        cb_name = IpgEventCallbacks::OnMiddleScrollLine;
-                                    },
-                                    ScrollDelta::Pixels { x, y } => {
-
-                                        event_name = "ScrollDelta Pixel".to_string();
-
-                                        hmap_s_f = Some(HashMap::from([("x".to_string(), x),
-                                                ("y".to_string(), y)]));
-                                        
-                                        cb_name = IpgEventCallbacks::OnMiddleScrollPixel;
-                                    },
-                                }
-                                
-                            },
-                    }
-
-                    let user_data = get_event_user_data(mouse_enabled.0);
-
-                    process_callback(mouse_enabled.0, 
-                                        event_name,
-                                        hmap_s_f,
-                                        None,
-                                        user_data,
-                                        cb_name);
-                }
-            },
-            Event::Window(wnd_event) => {
-                if wnd_enabled.1 {
-
-                    let mut event_name = "".to_string();
-                    let mut hmap_s_f: Option<HashMap<String, f32>>  = None;
-                    let user_data: Option<PyObject> = get_event_user_data(wnd_enabled.0);
-                    let mut cb_name: IpgEventCallbacks = IpgEventCallbacks::None;
-
-                    match wnd_event {
-                        iced::window::Event::Opened { position, size } => {
-                            event_name = format!("Window Opened");
-                            match position {
-                                Some(pos) => {
-                                    hmap_s_f = Some(HashMap::from([
-                                                            ("x".to_string(), pos.x),
-                                                            ("y".to_string(), pos.y),
-                                                            ("width".to_string(), size.width),
-                                                            ("height".to_string(), size.height),
-                                                            ]));
-                                },
-                                None => {
-                                    hmap_s_f = Some(HashMap::from([
-                                                            ("width".to_string(), size.width),
-                                                            ("height".to_string(), size.height),
-                                                            ]));
-                                },
-                            }
-                            cb_name = IpgEventCallbacks::WindowOnOpened;
-                        },
-                        iced::window::Event::Closed => {
-                            event_name = format!("window Closed");
-                            cb_name = IpgEventCallbacks::WindowOnClosed;
-                        },
-                        iced::window::Event::Moved(point) => {
-                            event_name = format!("Window Moved");
-                            hmap_s_f = Some(HashMap::from([
-                                                        ("x".to_string(), point.x),
-                                                        ("y".to_string(), point.y),
-                                                        ]));
-                            cb_name = IpgEventCallbacks::WindowOnMoved;
-                        },
-                        iced::window::Event::Resized (size) => {
-                            event_name = format!("Window Resized");
-                            hmap_s_f = Some(HashMap::from([
-                                                        ("width".to_string(), size.width),
-                                                        ("height".to_string(), size.height),
-                                                        ]));
-                            cb_name = IpgEventCallbacks::WindowOnResized;
-                        },
-                        iced::window::Event::RedrawRequested(_) => {},
-                        iced::window::Event::CloseRequested => {},
-                        iced::window::Event::Focused => {},
-                        iced::window::Event::Unfocused => {},
-                        iced::window::Event::FileHovered(_) => {},
-                        iced::window::Event::FileDropped(_) => {},
-                        iced::window::Event::FilesHoveredLeft => {},
-                    }
-                    
-                    process_callback(wnd_enabled.0, 
-                                        event_name,
-                                        hmap_s_f,
-                                        None,
-                                        user_data,
-                                        cb_name);
-                }
-                
-            },
-            Event::Touch(tch) => {
-                if touch_enabled.1 {
-                    match tch {
-                        iced::touch::Event::FingerPressed { id, position } => {
-                            dbg!(id, position);
-                        },
-                        iced::touch::Event::FingerMoved { id, position } => {
-                            dbg!(id, position);
-                        },
-                        iced::touch::Event::FingerLifted { id, position } => {
-                            dbg!(id, position);
-                        },
-                        iced::touch::Event::FingerLost { id, position } => {
-                            dbg!(id, position);
-                        },
-                    }
-                }
-                
-            },
+            None => (),
         }
+        
+    }
+    drop(state);
+    return true;
+
+}
+
+fn get_callback(id: usize, event_name: String) -> Option<PyObject> {
+    let cbs = access_callbacks();
+
+    let cb_opt = cbs.callback_events.get(&(id, event_name));
+
+    let cb = match cb_opt {
+        Some(cb) => Some(cb.clone()),
+        None => None
+    };
+    drop(cbs);
+    cb
 }
 
 pub fn get_event_user_data(id: usize) -> Option<PyObject> {
 
-    let state = access_state();
     let cb = access_callbacks();
 
-    for event_type in state.events.iter() {
-        
-        match event_type {
-            IpgEvents::Keyboard(_key) => {
-                for data in cb.user_data.iter() {
+    for data in cb.user_data.iter() {
                     if data.0 == id {
-                        return data.1.clone()
+                        let opt_py = data.1.clone();
+                        drop(cb);
+                        return opt_py
                     }
                 }
-            },
-            IpgEvents::Mouse(_mouse) => {
-                for data in cb.user_data.iter() {
-                    if data.0 == id {
-                        return data.1.clone()
-                    }
-                }
-            },
-            IpgEvents::Window(_wnd) => {
-                for data in cb.user_data.iter() {
-                    if data.0 == id {
-                        return data.1.clone()
-                    }
-                }
-            },
-        }
-    }
-
-    panic!("Event user data not found")
+    panic!("Event user data not found using id {}", id)
 
 }
 
@@ -455,75 +573,191 @@ fn process_location(location: Location) -> String {
     }
 }
 
-fn process_callback(id: usize, 
-                    event_name: String,
+fn process_keyboard_callback(id: usize,
+                    cb: Option<PyObject>,
+                    event_name: String, 
+                    hmap_s_s: HashMap<String, String>,
+                    user_data: Option<PyObject>, 
+                    ) 
+{
+    if cb.is_none() {
+        return
+    }
+
+    let cb = cb.unwrap();
+    Python::with_gil(|py| {
+
+        let dict = hmap_s_s.into_py_dict_bound(py);
+        let result = match user_data {
+            Some(user_data) => {
+                cb.call1(py, (id, event_name, dict, user_data))
+            },
+            None => {
+                cb.call1(py, (id, event_name, dict))
+            },
+        };
+        match result {
+                Ok(_) => (),
+                Err(er) => panic!("Keyboard Event: 3 parameters (id, event name) and 4 if using user_data are required or a python error in this function. {er}"),
+            }                   
+    });           
+
+}
+
+fn process_mouse_callback(id: usize,
+                    cb: Option<PyObject>,
+                    event_name: String, 
+                    hmap_s_f: Option<HashMap<String, f32>>,
+                    user_data: Option<PyObject>, 
+                    ) 
+{
+    if cb.is_none() {
+        return
+    }
+    let cb = cb.unwrap();
+    Python::with_gil(|py| {
+
+        if !hmap_s_f.is_some() {
+            let result = match user_data {
+                Some(user_data) => {
+                    cb.call1(py, (id, event_name, user_data))
+                },
+                None => {
+                    cb.call1(py, (id, event_name))
+                },
+            };
+            match result {
+                Ok(_) => (),
+                Err(er) => panic!("Window Event: 2 parameters (id, event name) and 3 if using user_data are required or a python error in this function. {er}"),
+            }
+        } else {
+            match hmap_s_f {
+                Some(sf) => {
+                    let dict = sf.into_py_dict_bound(py);
+                    let result = match user_data {
+                        Some(user_data) => {
+                            cb.call1(py, (id, event_name, dict, user_data))
+                        },
+                        None => {
+                            cb.call1(py, (id, event_name, dict))
+                        },
+                    };
+                    match result {
+                        Ok(_) => (),
+                        Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python error in this function. {er}"),
+                    }
+                },
+                None => (),
+            }
+        }
+    });
+
+}
+
+fn process_window_callback(id: usize,
+                    cb: Option<PyObject>,
+                    event_name: String, 
                     hmap_s_f: Option<HashMap<String, f32>>,
                     hmap_s_s: Option<HashMap<String, String>>,
                     user_data: Option<PyObject>, 
-                    cb_name: IpgEventCallbacks) 
+                    ) 
 {
+    if cb.is_none() {
+        return
+    }
+    let cb = cb.unwrap();
 
-    let app_cbs = access_callbacks();
+    Python::with_gil(|py| {
 
-    for callback in app_cbs.cb_events.iter() {
-        if id == callback.id && cb_name == callback.name {
-            let cb = &callback.cb;
-
-            Python::with_gil(|py| {
-
-                // hmap_s_f and hmap_s_s are never Some() together, one is always equal to None 
-                // or both are equal to None.
-                // Therefore only other option is the user_data. 
-                // This simplifies the returning vars, since I prefer not to return a None.
-                // Possibilities are (hmap_s_f), (hmap_s_f, user_data), or (hmap_ss), (hmap_s_s, user_data)
-                //  or (None, None)
-
-                if !hmap_s_f.is_some() && !hmap_s_s.is_some() {
-                    match user_data {
+        if hmap_s_f.is_none() && hmap_s_s.is_none() {
+            let result = match user_data {
+                Some(user_data) => {
+                    cb.call1(py, (id, event_name, user_data))
+                },
+                None => {
+                    cb.call1(py, (id, event_name))
+                },
+            };
+            match result {
+                Ok(_) => (),
+                Err(er) => panic!("Window Event: 2 parameters (id, event name) and 3 if using user_data are required or a python error in this function. {er}"),
+            }
+            return
+        }
+        
+        if hmap_s_f.is_some() {
+            match hmap_s_f {
+                Some(sf) => {
+                    let dict = sf.into_py_dict_bound(py);
+                    let result = match user_data {
                         Some(user_data) => {
-                            cb.call1(py, (id, event_name, user_data)).unwrap()
+                            cb.call1(py, (id, event_name, dict, user_data))
                         },
                         None => {
-                            cb.call1(py, (id, event_name)).unwrap()
+                            cb.call1(py, (id, event_name, dict))
                         },
                     };
-                } else {
-                    match hmap_s_f {
-                        Some(sf) => {
-                            let dict = sf.into_py_dict_bound(py);
-                            match user_data {
-                                Some(user_data) => {
-                                    cb.call1(py, (id, event_name, dict, user_data)).unwrap()
-                                },
-                                None => {
-                                    cb.call1(py, (id, event_name, dict)).unwrap()
-                                },
-                            };
+                    match result {
+                        Ok(_) => (),
+                        Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python error in this function. {er}"),
+                    }
+                },
+                None => (),
+            }
+        } else if hmap_s_s.is_some() {
+            match hmap_s_s {
+                Some(ss) => {
+                    let dict = ss.into_py_dict_bound(py);
+                    let result = match user_data {
+                        Some(user_data) => {
+                            cb.call1(py, (id, event_name, dict, user_data))
                         },
                         None => {
-                            match hmap_s_s {
-                                Some(ss) => {
-                                    let dict = ss.into_py_dict_bound(py);
-                                    match user_data {
-                                        Some(user_data) => {
-                                            cb.call1(py, (id, event_name, dict, user_data)).unwrap()
-                                        },
-                                        None => {
-                                            cb.call1(py, (id, event_name, dict)).unwrap()
-                                        },
-                                    };
-                                },
-                                None => (),
-                            }
-                        }
+                            cb.call1(py, (id, event_name, dict))
+                        },
+                    };
+                    match result {
+                        Ok(_) => (),
+                        Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python error in this function. {er}"),
                     }
-                }
-            });
+                },
+                None => (),
+            }
+        }
+            
+        
+    });
 
-            break;
-        }                   
-    };
-    drop(app_cbs);
+}
 
+fn process_touch_callback(id: usize,
+                    cb: Option<PyObject>,
+                    event_name: String,
+                    hmap_s_fg: HashMap<String, u64>,
+                    hmap_s_pt: HashMap<String, (f32, f32)>,
+                    user_data: Option<PyObject>, 
+                    ) 
+{
+    if cb.is_none() {
+        return
+    }
+    let cb = cb.unwrap();
+    Python::with_gil(|py| {
+
+        let dict1 = hmap_s_fg.into_py_dict_bound(py);
+        let dict2 = hmap_s_pt.into_py_dict_bound(py);
+        let result = match user_data {
+            Some(user_data) => {
+                cb.call1(py, (id, event_name, dict1, dict2, user_data))
+            },
+            None => {
+                cb.call1(py, (id, event_name, dict1, dict2))
+            },
+        };
+        match result {
+                Ok(_) => (),
+                Err(er) => panic!("Touch Event: 4 parameters (id, event name) and 5 if using user_data are required or a python error in this function. {er}"),
+            }
+    });
     
 }
