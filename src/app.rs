@@ -16,7 +16,7 @@ use once_cell::sync::Lazy;
 
 use crate::ipg_widgets::ipg_events::{process_keyboard_events, process_mouse_events, process_touch_events, process_window_event};
 use crate::ipg_widgets::ipg_window::IpgWindowMode;
-use crate::{access_window_mode, ipg_widgets};
+use crate::{access_window_actions, ipg_widgets};
 use crate::ipg_widgets::helpers::find_key_for_value;
 use crate::ipg_widgets::ipg_modal::{construct_modal, modal_callback, ModalMessage};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
@@ -418,20 +418,43 @@ fn get_window_values(iced_window_id: window::Id) -> (bool, bool, Theme) {
 }
 
 fn get_tasks() -> Task<Message> {
+    
+    let mut state = access_window_actions();
 
-    let mut state = access_window_mode();
-
-    if state.mode.is_empty() {return Task::none()}
-
-    let mut change_modes = vec![];
+    let mut actions = vec![];
 
     for mode in state.mode.iter() {
         let iced_id = find_key_for_value(mode.1);
-        change_modes.push(window::change_mode(iced_id, mode.0));
+        actions.push(window::change_mode(iced_id, mode.0));
     }
     state.mode = vec![];
+
+    for id in state.decorations.iter() {
+        let iced_id = find_key_for_value(*id);
+        actions.push(window::toggle_decorations(iced_id))
+    }
+    state.decorations = vec![];
+
+    for (id, width, height) in state.resize.iter() {
+        let iced_id = find_key_for_value(*id);
+        let size = Size::new(*width, *height);
+        actions.push(window::resize(iced_id, size))
+    }
+    state.resize = vec![];
+
+    for (id, x, y) in state.position.iter() {
+        let iced_id = find_key_for_value(*id);
+        let point = Point::new(*x, *y);
+        actions.push(window::move_to(iced_id, point))
+    }
+    state.position = vec![];
+
     drop(state);
-    Task::batch(change_modes)
+
+    if actions.is_empty() {
+        actions.push(Task::none());
+    }
+    Task::batch(actions)
 }
 
 // Central method to get the structures stored in the mutex and then the children 

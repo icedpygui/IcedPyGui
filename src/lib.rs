@@ -88,16 +88,22 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
     CALLBACKS.lock().unwrap()
 }
 
-pub struct WindowMode {
+pub struct WindowActions {
     pub mode: Vec<(window::Mode, usize)>,
+    pub decorations: Vec<usize>,
+    pub resize: Vec<(usize, f32, f32)>,
+    pub position: Vec<(usize, f32, f32)>,
 }
 
-pub static WINDOWMODE: Mutex<WindowMode> = Mutex::new(WindowMode {
+pub static WINDOWACTIONS: Mutex<WindowActions> = Mutex::new(WindowActions {
     mode: vec![],
+    decorations: vec![],
+    resize: vec![],
+    position: vec![],
 });
 
-pub fn access_window_mode() -> MutexGuard<'static, WindowMode> {
-    WINDOWMODE.lock().unwrap()
+pub fn access_window_actions() -> MutexGuard<'static, WindowActions> {
+    WINDOWACTIONS.lock().unwrap()
 }
 
 pub struct State {
