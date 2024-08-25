@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 
 use crate::app::{self, Message};
-use crate::{access_callbacks, access_state, access_window_mode};
+use crate::{access_callbacks, access_state, access_window_actions};
 
 use iced::window;
 use iced::{Element, Task, Theme, Size};
@@ -11,7 +11,7 @@ use iced::widget::Column;
 use pyo3::{pyclass, PyObject, Python};
 
 use super::callbacks::WidgetCallbackOut;
-use super::helpers::{try_extract_boolean, try_extract_f64};
+use super::helpers::{try_extract_boolean, try_extract_f64, try_extract_tup_usize_f32_f32, try_extract_u64};
 
 
 #[derive(Debug, Clone)]
@@ -329,11 +329,16 @@ pub fn window_item_update(wnd: &mut IpgWindow,
             let ipg_mode = try_extract_mode(value);
             let mode = get_mode(&ipg_mode);
             wnd.mode = ipg_mode;
-            let mut state = access_window_mode();
+            let mut state = access_window_actions();
             state.mode.push((mode, wnd.id));
             drop(state)
         },
-        IpgWindowParam::Decorations => (),
+        IpgWindowParam::Decorations => {
+            let val = try_extract_u64(value) as usize;
+            let mut state = access_window_actions();
+            state.decorations.push(val);
+            drop(state)
+        },
         IpgWindowParam::ExitOnCloseRequest => {
            
         },
@@ -344,10 +349,18 @@ pub fn window_item_update(wnd: &mut IpgWindow,
         IpgWindowParam::MinSize => (),
         IpgWindowParam::MaxSize => (),
         IpgWindowParam::Position => {
-
+            let val = try_extract_tup_usize_f32_f32(value);
+            let mut state = access_window_actions();
+            state.position.push(val);
+            drop(state)
         },
         IpgWindowParam::Resizable => (),
-        IpgWindowParam::Size => (),
+        IpgWindowParam::Size => {
+            let val = try_extract_tup_usize_f32_f32(value);
+            let mut state = access_window_actions();
+            state.resize.push(val);
+            drop(state)
+        },
         IpgWindowParam::Transparent => (),
     }
 

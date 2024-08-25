@@ -482,6 +482,17 @@ pub fn try_extract_ipg_color(value: PyObject) -> IpgColor {
     })
 }
 
+pub fn try_extract_tup_usize_f32_f32(value: PyObject) -> (usize, f32, f32) {
+    Python::with_gil(|py| {
+
+        let res = value.extract::<(usize, f32, f32)>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python object for tuple(usize, f32, f32)"),
+        }
+    })
+}
+
 pub fn get_container_id_via_string(id: String) -> usize {
 
     let state = access_state();

@@ -3436,16 +3436,26 @@ class IpgTogglerParam:
 
 
 class IpgWindowParam:
-    Decorations=True
-    Debug=False
-    ExitOnCloseRequest=True
-    Level=IpgWindowLevel
-    MinSize=0.0
-    MaxSize=0.0
-    Mode=IpgWindowMode
-    Position=dict
-    Resizable=bool
-    Size=dict
+    '''
+    Debug: bool=False\n
+        If true draws a frame around all widgets.
+    Decorations: int=0\n
+        The int is the windows id, toggles whether the window has a frame and header
+    Level: IpgWindowLevel=IpgWindowLevel.Normal
+        The window stacking behavior: Normal, AlwaysOnBottom, AlwaysOnTop.
+    MinSize: float=0.0
+    MaxSize: float=inf
+
+    '''
+    Debug: bool=False
+    Decorations: int=0
+    Level: tuple[id, IpgWindowLevel]
+    MinSize: float=0.0
+    MaxSize: float=float('inf')
+    Mode: IpgWindowMode=IpgWindowMode.Windowed
+    Position: tuple[int, float, float]
+    Resizable: bool=True
+    Size=tuple[int, float, float]
     Theme=IpgWindowTheme
     Transparent=bool
     ScaleFactor=1.0
@@ -3453,6 +3463,9 @@ class IpgWindowParam:
 
 
 class IpgWindowLevel:
+    """
+    The stacking order of the windows
+    """
     Normal=0
     AlwaysOnBottom=0
     AlwaysOnTop=0

@@ -1,11 +1,45 @@
-from icedpygui import IPG, IpgWindowParam, IpgWindowMode, IpgTextParam
+from icedpygui import IPG, IpgWindowParam, IpgWindowMode, IpgTextParam, IpgWindowLevel
 
 ipg = IPG()
 
 
 popup_id = ipg.generate_id()
 wnd2 = ipg.generate_id()
+wnd4 = ipg.generate_id()
 
+
+# ****************Functions for modifying the window 4 parameters*************
+# Debug requires a bool value therefore a toggler is used
+def toggle_debug(tog_id: int, value: bool):
+    ipg.update_item(wnd4, IpgWindowParam.Debug, value)
+
+
+# The decorator is just toggled therefore a button works.  Supply the window id.
+def toggle_decorations(btn_id: int):
+    ipg.update_item(wnd4, IpgWindowParam.Decorations, wnd4)
+
+
+def toggle_resize(btn_id: int, value: bool):
+    if value:
+        ipg.update_item(wnd4, IpgWindowParam.Size, (wnd4, 300.0, 400.0))
+    else:
+        ipg.update_item(wnd4, IpgWindowParam.Size, (wnd4, 300.0, 600.0))
+
+# The level of the window requires a tuple (window id, Level)
+def change_level(tog_id: int, value: bool):
+    if value:
+        ipg.update_item(wnd4, IpgWindowParam.Level, (wnd4, IpgWindowLevel.AlwaysOnBottom))
+    else:
+        ipg.update_item(wnd4, IpgWindowParam.Level, (wnd4, IpgWindowLevel.Normal))
+
+# Move the window to a new position, required a tuple(windowid, pos_x, pos_y)
+def toggle_move_to(tog_id: int, value: bool):
+    if value:
+        ipg.update_item(wnd4, IpgWindowParam.Position, (wnd4, 900.0, 25.0))
+    else:
+        ipg.update_item(wnd4, IpgWindowParam.Position, (wnd4, 1000.0, 25.0))
+
+# ****************Functions for changes and events in window 1*****************
 # Since the input value is a string, need to convert to  a float
 def change_scale(input_id: int, value: str):
     ipg.update_item(wnd1, IpgWindowParam.ScaleFactor, float(value))
@@ -204,5 +238,35 @@ ipg.add_button(parent_id="col", label="Cancel Window 2 Closing",
                on_press=close_window_canceled,
                user_data=popup_id
                )
+
+
+# ************Add the 4th window ****************************
+# This window is for changing the window parameters
+ipg.add_window(window_id="main4", 
+                title="Window 4",
+                width=300.0, height=600.0,  
+                pos_x=1000.0, pos_y=25.0,
+                gen_id=wnd4,
+                )
+
+ipg.add_column(window_id="main4", 
+               container_id="col"
+               )
+
+ipg.add_toggler(parent_id="col", 
+               label="Toggle Debug",
+               toggled=toggle_debug)
+
+ipg.add_button(parent_id="col", 
+               label="Toggle Decorations",
+               on_press=toggle_decorations)
+
+ipg.add_toggler(parent_id="col", 
+               label="Toggle Window Resize",
+               toggled=toggle_resize)
+
+ipg.add_toggler(parent_id="col", 
+               label="Toggle Position",
+               toggled=toggle_move_to)
 
 ipg.start_session()
