@@ -3,7 +3,8 @@
 
 use std::collections::HashMap;
 
-use crate::{access_callbacks, access_state};
+use crate::ipg_widgets::ipg_window::get_ipg_mode;
+use crate::{access_callbacks, access_state, access_window_actions};
 
 use iced::event::Event;
 use iced::keyboard::Event::{KeyPressed, KeyReleased, ModifiersChanged};
@@ -16,8 +17,6 @@ use iced::mouse::ScrollDelta;
 use iced::window;
 use pyo3::{PyObject, Python};
 use pyo3::types::IntoPyDict;
-
-use super::ipg_window::IpgWindowMode;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct IpgKeyBoardEvent {
@@ -79,31 +78,6 @@ pub enum IpgEvents {
     Mouse(IpgMouseEvent),
     Window(IpgWindowEvent),
 }
-
-// #[derive(Debug, Clone, PartialEq)]
-// pub enum IpgEventCallbacks {
-//     OnEnterWindow,
-//     OnExitWindow,
-//     OnMove,
-//     OnLeftPress,
-//     OnRightPress,
-//     OnMiddlePress,
-//     OnBackPress,
-//     OnForwardPress,
-//     OnOtherPress,
-//     OnLeftRelease,
-//     OnRightRelease,
-//     OnMiddleRelease,
-//     OnBackRelease,
-//     OnForwardRelease,
-//     OnOtherRelease,
-//     OnMiddleScrollLine,
-//     OnMiddleScrollPixel,
-//     WindowOnClosed,
-//     WindowOnMoved,
-//     WindowOnResized,
-//     None,
-// }
 
 pub fn process_keyboard_events(event: Event, event_id: usize) 
 {       
@@ -366,7 +340,7 @@ pub fn process_window_event(event: Event,
     match event {
         Event::Window(event) => {
             if event == iced::window::Event::Closed && !event_enabled {
-                let is_empty = handle_window_closing(window_id);
+                let is_empty = handle_window_closing(window_id, window::Mode::Hidden);
                 return is_empty;
             } else if !event_enabled {
                 return false
@@ -379,7 +353,8 @@ pub fn process_window_event(event: Event,
                    (None, name)
                 },
                 iced::window::Event::Closed => {
-                    let is_empty = handle_window_closing(window_id);
+                    dbg!("event closed");
+                    let is_empty = handle_window_closing(window_id, window::Mode::Hidden);
                     if is_empty {
                         return true;
                     }
@@ -411,9 +386,25 @@ pub fn process_window_event(event: Event,
                     (cb, name)
                 },
                 iced::window::Event::CloseRequested => {
+                    dbg!("close request");
+                    //  if callback present, don't close window
                     let name = "close requested".to_string();
                     let cb = get_callback(event_id, name.clone());
+                    
+                    if cb.is_none() {
+ 
+                        let mut actions = access_window_actions();
+                        actions.mode.push((ipg_id, window::Mode::Hidden));
+                        drop(actions);
+                        let is_empty = handle_window_closing(window_id, window::Mode::Hidden);
+                        dbg!(&is_empty);
+                        if is_empty {
+                            return true;
+                        }
+                    }
+                    
                     (cb, name)
+                    
                 },
                 iced::window::Event::Focused => {
                     let name = "focused".to_string();
@@ -463,20 +454,38 @@ pub fn process_window_event(event: Event,
     return false
 }
 
-fn handle_window_closing(iced_id: window::Id) -> bool {
+pub fn handle_window_closing(iced_id: window::Id, mode: window::Mode) -> bool {
     let mut state = access_state();
 
-    // remove the window
-    state.windows_iced_ipg_ids.remove(&iced_id);
+    let mut all_hidden = true;
+    for (ic_id, (_ipg_id, md)) in state.window_mode.iter_mut() {
+        if ic_id == &iced_id {
+            *md = mode;
+        }
+        if *md != window::Mode::Hidden {
+            all_hidden = false;
+        }
+    }
 
-    if state.windows_iced_ipg_ids.is_empty() {
-        drop(state);
+    if all_hidden {
         return true;
     }
 
+    // Windows are never destroyed, just hidden
+    let ipg_id_opt = state.windows_iced_ipg_ids.get(&iced_id);
+
+    let ipg_id_found = match ipg_id_opt {
+        Some(id) => id.clone(),
+        None => panic!("Events: handle_window_closing: Unable to find ipg_id based on Iced_id {:?}", iced_id),
+    };
+
+    // Needed a clone here because can't borrow again from state below
+    let iced_ipg_ids = state.windows_iced_ipg_ids.clone();
+
     // if any of the remaining windows are visible, then return false
-    for (_iced_id, ipg_id) in state.windows_iced_ipg_ids.iter() {
-        match state.containers.get(ipg_id) {
+    for (_iced_id, ipg_id) in iced_ipg_ids {
+        dbg!(ipg_id);
+        match state.containers.get_mut(&ipg_id) {
             Some(cnt) => {
                 match cnt {
                     super::ipg_enums::IpgContainers::IpgColumn(_) => (),
@@ -488,9 +497,10 @@ fn handle_window_closing(iced_id: window::Id) -> bool {
                     super::ipg_enums::IpgContainers::IpgScrollable(_) => (),
                     super::ipg_enums::IpgContainers::IpgToolTip(_) => (),
                     super::ipg_enums::IpgContainers::IpgWindow(wnd) => {
-                        if wnd.mode == IpgWindowMode::Windowed || wnd.mode == IpgWindowMode::Fullscreen {
-                            drop(state);
-                            return false;
+                        if wnd.id == ipg_id_found {
+                            dbg!("found", &mode);
+                            wnd.mode = get_ipg_mode(mode);
+                            dbg!(&wnd.mode);
                         }
                     },
                 }
@@ -500,7 +510,8 @@ fn handle_window_closing(iced_id: window::Id) -> bool {
         
     }
     drop(state);
-    return true;
+
+    return false;
 
 }
 

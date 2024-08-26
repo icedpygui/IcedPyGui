@@ -220,6 +220,7 @@ pub enum IpgButtonParam {
     HeightFill,
     Label,
     Padding,
+    Clip,
     Show,
     Style,
     StyleStandard,
@@ -254,6 +255,9 @@ pub fn button_item_update(btn: &mut IpgButton,
             let val = try_extract_vec_f64(value);
             btn.padding =  get_padding_f64(val);
         },
+        IpgButtonParam::Clip => {
+            btn.clip = try_extract_boolean(value);
+        }
         IpgButtonParam::Show => {
             btn.show = try_extract_boolean(value);
         },

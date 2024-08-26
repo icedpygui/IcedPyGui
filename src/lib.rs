@@ -89,10 +89,11 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
 }
 
 pub struct WindowActions {
-    pub mode: Vec<(window::Mode, usize)>,
+    pub mode: Vec<(usize, window::Mode)>,
     pub decorations: Vec<usize>,
     pub resize: Vec<(usize, f32, f32)>,
     pub position: Vec<(usize, f32, f32)>,
+    pub level: Vec<(usize, window::Level)>,
 }
 
 pub static WINDOWACTIONS: Mutex<WindowActions> = Mutex::new(WindowActions {
@@ -100,6 +101,7 @@ pub static WINDOWACTIONS: Mutex<WindowActions> = Mutex::new(WindowActions {
     decorations: vec![],
     resize: vec![],
     position: vec![],
+    level: vec![],
 });
 
 pub fn access_window_actions() -> MutexGuard<'static, WindowActions> {
@@ -126,7 +128,8 @@ pub struct State {
     pub windows_str_ids: Lazy<HashMap<String, usize>>,  // <ipg_id=str, ipg id>
     pub window_debug: Lazy<HashMap<window::Id, (usize, bool)>>, // (wid, debug)
     pub window_theme: Lazy<HashMap<window::Id, (usize, Theme)>>, // (wid, window Theme)
-    
+    pub window_mode: Lazy<HashMap<window::Id, (usize, window::Mode)>>,
+
     pub events: Vec<IpgEvents>,
     
     pub container_style: Lazy<HashMap<String, IpgContainerStyle>>,
@@ -168,6 +171,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         windows_str_ids: Lazy::new(||HashMap::new()),
         window_debug: Lazy::new(||HashMap::new()),
         window_theme: Lazy::new(||HashMap::new()),
+        window_mode: Lazy::new(||HashMap::new()),
         
         events: vec![],
 
@@ -280,7 +284,7 @@ impl IPG {
                         level=IpgWindowLevel::Normal,
                         scale_factor=1.0,
                         theme=IpgWindowTheme::Dark, 
-                        exit_on_close=true, on_resize=None, 
+                        exit_on_close=false, on_resize=None, 
                         mode=IpgWindowMode::Windowed, 
                         debug=false, user_data=None,
                         gen_id=None))]
@@ -3616,8 +3620,6 @@ impl IPG {
 
         Ok((strong, weak, text)) 
     }
-
-
 
     fn get_id(&mut self, gen_id: Option<usize>) -> usize
     {
