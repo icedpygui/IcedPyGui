@@ -686,7 +686,7 @@ class IPG:
                     height: Optional[float]=None,
                     width_fill: bool=False,
                     height_fill: bool=False,
-                    padding: List=[10.0],
+                    padding: list=[10.0],
                     clip: bool=False, 
                     style: Optional[str]=None,
                     style_standard: Optional[IpgStyleStandard]=None,
@@ -2935,530 +2935,628 @@ class IPG:
 
 
 class IpgAlignment:
-    Start=0
-    Center=0
-    End=0
+    """
+    How items placed in a container or widget are aligned
+    """
+    Start=''
+    Center=''
+    End=''
 
 
 class IpgHorizontalAlignment:
-    Left=0
-    Center=0
-    Right=0
+    """
+    How items placed in a container or widget are aligned in the horizontal direction
+    """
+    Left=''
+    Center=''
+    Right=''
 
 
 class IpgVerticalAlignment:
-    Top=0
-    Center=0
-    Bottom=0
+    """
+    How items placed in a container or widget are aligned in the vertical direction
+    """
+    Top=''
+    Center=''
+    Bottom=''
 
 class IpgButtonParam:
-    ArrowStyle=0
-    CornerRadius=0
-    Height=0
-    HeightFill=0
-    Label=0
-    Padding=0
-    Show=0
-    Style=0
-    StyleStandard=0
-    Width=0
-    WidthFill=0
+    """
+    Button paramtes
+
+    Parameters
+    ----------
+    ArrowStyle: IpgButtonArrow
+        A button becomes a type of arrow.
+    Height: float
+        The height of the button.
+    HeightFill: bool
+        Whether the button height fills the available space of a container.
+    Label: str
+        The label of the button.
+    Padding: list
+        The padding around the button.
+    Clip: bool
+        Whether the label is clipped or not
+    Show: bool
+        Whether to show the button
+    Style: str
+        The string id of the button style widget
+    StyleStandard: IpgStyleStandard
+        One of the standard styles
+    Width: float
+        The width of the button
+    WidthFill: bool
+         Whether the button width fills the available space of a container.
+    """
+    ArrowStyle: IpgButtonArrow
+    Height: float
+    HeightFill: bool
+    Label: str
+    Padding: list
+    Clip: bool
+    Show: bool
+    Style: str
+    StyleStandard: IpgStyleStandard
+    Width: float
+    WidthFill: bool
 
 
-class IpgCardStyle: 
-    Primary=0
-    Success=0
-    Danger=0
-    Warning=0
-    Info=0
-    Light=0
-    Dark=0
-    White=0
-    Default=0
+class IpgCardStyle:
+    """
+    The standard styles for the card widget
+    """
+    Primary=''
+    Success=''
+    Danger=''
+    Warning=''
+    Info=''
+    Light=''
+    Dark=''
+    White=''
+    Default=''
 
 
 class IpgCardParam:
-    Body=0
-    Foot=0
-    Head=0
-    IsOpen=0
-    Style=0
+    """
+    The card parameters
+
+    Parameters
+    ----------
+    Body: str
+        The body string
+    Foot: str
+        The footer string
+    Head: str
+        The header string
+    IsOpen: bool
+        Whether the card is open or minimized
+    Style: IpgCardStyle
+        The style of the card
+    """
+    Body: str
+    Foot: str
+    Head: str
+    IsOpen: bool
+    Style: IpgCardStyle
 
 
 class IpgCheckboxParam:
-    IconSize=0
-    IconX=0
-    IsChecked=0
-    Label=0
-    Show=0
-    Size=0
-    Spacing=0
-    StyleBackground=0
-    StyleBorder=0
-    StyleIconTextColor=0
-    StyleTextColor=0
-    TextLineHeight=0
-    TextShaping=0
-    TextSize=0
-    Width=0
-    WidthFill=0
+    """
+    The Checkbox parameters
+
+    Parameters
+    ----------
+    IconSize: float
+        Size of the icon.
+    IconX: bool
+        Whether to use and x or the default check.
+    IsChecked: bool
+        Wheter the checkbox is checked or not.
+    Label: str
+        THe label of the checkbox.
+    Show: bool
+        Whether to show the checkbox.
+    Size: float
+        The size of the square.
+    Spacing: float
+        The spacing between the swuare and label.
+    Style: str
+        The id of the checkbox style function.
+    StyleStandard: IpgStyleStandard
+        One of the standard styles.
+    TextLineHeight: float
+        The height of the text box holding the label.
+    TextSize: float
+        The size of the label text.
+    Width: float
+        The width of the entire checkbox.
+    WidthFill: bool
+        Whether the checkbox width fills the available space of the container.
+    """
+    IconSize: float
+    IconX: bool
+    IsChecked: bool
+    Label: str
+    Show: bool
+    Size: float
+    Spacing: float
+    Style: str
+    StyleStandard: IpgStyleStandard
+    TextLineHeight: float
+    TextSize: float
+    Width: float
+    WidthFill: bool
 
 
 class IpgColor:
-    PRIMARY=0
-    SUCCESS=0
-    DANGER=0
-    WARNING=0
-    INFO=0
-    LIGHT=0
-    DARK=0
-    BACKGROUND_THEME=0
-    ALICE_BLUE=0
-    ANTIQUE_WHITE=0
-    AQUA=0
-    AQUAMARINE=0
-    AZURE=0
-    BEIGE=0
-    BISQUE=0
-    BLACK=0
-    BLANCHED_ALMOND=0
-    BLUE=0
-    BLUE_VIOLET=0
-    BROWN=0
-    BURLY_WOOD=0
-    CADET_BLUE=0
-    CHARTREUSE=0
-    CHOCOLATE=0
-    CORAL=0
-    CORNFLOWER_BLUE=0
-    CORNSILK=0
-    CRIMSON=0
-    CYAN=0
-    DARK_BLUE=0
-    DARK_CYAN=0
-    DARK_GOLDEN_ROD=0
-    DARK_GRAY=0
-    DARK_GREY=0
-    DARK_GREEN=0
-    DARK_KHAKI=0
-    DARK_MAGENTA=0
-    DARK_OLIVE_GREEN=0
-    DARK_ORANGE=0
-    DARK_ORCHID=0
-    DARK_RED=0
-    DARK_SALMON=0
-    DARK_SEA_GREEN=0
-    DARK_SLATE_BLUE=0
-    DARK_SLATE_GRAY=0
-    DARK_SLATE_GREY=0
-    DARK_TURQUOISE=0
-    DARK_VIOLET=0
-    DEEP_PINK=0
-    DEEP_SKY_BLUE=0
-    DIM_GRAY=0
-    DIM_GREY=0
-    DODGER_BLUE=0
-    FIRE_BRICK=0
-    FLORAL_WHITE=0
-    FOREST_GREEN=0
-    FUCHSIA=0
-    GAINSBORO=0
-    GHOST_WHITE=0
-    GOLD=0
-    GOLDEN_ROD=0
-    GRAY=0
-    GREY=0
-    GREEN=0
-    GREEN_YELLOW=0
-    HONEY_DEW=0
-    HOT_PINK=0
-    INDIAN_RED=0
-    INDIGO=0
-    IVORY=0
-    KHAKI=0
-    LAVENDER=0
-    LAVENDER_BLUSH=0
-    LAWN_GREEN=0
-    LEMON_CHIFFON=0
-    LIGHT_BLUE=0
-    LIGHT_CORAL=0
-    LIGHT_CYAN=0
-    LIGHT_GOLDEN_ROD_YELLOW=0
-    LIGHT_GRAY=0
-    LIGHT_GREY=0
-    LIGHT_GREEN=0
-    LIGHT_PINK=0
-    LIGHT_SALMON=0
-    LIGHT_SEA_GREEN=0
-    LIGHT_SKY_BLUE=0
-    LIGHT_SLATE_GRAY=0
-    LIGHT_SLATE_GREY=0
-    LIGHT_STEEL_BLUE=0
-    LIGHT_YELLOW=0
-    LIME=0
-    LIME_GREEN=0
-    LINEN=0
-    MAGENTA=0
-    MAROON=0
-    MEDIUM_AQUA_MARINE=0
-    MEDIUM_BLUE=0
-    MEDIUM_ORCHID=0
-    MEDIUM_PURPLE=0
-    MEDIUM_SEA_GREEN=0
-    MEDIUM_SLATE_BLUE=0
-    MEDIUM_SPRING_GREEN=0
-    MEDIUM_TURQUOISE=0
-    MEDIUM_VIOLET_RED=0
-    MIDNIGHT_BLUE=0
-    MINT_CREAM=0
-    MISTY_ROSE=0
-    MOCCASIN=0
-    NAVAJO_WHITE=0
-    NAVY=0
-    OLD_LACE=0
-    OLIVE=0
-    OLIVE_DRAB=0
-    ORANGE=0
-    ORANGE_RED=0
-    ORCHID=0
-    PALE_GOLDEN_ROD=0
-    PALE_GREEN=0
-    PALE_TURQUOISE=0
-    PALE_VIOLET_RED=0
-    PAPAYA_WHIP=0
-    PEACH_PUFF=0
-    PERU=0
-    PINK=0
-    PLUM=0
-    POWDER_BLUE=0
-    PURPLE=0
-    REBECCA_PURPLE=0
-    RED=0
-    ROSY_BROWN=0
-    ROYAL_BLUE=0
-    SADDLE_BROWN=0
-    SALMON=0
-    SANDY_BROWN=0
-    SEA_GREEN=0
-    SEA_SHELL=0
-    SIENNA=0
-    SILVER=0
-    SKY_BLUE=0
-    SLATE_BLUE=0
-    SLATE_GRAY=0
-    SLATE_GREY=0
-    SNOW=0
-    SPRING_GREEN=0
-    STEEL_BLUE=0
-    TAN=0
-    TEAL=0
-    THISTLE=0
-    TOMATO=0
-    TRANSPARENT=0
-    TURQUOISE=0
-    VIOLET=0
-    WHEAT=0
-    WHITE=0
-    WHITE_SMOKE=0
-    YELLOW=0
-    YELLOW_GREEN=0
+    """
+    The standard colors available
+    """
+    PRIMARY=''
+    SUCCESS=''
+    DANGER=''
+    WARNING=''
+    INFO=''
+    LIGHT=''
+    DARK=''
+    BACKGROUND_THEME=''
+    ALICE_BLUE=''
+    ANTIQUE_WHITE=''
+    AQUA=''
+    AQUAMARINE=''
+    AZURE=''
+    BEIGE=''
+    BISQUE=''
+    BLACK=''
+    BLANCHED_ALMOND=''
+    BLUE=''
+    BLUE_VIOLET=''
+    BROWN=''
+    BURLY_WOOD=''
+    CADET_BLUE=''
+    CHARTREUSE=''
+    CHOCOLATE=''
+    CORAL=''
+    CORNFLOWER_BLUE=''
+    CORNSILK=''
+    CRIMSON=''
+    CYAN=''
+    DARK_BLUE=''
+    DARK_CYAN=''
+    DARK_GOLDEN_ROD=''
+    DARK_GRAY=''
+    DARK_GREY=''
+    DARK_GREEN=''
+    DARK_KHAKI=''
+    DARK_MAGENTA=''
+    DARK_OLIVE_GREEN=''
+    DARK_ORANGE=''
+    DARK_ORCHID=''
+    DARK_RED=''
+    DARK_SALMON=''
+    DARK_SEA_GREEN=''
+    DARK_SLATE_BLUE=''
+    DARK_SLATE_GRAY=''
+    DARK_SLATE_GREY=''
+    DARK_TURQUOISE=''
+    DARK_VIOLET=''
+    DEEP_PINK=''
+    DEEP_SKY_BLUE=''
+    DIM_GRAY=''
+    DIM_GREY=''
+    DODGER_BLUE=''
+    FIRE_BRICK=''
+    FLORAL_WHITE=''
+    FOREST_GREEN=''
+    FUCHSIA=''
+    GAINSBORO=''
+    GHOST_WHITE=''
+    GOLD=''
+    GOLDEN_ROD=''
+    GRAY=''
+    GREY=''
+    GREEN=''
+    GREEN_YELLOW=''
+    HONEY_DEW=''
+    HOT_PINK=''
+    INDIAN_RED=''
+    INDIGO=''
+    IVORY=''
+    KHAKI=''
+    LAVENDER=''
+    LAVENDER_BLUSH=''
+    LAWN_GREEN=''
+    LEMON_CHIFFON=''
+    LIGHT_BLUE=''
+    LIGHT_CORAL=''
+    LIGHT_CYAN=''
+    LIGHT_GOLDEN_ROD_YELLOW=''
+    LIGHT_GRAY=''
+    LIGHT_GREY=''
+    LIGHT_GREEN=''
+    LIGHT_PINK=''
+    LIGHT_SALMON=''
+    LIGHT_SEA_GREEN=''
+    LIGHT_SKY_BLUE=''
+    LIGHT_SLATE_GRAY=''
+    LIGHT_SLATE_GREY=''
+    LIGHT_STEEL_BLUE=''
+    LIGHT_YELLOW=''
+    LIME=''
+    LIME_GREEN=''
+    LINEN=''
+    MAGENTA=''
+    MAROON=''
+    MEDIUM_AQUA_MARINE=''
+    MEDIUM_BLUE=''
+    MEDIUM_ORCHID=''
+    MEDIUM_PURPLE=''
+    MEDIUM_SEA_GREEN=''
+    MEDIUM_SLATE_BLUE=''
+    MEDIUM_SPRING_GREEN=''
+    MEDIUM_TURQUOISE=''
+    MEDIUM_VIOLET_RED=''
+    MIDNIGHT_BLUE=''
+    MINT_CREAM=''
+    MISTY_ROSE=''
+    MOCCASIN=''
+    NAVAJO_WHITE=''
+    NAVY=''
+    OLD_LACE=''
+    OLIVE=''
+    OLIVE_DRAB=''
+    ORANGE=''
+    ORANGE_RED=''
+    ORCHID=''
+    PALE_GOLDEN_ROD=''
+    PALE_GREEN=''
+    PALE_TURQUOISE=''
+    PALE_VIOLET_RED=''
+    PAPAYA_WHIP=''
+    PEACH_PUFF=''
+    PERU=''
+    PINK=''
+    PLUM=''
+    POWDER_BLUE=''
+    PURPLE=''
+    REBECCA_PURPLE=''
+    RED=''
+    ROSY_BROWN=''
+    ROYAL_BLUE=''
+    SADDLE_BROWN=''
+    SALMON=''
+    SANDY_BROWN=''
+    SEA_GREEN=''
+    SEA_SHELL=''
+    SIENNA=''
+    SILVER=''
+    SKY_BLUE=''
+    SLATE_BLUE=''
+    SLATE_GRAY=''
+    SLATE_GREY=''
+    SNOW=''
+    SPRING_GREEN=''
+    STEEL_BLUE=''
+    TAN=''
+    TEAL=''
+    THISTLE=''
+    TOMATO=''
+    TRANSPARENT=''
+    TURQUOISE=''
+    VIOLET=''
+    WHEAT=''
+    WHITE=''
+    WHITE_SMOKE=''
+    YELLOW=''
+    YELLOW_GREEN=''
 
 class IpgContainerTheme:
-    Default=0
-    Custom=0
+    Default=''
+    Custom=''
 
 
 class IpgDatePickerParam:
-    Label=0
-    Padding=0
-    RotationRadians=0
-    SizeFactor=0
-    Show=0
+    Label=''
+    Padding=''
+    RotationRadians=''
+    SizeFactor=''
+    Show=''
 
 
 class IpgImageContentFit:
-    Contain=0
-    Cover=0
-    Fill=0
-    IpgNone=0
-    ScaleDown=0
+    Contain=''
+    Cover=''
+    Fill=''
+    IpgNone=''
+    ScaleDown=''
 
 
 class IpgImageFilterMethod:
-    Linear=0
-    Nearest=0
+    Linear=''
+    Nearest=''
 
 
 class IpgImageRotation:
-    Floating=0
-    Solid=0
+    Floating=''
+    Solid=''
 
 
 class IpgImageParam:
-    Height=0
-    HeightFill=0
-    ImagePath=0
-    Opacity=0
-    Padding=0
-    Show=0
-    Width=0
-    WidthFill=0
+    Height=''
+    HeightFill=''
+    ImagePath=''
+    Opacity=''
+    Padding=''
+    Show=''
+    Width=''
+    WidthFill=''
 
 
 class IpgMenuParam:
-    BarHeight=0
-    BarPadding=0
-    BarSpacing=0
-    BarWidths=0
-    CheckBoundsWidth=0
-    Show=0
+    BarHeight=''
+    BarPadding=''
+    BarSpacing=''
+    BarWidths=''
+    CheckBoundsWidth=''
+    Show=''
 
 
 class IpgMenuType:
-    Button=0
-    Checkbox=0
-    Circle=0
-    Dot=0
-    Label=0
-    Line=0
-    Text=0
-    Toggler=0
+    Button=''
+    Checkbox=''
+    Circle=''
+    Dot=''
+    Label=''
+    Line=''
+    Text=''
+    Toggler=''
 
 
 class IpgMenuSeparatorType:
-    Circle=0
-    Dot=0
-    Label=0
-    Line=0
+    Circle=''
+    Dot=''
+    Label=''
+    Line=''
 
 
 class IpgMouseAreaParam:
-    show=0
+    show=''
 
 
 class IpgPickListParam:
-    Options=0
-    Placeholder=0
-    Padding=0
-    Show=0
-    StyleBackground=0
-    StyleBorder=0
-    StyleHandleColor=0
-    StyleTextColor=0
-    TextSize=0
-    TextLineHeight=0
-    Width=0
-    Delete=0
+    Options=''
+    Placeholder=''
+    Padding=''
+    Show=''
+    StyleBackground=''
+    StyleBorder=''
+    StyleHandleColor=''
+    StyleTextColor=''
+    TextSize=''
+    TextLineHeight=''
+    Width=''
+    Delete=''
 
 
 class IpgPickListHandle:
-    Arrow=0
-    Dynamic=0
-    HandleNone=0
-    Static=0
+    Arrow=''
+    Dynamic=''
+    HandleNone=''
+    Static=''
 
 
 class IpgProgressBarParam:
-    Height=0
-    Min=0
-    Max=0
-    Show=0
-    StyleBackground=0
-    StyleBorder=0
-    StyleBarColor=0
-    Value=0
-    Width=0
-    WidthFill=0
+    Height=''
+    Min=''
+    Max=''
+    Show=''
+    StyleBackground=''
+    StyleBorder=''
+    StyleBarColor=''
+    Value=''
+    Width=''
+    WidthFill=''
 
 
 
 class IpgRadioDirection:
-    Horizontal=0
-    Vertical=0
+    Horizontal=''
+    Vertical=''
 
 
 class IpgRadioParam:
-    Direction=0
-    Labels=0
-    Padding=0
-    SelectedIndex=0
-    Show=0
-    Size=0
-    Spacing=0
-    StyleId=0
-    TextSpacing=0
-    TextSize=0
-    LineHeightPixels=0
-    LineHeightRelative=0
-    UserData=0
-    Width=0
-    WidthFill=0
-    Height=0
-    HeightFill=0
+    Direction=''
+    Labels=''
+    Padding=''
+    SelectedIndex=''
+    Show=''
+    Size=''
+    Spacing=''
+    StyleId=''
+    TextSpacing=''
+    TextSize=''
+    LineHeightPixels=''
+    LineHeightRelative=''
+    UserData=''
+    Width=''
+    WidthFill=''
+    Height=''
+    HeightFill=''
 
 
 class IpgScrollableDirection:
-    Vertical=0
-    Horizontal=0
-    Both=0
+    Vertical=''
+    Horizontal=''
+    Both=''
 
 
 class IpgScrollableParam:
-    Width=0
-    Height=0
-    HBarWidth=0
-    HBarMargin=0
-    HScrollerWidth=0
-    HBarAlignment=0
-    VBarWidth=0
-    VBarMargin=0
-    VScrollerWidth=0
-    VBarAlignment=0
+    Width=''
+    Height=''
+    HBarWidth=''
+    HBarMargin=''
+    HScrollerWidth=''
+    HBarAlignment=''
+    VBarWidth=''
+    VBarMargin=''
+    VScrollerWidth=''
+    VBarAlignment=''
 
 
 class IpgSelectableTextParam:
-    Text=0
-    Width=0
-    WidthFill=0
-    Height=0
-    HeightFill=0
-    HorizontalAlign=0
-    VerticalAlign=0
-    LineHeight=0
-    Size=0
-    TextColor=0
-    TextRgba=0
-    Show=0
+    Text=''
+    Width=''
+    WidthFill=''
+    Height=''
+    HeightFill=''
+    HorizontalAlign=''
+    VerticalAlign=''
+    LineHeight=''
+    Size=''
+    TextColor=''
+    TextRgba=''
+    Show=''
 
 class IpgSliderParam:
-    Min=0
-    Max=0
-    Step=0
-    Value=0
-    Width=0
-    WidthFill=0
-    Height=0
-    Style=0
-    Show=0
+    Min=''
+    Max=''
+    Step=''
+    Value=''
+    Width=''
+    WidthFill=''
+    Height=''
+    Style=''
+    Show=''
 
 
 class IpgStyleParam:
-    Background=0
-    BarColor=0
-    Border=0
-    DotColor=0
-    FillMode=0
-    HandleColor=0
-    IconColor=0
-    Shadow=0
+    Background=''
+    BarColor=''
+    Border=''
+    DotColor=''
+    FillMode=''
+    HandleColor=''
+    IconColor=''
+    Shadow=''
 
 
 class IpgStyleStandard:
-    Primary=0
-    Success=0
-    Danger=0
-    Text=0
+    Primary=''
+    Success=''
+    Danger=''
+    Text=''
 
 
 class IpgSvgParam:
-    SvgPath=0
-    Width=0
-    WidthFill=0
-    Height=0
-    HeightFill=0
-    Show=0
+    SvgPath=''
+    Width=''
+    WidthFill=''
+    Height=''
+    HeightFill=''
+    Show=''
 
 class IpgSvgContentFit:
-    Contain=0
-    Cover=0
-    Fill=0
-    IpgNone=0
-    ScaleDown=0
+    Contain=''
+    Cover=''
+    Fill=''
+    IpgNone=''
+    ScaleDown=''
 
 
 class IpgSvgRotation:
-    Floating=0
-    Solid=0
+    Floating=''
+    Solid=''
 
 
 class IpgTableRowHighLight:
-    Darker=0
-    Lighter=0
+    Darker=''
+    Lighter=''
 
 
 class IpgTableWidget:
-    Button=0
-    Checkbox=0
-    Modal=0
-    Toggler=0
+    Button=''
+    Checkbox=''
+    Modal=''
+    Toggler=''
 
 
 class IpgTextInputParam:
-    Placeholder=0
-    Value=0
-    IsSecure=0
-    Width=0
-    Padding=0
-    Size=0
-    LineHeightPixels=0
-    LineHeightRelative=0
-    StyleId=0
+    Placeholder=''
+    Value=''
+    IsSecure=''
+    Width=''
+    Padding=''
+    Size=''
+    LineHeightPixels=''
+    LineHeightRelative=''
+    StyleId=''
 
 
 class IpgTextParam:
-    Content=0
-    Height=0
-    HeightFill=0
-    HzAlignLeft=0
-    HzAlignCenter=0
-    HzAlignRight=0
-    LineHeight=0
-    Size=0
-    TextColor=0
-    TextRgba=0
-    VtAlignTop=0
-    VtAlignCenter=0
-    VtAlignBottom=0
-    Width=0
-    WidthFill=0
-    Show=0
+    Content=''
+    Height=''
+    HeightFill=''
+    HzAlignLeft=''
+    HzAlignCenter=''
+    HzAlignRight=''
+    LineHeight=''
+    Size=''
+    TextColor=''
+    TextRgba=''
+    VtAlignTop=''
+    VtAlignCenter=''
+    VtAlignBottom=''
+    Width=''
+    WidthFill=''
+    Show=''
 
 
 class IpgTogglerParam:
-    Alignment=0
-    Label=0
-    LineHeight=0
-    Show=0
-    Size=0
-    TextSize=0
-    Width=0
-    WidthFill=0
+    """
+    Toggler parameters
+
+    Parameters
+    ----------
+
+    """
+    Alignment: IpgAlignment
+    Label: str=''
+    LineHeight=''
+    Show=''
+    Size=''
+    TextSize=''
+    Width=''
+    WidthFill=''
 
 
 class IpgWindowParam:
     '''
-    Debug: bool=False\n
+    Parameters
+    ----------
+    Debug: bool=False
         If true draws a frame around all widgets.
-    Decorations: int=0\n
+    Decorations: int=0
         The int is the windows id, toggles whether the window has a frame and header
     Level: IpgWindowLevel=IpgWindowLevel.Normal
         The window stacking behavior: Normal, AlwaysOnBottom, AlwaysOnTop.
-    MinSize: float=0.0
-    MaxSize: float=inf
-
+    Mode: IpgWindowMode=IpgWindowMode.Windowed
+        How the window appears, windowed, hidden, or full screen.
+    Position: tuple[int, float, float]
+        Position of the window, (window_id, pos_x, pos_y).
+    Theme: IpgWindowTheme=IpgWindowTheme.Dark
+        Window theme.
+    ScaleFactor: float=1.0
+        Window scale factor
     '''
     Debug: bool=False
     Decorations: int=0
-    Level: tuple[id, IpgWindowLevel]
-    MinSize: float=0.0
-    MaxSize: float=float('inf')
+    Level: tuple[id, IpgWindowLevel]=[0, IpgWindowLevel.Normal]
     Mode: IpgWindowMode=IpgWindowMode.Windowed
-    Position: tuple[int, float, float]
-    Resizable: bool=True
-    Size=tuple[int, float, float]
-    Theme=IpgWindowTheme
-    Transparent=bool
-    ScaleFactor=1.0
+    Position: tuple[int, float, float]=[0.0]
+    Size: tuple[int, float, float]=[0.0]
+    Theme: IpgWindowTheme=IpgWindowTheme.Dark
+    ScaleFactor: float=1.0
     
 
 
@@ -3466,110 +3564,128 @@ class IpgWindowLevel:
     """
     The stacking order of the windows
     """
-    Normal=0
-    AlwaysOnBottom=0
-    AlwaysOnTop=0
+    Normal=''
+    AlwaysOnBottom=''
+    AlwaysOnTop=''
 
 
 class IpgWindowMode:
-    Closed=0,
-    Fullscreen=0
-    Windowed=0
+    """
+    Determine the window mode
+
+    Parameters
+    ----------
+    Closed
+        Window is hidden and can be reopened with a callback
+    FullScreen
+        Window is full screen, ensure you have a way of returning it to windowed
+    Windowed (default)
+        Window is not fullscreen and can be moved, etcs.
+    """
+    Closed=''
+    Fullscreen=''
+    Windowed=''
     
 
 class IpgWindowTheme:
-    Dark=0
-    Light=0
-    CatppuccinLatte=0
-    CatppuccinFrappe=0
-    CatppuccinMacchiato=0
-    CatppuccinMocha=0
-    Dracula=0
-    Ferra=0
-    GruvboxLight=0
-    GruvboxDark=0
-    KanagawaWave=0
-    KanagawaDragon=0
-    KanagawaLotus=0
-    Moonfly=0
-    Nightfly=0
-    Nord=0
-    Oxocarbon=0
-    SolarizedLight=0
-    SolarizedDark=0
-    TokyoNight=0
-    TokyoNightStorm=0
-    TokyoNightLight=0
+    """
+    Window themes
+    """
+    Dark=''
+    Light=''
+    CatppuccinLatte=''
+    CatppuccinFrappe=''
+    CatppuccinMacchiato=''
+    CatppuccinMocha=''
+    Dracula=''
+    Ferra=''
+    GruvboxLight=''
+    GruvboxDark=''
+    KanagawaWave=''
+    KanagawaDragon=''
+    KanagawaLotus=''
+    Moonfly=''
+    Nightfly=''
+    Nord=''
+    Oxocarbon=''
+    SolarizedLight=''
+    SolarizedDark=''
+    TokyoNight=''
+    TokyoNightStorm=''
+    TokyoNightLight=''
 
 
 class IpgButtonArrow:
-    ArrowBarLeft=0
-    ArrowBarRight=0
-    ArrowBarUp=0
-    ArrowClockwise=0
-    ArrowCounterclockwise=0
-    ArrowDown=0
-    ArrowDownCircle=0
-    ArrowDownCircleFill=0
-    ArrowDownLeft=0
-    ArrowDownLeftCircle=0
-    ArrowDownLeftCircleFill=0
-    ArrowDownLeftSquare=0
-    ArrowDownLeftSquareFill=0
-    ArrowDownRight=0
-    ArrowDownRightCircle=0
-    ArrowDownRightCircleFill=0
-    ArrowDownRightSquare=0
-    ArrowDownRightSquareFill=0
-    ArrowDownShort=0
-    ArrowDownSquare=0
-    ArrowDownSquareFill=0
-    ArrowDownUp=0
-    ArrowLeft=0
-    ArrowLeftCircle=0
-    ArrowLeftCircleFill=0
-    ArrowLeftRight=0
-    ArrowLeftShort=0
-    ArrowLeftSquare=0
-    ArrowLeftSquareFill=0
-    ArrowNinezerodegDown=0
-    ArrowNinezerodegLeft=0
-    ArrowNinezerodegRight=0
-    ArrowNinezerodegUp=0
-    ArrowRepeat=0
-    ArrowReturnLeft=0
-    ArrowReturnRight=0
-    ArrowRight=0
-    ArrowRightCircle=0
-    ArrowRightCircleFill=0
-    ArrowRightShort=0
-    ArrowRightSquare=0
-    ArrowRightSquareFill=0
-    ArrowThroughHeart=0
-    ArrowThroughHeartFill=0
-    ArrowUp=0
-    ArrowUpCircle=0
-    ArrowUpCircleFill=0
-    ArrowUpLeft=0
-    ArrowUpLeftCircle=0
-    ArrowUpLeftCircleFill=0
-    ArrowUpLeftSquare=0
-    ArrowUpLeftSquareFill=0
-    ArrowUpRight=0
-    ArrowUpRightCircle=0
-    ArrowUpRightCircleFill=0
-    ArrowUpRightSquare=0
-    ArrowUpRightSquareFill=0
-    ArrowUpShort=0
-    ArrowUpSquare=0
-    ArrowUpSquareFill=0
-    Arrows=0
-    ArrowsAngleContract=0
-    ArrowsAngleExpand=0
-    ArrowsCollapse=0
-    ArrowsCollapseVertical=0
-    ArrowsExpand=0
-    ArrowsExpandVertical=0
-    ArrowsFullscreen=0
-    ArrowsMove=0
-    ArrowsVertical=0
+    """
+    The various arrow for a button
+    """
+    ArrowBarLeft=''
+    ArrowBarRight=''
+    ArrowBarUp=''
+    ArrowClockwise=''
+    ArrowCounterclockwise=''
+    ArrowDown=''
+    ArrowDownCircle=''
+    ArrowDownCircleFill=''
+    ArrowDownLeft=''
+    ArrowDownLeftCircle=''
+    ArrowDownLeftCircleFill=''
+    ArrowDownLeftSquare=''
+    ArrowDownLeftSquareFill=''
+    ArrowDownRight=''
+    ArrowDownRightCircle=''
+    ArrowDownRightCircleFill=''
+    ArrowDownRightSquare=''
+    ArrowDownRightSquareFill=''
+    ArrowDownShort=''
+    ArrowDownSquare=''
+    ArrowDownSquareFill=''
+    ArrowDownUp=''
+    ArrowLeft=''
+    ArrowLeftCircle=''
+    ArrowLeftCircleFill=''
+    ArrowLeftRight=''
+    ArrowLeftShort=''
+    ArrowLeftSquare=''
+    ArrowLeftSquareFill=''
+    ArrowNinezerodegDown=''
+    ArrowNinezerodegLeft=''
+    ArrowNinezerodegRight=''
+    ArrowNinezerodegUp=''
+    ArrowRepeat=''
+    ArrowReturnLeft=''
+    ArrowReturnRight=''
+    ArrowRight=''
+    ArrowRightCircle=''
+    ArrowRightCircleFill=''
+    ArrowRightShort=''
+    ArrowRightSquare=''
+    ArrowRightSquareFill=''
+    ArrowThroughHeart=''
+    ArrowThroughHeartFill=''
+    ArrowUp=''
+    ArrowUpCircle=''
+    ArrowUpCircleFill=''
+    ArrowUpLeft=''
+    ArrowUpLeftCircle=''
+    ArrowUpLeftCircleFill=''
+    ArrowUpLeftSquare=''
+    ArrowUpLeftSquareFill=''
+    ArrowUpRight=''
+    ArrowUpRightCircle=''
+    ArrowUpRightCircleFill=''
+    ArrowUpRightSquare=''
+    ArrowUpRightSquareFill=''
+    ArrowUpShort=''
+    ArrowUpSquare=''
+    ArrowUpSquareFill=''
+    Arrows=''
+    ArrowsAngleContract=''
+    ArrowsAngleExpand=''
+    ArrowsCollapse=''
+    ArrowsCollapseVertical=''
+    ArrowsExpand=''
+    ArrowsExpandVertical=''
+    ArrowsFullscreen=''
+    ArrowsMove=''
+    ArrowsVertical=''

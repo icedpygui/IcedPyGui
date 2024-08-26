@@ -14,7 +14,7 @@ use iced::Color;
 use once_cell::sync::Lazy;
 
 
-use crate::ipg_widgets::ipg_events::{process_keyboard_events, process_mouse_events, process_touch_events, process_window_event};
+use crate::ipg_widgets::ipg_events::{handle_window_closing, process_keyboard_events, process_mouse_events, process_touch_events, process_window_event};
 use crate::ipg_widgets::ipg_window::IpgWindowMode;
 use crate::{access_window_actions, ipg_widgets};
 use crate::ipg_widgets::helpers::find_key_for_value;
@@ -45,7 +45,7 @@ use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_ca
 use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage, tick_callback};
 use ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
 use ipg_widgets::ipg_tool_tip::construct_tool_tip;
-use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_window, window_callback};
+use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_window};
 use crate::{access_state, IpgIds};
 
 
@@ -76,7 +76,6 @@ pub enum Message {
     Tick,
     Timer(usize, TIMMessage),
     FontLoaded(Result<(), font::Error>),
-    Window(WndMessage),
     WindowOpened(window::Id, Option<Point>, Size),
 
     MouseAreaOnPress(usize),
@@ -102,7 +101,6 @@ pub struct Flags {
 
 
 pub struct App {
-    windows: HashMap<window::Id, IpgWindow>,
     timer_duration: u64,
     keyboard_event_enabled: (usize, bool),
     mouse_event_enabled: (usize, bool),
@@ -118,12 +116,11 @@ impl App {
     
     pub fn new(flags: Flags) -> (Self, Task<Message>) {
         
-        let (windows, mut open) = add_windows();
+        let mut open = add_windows();
         open.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
 
         (
             Self {
-                windows,
                 timer_duration: flags.timer_duration,
                 keyboard_event_enabled: flags.keyboard_event_enabled,
                 mouse_event_enabled: flags.mouse_event_enabled,
@@ -193,7 +190,7 @@ impl App {
                 if is_empty {
                     iced::exit()
                 } else {
-                    // check for any window mode changes
+                    // check for any other window changes
                     get_tasks()
                 }
             },
@@ -300,9 +297,6 @@ impl App {
                 toggle_callback(id, message);
                 get_tasks()
             },
-            Message::Window(message) => {
-                window_callback(message)
-            },
             Message::WindowOpened(_id, _position, size) => {
                 Task::none()
             },
@@ -312,11 +306,11 @@ impl App {
 
     pub fn view(&self, window_id: window::Id) -> Element<self::Message> {
 
-        let (visible, debug, theme) = get_window_values(window_id);
+        let (_visible, debug, theme) = get_window_values(window_id);
         
-        if !visible { 
-            return horizontal_space().into();
-        }
+        // if !visible { 
+        //     return horizontal_space().into();
+        // }
  
         let content = create_content(window_id);
         
@@ -331,7 +325,6 @@ impl App {
 
     pub fn subscription(&self) -> Subscription<Message> {
 
-        
         let mut subscriptions = vec![];
         
         if self.timer_event_enabled.1 {
@@ -362,12 +355,22 @@ impl App {
         }
     }
 
-    pub fn theme(&self, window: window::Id) -> Theme {
+    pub fn theme(&self, iced_window_id: window::Id) -> Theme {
 
-        self.windows
-            .get(&window)
-            .map(|window| window.theme.clone())
-            .unwrap()
+        let state = access_state();
+
+        let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
+        let ipg_window_id = match ipg_window_id_opt {
+            Some(id) => id.clone(),
+            None => panic!("App: thwmw, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
+        };
+        
+        let window_opt = state.containers.get(&ipg_window_id);
+        let ipg_window = get_window_container(window_opt);
+
+        let theme = ipg_window.theme.clone();
+        drop(state);
+        theme
     }
 
     pub fn scale_factor(&self, iced_window_id: window::Id) -> f64 {
@@ -398,7 +401,7 @@ fn get_window_values(iced_window_id: window::Id) -> (bool, bool, Theme) {
     let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
     let ipg_window_id = match ipg_window_id_opt {
         Some(id) => id.clone(),
-        None => panic!("App: title, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
+        None => panic!("App: get_window_values, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
     };
     
     let window_opt = state.containers.get(&ipg_window_id);
@@ -423,9 +426,14 @@ fn get_tasks() -> Task<Message> {
 
     let mut actions = vec![];
 
-    for mode in state.mode.iter() {
-        let iced_id = find_key_for_value(mode.1);
-        actions.push(window::change_mode(iced_id, mode.0));
+    for (ipg_id, mode) in state.mode.iter() {
+        dbg!(mode);
+        let iced_id = find_key_for_value(*ipg_id);
+        actions.push(window::change_mode(iced_id, *mode));
+        let is_empty = handle_window_closing(iced_id, *mode);
+        if is_empty {
+            actions.push(iced::exit());
+        }
     }
     state.mode = vec![];
 
@@ -449,6 +457,12 @@ fn get_tasks() -> Task<Message> {
     }
     state.position = vec![];
 
+    for (ipg_id, level) in state.level.iter() {
+        let iced_id = find_key_for_value(*ipg_id);
+        actions.push(window::change_level(iced_id, *level));
+    }
+    state.level = vec![];
+
     drop(state);
 
     if actions.is_empty() {
@@ -456,6 +470,7 @@ fn get_tasks() -> Task<Message> {
     }
     Task::batch(actions)
 }
+
 
 // Central method to get the structures stored in the mutex and then the children 
 fn create_content(iced_id: window::Id) -> Element<'static, Message> {

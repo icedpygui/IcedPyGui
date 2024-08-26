@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgWindowParam, IpgWindowMode, IpgTextParam, IpgWindowLevel
+from icedpygui import IPG, IpgWindowParam, IpgWindowMode, IpgTextParam, IpgWindowLevel, IpgWindowTheme
 
 ipg = IPG()
 
@@ -19,25 +19,35 @@ def toggle_decorations(btn_id: int):
     ipg.update_item(wnd4, IpgWindowParam.Decorations, wnd4)
 
 
+# The resize of the window requires a list [width, height]
 def toggle_resize(btn_id: int, value: bool):
     if value:
-        ipg.update_item(wnd4, IpgWindowParam.Size, (wnd4, 300.0, 400.0))
+        ipg.update_item(wnd4, IpgWindowParam.Size, [300.0, 400.0])
     else:
-        ipg.update_item(wnd4, IpgWindowParam.Size, (wnd4, 300.0, 600.0))
+        ipg.update_item(wnd4, IpgWindowParam.Size, [300.0, 600.0])
 
-# The level of the window requires a tuple (window id, Level)
-def change_level(tog_id: int, value: bool):
+
+# The level of the window, move it over another window to see the effect
+def toggle_level(tog_id: int, value: bool):
     if value:
-        ipg.update_item(wnd4, IpgWindowParam.Level, (wnd4, IpgWindowLevel.AlwaysOnBottom))
+        ipg.update_item(wnd4, IpgWindowParam.Level, IpgWindowLevel.AlwaysOnBottom)
     else:
-        ipg.update_item(wnd4, IpgWindowParam.Level, (wnd4, IpgWindowLevel.Normal))
+        ipg.update_item(wnd4, IpgWindowParam.Level, IpgWindowLevel.Normal)
 
-# Move the window to a new position, required a tuple(windowid, pos_x, pos_y)
+
+# Move the window to a new position, required a list[pos_x, pos_y]
 def toggle_move_to(tog_id: int, value: bool):
     if value:
-        ipg.update_item(wnd4, IpgWindowParam.Position, (wnd4, 900.0, 25.0))
+        ipg.update_item(wnd4, IpgWindowParam.Position, [900.0, 25.0])
     else:
-        ipg.update_item(wnd4, IpgWindowParam.Position, (wnd4, 1000.0, 25.0))
+        ipg.update_item(wnd4, IpgWindowParam.Position, [1000.0, 25.0])
+
+
+def toggle_theme(tog_id: int, value: bool):
+    if value:
+        ipg.update_item(wnd4, IpgWindowParam.Theme, IpgWindowTheme.Light)
+    else:
+        ipg.update_item(wnd4, IpgWindowParam.Theme, IpgWindowTheme.Dark)
 
 # ****************Functions for changes and events in window 1*****************
 # Since the input value is a string, need to convert to  a float
@@ -95,9 +105,17 @@ def event_on_files_hover_left(wnd_id: int, event_name: str):
 
 # *******************add functions for close requested ******************************
 # This responds to the close request event
+# IMPORTANT: Once this event is used, you must also update any
+# other window with a close statement since all window are now
+# calling this event function.
 def event_on_close_requested(wnd_id: int, event_name: str):
-    # show window to acknowledge close or not
-    ipg.update_item(popup_id, IpgWindowParam.Mode, IpgWindowMode.Windowed)
+    if wnd_id == wnd2:
+        # show window to acknowledge close or not
+        ipg.update_item(popup_id, IpgWindowParam.Mode, IpgWindowMode.Windowed)
+    else:
+        # If not the window of interest, close it.
+        ipg.update_item(wnd_id, IpgWindowParam.Mode, IpgWindowMode.Closed)
+
 
 # This responds to the button pressed in the close request window
 def close_window_using_popup(btn_id: int, window_ids: list):
@@ -129,7 +147,6 @@ wnd1 = ipg.add_window(window_id="main1",
                       title="Window 1",
                       width=400.0, height=600.0, 
                       pos_x=100, pos_y=25,
-                      mode=IpgWindowMode.Fullscreen,
                       )
 
 # add a container to center things
@@ -268,5 +285,13 @@ ipg.add_toggler(parent_id="col",
 ipg.add_toggler(parent_id="col", 
                label="Toggle Position",
                toggled=toggle_move_to)
+
+ipg.add_toggler(parent_id="col", 
+               label="Toggle Level",
+               toggled=toggle_level)
+
+ipg.add_toggler(parent_id="col", 
+               label="Toggle Theme",
+               toggled=toggle_theme)
 
 ipg.start_session()

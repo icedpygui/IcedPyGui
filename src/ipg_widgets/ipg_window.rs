@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-use std::collections::HashMap;
 
 use crate::app::{self, Message};
 use crate::{access_callbacks, access_state, access_window_actions};
@@ -11,7 +10,7 @@ use iced::widget::Column;
 use pyo3::{pyclass, PyObject, Python};
 
 use super::callbacks::WidgetCallbackOut;
-use super::helpers::{try_extract_boolean, try_extract_f64, try_extract_tup_usize_f32_f32, try_extract_u64};
+use super::helpers::{try_extract_boolean, try_extract_f64, try_extract_u64, try_extract_vec_f32};
 
 
 #[derive(Debug, Clone)]
@@ -83,19 +82,28 @@ pub enum WndMessage {
     ScaleChanged(window::Id, String), 
 }
 
-pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Task<app::Message>>) {
+pub fn add_windows() -> Vec<Task<app::Message>> {
 
     let mut state = access_state();
 
-    let mut windows = HashMap::new();
+    let mut modes: Vec<(usize, window::Mode)> = vec![];
 
     let mut spawn_window: Vec<Task<app::Message>> = vec![];
 
     for i in 0..state.windows.len() {
         let visible = match state.windows[i].mode {
-            IpgWindowMode::Windowed => true,
-            IpgWindowMode::Fullscreen => true,
-            IpgWindowMode::Closed => false,
+            IpgWindowMode::Windowed => {
+                modes.push((state.windows[i].id, window::Mode::Windowed));
+                true
+            },
+            IpgWindowMode::Fullscreen => {
+                modes.push((state.windows[i].id, window::Mode::Fullscreen));
+                true
+            },
+            IpgWindowMode::Closed => {
+                modes.push((state.windows[i].id, window::Mode::Hidden));
+                false
+            },
         };
         let (iced_id, open) = window::open(window::Settings {
             size: state.windows[i].size,
@@ -110,51 +118,30 @@ pub fn add_windows() -> (HashMap<window::Id, IpgWindow>, Vec<Task<app::Message>>
             exit_on_close_request: state.windows[i].exit_on_close_request,
             ..Default::default()
         });
+        let id = state.windows[i].id.clone();
+        let debug = state.windows[i].debug.clone();
+        let theme = state.windows[i].theme.clone();
+        let mode = state.windows[i].mode.clone();
 
-        windows.insert(iced_id, state.windows[i].clone());
+        state.window_debug.insert(iced_id, (id, debug));
+        state.window_theme.insert(iced_id, (id, theme));
+        state.window_mode.insert(iced_id, (id, get_iced_mode(&mode)));
+
         let ipg_id = state.windows[i].id.clone();
         state.windows_iced_ipg_ids.insert(iced_id, ipg_id);
         let size = state.windows[i].size.clone();
         spawn_window.push(open.map(move|_|Message::WindowOpened(iced_id, None, size)));
         
     }
+
     drop(state);
 
-    // Set the state of the window debug to be used in the views
-    let mut state = access_state();
-    for (id, window) in windows.iter() {
-        state.window_debug.insert(id.clone(), (window.id, window.debug.clone()));
-        state.window_theme.insert(id.clone(), (window.id, window.theme.clone()));
-    }
-
-
-    (windows, spawn_window)
+    spawn_window
 
 }
 
 pub fn construct_window(content: Vec<Element<'static, app::Message>>) -> Element<'static, app::Message> {
     Column::with_children(content).into()
-}
-
-pub fn window_callback(message:WndMessage) -> Task<app::Message> {
-    
-    let mut _state = access_state();
-
-    match message {
-            WndMessage::TitleChanged(_id, _title) => {
-                Task::none()
-            },
-            WndMessage::NewWindow => {
-                Task::none()
-            },
-            WndMessage::ScaleInputChanged(_id, _something) => {
-                Task::none()
-            },
-            WndMessage::ScaleChanged(_id, _scale) => {
-                Task::none()
-            }, 
-    }
-
 }
 
 fn process_callback(wco: WidgetCallbackOut) 
@@ -289,23 +276,15 @@ pub fn get_iced_window_theme(theme: IpgWindowTheme) -> Theme {
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum IpgWindowParam {
-    DistroyWindow,
     Decorations,
     Debug,
-    ExitOnCloseRequest,
     Level,
-    MinSize,
-    MaxSize,
     Mode,
     Position,
-    Resizable,
     Size,
     Theme,
-    Transparent,
     ScaleFactor,
 }
-
-
 
 pub fn window_item_update(wnd: &mut IpgWindow,
                             item: PyObject,
@@ -327,10 +306,10 @@ pub fn window_item_update(wnd: &mut IpgWindow,
         },
         IpgWindowParam::Mode => {
             let ipg_mode = try_extract_mode(value);
-            let mode = get_mode(&ipg_mode);
+            let mode = get_iced_mode(&ipg_mode);
             wnd.mode = ipg_mode;
             let mut state = access_window_actions();
-            state.mode.push((mode, wnd.id));
+            state.mode.push((wnd.id, mode));
             drop(state)
         },
         IpgWindowParam::Decorations => {
@@ -339,29 +318,26 @@ pub fn window_item_update(wnd: &mut IpgWindow,
             state.decorations.push(val);
             drop(state)
         },
-        IpgWindowParam::ExitOnCloseRequest => {
-           
+        IpgWindowParam::Level => {
+            let ipg_level = try_extract_level(value);
+            let level = get_level(&ipg_level);
+            wnd.level = ipg_level;
+            let mut state = access_window_actions();
+            state.level.push((wnd.id, level));
+            drop(state)
         },
-        IpgWindowParam::DistroyWindow => {
-
-        }
-        IpgWindowParam::Level => (),
-        IpgWindowParam::MinSize => (),
-        IpgWindowParam::MaxSize => (),
         IpgWindowParam::Position => {
-            let val = try_extract_tup_usize_f32_f32(value);
+            let val = try_extract_vec_f32(value);
             let mut state = access_window_actions();
-            state.position.push(val);
+            state.position.push((wnd.id, val[0], val[1]));
             drop(state)
         },
-        IpgWindowParam::Resizable => (),
         IpgWindowParam::Size => {
-            let val = try_extract_tup_usize_f32_f32(value);
+            let val = try_extract_vec_f32(value);
             let mut state = access_window_actions();
-            state.resize.push(val);
+            state.resize.push((wnd.id, val[0], val[1]));
             drop(state)
         },
-        IpgWindowParam::Transparent => (),
     }
 
 }
@@ -394,7 +370,17 @@ fn try_extract_mode(mode: PyObject) -> IpgWindowMode {
         let res = mode.extract::<IpgWindowMode>(py);
         match res {
             Ok(mode) => mode,
-            Err(_) => panic!("Window mode extraction failed"),
+            Err(e) => panic!("Window mode extraction failed with error {}", e),
+        }
+    })
+}
+
+fn try_extract_level(level: PyObject) -> IpgWindowLevel {
+    Python::with_gil(|py| {
+        let res = level.extract::<IpgWindowLevel>(py);
+        match res {
+            Ok(level) => level,
+            Err(e) => panic!("Window level extraction failed with error {}", e),
         }
     })
 }
@@ -423,10 +409,18 @@ pub enum IpgWindowMode {
     Closed,
 }
 
-fn get_mode(mode: &IpgWindowMode) -> window::Mode {
+pub fn get_iced_mode(mode: &IpgWindowMode) -> window::Mode {
     match mode {
         IpgWindowMode::Windowed => window::Mode::Windowed,
         IpgWindowMode::Fullscreen => window::Mode::Fullscreen,
         IpgWindowMode::Closed => window::Mode::Hidden,
+    }
+}
+
+pub fn get_ipg_mode(mode: window::Mode) -> IpgWindowMode {
+    match mode {
+        window::Mode::Windowed => IpgWindowMode::Windowed,
+        window::Mode::Fullscreen => IpgWindowMode::Fullscreen,
+        window::Mode::Hidden => IpgWindowMode::Closed,
     }
 }
