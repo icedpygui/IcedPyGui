@@ -647,7 +647,7 @@ class IPG:
                         *,
                         parent_id: Optional[str]=None,
                         gap: int=10,
-                        style: str="box",
+                        style_id: str,
                      ) -> int:
     
         """
@@ -918,7 +918,7 @@ class IPG:
             text_size: float
                 Sets the size of the text beside the checkbox.
             icon_x: bool
-                If true, uses the x versus the checkmark icon.
+                If true, uses the x versus the check mark icon.
             icon_size: float
                 Sets the size of either the check or x icon.
             style_id: str
@@ -1104,7 +1104,8 @@ class IPG:
                     on_middle_release: Optional[Callable]=None,
                     on_enter: Optional[Callable]=None,
                     on_move: Optional[Callable]=None,
-                    on_exit: Optional[Callable]=None, 
+                    on_exit: Optional[Callable]=None,
+                    padding: list[float], 
                     width: Optional[float]=None,
                     height: Optional[float]=None,
                     width_fill: bool=False,
@@ -1476,13 +1477,13 @@ class IPG:
 
     def add_pick_list(self,
                         parent_id: str,
-                        options: List=[str],
+                        options: list=[str],
                         *,
                         gen_id: Optional[int]=None,
                         on_select: Optional[Callable]=None,
                         width: Optional[float]=None,
                         width_fill: bool=False,
-                        padding: List=[5.0],
+                        padding: list=[5.0],
                         placeholder: Optional[str]=None,
                         selected: Optional[str]=None,
                         text_size: float=15.0,
@@ -1493,8 +1494,7 @@ class IPG:
                         dynamic_closed: Union[None| IpgButtonArrow]=None,
                         dynamic_opened: Optional[IpgButtonArrow]=None,
                         custom_static: Optional[IpgButtonArrow]=None,
-                        style_color: Union[None, str]=None,
-                        style_border: Union[None, str]=None,
+                        style: Union[None, str]=None,
                         user_data: Optional[any]=None,
                         show: bool=True,
                       ) -> int:
@@ -2851,11 +2851,11 @@ class IPG:
         on_redraw_requested: Optional[Callable]=None
             When a redraw command is requested.
         on_close_requested: Optional[Callable]=None
-            When a window close is requested, the window seeting on_close_request must be set to False.
+            When a window close is requested, the window setting on_close_request must be set to False.
         on_focused: Optional[Callable]=None
             When an unfocused window is brought into focus.
         on_unfocused: Optional[Callable]=None
-            When another window is focused, unfocusing current window.
+            When another window is focused or unfocused.
         on_file_hovered: Optional[Callable]=None
             When a file is dragged over the window. The file path is delivered.
         on_file_dropped: Optional[Callable]=None
@@ -2962,7 +2962,7 @@ class IpgVerticalAlignment:
 
 class IpgButtonParam:
     """
-    Button paramtes
+    Button parameters
 
     Parameters
     ----------
@@ -2996,7 +2996,7 @@ class IpgButtonParam:
     Padding: list
     Clip: bool
     Show: bool
-    Style: str
+    StyleId: str
     StyleStandard: IpgStyleStandard
     Width: float
     WidthFill: bool
@@ -3032,13 +3032,13 @@ class IpgCardParam:
     IsOpen: bool
         Whether the card is open or minimized
     Style: IpgCardStyle
-        The style of the card
+        The string id of the add_card_style()
     """
     Body: str
     Foot: str
     Head: str
     IsOpen: bool
-    Style: IpgCardStyle
+    Style: str
 
 
 class IpgCheckboxParam:
@@ -3052,7 +3052,7 @@ class IpgCheckboxParam:
     IconX: bool
         Whether to use and x or the default check.
     IsChecked: bool
-        Wheter the checkbox is checked or not.
+        Whether the checkbox is checked or not.
     Label: str
         THe label of the checkbox.
     Show: bool
@@ -3060,9 +3060,9 @@ class IpgCheckboxParam:
     Size: float
         The size of the square.
     Spacing: float
-        The spacing between the swuare and label.
-    Style: str
-        The id of the checkbox style function.
+        The spacing between the square and label.
+    StyleId: str
+        The string id of the checkbox style function.
     StyleStandard: IpgStyleStandard
         One of the standard styles.
     TextLineHeight: float
@@ -3081,7 +3081,7 @@ class IpgCheckboxParam:
     Show: bool
     Size: float
     Spacing: float
-    Style: str
+    StyleId: str
     StyleStandard: IpgStyleStandard
     TextLineHeight: float
     TextSize: float
@@ -3251,58 +3251,149 @@ class IpgColor:
     YELLOW=''
     YELLOW_GREEN=''
 
-class IpgContainerTheme:
-    Default=''
-    Custom=''
-
 
 class IpgDatePickerParam:
-    Label=''
-    Padding=''
-    RotationRadians=''
-    SizeFactor=''
-    Show=''
+    """
+    Date Picker parameters
+
+    Parameters
+    ----------
+    Label: str
+        Label for the initial button
+    Padding: list[float]
+        Padding around the button
+    SizeFactor: float
+        Size of the calendar
+    Show: bool
+        Whether to show or not.
+    """
+    Label: str
+    Padding: list[float]
+    SizeFactor: float
+    Show: bool
 
 
 class IpgImageContentFit:
-    Contain=''
-    Cover=''
-    Fill=''
-    IpgNone=''
-    ScaleDown=''
+    """
+    Content fit for the image
+
+    Parameters
+    ---------
+    Contain: IpgImageContentFit.Contain
+        The image will be scaled (preserving aspect ratio) so that it just fits within the window.
+    Cover: IpgImageContentFit.Cover 
+        Scale the image to cover all of the bounding box, cropping if needed.
+    Fill: IpgImageContentFit.Fill
+        Distort the image so the widget is 100% covered without cropping.
+    IpgNoneIpgImageContentFit.IpgNone
+        Don't resize or scale the image at all.  This is best for when you've sized the image yourself.
+    ScaleDown: IpgImageContentFit.ScaleDown
+        Scale the image down if it's too big for the space, but never scale it up.
+    """
+    Contain: str
+    Cover: str
+    Fill: str
+    IpgNone: str
+    ScaleDown: str
 
 
 class IpgImageFilterMethod:
-    Linear=''
-    Nearest=''
+    '''
+    How the image is filtered
+
+    Parameters
+    ----------
+    Linear: IpgImageMethodFilter.Linear
+        Bi-linear interpolation image filtering strategy.
+    Nearest: IpgImageMethodFilter.Nearest
+        Nearest neighbor image filtering strategy.
+    '''
+    Linear: str
+    Nearest: str
 
 
 class IpgImageRotation:
-    Floating=''
-    Solid=''
+    """
+    What happens to the container when image is rotated.
+
+    Parameters
+    ----------
+    Floating: IpgImageRotation.Floating
+        When image is rotated, it floats above the container, not distorting it.
+    Solid: IpgImageRotation.Solid
+        When the image is rotated, the container resizes to fit.
+    """
+    Floating: str
+    Solid: str
 
 
 class IpgImageParam:
-    Height=''
-    HeightFill=''
-    ImagePath=''
-    Opacity=''
-    Padding=''
-    Show=''
-    Width=''
-    WidthFill=''
+    """
+    Image parameters
+
+    Parameters
+    ----------
+    Height: float
+        Sets the height of the widget. 
+    HeightFill: bool
+        Sets the height to fill the available space, overrides height.
+    ImagePath: str
+        Path to where the image is.
+    Opacity: float
+        How much opacity, 1=opaque, 0=transparent
+    Padding: list[float]
+        The padding around the image.
+    RotationRadians: float
+        How much to rotate the image in radians.
+    Show: bool
+        Whether to show or hide the image.
+    Width: float
+        Width of the image.
+    WidthFill: bool
+    Whether to fill the width to the available container size.
+    """
+    Height: float
+    HeightFill: bool
+    ImagePath: str
+    Opacity: float
+    Padding: list[float]
+    RotationRadians: float
+    Show: bool
+    Width: float
+    WidthFill: bool
 
 
 class IpgMenuParam:
-    BarHeight=''
-    BarPadding=''
-    BarSpacing=''
-    BarWidths=''
-    CheckBoundsWidth=''
-    Show=''
+    """
+    Menu Bar parameters
+
+    Parameters
+    ----------
+    BarHeight: float
+        The height od the bar
+    BarPadding: list[float]
+        The padding around the bar.
+    BarSpacing: float
+        The space between the bar and the menu items.
+    BarWidths: list[float]
+        The width of each menu item in the bar.
+    CheckBoundsWidth: float
+        Widths of the dropdown menu.
+    Show: bool
+        Whether to show or hide the widget
+    """
+    BarHeight: float
+    BarPadding: list[float]
+    BarSpacing: float
+    BarWidths: list[float]
+    CheckBoundsWidth: float
+    Show: bool
 
 
 class IpgMenuType:
+    """
+    The type of widgets a menu item can be.  Used in item_styles parameter.
+    """
     Button=''
     Checkbox=''
     Circle=''
@@ -3314,32 +3405,55 @@ class IpgMenuType:
 
 
 class IpgMenuSeparatorType:
+    """
+    The separator types id used.
+    """
     Circle=''
     Dot=''
     Label=''
     Line=''
 
 
-class IpgMouseAreaParam:
-    show=''
-
-
 class IpgPickListParam:
-    Options=''
-    Placeholder=''
-    Padding=''
-    Show=''
-    StyleBackground=''
-    StyleBorder=''
-    StyleHandleColor=''
-    StyleTextColor=''
-    TextSize=''
-    TextLineHeight=''
-    Width=''
-    Delete=''
+    """
+    PickList parameters
+
+    Parameters
+    ----------
+    Options: list[str]
+        Items in the picklist.
+    Placeholder: str
+        A placeholder in the picklist box.
+    Padding: list[float]
+        Padding around the picklist.
+    Show: bool
+        Whether to show or hide the widget.
+    StyleId: str
+        String id of the add_picklist_style()
+    TextSize: float
+        Size of the text.
+    TextLineHeight: float
+        Size od the text box.
+    Width: float
+        Width of the picklist.
+    WidthFill: bool
+        Whether the picklist expands the available width of the container.
+    """
+    Options: list[str]
+    Placeholder: str
+    Padding: list[float]
+    Show: bool
+    StyleId: str
+    TextSize: float
+    TextLineHeight: float
+    Width: float
+    WidthFill: bool
 
 
 class IpgPickListHandle:
+    """
+    The type of handle for the picklist.
+    """
     Arrow=''
     Dynamic=''
     HandleNone=''
@@ -3347,101 +3461,251 @@ class IpgPickListHandle:
 
 
 class IpgProgressBarParam:
-    Height=''
-    Min=''
-    Max=''
-    Show=''
-    StyleBackground=''
-    StyleBorder=''
-    StyleBarColor=''
-    Value=''
-    Width=''
-    WidthFill=''
+    """
+    The ProgressBar parameters.
+
+    Parameters
+    ----------
+    Height: float
+        Height of the bar.
+    HeightFill: bool
+        Whether the bar fills the height of the container.
+    Min: float
+        Minimum value of the bar.
+    Max: float
+        Maximum value of the bar.
+    Show: bool
+        Whether to show or hide the bar.
+    StyleId: str
+        The string id of the add_progress_bar_style()
+    StyleStandard: str
+        The standard style of the IpgStandardStyle class
+    Value: float
+        The value of the bar.
+    Width: float
+        The width of the bar.
+    WidthFill: bool
+        Whether the bar fills the width of the container.
+    """
+    Height: float
+    HeightFill: bool
+    Min: float
+    Max: float
+    Show: bool
+    StyleId: str
+    StyleStandard: str
+    Value: float
+    Width: float
+    WidthFill: bool
 
 
 
 class IpgRadioDirection:
+    """
+    Direction the radio button are aligned.
+    """
     Horizontal=''
     Vertical=''
 
 
 class IpgRadioParam:
-    Direction=''
-    Labels=''
-    Padding=''
-    SelectedIndex=''
-    Show=''
-    Size=''
-    Spacing=''
-    StyleId=''
-    TextSpacing=''
+    """
+    Radio button parameters
+
+    Parameters
+    ----------
+    Direction: str
+        The IpgRadioDirection class
+    Labels: list[str]
+        The labels for each radio button
+    Padding: list[float]
+        The padding around the radio
+    SelectedIndex: int
+        The index of the radio selected
+    Show: bool
+        Whether to show or hide the radio group
+    Size: float
+        The size of the radio circle.
+    Spacing: float
+        The spacing between the radio buttons in the group.
+    StyleId: str
+        The string id of the add_radio_style().
+    TextSpacing: float
+        The spacing between the radio  and the label.
     TextSize=''
-    LineHeightPixels=''
-    LineHeightRelative=''
-    UserData=''
-    Width=''
-    WidthFill=''
-    Height=''
-    HeightFill=''
+        The size of the label.
+    LineHeightPixels: int
+        The label box height in pixels.
+    LineHeightRelative: float
+        The label box height relative to the default.
+    UserData: any
+        Any user data need of any format.
+    Width: float
+        The width of the widget group.
+    WidthFill: bool
+        Whether the widget group fill the container width.
+    Height: float
+        The height of the widget group.
+    HeightFill: bool
+        Whether the widget group fill the container height.
+    """
+    Direction: str
+    Labels: list[str]
+    Padding: list[float]
+    SelectedIndex: int
+    Show: bool
+    Size: float
+    Spacing: float
+    StyleId: str
+    TextSpacing: float
+    TextSize=''
+    LineHeightPixels: int
+    LineHeightRelative: float
+    UserData: any
+    Width: float
+    WidthFill: bool
+    Height: float
+    HeightFill: bool
 
 
 class IpgScrollableDirection:
+    """
+    The scroll direction of the Scrollable
+    """
     Vertical=''
     Horizontal=''
     Both=''
 
 
 class IpgScrollableParam:
-    Width=''
-    Height=''
-    HBarWidth=''
-    HBarMargin=''
-    HScrollerWidth=''
-    HBarAlignment=''
-    VBarWidth=''
-    VBarMargin=''
-    VScrollerWidth=''
-    VBarAlignment=''
+    """
+    The Scrollable parameters
+
+    Parameters
+    ----------
+    Width: float
+        The width of the scrollable.
+    WidthFill: bool
+        Whether the scrollable fills the width container.
+    Height: float
+        The height of the scrollable.
+    HeightFill: bool
+        Whether the scrollable fills the height container.
+    HBarWidth: float
+        The horizontal bar width
+    HBarMargin: float
+        The horizontal bar margin.
+    HScrollerWidth: float
+        The horizontal scroller width.
+    HBarAlignment: IpgAlignment
+        The horizontal bar alignment.
+    VBarWidth: float
+        The vertical bar width.
+    VBarMargin: float
+        The vertical margin.
+    VScrollerWidth: float
+        The vertical scroller width.
+    VBarAlignment: IpgAlignment
+        The vertical bar alignment.
+    """
+    Width: float
+    WidthFill: bool
+    Height: float
+    HeightFill: bool
+    HBarWidth: float
+    HBarMargin: float
+    HScrollerWidth: float
+    HBarAlignment: IpgAlignment
+    VBarWidth: float
+    VBarMargin: float
+    VScrollerWidth: float
+    VBarAlignment: IpgAlignment
 
 
 class IpgSelectableTextParam:
-    Text=''
-    Width=''
-    WidthFill=''
-    Height=''
-    HeightFill=''
-    HorizontalAlign=''
-    VerticalAlign=''
-    LineHeight=''
-    Size=''
-    TextColor=''
-    TextRgba=''
-    Show=''
+    """
+    SelectableText parameters
+
+    Parameters
+    ----------
+    Text: str
+        The text
+    Width: float
+        The width of the widget.
+    WidthFill: bool
+        Whether the widget fills the container width.
+    Height: float
+        The height of the widget.
+    HeightFill: bool
+        Whether the widget fills the container height.
+    HorizontalAlign: IpgHorizontalAlignment
+        The horizontal alignment using the IpgHorizontalAlignment class
+    VerticalAlign: IpgVerticalAlignment
+        The vertical alignment using the IpgVerticalAlignment class
+    LineHeight: float
+        The size of the box the text.
+    Size: float
+        The size of the text.
+    TextColor: IpgColor
+        The color of the text.
+    TextRgba: list[float, 4]
+        The color of the text in rgba format.
+    Show: bool
+        Whether to show or hide the widget.
+    """
+    Text: str
+    Width: float
+    WidthFill: bool
+    Height: float
+    HeightFill: bool
+    HorizontalAlign: IpgHorizontalAlignment
+    VerticalAlign: IpgVerticalAlignment
+    LineHeight: float
+    Size: float
+    TextColor: IpgColor
+    TextRgba: list[float, 4]
+    Show: bool
 
 class IpgSliderParam:
-    Min=''
-    Max=''
-    Step=''
-    Value=''
-    Width=''
-    WidthFill=''
-    Height=''
-    Style=''
-    Show=''
+    """
+    Slider parameters
 
-
-class IpgStyleParam:
-    Background=''
-    BarColor=''
-    Border=''
-    DotColor=''
-    FillMode=''
-    HandleColor=''
-    IconColor=''
-    Shadow=''
+    Parameters
+    ----------
+    Min: float
+        The minimum range value.
+    Max: float
+        The maximum range value.
+    Step: float
+        The step of the range value.
+    Value: float
+        The current value.
+    Width: float
+        The width of the widget.
+    WidthFill: bool
+        Whether the width of the widget fills the container.
+    Height: float
+        The height of the widget.
+    StyleId: str
+        The string if of the add_slider_style().
+    Show: bool
+        Whether to show or hide the widget.
+    """
+    Min: float
+    Max: float
+    Step: float
+    Value: float
+    Width: float
+    WidthFill: bool
+    Height: float
+    StyleId: str
+    Show: bool
 
 
 class IpgStyleStandard:
+    """
+    Standard styles for widgets
+    """
     Primary=''
     Success=''
     Danger=''
@@ -3449,14 +3713,41 @@ class IpgStyleStandard:
 
 
 class IpgSvgParam:
-    SvgPath=''
-    Width=''
-    WidthFill=''
-    Height=''
-    HeightFill=''
-    Show=''
+    """
+    SVG image parameters
+    
+    Parameters
+    ----------
+    Height: float
+        The height of the widget.
+    HeightFill: bool
+        Whether the height of the widget fills the container.
+    ImagePath: str
+        The path to the image.
+    Show: bool
+        Whether to show or hide the widget.
+    Width: float
+        The width of the widget.
+    WidthFill: bool
+        Whether the width of the widget fills the container.
+    RotationRadians: float
+        How much to rotate the svg image in radians.
+    Opacity: float
+        The opacity of the widget.
+    """
+    Height: float
+    HeightFill: bool
+    ImagePath: str
+    Show: bool
+    Width: float
+    WidthFill: bool
+    RotationRadians: float
+    Opacity: float
 
 class IpgSvgContentFit:
+    """
+    How the image is sized.
+    """
     Contain=''
     Cover=''
     Fill=''
@@ -3465,16 +3756,61 @@ class IpgSvgContentFit:
 
 
 class IpgSvgRotation:
+    """
+    How the images interacts with the background during rotations.
+    """
     Floating=''
     Solid=''
 
 
+class IpgTableParam:
+    """
+    Table parameters
+
+    Parameters
+    ----------
+    Title: str
+        Title for the table.
+    Data: list[dict]
+        Table data in list of dictionaries form
+    Width: float
+        Width of the table.
+    Height: float
+        Height of the table.
+    RowHighlight: IpgTableRowHighLight
+        Sets the color type for highlighting alternate rows.
+    HighlightAmount: float
+        The highlighting amount.
+    ColumnWidths: list[float]
+        A list of column widths.
+    ModalShow: bool
+        Whether to show or hide the modal.
+    Show: bool
+        Whether to show or hide the widget.
+    """
+    Title: str
+    Data: dict
+    Width: float
+    Height: float
+    RowHighlight: IpgTableRowHighLight
+    HighlightAmount: float
+    ColumnWidths: list[float]
+    ModalShow: bool
+    Show: bool
+
+
 class IpgTableRowHighLight:
+    """
+    How the table highlighting is applied.
+    """
     Darker=''
     Lighter=''
 
 
 class IpgTableWidget:
+    """
+    The type of widget to use in the table row, if needed.
+    """
     Button=''
     Checkbox=''
     Modal=''
@@ -3482,34 +3818,84 @@ class IpgTableWidget:
 
 
 class IpgTextInputParam:
-    Placeholder=''
-    Value=''
-    IsSecure=''
-    Width=''
-    Padding=''
-    Size=''
-    LineHeightPixels=''
-    LineHeightRelative=''
-    StyleId=''
+    """
+    TextInput parameters
+
+    Parameters
+    ----------
+    Placeholder: str
+        The text in the box for instructions.
+    Value: str
+        The value typed in or pasted in the box
+    IsSecure: bool
+        Whether to display the text in a readable format or not.
+    Width: float
+        The width of the widget.
+    Padding: list[float]
+        The padding around the widget.
+    Size: float
+        The text ize.
+    LineHeightPixels: float
+        The height of the text box in pixels.
+    LineHeightRelative: float
+        The height of the text box relative to the default size.
+    StyleId: str
+        The string id of add_textinput_style().
+    """
+    Placeholder: str
+    Value: str
+    IsSecure: bool
+    Width: float
+    Padding: list[float]
+    Size: float
+    LineHeightPixels: float
+    LineHeightRelative: float
+    StyleId: str
 
 
 class IpgTextParam:
-    Content=''
-    Height=''
-    HeightFill=''
-    HzAlignLeft=''
-    HzAlignCenter=''
-    HzAlignRight=''
-    LineHeight=''
-    Size=''
-    TextColor=''
-    TextRgba=''
-    VtAlignTop=''
-    VtAlignCenter=''
-    VtAlignBottom=''
-    Width=''
-    WidthFill=''
-    Show=''
+    """
+    Text parameters
+
+    Parameters
+    ----------
+    Content: str
+        The text.
+    Height: float
+        The height of the widget.
+    HeightFill: bool
+        Whether to fill the height of the container with the widget.
+    HorizontalAlignment: IpgHorizontalAlignment
+        The alignment of the text in the text box.
+    LineHeight: float
+        The height of the text box.
+    Size: float
+        The size of the text.
+    TextColor: IpgColor
+        The color of the text.
+    TextRgba: list[float]
+        The color of the text in rgba format.
+    VerticalAlignment: IpgVerticalAlignment
+        The alignment of the text in the text box.
+    Width: float
+        The width of the widget.
+    WidthFill: bool
+        Whether to fill the width of the container with the widget.
+    Show: bool
+        Whether to show or hide the widget.
+    """
+    Content: str
+    Height: float
+    HeightFill: bool
+    HorizontalAlignment: IpgHorizontalAlignment
+    LineHeight: float
+    Size: float
+    TextColor: IpgColor
+    TextRgba: list[float]
+    VerticalAlignment: IpgVerticalAlignment
+    Width: float
+    WidthFill: bool
+    Show: bool
 
 
 class IpgTogglerParam:
@@ -3518,16 +3904,31 @@ class IpgTogglerParam:
 
     Parameters
     ----------
-
+    Alignment: IpgAlignment
+        Align widget using IpgAlignment
+    Label: str
+        String label for widget.
+    LineHeight: float
+        The height of the text box for the widget.
+    Show: bool
+        Whether to show or hide the widget.
+    Size: float
+        The size of the toggler.
+    TextSize: float
+        The text size of the label.
+    Width: float
+        The width of the widget.
+    WidthFill: bool
+        Whether the width fills the container.
     """
     Alignment: IpgAlignment
-    Label: str=''
-    LineHeight=''
-    Show=''
-    Size=''
-    TextSize=''
-    Width=''
-    WidthFill=''
+    Label: str
+    LineHeight: float
+    Show: bool
+    Size: float
+    TextSize: float
+    Width: float
+    WidthFill: bool
 
 
 class IpgWindowParam:
@@ -3580,10 +3981,10 @@ class IpgWindowMode:
     FullScreen
         Window is full screen, ensure you have a way of returning it to windowed
     Windowed (default)
-        Window is not fullscreen and can be moved, etcs.
+        Window is not full screen and can be moved, etc.
     """
     Closed=''
-    Fullscreen=''
+    FullScreen=''
     Windowed=''
     
 

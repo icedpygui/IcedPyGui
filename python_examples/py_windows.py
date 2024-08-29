@@ -79,7 +79,7 @@ def event_on_move(wnd_id: int, event_name: str, position: dict):
 
 
 def event_on_resize(wnd_id: int, event_name: str, size: dict):
-    ipg.update_item(event_resize_id, IpgTextParam.Content, f"Window with id {wnd_id} \nhas sise of {size}")
+    ipg.update_item(event_resize_id, IpgTextParam.Content, f"Window with id {wnd_id} \nhas size of {size}")
 
 
 def event_focused(wnd_id, event_name: str):
@@ -226,7 +226,7 @@ ipg.add_button(parent_id="cont",
 # **************Add close request window ***********************
 # Note the window is closed, acting like a modal in this case.
 ipg.add_window(window_id="close_request",
-               title="Close Reqested",
+               title="Close Requested",
                width=300.0, height=300.0,
                pos_centered=True,
                mode=IpgWindowMode.Closed,
@@ -244,7 +244,7 @@ ipg.add_column(window_id="close_request",
                parent_id="cont",
                )
 
-ipg.add_text(parent_id="col", content="With a little bit more programing, you could place this popup window anyplace on the screen.")
+ipg.add_text(parent_id="col", content="With a little bit more programming, you could place this popup window anyplace on the screen.")
 ipg.add_space(parent_id="col", height=30.0)
 
 ipg.add_button(parent_id="col", label="Close Window 2", 

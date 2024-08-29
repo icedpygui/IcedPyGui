@@ -29,81 +29,6 @@ pub fn get_text_pair(text: Option<Color>, color: Color) -> Color {
    }
 }
 
-/// A set of background colors.
-// #[derive(Debug, Clone, Copy, PartialEq)]
-// pub struct IpgColorPalette {
-//     /// The base background color.
-//     pub base: Pair,
-//     /// A weaker version of the base background color.
-//     pub weak: Pair,
-//     /// A stronger version of the base background color.
-//     pub strong: Pair,
-// }
-
-// impl IpgColorPalette {
-//     /// Generates a set of [`IpgColorPalette`] colors from the base and text colors.
-//     pub fn generate(base: Color, background: Color, text: Color, 
-//                 mut strong_factor: Option<f32>, mut weak_factor: Option<f32>) -> Self {
-        
-//         if weak_factor.is_none() {
-//             weak_factor = Some(0.4);
-//         }
-
-//         if strong_factor.is_none() {
-//             strong_factor = Some(0.1);
-//         }
-
-//         let weak = mix(base, background, weak_factor.unwrap()); 
-//         let strong = deviate(base, strong_factor.unwrap());
-
-//         Self {
-//             base: Pair::new(base, text),
-//             weak: Pair::new(weak, text),
-//             strong: Pair::new(strong, text),
-//         }
-//     }
-// }
-
-// pub fn mix(a: Color, b: Color, factor: f32) -> Color {
-//     let a_hsl = to_hsl(a);
-//     let b_hsl = to_hsl(b);
-
-//     let mixed = a_hsl.mix(b_hsl, factor);
-//     from_hsl(mixed)
-// }
-
-// fn deviate(color: Color, amount: f32) -> Color {
-//     if is_dark(color) {
-//         lighten(color, amount)
-//     } else {
-//         darken(color, amount)
-//     }
-// }
-
-// pub fn weak(base: Color, background: Color, mut factor: Option<f32>) -> Color {
-
-//     if factor.is_none() {
-//         factor = Some(0.4);
-//     }
-
-//     let a_hsl = to_hsl(base);
-//     let b_hsl = to_hsl(background);
-
-//     let mixed = a_hsl.mix(b_hsl, factor.unwrap());
-//     from_hsl(mixed)
-// }
-
-// pub fn strong(color: Color, mut amount: Option<f32>) -> Color {
-//     if amount.is_none() {
-//         amount = Some(0.1)
-//     }
-//     if is_dark(color) {
-//         lighten(color, amount.unwrap())
-//     } else {
-//         darken(color, amount.unwrap())
-//     }
-// }
-
 pub fn get_theme_color(wnd_theme: &Theme) -> Color {
     let palette = Theme::palette(wnd_theme);
 
@@ -173,26 +98,5 @@ fn relative_contrast(a: Color, b: Color) -> f32 {
     let b_srgb = Rgb::from(b);
 
     a_srgb.relative_contrast(b_srgb)
-}
-
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgStyleParam {
-    Background,
-    BarColor,
-    Border,
-    DotColor,
-    HandleColor,
-    IconColor,
-    Shadow,
-}
-
-
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum IpgStyleBackground {
-    Accent,
-    Color,
-    Rgba,
 }
 
