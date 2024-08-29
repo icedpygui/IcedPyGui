@@ -55,12 +55,10 @@ use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWind
 use ipg_widgets::ipg_enums::{IpgAlignment, IpgContainers, IpgHorizontalAlignment, 
     IpgVerticalAlignment, IpgWidgets};
 
-use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_horizontal_alignment, 
-    get_line_height, get_padding_f32, get_padding_f64, get_shaping, 
-    get_vertical_alignment, get_width};
+use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_line_height, get_padding_f32, get_padding_f64, get_shaping, get_width};
 
 use graphics::colors::{get_color, IpgColor};
-use style::styling::{readable, IpgStyleParam, IpgStyleStandard};
+use style::styling::{readable, IpgStyleStandard};
 
 const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
 
@@ -96,7 +94,7 @@ pub struct WindowActions {
     pub level: Vec<(usize, window::Level)>,
 }
 
-pub static WINDOWACTIONS: Mutex<WindowActions> = Mutex::new(WindowActions {
+pub static WINDOW_ACTIONS: Mutex<WindowActions> = Mutex::new(WindowActions {
     mode: vec![],
     decorations: vec![],
     resize: vec![],
@@ -105,7 +103,7 @@ pub static WINDOWACTIONS: Mutex<WindowActions> = Mutex::new(WindowActions {
 });
 
 pub fn access_window_actions() -> MutexGuard<'static, WindowActions> {
-    WINDOWACTIONS.lock().unwrap()
+    WINDOW_ACTIONS.lock().unwrap()
 }
 
 pub struct State {
@@ -374,7 +372,7 @@ impl IPG {
                                                 parent_id: "".to_string(), is_container: true}]);
 
         state.container_ids.insert(id, vec![id]);
-        // TODO: Only one of these below are needed but some suttle issues arise when not used together.
+        // TODO: Only one of these below are needed but some subtle issues arise when not used together.
         // Will need to work through it in the near future.  At the onset, used only one window then
         // iced made multi-window so sort of patch it to work but need to revisit it.
         state.containers.insert(id, IpgContainers::IpgWindow(IpgWindow::new(
@@ -432,7 +430,7 @@ impl IPG {
     fn add_container(&mut self,
                         window_id: String,
                         container_id: String,
-                        // **above reuired
+                        // **above required
                         parent_id: Option<String>,
                         width: Option<f32>,
                         width_fill: bool,
@@ -853,7 +851,7 @@ impl IPG {
             add_callback_to_mutex(self.id, "on_scroll".to_string(), on_scroll);
         }
         // For scrollable the fill doesn't work well so as long as the fixed is
-        // larger than the window, it will fill wahtever space is left.
+        // larger than the window, it will fill whatever space is left.
         if width_fill {width = Some(10_000.0)}
         if height_fill {height = Some(10_000.0)}
         let width = get_width(width, false);
@@ -1148,7 +1146,8 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, head, body, is_open=true, minmax_id=None, foot=None, 
+    #[pyo3(signature = (parent_id, head, body,      
+                        is_open=true, min_max_id=None, foot=None, 
                         gen_id=None, close_size=15.0, on_close=None, 
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_width=f32::INFINITY, max_height=f32::INFINITY, 
@@ -1160,7 +1159,7 @@ impl IPG {
                 body: String,
                 // above required
                 is_open: bool,
-                minmax_id: Option<usize>,
+                min_max_id: Option<usize>,
                 foot: Option<String>,
                 gen_id: Option<usize>,
                 close_size: f32,
@@ -1199,7 +1198,7 @@ impl IPG {
                                                     id,
                                                     is_open,
                                                     user_data,
-                                                    minmax_id,
+                                                    min_max_id,
                                                     width,
                                                     height,
                                                     max_width,
@@ -2928,9 +2927,6 @@ impl IPG {
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
 
-        let horizontal_alignment =  get_horizontal_alignment(horizontal_alignment);
-        let vertical_alignment = get_vertical_alignment(vertical_alignment);
-        
         let line_height = LineHeight::Relative(line_height);
 
         let shaping = get_shaping(shaping);
@@ -3676,8 +3672,8 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgSelectableText(st) => {
             selectable_text_item_update(st, item, value);
         },
-        IpgWidgets::IpgSlider(sldr) => {
-            slider_item_update(sldr, item, value)
+        IpgWidgets::IpgSlider(slider) => {
+            slider_item_update(slider, item, value)
         },
         IpgWidgets::IpgSpace(_) => (),
         IpgWidgets::IpgSvg(sg) => {
@@ -3769,7 +3765,6 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgScrollableParam>()?;
     m.add_class::<IpgSelectableTextParam>()?;
     m.add_class::<IpgSliderParam>()?;
-    m.add_class::<IpgStyleParam>()?;
     m.add_class::<IpgStyleStandard>()?;
     m.add_class::<IpgSvgParam>()?;
     m.add_class::<IpgTableRowHighLight>()?;

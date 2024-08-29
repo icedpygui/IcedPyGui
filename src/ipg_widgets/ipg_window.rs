@@ -96,7 +96,7 @@ pub fn add_windows() -> Vec<Task<app::Message>> {
                 modes.push((state.windows[i].id, window::Mode::Windowed));
                 true
             },
-            IpgWindowMode::Fullscreen => {
+            IpgWindowMode::FullScreen => {
                 modes.push((state.windows[i].id, window::Mode::Fullscreen));
                 true
             },
@@ -405,14 +405,14 @@ fn get_level(level: &IpgWindowLevel) -> iced::window::Level {
 #[pyclass]
 pub enum IpgWindowMode {
     Windowed,
-    Fullscreen,
+    FullScreen,
     Closed,
 }
 
 pub fn get_iced_mode(mode: &IpgWindowMode) -> window::Mode {
     match mode {
         IpgWindowMode::Windowed => window::Mode::Windowed,
-        IpgWindowMode::Fullscreen => window::Mode::Fullscreen,
+        IpgWindowMode::FullScreen => window::Mode::Fullscreen,
         IpgWindowMode::Closed => window::Mode::Hidden,
     }
 }
@@ -420,7 +420,7 @@ pub fn get_iced_mode(mode: &IpgWindowMode) -> window::Mode {
 pub fn get_ipg_mode(mode: window::Mode) -> IpgWindowMode {
     match mode {
         window::Mode::Windowed => IpgWindowMode::Windowed,
-        window::Mode::Fullscreen => IpgWindowMode::Fullscreen,
+        window::Mode::Fullscreen => IpgWindowMode::FullScreen,
         window::Mode::Hidden => IpgWindowMode::Closed,
     }
 }

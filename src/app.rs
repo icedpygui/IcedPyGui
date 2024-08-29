@@ -39,7 +39,7 @@ use ipg_widgets::ipg_selectable_text::{SLTXTMessage, construct_selectable_text, 
 use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_callback};
 use ipg_widgets::ipg_space::construct_space;
 use ipg_widgets::ipg_svg::{SvgMessage, construct_svg, svg_callback};
-use ipg_widgets::ipg_table::{contruct_table, TableMessage, table_callback};
+use ipg_widgets::ipg_table::{construct_table, TableMessage, table_callback};
 use ipg_widgets::ipg_text::construct_text;
 use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_callback};
 use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage, tick_callback};
@@ -340,7 +340,7 @@ impl App {
         }
         // window event is always enabled, since we are using iced::daemon, the windows
         // closing need to be followed and iced exited when the last window is closed.
-        // The closing is the only evennt monitored unless the user enables the window events.
+        // The closing is the only event monitored unless the user enables the window events.
         let w_event = window::events()
             .map(|(id, event)| Message::EventWindow((id, iced::Event::Window(event))));
 
@@ -362,7 +362,7 @@ impl App {
         let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
         let ipg_window_id = match ipg_window_id_opt {
             Some(id) => id.clone(),
-            None => panic!("App: thwmw, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
+            None => panic!("App: theme, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
         };
         
         let window_opt = state.containers.get(&ipg_window_id);
@@ -409,7 +409,7 @@ fn get_window_values(iced_window_id: window::Id) -> (bool, bool, Theme) {
 
     let vis = match ipg_window.mode {
         ipg_widgets::ipg_window::IpgWindowMode::Windowed => true,
-        ipg_widgets::ipg_window::IpgWindowMode::Fullscreen => true,
+        ipg_widgets::ipg_window::IpgWindowMode::FullScreen => true,
         ipg_widgets::ipg_window::IpgWindowMode::Closed => false,
     };
     let debug = ipg_window.debug;
@@ -597,7 +597,7 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                 IpgContainers::IpgTable(table) => {
                     let tbl = table.clone();
                     drop(state);
-                    return contruct_table(tbl, content)
+                    return construct_table(tbl, content)
                 },
                 IpgContainers::IpgRow(row) => {
                     return construct_row(row, content)
@@ -691,8 +691,8 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgSpace(sp) => {
                     return construct_space(sp)
                 },
-                IpgWidgets::IpgSvg(isvg) => {
-                    let svg = isvg.clone();
+                IpgWidgets::IpgSvg(i_svg) => {
+                    let svg = i_svg.clone();
                     drop(state);
                     return construct_svg(svg)
                 },

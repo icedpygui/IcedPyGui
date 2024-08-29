@@ -155,7 +155,7 @@ struct Data {
 }
 
 
-pub fn contruct_table(table: IpgTable, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
+pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
     let mut headers: Vec<Element<Message>>= vec![];
 
@@ -714,7 +714,7 @@ fn check_for_widget(widgets: &Vec<(usize, usize, usize, bool)>, row_index: usize
     // if not column return
     if widgets[0].2 != col_index {return None}
 
-    // Becuase of possible mixed columns of widgets, need the index
+    // Because of possible mixed columns of widgets, need the index
     for (index, widget) in widgets.iter().enumerate() {
         if row_index == widget.1 {
             return Some(index)
