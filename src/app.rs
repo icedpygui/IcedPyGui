@@ -427,7 +427,6 @@ fn get_tasks() -> Task<Message> {
     let mut actions = vec![];
 
     for (ipg_id, mode) in state.mode.iter() {
-        dbg!(mode);
         let iced_id = find_key_for_value(*ipg_id);
         actions.push(window::change_mode(iced_id, *mode));
         let is_empty = handle_window_closing(iced_id, *mode);
