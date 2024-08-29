@@ -339,7 +339,12 @@ pub fn process_window_event(event: Event,
 
     match event {
         Event::Window(event) => {
-            if event == iced::window::Event::Closed && !event_enabled {
+            if (event == iced::window::Event::Closed && !event_enabled) || 
+                (event == iced::window::Event::CloseRequested && !event_enabled) {
+                let mut actions = access_window_actions();
+                        actions.mode.push((ipg_id, window::Mode::Hidden));
+                        drop(actions);
+                        
                 let is_empty = handle_window_closing(window_id, window::Mode::Hidden);
                 return is_empty;
             } else if !event_enabled {
@@ -386,7 +391,6 @@ pub fn process_window_event(event: Event,
                     (cb, name)
                 },
                 iced::window::Event::CloseRequested => {
-                    dbg!("close request");
                     //  if callback present, don't close window
                     let name = "close requested".to_string();
                     let cb = get_callback(event_id, name.clone());
@@ -397,7 +401,7 @@ pub fn process_window_event(event: Event,
                         actions.mode.push((ipg_id, window::Mode::Hidden));
                         drop(actions);
                         let is_empty = handle_window_closing(window_id, window::Mode::Hidden);
-                        dbg!(&is_empty);
+                       
                         if is_empty {
                             return true;
                         }
@@ -484,7 +488,7 @@ pub fn handle_window_closing(iced_id: window::Id, mode: window::Mode) -> bool {
 
     // if any of the remaining windows are visible, then return false
     for (_iced_id, ipg_id) in iced_ipg_ids {
-        dbg!(ipg_id);
+
         match state.containers.get_mut(&ipg_id) {
             Some(cnt) => {
                 match cnt {
@@ -498,9 +502,7 @@ pub fn handle_window_closing(iced_id: window::Id, mode: window::Mode) -> bool {
                     super::ipg_enums::IpgContainers::IpgToolTip(_) => (),
                     super::ipg_enums::IpgContainers::IpgWindow(wnd) => {
                         if wnd.id == ipg_id_found {
-                            dbg!("found", &mode);
                             wnd.mode = get_ipg_mode(mode);
-                            dbg!(&wnd.mode);
                         }
                     },
                 }

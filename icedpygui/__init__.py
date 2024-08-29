@@ -13,7 +13,7 @@ from .icedpygui import IpgRadioParam, IpgRadioDirection
 from .icedpygui import IpgScrollableDirection, IpgScrollableParam
 from .icedpygui import IpgSelectableTextParam
 from .icedpygui import IpgSliderParam
-from .icedpygui import IpgStyleParam, IpgStyleStandard
+from .icedpygui import IpgStyleStandard
 from .icedpygui import IpgSvgParam
 from .icedpygui import IpgTableRowHighLight, IpgTableWidget, IpgTableParam
 from .icedpygui import IpgTextInputParam
