@@ -80,11 +80,10 @@ pub enum IpgEvents {
 }
 
 pub fn process_keyboard_events(event: Event, event_id: usize) 
-{       
+{      
     match event {    
         Event::Keyboard(KeyPressed { key, location, modifiers, text: _ }) => {
-            
-            // dbg!("Pressed", &key, &location, &modifiers, &text);
+        
             let user_data = get_event_user_data(event_id);
 
             let event_name = "key pressed".to_string();
@@ -113,7 +112,7 @@ pub fn process_keyboard_events(event: Event, event_id: usize)
             
         },
         Event::Keyboard(KeyReleased { key, location, modifiers, }) => {
-            // dbg!("Released", &key, location, modifiers);
+
             let user_data = get_event_user_data(event_id);
 
             let event_name = "key released".to_string();
@@ -155,7 +154,7 @@ pub fn process_mouse_events(event: Event, event_id: usize)
     let user_data = get_event_user_data(event_id);
     let mut hmap_s_f: Option<HashMap<String, f32>> = None;
     let mut event_name = "".to_string();
-
+    
     match event {
         Event::Mouse(m_event) => {
             let cb = match m_event {
@@ -233,8 +232,9 @@ pub fn process_mouse_events(event: Event, event_id: usize)
                     },
                     WheelScrolled { delta } => {
                         match delta {
-                            ScrollDelta::Lines { x:_, y } => {
-                                hmap_s_f = Some(HashMap::from([("y".to_string(), y)]));
+                            ScrollDelta::Lines { x, y } => {
+                                hmap_s_f = Some(HashMap::from([("x".to_string(), x),
+                                                                ("y".to_string(), y)]));
                                 event_name = "middle scroll line".to_string();
                                 get_callback(event_id, event_name.clone())
                             },
@@ -358,7 +358,6 @@ pub fn process_window_event(event: Event,
                    (None, name)
                 },
                 iced::window::Event::Closed => {
-                    dbg!("event closed");
                     let is_empty = handle_window_closing(window_id, window::Mode::Hidden);
                     if is_empty {
                         return true;
@@ -601,6 +600,7 @@ fn process_keyboard_callback(id: usize,
     Python::with_gil(|py| {
 
         let dict = hmap_s_s.into_py_dict_bound(py);
+        
         let result = match user_data {
             Some(user_data) => {
                 cb.call1(py, (id, event_name, dict, user_data))

@@ -2635,7 +2635,7 @@ impl IPG {
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
                         on_enter=None, on_move=None, on_exit=None, 
-                        user_data=None, show=false,
+                        user_data=None, show=true,
                         ))]
     fn add_svg(&mut self,
                     parent_id: String,
@@ -3304,13 +3304,13 @@ impl IPG {
 
         match on_key_press {
             Some(py) => {
-                callbacks.callback_events.insert((self.id, "key press".to_string()), py);
+                callbacks.callback_events.insert((self.id, "key pressed".to_string()), py);
             },
             None => (),
         }
         match on_key_release {
             Some(py) => {
-                callbacks.callback_events.insert((self.id, "key release".to_string()), py);
+                callbacks.callback_events.insert((self.id, "key released".to_string()), py);
             },
             None => (),
         }
@@ -3334,7 +3334,7 @@ impl IPG {
                         on_exit_window=None, on_left_press=None, on_left_release=None,
                         on_middle_press=None, on_middle_release=None,
                         on_right_press=None, on_right_release=None,
-                        on_middle_scroll=None,
+                        on_middle_scroll_line=None, on_middle_scroll_pixel=None,
                         user_data=None))]
     fn add_event_mouse(&mut self, 
                         enabled: bool,
@@ -3347,7 +3347,8 @@ impl IPG {
                         on_middle_release: Option<PyObject>,
                         on_right_press: Option<PyObject>,
                         on_right_release: Option<PyObject>,
-                        on_middle_scroll: Option<PyObject>,
+                        on_middle_scroll_line: Option<PyObject>,
+                        on_middle_scroll_pixel: Option<PyObject>,
                         user_data: Option<PyObject>,
                         ) -> PyResult<usize>
     {
@@ -3409,9 +3410,16 @@ impl IPG {
             },
             None => (),
         }
-        match on_middle_scroll {
+        match on_middle_scroll_line {
             Some(py) => {
-                callbacks.callback_events.insert((self.id, "middle scrollLine".to_string()), py);
+                callbacks.callback_events.insert((self.id, "middle scroll line".to_string()), py);
+            },
+            None => (),
+        }
+
+        match on_middle_scroll_pixel {
+            Some(py) => {
+                callbacks.callback_events.insert((self.id, "middle scroll pixel".to_string()), py);
             },
             None => (),
         }

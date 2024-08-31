@@ -65,8 +65,9 @@ def hide_bar(_btn_id: int, pg_id: any):
 
 
 # Add the window
-ipg.add_window("main", "CheckBox Demo",
-               600, 600, 100, 25)
+ipg.add_window(window_id="main", title="CheckBox Demo",
+               width=600, height=600, 
+               pos_centered=True)
 
 # Add the container to help with alignment
 ipg.add_container(window_id="main", container_id="cont", width_fill=True,
@@ -115,13 +116,13 @@ ipg.add_button("value_row", "Press Me to - ",
                on_press=change_value_minus, user_data=pg_id)
 
 # add row for min and max
-ipg.add_row("main", "minmax_row", parent_id="col2")
+ipg.add_row("main", "min_max_row", parent_id="col2")
 
 # text input widgets are used for the inputs which you convert to floats in the callback
 # Numeric input widgets to come.  No error checking done.
-ipg.add_text_input("minmax_row", "Enter Min",
+ipg.add_text_input("min_max_row", "Enter Min",
                    on_submit=change_min, width=150.0, user_data=pg_id)
-ipg.add_text_input("minmax_row", "Enter Max",
+ipg.add_text_input("min_max_row", "Enter Max",
                    on_submit=change_max, width=150.0, user_data=pg_id)
 
 # Add a button the short the bar
