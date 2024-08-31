@@ -13,9 +13,9 @@ ipg = IPG()
 
 # Setting up the image path
 cwd = os.getcwd()
-print(cwd)
-ferris = cwd + "/python_demo/resources/ferris_0.png"
-tiger = cwd + "/python_demo/resources/tiger_0.svg"
+
+ferris = cwd + "/python_examples/resources/ferris_0.png"
+tiger = cwd + "/python_examples/resources/tiger_0.svg"
 
 # Global var for the ids.
 ferris_ids = []

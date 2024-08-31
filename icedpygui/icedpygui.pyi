@@ -688,7 +688,7 @@ class IPG:
                     height_fill: bool=False,
                     padding: list=[10.0],
                     clip: bool=False, 
-                    style: Optional[str]=None,
+                    style_id: Optional[str]=None,
                     style_standard: Optional[IpgStyleStandard]=None,
                     style_arrow: Optional[IpgButtonArrow]=None,
                     user_data: Optional[any]=None,
@@ -2785,7 +2785,8 @@ class IPG:
                             on_middle_release: Optional[Callable]=None,
                             on_right_press: Optional[Callable]=None,
                             on_right_release: Optional[Callable]=None,
-                            on_middle_scroll: Optional[Callable]=None,
+                            on_middle_scroll_line: Optional[Callable]=None,
+                            on_middle_scroll_pixel: Optional[Callable]=None,
                             user_data: Optional[Any]=None,
                           ) ->int:
         """
@@ -2809,8 +2810,10 @@ class IPG:
             Calls a function when the right mouse button is pressed.
         on_right_release: Callable
             Calls a function when the right mouse button is released.
-        on_middle_scroll: Callable
-            Calls a function when the middle mouse scroll is scrolled.
+        on_middle_scroll_line: Callable
+            Calls a function when the middle mouse scroll is scrolled, sends line count.
+        on_middle_scroll_pixel: Callable
+            Calls a function when the middle mouse scroll is scrolled, send pixel count.
         user_data: any
             Any data that might be needed in the callback function.
         
@@ -2980,7 +2983,7 @@ class IpgButtonParam:
         Whether the label is clipped or not
     Show: bool
         Whether to show the button
-    Style: str
+    StyleId: str
         The string id of the button style widget
     StyleStandard: IpgStyleStandard
         One of the standard styles

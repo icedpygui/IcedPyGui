@@ -222,7 +222,7 @@ pub enum IpgButtonParam {
     Padding,
     Clip,
     Show,
-    Style,
+    StyleId,
     StyleStandard,
     Width,
     WidthFill,
@@ -261,7 +261,7 @@ pub fn button_item_update(btn: &mut IpgButton,
         IpgButtonParam::Show => {
             btn.show = try_extract_boolean(value);
         },
-        IpgButtonParam::Style => {
+        IpgButtonParam::StyleId => {
             let val = try_extract_string(value);
             btn.style_id = Some(val);
         },
