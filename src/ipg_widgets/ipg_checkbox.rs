@@ -1,13 +1,12 @@
-
-use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_f64, try_extract_string};
+//! ipg_checkbox
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, access_state};
 use crate::app;
-use super::helpers::{get_radius, get_shaping, get_width, try_extract_style_standard};
+use super::helpers::{get_radius, get_shaping, get_width, 
+    try_extract_style_standard, try_extract_boolean, 
+    try_extract_f64, try_extract_string};
 use super::callbacks::{WidgetCallbackIn, 
-                        WidgetCallbackOut, 
-                        get_set_widget_callback_data,
-                        };
+    WidgetCallbackOut, get_set_widget_callback_data};
 
 use crate::graphics::BOOTSTRAP_FONT;
 use crate::graphics::bootstrap_icon::{Icon, icon_to_char};

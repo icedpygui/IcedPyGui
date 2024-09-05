@@ -1,4 +1,4 @@
-#![allow(unused)]
+//! ipg_space
 use iced::{Element, Length};
 use iced::widget::Space;
 use crate::app;
@@ -19,12 +19,6 @@ impl IpgSpace {
             height,
         }
     }
-}
-
-
-#[derive(Debug, Clone)]
-pub enum SPMessage {
-    Update(usize),
 }
 
 

@@ -1,4 +1,4 @@
-
+//! ipg_toggler
 use crate::{access_callbacks, access_state, app};
 use super::helpers::{get_width, try_extract_boolean, try_extract_f64, 
     try_extract_ipg_horizontal_alignment, try_extract_string};
@@ -7,7 +7,6 @@ use super::callbacks::{
     get_set_widget_callback_data
 };
 use super::ipg_enums::IpgHorizontalAlignment;
-
 
 use iced::widget::text::LineHeight;
 use iced::widget::toggler::{self, Status};

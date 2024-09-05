@@ -1,4 +1,4 @@
-
+//! ipg_tool_tip
 use iced::Element;
 use iced::widget::{Column, text, Tooltip};
 use iced::widget::tooltip::Position;

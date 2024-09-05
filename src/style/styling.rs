@@ -1,5 +1,4 @@
-//!Styling
-use iced::theme::palette::Pair;
+//! styling
 use iced::{Color, Theme};
 use palette::{FromColor, Hsl};
 use palette::rgb::Rgb;
@@ -14,19 +13,6 @@ pub enum IpgStyleStandard {
     Success,
     Danger,
     Text,
-}
-
-pub fn get_text_pair(text: Option<Color>, color: Color) -> Color {
-    if text.is_some() {
-        text.unwrap()
-   } else {
-        let mut t_color = Color::BLACK;
-        if is_dark(color) {
-            t_color = Color::WHITE;
-        } 
-        let pair = Pair::new(color, t_color);
-        pair.text
-   }
 }
 
 pub fn get_theme_color(wnd_theme: &Theme) -> Color {

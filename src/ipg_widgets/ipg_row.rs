@@ -1,3 +1,4 @@
+//! ipg_row
 use iced::{Alignment, Padding, Length, Element};
 use iced::widget::Row;
 

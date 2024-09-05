@@ -1,4 +1,4 @@
-
+//! ipg_text
 use iced::{Color, Element, Length};
 use iced::widget::text::{LineHeight, Shaping, Style};
 use iced::widget::{Space, Text};
@@ -7,7 +7,10 @@ use crate::graphics::colors::get_color;
 
 use pyo3::{pyclass, PyObject, Python};
 
-use super::helpers::{get_height, get_horizontal_alignment, get_vertical_alignment, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_string, try_extract_vec_f32};
+use super::helpers::{get_height, get_horizontal_alignment, 
+    get_vertical_alignment, get_width, try_extract_boolean, 
+    try_extract_f64, try_extract_ipg_color, try_extract_string, 
+    try_extract_vec_f32};
 use super::ipg_enums::{IpgHorizontalAlignment, IpgVerticalAlignment};
 
 #[derive(Debug, Clone)]

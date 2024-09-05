@@ -1,13 +1,12 @@
-#![allow(unused)]
+//! ipg_menu
+#![allow(dead_code, unused_variables)]
 
 use std::collections::BTreeMap;
 
-use iced::widget::text;
 use iced::border::Radius;
-use iced::theme::palette::Pair;
 use iced::widget::button;
-use iced::widget::{row, Button, Checkbox, Container, Row, Space, Text, Toggler};
-use iced::{alignment, Background, Border, Color, Element, Length, Padding, Renderer, Shadow, Theme, Vector};
+use iced::widget::{row, Button, Checkbox, Container, Row, Text, Toggler};
+use iced::{alignment, Background, Border, Color, Element, Length, Padding, Renderer, Theme, Vector};
 
 use crate::iced_aw_widgets::menu::menu_tree::{Item, Menu};
 use crate::iced_aw_widgets::menu::menu_bar::MenuBar;
@@ -16,16 +15,14 @@ use crate::iced_aw_widgets::menu::quad::{InnerBounds, Quad};
 use crate::iced_aw_widgets::menu::style_status::Status;
 use crate::iced_aw_widgets::menu::menu_bar_style::{primary, Style};
 
-use crate::graphics::colors::{get_color, match_ipg_color, IpgColor};
-use crate::style::styling::{get_text_pair, is_dark, lighten, IpgStyleStandard};
-use pyo3::{pyclass, PyObject, Python};
+use crate::style::styling::{is_dark, IpgStyleStandard};
 use crate::{access_callbacks, access_state, app};
 use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
-use super::helpers::{get_height, get_width, get_padding_f32, get_padding_f64, get_radius, 
+use super::helpers::{get_height, get_padding_f64, get_radius, 
     try_extract_boolean, try_extract_f64, try_extract_vec_f32, try_extract_vec_f64};
-use super::ipg_button::{self, get_standard_style};
-use super::{ipg_checkbox, ipg_toggle};
+use super::{ipg_button, ipg_checkbox, ipg_toggle};
 
+use pyo3::{pyclass, PyObject, Python};
 
 #[derive(Debug, Clone)]
 pub struct IpgMenu {
@@ -296,7 +293,7 @@ pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message, Theme, 
         }
     }
 
-    let mut menu_bar: Vec<Element<'static, MenuMessage, Theme, Renderer>> = vec![];
+    let menu_bar: Vec<Element<'static, MenuMessage, Theme, Renderer>> = vec![];
 
     let mut bar_items: Vec<Item<MenuMessage, Theme, Renderer>> = vec![];
 
@@ -1012,7 +1009,7 @@ pub fn get_separator(theme: &Theme,
 
     let bg_color = theme.palette().background;
 
-    let mut quad_color = if is_dark(bg_color) {
+    let quad_color = if is_dark(bg_color) {
         Color::WHITE
     } else {
         Color::BLACK
@@ -1204,7 +1201,7 @@ fn default_separator(quad_type: IpgMenuSeparatorType, quad_color: Color, bg_colo
 
 fn default_quad(quad_type: IpgMenuSeparatorType, 
                 quad_color: Color, 
-                bg_color: Color,
+                _bg_color: Color,
                 width: Length,
                 height: Length,) 
 -> Quad

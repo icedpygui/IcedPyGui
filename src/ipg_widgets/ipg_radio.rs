@@ -1,5 +1,4 @@
 //!ipg_radio
-
 use crate::ipg_widgets::helpers::try_extract_boolean;
 use crate::{access_state, access_callbacks};
 use crate::app;

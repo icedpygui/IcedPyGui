@@ -1,5 +1,4 @@
-#![allow(dead_code)]
-
+//! ipg_canvas
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Arc;
 use iced::widget::Canvas;

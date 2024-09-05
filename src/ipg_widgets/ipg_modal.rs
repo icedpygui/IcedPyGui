@@ -1,4 +1,4 @@
-
+//!ipg_modal
 use iced::advanced::layout::{self, Layout};
 use iced::advanced::overlay;
 use iced::advanced::renderer;
@@ -14,7 +14,8 @@ use pyo3::{PyObject, Python};
 use crate::access_callbacks;
 use crate::app::{self, Message};
 
-use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{get_set_widget_callback_data, 
+    WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::get_alignment;
 use super::ipg_enums::IpgAlignment;
 

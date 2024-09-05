@@ -1,24 +1,16 @@
-
-
-use crate::access_state;
-use crate::app;
-use crate::access_callbacks;
+//! ipg_slider
+use crate::{app, access_callbacks, access_state};
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
 
-use super::helpers::get_radius;
-use super::helpers::get_width;
-use super::helpers::try_extract_boolean;
-use super::helpers::try_extract_f64;
-use super::helpers::try_extract_string;
+use super::helpers::{get_radius, get_width};
+use super::helpers::{try_extract_boolean, try_extract_f64, 
+    try_extract_string};
 
 use iced::border::Radius;
-use iced::widget::slider;
-use iced::widget::slider::HandleShape;
-use iced::widget::slider::{Status, Style};
-use iced::Color;
-use iced::{Length, Element, Theme};
+use iced::widget::slider::{self, HandleShape, Status, Style};
+use iced::{Color, Length, Element, Theme};
 use iced::widget::{Slider, Space};
 
 use pyo3::pyclass;

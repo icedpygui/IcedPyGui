@@ -1,39 +1,28 @@
-#![allow(unused)]
+//! ipg_table
+#![allow(unused_assignments)]
 use std::collections::HashMap;
 use std::result::Result;
 
 use crate::app::{self, Message};
-use crate::{access_callbacks, access_state, add_callback_to_mutex, find_parent_uid, TABLE_INTERNAL_IDS_START};
+use crate::{access_callbacks, TABLE_INTERNAL_IDS_START};
 use crate::style::styling::{get_theme_color, IpgStyleStandard};
-use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
-use super::helpers::{get_padding_f32, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_u64, try_extract_vec_f32};
-use super::ipg_theme_colors::{get_alt_color, IpgColorAction};
+use super::callbacks::{get_set_widget_callback_data, 
+    WidgetCallbackIn, WidgetCallbackOut};
+use super::helpers::{get_padding_f32, try_extract_boolean, 
+    try_extract_f64, try_extract_string, try_extract_vec_f32};
 use super::ipg_button;
 use crate::style::styling::{lighten, darken};
 
-use chrono::NaiveDate;
-use iced::widget::scrollable::{RelativeOffset, Viewport};
-use iced::{Border, Color, Point, Shadow};
-use iced::mouse::Interaction;
-use iced::widget::text::{LineHeight, Style};
-use iced::{alignment, theme, Background, Element, Length, Padding, Renderer, Theme};
-use iced::alignment::Alignment;
-use iced::widget::{center, container, mouse_area, opaque, stack, text, Button, Checkbox, Column, Container, Image, MouseArea, Row, Scrollable, Space, Text, Toggler};
+use iced::widget::scrollable::Viewport;
+use iced::Color;
+use iced::{alignment, Background, Element, Length, Padding, Theme};
 use iced::alignment::Horizontal;
-use iced::widget::svg;
-use iced::advanced::image;
-
+use iced::widget::{center, container, mouse_area, opaque, stack, 
+    text, Button, Checkbox, Column, Container, Row, Scrollable, 
+    Space, Text, Toggler};
 
 use pyo3::types::IntoPyDict;
 use pyo3::{pyclass, PyErr, PyObject, Python};
-
-
-#[derive(Debug, Clone)]
-pub enum TableData {
-    Row,
-    Column,
-}
-
 
 #[derive(Debug, Clone)]
 pub struct IpgTable {
@@ -60,7 +49,7 @@ pub struct IpgTable {
         pub toggler_user_data: Option<PyObject>,
         pub scroller_user_data: Option<PyObject>,
         pub scroller_id: usize,
-        scroller_pos: Vec<(String, f32)>,
+        _scroller_pos: Vec<(String, f32)>,
 }
 
 impl IpgTable {
@@ -112,7 +101,7 @@ impl IpgTable {
             toggler_user_data,
             scroller_user_data,
             scroller_id,
-            scroller_pos: vec![],
+            _scroller_pos: vec![],
         }
     }
 }
@@ -125,12 +114,12 @@ pub enum TableMessage {
     TableScrolled(Viewport, usize)
 }
 
-#[derive(Debug, Clone, Copy)]
-enum DataTypes {
-    Bool,
-    F64,
-    String,
-}
+// #[derive(Debug, Clone, Copy)]
+// enum DataTypes {
+//     Bool,
+//     F64,
+//     String,
+// }
 
 #[derive(Debug, Clone, Copy)]
 #[pyclass]
@@ -147,19 +136,10 @@ pub enum IpgTableWidget {
     Toggler,
 }
 
-#[derive(Debug, Clone)]
-struct Data {
-    index: usize,
-    d_type: DataTypes,
-    data: Vec<DataTypes>
-}
-
 
 pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
     let mut headers: Vec<Element<Message>>= vec![];
-
-    let mut column_elements: Vec<Element<Message>> = vec![];
 
     let mut data_rows: Vec<Vec<String>> = vec![];
     data_rows.push(vec![]);
@@ -190,7 +170,7 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
                     // dt.values are the columns in the table
                     for values in dt.values() {
                         for (i, v) in values.iter().enumerate() {
-                            let mut label = if *v {
+                            let label = if *v {
                                 "True".to_string()
                             } else {
                                 "False".to_string()
@@ -316,7 +296,7 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
             let index = check_for_widget(&table.button_ids, row_index, col_index);
             if index.is_some() {
                 widget_found = true;
-                let (wid_id, row, col, bl) = table.button_ids[index.unwrap()];
+                let (_wid_id, row, col, bl) = table.button_ids[index.unwrap()];
                 row_element = add_widget(IpgTableWidget::Button,
                                     table.id, 
                                     label.clone(), 
@@ -331,7 +311,7 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
             let index = check_for_widget(&table.checkbox_ids, row_index, col_index);
             if index.is_some() {
                 widget_found = true;
-                let (wid_id, row, col, bl) = table.checkbox_ids[index.unwrap()];
+                let (_wid_id, row, col, bl) = table.checkbox_ids[index.unwrap()];
                 row_element = add_widget(IpgTableWidget::Checkbox,
                                     table.id, 
                                     label.clone(), 
@@ -346,7 +326,7 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
             let index = check_for_widget(&table.toggler_ids, row_index, col_index);
             if index.is_some() {
                 widget_found = true;
-                let (wid_id, row, col, bl) = table.toggler_ids[index.unwrap()];
+                let (_wid_id, row, col, bl) = table.toggler_ids[index.unwrap()];
                 row_element = add_widget(IpgTableWidget::Toggler,
                                     table.id, 
                                     label.clone(), 
@@ -391,10 +371,10 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
                                             .align_x(Horizontal::Center)
                                             .into();
 
-    let body: Element<Message> = Row::with_children(column_elements)
-                                        .width(Length::Fill)
-                                        .spacing(5.0)
-                                        .into();
+    // let body: Element<Message> = Row::with_children(column_elements)
+    //                                     .width(Length::Fill)
+    //                                     .spacing(5.0)
+    //                                     .into();
     let content: Element<Message> = Column::with_children(content).into();
     let mousearea: Element<Message> =  mouse_area(center(
                         opaque(content))
@@ -453,13 +433,13 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
 }
 
 
-fn fill_column(col_values: Vec<Element<'static, Message>>) -> Element<'static, Message> {
+// fn fill_column(col_values: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
-    Column::with_children(col_values)
-                                            .align_x(Alignment::Center)
-                                            .width(Length::Fill)
-                                            .into()
-}
+//     Column::with_children(col_values)
+//                                             .align_x(Alignment::Center)
+//                                             .width(Length::Fill)
+//                                             .into()
+// }
 
 fn add_scroll(body: Element<'static, Message>, 
                 height: f32,
@@ -514,7 +494,7 @@ fn add_widget(widget_type: IpgTableWidget,
                 col_index: usize,
                 column_width: f32,
                 is_toggled: bool,
-                style_id: Option<String>) 
+                _style_id: Option<String>) 
                 -> Element<'static, Message> {
 
     match widget_type {
@@ -558,11 +538,11 @@ fn add_widget(widget_type: IpgTableWidget,
 }
 
 
-fn get_checked(on_toggled: &Option<HashMap<usize, Vec<bool>>>, col_index: &usize, row_index: usize) -> bool {
-    let toggled_hmap = on_toggled.as_ref().unwrap();
-    let toggled = toggled_hmap.get(&col_index).unwrap();
-    toggled[row_index]
-}
+// fn get_checked(on_toggled: &Option<HashMap<usize, Vec<bool>>>, col_index: &usize, row_index: usize) -> bool {
+//     let toggled_hmap = on_toggled.as_ref().unwrap();
+//     let toggled = toggled_hmap.get(&col_index).unwrap();
+//     toggled[row_index]
+// }
 
 pub fn table_callback(table_id: usize, message: TableMessage) {
 

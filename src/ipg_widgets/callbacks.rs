@@ -1,3 +1,4 @@
+//! callbacks
 #![allow(dead_code)]
 use crate::access_state;
 use super::ipg_enums::IpgContainers;
@@ -324,7 +325,6 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
             },
         }
     } else {
-        // let mut state = access_state();
 
         let container_opt = state.containers.get_mut(&wci.id);
         if container_opt.is_some() {

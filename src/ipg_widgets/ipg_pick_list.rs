@@ -1,20 +1,13 @@
-
-
+//! ipg_pick_list
 use crate::access_callbacks;
 use crate::access_state;
 use crate::app;
 use super::callbacks::{WidgetCallbackIn, 
-                        WidgetCallbackOut, 
-                        get_set_widget_callback_data};
-use super::helpers::get_padding_f64;
-use super::helpers::get_radius;
-use super::helpers::get_width;
-use super::helpers::try_extract_boolean;
-use super::helpers::try_extract_f64;
-use super::helpers::try_extract_string;
-use super::helpers::try_extract_vec_f64;
-use super::ipg_button::get_bootstrap_arrow_char;
-use super::ipg_button::IpgButtonArrow;
+    WidgetCallbackOut, get_set_widget_callback_data};
+use super::helpers::{get_padding_f64, get_radius, get_width};
+use super::helpers::{try_extract_boolean, try_extract_f64,
+    try_extract_string, try_extract_vec_f64};
+use super::ipg_button::{IpgButtonArrow, get_bootstrap_arrow_char};
 
 use iced::widget::pick_list::{self, Status};
 use iced::{Color, Font, Pixels, Theme};

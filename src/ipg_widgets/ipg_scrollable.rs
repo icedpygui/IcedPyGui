@@ -1,18 +1,13 @@
-#![allow(unused_assignments)]
-use crate::access_callbacks;
-use crate::access_state;
-use crate::app;
+//! ipg_scrollable
+use crate::{app, access_callbacks, access_state};
 use crate::TABLE_INTERNAL_IDS_END;
 use crate::TABLE_INTERNAL_IDS_START;
 use super::callbacks::get_set_container_callback_data;
 use super::callbacks::WidgetCallbackIn;
 use super::callbacks::WidgetCallbackOut;
-use super::helpers::get_height;
-use super::helpers::get_radius;
-use super::helpers::get_width;
-use super::helpers::try_extract_f64;
-use super::ipg_table::table_callback;
-use super::ipg_table::TableMessage;
+use super::helpers::{get_height, get_radius, get_width, 
+    try_extract_f64};
+use super::ipg_table::{TableMessage, table_callback};
 
 use iced::widget::container;
 use iced::widget::scrollable;
@@ -28,7 +23,6 @@ use iced::widget::Column;
 use pyo3::pyclass;
 use pyo3::types::IntoPyDict;
 use pyo3::{Python, PyObject};
-
 
 
 #[derive(Debug, Clone)]
