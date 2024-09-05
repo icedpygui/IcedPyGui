@@ -329,6 +329,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
         let container_opt = state.containers.get_mut(&wci.id);
         if container_opt.is_some() {
             match container_opt.unwrap() {
+                IpgContainers::IpgCanvas(_) => todo!(),
                 IpgContainers::IpgColumn(_) => todo!(),
                 IpgContainers::IpgContainer(_) => todo!(),
                 IpgContainers::IpgModal(modal) => {
@@ -421,6 +422,11 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
     };
     
     match container_type {
+        IpgContainers::IpgCanvas(_) => {
+            let wco = WidgetCallbackOut::default();
+            drop(state);
+            return wco
+        },
         IpgContainers::IpgColumn(_) => {
             let wco = WidgetCallbackOut::default();
             drop(state);

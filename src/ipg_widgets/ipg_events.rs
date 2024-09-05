@@ -491,6 +491,7 @@ pub fn handle_window_closing(iced_id: window::Id, mode: window::Mode) -> bool {
         match state.containers.get_mut(&ipg_id) {
             Some(cnt) => {
                 match cnt {
+                    super::ipg_enums::IpgContainers::IpgCanvas(_) => (),
                     super::ipg_enums::IpgContainers::IpgColumn(_) => (),
                     super::ipg_enums::IpgContainers::IpgContainer(_) => (),
                     super::ipg_enums::IpgContainers::IpgModal(_) => (),

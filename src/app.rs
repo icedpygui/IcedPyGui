@@ -8,12 +8,13 @@ use iced::{font, window, Size};
 use iced::event::{Event, Status};
 use iced::{Element, Point, Subscription, Task, Theme};
 use iced::executor;
-use iced::widget::{focus_next, horizontal_space, Column};
+use iced::widget::{focus_next, horizontal_space, Canvas, Column};
 use iced::time;
 use iced::Color;
 use once_cell::sync::Lazy;
 
 
+use crate::ipg_widgets::ipg_canvas::{construct_canvas, IpgBuildCanvas};
 use crate::ipg_widgets::ipg_events::{handle_window_closing, process_keyboard_events, process_mouse_events, process_touch_events, process_window_event};
 use crate::ipg_widgets::ipg_window::IpgWindowMode;
 use crate::{access_window_actions, ipg_widgets};
@@ -578,6 +579,11 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
     {
         Some(container) => 
             match container {
+                IpgContainers::IpgCanvas(can) => {
+                    let canvas = can.clone();
+                    drop(state);
+                    return construct_canvas(canvas)
+                },
                 IpgContainers::IpgColumn(col) => {
                     return construct_column(col, content) 
                 },
@@ -757,6 +763,7 @@ fn get_window_container(container_opt: Option<&IpgContainers>) -> &IpgWindow {
     };
 
     match container {
+        IpgContainers::IpgCanvas(_) => panic!("Wrong container"),
         IpgContainers::IpgColumn(_) => panic!("Wrong container"),
         IpgContainers::IpgContainer(_) => panic!("Wrong container"),
         IpgContainers::IpgModal(_) => panic!("Wrong container"),
