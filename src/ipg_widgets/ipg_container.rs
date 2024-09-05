@@ -1,9 +1,6 @@
-//!Container container
-#![allow(unused_assignments)]
-
+//! ipg_container
 use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector};
 use iced::widget::{container, Column, Container};
-
 
 use crate::access_state;
 use crate::app::Message;

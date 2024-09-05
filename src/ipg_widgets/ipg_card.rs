@@ -1,5 +1,4 @@
-#![allow(unused_imports)]
-
+//! ipg_card
 use crate::app::Message;
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_string};
 use crate::access_callbacks;
@@ -7,7 +6,7 @@ use super::callbacks::{WidgetCallbackIn,
 WidgetCallbackOut, get_set_widget_callback_data,
 };
 
-use iced::{Element, Length, Padding, Renderer, Theme};
+use iced::{Element, Length, Padding};
 use iced::widget::{Column, Space, Text};
 
 use crate::iced_aw_widgets::card::{Card, CardStyles};

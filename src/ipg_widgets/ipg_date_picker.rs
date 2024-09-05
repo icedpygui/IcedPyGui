@@ -1,5 +1,4 @@
-//! date_picker
-
+//! ipg_date_picker
 use crate::app::{Message, self};
 use crate::access_callbacks;
 use crate::style::styling::IpgStyleStandard;

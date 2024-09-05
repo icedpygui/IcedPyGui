@@ -1,4 +1,4 @@
-
+//! ipg_color_picker
 use crate::access_callbacks;
 use crate::app::Message;
 use super::ipg_button::get_button_style;

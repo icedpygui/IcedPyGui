@@ -1,26 +1,16 @@
-
-use crate::access_callbacks;
-use crate::access_state;
-use crate::app;
+//! ipg_text_input
+use crate::{app, access_callbacks, access_state};
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
-use super::helpers::get_padding_f64;
-use super::helpers::get_radius;
-use super::helpers::get_width;
-use super::helpers::try_extract_boolean;
-use super::helpers::try_extract_f64;
-use super::helpers::try_extract_string;
-use super::helpers::try_extract_u16;
-use super::helpers::try_extract_vec_f64;
+use super::helpers::{get_padding_f64, get_radius, get_width};
+use super::helpers::{try_extract_boolean, try_extract_f64, 
+    try_extract_string, try_extract_u16, try_extract_vec_f64};
 
 use iced::widget::text::LineHeight;
 use iced::widget::text_input;
 use iced::widget::text_input::{Style, Status};
-use iced::Color;
-use iced::Pixels;
-use iced::Theme;
-use iced::{Padding, Length, Element};
+use iced::{Color, Element, Length, Padding, Pixels, Theme};
 use iced::widget::{TextInput, Space};
 
 use pyo3::pyclass;

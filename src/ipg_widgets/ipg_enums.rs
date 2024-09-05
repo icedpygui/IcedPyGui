@@ -1,4 +1,4 @@
-
+//! ipg_enums
 use pyo3::pyclass;
 
 use super::ipg_button::IpgButton;

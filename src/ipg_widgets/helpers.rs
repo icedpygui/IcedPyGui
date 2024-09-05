@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+//! helpers
 use crate::graphics::colors::IpgColor;
 use crate::style::styling::IpgStyleStandard;
 use crate::access_state;
@@ -45,53 +45,6 @@ pub fn find_key_for_value(value: usize) -> window::Id {
     }
 }
 
-// pub fn get_usize_of_id(iced_id: window::Id) -> usize {
-
-//     let iced_id_str = format!("{:?}", iced_id);
-
-//     let mut numeric_vec: Vec<i32> = vec![];
-
-//     for c in iced_id_str.chars() {
-//         if c.is_numeric() {
-//             numeric_vec.push(c as i32 - 0x30);
-//         }
-//     }
-
-//     if numeric_vec.len() == 0 {
-//         panic!("usize of Id could not be obtained")
-//     }
-
-//     let mut acc: i32 = 0;
-
-//     for num in numeric_vec {
-//         acc *= 10;
-//         acc += num;
-//     }
-    
-//     acc as usize
-    
-// }
-
-
-pub fn convert_vecs<T, U>(vector: Vec<T>) -> Vec<U>
-  where
-	T: TryInto<U>,
-	<T as std::convert::TryInto<U>>::Error: std::fmt::Display
-{
-	vector
-		.into_iter()
-		.map(|value_t|
-			match TryInto::try_into(value_t) {
-				Ok(value_u) => value_u,
-				Err(why) => {
-					let t = std::any::type_name::<T>();
-					let u = std::any::type_name::<U>();
-					panic!("Error converting from {t} to {u}: {why}")
-				}
-			}
-		)
-		.collect()
-}
 
 pub fn get_alignment(align: IpgAlignment) -> Alignment {
 
@@ -216,16 +169,8 @@ fn vec_to_array2_f64(arr: &[f64]) -> [f32; 2] {
     [arr[0] as f32, arr[1] as f32]
 }
 
-fn vec_to_array4_f64(arr: &[f64]) -> [f32; 4] {
-    [arr[0] as f32, arr[1] as f32, arr[2] as f32, arr[3] as f32]
-}
-
 fn vec_to_array2_f32(arr: &[f32]) -> [f32; 2] {
     [arr[0], arr[1]]
-}
-
-fn vec_to_array4_f32(arr: &[f32]) -> [f32; 4] {
-    [arr[0], arr[1], arr[2], arr[3]]
 }
 
 pub fn get_shaping(shape: String) -> Shaping {
@@ -280,7 +225,6 @@ pub fn format_date(format: String, year: i32, month: usize, day: usize) -> Strin
     }
 }
 
-
 fn convert_to_len_two(value: usize) -> String {
 
     if value < 10 {
@@ -289,7 +233,6 @@ fn convert_to_len_two(value: usize) -> String {
         value.to_string()
     }
 }
-
 
 pub fn try_extract_i64(value: PyObject) -> i64 {
     Python::with_gil(|py| {
@@ -300,7 +243,6 @@ pub fn try_extract_i64(value: PyObject) -> i64 {
         }
     })  
 }
-
 
 pub fn try_extract_f64(value: PyObject) -> f64 {
     Python::with_gil(|py| {
@@ -353,7 +295,6 @@ pub fn try_extract_f64_option(value: PyObject) -> Option<f64> {
     })  
 }
 
-
 pub fn try_extract_vec_f64(value: PyObject) -> Vec<f64> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<f64>>(py);
@@ -364,7 +305,6 @@ pub fn try_extract_vec_f64(value: PyObject) -> Vec<f64> {
     })  
 }
 
-
 pub fn try_extract_vec_f32(value: PyObject) -> Vec<f32> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<f32>>(py);
@@ -374,7 +314,6 @@ pub fn try_extract_vec_f32(value: PyObject) -> Vec<f32> {
         }
     })  
 }
-
 
 pub fn try_extract_string(value: PyObject) -> String {
     Python::with_gil(|py| {
@@ -406,17 +345,6 @@ pub fn try_extract_vec_str(value: PyObject) -> Vec<String> {
     })  
 }
 
-
-// pub fn try_extract_vec_str_option(value: PyObject) -> Option<Vec<String>> {
-//     Python::with_gil(|py| {
-//         let res = value.extract::<Vec<String>>(py);
-//         match res {
-//             Ok(val) => Some(val),
-//             Err(_) => None,
-//         }
-//     })  
-// }
-
 pub fn try_extract_boolean(value: PyObject) -> bool {
     Python::with_gil(|py| {
         let res = value.extract::<bool>(py);
@@ -427,17 +355,6 @@ pub fn try_extract_boolean(value: PyObject) -> bool {
     })  
 }
 
-pub fn try_extract_ipg_alignment(value: PyObject) -> IpgAlignment {
-    Python::with_gil(|py| {
-
-        let res = value.extract::<IpgAlignment>(py);
-        match res {
-            Ok(val) => val,
-            Err(_) => panic!("Unable to extract python object for Alignment"),
-        }
-    })
-}
-
 pub fn try_extract_ipg_horizontal_alignment(value: PyObject) -> IpgHorizontalAlignment {
     Python::with_gil(|py| {
 
@@ -445,17 +362,6 @@ pub fn try_extract_ipg_horizontal_alignment(value: PyObject) -> IpgHorizontalAli
         match res {
             Ok(val) => val,
             Err(_) => panic!("Unable to extract python object for Horizontal Alignment"),
-        }
-    })
-}
-
-pub fn try_extract_ipg_vertical_alignment(value: PyObject) -> IpgVerticalAlignment {
-    Python::with_gil(|py| {
-
-        let res = value.extract::<IpgVerticalAlignment>(py);
-        match res {
-            Ok(val) => val,
-            Err(_) => panic!("Unable to extract python object for Vertical Alignment"),
         }
     })
 }
@@ -481,25 +387,3 @@ pub fn try_extract_ipg_color(value: PyObject) -> IpgColor {
         }
     })
 }
-
-pub fn get_container_id_via_string(id: String) -> usize {
-
-    let state = access_state();
-
-    let container_id_opt = state.container_str_ids.get(&id);
-
-    let container_id: usize = if container_id_opt.is_some() {
-        *container_id_opt.unwrap()
-    } else {
-        panic!("add_styling_background: parent_id not found.")
-    };
-
-    drop(state);
-
-    container_id
-}
-
-// fn find_key_with_value(map: HashMap<window::Id, usize>, value: usize) -> Option<window::Id> {
-//     map.iter()
-//         .find_map(|(key, val)| if val == value { Some(key) } else { None })
-// }

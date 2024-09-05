@@ -1,19 +1,15 @@
-
+//! ipg_svg
 use crate::app;
 use crate::access_callbacks;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
                         get_set_widget_callback_data};
-use super::helpers::get_height;
-use super::helpers::get_width;
-use super::helpers::try_extract_boolean;
-use super::helpers::try_extract_f64;
-use super::helpers::try_extract_string;
+use super::helpers::{get_height, get_width};
+use super::helpers::{try_extract_boolean, try_extract_f64, 
+    try_extract_string};
 
 use iced::widget::Space;
-use iced::Radians;
-use iced::Rotation;
-use iced::{Length, Element, Point};
+use iced::{Length, Element, Point, Radians, Rotation};
 use iced::widget::{Svg, MouseArea};
 use iced::mouse::Interaction;
 use iced::advanced::svg;

@@ -1,4 +1,4 @@
-//!Column Container
+//! ipg_column
 use iced::{Element, Length, Padding};
 use iced::widget::Column;
 

@@ -1,17 +1,16 @@
-//!ipg_timer
+//! ipg_timer
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, app};
+use super::callbacks::{get_set_widget_callback_data, 
+    WidgetCallbackIn, WidgetCallbackOut};
+use super::helpers::try_extract_i64;
+use super::ipg_button::{get_bootstrap_arrow, get_styling, 
+    IpgButtonArrow};
 
 use iced::widget::{Button, Text};
 use iced::{Element, Length, Padding, Theme};
 
 use pyo3::{pyclass, PyObject, Python};
-
-use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
-use super::helpers::try_extract_i64;
-use super::ipg_button::{get_bootstrap_arrow, get_styling, IpgButtonArrow};
-
-
 
 #[derive(Debug, Clone)]
 pub struct IpgTimer {

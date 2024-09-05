@@ -1,4 +1,4 @@
-
+//! ipg_mousearea
 use crate::access_callbacks;
 use crate::app::Message;
 use super::callbacks::{WidgetCallbackIn, 

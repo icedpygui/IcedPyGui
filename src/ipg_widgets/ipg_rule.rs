@@ -1,4 +1,4 @@
-
+//! ipg_rule
 use iced::widget::rule::{self, FillMode, Style};
 use iced::{Color, Element, Length, Theme};
 use iced::widget::{Container, Rule};

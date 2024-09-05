@@ -1,11 +1,13 @@
-
+//! ipg_progress_bar
 use iced::{Color, Element, Length, Theme};
 use iced::widget::{progress_bar, ProgressBar, Space};
 use pyo3::{pyclass, PyObject, Python};
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_state, app};
 
-use super::helpers::{get_height, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_style_standard};
+use super::helpers::{get_height, get_radius, get_width, 
+    try_extract_boolean, try_extract_f64, try_extract_string, 
+    try_extract_style_standard};
 
 
 #[derive(Debug, Clone)]

@@ -1,4 +1,4 @@
-
+//! ipg_events
 #![allow(unused_assignments)]
 
 use std::collections::HashMap;

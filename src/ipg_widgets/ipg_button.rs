@@ -1,6 +1,4 @@
-// #![allow(dead_code)]
-#![allow(unused_assignments)]
-
+//! ipg_button
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, access_state, app};
 use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_style_standard, try_extract_vec_f64};
