@@ -19,6 +19,7 @@ use pyo3::{PyObject, Python};
 #[derive(Debug, Clone)]
 pub struct IpgMouseArea {
         pub id: usize,
+        pub mouse_pointer: Option<IpgMousePointer>,
         pub show: bool,
         pub user_data: Option<PyObject>,
 }
@@ -26,18 +27,40 @@ pub struct IpgMouseArea {
 impl IpgMouseArea {
     pub fn new( 
         id: usize,
+        mouse_pointer: Option<IpgMousePointer>,
         show: bool,
         user_data: Option<PyObject>,
         ) -> Self {
         Self {
             id,
+            mouse_pointer,
             show,
             user_data,
         }
     }
 }
 
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgMousePointer {
+    None,
+    Idle,
+    Pointer,
+    Grab,
+    Text,
+    Crosshair,
+    Working,
+    Grabbing,
+    ResizingHorizontally,
+    ResizingVertically,
+    NotAllowed,
+    ZoomIn,
+}
+
 pub fn construct_mousearea(m_area: IpgMouseArea, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
+
+    let pointer: Interaction = get_interaction(m_area.mouse_pointer);
 
     let cont: Element<Message> = Column::with_children(content).into();
     // Had to use the Message because the content already has Message.  Typical problem
@@ -53,11 +76,32 @@ pub fn construct_mousearea(m_area: IpgMouseArea, content: Vec<Element<'static, M
                     .on_enter(Message::MouseAreaOnEnter(m_area.id))
                     .on_move(move|p| Message::MouseAreaOnMove(p, m_area.id))
                     .on_exit(Message::MouseAreaOnExit(m_area.id))
-                    .interaction(Interaction::Pointer)
+                    .interaction(pointer)
                     .into();
 
     ma
 
+}
+
+pub fn get_interaction(pointer: Option<IpgMousePointer>) -> Interaction {
+    if pointer.is_none() {
+        return Interaction::None
+    }
+
+    match pointer.unwrap() {
+        IpgMousePointer::None => Interaction::None,
+        IpgMousePointer::Idle => Interaction::Idle,
+        IpgMousePointer::Pointer => Interaction::Pointer,
+        IpgMousePointer::Grab => Interaction::Grab,
+        IpgMousePointer::Text => Interaction::Text,
+        IpgMousePointer::Crosshair => Interaction::Crosshair,
+        IpgMousePointer::Working => Interaction::Working,
+        IpgMousePointer::Grabbing => Interaction::Grabbing,
+        IpgMousePointer::ResizingHorizontally => Interaction::ResizingHorizontally,
+        IpgMousePointer::ResizingVertically => Interaction::ResizingVertically,
+        IpgMousePointer::NotAllowed => Interaction::NotAllowed,
+        IpgMousePointer::ZoomIn => Interaction::ZoomIn,
+    }
 }
 
 pub fn mousearea_callback(id: usize, event_name: String) {

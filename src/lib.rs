@@ -1,6 +1,9 @@
 //!lib for all of the python callable functions using pyo3
 use ipg_widgets::ipg_canvas::{IpgArc, IpgBezier, IpgCanvas, IpgCircle, IpgEllipse, IpgGeometry, IpgLine, IpgRectangle};
 use ipg_widgets::ipg_modal::IpgModal;
+use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, IpgOpaqueParam, IpgOpaqueStyle};
+use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
+use palette::rgb::Rgb;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -33,7 +36,7 @@ use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, Ip
     IpgImageParam, IpgImageRotation};
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParam, IpgMenuSeparatorStyle, 
     IpgMenuSeparatorType, IpgMenuBarStyle, IpgMenuStyle, IpgMenuType};
-use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParam};
+use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParam, IpgMousePointer};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListHandle, IpgPickListParam, IpgPickListStyle};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParam, IpgRadioStyle};
@@ -137,6 +140,7 @@ pub struct State {
     pub menu_bar_style: Lazy<HashMap<String, IpgMenuBarStyle>>,
     pub menu_style: Lazy<HashMap<String, IpgMenuStyle>>,
     pub menu_separator_style: Lazy<HashMap<String, IpgMenuSeparatorStyle>>,
+    pub opaque_style: Lazy<HashMap<String, IpgOpaqueStyle>>,
     pub pick_list_style: Lazy<HashMap<String, IpgPickListStyle>>,
     pub progress_bar_style: Lazy<HashMap<String, IpgProgressBarStyle>>,
     pub radio_style:  Lazy<HashMap<String, IpgRadioStyle>>,
@@ -181,6 +185,7 @@ pub static STATE: Mutex<State> = Mutex::new(
         menu_bar_style: Lazy::new(||HashMap::new()),
         menu_style: Lazy::new(||HashMap::new()),
         menu_separator_style: Lazy::new(||HashMap::new()),
+        opaque_style: Lazy::new(||HashMap::new()),
         pick_list_style: Lazy::new(||HashMap::new()),
         progress_bar_style: Lazy::new(||HashMap::new()),
         radio_style: Lazy::new(||HashMap::new()),
@@ -723,7 +728,8 @@ impl IPG {
     }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None, 
-                        gen_id=None, on_press=None, on_release=None,
+                        gen_id=None, mouse_pointer=None,
+                        on_press=None, on_release=None,
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
                         on_enter=None, on_move=None, on_exit=None,
@@ -734,6 +740,7 @@ impl IPG {
                         // required above
                         parent_id: Option<String>,
                         gen_id: Option<usize>,
+                        mouse_pointer: Option<IpgMousePointer>,
                         on_press: Option<PyObject>,
                         on_release: Option<PyObject>,
                         on_right_press: Option<PyObject>,
@@ -797,7 +804,8 @@ impl IPG {
         set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_mousearea".to_string());
 
         state.containers.insert(self.id, IpgContainers::IpgMouseArea(IpgMouseArea::new(
-                                    self.id,  
+                                    self.id,
+                                    mouse_pointer,  
                                     show, 
                                     user_data
                                 )));
@@ -805,6 +813,96 @@ impl IPG {
         drop(state);
         Ok(id)
 
+    }
+
+    #[pyo3(signature = (window_id, container_id, parent_id=None,
+                        width=None, height=None, 
+                        width_fill=false, height_fill=false,
+                        horizontal_alignment=None, vertical_alignment=None,
+                        mouse_on_press=None,
+                        show=true, style_id=None,
+                        gen_id=None,
+                        ))]
+    fn add_opaque_container(&mut self,
+                            window_id: String,
+                            container_id: String,
+                            // required above
+                            parent_id: Option<String>,
+                            width: Option<f32>,
+                            height: Option<f32>,
+                            width_fill: bool,
+                            height_fill: bool,
+                            horizontal_alignment: Option<IpgHorizontalAlignment>,
+                            vertical_alignment: Option<IpgVerticalAlignment>,
+                            mouse_on_press: Option<PyObject>,
+                            show: bool,
+                            style_id: Option<String>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize> 
+    {
+        let id = self.get_id(gen_id);
+
+        let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
+
+        let include_mouse_area = if mouse_on_press.is_some() {
+            add_callback_to_mutex(id, "on_press".to_string(), mouse_on_press);
+            true
+        } else {
+            false
+        };
+
+        let prt_id = match parent_id {
+            Some(id) => id,
+            None => window_id.clone(),
+        };
+
+        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
+
+        let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, id, "add_opaque".to_string());
+
+        state.containers.insert(id, IpgContainers::IpgOpaque(IpgOpaque::new(
+                                    id,  
+                                    width, 
+                                    height,
+                                    horizontal_alignment,
+                                    vertical_alignment,
+                                    include_mouse_area,
+                                    show,
+                                    style_id
+                                    )));
+        state.last_id = id;
+        drop(state);         
+        Ok(id)
+    }
+
+    #[pyo3(signature = (style_id, 
+                        background_color=None, 
+                        background_rgba=None,
+                        gen_id=None))]
+    fn add_opaque_style(&mut self,
+                            style_id: String,
+                            background_color: Option<IpgColor>,
+                            background_rgba: Option<[f32; 4]>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let mut state = access_state();
+
+        let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
+
+        state.opaque_style.insert(style_id, IpgOpaqueStyle::new( 
+                                                    id,
+                                                    background_color,
+                                                    ));
+        state.last_id = id;
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
@@ -857,6 +955,53 @@ impl IPG {
                                     height, 
                                     align_items,
                                     clip,
+                                )));
+        state.last_id = self.id;
+        drop(state);         
+        Ok(self.id)
+
+    }
+
+    #[pyo3(signature = (window_id, container_id, parent_id=None,
+                        width=None, height=None, 
+                        width_fill=false, height_fill=false,
+                        hide_index=None, show=true,
+                        ))]
+    fn add_stack(&mut self,
+                    window_id: String,
+                    container_id: String,
+                    // required above
+                    parent_id: Option<String>,
+                    width: Option<f32>,
+                    height: Option<f32>,
+                    width_fill: bool,
+                    height_fill: bool,
+                    hide_index: Option<usize>,
+                    show: bool,
+                    ) -> PyResult<usize> 
+    {
+        self.id += 1;
+
+        let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
+
+        let prt_id = match parent_id {
+            Some(id) => id,
+            None => window_id.clone(),
+        };
+
+        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
+
+        let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_stack".to_string());
+
+        state.containers.insert(self.id, IpgContainers::IpgStack(IpgStack::new(
+                                    self.id,  
+                                    width, 
+                                    height,
+                                    hide_index,
+                                    show,
                                 )));
         state.last_id = self.id;
         drop(state);         
@@ -1467,11 +1612,12 @@ impl IPG {
                         filter_method=IpgImageFilterMethod::Linear,
                         rotation=IpgImageRotation::Floating,
                         rotation_radians=0.0, opacity=1.0,
+                        mouse_pointer=None,
                         on_press=None, on_release=None,
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
-                        on_enter=None, on_move=None, on_exit=None, 
-                        user_data=None, show=false,
+                        on_enter=None, on_move=None, on_exit=None,
+                        user_data=None, show=true,
                         ))]
     fn add_image(&mut self,
                     parent_id: String,
@@ -1488,6 +1634,7 @@ impl IPG {
                     rotation: IpgImageRotation,
                     rotation_radians: f32,
                     opacity: f32,
+                    mouse_pointer: Option<IpgMousePointer>,
                     on_press: Option<PyObject>,
                     on_release: Option<PyObject>,
                     on_right_press: Option<PyObject>,
@@ -1559,6 +1706,7 @@ impl IPG {
                                                 rotation,
                                                 rotation_radians,
                                                 opacity,
+                                                mouse_pointer,
                                                 show,
                                                 user_data,
                                             )));
@@ -2685,7 +2833,8 @@ impl IPG {
                         height=None, height_fill=false,
                         content_fit=IpgSvgContentFit::Contain,
                         rotation=IpgSvgRotation::Floating,
-                        rotation_radians=0.0, opacity=1.0, 
+                        rotation_radians=0.0, opacity=1.0,
+                        mouse_pointer=None,
                         on_press=None, on_release=None,
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
@@ -2705,6 +2854,7 @@ impl IPG {
                     rotation: IpgSvgRotation,
                     rotation_radians: f32,
                     opacity: f32,
+                    mouse_pointer: Option<IpgMousePointer>,
                     on_press: Option<PyObject>,
                     on_release: Option<PyObject>,
                     on_right_press: Option<PyObject>,
@@ -2772,6 +2922,7 @@ impl IPG {
                                                 rotation,
                                                 rotation_radians,
                                                 opacity,
+                                                mouse_pointer,
                                                 show,
                                                 user_data,
                                             )));
@@ -3658,6 +3809,20 @@ impl IPG {
 
     }
 
+    #[pyo3(signature = (color))]
+    fn get_rgba_color(&mut self, color: IpgColor) -> PyResult<[f32; 4]>
+    {
+        let base: Option<Color> = get_color(None, Some(color), 1.0, false);
+
+        let rgb = if base.is_some() {
+            Rgb::from(base.unwrap())
+        } else {
+            panic!("Unable to get the rgba format of the color")
+        };
+
+        Ok([rgb.red, rgb.green, rgb.blue, 1.0])
+    }
+
     #[pyo3(signature = (base_color=None, base_rgba=None))]
     fn get_color_palette(&mut self, 
                             base_color: Option<IpgColor>,
@@ -4097,6 +4262,12 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
         IpgContainers::IpgMouseArea(m_area) => {
             mousearea_item_update(m_area, item, value);
         },
+        IpgContainers::IpgOpaque(op) => {
+            opaque_item_update(op, item, value);
+        },
+        IpgContainers::IpgStack(stack) => {
+            stack_item_update(stack, item, value);
+        },
         IpgContainers::IpgTable(table) => {
             table_item_update(table, item, value);
         },
@@ -4150,6 +4321,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgMenuSeparatorType>()?;
     m.add_class::<IpgMenuType>()?;
     m.add_class::<IpgMouseAreaParam>()?;
+    m.add_class::<IpgMousePointer>()?;
+    m.add_class::<IpgOpaqueParam>()?;
     m.add_class::<IpgPickListParam>()?;
     m.add_class::<IpgPickListHandle>()?;
     m.add_class::<IpgProgressBarParam>()?;
@@ -4159,6 +4332,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgScrollableParam>()?;
     m.add_class::<IpgSelectableTextParam>()?;
     m.add_class::<IpgSliderParam>()?;
+    m.add_class::<IpgStackParam>()?;
     m.add_class::<IpgStyleStandard>()?;
     m.add_class::<IpgSvgParam>()?;
     m.add_class::<IpgTableRowHighLight>()?;

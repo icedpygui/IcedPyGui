@@ -7,6 +7,8 @@ use super::callbacks::{WidgetCallbackIn,
 use super::helpers::{get_height, get_width};
 use super::helpers::{try_extract_boolean, try_extract_f64, 
     try_extract_string};
+use super::ipg_mousearea::get_interaction;
+use super::ipg_mousearea::IpgMousePointer;
 
 use iced::widget::Space;
 use iced::{Length, Element, Point, Radians, Rotation};
@@ -29,6 +31,7 @@ pub struct IpgSvg {
         pub rotation: IpgSvgRotation,
         pub rotation_radians: f32,
         pub opacity: f32,
+        pub mouse_pointer: Option<IpgMousePointer>,
         pub show: bool,
         pub user_data: Option<PyObject>,
 }
@@ -43,6 +46,7 @@ impl IpgSvg {
         rotation: IpgSvgRotation,
         rotation_radians: f32,
         opacity: f32,
+        mouse_pointer: Option<IpgMousePointer>,
         show: bool,
         user_data: Option<PyObject>,
         ) -> Self {
@@ -55,6 +59,7 @@ impl IpgSvg {
             rotation,
             rotation_radians,
             opacity,
+            mouse_pointer,
             show,
             user_data,
         }
@@ -107,6 +112,8 @@ pub fn construct_svg(sg: IpgSvg) -> Element<'static, app::Message> {
                                                 .opacity(sg.opacity)
                                                 .into();
 
+    let pointer: Interaction = get_interaction(sg.mouse_pointer);
+
     let widget: Element<SvgMessage> = 
                 MouseArea::new(svg_widget)
                     .on_press(SvgMessage::OnPress)
@@ -119,7 +126,7 @@ pub fn construct_svg(sg: IpgSvg) -> Element<'static, app::Message> {
                     .on_move(SvgMessage::OnMove)
                     .on_exit(SvgMessage::OnExit)
                     //Need to add in the other Interactions
-                    .interaction(Interaction::Pointer)
+                    .interaction(pointer)
                     .into();
 
     widget.map(move |message| app::Message::Svg(sg.id, message))

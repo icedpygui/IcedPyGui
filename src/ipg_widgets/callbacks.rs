@@ -340,6 +340,8 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     return wco
                 },
                 IpgContainers::IpgMouseArea(_) => todo!(),
+                IpgContainers::IpgOpaque(_) => todo!(),
+                IpgContainers::IpgStack(_) => todo!(),
                 IpgContainers::IpgTable(tbl) => {
                     let mut wco = WidgetCallbackOut::default();
                     if wci.value_str == Some("button".to_string()) {
@@ -444,6 +446,16 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
             return wco
         },
         IpgContainers::IpgModal(_modal) => {
+            let wco = WidgetCallbackOut::default();
+            drop(state);
+            return wco
+        },
+        IpgContainers::IpgOpaque(_) => {
+            let wco = WidgetCallbackOut::default();
+            drop(state);
+            return wco
+        },
+        IpgContainers::IpgStack(_) => {
             let wco = WidgetCallbackOut::default();
             drop(state);
             return wco

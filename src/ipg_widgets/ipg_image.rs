@@ -7,6 +7,8 @@ use super::callbacks::{WidgetCallbackIn,
 use super::helpers::{get_height, get_padding_f64, get_width, 
     try_extract_boolean, try_extract_f64, try_extract_string, 
     try_extract_vec_f64};
+use super::ipg_mousearea::get_interaction;
+use super::ipg_mousearea::IpgMousePointer;
     
 use iced::widget::image::FilterMethod;
 use iced::widget::Space;
@@ -32,6 +34,7 @@ pub struct IpgImage {
         pub rotation: IpgImageRotation,
         pub rotation_radians: f32,
         pub opacity: f32,
+        pub mouse_pointer: Option<IpgMousePointer>,
         pub show: bool,
         pub user_data: Option<PyObject>,
 }
@@ -48,6 +51,7 @@ impl IpgImage {
         rotation: IpgImageRotation,
         rotation_radians: f32,
         opacity: f32,
+        mouse_pointer: Option<IpgMousePointer>,
         show: bool,
         user_data: Option<PyObject>,
         ) -> Self {
@@ -62,6 +66,7 @@ impl IpgImage {
             rotation,
             rotation_radians,
             opacity,
+            mouse_pointer,
             show,
             user_data,
         }
@@ -124,6 +129,8 @@ pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
                                                 .padding(image.padding)
                                                 .into();
 
+    let pointer: Interaction = get_interaction(image.mouse_pointer);
+
     let ma: Element<ImageMessage> = 
                 MouseArea::new(cont)
                     .on_press(ImageMessage::OnPress)
@@ -135,7 +142,7 @@ pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
                     .on_enter(ImageMessage::OnEnter)
                     .on_move(ImageMessage::OnMove)
                     .on_exit(ImageMessage::OnExit)
-                    .interaction(Interaction::Pointer)
+                    .interaction(pointer)
                     .into();
 
     ma.map(move |message| app::Message::Image(image.id, message))

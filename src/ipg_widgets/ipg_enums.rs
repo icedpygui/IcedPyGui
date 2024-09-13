@@ -13,6 +13,7 @@ use super::ipg_image::IpgImage;
 use super::ipg_menu::IpgMenu;
 use super::ipg_modal::IpgModal;
 use super::ipg_mousearea::IpgMouseArea;
+use super::ipg_opaque::IpgOpaque;
 // use super::ipg_pane_grid::{IpgPaneGrid, IpgPane};
 use super::ipg_pick_list::IpgPickList;
 use super::ipg_progress_bar::IpgProgressBar;
@@ -23,6 +24,7 @@ use super::ipg_scrollable::IpgScrollable;
 use super::ipg_selectable_text::IpgSelectableText;
 use super::ipg_slider::IpgSlider;
 use super::ipg_space::IpgSpace;
+use super::ipg_stack::IpgStack;
 use super::ipg_svg::IpgSvg;
 use super::ipg_table::IpgTable;
 use super::ipg_text::IpgText;
@@ -41,6 +43,8 @@ pub enum IpgContainers {
     IpgContainer(IpgContainer),
     IpgModal(IpgModal),
     IpgMouseArea(IpgMouseArea),
+    IpgOpaque(IpgOpaque),
+    IpgStack(IpgStack),
     IpgTable(IpgTable),
     // IpgPaneGrid(IpgPaneGrid),
     // IpgPane(IpgPane),

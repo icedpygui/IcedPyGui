@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgImageParam, IpgTextParam, IpgSvgParam
-from icedpygui import IpgAlignment
+from icedpygui import IpgAlignment, IpgMousePointer
 import os, math
 
 
@@ -121,6 +121,7 @@ for i in range(0, 4):
                                    on_move=on_mouse_move,
                                    on_exit=on_mouse_exit,
                                    on_right_press=toggle_images,
+                                   mouse_pointer=IpgMousePointer.Pointer,
                                    show=True))
     
     tiger_ids.append(ipg.add_svg(parent_id="row1", svg_path=tiger,
@@ -129,6 +130,7 @@ for i in range(0, 4):
                                    on_move=on_mouse_move,
                                    on_exit=on_mouse_exit,
                                    on_right_press=toggle_images,
+                                   mouse_pointer=IpgMousePointer.Pointer,
                                    show=False))
     
     # Spacing was added last because because the two images occupy the same space
