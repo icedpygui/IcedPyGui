@@ -526,8 +526,9 @@ fn add_widget(widget_type: IpgTableWidget,
             chk.map(move |message| app::Message::Table(table_id, message))
         },
         IpgTableWidget::Toggler => {
-            let tog: Element<TableMessage> = Toggler::new(Some(label), is_toggled,
-                                    move|b| TableMessage::TableToggler(b, (row_index, col_index)))
+            let tog: Element<TableMessage> = Toggler::new(is_toggled)
+                                    .label(label)
+                                    .on_toggle(move|b| TableMessage::TableToggler(b, (row_index, col_index)))
                                     .width(Length::Fixed(column_width))
                                     .into();
 
