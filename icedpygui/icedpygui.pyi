@@ -3023,6 +3023,31 @@ class IPG:
         None
         """
 
+    def move_widget(self,
+                    window_id: str,
+                    widget_id: int,
+                    target_container_id: str,
+                    target_position: Optional[int]=None,
+                    ) -> None:
+        """
+        Moves a widget to another container
+
+        Parameters
+        ----------
+            window_id: str
+                Window id in string form.
+            widget_id: int
+                widget id in integer form.
+            target_container_id: str)
+                target container id in string form.
+            target_position: Optional[int]
+                target position, None = end of list.
+            
+        Returns
+        -------
+        None
+        """
+    
     def add_arc(self,
                 canvas_id: str,
                 center: tuple[float, float],

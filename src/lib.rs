@@ -3785,17 +3785,6 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (window_id, widget_id, target_container_id, target_position))]
-    fn move_widget(&self,
-                    window_id: String,
-                    widget_id: usize,
-                    target_container_id: String,
-                    target_position: Option<usize>,
-                    )
-    {
-        move_widget(widget_id, target_container_id, target_position, window_id);
-    }
-
     #[pyo3(signature = (wid, item, value))]
     fn update_item(&self, wid: usize, item: PyObject, value: PyObject) {
 
@@ -3819,6 +3808,17 @@ impl IPG {
 
     }
 
+    #[pyo3(signature = (window_id, widget_id, target_container_id, target_position))]
+    fn move_widget(&self,
+                    window_id: String,
+                    widget_id: usize,
+                    target_container_id: String,
+                    target_position: Option<usize>,
+                    )
+    {
+        move_widget(widget_id, target_container_id, target_position, window_id);
+    }
+    
     #[pyo3(signature = (color))]
     fn get_rgba_color(&mut self, color: IpgColor) -> PyResult<[f32; 4]>
     {
