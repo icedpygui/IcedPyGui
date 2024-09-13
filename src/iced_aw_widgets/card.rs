@@ -12,12 +12,7 @@ use iced::{
         text::LineHeight,
         widget::{Operation, Tree},
         Clipboard, Layout, Shell, Widget,
-    },
-    alignment::{Horizontal, Vertical},
-    event,
-    mouse::{self, Cursor},
-    touch, Alignment, Border, Color, Element, Event, Length, Padding, Pixels, Point, Rectangle,
-    Shadow, Size, Vector,
+    }, alignment::{Horizontal, Vertical}, event, mouse::{self, Cursor}, touch, widget::text::Wrapping, Alignment, Border, Color, Element, Event, Length, Padding, Pixels, Point, Rectangle, Shadow, Size, Vector
 };
 
 
@@ -828,6 +823,7 @@ fn draw_head<Message, Theme, Renderer>(
                 vertical_alignment: Vertical::Center,
                 line_height: LineHeight::Relative(1.3),
                 shaping: iced::advanced::text::Shaping::Advanced,
+                wrapping: Wrapping::Word,
             },
             Point::new(close_bounds.center_x(), close_bounds.center_y()),
             style_sheet.close_color,
