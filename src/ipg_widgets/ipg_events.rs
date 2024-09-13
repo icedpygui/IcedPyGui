@@ -87,7 +87,7 @@ pub fn process_keyboard_events(event: Event, event_id: usize)
                                     modifiers, 
                                     text: _ ,
                                     physical_key: _, 
-                                    modified_key }) => {
+                                    modified_key: _ }) => {
         
             let user_data = get_event_user_data(event_id);
 
