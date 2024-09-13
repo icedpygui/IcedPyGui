@@ -82,7 +82,12 @@ pub enum IpgEvents {
 pub fn process_keyboard_events(event: Event, event_id: usize) 
 {      
     match event {    
-        Event::Keyboard(KeyPressed { key, location, modifiers, text: _ }) => {
+        Event::Keyboard(KeyPressed { key, 
+                                    location, 
+                                    modifiers, 
+                                    text: _ ,
+                                    physical_key: _, 
+                                    modified_key }) => {
         
             let user_data = get_event_user_data(event_id);
 
