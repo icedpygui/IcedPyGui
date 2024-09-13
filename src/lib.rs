@@ -3436,6 +3436,8 @@ impl IPG {
                         background_rgba=None,
                         background_color_toggled=None,
                         background_rgba_toggled=None,
+                        background_color_disabled=None,
+                        background_rgba_disabled=None,
                         background_border_color=None,
                         background_border_rgba=None,
                         background_border_width=None,
@@ -3443,6 +3445,8 @@ impl IPG {
                         foreground_rgba=None,
                         foreground_color_toggled=None,
                         foreground_rgba_toggled=None,
+                        foreground_color_disabled=None,
+                        foreground_rgba_disabled=None,
                         foreground_border_color=None,
                         foreground_border_rgba=None,
                         foreground_border_width=None,
@@ -3454,6 +3458,8 @@ impl IPG {
                         background_rgba: Option<[f32; 4]>,
                         background_color_toggled: Option<IpgColor>,
                         background_rgba_toggled: Option<[f32; 4]>,
+                        background_color_disabled: Option<IpgColor>,
+                        background_rgba_disabled: Option<[f32; 4]>,
                         background_border_color: Option<IpgColor>,
                         background_border_rgba: Option<[f32; 4]>,
                         background_border_width: Option<f32>,
@@ -3461,6 +3467,8 @@ impl IPG {
                         foreground_rgba: Option<[f32; 4]>,
                         foreground_color_toggled: Option<IpgColor>,
                         foreground_rgba_toggled: Option<[f32; 4]>,
+                        foreground_color_disabled: Option<IpgColor>,
+                        foreground_rgba_disabled: Option<[f32; 4]>,
                         foreground_border_color: Option<IpgColor>,
                         foreground_border_rgba: Option<[f32; 4]>,
                         foreground_border_width: Option<f32>,
@@ -3471,9 +3479,11 @@ impl IPG {
 
         let background_color = get_color(background_rgba, background_color, 1.0, false);
         let background_color_toggled = get_color(background_rgba_toggled, background_color_toggled, 1.0, false);
+        let background_color_disabled = get_color(background_rgba_toggled, background_color_disabled, 1.0, false);
         let background_border_color = get_color(background_border_rgba, background_border_color, 1.0, false);
         let foreground_color = get_color(foreground_rgba, foreground_color, 1.0, false);
         let foreground_color_toggled = get_color(foreground_rgba_toggled, foreground_color_toggled, 1.0, false);
+        let foreground_color_disabled = get_color(foreground_rgba_toggled, foreground_color_disabled, 1.0, false);
         let foreground_border_color = get_color(foreground_border_rgba, foreground_border_color, 1.0, false);
         
 
@@ -3483,10 +3493,12 @@ impl IPG {
                                                 id,
                                                 background_color,
                                                 background_color_toggled,
+                                                background_color_disabled,
                                                 background_border_color,
                                                 background_border_width,
                                                 foreground_color,
                                                 foreground_color_toggled,
+                                                foreground_color_disabled,
                                                 foreground_border_color,
                                                 foreground_border_width,
                                                 ));
