@@ -10,7 +10,7 @@ use super::helpers::{try_extract_boolean, try_extract_f64,
 
 use iced::border::Radius;
 use iced::widget::slider::{self, HandleShape, Status, Style};
-use iced::{Color, Length, Element, Theme};
+use iced::{Background, Color, Element, Length, Theme};
 use iced::widget::{Slider, Space};
 
 use pyo3::pyclass;
@@ -293,12 +293,13 @@ fn get_styling(theme: &Theme,
     let mut base_style = slider::default(theme, status);
 
     if style.handle_color.is_some() {
-        base_style.handle.color = style.handle_color.unwrap()
+        base_style.handle.border_color = style.handle_color.unwrap()
     };
 
 
     if style.rail_color.is_some() {
-        base_style.rail.colors.0 = style.rail_color.unwrap();
+        base_style.rail.backgrounds = (Background::Color(style.rail_color.unwrap()), 
+                                        Background::Color(style.rail_color.unwrap()));
     }
 
     if style.rail_width.is_some() {
@@ -306,7 +307,7 @@ fn get_styling(theme: &Theme,
     }
 
     if style.rail_border_radius.is_some() {
-        base_style.rail.border_radius = get_radius(style.rail_border_radius.clone().unwrap(),
+        base_style.rail.border.radius = get_radius(style.rail_border_radius.clone().unwrap(),
                                             "Slider".to_string());
     }
 
@@ -341,7 +342,7 @@ fn get_styling(theme: &Theme,
     let mut hovered_style = base_style.clone();
 
     if style.rail_color_hovered.is_some() {
-        hovered_style.rail.colors.0 = style.rail_color_hovered.unwrap();
+        hovered_style.rail.border.color = style.rail_color_hovered.unwrap();
     }
 
     match status 

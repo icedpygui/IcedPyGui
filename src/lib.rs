@@ -3479,11 +3479,11 @@ impl IPG {
 
         let background_color = get_color(background_rgba, background_color, 1.0, false);
         let background_color_toggled = get_color(background_rgba_toggled, background_color_toggled, 1.0, false);
-        let background_color_disabled = get_color(background_rgba_toggled, background_color_disabled, 1.0, false);
+        let background_color_disabled = get_color(background_rgba_disabled, background_color_disabled, 1.0, false);
         let background_border_color = get_color(background_border_rgba, background_border_color, 1.0, false);
         let foreground_color = get_color(foreground_rgba, foreground_color, 1.0, false);
         let foreground_color_toggled = get_color(foreground_rgba_toggled, foreground_color_toggled, 1.0, false);
-        let foreground_color_disabled = get_color(foreground_rgba_toggled, foreground_color_disabled, 1.0, false);
+        let foreground_color_disabled = get_color(foreground_rgba_disabled, foreground_color_disabled, 1.0, false);
         let foreground_border_color = get_color(foreground_border_rgba, foreground_border_color, 1.0, false);
         
 
