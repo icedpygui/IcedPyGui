@@ -16,6 +16,8 @@ use once_cell::sync::Lazy;
 
 use crate::ipg_widgets::ipg_canvas::{construct_canvas, IpgBuildCanvas};
 use crate::ipg_widgets::ipg_events::{handle_window_closing, process_keyboard_events, process_mouse_events, process_touch_events, process_window_event};
+use crate::ipg_widgets::ipg_opaque::{construct_opaque, opaque_callback};
+use crate::ipg_widgets::ipg_stack::construct_stack;
 use crate::ipg_widgets::ipg_window::IpgWindowMode;
 use crate::{access_window_actions, ipg_widgets};
 use crate::ipg_widgets::helpers::find_key_for_value;
@@ -88,6 +90,7 @@ pub enum Message {
     MouseAreaOnEnter(usize),
     MouseAreaOnMove(Point, usize),
     MouseAreaOnExit(usize),
+    OpaqueOnPress(usize),
 }
 
 #[derive(Default)]
@@ -245,6 +248,10 @@ impl App {
             },
             Message::MouseAreaOnExit(id) => {
                 mousearea_callback(id, "on_exit".to_string());
+                Task::none()
+            },
+            Message::OpaqueOnPress(id) => {
+                opaque_callback(id, "on_press".to_string());
                 Task::none()
             },
             Message::PickList(id, message) => {
@@ -589,7 +596,7 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                 },
                 IpgContainers::IpgContainer(con) => {
                     if content.len() > 1 {
-                        panic!("A container can have only one widget, place your multiple widgets into  a column or row")
+                        panic!("A container can have only one widget, place your multiple widgets into a column or row")
                     }
                     return construct_container(con.clone(), content)
                 },
@@ -599,6 +606,9 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                 IpgContainers::IpgMouseArea(m_area) => {
                     return construct_mousearea(m_area.clone(), content)
                 },
+                IpgContainers::IpgOpaque(op) => {
+                    return construct_opaque(op.clone(), content)
+                }
                 IpgContainers::IpgTable(table) => {
                     let tbl = table.clone();
                     drop(state);
@@ -610,6 +620,9 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                 IpgContainers::IpgScrollable(scroll) => {
                     return construct_scrollable(scroll.clone(), content)
                 },
+                IpgContainers::IpgStack(stk) => {
+                    return construct_stack(stk.clone(), content)
+                }
                 IpgContainers::IpgToolTip(tool) => {
                     return construct_tool_tip(tool, content)
                 },
@@ -768,9 +781,11 @@ fn get_window_container(container_opt: Option<&IpgContainers>) -> &IpgWindow {
         IpgContainers::IpgContainer(_) => panic!("Wrong container"),
         IpgContainers::IpgModal(_) => panic!("Wrong container"),
         IpgContainers::IpgMouseArea(_) => panic!("Wrong container"),
+        IpgContainers::IpgOpaque(_) => panic!("Wrong container"),
         IpgContainers::IpgTable(_) => panic!("Wrong container"),
         IpgContainers::IpgRow(_) => panic!("Wrong container"),
         IpgContainers::IpgScrollable(_) => panic!("Wrong container"),
+        IpgContainers::IpgStack(_) => panic!("Wrong container"),
         IpgContainers::IpgToolTip(_) => panic!("Wrong container"),
         IpgContainers::IpgWindow(wnd) => {
             wnd

@@ -379,7 +379,8 @@ class IPG:
                         on_middle_release: Optional[Callable]=None,
                         on_enter: Optional[Callable]=None,
                         on_move: Optional[Callable]=None,
-                        on_exit: Optional[Callable]=None,  
+                        on_exit: Optional[Callable]=None,
+                        mouse_pointer: Optional[IpgMousePointer]=None,
                         show: bool=True,  
                         user_data: Optional[any]=None,
                       ) -> int:
@@ -422,6 +423,8 @@ class IPG:
                 Function to call for mouse moves in text area.
             on_exit: Callable
                 Function to call for mouse exits text area.
+            mouse_pointer: Optional[IpgMousePointer]
+                How the mouse pointer appears when over the mouse area.
             show: bool
                 To show the widget or not.
             user_data: any
@@ -431,6 +434,23 @@ class IPG:
         -------
         id: int
             Internal id of widget and can be used by user if equated.
+        """
+
+    def add_opaque_container(self,
+                            window_id: str,
+                            container_id: str,
+                            *,
+                            parent_id: Optional[str],
+                            width: Optional[float],
+                            height: Optional[float],
+                            width_fill: bool,
+                            height_fill: bool,
+                            mouse_on_press: Optional[Callable]=None,
+                            show: bool,
+                            style_id: Optional[str],
+                            ) -> int:
+        """
+        Adds an opaque container, usually used in the stask widget to hide items.
         """
 
     def add_row(self,
@@ -489,6 +509,52 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
 
+    def add_stack(self,
+                window_id: str,
+                container_id: str,
+                *,
+                parent_id: Optional[str]=None,
+                width: Optional[float]=None,
+                height: Optional[float]=None,
+                width_fill: bool=False,
+                height_fill: bool=False,
+                hide_index: Optional[int],
+                show: bool=True,
+                ) -> int:
+
+        """
+        Adds a stack of containers to the gui.
+        
+        Parameters
+        ----------
+            window_id: str
+                Id of the window to place container in.
+            container_id: str
+                The id of the container.
+            parent_id: str
+                If parent_id == window_id then not required, 
+                If another container then required.
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            height: float
+                Sets the height of the widget.   
+            height_fill: bool
+                Sets the height to fill the available space, overrides height.
+            hide_index: Optional[int],
+                Which item indexes to hide.
+            show_stack: bool,
+                Show the top later of the stack.
+            show: bool
+                Shows or hides widget.
+            
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
+        """
+        
     def add_scrollable(self,
                         window_id: str,
                         container_id: str,
@@ -1130,6 +1196,7 @@ class IPG:
                     rotation: IpgImageRotation=IpgImageRotation.Floating,
                     rotation_radians: float=0.0,
                     opacity: float=1.0,
+                    mouse_pointer: Optional[IpgMousePointer]=None,
                     show: bool=True,  
                     user_data: Optional[Any]=None,
                     ) -> int:
@@ -1186,6 +1253,8 @@ class IPG:
                 Amount to rotate, 180 degrees = 3.14159 radians.
             opacity: float
                 How much opacity, 1=opaque, 0=transparent
+            mouse_pointer: Optional[IpgMousePointer]
+                How the mouse pointer appears when over the image.
             show: bool
                 To show the widget or not.
             user_data: any
@@ -2236,7 +2305,8 @@ class IPG:
                     content_fit: IpgSvgContentFit=IpgSvgContentFit.Contain,
                     rotation: IpgSvgRotation=IpgSvgRotation.Floating,
                     rotation_radians: float=0.0,
-                    opacity: float=1.0, 
+                    opacity: float=1.0,
+                    mouse_pointer: Optional[IpgMousePointer]=None,
                     show: bool=True,  
                     user_data: Optional[Any]=None,
                     ) -> int:
@@ -2290,6 +2360,8 @@ class IPG:
                 Amount to rotate, 180 degrees = 3.14159 radians.
             opacity: float
                 How much opacity, 1=opaque, 0=transparent
+            mouse_pointer: Optional[IpgMousePointer]
+                How the mouse pointer appears when over the svg.
             show: bool
                 To show the widget or not.
             user_data: any
@@ -3538,9 +3610,32 @@ class IpgMenuSeparatorType:
     Line=''
 
 
+class IpgMousePointer:
+    """
+    Pointer types for the mouse interactions
+    """
+    Idle=''
+    Pointer=''
+    Grab=''
+    Text=''
+    Crosshair=''
+    Working=''
+    Grabbing=''
+    ResizingHorizontally=''
+    ResizingVertically=''
+    NotAllowed=''
+    ZoomIn=''
+
+class IpgOpaqueParam:
+    """
+    Oapque update parameters.
+    """
+    Show: bool
+
+
 class IpgPickListParam:
     """
-    PickList parameters
+    PickList update parameters
 
     Parameters
     ----------
@@ -3586,7 +3681,7 @@ class IpgPickListHandle:
 
 class IpgProgressBarParam:
     """
-    The ProgressBar parameters.
+    The ProgressBar update parameters.
 
     Parameters
     ----------
@@ -3792,7 +3887,7 @@ class IpgSelectableTextParam:
 
 class IpgSliderParam:
     """
-    Slider parameters
+    Slider update parameters
 
     Parameters
     ----------
@@ -3825,6 +3920,17 @@ class IpgSliderParam:
     StyleId: str
     Show: bool
 
+
+class IpgStackParam:
+    """
+    Stack update parameters
+
+    Parameters
+    ----------
+    ShowStack: bool
+        Show the top widget of the stack.
+    """
+    ShowStack: bool
 
 class IpgStyleStandard:
     """

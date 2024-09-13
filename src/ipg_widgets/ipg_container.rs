@@ -1,6 +1,6 @@
 //! ipg_container
 use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector};
-use iced::widget::{container, Column, Container};
+use iced::widget::{container, horizontal_space, Container};
 
 use crate::access_state;
 use crate::app::Message;
@@ -99,17 +99,17 @@ impl IpgContainerStyle {
 }
 
 
-pub fn construct_container(con: IpgContainer, content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
-    // iced container does not take a vec so need to put into a row or column first
-    let col_content: Element<'static, Message> = Column::with_children(content)
-                                                    .width(Length::Shrink)
-                                                    .height(Length::Shrink)
-                                                    .into();
+pub fn construct_container(con: IpgContainer, mut content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
 
     let align_h = get_horizontal_alignment(con.align_h.clone());
     let align_v = get_vertical_alignment(con.align_v.clone());
 
-    let cont: Element<Message> = Container::new(col_content)
+    let mut new_content: Element<Message> = horizontal_space().into();
+    if content.len() > 0 {
+        new_content = content.remove(0);
+    }
+
+    let cont: Element<Message> = Container::new(new_content)
                 .padding(con.padding)
                 .width(con.width)
                 .height(con.height)
