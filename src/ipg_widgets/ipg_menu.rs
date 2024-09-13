@@ -813,8 +813,10 @@ fn match_menu_item(item_type: IpgMenuType,
         },
         IpgMenuType::Toggler => {
             let tog: Element<MenuMessage, Theme, Renderer> = 
-                        Toggler::new(lbl, is_toggled, move|b| 
-                            MenuMessage::ItemTogToggled(b, (bar_index, item_index)))
+                        Toggler::new(is_toggled)
+                            .on_toggle(move|b| 
+                                MenuMessage::ItemTogToggled(b, (bar_index, item_index)))
+                            .label(lbl)
                             .style(move|theme: &Theme, status| {     
                                 ipg_toggle::get_styling(theme, status, 
                                                         style.clone()) 
