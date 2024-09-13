@@ -7,7 +7,6 @@ use super::callbacks::{
     get_set_widget_callback_data
 };
 use super::ipg_enums::IpgHorizontalAlignment;
-
 use iced::widget::text::LineHeight;
 use iced::widget::toggler::{self, Status};
 use pyo3::{pyclass, PyObject, Python};
@@ -71,10 +70,12 @@ pub struct IpgTogglerStyle {
     pub id: usize,
     pub background_color: Option<Color>,
     pub background_color_toggled: Option<Color>,
+    pub background_color_disabled: Option<Color>,
     pub background_border_color: Option<Color>,
     pub background_border_width: Option<f32>,
     pub foreground_color: Option<Color>,
     pub foreground_color_toggled: Option<Color>,
+    pub foreground_color_disabled: Option<Color>,
     pub foreground_border_color: Option<Color>,
     pub foreground_border_width: Option<f32>,
 }
@@ -84,10 +85,12 @@ impl IpgTogglerStyle {
         id: usize,
         background_color: Option<Color>,
         background_color_toggled: Option<Color>,
+        background_color_disabled: Option<Color>,
         background_border_color: Option<Color>,
         background_border_width: Option<f32>,
         foreground_color: Option<Color>,
         foreground_color_toggled: Option<Color>,
+        foreground_color_disabled: Option<Color>,
         foreground_border_color: Option<Color>,
         foreground_border_width: Option<f32>,
     ) -> Self {
@@ -95,10 +98,12 @@ impl IpgTogglerStyle {
             id,
             background_color,
             background_color_toggled,
+            background_color_disabled,
             background_border_color,
             background_border_width,
             foreground_color,
             foreground_color_toggled,
+            foreground_color_disabled,
             foreground_border_color,
             foreground_border_width,
         }
@@ -120,7 +125,14 @@ pub fn construct_toggler(tog: IpgToggler) -> Element<'static, app::Message> {
 
     let text_alignment = get_text_alignment(tog.text_alignment);
 
-    let ipg_tog: Element<TOGMessage> = Toggler::new(tog.label, tog.is_toggled, TOGMessage::Toggled)
+    let label = match tog.label {
+        Some(label) => label,
+        None => "".to_string(),
+    };
+
+    let ipg_tog: Element<TOGMessage> = Toggler::new(tog.is_toggled)
+                                                    .label(label)
+                                                    .on_toggle(TOGMessage::Toggled)
                                                     .size(tog.size)
                                                     .width(tog.width)
                                                     .text_size(tog.text_size)
@@ -337,6 +349,7 @@ pub fn get_styling(theme: &Theme, status: Status,
                 }
             }
         }
+        Status::Disabled => todo!(),
     }
 
     match status {
@@ -351,13 +364,14 @@ pub fn get_styling(theme: &Theme, status: Status,
             if is_toggled {
                 if style.foreground_color_toggled.is_some() {
                     tog_style.foreground = Color {
-                                                    a: 0.5,
-                                                    ..style.foreground_color_toggled.unwrap().into()
-                                                };
+                                                a: 0.5,
+                                                ..style.foreground_color_toggled.unwrap().into()
+                                            };
                 }
                 
             }
         }
+        Status::Disabled => todo!(),
     }
 
     tog_style
