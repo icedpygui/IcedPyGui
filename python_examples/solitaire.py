@@ -230,9 +230,10 @@ class solitaire:
                 count -= 1
         
         # add cards left to stock
-        for card in self.cards[0:count]:
+        for i, card in enumerate(self.cards[0:count+1]):
+            card["stock_pile"] = i
             file = f"{self.path}/{card.get('suite')}/{card.get('value')}.png"
-            self.ipg.add_image(parent_id=f"stack_stock_pile", 
+            self.stock.append(self.ipg.add_image(parent_id=f"stack_stock_pile", 
                                 image_path=file,
                                 width=self.card_width, 
                                 height=self.card_height,
@@ -240,7 +241,7 @@ class solitaire:
                                 mouse_pointer=IpgMousePointer.Grabbing,
                                 user_data=("card", card),
                                 on_press=self.card_selected,
-                                )
+                                ))
             
         # add a cover
         file = f"{self.path}/card_back.png"
@@ -251,7 +252,7 @@ class solitaire:
                             content_fit=IpgImageContentFit.Fill,
                             mouse_pointer=IpgMousePointer.Grabbing,
                             user_data=("cover", None),
-                            on_press=self.card_selected,
+                            on_press=self.new_cards,
                             )
 
     def card_selected(self, card_id, info):
@@ -272,11 +273,25 @@ class solitaire:
             self.selected = None
         self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
 
-    def new_cards(self):
-        print()
-        
-        
-        
+    def new_cards(self, card_id, info):
+        if len(self.stock) >= 3:
+            ids_to_move = self.stock[-3:] 
+            self.stock = self.stock[0:len(self.stock)-3]
+        elif len(self.stock) >= 2:
+            ids_to_move = self.stock[-2:]
+            self.stock = self.stock[0:len(self.stock)-2]
+        elif len(self.stock) >= 1:
+            ids_to_move = self.stock[-1:]
+            self.stock = self.stock[0:len(self.stock)-1]
+        else:
+            return
+        for wid in ids_to_move:
+            self.ipg.move_widget(window_id="main",
+                                 widget_id=wid,
+                                 target_container_id="stack_waste_pile",
+                                 target_position=None,
+                                )
+        self.waste.extend(ids_to_move)
         
 
 game = solitaire()
