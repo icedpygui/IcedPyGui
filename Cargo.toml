@@ -14,7 +14,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.21.2", features = ["extension-module"] }
-iced = { path = "../iced_8fb939b/", features = ["advanced", "canvas", "debug", "highlighter", "image", 
+iced = { git = "https://github.com/iced-rs/iced.git", rev= "8fb939b", features = ["advanced", "canvas", "debug", "highlighter", "image", 
                                         "lazy", "smol", "svg", "tokio", "multi-window", "auto-detect-theme"] }
 
 tokio = { version = "1.0", features = ["fs"]}
