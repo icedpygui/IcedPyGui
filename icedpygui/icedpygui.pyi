@@ -3032,7 +3032,8 @@ class IPG:
                     window_id: str,
                     widget_id: int,
                     target_container_id: str,
-                    target_position: Optional[int]=None,
+                    move_after: Optional[int]=None,
+                    move_before: Optional[int]=None,
                     ) -> None:
         """
         Moves a widget to another container
@@ -3045,7 +3046,9 @@ class IPG:
                 widget id in integer form.
             target_container_id: str)
                 target container id in string form.
-            target_position: Optional[int]
+            move_after: Optional[int]
+                target position, None = end of list.
+            move_before: Optional[int]
                 target position, None = end of list.
             
         Returns
