@@ -1,31 +1,18 @@
 from icedpygui import IPG
 
-move_ids = []
-target_ids = []
-
+ids = []
 
 
 def move_widget(btn_id, item):
     # equate the tuple items to help interpretation
-    move_id = item[0]
-    target_id = item[1]
+    widget_id = item[0]
+    container_id = item[1]
+    move_after = item[2]
+    move_before = item[3]
+
     # move the widget
-    ipg.move_widget("main", move_id, "col_1", target_id)
-    # clean up the indexes to maintain sync with the gui items
-    move_ids.remove(move_id)
+    ipg.move_widget("main", widget_id, container_id, move_after, move_before)
     
-    if target_id is None:
-        target_ids.append(move_id)
-    else:
-        # Note: inserting elements into a list will cause undefined behaviors
-        # unless you exit immediately after.  If you need to continue for some reason,
-        # note the index and then insert after leaving to loop.
-        print(target_ids)
-        for index, id in enumerate(target_ids):
-            if id == target_id:
-                target_ids.insert(index, move_id)
-                break
-        print(target_ids)
 
 ipg = IPG()
 
@@ -46,7 +33,7 @@ ipg.add_column(window_id="main",
                )
 
 for i in range(0, 10):
-    target_ids.append(ipg.add_text(parent_id="col_1", content=f"{i}"))
+    ids.append(ipg.add_text(parent_id="col_1", content=f"{i}"))
 
 ipg.add_space(parent_id="row", width=100.0)
 
@@ -54,9 +41,6 @@ ipg.add_column(window_id="main",
                container_id="col_2",
                parent_id="row",
                )
-
-for i in range(0, 10):
-    move_ids.append(ipg.add_text(parent_id="col_2", content=f"{i}"))
 
 
 ipg.add_column(window_id="main",
@@ -66,14 +50,19 @@ ipg.add_column(window_id="main",
 ipg.add_button(parent_id="move_btns",
                label="Move number 5 to end",
                on_press=move_widget,
-               user_data=(move_ids[5], None)
+               user_data=(ids[5], "col_1", None, None)
                )
 
 ipg.add_button(parent_id="move_btns",
-               label="Move number 6 after 4",
+               label="Move number 5 after 0",
                on_press=move_widget,
-               user_data=(move_ids[6], target_ids[5])
+               user_data=(ids[5], "col_1", ids[1], None)
                )
 
+ipg.add_button(parent_id="move_btns",
+               label="Move number 5 before 0",
+               on_press=move_widget,
+               user_data=(ids[5], "col_1", None, ids[0])
+               )
 
 ipg.start_session()

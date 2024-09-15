@@ -3820,15 +3820,85 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (window_id, widget_id, target_container_id, target_position))]
+    #[pyo3(signature = (window_id, 
+                        widget_id, 
+                        target_container_id, 
+                        move_after=None,
+                        move_before=None
+                        ))]
     fn move_widget(&self,
                     window_id: String,
                     widget_id: usize,
                     target_container_id: String,
-                    target_position: Option<usize>,
+                    move_after: Option<usize>,
+                    move_before: Option<usize>,
                     )
     {
-        move_widget(widget_id, target_container_id, target_position, window_id);
+        let mut state = access_state();
+
+        let container_str_id_opt = state.container_str_ids.get(&target_container_id);
+
+        let container_usize_id = match container_str_id_opt {
+            Some(id) => id.clone(),
+            None => panic!("move_widget: unable to find the target container id based on the id {}", target_container_id)
+        };
+
+        let window_id_usize_opt = state.windows_str_ids.get(&window_id);
+
+        let window_id_usize = match window_id_usize_opt {
+            Some(id) => id.clone(),
+            None => panic!("move_widget: unable to find the window_id using the id {}", window_id)
+        };
+
+        let window_widget_ids_opt = state.ids.get_mut(&window_id_usize);
+
+        let window_widget_ids = match window_widget_ids_opt {
+            Some(ids) => ids,
+            None => panic!("move_widget: unable to find widget using window_id {}", window_id)    
+        };
+
+        let mut before = false;
+        let pos_id = if move_after.is_some() {
+            move_after.unwrap()
+        } else if move_before.is_some() { 
+            before = true;
+            move_before.unwrap()
+        } else {
+            1_000_000
+        };
+
+        //  set some large numbers to break early
+        let mut found_index = 1_000_000;
+        let mut target_index: usize = 1_000_000;
+
+        for (i, ids) in window_widget_ids.iter_mut().enumerate() {
+            if ids.id == widget_id {
+                ids.parent_uid = container_usize_id;
+                ids.parent_id = target_container_id.clone();
+                found_index = i;
+            }
+            if ids.id == pos_id {
+                target_index = i
+            }
+            if found_index != 1_000_000 && (target_index != 1_000_000 || pos_id == 1_000_000) {
+                break;
+            }
+        }
+        
+        let move_ids = window_widget_ids.remove(found_index);
+        
+        if pos_id == 1_000_000 {
+            window_widget_ids.push(move_ids);
+        } else {
+            if before {
+                window_widget_ids.insert(target_index-1, move_ids);
+            } else {
+                window_widget_ids.insert(target_index, move_ids);
+            }
+        }  
+
+        drop(state);
+
     }
     
     #[pyo3(signature = (color))]
@@ -4302,66 +4372,6 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
             window_item_update(wnd, item, value);
         },
     }
-}
-
-fn move_widget(widget_id: usize, container_str_id: String, position_id: Option<usize>, window_id: String) {
-
-    let mut state = access_state();
-
-    let container_str_id_opt = state.container_str_ids.get(&container_str_id);
-
-    let container_usize_id = match container_str_id_opt {
-        Some(id) => id.clone(),
-        None => panic!("move_widget: unable to find the container id based on the contriner string id {}", container_str_id)
-    };
-
-    let window_id_usize_opt = state.windows_str_ids.get(&window_id);
-
-    let window_id_usize = match window_id_usize_opt {
-        Some(id) => id.clone(),
-        None => panic!("move_widget: unable to find the window_id using the id {}", window_id)
-    };
-
-    let window_widget_ids_opt = state.ids.get_mut(&window_id_usize);
-
-    let window_widget_ids = match window_widget_ids_opt {
-        Some(ids) => ids,
-        None => panic!("move_widget: unable to find widget using window_id {}", window_id)    
-    };
-
-    let pos_id = match position_id {
-        Some(id) => id,
-        None => 1_000_000,
-    };
-
-    //  set some large numbers to break early
-    let mut found_index = 1_000_000;
-    let mut target_index: usize = 1_000_000;
-
-    for (i, ids) in window_widget_ids.iter_mut().enumerate() {
-        if ids.id == widget_id {
-            ids.parent_uid = container_usize_id;
-            ids.parent_id = container_str_id.clone();
-            found_index = i;
-        }
-        if ids.id == pos_id {
-            target_index = i
-        }
-        if found_index != 1_000_000 && (target_index != 1_000_000 || pos_id == 1_000_000) {
-            break;
-        }
-    }
-    
-    let move_ids = window_widget_ids.remove(found_index);
-    
-    if pos_id == 1_000_000 {
-        window_widget_ids.push(move_ids);
-    } else {
-        window_widget_ids.insert(target_index, move_ids);
-    }  
-
-    drop(state);
-
 }
 
 fn set_state_cont_wnd_ids(state: &mut State, wnd_id: &String, cnt_str_id: String, 
