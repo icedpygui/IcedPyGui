@@ -2983,7 +2983,7 @@ class IPG:
 
     # *******************************all item ops**************************************
         
-    def delete_item(self, wid: int):
+    def delete_item(self, window_id: str, wid: int):
         """
         Deletes an item using the widgets id.
         Example: btn_id = add_button("Button")
@@ -2991,6 +2991,8 @@ class IPG:
 
         Parameters
         ----------
+        window_id: str
+            Window id in string form.
         wid: int
             The widget id of the widget to be updated.
 
@@ -2999,7 +3001,8 @@ class IPG:
         None
         """
 
-    def update_item(self, 
+    def update_item(self,
+                    window_id: str, 
                     wid: int, 
                     param: str, 
                     value: any,
@@ -3010,6 +3013,8 @@ class IPG:
         
         Parameters
         ----------
+        window_id: str
+            Window id in string form.
         wid: int
             The widget id of the widget to be updated.
         param: class property

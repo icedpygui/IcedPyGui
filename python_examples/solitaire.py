@@ -23,6 +23,8 @@ class solitaire:
         self.tableau: list=[1, 2, 3, 4, 5, 6, 7]
         self.status_id: int=0
         self.deal_amount: int=3
+        
+        self.stock_cover: int=0
 
         self.selected: int=None
         self.destination: int=None
@@ -210,7 +212,7 @@ class solitaire:
         for i in range(0, 7):
             last = self.tableau[i]-1
             for j in range(0, self.tableau[i]):
-                self.ipg.add_column(window_id="main",
+                card_col_wid = self.ipg.add_column(window_id="main",
                                     container_id=f"tab_col_1_{card_index}",
                                     parent_id=f"tab_stack_{i}",)
                 
@@ -274,7 +276,7 @@ class solitaire:
             
         # add a cover
         file = f"{self.path}/card_back.png"
-        self.ipg.add_image(parent_id=f"stack_stock_pile", 
+        self.stock_cover = self.ipg.add_image(parent_id=f"stack_stock_pile", 
                             image_path=file,
                             width=self.card_width, 
                             height=self.card_height,
@@ -300,7 +302,7 @@ class solitaire:
                 self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
                 return
 
-        # index >= 100 is foundation empty slot
+        # index >= 100 foundation is an empty slot
         if card_index >= 100 and bool(self.selected):
             fd_slot = card_index-100
             content = self.move_to_foundation(fd_slot)
@@ -320,7 +322,7 @@ class solitaire:
             self.selected = card_index
             return
         
-        # if a card is selected, then this selection is the destination
+        # if a card is selected, then this selection is the target
         if bool(self.selected):
             target_card = self.cards[card_index]
             origin_card = self.cards[self.selected]
@@ -330,10 +332,10 @@ class solitaire:
                 content = "You cannot place same colored cards on each other"
                 return
             
-            # are the card values i part
+            # are the card values 1 apart
             if origin_card.get("value") == target_card.get("value")-1:
                 content = f"Status: Target card {target_card.get('name')} {target_card.get('suite')}"
-                self.move_card(card_index)
+                self.move_between_tabs(target_card)
             else:
                 content = "The value of the selected card must be one less than the target card."
 
@@ -352,9 +354,12 @@ class solitaire:
         else:
             return
         for wid in ids_to_move:
-            self.move_card(wid, "stack_waste_pile"), None
+            self.move_card(wid, "stack_waste_pile", None)
             
         self.waste.extend(ids_to_move)
+        
+        if len(self.stock) == 0:
+            self.ipg.delete_item("main", self.stock_cover)
         
     def move_card(self, wid, tar_id, tar_pos):
         self.ipg.move_widget(window_id="main",
@@ -393,8 +398,17 @@ class solitaire:
         self.selected = None
         return content
             
-
+    def move_between_tabs(self, target_card):
+        origin_card = self.cards[self.selected]
         
+       
+        # get the current tab index and increment by 1
+        index = target_card.get("tab_index") + 1
+        tab_col = target_card.get("tab_column")
+        
+        self.cards[self.selected]["tab_column"] = tab_col
+        self.cards[self.selected]["tab_index"] = index
+        card = self.cards[self.selected]
 
 game = solitaire()
 game.start_game()
