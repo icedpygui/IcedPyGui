@@ -496,22 +496,12 @@ pub fn handle_window_closing(iced_id: window::Id, mode: window::Mode) -> bool {
         match state.containers.get_mut(&ipg_id) {
             Some(cnt) => {
                 match cnt {
-                    super::ipg_enums::IpgContainers::IpgCanvas(_) => (),
-                    super::ipg_enums::IpgContainers::IpgColumn(_) => (),
-                    super::ipg_enums::IpgContainers::IpgContainer(_) => (),
-                    super::ipg_enums::IpgContainers::IpgModal(_) => (),
-                    super::ipg_enums::IpgContainers::IpgMouseArea(_) => (),
-                    super::ipg_enums::IpgContainers::IpgOpaque(_) => (),
-                    super::ipg_enums::IpgContainers::IpgTable(_) => (),
-                    super::ipg_enums::IpgContainers::IpgRow(_) => (),
-                    super::ipg_enums::IpgContainers::IpgScrollable(_) => (),
-                    super::ipg_enums::IpgContainers::IpgStack(_) => (),
-                    super::ipg_enums::IpgContainers::IpgToolTip(_) => (),
                     super::ipg_enums::IpgContainers::IpgWindow(wnd) => {
                         if wnd.id == ipg_id_found {
                             wnd.mode = get_ipg_mode(mode);
                         }
                     },
+                    _ => ()
                 }
             },
             None => (),
