@@ -776,19 +776,9 @@ fn get_window_container(container_opt: Option<&IpgContainers>) -> &IpgWindow {
     };
 
     match container {
-        IpgContainers::IpgCanvas(_) => panic!("Wrong container"),
-        IpgContainers::IpgColumn(_) => panic!("Wrong container"),
-        IpgContainers::IpgContainer(_) => panic!("Wrong container"),
-        IpgContainers::IpgModal(_) => panic!("Wrong container"),
-        IpgContainers::IpgMouseArea(_) => panic!("Wrong container"),
-        IpgContainers::IpgOpaque(_) => panic!("Wrong container"),
-        IpgContainers::IpgTable(_) => panic!("Wrong container"),
-        IpgContainers::IpgRow(_) => panic!("Wrong container"),
-        IpgContainers::IpgScrollable(_) => panic!("Wrong container"),
-        IpgContainers::IpgStack(_) => panic!("Wrong container"),
-        IpgContainers::IpgToolTip(_) => panic!("Wrong container"),
         IpgContainers::IpgWindow(wnd) => {
             wnd
         },
+        _ => panic!("get_window: Not a Window")
     }
 }
