@@ -1,5 +1,5 @@
 //!lib for all of the python callable functions using pyo3
-use ipg_widgets::ipg_canvas::{IpgArc, IpgBezier, IpgCanvas, IpgCircle, IpgEllipse, IpgGeometry, IpgLine, IpgRectangle};
+use ipg_widgets::ipg_canvas::{CurveStatus, DrawCurve, IpgArc, IpgBezier, IpgCanvas, IpgCanvasMode, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgGeometry, IpgLine, IpgRectangle};
 use ipg_widgets::ipg_modal::IpgModal;
 use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, IpgOpaqueParam, IpgOpaqueStyle};
 use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
@@ -149,8 +149,6 @@ pub struct State {
     pub text_input_style: Lazy<HashMap<String, IpgTextInputStyle>>,
     pub toggler_style: Lazy<HashMap<String, IpgTogglerStyle>>,
     pub scrollable_style: Lazy<HashMap<String, IpgScrollableStyle>>,
-
-    pub geometries: Lazy<HashMap<usize, Vec<IpgGeometry>>>,
 }
 
 pub static STATE: Mutex<State> = Mutex::new(
@@ -169,7 +167,6 @@ pub static STATE: Mutex<State> = Mutex::new(
         widgets: Lazy::new(||HashMap::new()),
         widget_container_ids: Lazy::new(||HashMap::new()),
 
-        
         windows: vec![],
         windows_iced_ipg_ids: Lazy::new(||HashMap::new()),
         windows_str_ids: Lazy::new(||HashMap::new()),
@@ -194,8 +191,6 @@ pub static STATE: Mutex<State> = Mutex::new(
         text_input_style: Lazy::new(||HashMap::new()),
         toggler_style: Lazy::new(||HashMap::new()),
         scrollable_style: Lazy::new(||HashMap::new()),
-
-        geometries: Lazy::new(||HashMap::new()),
     }
 );
 
@@ -203,6 +198,53 @@ pub fn access_state() -> MutexGuard<'static, State> {
     STATE.lock().unwrap()
 }
 
+#[derive(Debug)]
+pub struct CanvasState {
+    pub geometries: Lazy<HashMap<String, Vec<IpgGeometry>>>,
+    pub escape_pressed: bool,
+    pub curve_index_to_edit: Option<usize>,
+    pub polygon_number: i8,
+    pub curve_editing: Option<DrawCurve>,
+    pub canvas_id: Option<String>,
+    pub mode: IpgCanvasMode,
+    pub selection: IpgCanvasWidget,
+    pub curves_update: bool,
+    pub return_curve: DrawCurve,
+}
+
+pub static CANVAS_STATE: Mutex<CanvasState> = Mutex::new(
+    CanvasState {
+        geometries: Lazy::new(||HashMap::new()),
+        escape_pressed: false,
+        curve_index_to_edit: None,
+        polygon_number: 0,
+        curve_editing: None,
+        canvas_id: None,
+        mode: IpgCanvasMode::New,
+        selection: IpgCanvasWidget::None,
+        curves_update: false,
+        return_curve: DrawCurve {
+            curve_type: IpgCanvasWidget::None,
+            mode: IpgCanvasMode::New,
+            status: CurveStatus::New,
+            from: Some(Point::ORIGIN),
+            to: Some(Point::ORIGIN),
+            control: Some(Point::ORIGIN),
+            points: vec![],
+            closed: false,
+            color: None,
+            width: 2.0,
+            fill: false,
+            edit_point_index: Some(0),
+            edit_index: Some(0),
+            
+        },
+    }
+);
+
+pub fn access_canvas_state() -> MutexGuard<'static, CanvasState> {
+    CANVAS_STATE.lock().unwrap()
+}
 
 #[derive(Debug, Clone)]
 pub struct IpgIds {
@@ -463,9 +505,11 @@ impl IPG {
 
         let mut state = access_state();
 
-        set_state_cont_wnd_ids(&mut state, &window_id, canvas_id, self.id, "add_canvas".to_string());
+        set_state_cont_wnd_ids(&mut state, &window_id, canvas_id.clone(), self.id, "add_canvas".to_string());
 
-        state.geometries.insert(id, vec![]);
+        let mut canvas_state = access_canvas_state();
+        canvas_state.geometries.insert(canvas_id, vec![]);
+        drop(canvas_state);
 
         state.containers.insert(self.id, IpgContainers::IpgCanvas(IpgCanvas::new(
                                                 id,
@@ -3959,7 +4003,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (canvas_id,
-                        center,
+                        center_xy,
                         radius,
                         start_angle,
                         end_angle,
@@ -3971,7 +4015,7 @@ impl IPG {
                         ))]
     fn add_arc(&mut self,
                     canvas_id: String,
-                    center: (f32, f32),
+                    center_xy: (f32, f32),
                     radius: f32,
                     start_angle: f32,
                     end_angle: f32,
@@ -3982,20 +4026,22 @@ impl IPG {
                     show: bool,
                     )  -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
-
         let mut state = access_state();
-
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id).clone();
-        let canvas_usize = if canvas_usize_opt.is_some() {
-            canvas_usize_opt.unwrap().clone()
-        } else {
-            panic!("Bezier: You need to define a canvas before adding geometries.")
-        };
+        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
         
-        let ipg_bezier = IpgGeometry::IpgArc(IpgArc::new(
+        if canvas_usize_opt.is_none() {
+            panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+        }
+        
+        let id = self.get_id(gen_id);
+        state.last_id = self.id;
+        drop(state);
+
+        let center = Point::new(center_xy.0, center_xy.1);
+
+        let arc = IpgGeometry::IpgArc(IpgArc::new(
                                                 id,
-                                                canvas_id,
+                                                canvas_id.clone(),
                                                 center,
                                                 radius,
                                                 start_angle,
@@ -4005,21 +4051,25 @@ impl IPG {
                                                 fill,
                                                 show,
                                             ));
+                                    
+        let mut canvas_state = access_canvas_state();
 
-        match state.geometries.get_mut(&canvas_usize) {
-            Some(can) => can.push(ipg_bezier),
-            None => panic!("Arc: unable to find the canvas using id {}.", canvas_usize)
+        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
+
+        if geometries_opt.is_none() {
+            canvas_state.geometries.insert(canvas_id, vec![arc]);
+        } else {
+            let geo_vec = geometries_opt.unwrap();
+            geo_vec.push(arc)
         }
-
-        state.last_id = self.id;
-        drop(state);
+        canvas_state.curves_update = true;
+        drop(canvas_state);
 
         Ok(id)
     }
 
     #[pyo3(signature = (canvas_id,
                         points,
-                        radius,
                         stroke_width,
                         color=None,
                         fill=false,
@@ -4029,7 +4079,6 @@ impl IPG {
     fn add_bezier(&mut self,
                     canvas_id: String,
                     points: ((f32, f32), (f32, f32), (f32, f32)),
-                    radius: f32,
                     stroke_width: f32,
                     color: Option<IpgColor>,
                     fill: bool,
@@ -4037,35 +4086,43 @@ impl IPG {
                     show: bool,
                     )  -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
-
         let mut state = access_state();
-
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id).clone();
-        let canvas_usize = if canvas_usize_opt.is_some() {
-            canvas_usize_opt.unwrap().clone()
-        } else {
-            panic!("Bezier: You need to define a canvas before adding geometries.")
-        };
+        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
         
-        let ipg_bezier = IpgGeometry::IpgBezier(IpgBezier::new(
+        if canvas_usize_opt.is_none() {
+            panic!("Bezier: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+        }
+        
+        let id = self.get_id(gen_id);
+        state.last_id = self.id;
+        drop(state);
+
+        let points = (Point::new(points.0.0, points.0.1),
+                                             Point::new(points.1.0, points.1.1),
+                                             Point::new(points.2.0, points.2.1));
+        
+        let bezier = IpgGeometry::IpgBezier(IpgBezier::new(
                                                 id,
-                                                canvas_id,
+                                                canvas_id.clone(),
                                                 points,
-                                                radius,
                                                 stroke_width,
                                                 color,
                                                 fill,
                                                 show,
                                             ));
 
-        match state.geometries.get_mut(&canvas_usize) {
-            Some(can) => can.push(ipg_bezier),
-            None => panic!("Bezier: unable to find the canvas using id {}.", canvas_usize)
-        }
+        let mut canvas_state = access_canvas_state();
 
-        state.last_id = self.id;
-        drop(state);
+        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
+
+        if geometries_opt.is_none() {
+            canvas_state.geometries.insert(canvas_id, vec![bezier]);
+        } else {
+            let geo_vec = geometries_opt.unwrap();
+            geo_vec.push(bezier)
+        }
+        canvas_state.curves_update = true;
+        drop(canvas_state);
 
         Ok(id)
     }
@@ -4090,21 +4147,23 @@ impl IPG {
                     show: bool,
                     )  -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
-
         let mut state = access_state();
-
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id).clone();
-        let canvas_usize = if canvas_usize_opt.is_some() {
-            canvas_usize_opt.unwrap().clone()
-        } else {
-            panic!("Circle: You need to define a canvas before adding geometries.")
-        };
+        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
         
-        let ipg_circle = IpgGeometry::IpgCircle(IpgCircle::new(
+        if canvas_usize_opt.is_none() {
+            panic!("Circle: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+        }
+        
+        let id = self.get_id(gen_id);
+        state.last_id = self.id;
+        drop(state);
+        
+        let center = Point::new(center_xy.0, center_xy.1);
+
+        let circle = IpgGeometry::IpgCircle(IpgCircle::new(
                                                 id,
-                                                canvas_id,
-                                                center_xy,
+                                                canvas_id.clone(),
+                                                center,
                                                 radius,
                                                 stroke_width,
                                                 color,
@@ -4112,19 +4171,24 @@ impl IPG {
                                                 show,
                                             ));
 
-        match state.geometries.get_mut(&canvas_usize) {
-            Some(can) => can.push(ipg_circle),
-            None => panic!("Circle: unable to find the canvas using id {}.", canvas_usize)
-        }
+        let mut canvas_state = access_canvas_state();
 
-        state.last_id = self.id;
-        drop(state);
+        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
+
+        if geometries_opt.is_none() {
+            canvas_state.geometries.insert(canvas_id, vec![circle]);
+        } else {
+            let geo_vec = geometries_opt.unwrap();
+            geo_vec.push(circle)
+        }
+        canvas_state.curves_update = true;
+        drop(canvas_state);
 
         Ok(id)
     }
 
     #[pyo3(signature = (canvas_id,
-                        center,
+                        center_xy,
                         radii,
                         rotation,
                         start_angle,
@@ -4137,7 +4201,7 @@ impl IPG {
                         ))]
     fn add_ellipse(&mut self,
                     canvas_id: String,
-                    center: (f32, f32),
+                    center_xy: (f32, f32),
                     radii: (f32, f32),
                     rotation: f32,
                     start_angle: f32,
@@ -4149,20 +4213,23 @@ impl IPG {
                     show: bool,
                     )  -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
-
         let mut state = access_state();
-
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id).clone();
-        let canvas_usize = if canvas_usize_opt.is_some() {
-            canvas_usize_opt.unwrap().clone()
-        } else {
-            panic!("Ellipse: You need to define a canvas before adding geometries.")
-        };
+        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
         
-        let ipg_ellipse = IpgGeometry::IpgEllipse(IpgEllipse::new(
+        if canvas_usize_opt.is_none() {
+            panic!("Ellipse: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+        }
+        
+        let id = self.get_id(gen_id);
+        state.last_id = self.id;
+        drop(state);
+
+        let center = Point::new(center_xy.0, center_xy.1);
+        let radii = Point::new(radii.0, radii.1);
+        
+        let ellipse = IpgGeometry::IpgEllipse(IpgEllipse::new(
                                                 id,
-                                                canvas_id,
+                                                canvas_id.clone(),
                                                 center,
                                                 radii,
                                                 rotation,
@@ -4174,19 +4241,25 @@ impl IPG {
                                                 show,
                                             ));
 
-        match state.geometries.get_mut(&canvas_usize) {
-            Some(can) => can.push(ipg_ellipse),
-            None => panic!("Ellipse: unable to find the canvas using id {}.", canvas_usize)
+        let mut canvas_state = access_canvas_state();
+
+        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
+
+        if geometries_opt.is_none() {
+            canvas_state.geometries.insert(canvas_id, vec![ellipse]);
+        } else {
+            let geo_vec = geometries_opt.unwrap();
+            geo_vec.push(ellipse)
         }
-
-        state.last_id = self.id;
-        drop(state);
-
+        canvas_state.curves_update = true;
+        drop(canvas_state);
+        
         Ok(id)
     }
 
     #[pyo3(signature = (canvas_id,
-                        points,
+                        start,
+                        end,
                         stroke_width,
                         color=None,
                         gen_id=None,
@@ -4194,40 +4267,48 @@ impl IPG {
                         ))]
     fn add_line(&mut self,
                     canvas_id: String,
-                    points: Vec<(f32, f32)>,
+                    start: (f32, f32),
+                    end: (f32, f32),
                     stroke_width: f32,
                     color: Option<IpgColor>,
                     gen_id: Option<usize>,
                     show: bool,
                     )  -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
-
         let mut state = access_state();
-
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id).clone();
-        let canvas_usize = if canvas_usize_opt.is_some() {
-            canvas_usize_opt.unwrap().clone()
-        } else {
-            panic!("Line: You need to define a canvas before adding geometries.")
-        };
+        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
         
-        let ipg_line = IpgGeometry::IpgLine(IpgLine::new(
+        if canvas_usize_opt.is_none() {
+            panic!("Line: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+        }
+        
+        let id = self.get_id(gen_id);
+        state.last_id = self.id;
+        drop(state);
+
+        let points = [Point::new(start.0, start.1), Point::new(end.0, end.1)];
+        
+        let line = IpgGeometry::IpgLine(IpgLine::new(
                                                 id,
-                                                canvas_id,
+                                                canvas_id.clone(),
                                                 points,
                                                 stroke_width,
                                                 color,
                                                 show,
                                             ));
 
-        match state.geometries.get_mut(&canvas_usize) {
-            Some(can) => can.push(ipg_line),
-            None => panic!("Line: unable to find the canvas using id {}.", canvas_usize)
-        }
+        let mut canvas_state = access_canvas_state();
 
-        state.last_id = self.id;
-        drop(state);
+        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
+
+        if geometries_opt.is_none() {
+            canvas_state.geometries.insert(canvas_id, vec![line]);
+        } else {
+            let geo_vec = geometries_opt.unwrap();
+            geo_vec.push(line)
+        }
+        canvas_state.curves_update = true;
+        drop(canvas_state);
 
         Ok(id)
     }
@@ -4254,21 +4335,23 @@ impl IPG {
                     show: bool,
                     )  -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
-
         let mut state = access_state();
-
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id).clone();
-        let canvas_usize = if canvas_usize_opt.is_some() {
-            canvas_usize_opt.unwrap().clone()
-        } else {
-            panic!("Rectangle: You need to define a canvas before adding geometries.")
-        };
+        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
         
-        let ipg_rect = IpgGeometry::IpgRectangle(IpgRectangle::new(
+        if canvas_usize_opt.is_none() {
+            panic!("Rectangle: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+        }
+        
+        let id = self.get_id(gen_id);
+        state.last_id = self.id;
+        drop(state);
+
+        let top_left = Point::new(top_left_xy.0, top_left_xy.1);
+        
+        let rect = IpgGeometry::IpgRectangle(IpgRectangle::new(
                                                 id,
-                                                canvas_id,
-                                                top_left_xy,
+                                                canvas_id.clone(),
+                                                top_left,
                                                 width,
                                                 height,
                                                 stroke_width,
@@ -4277,15 +4360,37 @@ impl IPG {
                                                 show,
                                             ));
 
-        match state.geometries.get_mut(&canvas_usize) {
-            Some(can) => can.push(ipg_rect),
-            None => panic!("Rectangle: unable to find the canvas using id {}.", canvas_usize)
-        }
+        let mut canvas_state = access_canvas_state();
 
-        state.last_id = self.id;
-        drop(state);
+        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
+
+        if geometries_opt.is_none() {
+            canvas_state.geometries.insert(canvas_id, vec![rect]);
+        } else {
+            let geo_vec = geometries_opt.unwrap();
+            geo_vec.push(rect)
+        }
+        canvas_state.curves_update = true;
+        drop(canvas_state);
 
         Ok(id)
+    }
+
+    #[pyo3(signature = (canvas_id,
+                        widget,
+                        mode,
+                        ))]
+    fn add_canvas_widget(& self,
+                        canvas_id: String,
+                        widget: IpgCanvasWidget,
+                        mode: IpgCanvasMode) 
+    {
+        let mut canvas_state = access_canvas_state();
+        canvas_state.canvas_id = Some(canvas_id);
+        canvas_state.selection = widget;
+        canvas_state.mode = mode;
+
+        drop(canvas_state);
     }
 }
 
@@ -4400,6 +4505,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgVerticalAlignment>()?;
     m.add_class::<IpgButtonArrow>()?;
     m.add_class::<IpgButtonParam>()?;
+    m.add_class::<IpgCanvasMode>()?;
+    m.add_class::<IpgCanvasWidget>()?;
     m.add_class::<IpgCardStyle>()?;
     m.add_class::<IpgCardParam>()?;
     m.add_class::<IpgColor>()?;
@@ -4524,4 +4631,10 @@ pub fn find_parent_uid(ipg_ids: &Vec<IpgIds>, parent_id: String) -> usize {
     panic!("Parent id {:?} not found in function find_parent_uid()", parent_id)
 }
 
-
+pub fn get_id() -> usize {
+    let mut state = access_state();
+    state.last_id += 1;
+    let id = state.last_id;
+    drop(state);
+    id
+}

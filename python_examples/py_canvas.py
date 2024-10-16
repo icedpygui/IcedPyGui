@@ -12,7 +12,7 @@ ipg.add_canvas(window_id="main", canvas_id="canvas",
                width_fill=True, height_fill=True)
 
 ipg.add_arc(canvas_id="canvas",
-               center=(300.0, 100.0),
+               center_xy=(300.0, 100.0),
                radius=50.0,
                start_angle=math.pi,
                end_angle=math.pi*2,
@@ -20,7 +20,6 @@ ipg.add_arc(canvas_id="canvas",
 
 ipg.add_bezier(canvas_id="canvas",
                points=((50.0, 200.0), (50.0, 125.0), (150.0, 200.0)),
-               radius=50.0,
                stroke_width=2.0)
 
 ipg.add_circle(canvas_id="canvas",
@@ -31,7 +30,7 @@ ipg.add_circle(canvas_id="canvas",
                fill=True)
 
 ipg.add_ellipse(canvas_id="canvas",
-                center=(100.0, 275.0),
+                center_xy=(100.0, 275.0),
                 radii=(60.0, 10.0),
                 rotation=math.pi,
                 start_angle=0.0,
@@ -40,7 +39,8 @@ ipg.add_ellipse(canvas_id="canvas",
                 )
 
 ipg.add_line(canvas_id="canvas",
-             points=[(50.0, 350.0), (300.0, 370.0)],
+             start=(50.0, 350.0), 
+             end=(300.0, 370.0),
              color=IpgColor.YELLOW,
              stroke_width=2.0,)
 
