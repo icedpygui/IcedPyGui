@@ -14,7 +14,7 @@ use iced::Color;
 use once_cell::sync::Lazy;
 
 
-use crate::ipg_widgets::ipg_canvas::{construct_canvas, IpgBuildCanvas};
+use crate::ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage, IpgBuildCanvas};
 use crate::ipg_widgets::ipg_events::{handle_window_closing, process_keyboard_events, process_mouse_events, process_touch_events, process_window_event};
 use crate::ipg_widgets::ipg_opaque::{construct_opaque, opaque_callback};
 use crate::ipg_widgets::ipg_stack::construct_stack;
@@ -57,6 +57,7 @@ use iced::widget::{scrollable, Space};
 #[derive(Debug, Clone)]
 pub enum Message {
     Button(usize, BTNMessage),
+    Canvas,
     Card(usize, CardMessage),
     CheckBox(usize, CHKMessage),
     DatePicker(usize, DPMessage),
@@ -162,6 +163,11 @@ impl App {
             },
             Message::Button(id, message) => {
                 button_callback(id, message);
+                get_tasks()
+            },
+            Message::Canvas => {
+                dbg!("message canvas");
+                canvas_callback();
                 get_tasks()
             },
             Message::Card(id, message) => {

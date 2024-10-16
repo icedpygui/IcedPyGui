@@ -1,6 +1,7 @@
 from .icedpygui import IPG
 from .icedpygui import IpgAlignment, IpgHorizontalAlignment, IpgVerticalAlignment 
 from .icedpygui import IpgButtonArrow, IpgButtonParam
+from .icedpygui import IpgCanvasMode, IpgCanvasWidget
 from .icedpygui import IpgCardStyle, IpgCardParam
 from .icedpygui import IpgCheckboxParam
 from .icedpygui import IpgColor

@@ -110,6 +110,10 @@ class IPG:
                     height_fill: bool=False,
                     parent_id: Optional[str]=None,
                     gen_id: Optional[int]=None,
+                    border_show: bool=True,
+                    border_color: Optional[IpgColor]=None,
+                    border_width: float=2.0,
+                    background: Optional[IpgColor]=None,
                     show: bool=True,
                     )  -> int:
         """
@@ -3055,10 +3059,20 @@ class IPG:
         -------
         None
         """
-    
+    def add_canvas_widget(self,
+                          canvas_id: str,
+                          widget: IpgCanvasWidget, 
+                          mode: IpgCanvasMode
+                          ) -> int:
+        """
+        Dynamically adds a canvas widget to the canvas by using 
+        the mode behavior to place on the canvas.
+        """
+        
+        
     def add_arc(self,
                 canvas_id: str,
-                center: tuple[float, float],
+                center_xy: tuple[float, float],
                 radius: float,
                 start_angle: float,
                 end_angle: float,
@@ -3075,7 +3089,6 @@ class IPG:
     def add_bezier(self,
                     canvas_id: str,
                     points: tuple[tuple[float, float], tuple[float, float], tuple[float, float]],
-                    radius: float,
                     stroke_width: float,
                     color: Optional[IpgColor]=None,
                     fill: bool=False,
@@ -3122,7 +3135,7 @@ class IPG:
 
     def add_ellipse(self,
                 canvas_id: str,
-                center: tuple[float, float],
+                center_xy: tuple[float, float],
                 radii: tuple[float, float],
                 rotation: float,
                 start_angle: float,
@@ -3139,7 +3152,8 @@ class IPG:
 
     def add_line(self,
                 canvas_id: str,
-                points: list[tuple[float, float]],
+                start: tuple[float, float],
+                end: tuple[float, float],
                 stroke_width: float,
                 color: Optional[IpgColor]=None,
                 gen_id: Optional[int]=None,
@@ -3163,6 +3177,21 @@ class IPG:
         """
         Add a rectangle to the canvas.
         """
+    
+    def add_canvas_image(self,
+                    canvas_id: str,
+                    image_path: str,
+                    top_left_xy: tuple[float, float],
+                    width: float,
+                    height: float,
+                    gen_id: Optional[int]=None,
+                    show: bool=True,
+                    ) -> int:
+        """
+        Add an image to the canvas.
+        """    
+        
+        
 class IpgAlignment:
     """
     How items placed in a container or widget are aligned
@@ -3231,6 +3260,23 @@ class IpgButtonParam:
     WidthFill: bool
 
 
+class IpgCanvasWidget:
+    Bezier: str
+    Circle: str
+    Line: str
+    Polygon: str
+    Rectangle: str
+    RightTriangle: str
+    Triangle: str
+    
+
+class IpgCanvasMode:
+    New: str
+    Edit: str
+    Freehand: str 
+    PicknPlace: str
+    
+       
 class IpgCardStyle:
     """
     The standard styles for the card widget
