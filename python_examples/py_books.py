@@ -5,18 +5,17 @@ from icedpygui import IpgTextParam, IpgAlignment, IpgHorizontalAlignment, IpgVer
 from icedpygui import IpgButtonParam, IpgPickListParam, IpgDatePickerParam
 import polars as pl
 from datetime import datetime, date
+import os
 
 # Just to demo how one might use a large table, I have supplied my book list that
 # I have read over the last few years.  You may note that I'm a scifi reader but
 # am trying to expand more into thrillers and mystery with a touch of other genres.
 
-# Note:: The modal is not working at this time but should be up and going in about
-# a week after this is published.  When you press a button you will just get a dimmed
-# window for now.  I'll be adding a control row beneath the header for sorting and 
-# other types of actions or incorporate it into the her row itself.
+# Note:: I'll be adding a control row beneath the header for sorting and 
+# other types of actions or incorporate it into the header row itself.
 
 # Note: You will need to install polars and have the resource folder with the csv books file.
-#  I use polars vs pandas because its much faster for larger tables.
+# I use polars vs pandas because its much faster for larger tables.
 
 class Books:
     def __init__(self):
@@ -50,7 +49,8 @@ class Books:
         self.ipg.start_session()
 
     def load(self):
-        self.df = pl.read_csv("./python_demo/resources/books.csv",
+        cwd = os.getcwd();
+        self.df = pl.read_csv(f"{cwd}/python_examples/resources/books.csv",
                               try_parse_dates=False,
                               missing_utf8_is_empty_string=True)
         self.df = self.df.sort(["Author", "Series", "Num"])

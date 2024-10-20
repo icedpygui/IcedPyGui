@@ -1,4 +1,5 @@
 //! ipg_canvas
+#![allow(dead_code)]
 use iced::advanced::graphics::geometry::{Cache, Frame};
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Arc;
@@ -333,7 +334,6 @@ impl canvas::Program<app::Message> for IpgBuildCanvas {
                                     
                                 }
                                 IpgCanvasWidget::Line => {
-                                    dbg!("line");
                                     if canvas_state.return_curve.from.is_none() {
                                         canvas_state.return_curve.from = Some(cursor_position);
                                     } else if canvas_state.return_curve.to.is_none() {
@@ -341,10 +341,9 @@ impl canvas::Program<app::Message> for IpgBuildCanvas {
                                         // finalize the curve
                                         canvas_state.return_curve.status = CurveStatus::Complete;
                                     }
-                                    if canvas_state.return_curve.status != CurveStatus::Complete {
-                                        drop(canvas_state);
-                                        return (event::Status::Captured, Some(app::Message::Canvas))
-                                    }
+                                    // if canvas_state.return_curve.status != CurveStatus::Complete {
+                                    //     return (event::Status::Captured, Some(app::Message::Canvas))
+                                    // }
                                 },
                                 IpgCanvasWidget::Polygon => {
                                     if return_curve.from.is_none() {
@@ -527,6 +526,8 @@ impl canvas::Program<app::Message> for IpgBuildCanvas {
                             canvas_state.geometries.insert(canvas_id, vec![geometry]);
                         }
                         canvas_state.return_curve = DrawCurve::default();
+                        canvas_state.curves_update = true;
+                        
                     }
                     
                     drop(canvas_state);
@@ -539,210 +540,205 @@ impl canvas::Program<app::Message> for IpgBuildCanvas {
     }    
 
     fn draw(&self, _state: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _cursor: mouse::Cursor) -> Vec<Geometry> {
-        
-        let canvas_state = access_canvas_state();
-        // if !canvas_state.curves_update {
-        //     drop(canvas_state);
-        //     return vec![]
-        // }
+        let mut canvas_state = access_canvas_state();
+        if canvas_state.curves_update {
+            self.cache.clear();
+        }
         
         // let mut frame_vec: Vec<Geometry> = vec![];
         let palette_color = theme.palette().text;
 
         let content =
-                self.cache.draw(renderer, bounds.size(), |frame| { 
+            self.cache.draw(renderer, bounds.size(), |frame| { 
+            
+            for (_canvas, geometries) in canvas_state.geometries.iter() {
+                for geometry in geometries {
+                    match geometry {
+                        IpgGeometry::IpgArc(ac) => {
+                            // let mut frame = Frame::new(renderer, bounds.size());
+                            let center = Point::from(ac.center);
 
-        for (_canvas, geometries) in canvas_state.geometries.iter() {
-            for geometry in geometries {
-                match geometry {
-                    IpgGeometry::IpgArc(ac) => {
-                        // let mut frame = Frame::new(renderer, bounds.size());
-                        let center = Point::from(ac.center);
-
-                        let arc = Path::new(|p| {
-                            p.arc(Arc { center, radius: ac.radius, start_angle: Radians(ac.start_angle), end_angle: Radians(ac.end_angle) })
-                        });
-
-                        let color = if ac.color.is_some() {
-                            match_ipg_color(ac.color.clone().unwrap())
-                        } else {
-                            palette_color
-                        };
-
-                        let style = Style::Solid(color);
-
-                        let stroke = Stroke{ style, width: ac.stroke_width, ..Default::default()};
-
-                        if ac.fill {
-                            frame.fill(&arc, Fill {
-                                style,
-                                ..Fill::default()
+                            let arc = Path::new(|p| {
+                                p.arc(Arc { center, radius: ac.radius, start_angle: Radians(ac.start_angle), end_angle: Radians(ac.end_angle) })
                             });
-                        } else {
-                            frame.stroke(&arc, stroke);
-                        }
-                        
-                        // frame_vec.push(frame.into_geometry());
-                    },
-                    IpgGeometry::IpgBezier(bz) => {
-                        // let mut frame = Frame::new(renderer, bounds.size());
-                        let start = Point::from(bz.points.0);
-                        let cp = Point::from(bz.points.1);
-                        let end = Point::from(bz.points.2);
-                        
-                        let bezier = Path::new(|p| {
-                            p.move_to(start);
-                            p.quadratic_curve_to(cp, end);
-                        });
-                        
-                        let color = if bz.color.is_some() {
-                            match_ipg_color(bz.color.clone().unwrap())
-                        } else {
-                            palette_color
-                        };
 
-                        let style = Style::Solid(color);
+                            let color = if ac.color.is_some() {
+                                match_ipg_color(ac.color.clone().unwrap())
+                            } else {
+                                palette_color
+                            };
 
-                        let stroke = Stroke{ style, width: bz.stroke_width, ..Default::default()};
+                            let style = Style::Solid(color);
 
-                        if bz.fill {
-                            frame.fill(&bezier, Fill {
-                                style,
-                                ..Fill::default()
+                            let stroke = Stroke{ style, width: ac.stroke_width, ..Default::default()};
+
+                            if ac.fill {
+                                frame.fill(&arc, Fill {
+                                    style,
+                                    ..Fill::default()
+                                });
+                            } else {
+                                frame.stroke(&arc, stroke);
+                            }
+                            
+                            // frame_vec.push(frame.into_geometry());
+                        },
+                        IpgGeometry::IpgBezier(bz) => {
+                            // let mut frame = Frame::new(renderer, bounds.size());
+                            let start = Point::from(bz.points.0);
+                            let cp = Point::from(bz.points.1);
+                            let end = Point::from(bz.points.2);
+                            
+                            let bezier = Path::new(|p| {
+                                p.move_to(start);
+                                p.quadratic_curve_to(cp, end);
                             });
-                        } else {
-                            frame.stroke(&bezier, stroke);
-                        }
+                            
+                            let color = if bz.color.is_some() {
+                                match_ipg_color(bz.color.clone().unwrap())
+                            } else {
+                                palette_color
+                            };
+
+                            let style = Style::Solid(color);
+
+                            let stroke = Stroke{ style, width: bz.stroke_width, ..Default::default()};
+
+                            if bz.fill {
+                                frame.fill(&bezier, Fill {
+                                    style,
+                                    ..Fill::default()
+                                });
+                            } else {
+                                frame.stroke(&bezier, stroke);
+                            }
+                            
+                            // frame_vec.push(frame.into_geometry());
+                        },
+                        IpgGeometry::IpgCircle(cir) => {
+                            // let mut frame = Frame::new(renderer, bounds.size());
+                            let point = Point::from(cir.center);
+                            
+                            let circle = Path::circle(point, cir.radius);
+
+                            let color = if cir.color.is_some() {
+                                match_ipg_color(cir.color.clone().unwrap())
+                            } else {
+                                palette_color
+                            };
+
+                            let style = Style::Solid(color);
+
+                            let stroke = Stroke{ style, width: cir.stroke_width, ..Default::default()};
+
+                            if cir.fill {
+                                frame.fill(&circle, Fill {
+                                    style,
+                                    ..Fill::default()
+                                });
+                            } else {
+                                frame.stroke(&circle, stroke);
+                            }
+                            
+                            // frame_vec.push(frame.into_geometry());
+                        },
+                        IpgGeometry::IpgEllipse(el) => {
+                            // let mut frame = Frame::new(renderer, bounds.size());
                         
-                        // frame_vec.push(frame.into_geometry());
-                    },
-                    IpgGeometry::IpgCircle(cir) => {
-                        // let mut frame = Frame::new(renderer, bounds.size());
-                        let point = Point::from(cir.center);
-                        
-                        let circle = Path::circle(point, cir.radius);
-
-                        let color = if cir.color.is_some() {
-                            match_ipg_color(cir.color.clone().unwrap())
-                        } else {
-                            palette_color
-                        };
-
-                        let style = Style::Solid(color);
-
-                        let stroke = Stroke{ style, width: cir.stroke_width, ..Default::default()};
-
-                        if cir.fill {
-                            frame.fill(&circle, Fill {
-                                style,
-                                ..Fill::default()
+                            let radii = Vector::from([el.radii.x, el.radii.y]);
+                            let rotation = Radians(el.rotation);
+                            let start_angle = Radians(el.start_angle);
+                            let end_angle = Radians(el.end_angle);
+                            
+                            let ellipse = Path::new(|p| {
+                                p.ellipse(Elliptical{ center: el.center, radii, rotation, start_angle, end_angle });
                             });
-                        } else {
-                            frame.stroke(&circle, stroke);
-                        }
+                            
+                            let color = if el.color.is_some() {
+                                match_ipg_color(el.color.clone().unwrap())
+                            } else {
+                                palette_color
+                            };
+
+                            let style = Style::Solid(color);
+
+                            let stroke = Stroke{ style, width: el.stroke_width, ..Default::default()};
+
+                            if el.fill {
+                                frame.fill(&ellipse, Fill {
+                                    style,
+                                    ..Fill::default()
+                                });
+                            } else {
+                                frame.stroke(&ellipse, stroke);
+                            }
+                            
+                            // frame_vec.push(frame.into_geometry());
+                        },
+                        IpgGeometry::IpgLine(ln) => {
+                            // let mut frame = Frame::new(renderer, bounds.size());
+                            let line = Path::line(ln.points[0].clone(), ln.points[1].clone());
+
+                            let color = if ln.color.is_some() {
+                                match_ipg_color(ln.color.clone().unwrap())
+                            } else {
+                                palette_color
+                            };
+
+                            let style = Style::Solid(color);
+
+                            let stroke = Stroke{ style, width: ln.stroke_width, ..Default::default()};
+                            
+                            frame.stroke(&line, stroke);
+                            
+                            // frame_vec.push(frame.into_geometry());
+                        },
+                        IpgGeometry::IpgPolygon(_poly) => todo!(),
+                        IpgGeometry::IpgRectangle(rect) => {
+                            // let mut frame = Frame::new(renderer, bounds.size());
+                            let size = iced::Size { width: rect.width, height: rect.height };
+                            let rectangle = Path::rectangle(rect.top_left, size);
+
+                            let color = if rect.color.is_some() {
+                                match_ipg_color(rect.color.clone().unwrap())
+                            } else {
+                                palette_color
+                            };
+
+                            let style = Style::Solid(color);
+
+                            let stroke = Stroke{ style, width: rect.stroke_width, ..Default::default()};
+                            
+                            if rect.fill {
+                                frame.fill(&rectangle, Fill {
+                                    style,
+                                    ..Fill::default()
+                                });
+                            } else {
+                                frame.stroke(&rectangle, stroke);
+                            }
+                            
+                            // frame_vec.push(frame.into_geometry());
+                        },
+                        IpgGeometry::None => (),
                         
-                        // frame_vec.push(frame.into_geometry());
-                    },
-                    IpgGeometry::IpgEllipse(el) => {
-                        // let mut frame = Frame::new(renderer, bounds.size());
-                       
-                        let radii = Vector::from([el.radii.x, el.radii.y]);
-                        let rotation = Radians(el.rotation);
-                        let start_angle = Radians(el.start_angle);
-                        let end_angle = Radians(el.end_angle);
-                        
-                        let ellipse = Path::new(|p| {
-                            p.ellipse(Elliptical{ center: el.center, radii, rotation, start_angle, end_angle });
-                        });
-                        
-                        let color = if el.color.is_some() {
-                            match_ipg_color(el.color.clone().unwrap())
-                        } else {
-                            palette_color
-                        };
+                        IpgGeometry::IpgTriangle(_tri) => {
 
-                        let style = Style::Solid(color);
+                        },
+                        IpgGeometry::IpgRightTriangle(_r_tri) => {
 
-                        let stroke = Stroke{ style, width: el.stroke_width, ..Default::default()};
-
-                        if el.fill {
-                            frame.fill(&ellipse, Fill {
-                                style,
-                                ..Fill::default()
-                            });
-                        } else {
-                            frame.stroke(&ellipse, stroke);
-                        }
-                        
-                        // frame_vec.push(frame.into_geometry());
-                    },
-                    IpgGeometry::IpgLine(ln) => {
-                        // let mut frame = Frame::new(renderer, bounds.size());
-                        let line = Path::line(ln.points[0].clone(), ln.points[1].clone());
-
-                        let color = if ln.color.is_some() {
-                            match_ipg_color(ln.color.clone().unwrap())
-                        } else {
-                            palette_color
-                        };
-
-                        let style = Style::Solid(color);
-
-                        let stroke = Stroke{ style, width: ln.stroke_width, ..Default::default()};
-                        
-                        frame.stroke(&line, stroke);
-                        
-                        // frame_vec.push(frame.into_geometry());
-                    },
-                    IpgGeometry::IpgPolygon(_poly) => todo!(),
-                    IpgGeometry::IpgRectangle(rect) => {
-                        // let mut frame = Frame::new(renderer, bounds.size());
-                        let size = iced::Size { width: rect.width, height: rect.height };
-                        let rectangle = Path::rectangle(rect.top_left, size);
-
-                        let color = if rect.color.is_some() {
-                            match_ipg_color(rect.color.clone().unwrap())
-                        } else {
-                            palette_color
-                        };
-
-                        let style = Style::Solid(color);
-
-                        let stroke = Stroke{ style, width: rect.stroke_width, ..Default::default()};
-                        
-                        if rect.fill {
-                            frame.fill(&rectangle, Fill {
-                                style,
-                                ..Fill::default()
-                            });
-                        } else {
-                            frame.stroke(&rectangle, stroke);
-                        }
-                        
-                        // frame_vec.push(frame.into_geometry());
-                    },
-                    IpgGeometry::None => (),
-                    
-                    IpgGeometry::IpgTriangle(_tri) => {
-
-                    },
-                    IpgGeometry::IpgRightTriangle(_r_tri) => {
-
-                    },
+                        },
+                    }
                 }
+                frame.stroke(
+                    &Path::rectangle(Point::ORIGIN, frame.size()),
+                    Stroke::default()
+                        .with_width(2.0)
+                        .with_color(theme.palette().text),
+                    );
             }
-            frame.stroke(
-                &Path::rectangle(Point::ORIGIN, frame.size()),
-                Stroke::default()
-                    .with_width(2.0)
-                    .with_color(theme.palette().text),
-                );
-        }
-        // canvas_state.curves_update = false;
-        drop(canvas_state);
         });
-        
-        let mut canvas_state = access_canvas_state();
+
         let curve = canvas_state.return_curve.clone();
         canvas_state.curves_update = false;
         let pending = match curve.curve_type {
@@ -904,11 +900,8 @@ impl canvas::Program<app::Message> for IpgBuildCanvas {
                 
             },
         };
-        // let mut frame = Frame::new(renderer, bounds.size());
-        
-        // frame_vec.push(frame.into_geometry());
 
-        drop(canvas_state);
+    drop(canvas_state);
        
     if pending.is_some() {
         vec![content, pending.unwrap().into_geometry()]

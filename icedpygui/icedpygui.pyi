@@ -2390,15 +2390,27 @@ class IPG:
                     row_highlight: Optional[IpgTableRowHighLight]=None,
                     highlight_amount: float=0.15,
                     column_widths: list=[50.0],
-                    button_style: Optional[Dict[int: IpgStyleStandard]]=None,
-                    widgets_columns: Optional[Dict[int: list[IpgTableWidget]]]=None,
+                    button_fill_columns: Optional[list[int]],
+                    checkbox_fill_columns: Optional[list[int]],
+                    toggler_fill_columns: Optional[list[int]],
+                    mixed_widgets_columns: Optional[Dict[int: list[IpgTableWidget]]]=None,
+                    button_fill_style_id: Optional[str]=None,
+                    button_fill_standard_style: Optional[IpgStyleStandard]=None,
+                    checkbox_fill_style_id: Optional[str]=None,
+                    checkbox_fill_standard_style: Optional[IpgStyleStandard]=None,
+                    toggler_fill_style_id: Optional[str]=None,
+                    mixed_widgets_column_style_ids: Optional[Dict[int, list[str]]]=None,
                     gen_id: Optional[int]=None,
-                    on_button: Optional[Callable]=None,
-                    on_checkbox: Optional[Callable]=None,
-                    on_modal: Optional[Callable]=None,
-                    on_toggler: Optional[Callable]=None,
-                    show: bool=True, 
-                    user_data: Optional[Any]=None,
+                    on_button: Optional[Any]=None,
+                    on_checkbox: Optional[Any]=None,
+                    on_toggler: Optional[Any]=None,
+                    on_scroll: Optional[Any]=None,
+                    show: bool=True,
+                    modal_show=False,
+                    button_user_data: Optional[Any]=None,
+                    checkbox_user_data: Optional[Any]=None,
+                    toggler_user_data: Optional[Any]=None,
+                    scroller_user_data: Optional[Any]=None,
                   ) -> int:
 
         """
@@ -4399,3 +4411,4 @@ class IpgButtonArrow:
     ArrowsFullscreen=''
     ArrowsMove=''
     ArrowsVertical=''
+ # type: ignore
