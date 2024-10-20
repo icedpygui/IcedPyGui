@@ -427,20 +427,23 @@ class Demo:
         # This probably covers the vast majority of needs.  If you need that mixed column, convert
         # the list to a string.  When the final version is displayed, it's converted to a string anyway.
         data = [{"Button": col0},
-                {"ChkBox": col1},
+                {"CheckBox": col1},
                 {"Col2": col2},
                 {"Col3": col3},
                 {"Col4": col4},
                 {"Col5": col5}]
 
-    
+        column_widths = [75.0, 100.0, 100.0, 100.0, 100.0, 100.0]
+        tbl_width = sum(column_widths)
+        
         # The table is added.
         self.ipg.add_table(window_id=self.wnd_2,
                             table_id="table", 
                             title="My Table", 
                             data=data,
-                            column_widths=[75.0, 50.0, 100.0, 100.0, 100.0, 100.0],
-                            width=600.0, height=300.0, 
+                            column_widths=column_widths,
+                            width=tbl_width, 
+                            height=300.0, 
                             row_highlight=IpgTableRowHighLight.Lighter,
                             data_length=len(col0),
                             button_fill_columns=[0],

@@ -3605,7 +3605,7 @@ impl IPG {
                         on_exit_window=None, on_left_press=None, on_left_release=None,
                         on_middle_press=None, on_middle_release=None,
                         on_right_press=None, on_right_release=None,
-                        on_middle_scroll_line=None, on_middle_scroll_pixel=None,
+                        on_middle_scroll_line=None,
                         user_data=None))]
     fn add_event_mouse(&mut self, 
                         enabled: bool,
@@ -3619,7 +3619,6 @@ impl IPG {
                         on_right_press: Option<PyObject>,
                         on_right_release: Option<PyObject>,
                         on_middle_scroll_line: Option<PyObject>,
-                        on_middle_scroll_pixel: Option<PyObject>,
                         user_data: Option<PyObject>,
                         ) -> PyResult<usize>
     {
@@ -3684,13 +3683,6 @@ impl IPG {
         match on_middle_scroll_line {
             Some(py) => {
                 callbacks.callback_events.insert((self.id, "middle scroll line".to_string()), py);
-            },
-            None => (),
-        }
-
-        match on_middle_scroll_pixel {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "middle scroll pixel".to_string()), py);
             },
             None => (),
         }

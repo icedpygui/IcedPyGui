@@ -6,8 +6,6 @@ ipg = IPG()
 
 # make a global var to hold some scroll data
 scroll_total_line_y = 0
-scroll_total_pixel_x = 0
-scroll_total_pixel_y = 0
 
 
 # The mouse move callback will fire when the window opens.
@@ -40,15 +38,6 @@ def mouse_button_scrolled_line(_mouse_id: int, name: str, scroll: dict, _user_da
                     f"{name} {scroll} total = {scroll_total_line_y}")
 
 
-# The scroll data is a dictionary
-def mouse_button_scrolled_pixel(_mouse_id: int, name: str, scroll: dict, _user_data: any):
-    global scroll_total_pixel_x
-    global scroll_total_pixel_y
-    scroll_total_pixel_x += scroll.get("x")
-    scroll_total_pixel_y += scroll.get("y")
-    ipg.update_item(text_for_scroll_pixel, IpgTextParam.Content, 
-                    f"{name} {scroll} total = x {scroll_total_pixel_x}, y {scroll_total_pixel_y}")
-
 # An event can be added at any time since they are not widgets or containers.
 ipg.add_event_mouse(enabled=True,
                     on_move=mouse_move,
@@ -59,7 +48,6 @@ ipg.add_event_mouse(enabled=True,
                     on_right_press=mouse_button_pressed,
                     on_right_release=mouse_button_released,
                     on_middle_scroll_line=mouse_button_scrolled_line,
-                    on_middle_scroll_pixel=mouse_button_scrolled_pixel,
                     user_data="Some Data",
                     )
 
@@ -80,7 +68,6 @@ text_for_moved = ipg.add_text(parent_id="col", content="Mouse position will be h
 text_for_pressed = ipg.add_text(parent_id="col", content="Button presses will show here")
 text_for_released = ipg.add_text(parent_id="col", content="Button releases will show here")
 text_for_scroll_line = ipg.add_text(parent_id="col", content="Button scroll line data will show here")
-text_for_scroll_pixel = ipg.add_text(parent_id="col", content="Button scroll pixel data will show here")
 text_for_user_data = ipg.add_text(parent_id="col", content="Button user data will show here")
 
 # Required to be the last widget sent to Iced,  If you start the program
