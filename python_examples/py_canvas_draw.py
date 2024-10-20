@@ -64,7 +64,7 @@ ipg.add_radio(parent_id="col", labels=widget_labels,
 
 ipg.add_line(canvas_id="canvas", 
              start=(0.0, 0.0), 
-             end=(250.0, 250.0),
+             end=(50.0, 50.0),
              stroke_width=2.0)
 
 

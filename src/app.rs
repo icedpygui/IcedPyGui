@@ -166,7 +166,6 @@ impl App {
                 get_tasks()
             },
             Message::Canvas => {
-                dbg!("message canvas");
                 canvas_callback();
                 get_tasks()
             },

@@ -315,8 +315,19 @@ pub fn get_standard_style(theme: &Theme, status: Status,
             }
             style
         },
-        Some(IpgStyleStandard::Text) => button::text(theme, status),
-        None => button::primary(theme, status),
+        Some(IpgStyleStandard::Text) => {
+            button::text(theme, status)
+        },
+        None => {
+            let mut style = button::primary(theme, status);
+            if border.is_some() {
+                style.border = border.unwrap();
+            }
+            if shadow.is_some() {
+                style.shadow = shadow.unwrap();
+            }
+            style
+        }
     }
 }
 
@@ -351,11 +362,11 @@ pub fn get_styling(theme: &Theme, status: Status,
     let mut base_style = button::primary(theme, status);
     let mut hover_style = button::primary(theme, status);
 
-    let mut style = IpgButtonStyle::default();
-
-    if style_opt.is_some() {
-        style = style_opt.unwrap().clone();
-    }
+    let style = if style_opt.is_some() {
+        style_opt.unwrap().clone()
+    } else {
+        IpgButtonStyle::default()
+    };
 
     if style.border_color.is_some() {
         border.color = style.border_color.unwrap();
@@ -370,22 +381,29 @@ pub fn get_styling(theme: &Theme, status: Status,
         shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
         shadow.blur_radius = style.shadow_blur_radius;
     }
-    
-    // style_standard overrides style
-    if style_standard.is_some() {
-        return get_standard_style(theme, status, 
+
+    // style_standard overrides style except for border and shadow
+    let style_standard = get_standard_style(theme, status, 
                                     style_standard, 
-                                    Some(border), Some(shadow))
-    }
+                                    Some(border), Some(shadow));
+    
+    base_style.background = if style.background_color.is_some() {
+        Some(style.background_color.unwrap().into())
+    } else {
+        style_standard.background
+    };
 
-    if style.background_color.is_some() {
-        base_style.background = Some(style.background_color.unwrap().into());
-    }
+    hover_style.background = if style.background_color_hovered.is_some() {
+        Some(style.background_color_hovered.unwrap().into())
+    } else {
+        style_standard.background
+    };
 
-    if style.background_color_hovered.is_some() {
-        hover_style.background = Some(style.background_color_hovered.unwrap().into());
-    }
+    base_style.border = border;
+    hover_style.border = border;
 
+    base_style.shadow = shadow;
+    hover_style.shadow = shadow;
 
     let style = match status {
         Status::Active | Status::Pressed => base_style,

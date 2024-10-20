@@ -10,7 +10,7 @@ use super::callbacks::{get_set_widget_callback_data,
     WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_padding_f32, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f32};
-use super::ipg_button;
+use super::{ipg_button, ipg_checkbox, ipg_toggle};
 use crate::style::styling::{lighten, darken};
 
 use iced::widget::scrollable::Viewport;
@@ -39,7 +39,9 @@ pub struct IpgTable {
         pub checkbox_ids: Vec<(usize, usize, usize, bool)>,
         pub toggler_ids: Vec<(usize, usize, usize, bool)>,
         pub button_fill_style_id: Option<String>,
+        pub button_fill_style_standard: Option<IpgStyleStandard>,
         pub checkbox_fill_style_id: Option<String>,
+        pub checkbox_fill_style_standard: Option<IpgStyleStandard>,
         pub toggler_fill_style_id: Option<String>,
         pub mixed_widgets_column_style_ids: Option<HashMap<usize, Vec<String>>>,
         pub modal_show: bool,
@@ -67,10 +69,13 @@ impl IpgTable {
         checkbox_ids: Vec<(usize, usize, usize, bool)>,
         toggler_ids: Vec<(usize, usize, usize, bool)>,
         button_fill_style_id: Option<String>,
+        button_fill_style_standard: Option<IpgStyleStandard>,
         checkbox_fill_style_id: Option<String>,
+        checkbox_fill_style_standard: Option<IpgStyleStandard>,
         toggler_fill_style_id: Option<String>,
         mixed_widgets_column_style_ids: Option<HashMap<usize, Vec<String>>>,
         show: bool,
+        modal_show: bool,
         button_user_data: Option<PyObject>,
         checkbox_user_data: Option<PyObject>,
         toggler_user_data: Option<PyObject>,
@@ -91,10 +96,12 @@ impl IpgTable {
             checkbox_ids,
             toggler_ids,
             button_fill_style_id,
+            button_fill_style_standard,
             checkbox_fill_style_id,
+            checkbox_fill_style_standard,
             toggler_fill_style_id,
             mixed_widgets_column_style_ids,
-            modal_show: false,
+            modal_show,
             show,
             button_user_data,
             checkbox_user_data,
@@ -305,6 +312,7 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
                                     col_width, 
                                     bl,
                                     table.button_fill_style_id.clone(),
+                                    table.button_fill_style_standard.clone(),
                                     );
             }
 
@@ -320,6 +328,7 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
                                     col_width, 
                                     bl,
                                     table.checkbox_fill_style_id.clone(),
+                                    table.checkbox_fill_style_standard.clone(),
                                     );
             }
 
@@ -335,6 +344,7 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
                                     col_width, 
                                     bl,
                                     table.toggler_fill_style_id.clone(),
+                                    None,
                                     );
             }
 
@@ -371,10 +381,6 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
                                             .align_x(Horizontal::Center)
                                             .into();
 
-    // let body: Element<Message> = Row::with_children(column_elements)
-    //                                     .width(Length::Fill)
-    //                                     .spacing(5.0)
-    //                                     .into();
     let content: Element<Message> = Column::with_children(content).into();
     let mousearea: Element<Message> =  mouse_area(center(
                         opaque(content))
@@ -433,14 +439,6 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
 }
 
 
-// fn fill_column(col_values: Vec<Element<'static, Message>>) -> Element<'static, Message> {
-
-//     Column::with_children(col_values)
-//                                             .align_x(Alignment::Center)
-//                                             .width(Length::Fill)
-//                                             .into()
-// }
-
 fn add_scroll(body: Element<'static, Message>, 
                 height: f32,
                 scroller_id: usize,
@@ -494,8 +492,9 @@ fn add_widget(widget_type: IpgTableWidget,
                 col_index: usize,
                 column_width: f32,
                 is_toggled: bool,
-                _style_id: Option<String>) 
-                -> Element<'static, Message> {
+                style_id: Option<String>,
+                style_standard: Option<IpgStyleStandard>
+                ) -> Element<'static, Message> {
 
     match widget_type {
         IpgTableWidget::Button => {
@@ -504,46 +503,49 @@ fn add_widget(widget_type: IpgTableWidget,
                                 .align_x(Horizontal::Center)
                                 .width(Length::Fixed(column_width));
 
-            let btn_style: Option<IpgStyleStandard> = Some(IpgStyleStandard::Primary);
+            // let btn_style: Option<IpgStyleStandard> = Some(IpgStyleStandard::Primary);
 
             let btn: Element<TableMessage> = 
                     Button::new(txt)
                                 .padding(Padding::ZERO)
-                                .width(Length::Shrink)
+                                .clip(true)
                                 .on_press(TableMessage::TableButton((row_index, col_index))) 
                                 .style(move|theme, status|
-                                    ipg_button::get_standard_style(theme, status, btn_style.clone(), 
-                                                                None, None))
+                                    ipg_button::get_styling(theme, status, style_id.clone(), 
+                                                                style_standard.clone()))
                                 .into(); 
-            btn.map(move |message| app::Message::Table(table_id, message))
+            let btn_mapped = btn.map(move |message| app::Message::Table(table_id, message));
+            container(btn_mapped).center_x(column_width).clip(true).into()
         },
         IpgTableWidget::Checkbox => {
             let chk: Element<TableMessage> = 
                     Checkbox::new(label, is_toggled)
-                                .width(Length::Fixed(column_width))
                                 .on_toggle(move|b| TableMessage::TableCheckbox(b, (row_index, col_index)))
+                                .style(move|theme, status|
+                                    ipg_checkbox::get_styling(theme, status, 
+                                                                style_id.clone(), 
+                                                                style_standard.clone(), 
+                                                                is_toggled))
                                 .into();
-            chk.map(move |message| app::Message::Table(table_id, message))
+            let chk_mapped = chk.map(move |message| app::Message::Table(table_id, message));
+            container(chk_mapped).width(column_width).center_x(Length::Fixed(column_width)).clip(true).into()
         },
         IpgTableWidget::Toggler => {
             let tog: Element<TableMessage> = Toggler::new(is_toggled)
                                     .label(label)
                                     .on_toggle(move|b| TableMessage::TableToggler(b, (row_index, col_index)))
-                                    .width(Length::Fixed(column_width))
+                                    .style(move|theme, status|
+                                    ipg_toggle::get_styling(theme, status, 
+                                                            style_id.clone()
+                                                            ))
                                     .into();
 
 
-            tog.map(move |message| app::Message::Table(table_id, message))
+            let tog_mapped = tog.map(move |message| app::Message::Table(table_id, message));
+            container(tog_mapped).width(column_width).center_x(Length::Fixed(column_width)).clip(true).into()
         }
     }
 }
-
-
-// fn get_checked(on_toggled: &Option<HashMap<usize, Vec<bool>>>, col_index: &usize, row_index: usize) -> bool {
-//     let toggled_hmap = on_toggled.as_ref().unwrap();
-//     let toggled = toggled_hmap.get(&col_index).unwrap();
-//     toggled[row_index]
-// }
 
 pub fn table_callback(table_id: usize, message: TableMessage) {
 

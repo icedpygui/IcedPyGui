@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgAlignment, IpgTableRowHighLight, IpgTableWidget
+from icedpygui import IPG, IpgAlignment, IpgTableRowHighLight, IpgTableWidget, IpgColor
 import random, os
 
 ipg = IPG()
@@ -16,9 +16,15 @@ def widget_toggler(tbl_id: int, index: tuple[int, int], on_toggle: bool):
     print(tbl_id, index, on_toggle)
 
 
+ipg.add_button_style("btn_style", border_radius=[10.0])
+ipg.add_checkbox_style("chk_style", border_width=3.0)
+ipg.add_toggler_style("tog_style",
+                      background_border_width=2.0, 
+                      background_border_color=IpgColor.YELLOW)
+
 # Add the window
 ipg.add_window(window_id="main", title="Table Demo", width=800, height=800,
-               pos_x=100, pos_y=25)
+               pos_x=100, pos_y=25, debug=True)
 
 # Add the container, since the table requires a width and height,
 # the container can shrink(default) to fit.
@@ -58,9 +64,9 @@ for i in range(0, 10):
 # the extraction occurs and life is wonderful.  If no existing type is found, then an error occurs.
 # Currently, not every variation is covered but that can be improved in future versions.
 # This probably covers the vast majorities needs.  If you need that mixed column, convert
-# the list to a string.  When the final version is displayed, it's converted to  a string anyway.
+# the list to a string.  When the final version is displayed, it's converted to a string to display anyway.
 data = [{"Button": col0},
-        {"CheckBox": col1},
+        {"CheckkBox": col1},
         {"Toggler": col2},
         {"Col3": col3},
         {"Col4": col4},
@@ -79,7 +85,7 @@ for _ in range(0, len(col0)):
     togglers.append(IpgTableWidget.Toggler)
 
 # It's best to make them the same,
-col_widths = [75, 75, 150, 75, 75, 75, 75]
+col_widths = [90, 100, 150, 75, 75, 75, 75]
 table_width = sum(col_widths)
 
 # The table is added.
@@ -94,8 +100,11 @@ ipg.add_table(window_id="main",
               height=300.0,
               row_highlight=IpgTableRowHighLight.Lighter,
               button_fill_columns=[0],
+              button_fill_style_id="btn_style",
               checkbox_fill_columns=[1],
+              checkbox_fill_style_id="chk_style",
               toggler_fill_columns=[2],
+              toggler_fill_style_id="tog_style",
               on_button=widget_button,
               on_checkbox=widget_checkbox,
               on_toggler=widget_toggler,

@@ -38,5 +38,6 @@
         "staticmethod",
         "venv"
     ],
-    "editor.selectionClipboard": false
+    "editor.selectionClipboard": false,
+    "rust-analyzer.hover.documentation.keywords.enable": true,
 }
