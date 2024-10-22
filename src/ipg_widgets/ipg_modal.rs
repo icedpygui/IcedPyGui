@@ -7,7 +7,7 @@ use iced::advanced::{self, Clipboard, Shell};
 use iced::alignment::Alignment;
 use iced::{event, Padding, Renderer, Theme};
 use iced::mouse;
-use iced::widget::{Button, Column};
+use iced::widget::{center, container, mouse_area, opaque, Button, Column};
 use iced::{Color, Element, Event, Length, Point, Rectangle, Size, Vector};
 use pyo3::{PyObject, Python};
 
@@ -72,38 +72,54 @@ pub enum ModalMessage {
 }
 
 
-pub fn construct_modal(modal: IpgModal, content: Vec<Element<'static, Message>> ) 
+pub fn construct_modal(mdl: IpgModal, content: Vec<Element<'static, Message>> ) 
             -> Element<'static, Message, Theme, Renderer> {
 
-    let label = Text::new(modal.label.clone());            
+    let label = Text::new(mdl.label.clone());            
     let button: Element<ModalMessage> = Button::new(label)
                                         .on_press(ModalMessage::OnOpen)
                                         .into();
 
 
     let btn: Element<Message, Theme, Renderer> = button.map(move |message| 
-                                                    app::Message::Modal(modal.id, message));
-                                                    
-    if modal.show {
-    let align_items = get_alignment(modal.align_items.clone());
+                                                    app::Message::Modal(mdl.id, message));
+    dbg!(&mdl.width, &mdl.height);                          
+    if mdl.show {
+        let align_items = get_alignment(mdl.align_items.clone());
 
-    let column: Element<Message, Theme, Renderer> = Column::with_children(content)
-                                        .align_x(align_items)
-                                        .height(modal.height)
-                                        .padding(modal.padding)
-                                        .spacing(modal.spacing)
-                                        .width(modal.width)
-                                        .clip(modal.clip)
-                                        .into();
-    
-    
-    let modal: Element<'static, Message, Theme, Renderer> = 
-                                    Modal::new(
-                                        btn, 
-                                        column
-                                    )
-                                    .into();
-    modal
+        let col: Element<Message, Theme, Renderer> = Column::with_children(content)
+                                            .align_x(align_items)
+                                            .width(mdl.width)
+                                            .height(mdl.height)
+                                            .padding(mdl.padding)
+                                            .spacing(mdl.spacing)
+                                            .clip(mdl.clip)
+                                            .into();
+        
+        let ml: Element<'static, Message, Theme, Renderer> = 
+            opaque(
+                mouse_area(center(opaque(col)).style(|_theme| {
+                    container::Style {
+                        background: Some(
+                            Color {
+                                a: 0.8,
+                                ..Color::BLACK
+                            }
+                            .into(),
+                        ),
+                        ..container::Style::default()
+                    }
+                }))
+                // .on_press(on_blur)
+            )
+            .into();
+                                        // Modal::new(
+                                        //     btn, 
+                                        //     column
+                                        // )
+                                        // .into();
+        dbg!("show");
+        ml
     } else {
         btn
     }            
@@ -173,7 +189,6 @@ pub fn process_callback(wco: WidgetCallbackOut)
     drop(app_cbs);
          
 }
-
 
 
 /// A widget that centers a modal element over some base element

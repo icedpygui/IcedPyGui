@@ -329,9 +329,6 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
         let container_opt = state.containers.get_mut(&wci.id);
         if container_opt.is_some() {
             match container_opt.unwrap() {
-                IpgContainers::IpgCanvas(_) => todo!(),
-                IpgContainers::IpgColumn(_) => todo!(),
-                IpgContainers::IpgContainer(_) => todo!(),
                 IpgContainers::IpgModal(modal) => {
                     let mut wco = WidgetCallbackOut::default();
                     modal.show = true;
@@ -339,9 +336,6 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     drop(state);
                     return wco
                 },
-                IpgContainers::IpgMouseArea(_) => todo!(),
-                IpgContainers::IpgOpaque(_) => todo!(),
-                IpgContainers::IpgStack(_) => todo!(),
                 IpgContainers::IpgTable(tbl) => {
                     let mut wco = WidgetCallbackOut::default();
                     if wci.value_str == Some("button".to_string()) {
@@ -400,10 +394,7 @@ pub fn get_set_widget_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut
                     
                     return wco
                 },
-                IpgContainers::IpgRow(_) => todo!(),
-                IpgContainers::IpgScrollable(_) => todo!(),
-                IpgContainers::IpgToolTip(_) => todo!(),
-                IpgContainers::IpgWindow(_) => todo!(),
+                _ => panic!("container not found")
             }
         }
     }

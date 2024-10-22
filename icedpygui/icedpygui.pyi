@@ -304,70 +304,70 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
 
-    def add_modal(self,
-                    window_id: str,
-                    container_id: str,
-                    label: str,
-                    *,
-                    parent_id: Optional[str]=None,
-                    on_open: Optional[Callable]=None,
-                    align_items: IpgAlignment=IpgAlignment.Start,
-                    width: Optional[float]=None,
-                    height: Optional[float]=None,
-                    width_fill: bool=False,
-                    height_fill: bool=False,
-                    max_width: float=float('inf'),
-                    padding: List=[10.0], 
-                    spacing: float=20.0,
-                    clip: bool=False,
-                    show: bool=True,
-                    ) -> int:
+    # def add_modal(self,
+    #                 window_id: str,
+    #                 container_id: str,
+    #                 label: str,
+    #                 *,
+    #                 parent_id: Optional[str]=None,
+    #                 on_open: Optional[Callable]=None,
+    #                 align_items: IpgAlignment=IpgAlignment.Start,
+    #                 width: Optional[float]=None,
+    #                 height: Optional[float]=None,
+    #                 width_fill: bool=False,
+    #                 height_fill: bool=False,
+    #                 max_width: float=float('inf'),
+    #                 padding: List=[10.0], 
+    #                 spacing: float=20.0,
+    #                 clip: bool=False,
+    #                 show: bool=True,
+    #                 ) -> int:
 
-        """ 
-        Adds a Column which is a container that distributes its contents vertically
+    #     """ 
+    #     Adds a Column which is a container that distributes its contents vertically
         
-        Parameters
-        ----------
-            window_id: str
-                Id of the window to place container in.
-            container_id: str
-                The id of the container.
-            label: str
-                Label for the button to open the modal.
-            parent_id: str
-                If parent_id == window_id then not required, 
-                If another container then required.
-            on_open: Optional[Callable]=None
+    #     Parameters
+    #     ----------
+    #         window_id: str
+    #             Id of the window to place container in.
+    #         container_id: str
+    #             The id of the container.
+    #         label: str
+    #             Label for the button to open the modal.
+    #         parent_id: str
+    #             If parent_id == window_id then not required, 
+    #             If another container then required.
+    #         on_open: Optional[Callable]=None
 
-            align_items: IpgColumnAlignment
-                Sets the vertical alignment of the items in the column; Start, Center, End.
-            width: float
-                Sets the width of the widget.
-            width_fill: bool
-                Sets the width to fill the available space, overrides width.
-            height: float
-                Sets the height of the widget.   
-            height_fill: bool
-                Sets the height to fill the available space, overrides height.
-            max_width: float
-                Sets the maximum width the container is allowed to be.
-            padding: List[float]
-                Sets the padding for container.
-                use [float] for all sides,
-                use [float, float] for [top&bottom, left&right]
-                use [float, float, float, float] for [top, right, bottom, left]
-            spacing: float
-                Sets the spacing between items in column.
-            clip: bool
-                Whether to clip any text if size > container.
-            show: bool
-                Shows or hides widget.
+    #         align_items: IpgColumnAlignment
+    #             Sets the vertical alignment of the items in the column; Start, Center, End.
+    #         width: float
+    #             Sets the width of the widget.
+    #         width_fill: bool
+    #             Sets the width to fill the available space, overrides width.
+    #         height: float
+    #             Sets the height of the widget.   
+    #         height_fill: bool
+    #             Sets the height to fill the available space, overrides height.
+    #         max_width: float
+    #             Sets the maximum width the container is allowed to be.
+    #         padding: List[float]
+    #             Sets the padding for container.
+    #             use [float] for all sides,
+    #             use [float, float] for [top&bottom, left&right]
+    #             use [float, float, float, float] for [top, right, bottom, left]
+    #         spacing: float
+    #             Sets the spacing between items in column.
+    #         clip: bool
+    #             Whether to clip any text if size > container.
+    #         show: bool
+    #             Shows or hides widget.
             
-        Returns
-        -------
-        id: int
-            Internal id of widget and can be used by user if equated.
-        """
+    #     Returns
+    #     -------
+    #     id: int
+    #         Internal id of widget and can be used by user if equated.
+    #     """
 
     def add_mousearea(self,
                         window_id: str,
@@ -3047,7 +3047,7 @@ class IPG:
     def move_widget(self,
                     window_id: str,
                     widget_id: int,
-                    target_container_id: str,
+                    target_container_str_id: str,
                     move_after: Optional[int]=None,
                     move_before: Optional[int]=None,
                     ) -> None:

@@ -24,7 +24,7 @@ ipg.add_toggler_style("tog_style",
 
 # Add the window
 ipg.add_window(window_id="main", title="Table Demo", width=800, height=800,
-               pos_x=100, pos_y=25, debug=True)
+               pos_x=100, pos_y=25)
 
 # Add the container, since the table requires a width and height,
 # the container can shrink(default) to fit.
