@@ -46,7 +46,7 @@ stack_id = ipg.add_stack(window_id="main",
                             )
 
 for i in range(1, 14):
-    # Adds the first container to the stack.
+    # Adds the column to the stack to hold the space and card.
     ipg.add_column(window_id="main",
                         container_id=f"col_{i}",
                         parent_id="stack",
@@ -54,6 +54,9 @@ for i in range(1, 14):
 
     file = f"{path}{i}.png"
 
+    # The space, whcich grows with each card, allows for an offset
+    # to be able to see all of the cards.  If not used, they are 
+    # stacked on top of each other.
     ipg.add_space(parent_id=f"col_{i}",
                   height=35*i-35)
 

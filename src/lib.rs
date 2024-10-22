@@ -1,8 +1,4 @@
 //!lib for all of the python callable functions using pyo3
-use ipg_widgets::ipg_canvas::{CurveStatus, DrawCurve, IpgArc, IpgBezier, IpgCanvas, IpgCanvasMode, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgGeometry, IpgLine, IpgRectangle};
-use ipg_widgets::ipg_modal::IpgModal;
-use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, IpgOpaqueParam, IpgOpaqueStyle};
-use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
 use palette::rgb::Rgb;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
@@ -26,6 +22,7 @@ mod graphics;
 mod style;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
+use ipg_widgets::ipg_canvas::{CurveStatus, DrawCurve, IpgArc, IpgBezier, IpgCanvas, IpgCanvasMode, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgGeometry, IpgLine, IpgRectangle};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyle, IpgCardParam};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle};
 use ipg_widgets::ipg_column::IpgColumn;
@@ -36,7 +33,9 @@ use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, Ip
     IpgImageParam, IpgImageRotation};
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParam, IpgMenuSeparatorStyle, 
     IpgMenuSeparatorType, IpgMenuBarStyle, IpgMenuStyle, IpgMenuType};
+// use ipg_widgets::ipg_modal::IpgModal;
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParam, IpgMousePointer};
+use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, IpgOpaqueParam, IpgOpaqueStyle};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListHandle, IpgPickListParam, IpgPickListStyle};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParam, IpgRadioStyle};
@@ -48,6 +47,7 @@ use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectabl
                                         IpgSelectableTextParam};
 use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParam, IpgSliderStyle};
 use ipg_widgets::ipg_space::IpgSpace;
+use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParam, IpgSvgRotation};
 use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam, IpgTableRowHighLight, IpgTableWidget,};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
@@ -700,76 +700,76 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (window_id, container_id, label,
-                        parent_id=None, on_open=None,
-                        align_items=IpgAlignment::Start, 
-                        width=None, height=None,
-                        width_fill=false, height_fill=false,
-                        max_width=f32::INFINITY, padding=vec![0.0], 
-                        spacing=10.0, clip=false, show=false,
-                        user_data=None,
-                        ))]
-    fn add_modal(&mut self,
-                        window_id: String,
-                        container_id: String,
-                        label: String,
-                        // **above required
-                        parent_id: Option<String>,
-                        on_open: Option<PyObject>,
-                        align_items: IpgAlignment,
-                        width: Option<f32>,
-                        height: Option<f32>,
-                        width_fill: bool,
-                        height_fill: bool,
-                        max_width: f32,
-                        padding: Vec<f64>,
-                        spacing: f32,
-                        clip: bool,
-                        show: bool,
-                        user_data: Option<PyObject>,
-                        ) -> PyResult<usize> 
-    {
+    // #[pyo3(signature = (window_id, container_id, label,
+    //                     parent_id=None, on_open=None,
+    //                     align_items=IpgAlignment::Start, 
+    //                     width=None, height=None,
+    //                     width_fill=false, height_fill=false,
+    //                     max_width=f32::INFINITY, padding=vec![0.0], 
+    //                     spacing=10.0, clip=false, show=false,
+    //                     user_data=None,
+    //                     ))]
+    // fn add_modal(&mut self,
+    //                     window_id: String,
+    //                     container_id: String,
+    //                     label: String,
+    //                     // **above required
+    //                     parent_id: Option<String>,
+    //                     on_open: Option<PyObject>,
+    //                     align_items: IpgAlignment,
+    //                     width: Option<f32>,
+    //                     height: Option<f32>,
+    //                     width_fill: bool,
+    //                     height_fill: bool,
+    //                     max_width: f32,
+    //                     padding: Vec<f64>,
+    //                     spacing: f32,
+    //                     clip: bool,
+    //                     show: bool,
+    //                     user_data: Option<PyObject>,
+    //                     ) -> PyResult<usize> 
+    // {
 
-        self.id += 1;
+    //     self.id += 1;
 
-        if on_open.is_some() {
-            add_callback_to_mutex(self.id, "on_open".to_string(), on_open);
-        }
+    //     if on_open.is_some() {
+    //         add_callback_to_mutex(self.id, "on_open".to_string(), on_open);
+    //     }
         
-        let width = get_width(width, width_fill);
-        let height = get_height(height, height_fill);
+    //     let width = get_width(width, width_fill);
+    //     let height = get_height(height, height_fill);
 
-        let padding = get_padding_f64(padding);
+    //     let padding = get_padding_f64(padding);
 
-        let prt_id = match parent_id {
-            Some(id) => id,
-            None => window_id.clone(),
-        };
+    //     let prt_id = match parent_id {
+    //         Some(id) => id,
+    //         None => window_id.clone(),
+    //     };
 
-        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
+    //     set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
 
-        let mut state = access_state();
+    //     let mut state = access_state();
 
-        set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_column".to_string());
+    //     set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_column".to_string());
 
-        state.containers.insert(self.id, IpgContainers::IpgModal(IpgModal::new(
-                                                                self.id,
-                                                                label,  
-                                                                show, 
-                                                                spacing, 
-                                                                padding, 
-                                                                width, 
-                                                                height, 
-                                                                max_width, 
-                                                                align_items,
-                                                                clip,
-                                                                user_data,
-                                                            )));
-        state.last_id = self.id;
-        drop(state);
-        Ok(self.id)
+    //     state.containers.insert(self.id, IpgContainers::IpgModal(IpgModal::new(
+    //                                                             self.id,
+    //                                                             label,  
+    //                                                             show, 
+    //                                                             spacing, 
+    //                                                             padding, 
+    //                                                             width, 
+    //                                                             height, 
+    //                                                             max_width, 
+    //                                                             align_items,
+    //                                                             clip,
+    //                                                             user_data,
+    //                                                         )));
+    //     state.last_id = self.id;
+    //     drop(state);
+    //     Ok(self.id)
 
-    }
+    // }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None, 
                         gen_id=None, mouse_pointer=None,
@@ -3867,25 +3867,25 @@ impl IPG {
 
     #[pyo3(signature = (window_id, 
                         widget_id, 
-                        target_container_id, 
+                        target_container_str_id, 
                         move_after=None,
                         move_before=None
                         ))]
     fn move_widget(&self,
                     window_id: String,
                     widget_id: usize,
-                    target_container_id: String,
+                    target_container_str_id: String,
                     move_after: Option<usize>,
                     move_before: Option<usize>,
                     )
     {
         let mut state = access_state();
 
-        let container_str_id_opt = state.container_str_ids.get(&target_container_id);
+        let container_str_id_opt = state.container_str_ids.get(&target_container_str_id);
 
         let container_usize_id = match container_str_id_opt {
             Some(id) => id.clone(),
-            None => panic!("move_widget: unable to find the target container id based on the id {}", target_container_id)
+            None => panic!("move_widget: unable to find the target container id based on the id {}", target_container_str_id)
         };
 
         let window_id_usize_opt = state.windows_str_ids.get(&window_id);
@@ -3919,7 +3919,7 @@ impl IPG {
         for (i, ids) in window_widget_ids.iter_mut().enumerate() {
             if ids.id == widget_id {
                 ids.parent_uid = container_usize_id;
-                ids.parent_id = target_container_id.clone();
+                ids.parent_id = target_container_str_id.clone();
                 found_index = i;
             }
             if ids.id == pos_id {
