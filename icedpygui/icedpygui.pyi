@@ -3018,7 +3018,6 @@ class IPG:
         """
 
     def update_item(self,
-                    window_id: str, 
                     wid: int, 
                     param: str, 
                     value: any,
@@ -3029,8 +3028,6 @@ class IPG:
         
         Parameters
         ----------
-        window_id: str
-            Window id in string form.
         wid: int
             The widget id of the widget to be updated.
         param: class property
