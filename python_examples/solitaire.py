@@ -1,7 +1,7 @@
 import os
 import random
 from icedpygui import IPG, IpgColor, IpgStackParam, IpgMousePointer, IpgImageContentFit
-from icedpygui import IpgTextParam
+from icedpygui import IpgTextParam, IpgImageParam
 
 
 def dump(obj):
@@ -24,7 +24,7 @@ class solitaire:
         self.status_id: int=0
         self.deal_amount: int=3
         
-        self.stock_cover: int=0
+        self.stock_cover_id: int=0
 
         self.selected: int=None
         self.destination: int=None
@@ -37,7 +37,7 @@ class solitaire:
                     width=800.0,
                     height=800.0,
                     pos_centered=True,
-                    # debug=True
+                    debug=True
                     )
         self.ipg.add_column(window_id="main",
                             container_id="main_col",
@@ -82,7 +82,13 @@ class solitaire:
                            container_id="stack_stock_pile",
                            parent_id="stock_pile",
                            width=self.card_width,
-                           height=self.card_height,)
+                           height=self.card_height)
+        self.ipg.add_mousearea(window_id="main",
+                                    container_id="mouse_stock_pile",
+                                    parent_id="stack_stock_pile",
+                                    mouse_pointer=IpgMousePointer.Grab,
+                                    on_press=self.reload_stock,
+                                    )
         
         # add the waste container to the row
         self.ipg.add_container(window_id="main",
@@ -130,6 +136,14 @@ class solitaire:
                                     padding=[0.0],
                                     style_id="stock_style")
 
+        # add a container off screen to hide widget that become unused, need if restart game used
+        self.ipg.add_space(parent_id="stock_row",
+                           width=50.0)
+        self.ipg.add_stack(window_id="main",
+                               container_id="hidden",
+                               parent_id="stock_row",
+                               show=False)
+
         # Add a space between the rows
         self.ipg.add_space(parent_id="main_col", height=20.0)
         self.status_id = self.ipg.add_text(parent_id="main_col", content="Status: Selected None")
@@ -138,7 +152,7 @@ class solitaire:
         self.ipg.add_row(window_id="main",
                          container_id="tableau_row",
                          parent_id="main_col",
-                         height=600.0,
+                        #  height=600.0,
                          spacing=10.0
                          )
         
@@ -146,7 +160,7 @@ class solitaire:
         self.ipg.add_space(parent_id="tableau_row",
                            width=20.0)
         
-        # Add the 7 card slots
+        # Add the 7 card tableau slots
         for i in range(0, 7):
             # Add in the stacks
             self.ipg.add_stack(window_id="main",
@@ -210,45 +224,48 @@ class solitaire:
     def deal_cards(self):
         card_index = len(self.cards)-1
         for i in range(0, 7):
-            last = self.tableau[i]-1
-            for j in range(0, self.tableau[i]):
-                card_col_wid = self.ipg.add_column(window_id="main",
-                                    container_id=f"tab_col_1_{card_index}",
+            last_card = self.tableau[i]-1
+            for j in range(0, 13):
+                self.ipg.add_column(window_id="main",
+                                    container_id=f"tabcol_{i}_{j}",
                                     parent_id=f"tab_stack_{i}",)
                 
                 # Add a blank at top to hide the card below
-                self.ipg.add_space(parent_id=f"tab_col_1_{card_index}",
+                self.ipg.add_space(parent_id=f"tabcol_{i}_{j}",
                                     height=20*j)
- 
-                self.cards[card_index]["index"] = card_index
-                self.cards[card_index]["tab_column"] = i
-                self.cards[card_index]["tab_index"] = j
-                card = self.cards[card_index]
-                file = f"{self.path}/{card.get('suite')}/{card.get('value')}.png"
-                self.cards[card_index]["wid"] = self.ipg.add_image(parent_id=f"tab_col_1_{card_index}", 
-                                    image_path=file,
-                                    width=self.card_width, 
-                                    height=self.card_height,
-                                    content_fit=IpgImageContentFit.Fill,
-                                    mouse_pointer=IpgMousePointer.Grab,
-                                    on_press=self.card_selected,
-                                    user_data=card_index,
-                                    )
-                if j != last:
+
+                if j <= last_card: 
+                    self.cards[card_index]["index"] = card_index
+                    self.cards[card_index]["tab_column"] = i
+                    self.cards[card_index]["tab_index"] = j
+                    card = self.cards[card_index]
+                    file = f"{self.path}/{card.get('suite')}/{card.get('value')}.png"
+                    self.cards[card_index]["wid"] = self.ipg.add_image(parent_id=f"tabcol_{i}_{j}", 
+                                        image_path=file,
+                                        width=self.card_width, 
+                                        height=self.card_height,
+                                        content_fit=IpgImageContentFit.Fill,
+                                        mouse_pointer=IpgMousePointer.Grab,
+                                        on_press=self.card_selected,
+                                        user_data=card_index,
+                                        )
+                    card_index -= 1
+                if j < last_card:
                     # add the blank over the vard unless last one.
                     self.ipg.add_column(window_id="main",
-                                    container_id=f"tab_col_2_{card_index}",
+                                    container_id=f"tab_blank_{i}_{j}",
                                     parent_id=f"tab_stack_{i}",)
                 
                     # Add a blank at top to hide the card below
-                    self.ipg.add_space(parent_id=f"tab_col_2_{card_index}",
+                    self.ipg.add_space(parent_id=f"tab_blank_{i}_{j}",
                                         height=20*j)
 
                     self.covers[card_index]["index"] = card_index
                     self.covers[card_index]["tab_column"] = i
                     self.covers[card_index]["tab_index"] = j
                     file = f"{self.path}/card_back.png"
-                    self.covers[card_index]["wid"] = self.ipg.add_image(parent_id=f"tab_col_2_{card_index}", 
+                    self.covers[card_index]["wid"] = self.ipg.add_image(
+                            parent_id=f"tab_blank_{i}_{j}", 
                             image_path=file,
                             width=self.card_width, 
                             height=self.card_height,
@@ -257,8 +274,6 @@ class solitaire:
                             on_press=self.card_selected,
                             )
     
-                card_index -= 1
-        
         # add cards left to stock
         for index, card in enumerate(self.cards[0:card_index+1]):
             file = f"{self.path}/{card.get('suite')}/{card.get('value')}.png"
@@ -276,7 +291,7 @@ class solitaire:
             
         # add a cover
         file = f"{self.path}/card_back.png"
-        self.stock_cover = self.ipg.add_image(parent_id=f"stack_stock_pile", 
+        self.stock_cover_id = self.ipg.add_image(parent_id=f"stack_stock_pile", 
                             image_path=file,
                             width=self.card_width, 
                             height=self.card_height,
@@ -286,20 +301,21 @@ class solitaire:
                             on_press=self.new_cards,
                             )
 
-    def card_selected(self, card_id, card_index: int):
-
+    def card_selected(self, card_id: int, card_index: int):
         # index >= 200 is cover card
+        # check to see if it can be moved to show the next card
         if card_index >= 200:
-            
             cover_index = card_index-200
             column = self.covers[cover_index].get("tab_column")
             if self.covers[cover_index].get("tab_index") == self.tableau[column]-1:
                 wid = self.covers[cover_index].get("wid")
-                self.ipg.delete_item("main", wid)
+                self.selected = None
+                self.move_card(card_id, "hidden")
                 return
             else:
                 content = "You can only uncover the last card"
                 self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
+                self.selected = None
                 return
 
         # index >= 100 foundation is an empty slot
@@ -309,13 +325,13 @@ class solitaire:
             self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
             return
         
-        if card_index >= 100 and not bool(self.selected):
+        if card_index >= 100 and not self.selected is None:
             content = "You cannot select a foundation slot first"
             self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
             return
 
         # if no card selected, set the self.selected
-        if not bool(self.selected):
+        if self.selected is None:
             card = self.cards[card_index]
             content = f"Status: Selected {card.get('name')} {card.get('color')}"
             self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
@@ -323,7 +339,7 @@ class solitaire:
             return
         
         # if a card is selected, then this selection is the target
-        if bool(self.selected):
+        if not self.selected is None:
             target_card = self.cards[card_index]
             origin_card = self.cards[self.selected]
 
@@ -335,7 +351,7 @@ class solitaire:
             # are the card values 1 apart
             if origin_card.get("value") == target_card.get("value")-1:
                 content = f"Status: Target card {target_card.get('name')} {target_card.get('suite')}"
-                self.move_between_tabs(target_card)
+                self.move_between_tabs(origin_card, target_card)
             else:
                 content = "The value of the selected card must be one less than the target card."
 
@@ -354,19 +370,20 @@ class solitaire:
         else:
             return
         for wid in ids_to_move:
-            self.move_card(wid, "stack_waste_pile", None)
+            self.move_card(wid, "stack_waste_pile")
             
         self.waste.extend(ids_to_move)
         
         if len(self.stock) == 0:
-            self.ipg.delete_item("main", self.stock_cover)
+            self.ipg.update_item("main", self.stock_cover_id, IpgImageParam.Show, False)
         
-    def move_card(self, wid, tar_id, tar_pos):
+    def move_card(self, card_id, tar_str_id):
         self.ipg.move_widget(window_id="main",
-                                 widget_id=wid,
-                                 target_container_id=tar_id,
-                                 target_position=tar_pos,
-                                 )
+                             widget_id=card_id,
+                             target_container_str_id=tar_str_id,
+                             move_before=None,
+                             move_after=None
+                             )
         
     def move_to_foundation(self, fd_slot: int):
         origin_card = self.cards[self.selected]
@@ -398,17 +415,25 @@ class solitaire:
         self.selected = None
         return content
             
-    def move_between_tabs(self, target_card):
-        origin_card = self.cards[self.selected]
+    def move_between_tabs(self, origin_card, target_card):
+        # get target info
+        tar_tab_column = target_card.get("tab_column")
+        tar_tab_index = target_card.get("tab_index") + 1 # add 1 since moved after
+        tar_container_id = f"tabcol_{tar_tab_column}_{tar_tab_index}"
+        # get origin id
+        origin_id = origin_card.get("wid")
+        # tableau index adjustments
+        origin_tab_column = origin_card.get("tab_column");
+        self.tableau[origin_tab_column] -= 1
+        self.tableau[tar_tab_column] += 1
+        # adjust the origin card indexes
+        origin_card["tab_column"] = tar_tab_column
+        origin_card["tab_index"] = tar_tab_index
+        # move the card
+        self.move_card(origin_id, tar_container_id)
         
-       
-        # get the current tab index and increment by 1
-        index = target_card.get("tab_index") + 1
-        tab_col = target_card.get("tab_column")
-        
-        self.cards[self.selected]["tab_column"] = tab_col
-        self.cards[self.selected]["tab_index"] = index
-        card = self.cards[self.selected]
+    def reload_stock(self, area_id):
+        print()
 
 game = solitaire()
 game.start_game()
