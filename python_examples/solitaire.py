@@ -26,18 +26,17 @@ class solitaire:
         
         self.stock_cover_id: int=0
 
-        self.selected: int=None
-        self.destination: int=None
+        self.origin: int=None
+        self.target: int=None
         
-        # set the foundation slots using index >=100 to indicate no card present
-        self.foundation_top_card: list=[100, 101, 102, 103]
+        self.foundation_top_card_value: list=[0, 0, 0, 0]
+        self.foundation_top_card_suite: list=[None, None, None, None]
 
     def start_game(self):
         self.ipg.add_window(window_id="main", title="Solitaire",
                     width=800.0,
                     height=800.0,
                     pos_centered=True,
-                    debug=True
                     )
         self.ipg.add_column(window_id="main",
                             container_id="main_col",
@@ -115,7 +114,7 @@ class solitaire:
         # Add the 4 foundation slots
         for i in range(0, 4):
             self.ipg.add_stack(window_id="main",
-                           container_id=f"foundation_{100+i}",
+                           container_id=f"foundation_{i}",
                            parent_id="stock_row",
                            width=self.card_width,
                            height=self.card_height,
@@ -123,14 +122,14 @@ class solitaire:
             
             self.ipg.add_mousearea(window_id="main",
                                     container_id=f"foundation_mouse_{i}",
-                                    parent_id=f"foundation_{100+i}",
+                                    parent_id=f"foundation_{i}",
                                     mouse_pointer=IpgMousePointer.Grab,
                                     on_press=self.card_selected,
                                     user_data=100+i,
                                     )
             self.ipg.add_container(window_id="main",
                                     container_id=f"foundation_container_{i}",
-                                    parent_id=f"foundation_{100+i}",
+                                    parent_id=f"foundation_{i}",
                                     width=self.card_width,
                                     height=self.card_height,
                                     padding=[0.0],
@@ -279,7 +278,7 @@ class solitaire:
             file = f"{self.path}/{card.get('suite')}/{card.get('value')}.png"
             self.cards[index]["stock_pile"] = i
             self.cards[index]["index"] = index
-            self.cards[index]["wid"] = self.stock.append(self.ipg.add_image(parent_id=f"stack_stock_pile", 
+            wid = self.ipg.add_image(parent_id="stack_stock_pile", 
                                 image_path=file,
                                 width=self.card_width, 
                                 height=self.card_height,
@@ -287,7 +286,9 @@ class solitaire:
                                 mouse_pointer=IpgMousePointer.Grabbing,
                                 user_data=index,
                                 on_press=self.card_selected,
-                                ))
+                                )
+            self.stock.append(wid)
+            self.cards[index]["wid"] = wid
             
         # add a cover
         file = f"{self.path}/card_back.png"
@@ -302,6 +303,15 @@ class solitaire:
                             )
 
     def card_selected(self, card_id: int, card_index: int):
+        if self.origin is None:
+            self.origin = self.cards[card_index]
+        elif self.target is None:
+            self.target = self.cards[card_index]
+        else:
+            print(origin_card)
+            print(target_card)
+            return
+        
         # index >= 200 is cover card
         # check to see if it can be moved to show the next card
         if card_index >= 200:
@@ -309,55 +319,67 @@ class solitaire:
             column = self.covers[cover_index].get("tab_column")
             if self.covers[cover_index].get("tab_index") == self.tableau[column]-1:
                 wid = self.covers[cover_index].get("wid")
-                self.selected = None
+                self.origin = None
                 self.move_card(card_id, "hidden")
                 return
             else:
                 content = "You can only uncover the last card"
                 self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
-                self.selected = None
+                self.origin = None
                 return
 
         # index >= 100 foundation is an empty slot
-        if card_index >= 100 and bool(self.selected):
+        if card_index >= 100 and bool(self.origin):
             fd_slot = card_index-100
             content = self.move_to_foundation(fd_slot)
             self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
             return
         
-        if card_index >= 100 and not self.selected is None:
+        if card_index >= 100 and not self.origin is None:
             content = "You cannot select a foundation slot first"
+            self.select = None
             self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
             return
 
         # if no card selected, set the self.selected
-        if self.selected is None:
+        if self.origin is None:
             card = self.cards[card_index]
             content = f"Status: Selected {card.get('name')} {card.get('color')}"
             self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
-            self.selected = card_index
+            self.origin = card_index
             return
         
         # if a card is selected, then this selection is the target
-        if not self.selected is None:
+        if not self.origin is None:
             target_card = self.cards[card_index]
-            origin_card = self.cards[self.selected]
+            origin_card = self.cards[self.origin]
 
             # Check the color
             if target_card.get("color") == origin_card.get("color"):
                 content = "You cannot place same colored cards on each other"
+                self.select = None
                 return
             
             # are the card values 1 apart
+            print(origin_card)
+            print(target_card)
             if origin_card.get("value") == target_card.get("value")-1:
                 content = f"Status: Target card {target_card.get('name')} {target_card.get('suite')}"
-                self.move_between_tabs(origin_card, target_card)
+                if origin_card.get("stock_pile") is not None:
+                    self.move_waste_to_tableau(origin_card, target_card)
+                    self.select = None
+                else:
+                    self.move_between_tabs(origin_card, target_card)
+                    self.select = None
             else:
                 content = "The value of the selected card must be one less than the target card."
-
-            self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
+                self.select = None
+            
+        self.ipg.update_item(self.status_id, IpgTextParam.Content, content)
 
     def new_cards(self, card_id, card_index):
+        if len(self.stock) == 0:
+            self.ipg.update_item(self.stock_cover_id, IpgImageParam.Show, False)
         if len(self.stock) >= 3:
             ids_to_move = self.stock[-3:] 
             self.stock = self.stock[0:len(self.stock)-3]
@@ -374,9 +396,6 @@ class solitaire:
             
         self.waste.extend(ids_to_move)
         
-        if len(self.stock) == 0:
-            self.ipg.update_item("main", self.stock_cover_id, IpgImageParam.Show, False)
-        
     def move_card(self, card_id, tar_str_id):
         self.ipg.move_widget(window_id="main",
                              widget_id=card_id,
@@ -386,34 +405,24 @@ class solitaire:
                              )
         
     def move_to_foundation(self, fd_slot: int):
-        origin_card = self.cards[self.selected]
+        origin_card = self.cards[self.origin]
+
+        if self.foundation_top_card_value[fd_slot] != origin_card.get("value") - 1:
+            return f"You cannot move the card {origin_card.get('name')} with a value of {origin_card.get('value')} to the foundation slot {fd_slot}"
         
-        # get the foundation slot top card value
-        fd_index = self.foundation_top_card[fd_slot]
 
-        if fd_index >= 100 and origin_card.get("value") == 1:
-            wid = origin_card.get("wid")
-            target_id = f"foundation_{fd_index}" 
-            self.move_card(wid, target_id, None)
-            content = f"Status: Destination foundation_{fd_slot}"
-
-        if fd_index >= 100 and origin_card.get("value") != 1:
-            return f"You cannot move the card {origin_card.get('name')} of {origin_card.get('suite')} to the foundation slot {fd_slot}"
-        
-        # slot not empty
-        if fd_index < 100:
-            target_card = self.cards.get(fd_index)
-
-            if target_card.get("value") + 1 != origin_card.get("value"):
-                return f"You cannot move the card having a value of {origin_card.get('value')} to foundation slot {fd_slot}"
+        if self.foundation_top_card_suite[fd_slot] != origin_card.get("suite") and origin_card.get("value") != 1:
+            return f"You cannot move the card having a suite of {origin_card.get('suite')} to foundation slot {fd_slot}"
                 
-        col = self.cards[self.selected]["tab_column"]    
-        self.tableau[col] -= 1
-        self.cards[self.selected]["foundation"] = fd_index
-        self.cards[self.selected]["tab_column"] = None
-        self.cards[self.selected]["tab_index"] = None
-        self.selected = None
-        return content
+        tab_col = origin_card["tab_column"]    
+        self.tableau[tab_col] -= 1
+        self.cards[self.origin]["foundation"] = fd_slot
+        self.cards[self.origin]["tab_column"] = None
+        self.cards[self.origin]["tab_index"] = None
+        self.origin = None
+        self.foundation_top_card_value[fd_slot] = origin_card.get("value")
+        self.move_card(origin_card.get("wid"), f"foundation_mouse_{fd_slot}")
+        return f"Card {origin_card.get('name')} was moved to foundation slot {fd_slot}"
             
     def move_between_tabs(self, origin_card, target_card):
         # get target info
@@ -432,8 +441,26 @@ class solitaire:
         # move the card
         self.move_card(origin_id, tar_container_id)
         
+    def move_waste_to_tableau(self, origin_card, target_card):
+        origin_card["stock_pile"] = None
+        origin_card["tab_column"] = target_card["tab_column"]
+        origin_card["tab_index"] = target_card["tab_index"] + 1
+        self.tableau[origin_card.get('tab_index')] += 1
+        tar_container_id = f"tabcol_{origin_card.get('tab_column')}_{origin_card.get('tab_index')}"
+        self.move_card(origin_card["wid"], tar_container_id)
+        
+        
     def reload_stock(self, area_id):
-        print()
+        # Show the cover card
+        self.ipg.update_item(self.stock_cover_id, IpgImageParam.Show, True)
+        # Move the ids back to the stock and reverse the order
+        self.stock = self.waste
+        self.waste = []
+        self.stock.reverse()
+        # move the cards back to stock
+        for wid in self.stock:
+            self.move_card(wid, "stack_stock_pile")
+        self.move_card(self.stock_cover_id, "stack_stock_pile")
 
 game = solitaire()
 game.start_game()
