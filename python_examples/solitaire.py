@@ -365,7 +365,6 @@ class solitaire:
         self.cards[wid] = cover
 
     def card_selected(self, card_id: int):
-        
         if self.origin is None:
             self.origin = card_id
             card = self.cards.get(card_id)
@@ -384,13 +383,17 @@ class solitaire:
                 self.move_stock_to_waste()
                 self.origin = None
                 return
+            elif card.get("name") == "mousearea":
+                self.origin = None
+                return
+            
         elif self.target is None:
             self.target = card_id
         else:
             print(self.cards.get(self.origin))
             print(self.cards.get(self.target))
             raise Exception("origin and target are both not None")
-        
+
         if self.origin is not None and self.target is not None:
             self.move_card()  
             self.ipg.update_item(self.status_id, IpgTextParam.Content, self.content)
@@ -400,26 +403,31 @@ class solitaire:
         if self.cards.get(self.origin).get("tableau") and self.cards.get(self.target).get("tableau"):
             ids = self.move_tab_to_tab()
         elif self.cards.get(self.origin).get("tableau") and self.cards.get(self.target).get("foundation"):
-            ids = [self.move_tab_to_foundation()]
+            ids = self.move_tab_to_foundation()
         elif self.cards.get(self.origin).get("waste") and self.cards.get(self.target).get("tableau"):
-            ids = [self.move_waste_to_tableau()]
+            ids = self.move_waste_to_tableau()
         elif self.cards.get(self.origin).get("waste") and self.cards.get(self.target).get("foundation"):
-            ids = [self.move_waste_to_foundation()]
+            ids = self.move_waste_to_foundation()
         elif self.cards.get(self.origin).get("stock") and self.cards.get(self.target).get("waste"):
-            ids = [self.move_stock_to_waste()]
-        elif self.cards.get(self.origin).get("waste") and self.cards.get(self.target).get("stock"):  
-            ids = [self.move_waste_to_stock]
+            ids = self.move_stock_to_waste()
+        elif self.cards.get(self.origin).get("waste") and self.cards.get(self.target).get("stock"):
+            self.content = "Cannot move waste to stock"
+            ids = None
+        elif self.cards.get(self.origin).get("tableau") and self.cards.get(self.target).get("stock"):
+            self.content = "Cannot move a card to stock"
+            ids = None
         else:
             if len(ids) == 0:
                 raise Exception("target_str_id is None")
-
-        for wid, str_id in ids:
-            self.ipg.move_widget(window_id="main",
-                                widget_id=wid,
-                                target_container_str_id=str_id,
-                                move_before=None,
-                                move_after=None
-                                )
+        
+        if ids is not None:
+            for wid, str_id in ids:
+                self.ipg.move_widget(window_id="main",
+                                    widget_id=wid,
+                                    target_container_str_id=str_id,
+                                    move_before=None,
+                                    move_after=None
+                                    )
         self.origin = None
         self.target = None
         
@@ -470,9 +478,6 @@ class solitaire:
             if found:
                 ids_to_move.append(card_id)
         
-        # ids_to_move = tab_card_ids[slice(found_index, len(tab_card_ids))]
-        print("origin tab", self.tableau[origin.get("tab_column")])
-        print("ids_to_move", ids_to_move)
         tar_container_id = []
         tab_index = target.get("tab_index")
         tar_tab_column = target.get("tab_column")
@@ -485,7 +490,6 @@ class solitaire:
             tar_container_id.append((wid, f"tabcol_{tar_tab_column}_{tar_tab_index}"))
             
             # tableau index adjustments
-            print(wid)
             self.tableau[origin_tab_column].remove(wid)
             self.tableau[tar_tab_column].append(wid)
             
@@ -523,7 +527,7 @@ class solitaire:
         self.cards[origin_id]["tab_index"] = None
 
         self.content = f"Card {origin.get('name')} was moved to foundation slot {fd_slot}"    
-        return (origin_id, f"foundation_{fd_slot}")
+        return [(origin_id, f"foundation_{fd_slot}")]
     
     def move_waste_to_tableau(self):
         origin = self.cards.get(self.origin)
@@ -561,7 +565,7 @@ class solitaire:
         self.cards[origin_id]["waste"] = None
         self.waste.remove(origin_id)
 
-        return (origin_id, tar_container_id)
+        return [(origin_id, tar_container_id)]
         
     def move_stock_to_waste(self):
         ids_to_move = []
@@ -628,7 +632,7 @@ class solitaire:
         self.waste.remove(origin_id)
 
         self.content = f"Card {origin.get('name')} was moved to foundation slot {fd_slot}"    
-        return (origin_id, f"foundation_{fd_slot}")
+        return [(origin_id, f"foundation_{fd_slot}")]
         
 
 game = solitaire()
