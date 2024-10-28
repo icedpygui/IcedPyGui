@@ -23,46 +23,51 @@ Python wrapper for Rust Iced Gui
 * Supported Iced widgets
   * Button
   * Checkbox
-  * Canvas - next release
+  * Canvas - Can add canvas widgets but dynamic drawing to follow
   * Column - a container holding widgets or other container in with horizontal positioning
   * ComboBox - Needs modification to work in IPG, but PicKList good substitute
   * Container - container, holds a single container or widget, used for alignment purposes
   * Events - keyboard, mouse, timer, and window
   * Fonts - Future release
   * Image - svg and png types
-  * Modal - revising next minor release
+  * Modal - discontinued for now, use stack or open a small window
   * MouseArea - holds a widget and detect mouse movement and mouse button presses
   * PaneGrid - maybe a future release, will need to be modified for IPG
   * PickList - essentially a combobox
   * ProgressBar - a bar used to show progression of some action
-  * QRCodes - within the next few minor releases
+  * QRCodes - future release
   * Radio buttons - multiple radios can be grouped, multiple groups allowed
   * Row - a container holding widgets or other containers with vertical positioning.
   * Rule - A widget line divider for readability
   * Scrollable - container which allows scrolling items
   * Slider - A widget for creating values by sliding a bar
   * Space - a widget for helping align content
-  * Stack - a container that allows one to stack other containers next minor release
+  * Stack - a container that allows one to stack other containers
   * Styling - All widget now have styling
   * SVG - image type
-  * TextEditor - Future, needs modification to work in IPG
+  * TextEditor - Future release
   * TextInput - Allows one to input any text, numerical ones coming soon
   * Text - a text widget
   * Toggler - a widget for setting conditions like true/false on/off, etc
-  * Tooltip - Only widget now, container ability near future release
-  * Windows multiple -
+  * Tooltip - Only widget now, container ability future release
+  * Windows multiple - many windows enabled
 * Iced_aw widgets - are moved into IPG due to version conflicts
   * Card - a container with a header and footer
-  * ColorPicker - color selector - next minor release
+  * ColorPicker - future release
   * Menu - Dropdown menu items
-  * Tabs - a near future release
+  * Tabs - future release
 * IPG widgets
   * DatePicker - compact and resizable
   * SelectableText - all mouse buttons supported
   * Table - Easily loaded with a list of py dictionaries, supports adding buttons, checkboxes, and togglers, continually updating code
 
-* Python issues to be addressed
-  * Need to incorporate using with statement in python.  Using with would allow one to not have to supply the window or parent id if those follow closely.  For example:
+## Future Enhancements to the program
+* Since upgrading to iced 0.13.1, I can now dispense with using a mutex to store some data.  These work fine but a mutex cannot use anything with a lifetime since it is static.  This will clear up some issues when trying to incorporated widgets such as the Editor, etc.
+* Some optimization might be possible by not rebuilding the widgets unless they change.  Not tested yet but hopefully it can happen.
+* More widgets will be added see those mentioned above, along with any other I can find.
+* Fonts is on the list for an upcoming release.
+## Python issues to be addressed
+  * Need to incorporate using the 'with' statement in python.  Using with would allow one to not have to supply the window or parent id if those follow closely.  For example:
 
     ``` python
         with window(...):
@@ -70,12 +75,13 @@ Python wrapper for Rust Iced Gui
                 add_widget(...)
     ```
 
-  * @dataclass needs to be supported (support soon)
-  * @staticmethod support added soon.
+  * @dataclass can be used but no IPG code in it until a later release
+  * @staticmethod future release
+  * Better error messages during callbacks.  Currently an error in python code during the callback trigger a rust error which captures the python error but doesn't sya where in the callback it happens.
 
 ## Pyo3 Enhancements
 
-There are a number of future possible enhancements related to parallelism and async.
+* There are a number of future possible enhancements related to parallelism and async.
 
 ## Installation (PiPy)
 
@@ -85,11 +91,10 @@ There are a number of future possible enhancements related to parallelism and as
 
 * Install Rust
 * Clone the repository and open in your favorite IDE
-* Create and activate a virtual environment
+* Create and activate a virtual environment - The venv for this take a couple of minutes to create, be patient, sometimes a restart of vs code needed to recognize the venv
 * Install maturin and compile the rust code
 * Use maturin develop (~10 sec compile time on AMD Rizen 7700, stored in local venv)
-* maturin build (~10 sec compile time stored in target/wheels)
-* maturin build --release (~2 min compile time stored in target/wheels)
+* maturin build --release (~1.5 min compile time stored in target/wheels)
 * Copy over one of the python examples (link above), use the below code, or the demo in the [demo folder](https://github.com/icedpygui/IcedPyGui/tree/main/python_demo).
 
 ```python
@@ -112,8 +117,6 @@ maturin develop
 ## Intro
 
 Iced is a great GUI for Rust but it's still early in the development cycle, more good things will follow.  
-
-Some would probably say it's too early for a python wrap but I though I would give it a try since I wanted a project that would help me improve my Rust skills, which I've only been using a for a short time.
 
 This project is the first I have published and so I expect I'll learn a lot and hopefully you can bare with me.
 
