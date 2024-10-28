@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 None
 
+## [0.3.0] - 2024-10-29
+
+- updated to iced 0.13.1
+- added canvas with examples
+- added stack with example
+- added ability to move widget between containers
+- table widget updated widgets
+- closing, opening, hidding windows more consistent
+- refacted area to improve consistency and efficiency
+- touched many area while updating to iced 0.13.1
+
 ## [0.2.0] - 2024-08-12
 
 - updated to iced rev="07f94d6"
