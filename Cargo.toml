@@ -30,7 +30,7 @@ serde = "1.0.201"
 serde_json = "*"
 
 [build-dependencies]
-pyo3-build-config = { version = "0.21.2", features = ["resolve-config"] }
+pyo3-build-config = { version = "0.22.0", features = ["resolve-config"] }
 
 [profile.release]
 strip = true
