@@ -11,12 +11,7 @@ Python wrapper for Rust Iced Gui
 </div>
 
 ## Revisions
-
-* Upcoming revision 0.3.0 estimated to be October 15.
-* Commits are not made to main at this time but to a dev version
-* This version may have errors and are usually a work in progress
-* Fixes will be merged into main.
-* Minor versions should be expected about every 2-3 weeks for now.
+* Current version 0.3.0
 
 ## Features
 
