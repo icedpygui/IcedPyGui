@@ -11,14 +11,13 @@ None
 
 ## [0.3.0] - 2024-10-29
 
-- updated to iced 0.13.1
+- updated to iced 0.13.1 many small changes to widgets
 - added canvas with examples
 - added stack with example
 - added ability to move widget between containers
-- table widget updated widgets
+- table widget updated
 - closing, opening, hidding windows more consistent
-- refacted area to improve consistency and efficiency
-- touched many area while updating to iced 0.13.1
+- refactored areas to improve consistency and efficiency
 
 ## [0.2.0] - 2024-08-12
 
