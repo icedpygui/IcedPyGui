@@ -72,15 +72,21 @@ Python wrapper for Rust Iced Gui
 
   * @dataclass can be used but no IPG code in it until a later release
   * @staticmethod future release
-  * Better error messages during callbacks.  Currently an error in python code during the callback trigger a rust error which captures the python error but doesn't sya where in the callback it happens.
+  * Better error messages during callbacks.  Currently an error in python code during the callback trigger a rust error which captures the python error but doesn't say where in the callback it happens.
 
 ## Pyo3 Enhancements
 
 * There are a number of future possible enhancements related to parallelism and async.
 
 ## Installation (PiPy)
-
-* PyPi not used yet but soon.  Wheels (linux, window) supplied in repository for easy installation.
+* Code not published to PiPy yet.  Download one of the wheels attached to the [release page](https://github.com/icedpygui/IcedPyGui/releases), code also in wheels folder or see below for installation via rust
+* Open one of the example using your favorite IDE.
+* Create and activate a virtual environment
+ ```python
+pip install path to wheel
+# or if already installed previously
+pip install --force-reinstall path to wheel
+ ```
 
 ## Installation (Rust)
 
@@ -169,7 +175,7 @@ ipg.add_column(window_id="main", container_id="col",
                 align_items=IpgAlignment.Center)
 ```
 
-So, the window was added using an window_id, title, size and position, followed by a container and column.  The ids are a key part of IPG and can be consider the glue that holds everything together.  Each time there is an add command, a corresponding structure is initialized and stored in a Mutex using a HashMap with an integer id.  Once Iced is started, a recursive routine is called to create the nested tree for all of the containers and widgets which is used by Iced to display them.  Therefore, widgets can only be added during the add or construct phase.  This might seem restrictive but if you have a widget that you need later, just add it with the show parameter as false.  When the time comes for it's use, just change the parameter show to true and you now have it.  You can modify all of the widgets during a callback procedure where the command update_item() is used. You will see this in the demo code below.
+So, the window was added using an window_id, title, size and position, followed by a container and column.  The ids are a key part of IPG and can be consider the glue that holds everything together.  Each time there is an add command, a corresponding structure is initialized and stored in a Mutex using a HashMap with an integer id.  Once Iced is started, a recursive routine is called to create the nested tree for all of the containers and widgets which is used by Iced to display them.  Therefore, widgets can only be added during the add or construct phase.  This might seem restrictive but if you have a widget that you need later, just add it with the show parameter as false.  When the time comes for it's use, just change the parameter show to true and you now have it.  You can modify all of the widgets during a callback procedure where the command update_item() is used. You can also move widgets from container to container very easily.  You will see some of this in the demo code below.
 
 Note how the ids are used.  A container must have a window_id because Iced is a multi-window GUI, we need to know which window to put it in.  In addition, if a container goes into another container, then the parent_id is needed.
 
