@@ -14,24 +14,22 @@ use iced::Color;
 use once_cell::sync::Lazy;
 
 
-use crate::ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage, IpgBuildCanvas};
-use crate::ipg_widgets::ipg_events::{handle_window_closing, process_keyboard_events, process_mouse_events, process_touch_events, process_window_event};
-use crate::ipg_widgets::ipg_opaque::{construct_opaque, opaque_callback};
-use crate::ipg_widgets::ipg_stack::construct_stack;
-use crate::ipg_widgets::ipg_window::IpgWindowMode;
 use crate::{access_window_actions, ipg_widgets};
-use crate::ipg_widgets::helpers::find_key_for_value;
-use crate::ipg_widgets::ipg_modal::{construct_modal, modal_callback, ModalMessage};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
+use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage, IpgBuildCanvas};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
 use ipg_widgets::ipg_column::construct_column;
 use ipg_widgets::ipg_container::construct_container;
 use ipg_widgets::ipg_date_picker::{DPMessage, construct_date_picker, date_picker_update};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
+use ipg_widgets::ipg_events::{handle_window_closing, process_keyboard_events, process_mouse_events, process_touch_events, process_window_event};
+use ipg_widgets::helpers::find_key_for_value;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
 use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
+use ipg_widgets::ipg_modal::{construct_modal, modal_callback, ModalMessage};
 use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_point, construct_mousearea};
+use ipg_widgets::ipg_opaque::{construct_opaque, opaque_callback};
 use ipg_widgets::ipg_pick_list::{PLMessage, construct_picklist, pick_list_callback};
 use ipg_widgets::ipg_progress_bar::construct_progress_bar;
 use ipg_widgets::ipg_radio::{RDMessage, construct_radio, radio_callback};
@@ -41,6 +39,7 @@ use ipg_widgets::ipg_scrollable::{construct_scrollable, scrollable_callback};
 use ipg_widgets::ipg_selectable_text::{SLTXTMessage, construct_selectable_text, selectable_text_callback};
 use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_callback};
 use ipg_widgets::ipg_space::construct_space;
+use ipg_widgets::ipg_stack::construct_stack;
 use ipg_widgets::ipg_svg::{SvgMessage, construct_svg, svg_callback};
 use ipg_widgets::ipg_table::{construct_table, TableMessage, table_callback};
 use ipg_widgets::ipg_text::construct_text;
@@ -49,8 +48,8 @@ use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage, tick_c
 use ipg_widgets::ipg_toggle::{construct_toggler, toggle_callback, TOGMessage};
 use ipg_widgets::ipg_tool_tip::construct_tool_tip;
 use ipg_widgets::ipg_window::{WndMessage, IpgWindow, add_windows, construct_window};
+use ipg_widgets::ipg_window::IpgWindowMode;
 use crate::{access_state, IpgIds};
-
 
 use iced::widget::{scrollable, Space};
 
