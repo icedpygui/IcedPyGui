@@ -12,7 +12,7 @@ authors = [
 readme = "README.md"
 # PyO3 doesn't support python 3.13 yet.
 requires-python = ">=3.10, < 3.13"
-keywords = ["iced", "iced_aw", "gui", "rust", "python"]
+keywords = ["iced", "gui", "rust", "python"]
 
 classifiers = [
     "Programming Language :: Rust",

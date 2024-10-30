@@ -10,8 +10,8 @@ Python wrapper for Rust Iced Gui
 
 </div>
 
-## Revisions
-* Current version 0.3.0
+## Python Examples
+* [Many Python examples are here](https://github.com/icedpygui/IcedPyGui-Python-Examples).
 
 ## Features
 
@@ -79,13 +79,9 @@ Python wrapper for Rust Iced Gui
 * There are a number of future possible enhancements related to parallelism and async.
 
 ## Installation (PiPy)
-* Code not published to PiPy yet.  Download one of the wheels attached to the [release page](https://github.com/icedpygui/IcedPyGui/releases), code also in wheels folder or see below for installation via rust
-* Open one of the example using your favorite IDE.
-* Create and activate a virtual environment
+* Create and activate a virtual environment in your favorite IDE
  ```python
-pip install path to wheel
-# or if already installed previously
-pip install --force-reinstall path to wheel
+pip install IcedPyGui
  ```
 
 ## Installation (Rust)
@@ -113,7 +109,6 @@ maturin develop
 * [Maturin](https://github.com/PyO3/maturin) is used to build and publish the module .
 * The syntax and the design of the callbacks were inspired by the python wrapper of Dear ImGui, [DearPyGui(DPG)](https://github.com/hoffstadt/DearPyGui).
 * The icon above was a merge of Python and Iced icons by [Deep Dream Generator](https://deepdreamgenerator.com)
-* [Python Examples are here](https://github.com/icedpygui/IcedPyGui-Python-Examples).
 
 ## Intro
 
