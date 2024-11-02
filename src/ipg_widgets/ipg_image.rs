@@ -1,9 +1,10 @@
 //!ipg_image
 use crate::app;
 use crate::access_callbacks;
+use crate::IpgState;
+use super::callbacks::widget_callback_data;
 use super::callbacks::{WidgetCallbackIn, 
-                        WidgetCallbackOut, 
-                        get_set_widget_callback_data};
+                        WidgetCallbackOut};
 use super::helpers::{get_height, get_padding_f64, get_width, 
     try_extract_boolean, try_extract_f64, try_extract_string, 
     try_extract_vec_f64};
@@ -173,50 +174,50 @@ fn match_rotation(rot: IpgImageRotation, radians: Radians) -> Rotation {
     }
 }
 
-pub fn image_callback(id: usize, message: ImageMessage) {
+pub fn image_callback(state: &mut IpgState, id: usize, message: ImageMessage) {
 
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
 
     match message {
         ImageMessage::OnPress => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_press".to_string();
             process_callback(wco);
         },
         ImageMessage::OnRelease => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_release".to_string();
             process_callback(wco);
         },
         ImageMessage::OnRightPress => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_right_press".to_string();
             process_callback(wco);
         },
         ImageMessage::OnRightRelease => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_right_release".to_string();
             process_callback(wco);
         },
         ImageMessage::OnMiddlePress => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_middle_press".to_string();
             process_callback(wco);
         },
         ImageMessage::OnMiddleRelease => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_middle_release".to_string();
             process_callback(wco);
         },
         ImageMessage::OnEnter => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_enter".to_string();
             process_callback(wco);
@@ -226,14 +227,14 @@ pub fn image_callback(id: usize, message: ImageMessage) {
             points.push(("x".to_string(), point.x));
             points.push(("y".to_string(), point.y));
             
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_move".to_string();
             wco.points = Some(points);
             process_callback(wco);
         },
         ImageMessage::OnExit => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_exit".to_string();
             process_callback(wco);

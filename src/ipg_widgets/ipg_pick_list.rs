@@ -1,9 +1,10 @@
 //! ipg_pick_list
 use crate::access_callbacks;
-use crate::access_state;
 use crate::app;
+use crate::IpgState;
+use super::callbacks::widget_callback_data;
 use super::callbacks::{WidgetCallbackIn, 
-    WidgetCallbackOut, get_set_widget_callback_data};
+    WidgetCallbackOut};
 use super::helpers::{get_padding_f64, get_radius, get_width};
 use super::helpers::{try_extract_boolean, try_extract_f64,
     try_extract_string, try_extract_vec_f64};
@@ -39,7 +40,7 @@ pub struct IpgPickList {
     pub dynamic_closed: Option<IpgButtonArrow>,
     pub dynamic_open: Option<IpgButtonArrow>,
     pub custom_static: Option<IpgButtonArrow>,
-    pub style: Option<String>,
+    pub style_id: Option<String>,
 }
 
 impl IpgPickList {
@@ -80,7 +81,7 @@ impl IpgPickList {
             dynamic_closed,
             dynamic_open,
             custom_static,
-            style,
+            style_id: style,
         }
     }
 }
@@ -130,7 +131,7 @@ pub enum PLMessage {
 }
 
 
-pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
+pub fn construct_picklist(pick: IpgPickList, style: Option<IpgPickListStyle>) -> Element<'static, app::Message> {
 
     if!pick.show {
         return Space::new(0.0, 0.0).into()
@@ -166,7 +167,7 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
                                         .handle(handle)
                                         .style(move|theme: &Theme, status| {   
                                             get_styling(theme, status, 
-                                                pick.style.clone(),
+                                                style.clone(),
                                             )  
                                             })
                                         .into();
@@ -176,14 +177,14 @@ pub fn construct_picklist(pick: IpgPickList) -> Element<'static, app::Message> {
 }
  
 
- pub fn pick_list_callback(id: usize, message: PLMessage) {
+ pub fn pick_list_callback(state: &mut IpgState, id: usize, message: PLMessage) {
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
 
     match message {
         PLMessage::OnSelect(value) => {
             wci.value_str = Some(value.clone());
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_select".to_string();
             wco.value_str = Some(value);
@@ -342,7 +343,7 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
         },
         IpgPickListParam::Style => {
             let val = try_extract_string(value);
-            pl.style = Some(val);
+            pl.style_id = Some(val);
         },
         IpgPickListParam::TextSize => {
             let size = try_extract_f64(value);
@@ -456,27 +457,19 @@ fn get_handle(ipg_handle: IpgPickListHandle,
 
 
 pub fn get_styling(theme: &Theme, status: Status, 
-                    style_str: Option<String>, 
+                    style_opt: Option<IpgPickListStyle>, 
                     ) -> pick_list::Style {
     
     let mut active_style = pick_list::default(theme, Status::Active);
-   
-    let state = access_state();
 
-    if style_str.is_none() {
+    let style = if style_opt.is_none() {
         return match status {
             Status::Active => active_style,
             Status::Hovered | Status::Opened => pick_list::default(theme, Status::Hovered),
         }
-    }
-
-    let style_opt = state.pick_list_style.get(&style_str.clone().unwrap());
-    
-    let style = match style_opt {
-        Some(st) => st,
-        None => panic!("PiclList: The style_id {} for add_pick_list_style could not be found", style_str.unwrap())
+    } else {
+        style_opt.unwrap()
     };
-
 
     if style.background_color.is_some() {
         active_style.background = style.background_color.unwrap().into();

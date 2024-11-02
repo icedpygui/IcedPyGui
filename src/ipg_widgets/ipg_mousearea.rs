@@ -1,9 +1,7 @@
 //! ipg_mousearea
-use crate::access_callbacks;
+use crate::{access_callbacks, IpgState};
 use crate::app::Message;
-use super::callbacks::{WidgetCallbackIn, 
-                        WidgetCallbackOut, 
-                        get_set_container_callback_data};
+use super::callbacks::{container_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::try_extract_boolean;
 
 use iced::widget::MouseArea;
@@ -104,19 +102,19 @@ pub fn get_interaction(pointer: Option<IpgMousePointer>) -> Interaction {
     }
 }
 
-pub fn mousearea_callback(id: usize, event_name: String) {
+pub fn mousearea_callback(state: &mut IpgState, id: usize, event_name: String) {
     
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
 
-    let mut wco = get_set_container_callback_data(wci);
+    let mut wco = container_callback_data(state, wci);
     wco.id = id;
     wco.event_name = event_name;
     process_callback(wco);
 
 }
 
-pub fn mousearea_callback_point(id: usize, point: Point, event_name: String) {
+pub fn mousearea_callback_point(state: &mut IpgState, id: usize, point: Point, event_name: String) {
 
     let mut points: Vec<(String, f32)> = vec![];
     points.push(("x".to_string(), point.x));
@@ -125,7 +123,7 @@ pub fn mousearea_callback_point(id: usize, point: Point, event_name: String) {
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
 
-    let mut wco = get_set_container_callback_data(wci);
+    let mut wco = container_callback_data(state, wci);
     wco.id = id;
     wco.event_name = event_name;
     wco.points = Some(points);

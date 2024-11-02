@@ -1,12 +1,11 @@
 //! ipg_checkbox
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, access_state};
+use crate::{access_callbacks, IpgState};
 use crate::app;
 use super::helpers::{get_radius, get_shaping, get_width, 
     try_extract_style_standard, try_extract_boolean, 
     try_extract_f64, try_extract_string};
-use super::callbacks::{WidgetCallbackIn, 
-    WidgetCallbackOut, get_set_widget_callback_data};
+use super::callbacks::{widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 
 use crate::graphics::BOOTSTRAP_FONT;
 use crate::graphics::bootstrap_icon::{Icon, icon_to_char};
@@ -128,7 +127,7 @@ pub enum CHKMessage {
     OnToggle(bool),
 }
 
-pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
+pub fn construct_checkbox(chk: IpgCheckBox, style: Option<IpgCheckboxStyle>) -> Element<'static, app::Message> {
 
     if !chk.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
@@ -163,7 +162,7 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
                             )
                             .style(move|theme: &Theme, status| {   
                                 get_styling(theme, status,
-                                    chk.style_id.clone(), 
+                                    style.clone(), 
                                     chk.style_standard.clone(),
                                     chk.is_checked,
                                     )  
@@ -173,14 +172,14 @@ pub fn construct_checkbox(chk: IpgCheckBox) -> Element<'static, app::Message> {
     ipg_chk.map(move |message| app::Message::CheckBox(chk.id, message))
 }
 
-pub fn checkbox_callback(id: usize, message: CHKMessage) {
+pub fn checkbox_callback(state: &mut IpgState, id: usize, message: CHKMessage) {
 
     match message {
         CHKMessage::OnToggle(on_toggle) => {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.on_toggle = Some(on_toggle);
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_toggle".to_string();
             process_callback(wco);
@@ -328,28 +327,16 @@ pub fn try_extract_checkbox_update(update_obj: PyObject) -> IpgCheckboxParam {
 }
 
 pub fn get_styling(theme: &Theme, status: Status,
-                    style_id: Option<String>,
+                    style_opt: Option<IpgCheckboxStyle>,
                     style_standard: Option<IpgStyleStandard>,
                     is_checked: bool, 
                     ) -> checkbox::Style 
 {
 
-    if style_standard.is_none() && style_id.is_none() {
+    if style_standard.is_none() && style_opt.is_none() {
         return checkbox::primary(theme, status)
     }
     
-    let state = access_state();
-
-    let style_opt = if style_id.is_some() {
-        state.checkbox_style.get(&style_id.clone().unwrap())
-    } else {
-        None
-    };
-    
-    if style_id.is_some() && style_opt.is_none() {
-        panic!("Checkbox: Unable to find style_id {}", style_id.unwrap())
-    }
-
     if style_standard.is_some() {
         let style_std = style_standard.clone().unwrap();
 

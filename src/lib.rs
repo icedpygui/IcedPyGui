@@ -90,6 +90,18 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
     CALLBACKS.lock().unwrap()
 }
 
+pub struct UpdateItems {
+    pub items: Lazy<HashMap<usize, (PyObject, PyObject)>>, // wid, (item, value)
+}
+
+pub static UPDATE_ITEMS: Mutex<UpdateItems> = Mutex::new(UpdateItems {
+    items: Lazy::new(||HashMap::new()),
+});
+
+pub fn access_update_items() -> MutexGuard<'static, UpdateItems> {
+    UPDATE_ITEMS.lock().unwrap()
+}
+
 pub struct WindowActions {
     pub mode: Vec<(usize, window::Mode)>,
     pub decorations: Vec<usize>,
@@ -110,6 +122,7 @@ pub fn access_window_actions() -> MutexGuard<'static, WindowActions> {
     WINDOW_ACTIONS.lock().unwrap()
 }
 
+#[derive(Debug)]
 pub struct State {
     pub ids: Lazy<HashMap<usize, Vec<IpgIds>>>,  // <window_id=usize, Vec<IpgIds=structure>>
     pub last_id: usize,
@@ -196,6 +209,111 @@ pub static STATE: Mutex<State> = Mutex::new(
 
 pub fn access_state() -> MutexGuard<'static, State> {
     STATE.lock().unwrap()
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct IpgState {
+    pub ids: HashMap<usize, Vec<IpgIds>>,  // <window_id=usize, Vec<IpgIds=structure>>
+    pub last_id: usize,
+
+    pub containers: HashMap<usize, IpgContainers>,
+    pub container_ids: HashMap<usize, Vec<usize>>,  // <window_id=usize, vec<container_id=usize>>
+    pub container_wnd_str_ids: HashMap<String, String>, // get window string id based on container string id
+    pub container_str_ids: HashMap<String, usize>, // get container usize id based on container string
+    pub container_window_usize_ids: HashMap<usize, usize>, //get window usize id based on container usize id
+    
+    pub widgets: HashMap<usize, IpgWidgets>,
+    pub widget_container_ids: HashMap<usize, String>, //widget_id=usize, container_id=String
+    
+    pub windows_iced_ipg_ids: HashMap<window::Id, usize>, // <iced id, ipg id>
+    pub windows_str_ids: HashMap<String, usize>,  // <ipg_id=str, ipg id>
+    pub windows: Vec<IpgWindow>,
+    pub window_debug: HashMap<window::Id, (usize, bool)>, // (wid, debug)
+    pub window_theme: HashMap<window::Id, (usize, Theme)>, // (wid, window Theme)
+    pub window_mode: HashMap<window::Id, (usize, window::Mode)>,
+
+    pub container_style: HashMap<String, IpgContainerStyle>,
+    pub button_style: HashMap<String, IpgButtonStyle>,
+    pub checkbox_style: HashMap<String, IpgCheckboxStyle>,
+    pub menu_bar_style: HashMap<String, IpgMenuBarStyle>,
+    pub menu_style: HashMap<String, IpgMenuStyle>,
+    pub menu_separator_style: HashMap<String, IpgMenuSeparatorStyle>,
+    pub opaque_style: HashMap<String, IpgOpaqueStyle>,
+    pub pick_list_style: HashMap<String, IpgPickListStyle>,
+    pub progress_bar_style: HashMap<String, IpgProgressBarStyle>,
+    pub radio_style:  HashMap<String, IpgRadioStyle>,
+    pub rule_style:  HashMap<String, IpgRuleStyle>,
+    pub slider_style:  HashMap<String, IpgSliderStyle>,
+    pub text_input_style: HashMap<String, IpgTextInputStyle>,
+    pub toggler_style: HashMap<String, IpgTogglerStyle>,
+    pub scrollable_style: HashMap<String, IpgScrollableStyle>,
+
+    pub keyboard_event_enabled: (usize, bool),
+    pub mouse_event_enabled: (usize, bool),
+    pub timer_event_enabled: (usize, bool),
+    pub window_event_enabled: (usize, bool),
+    pub touch_event_enabled: (usize, bool),
+    pub timer_duration: u64,
+
+    pub mode: Vec<(usize, window::Mode)>,
+    pub decorations: Vec<usize>,
+    pub resize: Vec<(usize, f32, f32)>,
+    pub position: Vec<(usize, f32, f32)>,
+    pub level: Vec<(usize, window::Level)>,
+}
+
+impl IpgState {
+    pub fn new() -> Self {
+        IpgState {
+            ids: HashMap::new(),
+            last_id: 0,
+
+            containers: HashMap::new(),
+            container_ids: HashMap::new(),
+            container_wnd_str_ids: HashMap::new(),
+            container_str_ids: HashMap::new(),
+            container_window_usize_ids: HashMap::new(),
+
+            widgets: HashMap::new(),
+            widget_container_ids: HashMap::new(),
+
+            windows_iced_ipg_ids: HashMap::new(),
+            windows_str_ids: HashMap::new(),
+            windows: vec![],
+            window_debug: HashMap::new(),
+            window_theme: HashMap::new(),
+            window_mode: HashMap::new(),
+
+            container_style: HashMap::new(),
+            button_style: HashMap::new(),
+            checkbox_style: HashMap::new(),
+            menu_bar_style: HashMap::new(),
+            menu_style: HashMap::new(),
+            menu_separator_style: HashMap::new(),
+            opaque_style: HashMap::new(),
+            pick_list_style: HashMap::new(),
+            progress_bar_style: HashMap::new(),
+            radio_style: HashMap::new(),
+            rule_style: HashMap::new(),
+            slider_style: HashMap::new(),
+            text_input_style: HashMap::new(),
+            toggler_style: HashMap::new(),
+            scrollable_style: HashMap::new(),
+
+            keyboard_event_enabled: (0, false),
+            mouse_event_enabled: (0, false), 
+            timer_event_enabled: (0, false), 
+            window_event_enabled: (0, false),
+            touch_event_enabled: (0, false),
+            timer_duration: 0,
+
+            mode: vec![],
+            decorations: vec![],
+            resize: vec![],
+            position: vec![],
+            level: vec![],
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -3845,23 +3963,24 @@ impl IPG {
     #[pyo3(signature = (wid, item, value))]
     fn update_item(&self, wid: usize, item: PyObject, value: PyObject) {
 
-        let mut state = access_state();
+        let mut update = access_update_items();
+        update.items.insert(wid, (item, value));
+        drop(update);
+        // let widget = state.widgets.get_mut(&wid);
 
-        let widget = state.widgets.get_mut(&wid);
+        // if widget.is_some() {
+        //     match_widget(widget.unwrap(), item, value);
+        //         drop(state);
+        // } else {
+        //     match state.containers.get_mut(&wid) {
 
-        if widget.is_some() {
-            match_widget(widget.unwrap(), item, value);
-                drop(state);
-        } else {
-            match state.containers.get_mut(&wid) {
-
-                Some(cnt) => {
-                    match_container(cnt, item.clone(), value.clone());
-                    drop(state);
-                },
-                None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
-            }
-        }
+        //         Some(cnt) => {
+        //             match_container(cnt, item.clone(), value.clone());
+        //             drop(state);
+        //         },
+        //         None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
+        //     }
+        // }
 
     }
 
@@ -4451,7 +4570,7 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
 }
 
 fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject) {
-    // TODO: Update containers
+
     match container {
         IpgContainers::IpgCanvas(_) => {},
         IpgContainers::IpgColumn(_) => {},

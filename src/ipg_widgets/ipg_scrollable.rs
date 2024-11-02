@@ -1,8 +1,8 @@
 //! ipg_scrollable
-use crate::{app, access_callbacks, access_state};
+use crate::{access_callbacks, access_state, app, IpgState};
 use crate::TABLE_INTERNAL_IDS_END;
 use crate::TABLE_INTERNAL_IDS_START;
-use super::callbacks::get_set_container_callback_data;
+use super::callbacks::container_callback_data;
 use super::callbacks::WidgetCallbackIn;
 use super::callbacks::WidgetCallbackOut;
 use super::helpers::{get_height, get_radius, get_width, 
@@ -246,7 +246,7 @@ fn get_direction(direction: IpgScrollableDirection,
 
 }
 
-pub fn scrollable_callback(id: usize, vp: Viewport) {
+pub fn scrollable_callback(state: &mut IpgState, id: usize, vp: Viewport) {
 
     if id >= TABLE_INTERNAL_IDS_START && id <= TABLE_INTERNAL_IDS_END {
         table_callback(id, TableMessage::TableScrolled(vp, id));
@@ -267,7 +267,7 @@ pub fn scrollable_callback(id: usize, vp: Viewport) {
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
     
-    let mut wco = get_set_container_callback_data(wci);
+    let mut wco = container_callback_data(state, wci);
     wco.id = id;
     wco.scroll_pos = offsets;
     wco.event_name = "on_scroll".to_string();

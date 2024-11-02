@@ -10,6 +10,7 @@ use super::callbacks::{get_set_widget_callback_data,
     WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_padding_f32, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f32};
+use super::ipg_button::IpgButtonStyle;
 use super::{ipg_button, ipg_checkbox, ipg_toggle};
 use crate::style::styling::{lighten, darken};
 
@@ -144,7 +145,10 @@ pub enum IpgTableWidget {
 }
 
 
-pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
+pub fn construct_table(table: IpgTable, 
+                        content: Vec<Element<'static, Message>>, 
+                        button_fill_style: Option<IpgButtonStyle>) 
+                        -> Element<'static, Message> {
 
     let mut headers: Vec<Element<Message>>= vec![];
 
@@ -311,7 +315,7 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
                                     col,
                                     col_width, 
                                     bl,
-                                    table.button_fill_style_id.clone(),
+                                    button_fill_style.clone(),
                                     table.button_fill_style_standard.clone(),
                                     );
             }
@@ -327,7 +331,7 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
                                     col,
                                     col_width, 
                                     bl,
-                                    table.checkbox_fill_style_id.clone(),
+                                    None,
                                     table.checkbox_fill_style_standard.clone(),
                                     );
             }
@@ -343,7 +347,7 @@ pub fn construct_table(table: IpgTable, content: Vec<Element<'static, Message>>)
                                     col,
                                     col_width, 
                                     bl,
-                                    table.toggler_fill_style_id.clone(),
+                                    None,
                                     None,
                                     );
             }
@@ -492,7 +496,7 @@ fn add_widget(widget_type: IpgTableWidget,
                 col_index: usize,
                 column_width: f32,
                 is_toggled: bool,
-                style_id: Option<String>,
+                btn_style: Option<IpgButtonStyle>,
                 style_standard: Option<IpgStyleStandard>
                 ) -> Element<'static, Message> {
 
@@ -511,7 +515,7 @@ fn add_widget(widget_type: IpgTableWidget,
                                 .clip(true)
                                 .on_press(TableMessage::TableButton((row_index, col_index))) 
                                 .style(move|theme, status|
-                                    ipg_button::get_styling(theme, status, style_id.clone(), 
+                                    ipg_button::get_styling(theme, status, btn_style.clone(), 
                                                                 style_standard.clone()))
                                 .into(); 
             let btn_mapped = btn.map(move |message| app::Message::Table(table_id, message));
@@ -523,7 +527,7 @@ fn add_widget(widget_type: IpgTableWidget,
                                 .on_toggle(move|b| TableMessage::TableCheckbox(b, (row_index, col_index)))
                                 .style(move|theme, status|
                                     ipg_checkbox::get_styling(theme, status, 
-                                                                style_id.clone(), 
+                                                                None, 
                                                                 style_standard.clone(), 
                                                                 is_toggled))
                                 .into();
@@ -536,7 +540,7 @@ fn add_widget(widget_type: IpgTableWidget,
                                     .on_toggle(move|b| TableMessage::TableToggler(b, (row_index, col_index)))
                                     .style(move|theme, status|
                                     ipg_toggle::get_styling(theme, status, 
-                                                            style_id.clone()
+                                                            None,
                                                             ))
                                     .into();
 

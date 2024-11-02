@@ -1,16 +1,14 @@
 //! ipg_date_picker
 use crate::app::{Message, self};
-use crate::access_callbacks;
+use crate::{access_callbacks, IpgState};
 use crate::style::styling::IpgStyleStandard;
 use super::ipg_modal::Modal;
-use super::callbacks::{WidgetCallbackIn, 
-                        WidgetCallbackOut, 
-                        get_set_widget_callback_data};
+use super::callbacks::{widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use crate::ICON_FONT_BOOT;
 use super::helpers::{get_padding_f64, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f64, 
     DATE_FORMATS, DAYS, MONTH_NAMES, WEEKDAYS};
-use super::ipg_button::{get_standard_style, get_styling};
+use super::ipg_button::{get_standard_style, get_styling, IpgButtonStyle};
 
 use iced::advanced::graphics::core::Element;
 use iced::widget::button;
@@ -99,10 +97,10 @@ pub enum DPMessage {
     OnSubmit,
 }   
 
-pub fn construct_date_picker(dp: IpgDatePicker) -> Element<'static, Message, Theme, Renderer> {
+pub fn construct_date_picker(dp: IpgDatePicker, btn_style: Option<IpgButtonStyle>) -> Element<'static, Message, Theme, Renderer> {
 
     if !dp.show {
-        return calendar_show_button(dp.clone());
+        return calendar_show_button(dp.clone(), btn_style);
     }
     
     let width = Length::Fixed(dp.show_width * dp.size_factor);
@@ -219,7 +217,7 @@ fn get_days_of_month(year: i32, month: u32) -> i64 {
     
 }
 
-fn calendar_show_button(dp: IpgDatePicker) -> Element<'static, Message, Theme, Renderer> {
+fn calendar_show_button(dp: IpgDatePicker, btn_style: Option<IpgButtonStyle>) -> Element<'static, Message, Theme, Renderer> {
 
     let show_btn: Element<DPMessage, Theme, Renderer> = 
                     Button::new(Text::new(dp.label.clone()))
@@ -228,7 +226,7 @@ fn calendar_show_button(dp: IpgDatePicker) -> Element<'static, Message, Theme, R
                                     .width(Length::Shrink)
                                     .style(move|theme, status|
                                         get_styling(theme, status,
-                                            dp.button_style_id.clone(), 
+                                            btn_style.clone(), 
                                             dp.button_style_standard.clone()
                                         ))
                                     .into();
@@ -486,7 +484,7 @@ fn create_submit_row(id: usize, size_factor: f32, selected_date: String) -> Elem
 }
 
 
-pub fn date_picker_update(id: usize, message: DPMessage) {
+pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
 
     match message {
         DPMessage::ShowModal => {
@@ -495,28 +493,28 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
             wci.id = id;
             wci.show = Some(true);
             wci.is_submitted = Some(false);
-            let _ = get_set_widget_callback_data(wci);
+            let _ = widget_callback_data(state, wci);
         }
         DPMessage::HideModal => {
             // Non callback just sending the values.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.show = Some(false);
-            let _ = get_set_widget_callback_data(wci);
+            let _ = widget_callback_data(state, wci);
         }
         DPMessage::DayPressed(day) => {
             // Non callback just sending the values.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.selected_day = Some(day);
-            let _ = get_set_widget_callback_data(wci);
+            let _ = widget_callback_data(state, wci);
         }
         DPMessage::DatePickerFormat(date_format) => {
             // Non callback just sending the values.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.date_format = Some(date_format);
-            let _ = get_set_widget_callback_data(wci);
+            let _ = widget_callback_data(state, wci);
         }
         DPMessage::MonthRightPressed(index) => {
             // Non callback just sending the values.
@@ -525,7 +523,7 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
             wci.index = Some(index);
             wci.increment_value = Some(1);
             wci.is_submitted = Some(false);
-            let _ = get_set_widget_callback_data(wci);
+            let _ = widget_callback_data(state, wci);
         }
         DPMessage::MonthLeftPressed(index) => {
             // Non callback just sending the values.
@@ -534,7 +532,7 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
             wci.index = Some(index);
             wci.increment_value = Some(-1);
             wci.is_submitted = Some(false);
-            let _ = get_set_widget_callback_data(wci);
+            let _ = widget_callback_data(state, wci);
         }
         DPMessage::YearRightPressed => {
             // Non callback just sending the values.
@@ -542,7 +540,7 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
             wci.id = id;
             wci.selected_year = Some(1);
             wci.is_submitted = Some(false);
-            let _ = get_set_widget_callback_data(wci);
+            let _ = widget_callback_data(state, wci);
         }
         DPMessage::YearLeftPressed => {
             // Non callback just sending the values.
@@ -550,20 +548,19 @@ pub fn date_picker_update(id: usize, message: DPMessage) {
             wci.id = id;
             wci.selected_year = Some(-1);
             wci.is_submitted = Some(false);
-            let _ = get_set_widget_callback_data(wci);
+            let _ = widget_callback_data(state, wci);
         }
         DPMessage::OnSubmit => {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.is_submitted = Some(true);
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_submit".to_string();
             process_callback(wco);
         }
     }
     
-
 }
 
 

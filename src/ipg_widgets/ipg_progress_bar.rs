@@ -3,7 +3,7 @@ use iced::{Color, Element, Length, Theme};
 use iced::widget::{progress_bar, ProgressBar, Space};
 use pyo3::{pyclass, PyObject, Python};
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_state, app};
+use crate::app;
 
 use super::helpers::{get_height, get_radius, get_width, 
     try_extract_boolean, try_extract_f64, try_extract_string, 
@@ -21,7 +21,7 @@ pub struct IpgProgressBar {
     pub width: Length,
     pub height: Length,
     pub style_standard: Option<IpgStyleStandard>,
-    pub style: Option<String>,
+    pub style_id: Option<String>,
 }
 
 impl IpgProgressBar {
@@ -45,7 +45,7 @@ impl IpgProgressBar {
             width,
             height,
             style_standard,
-            style,
+            style_id: style,
         }
     }
 }
@@ -81,7 +81,7 @@ impl IpgProgressBarStyle {
 }
 
 
-pub fn construct_progress_bar(bar: IpgProgressBar) -> Element<'static, app::Message> {
+pub fn construct_progress_bar(bar: IpgProgressBar, style: Option<IpgProgressBarStyle>) -> Element<'static, app::Message> {
     
     if !bar.show {
         return Space::new(0.0, 0.0).into();
@@ -93,7 +93,7 @@ pub fn construct_progress_bar(bar: IpgProgressBar) -> Element<'static, app::Mess
                             .style(move|theme: &Theme | {   
                                 get_styling(theme, 
                                     bar.style_standard.clone(), 
-                                    bar.style.clone(), 
+                                    style.clone(), 
                                     )  
                                 })
                             .into()
@@ -139,7 +139,7 @@ pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
             pb.style_standard = Some(try_extract_style_standard(value))
         },
         IpgProgressBarParam::Style => {
-            pb.style = Some(try_extract_string(value))
+            pb.style_id = Some(try_extract_string(value))
         },
         IpgProgressBarParam::Value => {
             pb.value = try_extract_f64(value) as f32;
@@ -169,25 +169,12 @@ pub fn try_extract_progress_bar_update(update_obj: PyObject) -> IpgProgressBarPa
 
 pub fn get_styling(theme: &Theme,
                     style_standard: Option<IpgStyleStandard>,
-                    style_str: Option<String>, 
+                    style_opt: Option<IpgProgressBarStyle>, 
                     ) -> progress_bar::Style 
 {
-    let state = access_state();
-
-    if style_standard.is_none() && style_str.is_none() {
+    if style_standard.is_none() && style_opt.is_none() {
         return progress_bar::primary(theme)
     }
-
-    let style_opt = if style_str.is_some() {
-        state.progress_bar_style.get(&style_str.clone().unwrap())
-    } else {
-        None
-    };
-
-    if style_str.is_some() && style_opt.is_none() {
-        panic!("ProgressBar style: Unable to find style_id {}.", style_str.unwrap())
-    }
-
 
     if style_standard.is_some() {
         let style_std = style_standard.unwrap().clone();

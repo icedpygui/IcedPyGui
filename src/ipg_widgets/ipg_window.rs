@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::app::{self, Message};
-use crate::{access_callbacks, access_state, access_window_actions};
+use crate::{access_callbacks, access_window_actions, IpgState};
 
 use iced::window;
 use iced::{Element, Task, Theme, Size};
@@ -82,9 +82,7 @@ pub enum WndMessage {
     ScaleChanged(window::Id, String), 
 }
 
-pub fn add_windows() -> Vec<Task<app::Message>> {
-
-    let mut state = access_state();
+pub fn add_windows(state: &mut IpgState) -> Vec<Task<app::Message>> {
 
     let mut modes: Vec<(usize, window::Mode)> = vec![];
 
@@ -133,8 +131,6 @@ pub fn add_windows() -> Vec<Task<app::Message>> {
         spawn_window.push(open.map(move|_|Message::WindowOpened(iced_id, None, size)));
         
     }
-
-    drop(state);
 
     spawn_window
 

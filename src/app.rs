@@ -14,7 +14,7 @@ use iced::Color;
 use once_cell::sync::Lazy;
 
 
-use crate::{access_window_actions, ipg_widgets};
+use crate::{access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage, IpgBuildCanvas};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
@@ -105,6 +105,7 @@ pub struct Flags {
 
 
 pub struct App {
+    state: IpgState,
     timer_duration: u64,
     keyboard_event_enabled: (usize, bool),
     mouse_event_enabled: (usize, bool),
@@ -119,12 +120,15 @@ pub struct App {
 impl App {
     
     pub fn new(flags: Flags) -> (Self, Task<Message>) {
+        let mut state = IpgState::new();
+        clone_state(&mut state);
         
-        let mut open = add_windows();
+        let mut open = add_windows(&mut state);
         open.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
 
         (
             Self {
+                state,
                 timer_duration: flags.timer_duration,
                 keyboard_event_enabled: flags.keyboard_event_enabled,
                 mouse_event_enabled: flags.mouse_event_enabled,
@@ -140,19 +144,16 @@ impl App {
     }
 
     pub fn title(&self, iced_window_id: window::Id) -> String {
-        let state = access_state();
-
-        let ipg_window_id = match state.windows_iced_ipg_ids.get(&iced_window_id) {
+        
+        let ipg_window_id = match self.state.windows_iced_ipg_ids.get(&iced_window_id) {
             Some(id) => id.clone(),
             None => panic!("App: title, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
         };
         
-        let window_opt = state.containers.get(&ipg_window_id);
+        let window_opt = self.state.containers.get(&ipg_window_id);
         let ipg_window = get_window_container(window_opt);
 
-        let title = ipg_window.title.clone();
-        drop(state);
-        title
+        ipg_window.title.clone()
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -161,23 +162,27 @@ impl App {
                 Task::none()
             },
             Message::Button(id, message) => {
-                button_callback(id, message);
-                get_tasks()
+                button_callback(&mut self.state, id, message);
+                process_updates(&mut self.state);
+                get_tasks(&mut self.state)
             },
             Message::Canvas => {
                 canvas_callback();
-                get_tasks()
+                get_tasks(&mut self.state)
             },
             Message::Card(id, message) => {
-                card_callback(id, message);
+                card_callback(&mut self.state, id, message);
+                process_updates(&mut self.state);
                  Task::none()
             },
             Message::CheckBox(id, message) => {
-                checkbox_callback(id, message);
-                get_tasks()
+                checkbox_callback(&mut self.state, id, message);
+                process_updates(&mut self.state);
+                get_tasks(&mut self.state)
             },
             Message::DatePicker(id, message) => {
-                date_picker_update(id, message);
+                date_picker_update(&mut self.state, id, message);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::EventKeyboard(event) => {
@@ -190,7 +195,7 @@ impl App {
             },
             Message::EventWindow((window_id, event)) => {
                 // if all windows are closed, returns a true else false.
-                let is_empty = process_window_event(event, 
+                let is_empty = process_window_event(&mut self.state, event, 
                     self.window_event_enabled.0, 
                     self.window_event_enabled.1, 
                     window_id);
@@ -199,7 +204,7 @@ impl App {
                     iced::exit()
                 } else {
                     // check for any other window changes
-                    get_tasks()
+                    get_tasks(&mut self.state)
                 }
             },
             Message::EventTouch(event) => {
@@ -207,51 +212,54 @@ impl App {
                 Task::none()
             },
             Message::Image(id, message) => {
-                image_callback(id, message);
+                image_callback(&mut self.state, id, message);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::Menu(id, message) => {
                 menu_callback(id, message);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::Modal(id, message) => {
                 modal_callback(id, message);
+                process_updates(&mut self.state);
                 focus_next()
             },
             Message::MouseAreaOnPress(id) => {
-                mousearea_callback(id, "on_press".to_string());
+                mousearea_callback(&mut self.state, id, "on_press".to_string());
                 Task::none()
             },
             Message::MouseAreaOnRelease(id) => {
-                mousearea_callback(id, "on_release".to_string());
+                mousearea_callback(&mut self.state, id, "on_release".to_string());
                 Task::none()
             },
             Message::MouseAreaOnRightPress(id) => {
-                mousearea_callback(id, "on_right_press".to_string());
+                mousearea_callback(&mut self.state, id, "on_right_press".to_string());
                 Task::none()
             },
             Message::MouseAreaOnRightRelease(id) => {
-                mousearea_callback(id, "on_right_release".to_string());
+                mousearea_callback(&mut self.state, id, "on_right_release".to_string());
                 Task::none()
             },
             Message::MouseAreaOnMiddlePress(id) => {
-                mousearea_callback(id, "on_middle_press".to_string());
+                mousearea_callback(&mut self.state, id, "on_middle_press".to_string());
                 Task::none()
             },
             Message::MouseAreaOnMiddleRelease(id) => {
-                mousearea_callback(id, "on_middle_release".to_string());
+                mousearea_callback(&mut self.state, id, "on_middle_release".to_string());
                 Task::none()
             },
             Message::MouseAreaOnEnter(id) => {
-                mousearea_callback(id, "on_enter".to_string());
+                mousearea_callback(&mut self.state, id, "on_enter".to_string());
                 Task::none()
             },
             Message::MouseAreaOnMove(point, id) => {
-                mousearea_callback_point(id, point, "on_move".to_string());
+                mousearea_callback_point(&mut self.state, id, point, "on_move".to_string());
                 Task::none()
             },
             Message::MouseAreaOnExit(id) => {
-                mousearea_callback(id, "on_exit".to_string());
+                mousearea_callback(&mut self.state, id, "on_exit".to_string());
                 Task::none()
             },
             Message::OpaqueOnPress(id) => {
@@ -259,39 +267,47 @@ impl App {
                 Task::none()
             },
             Message::PickList(id, message) => {
-                pick_list_callback(id, message);
+                pick_list_callback(&mut self.state, id, message);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::Radio(id, message) => {
                 radio_callback(id, message);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::Scrolled(vp, id) => {
-                scrollable_callback(id, vp);
+                scrollable_callback(&mut self.state, id, vp);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::SelectableText(id, message) => {
                 selectable_text_callback(id, message);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::Slider(id, message) => {
                 slider_callback(id, message);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::Svg(id, message) => {
-                svg_callback(id, message);
+                svg_callback(&mut self.state, id, message);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::Table(id, message) => {
                 table_callback(id, message);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::TextInput(id, message) => {
                 text_input_callback(id, message);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::Tick => {
-                tick_callback(self.timer_event_enabled.0);
+                tick_callback(&mut self.state, self.timer_event_enabled.0);
                 Task::none()
             }
             Message::Timer(id, message) => {
@@ -302,12 +318,13 @@ impl App {
                     },
                     TIMMessage::OnStop => self.timer_event_enabled.1 = false,
                 }
-                self.timer_duration = timer_callback(id, message);
+                self.timer_duration = timer_callback(&mut self.state, id, message);
                 Task::none()
             },
             Message::Toggler(id, message) => {
                 toggle_callback(id, message);
-                get_tasks()
+                process_updates(&mut self.state);
+                get_tasks(&mut self.state)
             },
             Message::WindowOpened(_id, _position, size) => {
                 Task::none()
@@ -318,13 +335,13 @@ impl App {
 
     pub fn view(&self, window_id: window::Id) -> Element<self::Message> {
 
-        let (_visible, debug, theme) = get_window_values(window_id);
+        let (_visible, debug, theme) = get_window_values(window_id, &self.state);
         
         // if !visible { 
         //     return horizontal_space().into();
         // }
  
-        let content = create_content(window_id);
+        let content = create_content(window_id, &self.state);
         
         if debug {
             let color = match_theme_with_color(theme);
@@ -369,46 +386,36 @@ impl App {
 
     pub fn theme(&self, iced_window_id: window::Id) -> Theme {
 
-        let state = access_state();
-
-        let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
+        let ipg_window_id_opt = self.state.windows_iced_ipg_ids.get(&iced_window_id);
         let ipg_window_id = match ipg_window_id_opt {
             Some(id) => id.clone(),
             None => panic!("App: theme, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
         };
         
-        let window_opt = state.containers.get(&ipg_window_id);
+        let window_opt = self.state.containers.get(&ipg_window_id);
         let ipg_window = get_window_container(window_opt);
 
-        let theme = ipg_window.theme.clone();
-        drop(state);
-        theme
+        ipg_window.theme.clone()
     }
 
     pub fn scale_factor(&self, iced_window_id: window::Id) -> f64 {
 
-        let state = access_state();
-
-        let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
+        let ipg_window_id_opt = self.state.windows_iced_ipg_ids.get(&iced_window_id);
         let ipg_window_id = match ipg_window_id_opt {
             Some(id) => id.clone(),
             None => panic!("App: title, Unable to find ipg_window_id based on iced_window_id {:?}.", iced_window_id)
         };
         
-        let window_opt = state.containers.get(&ipg_window_id);
+        let window_opt = self.state.containers.get(&ipg_window_id);
         let ipg_window = get_window_container(window_opt);
 
-        let factor = ipg_window.scale_factor;
-        drop(state);
-        factor
-    
+        ipg_window.scale_factor
     }
 
 }
 
 
-fn get_window_values(iced_window_id: window::Id) -> (bool, bool, Theme) {
-    let state = access_state();
+fn get_window_values(iced_window_id: window::Id, state: &IpgState) -> (bool, bool, Theme) {
 
     let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
     let ipg_window_id = match ipg_window_id_opt {
@@ -427,15 +434,11 @@ fn get_window_values(iced_window_id: window::Id) -> (bool, bool, Theme) {
     let debug = ipg_window.debug;
     let theme = ipg_window.theme.clone();
 
-    drop(state);
-
     (vis, debug, theme)
 }
 
-fn get_tasks() -> Task<Message> {
+fn get_tasks(state: &mut IpgState) -> Task<Message> {
     
-    let mut state = access_window_actions();
-
     let mut actions = vec![];
 
     for (ipg_id, mode) in state.mode.iter() {
@@ -474,20 +477,17 @@ fn get_tasks() -> Task<Message> {
     }
     state.level = vec![];
 
-    drop(state);
-
     if actions.is_empty() {
         actions.push(Task::none());
     }
     Task::batch(actions)
+
 }
 
 
 // Central method to get the structures stored in the mutex and then the children 
-fn create_content(iced_id: window::Id) -> Element<'static, Message> {
+fn create_content(iced_id: window::Id, state: &IpgState) -> Element<'static, Message> {
     
-    let state = access_state();
-
     let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_id);
 
     let ipg_window_id = match ipg_window_id_opt {
@@ -501,12 +501,11 @@ fn create_content(iced_id: window::Id) -> Element<'static, Message> {
     // The unique parent containers are combined with all the children ids held in a vec.
     let all_parent_ids = get_combine_parents_and_children(
                             &unique_parent_ids, state.ids.get(&ipg_window_id));
-    
-    drop(state);
 
     let content = get_children(&all_parent_ids,
-                                                                    &0, 
-                                                                    &unique_parent_ids);
+                                                                &0, 
+                                                                &unique_parent_ids,
+                                                                state);
     content.into()
 }
 
@@ -557,6 +556,7 @@ fn get_combine_parents_and_children(parent_ids: &Vec<usize>, ids_opt: Option<&Ve
 fn get_children(parents: &Vec<ParentChildIds>, 
                 index: &usize, 
                 parent_ids: &Vec<usize>, 
+                state: &IpgState,
                 ) -> Element<'static, Message> 
 {
 
@@ -565,24 +565,22 @@ fn get_children(parents: &Vec<ParentChildIds>,
     for child in &parents[*index].child_ids {
         if parent_ids.contains(&child) {
             let index = parents.iter().position(|r| &r.parent_id == child).unwrap();
-            content.push(get_children(&parents, &index, parent_ids));
+            content.push(get_children(&parents, &index, parent_ids, state));
         } else {
-            content.push(get_widget(child));
+            content.push(get_widget(state, child));
         }
     }
     let id = &parents[*index].parent_id;
 
     if id != &0 {
-        get_container(id, content)
+        get_container(state, id, content)
     } else {
         Column::with_children(content).into()  // the final container
     }
 }
 
 
-fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
-
-    let state = access_state();
+fn get_container(state: &IpgState, id: &usize, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
 
     let container_opt: Option<&IpgContainers> = state.containers.get(id);
 
@@ -592,7 +590,6 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
             match container {
                 IpgContainers::IpgCanvas(can) => {
                     let canvas = can.clone();
-                    drop(state);
                     return construct_canvas(canvas)
                 },
                 IpgContainers::IpgColumn(col) => {
@@ -615,8 +612,16 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
                 }
                 IpgContainers::IpgTable(table) => {
                     let tbl = table.clone();
-                    drop(state);
-                    return construct_table(tbl, content)
+                    let style = match table.button_fill_style_id.clone() {
+                        Some(id) => state.button_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_table(tbl, content, Some(st));
+                    } else {
+                        return construct_table(tbl, content, None);
+                    }
                 },
                 IpgContainers::IpgRow(row) => {
                     return construct_row(row, content)
@@ -640,9 +645,7 @@ fn get_container(id: &usize, content: Vec<Element<'static, Message>>) -> Element
     
 }
 
-fn get_widget(id: &usize) -> Element<'static, Message> {
-
-    let state = access_state();
+fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
 
     let widget_opt: Option<&IpgWidgets> = state.widgets.get(id);
 
@@ -651,63 +654,91 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
         Some(widget) => 
             match widget {      
                 IpgWidgets::IpgButton(btn) => {
-                    let button = btn.clone();
-                    drop(state);
-                    return construct_button(button)
+                    let style = match btn.style_id.clone() {
+                        Some(id) => state.button_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_button(btn.clone(), Some(st));
+                    } else {
+                        return construct_button(btn.clone(), None);
+                    }
                 },
                 IpgWidgets::IpgCard(crd) => {
                     let card = crd.clone();
-                    drop(state);
                   return construct_card(card)
                 },
                 IpgWidgets::IpgCheckBox(chk) => {
-                    let c_box = chk.clone();
-                    drop(state);
-                    return construct_checkbox(c_box)
+                    let style = match chk.style_id.clone() {
+                        Some(id) => state.checkbox_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_checkbox(chk.clone(), Some(st));
+                    } else {
+                        return construct_checkbox(chk.clone(), None);
+                    }
                 },
                 IpgWidgets::IpgImage(img) => {
                     let image = img.clone();
-                    drop(state);
                     return construct_image(image)
                 },
                 IpgWidgets::IpgMenu(mn) => {
                     let menu = mn.clone();
-                    drop(state);
 ;                    return construct_menu(menu)
                 },
                 IpgWidgets::IpgDatePicker(dp) => {
-                    let d_picker = dp.clone();
-                    drop(state);
-                    return construct_date_picker(d_picker)
+                    let style = match dp.button_style_id.clone() {
+                        Some(id) => state.button_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_date_picker(dp.clone(), Some(st));
+                    } else {
+                        return construct_date_picker(dp.clone(), None);
+                    }
                 },
                 IpgWidgets::IpgPickList(pick) => {
-                    let pck = pick.clone();
-                    drop(state);
-                    return construct_picklist(pck)
+                    let style = match pick.style_id.clone() {
+                        Some(id) => state.pick_list_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_picklist(pick.clone(), Some(st));
+                    } else {
+                        return construct_picklist(pick.clone(), None);
+                    }
                 },
                 IpgWidgets::IpgProgressBar(bar) => {
-                    let br = bar.clone();
-                    drop(state);
-                    return construct_progress_bar(br)
+                    let style = match bar.style_id.clone() {
+                        Some(id) => state.progress_bar_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_progress_bar(bar.clone(), Some(st));
+                    } else {
+                        return construct_progress_bar(bar.clone(), None);
+                    }
                 }
                 IpgWidgets::IpgSelectableText(sltxt) => {
                     let s_txt = sltxt.clone();
-                    drop(state);
                     return construct_selectable_text(s_txt)
                 },
                 IpgWidgets::IpgRadio(radio) => {
                     let rad = radio.clone();
-                    drop(state);
                     return construct_radio(rad) 
                 },
                 IpgWidgets::IpgRule(rule) => {
                     let rul = rule.clone();
-                    drop(state);
                     return construct_rule(rul) 
                 },
                 IpgWidgets::IpgSlider(slider) => {
                     let sld = slider.clone();
-                    drop(state);
                     return construct_slider(sld)
                 },
                 IpgWidgets::IpgSpace(sp) => {
@@ -715,27 +746,22 @@ fn get_widget(id: &usize) -> Element<'static, Message> {
                 },
                 IpgWidgets::IpgSvg(i_svg) => {
                     let svg = i_svg.clone();
-                    drop(state);
                     return construct_svg(svg)
                 },
                 IpgWidgets::IpgText(text) => {
                     let txt = text.clone();
-                    drop(state);
                     return construct_text(txt)
                 },
                 IpgWidgets::IpgTextInput(input) => {
                     let t_input = input.clone();
-                    drop(state);
                     return construct_text_input(t_input)           
                 },
                 IpgWidgets::IpgTimer(tim) => {
                     let tm = tim.clone();
-                    drop(state);
                     return construct_timer(tm);
                 },
                 IpgWidgets::IpgToggler(tog) => {
                     let tg = tog.clone();
-                    drop(state);
                     return construct_toggler(tg)           
                 },
             },
@@ -785,4 +811,92 @@ fn get_window_container(container_opt: Option<&IpgContainers>) -> &IpgWindow {
         },
         _ => panic!("get_window: Not a Window")
     }
+}
+
+fn process_updates(state: &mut IpgState) {
+    
+    let mut update = access_update_items();
+
+    for (id, (item, value)) in update.items.clone().into_iter() {
+        let widget = state.widgets.get_mut(&id);
+
+        if widget.is_some() {
+            match_widget(widget.unwrap(), item, value);
+        } else {
+            match state.containers.get_mut(&id) {
+                Some(cnt) => {
+                    match_container(cnt, item, value);
+                    
+                },
+                None => panic!("Item_update: Widget, Container, or Window with id {id} not found.")
+            }
+        }
+    }
+    drop(update);
+}
+
+fn clone_state(state: &mut IpgState) {
+    let mut mut_state = access_state();
+    state.ids = mut_state.ids.to_owned();
+    state.containers = mut_state.containers.to_owned();
+    state.container_ids = mut_state.container_ids.to_owned();
+    state.container_wnd_str_ids = mut_state.container_wnd_str_ids.to_owned();
+    state.container_str_ids = mut_state.container_str_ids.to_owned();
+    state.container_window_usize_ids = mut_state.container_window_usize_ids.to_owned();
+    state.widgets = mut_state.widgets.to_owned();
+    state.widget_container_ids = mut_state.widget_container_ids.to_owned();
+    state.windows_iced_ipg_ids = mut_state.windows_iced_ipg_ids.to_owned();
+    state.windows_str_ids = mut_state.windows_str_ids.to_owned();
+    state.windows = mut_state.windows.to_owned();
+    state.window_debug = mut_state.window_debug.to_owned();
+    state.window_theme = mut_state.window_theme.to_owned();
+    state.window_mode = mut_state.window_mode.to_owned();
+    state.container_style = mut_state.container_style.to_owned();
+    state.button_style = mut_state.button_style.to_owned();
+    state.checkbox_style = mut_state.checkbox_style.to_owned();
+    state.menu_bar_style = mut_state.menu_bar_style.to_owned();
+    state.menu_style = mut_state.menu_style.to_owned();
+    state.menu_separator_style = mut_state.menu_separator_style.to_owned();
+    state.opaque_style = mut_state.opaque_style.to_owned();
+    state.pick_list_style = mut_state.pick_list_style.to_owned();
+    state.progress_bar_style = mut_state.progress_bar_style.to_owned();
+    state.radio_style = mut_state.radio_style.to_owned();
+    state.rule_style = mut_state.rule_style.to_owned();
+    state.slider_style = mut_state.slider_style.to_owned();
+    state.text_input_style = mut_state.text_input_style.to_owned();
+    state.toggler_style = mut_state.toggler_style.to_owned();
+    state.scrollable_style = mut_state.scrollable_style.to_owned();
+
+    mut_state.ids = Lazy::new(||HashMap::new());
+    mut_state.last_id = 0;
+    mut_state.containers = Lazy::new(||HashMap::new());
+    mut_state.container_ids = Lazy::new(||HashMap::new());
+    mut_state.container_str_ids = Lazy::new(||HashMap::new());
+    mut_state.container_wnd_str_ids = Lazy::new(||HashMap::new());
+    mut_state.container_window_usize_ids = Lazy::new(||HashMap::new());
+    mut_state.widgets = Lazy::new(||HashMap::new());
+    mut_state.widget_container_ids = Lazy::new(||HashMap::new());
+    mut_state.windows = vec![];
+    mut_state.windows_iced_ipg_ids = Lazy::new(||HashMap::new());
+    mut_state.windows_str_ids = Lazy::new(||HashMap::new());
+    mut_state.window_debug = Lazy::new(||HashMap::new());
+    mut_state.window_theme = Lazy::new(||HashMap::new());
+    mut_state.window_mode = Lazy::new(||HashMap::new());
+    mut_state.container_style = Lazy::new(||HashMap::new());
+    mut_state.button_style = Lazy::new(||HashMap::new());
+    mut_state.checkbox_style = Lazy::new(||HashMap::new());
+    mut_state.menu_bar_style = Lazy::new(||HashMap::new());
+    mut_state.menu_style = Lazy::new(||HashMap::new());
+    mut_state.menu_separator_style = Lazy::new(||HashMap::new());
+    mut_state.opaque_style = Lazy::new(||HashMap::new());
+    mut_state.pick_list_style = Lazy::new(||HashMap::new());
+    mut_state.progress_bar_style = Lazy::new(||HashMap::new());
+    mut_state.radio_style = Lazy::new(||HashMap::new());
+    mut_state.rule_style = Lazy::new(||HashMap::new());
+    mut_state.slider_style = Lazy::new(||HashMap::new());
+    mut_state.text_input_style = Lazy::new(||HashMap::new());
+    mut_state.toggler_style = Lazy::new(||HashMap::new());
+    mut_state.scrollable_style = Lazy::new(||HashMap::new());
+
+    drop(mut_state);
 }

@@ -1,9 +1,11 @@
 //! ipg_svg
 use crate::app;
 use crate::access_callbacks;
+use crate::IpgState;
+use super::callbacks::widget_callback_data;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut, 
-                        get_set_widget_callback_data};
+                        };
 use super::helpers::{get_height, get_width};
 use super::helpers::{try_extract_boolean, try_extract_f64, 
     try_extract_string};
@@ -150,50 +152,50 @@ fn match_rotation(rot: IpgSvgRotation, radians: Radians) -> Rotation {
     }
 }
 
-pub fn svg_callback(id: usize, message: SvgMessage) {
+pub fn svg_callback(state: &mut IpgState, id: usize, message: SvgMessage) {
 
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
 
     match message {
         SvgMessage::OnPress => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_press".to_string();
             process_callback(wco);
         },
         SvgMessage::OnRelease => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_release".to_string();
             process_callback(wco);
         },
         SvgMessage::OnRightPress => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_right_press".to_string();
             process_callback(wco);
         },
         SvgMessage::OnRightRelease => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_right_release".to_string();
             process_callback(wco);
         },
         SvgMessage::OnMiddlePress => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_middle_press".to_string();
             process_callback(wco);
         },
         SvgMessage::OnMiddleRelease => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_middle_release".to_string();
             process_callback(wco);
         },
         SvgMessage::OnEnter => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_enter".to_string();
             process_callback(wco);
@@ -203,14 +205,14 @@ pub fn svg_callback(id: usize, message: SvgMessage) {
             points.push(("x".to_string(), point.x));
             points.push(("y".to_string(), point.y));
             
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_move".to_string();
             wco.points = Some(points);
             process_callback(wco);
         },
         SvgMessage::OnExit => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_exit".to_string();
             process_callback(wco);

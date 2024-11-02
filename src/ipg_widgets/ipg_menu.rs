@@ -791,7 +791,7 @@ fn match_menu_item(item_type: IpgMenuType,
                                     .width(Length::Fill)
                                     .style(move|theme: &Theme, status| {
                                         ipg_button::get_styling(theme, status, 
-                                                                style.clone(),
+                                                                None,
                                                                 style_standard.clone()) 
                                         })
                                     .into();
@@ -804,7 +804,7 @@ fn match_menu_item(item_type: IpgMenuType,
                             .on_toggle(move|b| MenuMessage::ItemCheckToggled(b, (bar_index, item_index)))
                             .style(move|theme: &Theme, status| {
                                 ipg_checkbox::get_styling(theme, status, 
-                                                        style.clone(),
+                                                        None,
                                                         style_standard.clone(),
                                                         is_checked) 
                             })
@@ -892,7 +892,7 @@ fn menu_bar_button(label: String,
                                             button::text(theme, status)
                                         } else {
                                             ipg_button::get_styling(theme, status, 
-                                                style.clone(), style_standard.clone())
+                                                None, style_standard.clone())
                                         }
                                         })
                                     .into();

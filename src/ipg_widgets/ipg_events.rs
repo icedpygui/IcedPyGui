@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use crate::ipg_widgets::ipg_window::get_ipg_mode;
-use crate::{access_callbacks, access_state, access_window_actions};
+use crate::{access_callbacks, access_state, access_window_actions, IpgState};
 
 use iced::event::Event;
 use iced::keyboard::Event::{KeyPressed, KeyReleased, ModifiersChanged};
@@ -317,7 +317,8 @@ pub fn process_touch_events(event: Event, event_id: usize) {
 }
 
 
-pub fn process_window_event(event: Event,
+pub fn process_window_event(state: &mut IpgState,
+                            event: Event,
                             event_id: usize,
                             event_enabled: bool,
                             window_id: window::Id
@@ -333,14 +334,11 @@ pub fn process_window_event(event: Event,
         None
     };
    
-    let state = access_state();
-
     let ipg_window_id = match state.windows_iced_ipg_ids.get(&window_id) {
         Some(id) => id,
         None => panic!("Process window event: Unable to find the ipg window id using the iced id {:?}.", window_id)
     };
     let ipg_id = ipg_window_id.clone();
-    drop(state);
 
     match event {
         Event::Window(event) => {

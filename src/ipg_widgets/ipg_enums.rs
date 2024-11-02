@@ -36,7 +36,7 @@ use super::ipg_tool_tip::IpgToolTip;
 use super::ipg_window::IpgWindow;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum IpgContainers {
     IpgCanvas(IpgCanvas),
     IpgColumn(IpgColumn),
@@ -54,7 +54,7 @@ pub enum IpgContainers {
     IpgWindow(IpgWindow),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum IpgWidgets {
     IpgButton(IpgButton),
     IpgCard(IpgCard),

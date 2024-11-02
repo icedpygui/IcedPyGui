@@ -1,9 +1,8 @@
 //! ipg_card
 use crate::app::Message;
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_string};
-use crate::access_callbacks;
-use super::callbacks::{WidgetCallbackIn, 
-WidgetCallbackOut, get_set_widget_callback_data,
+use crate::{access_callbacks, IpgState};
+use super::callbacks::{widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
 };
 
 use iced::{Element, Length, Padding};
@@ -145,13 +144,13 @@ pub fn construct_card (crd: IpgCard) -> Element<'static, Message> {
 
 }
 
-pub fn card_callback(id: usize, message: CardMessage) {
+pub fn card_callback(state: &mut IpgState, id: usize, message: CardMessage) {
     match message {
         CardMessage::OnClose => {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.value_bool = Some(false);
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_close".to_string();
             process_callback(wco);

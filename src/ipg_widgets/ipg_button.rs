@@ -1,10 +1,12 @@
 //! ipg_button
+
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, access_state, app};
-use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_style_standard, try_extract_vec_f64};
+use crate::{access_callbacks, app, IpgState};
+use super::helpers::{get_height, get_padding_f64, get_radius, get_width, 
+    try_extract_boolean, try_extract_f64, try_extract_string, 
+    try_extract_style_standard, try_extract_vec_f64};
 use super::callbacks::{
-    WidgetCallbackIn, WidgetCallbackOut, 
-    get_set_widget_callback_data
+    widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
 };
 
 use iced::widget::button::{self, Status, Style};
@@ -114,7 +116,7 @@ pub enum BTNMessage {
 }
 
 
-pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
+pub fn construct_button(btn: IpgButton, style: Option<IpgButtonStyle>) -> Element<'static, app::Message> {
 
     if !btn.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
@@ -135,7 +137,7 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
                                 .clip(btn.clip)
                                 .style(move|theme: &Theme, status| {   
                                     get_styling(theme, status,
-                                        btn.style_id.clone(),
+                                        style.clone(),
                                         btn.style_standard.clone(),
                                     )  
                                     })
@@ -146,7 +148,7 @@ pub fn construct_button(btn: IpgButton) -> Element<'static, app::Message> {
 }
 
 
-pub fn button_callback(id: usize, message: BTNMessage) {
+pub fn button_callback(state: &mut IpgState, id: usize, message: BTNMessage) {
 
     let mut wci = WidgetCallbackIn::default();
     wci.id = id;
@@ -154,7 +156,7 @@ pub fn button_callback(id: usize, message: BTNMessage) {
     match message {
         BTNMessage::OnPress => {
             // getting only
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_press".to_string();
             process_callback(wco);
@@ -332,24 +334,12 @@ pub fn get_standard_style(theme: &Theme, status: Status,
 }
 
 pub fn get_styling(theme: &Theme, status: Status,
-                    style_id: Option<String>,
-                    style_standard: Option<IpgStyleStandard>,  
+                    style_opt: Option<IpgButtonStyle>,
+                    style_standard: Option<IpgStyleStandard>,
                     ) -> button::Style 
 {
-    if style_standard.is_none() && style_id.is_none() {
+    if style_standard.is_none() && style_opt.is_none() {
         return button::primary(theme, status)
-    }
-
-    let state = access_state();
-
-    let style_opt = if style_id.is_some() {
-        state.button_style.get(&style_id.clone().unwrap())
-    } else {
-        None
-    };
-
-    if style_id.is_some() && style_opt.is_none() {
-        panic!("Button: Unable to find style_id {}", style_id.unwrap())
     }
 
     if style_opt.is_none() && style_standard.is_some() {
