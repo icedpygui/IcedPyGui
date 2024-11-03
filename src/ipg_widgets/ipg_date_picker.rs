@@ -3,7 +3,7 @@ use crate::app::{Message, self};
 use crate::{access_callbacks, IpgState};
 use crate::style::styling::IpgStyleStandard;
 use super::ipg_modal::Modal;
-use super::callbacks::{widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use crate::ICON_FONT_BOOT;
 use super::helpers::{get_padding_f64, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f64, 
@@ -493,28 +493,28 @@ pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
             wci.id = id;
             wci.show = Some(true);
             wci.is_submitted = Some(false);
-            let _ = widget_callback_data(state, wci);
+            let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::HideModal => {
             // Non callback just sending the values.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.show = Some(false);
-            let _ = widget_callback_data(state, wci);
+            let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::DayPressed(day) => {
             // Non callback just sending the values.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.selected_day = Some(day);
-            let _ = widget_callback_data(state, wci);
+            let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::DatePickerFormat(date_format) => {
             // Non callback just sending the values.
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.date_format = Some(date_format);
-            let _ = widget_callback_data(state, wci);
+            let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::MonthRightPressed(index) => {
             // Non callback just sending the values.
@@ -523,7 +523,7 @@ pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
             wci.index = Some(index);
             wci.increment_value = Some(1);
             wci.is_submitted = Some(false);
-            let _ = widget_callback_data(state, wci);
+            let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::MonthLeftPressed(index) => {
             // Non callback just sending the values.
@@ -532,7 +532,7 @@ pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
             wci.index = Some(index);
             wci.increment_value = Some(-1);
             wci.is_submitted = Some(false);
-            let _ = widget_callback_data(state, wci);
+            let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::YearRightPressed => {
             // Non callback just sending the values.
@@ -540,7 +540,7 @@ pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
             wci.id = id;
             wci.selected_year = Some(1);
             wci.is_submitted = Some(false);
-            let _ = widget_callback_data(state, wci);
+            let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::YearLeftPressed => {
             // Non callback just sending the values.
@@ -548,13 +548,13 @@ pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
             wci.id = id;
             wci.selected_year = Some(-1);
             wci.is_submitted = Some(false);
-            let _ = widget_callback_data(state, wci);
+            let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::OnSubmit => {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.is_submitted = Some(true);
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_submit".to_string();
             process_callback(wco);

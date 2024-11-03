@@ -2,7 +2,6 @@
 use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector};
 use iced::widget::{container, horizontal_space, Container};
 
-use crate::access_state;
 use crate::app::Message;
 
 use super::helpers::{get_horizontal_alignment, get_radius, get_vertical_alignment};
@@ -99,7 +98,10 @@ impl IpgContainerStyle {
 }
 
 
-pub fn construct_container(con: IpgContainer, mut content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
+pub fn construct_container(con: IpgContainer, 
+                            mut content: Vec<Element<'static, Message>>,
+                            style: Option<IpgContainerStyle> ) 
+                            -> Element<'static, Message> {
 
     let align_h = get_horizontal_alignment(con.align_h.clone());
     let align_v = get_vertical_alignment(con.align_v.clone());
@@ -118,7 +120,7 @@ pub fn construct_container(con: IpgContainer, mut content: Vec<Element<'static, 
                 .clip(con.clip)
                 .style(move|theme|
                     get_styling(&theme, 
-                        con.style_id.clone(),
+                        style.clone(),
                         ))
                 .into();
     cont.into()
@@ -126,22 +128,14 @@ pub fn construct_container(con: IpgContainer, mut content: Vec<Element<'static, 
 
 
 pub fn get_styling(theme: &Theme,
-                style_id: Option<String>,  
+                style_opt: Option<IpgContainerStyle>,  
                 ) -> container::Style {
     
-    let state = access_state();
-
-    if style_id.is_none() {
+    if style_opt.is_none() {
         return container::transparent(theme);
     }
 
-    let style_opt = state.container_style.get(&style_id.unwrap());
-
-    let style = if style_opt.is_some() {
-        style_opt.unwrap()
-    } else {
-        panic!("Container style: style_id not found.")
-    };
+    let style = style_opt.unwrap();
 
     let background_color = if style.background_color.is_some() {
         style.background_color.unwrap()

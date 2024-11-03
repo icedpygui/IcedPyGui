@@ -1,6 +1,6 @@
 //! ipg_slider
 use crate::{access_callbacks, app, IpgState};
-use super::callbacks::{widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 
 use super::helpers::{get_radius, get_width};
 use super::helpers::{try_extract_boolean, try_extract_f64, 
@@ -143,13 +143,13 @@ pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
     match message {
         SLMessage::OnChange(value) => {
             wci.value_float = Some(value as f64);
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_change".to_string();
             process_callback(wco);
         },
         SLMessage::OnRelease => {
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_release".to_string();
             process_callback(wco);

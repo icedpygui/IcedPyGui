@@ -5,7 +5,7 @@ use crate::app;
 use super::helpers::{get_radius, get_shaping, get_width, 
     try_extract_style_standard, try_extract_boolean, 
     try_extract_f64, try_extract_string};
-use super::callbacks::{widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 
 use crate::graphics::BOOTSTRAP_FONT;
 use crate::graphics::bootstrap_icon::{Icon, icon_to_char};
@@ -179,7 +179,7 @@ pub fn checkbox_callback(state: &mut IpgState, id: usize, message: CHKMessage) {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
             wci.on_toggle = Some(on_toggle);
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_toggle".to_string();
             process_callback(wco);

@@ -13,7 +13,7 @@ use std::iter::Iterator;
 use std::collections::HashMap;
 
 mod app;
-use app::{App, Flags};
+use app::App;
 
 mod ipg_widgets;
 mod iced_widgets;
@@ -28,7 +28,7 @@ use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxPa
 use ipg_widgets::ipg_column::IpgColumn;
 use ipg_widgets::ipg_container::{IpgContainer, IpgContainerStyle};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParam};
-use ipg_widgets::ipg_events::{IpgEvents, IpgKeyBoardEvent, IpgMouseEvent, IpgWindowEvent};
+use ipg_widgets::ipg_events::IpgEvents;
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, IpgImageFilterMethod, 
     IpgImageParam, IpgImageRotation};
 use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParam, IpgMenuSeparatorStyle, 
@@ -90,18 +90,27 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
     CALLBACKS.lock().unwrap()
 }
 
+#[derive(Debug)]
 pub struct UpdateItems {
-    pub items: Lazy<HashMap<usize, (PyObject, PyObject)>>, // wid, (item, value)
+    // wid, (item, value)
+    pub updates: Lazy<HashMap<usize, (PyObject, PyObject)>>, 
+    // window_id_widget_id, (window_id, wid, arget_container_str_id, move_after(wid), move_before(wid))
+    pub moves: Lazy<HashMap<String, (String, usize, String, Option<usize>, Option<usize>)>>,
+    // window_id, wid
+    pub deletes: Lazy<HashMap<String, usize>>,
 }
 
 pub static UPDATE_ITEMS: Mutex<UpdateItems> = Mutex::new(UpdateItems {
-    items: Lazy::new(||HashMap::new()),
+    updates: Lazy::new(||HashMap::new()),
+    moves: Lazy::new(||HashMap::new()),
+    deletes: Lazy::new(||HashMap::new()),
 });
 
 pub fn access_update_items() -> MutexGuard<'static, UpdateItems> {
     UPDATE_ITEMS.lock().unwrap()
 }
 
+#[derive(Debug)]
 pub struct WindowActions {
     pub mode: Vec<(usize, window::Mode)>,
     pub decorations: Vec<usize>,
@@ -162,6 +171,13 @@ pub struct State {
     pub text_input_style: Lazy<HashMap<String, IpgTextInputStyle>>,
     pub toggler_style: Lazy<HashMap<String, IpgTogglerStyle>>,
     pub scrollable_style: Lazy<HashMap<String, IpgScrollableStyle>>,
+
+    pub keyboard_event_id_enabled: (usize, bool),
+    pub mouse_event_id_enabled: (usize, bool),
+    pub timer_event_id_enabled: (usize, bool),
+    pub window_event_id_enabled: (usize, bool),
+    pub touch_event_id_enabled: (usize, bool),
+    pub timer_duration: u64,
 }
 
 pub static STATE: Mutex<State> = Mutex::new(
@@ -204,6 +220,13 @@ pub static STATE: Mutex<State> = Mutex::new(
         text_input_style: Lazy::new(||HashMap::new()),
         toggler_style: Lazy::new(||HashMap::new()),
         scrollable_style: Lazy::new(||HashMap::new()),
+        
+        keyboard_event_id_enabled: (0, false),
+        mouse_event_id_enabled: (0, false), 
+        timer_event_id_enabled: (0, false), 
+        window_event_id_enabled: (0, false),
+        touch_event_id_enabled: (0, false),
+        timer_duration: 0,
     }
 );
 
@@ -248,11 +271,11 @@ pub struct IpgState {
     pub toggler_style: HashMap<String, IpgTogglerStyle>,
     pub scrollable_style: HashMap<String, IpgScrollableStyle>,
 
-    pub keyboard_event_enabled: (usize, bool),
-    pub mouse_event_enabled: (usize, bool),
-    pub timer_event_enabled: (usize, bool),
-    pub window_event_enabled: (usize, bool),
-    pub touch_event_enabled: (usize, bool),
+    pub keyboard_event_id_enabled: (usize, bool),
+    pub mouse_event_id_enabled: (usize, bool),
+    pub timer_event_id_enabled: (usize, bool),
+    pub window_event_id_enabled: (usize, bool),
+    pub touch_event_id_enabled: (usize, bool),
     pub timer_duration: u64,
 
     pub mode: Vec<(usize, window::Mode)>,
@@ -300,11 +323,11 @@ impl IpgState {
             toggler_style: HashMap::new(),
             scrollable_style: HashMap::new(),
 
-            keyboard_event_enabled: (0, false),
-            mouse_event_enabled: (0, false), 
-            timer_event_enabled: (0, false), 
-            window_event_enabled: (0, false),
-            touch_event_enabled: (0, false),
+            keyboard_event_id_enabled: (0, false),
+            mouse_event_id_enabled: (0, false), 
+            timer_event_id_enabled: (0, false), 
+            window_event_id_enabled: (0, false),
+            touch_event_id_enabled: (0, false),
             timer_duration: 0,
 
             mode: vec![],
@@ -365,6 +388,14 @@ pub fn access_canvas_state() -> MutexGuard<'static, CanvasState> {
 }
 
 #[derive(Debug, Clone)]
+pub enum IpgUpdateType {
+    Add,
+    Delete,
+    Move,
+    Update,
+}
+
+#[derive(Debug, Clone)]
 pub struct IpgIds {
     pub id: usize,  // id of widget or container
     pub parent_uid: usize,  // parent_uid == id of a container
@@ -397,37 +428,12 @@ impl IPG {
     #[pyo3(signature = ())]
     fn start_session(&self) {
 
-        let state = access_state();
-        let mut flags = Flags {keyboard_event_enabled: (0, false),
-                                        mouse_event_enabled: (0, false), 
-                                        timer_event_enabled: (0, false), 
-                                        window_event_enabled: (0, false),
-                                        touch_event_enabled: (0, false),
-                                        timer_duration: 0,
-                                    };
-
-        for events in state.events.iter() {
-            match events {
-                IpgEvents::Keyboard(kb)=> {
-                    flags.keyboard_event_enabled = (kb.id, kb.enabled)
-                },
-                IpgEvents::Mouse(mouse)=> {
-                    flags.mouse_event_enabled = (mouse.id, mouse.enabled)
-                },
-                IpgEvents::Window(wnd) => {
-                    flags.window_event_enabled = (wnd.id, wnd.enabled);
-                }, 
-            }
-        }
-
-        drop(state);
-
         let _ = iced::daemon(App::title, App::update, App::view)
                     .subscription(App::subscription)
                     .theme(App::theme)
                     .scale_factor(App::scale_factor)
                     .antialiasing(true)
-                    .run_with(||App::new(flags));
+                    .run_with(||App::new());
     }
 
     #[pyo3(signature = ())]
@@ -3710,10 +3716,8 @@ impl IPG {
         
         let mut state = access_state();
 
-        state.events.push(IpgEvents::Keyboard(IpgKeyBoardEvent::new(
-                                                                    self.id,
-                                                                    enabled, 
-                                                                    )));
+        state.keyboard_event_id_enabled = (self.id, enabled);
+
         state.last_id = self.id;
         drop(state);
         Ok(self.id)
@@ -3811,10 +3815,8 @@ impl IPG {
         
         let mut state = access_state();
 
-        state.events.push(IpgEvents::Mouse(IpgMouseEvent::new(
-                                                            self.id,
-                                                            enabled, 
-                                                            )));
+        state.mouse_event_id_enabled = (self.id, enabled);
+
         state.last_id = self.id;
         drop(state);
         Ok(self.id)
@@ -3915,10 +3917,8 @@ impl IPG {
         
         let mut state = access_state();
 
-        state.events.push(IpgEvents::Window(IpgWindowEvent::new(
-                                                            self.id,
-                                                            enabled, 
-                                                            )));
+        state.window_event_id_enabled = (self.id, enabled);
+
         state.last_id = self.id;
         drop(state);
         Ok(self.id)
@@ -3927,7 +3927,6 @@ impl IPG {
     #[pyo3(signature = (window_id, wid))]
     fn delete_item(&self, window_id: String, wid: usize) 
     {
-
         let mut state = access_state();
 
         let iced_id = match state.windows_str_ids.get(&window_id) {
@@ -3962,25 +3961,11 @@ impl IPG {
 
     #[pyo3(signature = (wid, item, value))]
     fn update_item(&self, wid: usize, item: PyObject, value: PyObject) {
+        let mut all_updates = access_update_items();
 
-        let mut update = access_update_items();
-        update.items.insert(wid, (item, value));
-        drop(update);
-        // let widget = state.widgets.get_mut(&wid);
+        all_updates.updates.insert(wid, (item, value));
 
-        // if widget.is_some() {
-        //     match_widget(widget.unwrap(), item, value);
-        //         drop(state);
-        // } else {
-        //     match state.containers.get_mut(&wid) {
-
-        //         Some(cnt) => {
-        //             match_container(cnt, item.clone(), value.clone());
-        //             drop(state);
-        //         },
-        //         None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
-        //     }
-        // }
+        drop(all_updates);
 
     }
 
@@ -3998,71 +3983,10 @@ impl IPG {
                     move_before: Option<usize>,
                     )
     {
-        let mut state = access_state();
-
-        let container_str_id_opt = state.container_str_ids.get(&target_container_str_id);
-
-        let container_usize_id = match container_str_id_opt {
-            Some(id) => id.clone(),
-            None => panic!("move_widget: unable to find the target container id based on the id {}", target_container_str_id)
-        };
-
-        let window_id_usize_opt = state.windows_str_ids.get(&window_id);
-
-        let window_id_usize = match window_id_usize_opt {
-            Some(id) => id.clone(),
-            None => panic!("move_widget: unable to find the window_id using the id {}", window_id)
-        };
-
-        let window_widget_ids_opt = state.ids.get_mut(&window_id_usize);
-
-        let window_widget_ids = match window_widget_ids_opt {
-            Some(ids) => ids,
-            None => panic!("move_widget: unable to find widget using window_id {}", window_id)    
-        };
-
-        let mut before = false;
-        let pos_id = if move_after.is_some() {
-            move_after.unwrap()
-        } else if move_before.is_some() { 
-            before = true;
-            move_before.unwrap()
-        } else {
-            1_000_000
-        };
-
-        //  set some large numbers to break early
-        let mut found_index = 1_000_000;
-        let mut target_index: usize = 1_000_000;
-
-        for (i, ids) in window_widget_ids.iter_mut().enumerate() {
-            if ids.id == widget_id {
-                ids.parent_uid = container_usize_id;
-                ids.parent_id = target_container_str_id.clone();
-                found_index = i;
-            }
-            if ids.id == pos_id {
-                target_index = i
-            }
-            if found_index != 1_000_000 && (target_index != 1_000_000 || pos_id == 1_000_000) {
-                break;
-            }
-        }
-        
-        let move_ids = window_widget_ids.remove(found_index);
-        
-        if pos_id == 1_000_000 {
-            window_widget_ids.push(move_ids);
-        } else {
-            if before {
-                window_widget_ids.insert(target_index-1, move_ids);
-            } else {
-                window_widget_ids.insert(target_index, move_ids);
-            }
-        }  
-
-        drop(state);
-
+        let mut all_updates = access_update_items();
+        let str_id = format!("{}_{}", window_id, widget_id);
+        all_updates.moves.insert(str_id, (window_id, widget_id, target_container_str_id, move_after, move_before));
+        drop(all_updates);
     }
     
     #[pyo3(signature = (color))]
@@ -4515,6 +4439,7 @@ impl IPG {
 }
 
 fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
+
     match widget {
         IpgWidgets::IpgButton(btn) => {
             button_item_update(btn, item, value);

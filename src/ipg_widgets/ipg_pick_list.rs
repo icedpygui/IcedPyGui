@@ -2,7 +2,7 @@
 use crate::access_callbacks;
 use crate::app;
 use crate::IpgState;
-use super::callbacks::widget_callback_data;
+use super::callbacks::set_or_get_widget_callback_data;
 use super::callbacks::{WidgetCallbackIn, 
     WidgetCallbackOut};
 use super::helpers::{get_padding_f64, get_radius, get_width};
@@ -187,7 +187,7 @@ pub fn construct_picklist(pick: IpgPickList,
     match message {
         PLMessage::OnSelect(value) => {
             wci.value_str = Some(value.clone());
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_select".to_string();
             wco.value_str = Some(value);

@@ -1,6 +1,6 @@
 //!ipg_radio
 use crate::ipg_widgets::helpers::try_extract_boolean;
-use crate::{access_state, access_callbacks};
+use crate::{access_callbacks, IpgState};
 use crate::app;
 use super::helpers::{get_height, get_padding_f64, 
     get_width, try_extract_f64, try_extract_f64_option,
@@ -200,11 +200,10 @@ pub fn construct_radio(radio: IpgRadio,
 }
 
 
-pub fn radio_callback(id: usize, message: RDMessage) {
+pub fn radio_callback(state: &mut IpgState, id: usize, message: RDMessage) {
 
     let mut wco = WidgetCallbackOut::default();
 
-    let mut state = access_state();
     let widget_opt = state.widgets.get_mut(&id);
 
     let widgets = match widget_opt {
@@ -304,7 +303,6 @@ pub fn radio_callback(id: usize, message: RDMessage) {
     wco.user_data = radio.user_data.clone();
     wco.selected_label = Some(radio.labels[ch_usize].clone());
     wco.selected_index = Some(ch_usize);
-    drop(state);
 
     wco.id = id;
     wco.event_name = "on_select".to_string();

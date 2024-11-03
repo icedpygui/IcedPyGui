@@ -3,7 +3,7 @@ use crate::app;
 use crate::access_callbacks;
 use crate::graphics::colors::get_color;
 use crate::IpgState;
-use super::callbacks::widget_callback_data;
+use super::callbacks::set_or_get_widget_callback_data;
 use super::callbacks::{WidgetCallbackIn, 
                         WidgetCallbackOut};
 use super::helpers::try_extract_ipg_color;
@@ -138,43 +138,43 @@ pub fn selectable_text_callback(state: &mut IpgState, id: usize, message: SLTXTM
 
     match message {
         SLTXTMessage::OnPress => {
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_press".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnRelease => {
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_release".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnRightPress => {
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_right_press".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnRightRelease => {
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_right_release".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnMiddlePress => {
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_middle_press".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnMiddleRelease => {
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_middle_release".to_string();
             process_callback(wco);
         },
         SLTXTMessage::OnEnter => {
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_enter".to_string();
             process_callback(wco);
@@ -183,14 +183,14 @@ pub fn selectable_text_callback(state: &mut IpgState, id: usize, message: SLTXTM
             let mut points: Vec<(String, f32)> = vec![];
             points.push(("x".to_string(), point.x));
             points.push(("y".to_string(), point.y));
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_move".to_string();
             wco.points = Some(points);
             process_callback(wco);
         },
         SLTXTMessage::OnExit => {
-            let mut wco = widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_exit".to_string();
             process_callback(wco);

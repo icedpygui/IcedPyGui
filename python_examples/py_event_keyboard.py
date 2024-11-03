@@ -14,7 +14,6 @@ def key_pressed(_event_id, name: str, key: dict, user_data: any):
     modifier = key.get("modifier")
     if key.get("modifier") == "None":
         modifier = ""
-
     ipg.update_item(text_pressed, IpgTextParam.Content, f"{name}: {modifier} {key.get('key')}")
     ipg.update_item(text_user_data, IpgTextParam.Content, f"user data is {user_data}")
 

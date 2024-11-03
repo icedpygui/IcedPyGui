@@ -1,6 +1,6 @@
 //! ipg_text_input
 use crate::{access_callbacks, app, IpgState};
-use super::callbacks::{widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_padding_f64, get_radius, get_width};
 use super::helpers::{try_extract_boolean, try_extract_f64, 
     try_extract_string, try_extract_u16, try_extract_vec_f64};
@@ -163,7 +163,7 @@ pub fn text_input_callback(state: &mut IpgState, id: usize, message: TIMessage) 
     match message {
         TIMessage::OnInput(value) => {
             wci.value_str = Some(value.clone());
-            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_input".to_string();
             wco.value_str = Some(value);
@@ -171,7 +171,7 @@ pub fn text_input_callback(state: &mut IpgState, id: usize, message: TIMessage) 
         },
         TIMessage::OnSubmit(value) => {
             // wci.value_str = Some(value.clone());
-            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_submit".to_string();
             wco.value_str = Some(value);
@@ -179,7 +179,7 @@ pub fn text_input_callback(state: &mut IpgState, id: usize, message: TIMessage) 
         }
         TIMessage::OnPaste(value) => {
             wci.value_str = Some(value.clone());
-            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_paste".to_string();
             wco.value_str = Some(value);

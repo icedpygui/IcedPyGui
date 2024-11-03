@@ -11,10 +11,10 @@ use iced::widget::{center, container, mouse_area, opaque, Button, Column};
 use iced::{Color, Element, Event, Length, Point, Rectangle, Size, Vector};
 use pyo3::{PyObject, Python};
 
-use crate::access_callbacks;
+use crate::{access_callbacks, IpgState};
 use crate::app::{self, Message};
 
-use super::callbacks::{get_set_widget_callback_data, 
+use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::get_alignment;
 use super::ipg_enums::IpgAlignment;
@@ -127,7 +127,7 @@ pub fn construct_modal(mdl: IpgModal, content: Vec<Element<'static, Message>> )
 }
 
 
-pub fn modal_callback(id: usize, message: ModalMessage) {
+pub fn modal_callback(state: &mut IpgState, id: usize, message: ModalMessage) {
 
     let mut wci = WidgetCallbackIn::default();
     wci.id = id;
@@ -136,7 +136,7 @@ pub fn modal_callback(id: usize, message: ModalMessage) {
         ModalMessage::OnOpen => {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
             wci.id = id;
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_open".to_string();
             process_callback(wco);

@@ -18,7 +18,7 @@ use iced::window;
 use pyo3::{PyObject, Python};
 use pyo3::types::IntoPyDict;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct IpgKeyBoardEvent {
     pub id: usize,
     pub enabled: bool,
@@ -80,7 +80,7 @@ pub enum IpgEvents {
 }
 
 pub fn process_keyboard_events(event: Event, event_id: usize) 
-{      
+{   
     match event {    
         Event::Keyboard(KeyPressed { key, 
                                     location, 
@@ -88,11 +88,11 @@ pub fn process_keyboard_events(event: Event, event_id: usize)
                                     text: _ ,
                                     physical_key: _, 
                                     modified_key: _ }) => {
-        
+            
             let user_data = get_event_user_data(event_id);
 
             let event_name = "key pressed".to_string();
-            
+
             let cb = get_callback(event_id, event_name.clone());
             
             let key_str: String = process_key(key.as_ref());
@@ -319,11 +319,12 @@ pub fn process_touch_events(event: Event, event_id: usize) {
 
 pub fn process_window_event(state: &mut IpgState,
                             event: Event,
-                            event_id: usize,
-                            event_enabled: bool,
-                            window_id: window::Id
+                            window_id: window::Id,
                         ) -> bool
 {
+    let event_id = state.window_event_id_enabled.0;
+    let event_enabled = state.window_event_id_enabled.1; 
+
     let mut hmap_s_f: Option<HashMap<String, f32>> = None;
     let mut hmap_s_s: Option<HashMap<String, String>> = None;
 

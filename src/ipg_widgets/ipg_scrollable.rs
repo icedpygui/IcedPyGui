@@ -1,5 +1,5 @@
 //! ipg_scrollable
-use crate::{access_callbacks, access_state, app, IpgState};
+use crate::{access_callbacks, app, IpgState};
 use crate::TABLE_INTERNAL_IDS_END;
 use crate::TABLE_INTERNAL_IDS_START;
 use super::callbacks::container_callback_data;
@@ -172,8 +172,10 @@ pub enum IpgScrollableAlignment {
 }
 
 
-pub fn construct_scrollable(scroll: IpgScrollable, content: Vec<Element<'static, app::Message>> ) 
-                                                            -> Element<'static, app::Message> {
+pub fn construct_scrollable(scroll: IpgScrollable, 
+                            content: Vec<Element<'static, app::Message>>,
+                            style: Option<IpgScrollableStyle> ) 
+                            -> Element<'static, app::Message> {
 
     let content: Element<'static, app::Message> = Column::with_children(content).into();
 
@@ -194,7 +196,7 @@ pub fn construct_scrollable(scroll: IpgScrollable, content: Vec<Element<'static,
                     .on_scroll(move|vp| app::Message::Scrolled(vp, scroll.id))
                     .style(move|theme, status| {
                         get_styling(theme, status,
-                                    scroll.style_id.clone(),
+                                    style.clone(),
                                     )
                     })
                     .into()
@@ -249,7 +251,7 @@ fn get_direction(direction: IpgScrollableDirection,
 pub fn scrollable_callback(state: &mut IpgState, id: usize, vp: Viewport) {
 
     if id >= TABLE_INTERNAL_IDS_START && id <= TABLE_INTERNAL_IDS_END {
-        table_callback(id, TableMessage::TableScrolled(vp, id));
+        table_callback(state, id, TableMessage::TableScrolled(vp, id));
         return
     }
 
@@ -411,22 +413,15 @@ pub fn try_extract_alignment(direct_obj: PyObject) -> IpgScrollableAlignment {
 }
 
 fn get_styling(theme: &Theme, status: Status,
-                style_id: Option<String>,
+                style_opt: Option<IpgScrollableStyle>,
                 ) -> Style 
 {
-    let state = access_state();
 
-    if style_id.is_none() {
+    if style_opt.is_none() {
         return scrollable::default(theme, status);
     }
 
-    let style_opt = state.scrollable_style.get(&style_id.unwrap());
-
-    let style = if style_opt.is_some() {
-        style_opt.unwrap()
-    } else {
-        panic!("Container style: style_id not found.")
-    };
+    let style = style_opt.unwrap();
 
     let background_color = if style.background_color.is_some() {
         style.background_color.unwrap()

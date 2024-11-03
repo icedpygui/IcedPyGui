@@ -6,7 +6,7 @@ use super::helpers::{get_height, get_padding_f64, get_radius, get_width,
     try_extract_boolean, try_extract_f64, try_extract_string, 
     try_extract_style_standard, try_extract_vec_f64};
 use super::callbacks::{
-    widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
+    set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
 };
 
 use iced::widget::button::{self, Status, Style};
@@ -156,7 +156,7 @@ pub fn button_callback(state: &mut IpgState, id: usize, message: BTNMessage) {
     match message {
         BTNMessage::OnPress => {
             // getting only
-            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_press".to_string();
             process_callback(wco);

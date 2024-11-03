@@ -1,11 +1,11 @@
 import random
-
+import os
 from icedpygui import IPG, IpgTableRowHighLight, IpgTableWidget, IpgTableParam, IpgColor
 from icedpygui import IpgTextParam, IpgAlignment, IpgHorizontalAlignment, IpgVerticalAlignment, IpgTextInputParam
 from icedpygui import IpgButtonParam, IpgPickListParam, IpgDatePickerParam
 import polars as pl
 from datetime import datetime, date
-import os
+
 
 # Just to demo how one might use a large table, I have supplied my book list that
 # I have read over the last few years.  You may note that I'm a scifi reader but

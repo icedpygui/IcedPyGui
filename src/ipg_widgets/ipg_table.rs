@@ -4,9 +4,9 @@ use std::collections::HashMap;
 use std::result::Result;
 
 use crate::app::{self, Message};
-use crate::{access_callbacks, TABLE_INTERNAL_IDS_START};
+use crate::{access_callbacks, IpgState, TABLE_INTERNAL_IDS_START};
 use crate::style::styling::{get_theme_color, IpgStyleStandard};
-use super::callbacks::{get_set_widget_callback_data, 
+use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_padding_f32, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f32};
@@ -551,7 +551,7 @@ fn add_widget(widget_type: IpgTableWidget,
     }
 }
 
-pub fn table_callback(table_id: usize, message: TableMessage) {
+pub fn table_callback(state: &mut IpgState, table_id: usize, message: TableMessage) {
 
     let mut wci = WidgetCallbackIn::default();
     wci.id = table_id;
@@ -559,7 +559,7 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
     match message {
         TableMessage::TableButton((row_index, col_index)) => {
             wci.value_str = Some("button".to_string());
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = table_id; 
             wco.index_table = Some((row_index, col_index));
             wco.event_name = "on_button".to_string();
@@ -569,7 +569,7 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             wci.value_str =  Some("checkbox".to_string());
             wci.on_toggle = Some(on_toggle);
             wci.index_table = Some((row_index, col_index));
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = table_id;
             wco.event_name = "on_checkbox".to_string();
             wco.on_toggle = Some(on_toggle);
@@ -580,7 +580,7 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             wci.value_str = Some("toggler".to_string());
             wci.on_toggle = Some(on_toggle);
             wci.index_table = Some((row_index, col_index));
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = table_id;
             wco.event_name = "on_toggler".to_string();
             wco.on_toggle = Some(on_toggle);
@@ -598,7 +598,7 @@ pub fn table_callback(table_id: usize, message: TableMessage) {
             offsets.push(("rev_offset_x".to_string(), vp.absolute_offset_reversed().x));
             offsets.push(("rev_offset_y".to_string(), vp.absolute_offset_reversed().y));
 
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = table_id;
             wco.event_name = "on_scroll".to_string();
             wco.scroll_pos = offsets;

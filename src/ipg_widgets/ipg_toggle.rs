@@ -3,7 +3,7 @@ use crate::{access_callbacks, app, IpgState};
 use super::helpers::{get_width, try_extract_boolean, try_extract_f64, 
     try_extract_ipg_horizontal_alignment, try_extract_string};
 use super::callbacks::{
-    widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
+    set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
 };
 use super::ipg_enums::IpgHorizontalAlignment;
 use iced::widget::text::LineHeight;
@@ -158,7 +158,7 @@ pub fn toggle_callback(state: &mut IpgState, id: usize, message: TOGMessage) {
     match message {
         TOGMessage::Toggled(on_toggle) => {
             wci.on_toggle = Some(on_toggle);
-            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.on_toggle = Some(on_toggle);
             wco.event_name = "toggled".to_string();

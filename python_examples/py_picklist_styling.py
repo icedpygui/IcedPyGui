@@ -8,7 +8,7 @@ ipg = IPG()
 # The data returns the item selected and can be named anything.
 # The update items uses the text widget id and the "content" parameter
 # to update.  The value is what you want the content parameter to equal.
-def picked_item(_pl_id, data):
+def picked_item(pl_id, data):
     print(f"pl_id = {pl_id} data = {data}")
 
 
@@ -33,7 +33,7 @@ options = ["One", "Two", "Three"]
 
 # A PickList is added and the handle is not defined which
 # will result in a down arrow used in the PickList box.
-pl_id = ipg.add_pick_list(parent_id="row1", options=options,
+ipg.add_pick_list(parent_id="row1", options=options,
                             placeholder="Choose a Number...",
                             on_select=picked_item)
 
@@ -44,11 +44,11 @@ ipg.add_row("main", "row2", parent_id="col")
 
 # Another PickList is added and the handle is defined as an arrow which
 # will result in a down arrow used again but the size can be changed.
-pl_id = ipg.add_pick_list(parent_id="row2", options=options, 
-                            placeholder="Choose a Number...", 
-                            handle=IpgPickListHandle.Arrow,
-                            arrow_size=30.0,
-                            on_select=picked_item)
+ipg.add_pick_list(parent_id="row2", options=options, 
+                    placeholder="Choose a Number...", 
+                    handle=IpgPickListHandle.Arrow,
+                    arrow_size=30.0,
+                    on_select=picked_item)
 
 ipg.add_text(parent_id="row2", content="Arrow Style with down arrow sized to 30")
 
@@ -57,13 +57,13 @@ ipg.add_row("main", "row3", parent_id="col")
 
 # Another PickList is added and the handle is defined as Dynamic which
 # will result in an arrow used for the open and closed position.
-pl_id = ipg.add_pick_list(parent_id="row3", options=options, 
-                            placeholder="Choose a Number...", 
-                            handle=IpgPickListHandle.Dynamic,
-                            arrow_size=20.0, # the dynamic arrows can be sized too, if needed
-                            dynamic_closed=IpgButtonArrow.ArrowUp,
-                            dynamic_opened=IpgButtonArrow.ArrowDown,
-                            on_select=picked_item
+ipg.add_pick_list(parent_id="row3", options=options, 
+                    placeholder="Choose a Number...", 
+                    handle=IpgPickListHandle.Dynamic,
+                    arrow_size=20.0, # the dynamic arrows can be sized too, if needed
+                    dynamic_closed=IpgButtonArrow.ArrowUp,
+                    dynamic_opened=IpgButtonArrow.ArrowDown,
+                    on_select=picked_item
                             )
 
 ipg.add_text(parent_id="row3", content="Arrow Style with right and down arrow sized to 20")
@@ -73,12 +73,12 @@ ipg.add_row("main", "row4", parent_id="col")
 
 # Another PickList is added and the handle is defined as an Custom which
 # will result in a down arrow used again but the size can be changed.
-pl_id = ipg.add_pick_list(parent_id="row4", options=options, 
-                            placeholder="Choose a Number...", 
-                            handle=IpgPickListHandle.Static,
-                            arrow_size=20.0, # the custom arrows can be sized too, if needed
-                            custom_static=IpgButtonArrow.ArrowNinezerodegDown,
-                            on_select=picked_item
+ipg.add_pick_list(parent_id="row4", options=options, 
+                    placeholder="Choose a Number...", 
+                    handle=IpgPickListHandle.Static,
+                    arrow_size=20.0, # the custom arrows can be sized too, if needed
+                    custom_static=IpgButtonArrow.ArrowNinezerodegDown,
+                    on_select=picked_item
                             )
 
 ipg.add_text(parent_id="row4", content="Arrow Custom Style sized to 20.")
@@ -98,12 +98,12 @@ ipg.add_row("main", "row5", parent_id="col")
 
 # Another PickList is added and the handle is defined as an Custom which
 # will result in a down arrow used again but the size can be changed.
-pl_id = ipg.add_pick_list(parent_id="row5", options=options, 
-                            arrow_size=25.0,
-                            placeholder="Choose a Number...",
-                            style="colors",
-                            on_select=picked_item
-                            )
+ipg.add_pick_list(parent_id="row5", options=options, 
+                    arrow_size=25.0,
+                    placeholder="Choose a Number...",
+                    style="colors",
+                    on_select=picked_item
+                    )
 
 ipg.add_text(parent_id="row5", content="Background, Border, Handle, and Text styling")
 

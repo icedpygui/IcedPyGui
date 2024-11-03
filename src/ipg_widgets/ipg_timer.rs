@@ -1,7 +1,7 @@
 //! ipg_timer
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, app, IpgState};
-use super::callbacks::{widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::try_extract_i64;
 use super::ipg_button::{get_bootstrap_arrow, get_styling, 
     IpgButtonArrow};
@@ -117,7 +117,7 @@ pub fn timer_callback(state: &mut IpgState, id: usize, message: TIMMessage) -> u
         TIMMessage::OnStart => {
             wci.started = Some(true);
             wci.counter = Some(0);
-            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             duration = match wco.duration {
                 Some(dur) => dur,
@@ -128,7 +128,7 @@ pub fn timer_callback(state: &mut IpgState, id: usize, message: TIMMessage) -> u
         }
         TIMMessage::OnStop => {
             wci.started = Some(false);
-            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_stop".to_string();
             process_callback(wco);
@@ -137,13 +137,14 @@ pub fn timer_callback(state: &mut IpgState, id: usize, message: TIMMessage) -> u
     duration
 }
 
-pub fn tick_callback(state: &mut IpgState, id: usize) 
+pub fn tick_callback(state: &mut IpgState) 
 {
+    let id= state.timer_event_id_enabled.0;
     let mut wci = WidgetCallbackIn::default();
     wci.id = id;
 
     wci.counter = Some(1);
-    let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
+    let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
     wco.id = id;
     wco.event_name = "on_tick".to_string();
     process_callback(wco);

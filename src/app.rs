@@ -14,6 +14,7 @@ use iced::Color;
 use once_cell::sync::Lazy;
 
 
+use crate::ipg_widgets::ipg_events::IpgKeyBoardEvent;
 use crate::{access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage, IpgBuildCanvas};
@@ -93,33 +94,15 @@ pub enum Message {
     OpaqueOnPress(usize),
 }
 
-#[derive(Default)]
-pub struct Flags {
-    pub keyboard_event_enabled: (usize, bool),
-    pub mouse_event_enabled: (usize, bool),
-    pub timer_event_enabled: (usize, bool),
-    pub window_event_enabled: (usize, bool),
-    pub touch_event_enabled: (usize, bool),
-    pub timer_duration: u64,
-}
-
 
 pub struct App {
     state: IpgState,
-    timer_duration: u64,
-    keyboard_event_enabled: (usize, bool),
-    mouse_event_enabled: (usize, bool),
-    timer_event_enabled: (usize, bool),
-    window_event_enabled: (usize, bool),
-    touch_event_enabled: (usize, bool),
-
-    counter: i32, 
 }
 
 
 impl App {
     
-    pub fn new(flags: Flags) -> (Self, Task<Message>) {
+    pub fn new() -> (Self, Task<Message>) {
         let mut state = IpgState::new();
         clone_state(&mut state);
         
@@ -129,14 +112,6 @@ impl App {
         (
             Self {
                 state,
-                timer_duration: flags.timer_duration,
-                keyboard_event_enabled: flags.keyboard_event_enabled,
-                mouse_event_enabled: flags.mouse_event_enabled,
-                timer_event_enabled: flags.timer_event_enabled,
-                window_event_enabled: flags.window_event_enabled,
-                touch_event_enabled: flags.touch_event_enabled,
-
-                counter: 0,
             },
             
             Task::batch(open),
@@ -186,19 +161,20 @@ impl App {
                 Task::none()
             },
             Message::EventKeyboard(event) => {
-                process_keyboard_events(event, self.keyboard_event_enabled.0);
+                process_keyboard_events(event, self.state.keyboard_event_id_enabled.0);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::EventMouse(event) => {
-                process_mouse_events(event, self.mouse_event_enabled.0);
+                process_mouse_events(event, self.state.mouse_event_id_enabled.0);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::EventWindow((window_id, event)) => {
                 // if all windows are closed, returns a true else false.
-                let is_empty = process_window_event(&mut self.state, event, 
-                    self.window_event_enabled.0, 
-                    self.window_event_enabled.1, 
-                    window_id);
+                let is_empty = process_window_event(&mut self.state, 
+                                                            event, 
+                                                            window_id);
 
                 if is_empty {
                     iced::exit()
@@ -208,7 +184,8 @@ impl App {
                 }
             },
             Message::EventTouch(event) => {
-                process_touch_events(event, self.touch_event_enabled.0);
+                process_touch_events(event, self.state.touch_event_id_enabled.0);
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::Image(id, message) => {
@@ -217,53 +194,63 @@ impl App {
                 Task::none()
             },
             Message::Menu(id, message) => {
-                menu_callback(id, message);
+                menu_callback(&mut self.state, id, message);
                 process_updates(&mut self.state);
                 Task::none()
             },
             Message::Modal(id, message) => {
-                modal_callback(id, message);
+                modal_callback(&mut self.state, id, message);
                 process_updates(&mut self.state);
                 focus_next()
             },
             Message::MouseAreaOnPress(id) => {
                 mousearea_callback(&mut self.state, id, "on_press".to_string());
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::MouseAreaOnRelease(id) => {
                 mousearea_callback(&mut self.state, id, "on_release".to_string());
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::MouseAreaOnRightPress(id) => {
                 mousearea_callback(&mut self.state, id, "on_right_press".to_string());
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::MouseAreaOnRightRelease(id) => {
                 mousearea_callback(&mut self.state, id, "on_right_release".to_string());
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::MouseAreaOnMiddlePress(id) => {
                 mousearea_callback(&mut self.state, id, "on_middle_press".to_string());
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::MouseAreaOnMiddleRelease(id) => {
                 mousearea_callback(&mut self.state, id, "on_middle_release".to_string());
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::MouseAreaOnEnter(id) => {
                 mousearea_callback(&mut self.state, id, "on_enter".to_string());
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::MouseAreaOnMove(point, id) => {
                 mousearea_callback_point(&mut self.state, id, point, "on_move".to_string());
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::MouseAreaOnExit(id) => {
                 mousearea_callback(&mut self.state, id, "on_exit".to_string());
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::OpaqueOnPress(id) => {
                 opaque_callback(&mut self.state, id, "on_press".to_string());
+                process_updates(&mut self.state);
                 Task::none()
             },
             Message::PickList(id, message) => {
@@ -272,7 +259,7 @@ impl App {
                 Task::none()
             },
             Message::Radio(id, message) => {
-                radio_callback(id, message);
+                radio_callback(&mut self.state, id, message);
                 process_updates(&mut self.state);
                 Task::none()
             },
@@ -297,7 +284,7 @@ impl App {
                 Task::none()
             },
             Message::Table(id, message) => {
-                table_callback(id, message);
+                table_callback(&mut self.state, id, message);
                 process_updates(&mut self.state);
                 Task::none()
             },
@@ -307,18 +294,19 @@ impl App {
                 Task::none()
             },
             Message::Tick => {
-                tick_callback(&mut self.state, self.timer_event_enabled.0);
+                tick_callback(&mut self.state);
+                process_updates(&mut self.state);
                 Task::none()
             }
             Message::Timer(id, message) => {
                 match message {
                     TIMMessage::OnStart => {
-                        self.timer_event_enabled.0 = id;
-                        self.timer_event_enabled.1 = true;
+                        self.state.timer_event_id_enabled.0 = id;
+                        self.state.timer_event_id_enabled.1 = true;
                     },
-                    TIMMessage::OnStop => self.timer_event_enabled.1 = false,
+                    TIMMessage::OnStop => self.state.timer_event_id_enabled.1 = false,
                 }
-                self.timer_duration = timer_callback(&mut self.state, id, message);
+                self.state.timer_duration = timer_callback(&mut self.state, id, message);
                 Task::none()
             },
             Message::Toggler(id, message) => {
@@ -327,6 +315,7 @@ impl App {
                 get_tasks(&mut self.state)
             },
             Message::WindowOpened(_id, _position, size) => {
+                process_updates(&mut self.state);
                 Task::none()
             },
         }
@@ -356,15 +345,15 @@ impl App {
 
         let mut subscriptions = vec![];
         
-        if self.timer_event_enabled.1 {
-            subscriptions.push(time::every(iced::time::Duration::from_millis(self.timer_duration)).map(|_| Message::Tick));
+        if self.state.timer_event_id_enabled.1 {
+            subscriptions.push(time::every(iced::time::Duration::from_millis(self.state.timer_duration)).map(|_| Message::Tick));
         } 
         
-        if self.keyboard_event_enabled.1 {
+        if self.state.keyboard_event_id_enabled.1 {
             subscriptions.push(iced::event::listen().map(Message::EventKeyboard));
         }
 
-        if self.mouse_event_enabled.1 {
+        if self.state.mouse_event_id_enabled.1 {
             subscriptions.push(iced::event::listen().map(Message::EventMouse));
         }
         // window event is always enabled, since we are using iced::daemon, the windows
@@ -599,7 +588,16 @@ fn get_container(state: &IpgState, id: &usize, content: Vec<Element<'static, Mes
                     if content.len() > 1 {
                         panic!("A container can have only one widget, place your multiple widgets into a column or row")
                     }
-                    return construct_container(con.clone(), content)
+                    let style = match con.style_id.clone() {
+                        Some(id) => state.container_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_container(con.clone(), content, Some(st));
+                    } else {
+                        return construct_container(con.clone(), content, None);
+                    }
                 },
                 IpgContainers::IpgModal(modal) => {
                     return construct_modal(modal.clone(), content)
@@ -620,23 +618,31 @@ fn get_container(state: &IpgState, id: &usize, content: Vec<Element<'static, Mes
                     }
                 }
                 IpgContainers::IpgTable(table) => {
-                    let tbl = table.clone();
                     let style = match table.button_fill_style_id.clone() {
                         Some(id) => state.button_style.get(&id),
                         None => None,
                     };
                     if style.is_some() {
                         let st = style.unwrap().clone();
-                        return construct_table(tbl, content, Some(st));
+                        return construct_table(table.clone(), content, Some(st));
                     } else {
-                        return construct_table(tbl, content, None);
+                        return construct_table(table.clone(), content, None);
                     }
                 },
                 IpgContainers::IpgRow(row) => {
                     return construct_row(row, content)
                 },
                 IpgContainers::IpgScrollable(scroll) => {
-                    return construct_scrollable(scroll.clone(), content)
+                    let style = match scroll.style_id.clone() {
+                        Some(id) => state.scrollable_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_scrollable(scroll.clone(), content, Some(st));
+                    } else {
+                        return construct_scrollable(scroll.clone(), content, None);
+                    }
                 },
                 IpgContainers::IpgStack(stk) => {
                     return construct_stack(stk.clone(), content)
@@ -862,24 +868,122 @@ fn get_window_container(container_opt: Option<&IpgContainers>) -> &IpgWindow {
 
 fn process_updates(state: &mut IpgState) {
     
-    let mut update = access_update_items();
+    let mut all_updates = access_update_items();
 
-    for (id, (item, value)) in update.items.clone().into_iter() {
-        let widget = state.widgets.get_mut(&id);
+    let deletes = all_updates.deletes.clone();
+    for (window_id, wid) in deletes.into_iter() {
+        let iced_id = match state.windows_str_ids.get(&window_id) {
+            Some(id) => id.clone(),
+            None => panic!("Window_id {} not found in delete_item", window_id)
+        };
 
+        let ipg_ids = match state.ids.get_mut(&iced_id) {
+            Some(ids) => ids,
+            None => panic!("Ids not found for window_id {} in delete_item", window_id)
+        };
+
+        let mut index: i32 = -1;
+
+        for (i, ipg_id) in ipg_ids.iter().enumerate() {
+            if ipg_id.id == wid {
+                index = i as i32;
+                break;
+            }
+        }
+
+        if index == -1 {
+            panic!("item with id {wid} could not be found to delete")
+        }
+
+        ipg_ids.remove(index as usize);
+
+        state.widgets.remove(&wid);   
+    }
+    all_updates.deletes = Lazy::new(||HashMap::new());
+
+    let moves = all_updates.moves.clone();
+    for (_, (window_id, widget_id, target_container_str_id, move_after, move_before)) in moves.into_iter() {
+
+        let container_str_id_opt = state.container_str_ids.get(&target_container_str_id);
+
+        let container_usize_id = match container_str_id_opt {
+            Some(id) => id.clone(),
+            None => panic!("move_widget: unable to find the target container id based on the id {}", target_container_str_id)
+        };
+
+        let window_id_usize_opt = state.windows_str_ids.get(&window_id);
+
+        let window_id_usize = match window_id_usize_opt {
+            Some(id) => id.clone(),
+            None => panic!("move_widget: unable to find the window_id using the id {}", window_id)
+        };
+
+        let window_widget_ids_opt = state.ids.get_mut(&window_id_usize);
+
+        let window_widget_ids = match window_widget_ids_opt {
+            Some(ids) => ids,
+            None => panic!("move_widget: unable to find widget using window_id {}", window_id)    
+        };
+
+        let mut before = false;
+        let pos_id = if move_after.is_some() {
+            move_after.unwrap()
+        } else if move_before.is_some() { 
+            before = true;
+            move_before.unwrap()
+        } else {
+            1_000_000
+        };
+
+        //  set some large numbers to break early
+        let mut found_index = 1_000_000;
+        let mut target_index: usize = 1_000_000;
+
+        for (i, ids) in window_widget_ids.iter_mut().enumerate() {
+            if ids.id == widget_id {
+                ids.parent_uid = container_usize_id;
+                ids.parent_id = target_container_str_id.clone();
+                found_index = i;
+            }
+            if ids.id == pos_id {
+                target_index = i
+            }
+            if found_index != 1_000_000 && (target_index != 1_000_000 || pos_id == 1_000_000) {
+                break;
+            }
+        }
+        
+        let move_ids = window_widget_ids.remove(found_index);
+        
+        if pos_id == 1_000_000 {
+            window_widget_ids.push(move_ids);
+        } else {
+            if before {
+                window_widget_ids.insert(target_index-1, move_ids);
+            } else {
+                window_widget_ids.insert(target_index, move_ids);
+            }
+        }
+    }  
+    all_updates.moves = Lazy::new(||HashMap::new());
+
+    let updates = all_updates.updates.clone();
+    for (wid, (item, value)) in updates.into_iter() {
+        let widget = state.widgets.get_mut(&wid);
         if widget.is_some() {
             match_widget(widget.unwrap(), item, value);
         } else {
-            match state.containers.get_mut(&id) {
+            match state.containers.get_mut(&wid) {
                 Some(cnt) => {
                     match_container(cnt, item, value);
                     
                 },
-                None => panic!("Item_update: Widget, Container, or Window with id {id} not found.")
+                None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
             }
-        }
+        }  
     }
-    drop(update);
+    all_updates.updates = Lazy::new(||HashMap::new());
+    
 }
 
 fn clone_state(state: &mut IpgState) {
@@ -913,6 +1017,12 @@ fn clone_state(state: &mut IpgState) {
     state.text_input_style = mut_state.text_input_style.to_owned();
     state.toggler_style = mut_state.toggler_style.to_owned();
     state.scrollable_style = mut_state.scrollable_style.to_owned();
+    state.keyboard_event_id_enabled = mut_state.keyboard_event_id_enabled.to_owned();
+    state.mouse_event_id_enabled = mut_state.mouse_event_id_enabled.to_owned();
+    state.timer_event_id_enabled = mut_state.timer_event_id_enabled.to_owned();
+    state.window_event_id_enabled = mut_state.window_event_id_enabled.to_owned();
+    state.touch_event_id_enabled = mut_state.touch_event_id_enabled.to_owned();
+    state.timer_duration = mut_state.timer_duration.to_owned();
 
     mut_state.ids = Lazy::new(||HashMap::new());
     mut_state.last_id = 0;
@@ -944,6 +1054,12 @@ fn clone_state(state: &mut IpgState) {
     mut_state.text_input_style = Lazy::new(||HashMap::new());
     mut_state.toggler_style = Lazy::new(||HashMap::new());
     mut_state.scrollable_style = Lazy::new(||HashMap::new());
+    mut_state.keyboard_event_id_enabled = (0, false);
+    mut_state.mouse_event_id_enabled = (0, false);
+    mut_state.timer_event_id_enabled = (0, false);
+    mut_state.window_event_id_enabled = (0, false);
+    mut_state.touch_event_id_enabled = (0, false);
+    mut_state.timer_duration = 0;
 
     drop(mut_state);
 }

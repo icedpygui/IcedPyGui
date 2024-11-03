@@ -16,8 +16,8 @@ use crate::iced_aw_widgets::menu::style_status::Status;
 use crate::iced_aw_widgets::menu::menu_bar_style::{primary, Style};
 
 use crate::style::styling::{is_dark, IpgStyleStandard};
-use crate::{access_callbacks, access_state, app};
-use super::callbacks::{get_set_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use crate::{access_callbacks, access_state, app, IpgState};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_height, get_padding_f64, get_radius, 
     try_extract_boolean, try_extract_f64, try_extract_vec_f32, try_extract_vec_f64};
 use super::{ipg_button, ipg_checkbox, ipg_toggle};
@@ -500,13 +500,13 @@ fn get_mb_styling(theme: &Theme,
 }
 
 
-pub fn menu_callback(id: usize, message: MenuMessage) {
+pub fn menu_callback(state: &mut IpgState, id: usize, message: MenuMessage) {
     let mut wci = WidgetCallbackIn::default();
     wci.id = id;
     
     match message {
         MenuMessage::ItemPressed((bar_index, menu_index)) => {
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.bar_index = Some(bar_index);
             wco.menu_index = Some(menu_index);
@@ -515,7 +515,7 @@ pub fn menu_callback(id: usize, message: MenuMessage) {
         }
         MenuMessage::ItemCheckToggled(is_checked, (bar_index, menu_index)) => {
             wci.is_checked = Some(is_checked);
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.bar_index = Some(bar_index);
             wco.menu_index = Some(menu_index);
@@ -524,7 +524,7 @@ pub fn menu_callback(id: usize, message: MenuMessage) {
         },
         MenuMessage::ItemTogToggled(togged, (bar_index, menu_index)) => {
             wci.on_toggle = Some(togged)
-;            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+;            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.bar_index = Some(bar_index);
             wco.menu_index = Some(menu_index);
