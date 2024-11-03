@@ -263,7 +263,7 @@ impl App {
                 Task::none()
             },
             Message::OpaqueOnPress(id) => {
-                opaque_callback(id, "on_press".to_string());
+                opaque_callback(&mut self.state, id, "on_press".to_string());
                 Task::none()
             },
             Message::PickList(id, message) => {
@@ -282,12 +282,12 @@ impl App {
                 Task::none()
             },
             Message::SelectableText(id, message) => {
-                selectable_text_callback(id, message);
+                selectable_text_callback(&mut self.state, id, message);
                 process_updates(&mut self.state);
                 Task::none()
             },
             Message::Slider(id, message) => {
-                slider_callback(id, message);
+                slider_callback(&mut self.state, id, message);
                 process_updates(&mut self.state);
                 Task::none()
             },
@@ -302,7 +302,7 @@ impl App {
                 Task::none()
             },
             Message::TextInput(id, message) => {
-                text_input_callback(id, message);
+                text_input_callback(&mut self.state, id, message);
                 process_updates(&mut self.state);
                 Task::none()
             },
@@ -322,7 +322,7 @@ impl App {
                 Task::none()
             },
             Message::Toggler(id, message) => {
-                toggle_callback(id, message);
+                toggle_callback(&mut self.state, id, message);
                 process_updates(&mut self.state);
                 get_tasks(&mut self.state)
             },
@@ -441,7 +441,7 @@ fn get_tasks(state: &mut IpgState) -> Task<Message> {
     
     let mut actions = vec![];
 
-    for (ipg_id, mode) in state.mode.iter() {
+    for (ipg_id, mode) in state.mode.iter_mut() {
         let iced_id = find_key_for_value(*ipg_id);
         actions.push(window::change_mode(iced_id, *mode));
         let is_empty = handle_window_closing(iced_id, *mode);
@@ -608,7 +608,16 @@ fn get_container(state: &IpgState, id: &usize, content: Vec<Element<'static, Mes
                     return construct_mousearea(m_area.clone(), content)
                 },
                 IpgContainers::IpgOpaque(op) => {
-                    return construct_opaque(op.clone(), content)
+                    let style = match op.style_id.clone() {
+                        Some(id) => state.opaque_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_opaque(op.clone(), content, Some(st));
+                    } else {
+                        return construct_opaque(op.clone(), content, None);
+                    }
                 }
                 IpgContainers::IpgTable(table) => {
                     let tbl = table.clone();
@@ -724,22 +733,45 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                     } else {
                         return construct_progress_bar(bar.clone(), None);
                     }
-                }
-                IpgWidgets::IpgSelectableText(sltxt) => {
-                    let s_txt = sltxt.clone();
-                    return construct_selectable_text(s_txt)
                 },
                 IpgWidgets::IpgRadio(radio) => {
-                    let rad = radio.clone();
-                    return construct_radio(rad) 
+                    let style = match radio.style_id.clone() {
+                        Some(id) => state.radio_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_radio(radio.clone(), Some(st));
+                    } else {
+                        return construct_radio(radio.clone(), None);
+                    }
                 },
                 IpgWidgets::IpgRule(rule) => {
-                    let rul = rule.clone();
-                    return construct_rule(rul) 
+                    let style = match rule.style_id.clone() {
+                        Some(id) => state.rule_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_rule(rule.clone(), Some(st));
+                    } else {
+                        return construct_rule(rule.clone(), None);
+                    }
+                },
+                IpgWidgets::IpgSelectableText(sltxt) => {
+                    return construct_selectable_text(sltxt.clone())
                 },
                 IpgWidgets::IpgSlider(slider) => {
-                    let sld = slider.clone();
-                    return construct_slider(sld)
+                    let style = match slider.style_id.clone() {
+                        Some(id) => state.slider_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_slider(slider.clone(), Some(st));
+                    } else {
+                        return construct_slider(slider.clone(), None);
+                    }
                 },
                 IpgWidgets::IpgSpace(sp) => {
                     return construct_space(sp)
@@ -753,16 +785,31 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                     return construct_text(txt)
                 },
                 IpgWidgets::IpgTextInput(input) => {
-                    let t_input = input.clone();
-                    return construct_text_input(t_input)           
+                    let style = match input.style_id.clone() {
+                        Some(id) => state.text_input_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_text_input(input.clone(), Some(st));
+                    } else {
+                        return construct_text_input(input.clone(), None);
+                    }        
                 },
-                IpgWidgets::IpgTimer(tim) => {
-                    let tm = tim.clone();
-                    return construct_timer(tm);
+                IpgWidgets::IpgTimer(timer) => {
+                    return construct_timer(timer.clone());
                 },
                 IpgWidgets::IpgToggler(tog) => {
-                    let tg = tog.clone();
-                    return construct_toggler(tg)           
+                    let style = match tog.style_id.clone() {
+                        Some(id) => state.toggler_style.get(&id),
+                        None => None,
+                    };
+                    if style.is_some() {
+                        let st = style.unwrap().clone();
+                        return construct_toggler(tog.clone(), Some(st));
+                    } else {
+                        return construct_toggler(tog.clone(), None);
+                    }          
                 },
             },
         None => panic!("App: Widgets not found in fn get_widget id={}", id)
@@ -876,12 +923,12 @@ fn clone_state(state: &mut IpgState) {
     mut_state.container_window_usize_ids = Lazy::new(||HashMap::new());
     mut_state.widgets = Lazy::new(||HashMap::new());
     mut_state.widget_container_ids = Lazy::new(||HashMap::new());
-    mut_state.windows = vec![];
-    mut_state.windows_iced_ipg_ids = Lazy::new(||HashMap::new());
-    mut_state.windows_str_ids = Lazy::new(||HashMap::new());
-    mut_state.window_debug = Lazy::new(||HashMap::new());
-    mut_state.window_theme = Lazy::new(||HashMap::new());
-    mut_state.window_mode = Lazy::new(||HashMap::new());
+    // mut_state.windows = vec![];
+    // mut_state.windows_iced_ipg_ids = Lazy::new(||HashMap::new());
+    // mut_state.windows_str_ids = Lazy::new(||HashMap::new());
+    // mut_state.window_debug = Lazy::new(||HashMap::new());
+    // mut_state.window_theme = Lazy::new(||HashMap::new());
+    // mut_state.window_mode = Lazy::new(||HashMap::new());
     mut_state.container_style = Lazy::new(||HashMap::new());
     mut_state.button_style = Lazy::new(||HashMap::new());
     mut_state.checkbox_style = Lazy::new(||HashMap::new());

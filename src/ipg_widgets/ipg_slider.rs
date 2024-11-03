@@ -1,8 +1,6 @@
 //! ipg_slider
-use crate::{app, access_callbacks, access_state};
-use super::callbacks::{WidgetCallbackIn, 
-                        WidgetCallbackOut, 
-                        get_set_widget_callback_data};
+use crate::{access_callbacks, app, IpgState};
+use super::callbacks::{widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 
 use super::helpers::{get_radius, get_width};
 use super::helpers::{try_extract_boolean, try_extract_f64, 
@@ -112,7 +110,9 @@ pub enum SLMessage {
     OnRelease,
 }
 
-pub fn construct_slider(slider: IpgSlider) -> Element<'static, app::Message> {
+pub fn construct_slider(slider: IpgSlider, 
+                        style: Option<IpgSliderStyle>) 
+                        -> Element<'static, app::Message> {
 
     if !slider.show {
         return Space::new(0.0, 0.0).into()
@@ -128,14 +128,14 @@ pub fn construct_slider(slider: IpgSlider) -> Element<'static, app::Message> {
                                                     .height(slider.height)
                                                     .style(move|theme, status|
                                                     get_styling(theme, status,
-                                                        slider.style_id.clone()
+                                                        style.clone()
                                                     ))
                                                     .into();
 
     sld.map(move |message| app::Message::Slider(slider.id, message))
 }
 
-pub fn slider_callback(id: usize, message: SLMessage) {
+pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
 
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
@@ -143,20 +143,19 @@ pub fn slider_callback(id: usize, message: SLMessage) {
     match message {
         SLMessage::OnChange(value) => {
             wci.value_float = Some(value as f64);
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_change".to_string();
             process_callback(wco);
         },
         SLMessage::OnRelease => {
-            let mut wco = get_set_widget_callback_data(wci);
+            let mut wco = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_release".to_string();
             process_callback(wco);
         },
     }
 }
-
 
 pub fn process_callback(wco: WidgetCallbackOut) 
 {
@@ -275,20 +274,14 @@ fn try_extract_slider_update(update_obj: PyObject) -> IpgSliderParam {
 
 fn get_styling(theme: &Theme, 
                 status: Status,
-                style_id: Option<String>) -> Style {
+                style_opt: Option<IpgSliderStyle>) 
+                -> Style {
 
-    if style_id.is_none() {
+    if style_opt.is_none() {
         return slider::default(theme, status)
     }     
 
-    let state = access_state();
-
-    let style_opt = state.slider_style.get(&style_id.clone().unwrap());
-
-    let style = match style_opt {
-        Some(st) => st,
-        None => panic!("Slider styling: Unable to find the style_id '{}'.", style_id.unwrap())
-    };
+    let style = style_opt.unwrap();
 
     let mut base_style = slider::default(theme, status);
 

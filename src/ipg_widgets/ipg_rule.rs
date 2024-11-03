@@ -2,7 +2,7 @@
 use iced::widget::rule::{self, FillMode, Style};
 use iced::{Color, Element, Length, Theme};
 use iced::widget::{Container, Rule};
-use crate::{access_state, app};
+use crate::app;
 
 use super::helpers::get_radius;
 
@@ -13,7 +13,7 @@ pub struct IpgRule {
     pub height: Length,
     pub thickness: u16,
     pub rule_type: String,
-    pub style: Option<String>,
+    pub style_id: Option<String>,
 }
 
 impl IpgRule {
@@ -31,7 +31,7 @@ impl IpgRule {
             height,
             thickness,
             rule_type,
-            style,
+            style_id: style,
         }
     }
 }
@@ -69,22 +69,27 @@ impl IpgRuleStyle {
 // Looks reversed but not.  The only controllale parameter for horizontal
 // is the thickness of the line which is height.  The opposite for vertical.
 // To control the other dimension, need to put into a container.
-pub fn construct_rule(rule: IpgRule) -> Element<'static, app::Message> {
+pub fn construct_rule(rule: IpgRule, 
+                        style: Option<IpgRuleStyle>) 
+                        -> Element<'static, app::Message> {
+
     if rule.rule_type == "h".to_string() {
-        return construct_horizontal(rule)
+        return construct_horizontal(rule, style)
     } else {
-        return construct_rule_vertical(rule)
+        return construct_rule_vertical(rule, style)
     }
 
 }
 
 // The width or height parameters seems to have no effect so set to 0.
-pub fn construct_horizontal(rule: IpgRule) -> Element<'static, app::Message>{
+pub fn construct_horizontal(rule: IpgRule, 
+                            style: Option<IpgRuleStyle>) 
+                            -> Element<'static, app::Message>{
 
     let rule_h: Element<app::Message> = Rule::horizontal(1)
                                             .style(move|theme: &Theme| {   
                                                 get_styling(theme,
-                                                    rule.style.clone(),
+                                                    style.clone(),
                                                     rule.thickness, 
                                                     )  
                                                 })
@@ -94,12 +99,14 @@ pub fn construct_horizontal(rule: IpgRule) -> Element<'static, app::Message>{
 
 }
 
-fn construct_rule_vertical(rule: IpgRule) -> Element<'static, app::Message> {
+fn construct_rule_vertical(rule: IpgRule, 
+                            style: Option<IpgRuleStyle>) 
+                            -> Element<'static, app::Message> {
 
     let rule_v: Element<app::Message> = Rule::vertical(1)
                                             .style(move|theme: &Theme| {   
                                                 get_styling(theme,
-                                                    rule.style.clone(), 
+                                                    style.clone(), 
                                                     rule.thickness,
                                                     )  
                                                 })
@@ -111,25 +118,18 @@ fn construct_rule_vertical(rule: IpgRule) -> Element<'static, app::Message> {
 
 
 fn get_styling(theme: &Theme,
-                style_str: Option<String>, 
+                style_opt: Option<IpgRuleStyle>, 
                 thickness: u16,
                 ) -> Style {
 
     let mut base_style = rule::default(theme);
     base_style.width = thickness;
 
-    if style_str.is_none() {
+    if style_opt.is_none() {
         return  base_style
     }
 
-    let state = access_state();
-
-    let style_opt = state.rule_style.get(&style_str.clone().unwrap());
-
-    let style = match style_opt {
-        Some(st) => st,
-        None => panic!("Rule style: Unable to fine the style_id '{}", style_str.unwrap()),
-    };
+    let style = style_opt.unwrap();
     
     if style.color.is_some() {
         base_style.color = style.color.unwrap();

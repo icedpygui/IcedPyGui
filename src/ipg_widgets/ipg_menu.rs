@@ -819,7 +819,7 @@ fn match_menu_item(item_type: IpgMenuType,
                             .label(lbl)
                             .style(move|theme: &Theme, status| {     
                                 ipg_toggle::get_styling(theme, status, 
-                                                        style.clone()) 
+                                                        None) 
                             })
                                 .into();
             Item::new(tog)

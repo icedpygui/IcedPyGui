@@ -1,8 +1,6 @@
 //! ipg_text_input
-use crate::{app, access_callbacks, access_state};
-use super::callbacks::{WidgetCallbackIn, 
-                        WidgetCallbackOut, 
-                        get_set_widget_callback_data};
+use crate::{access_callbacks, app, IpgState};
+use super::callbacks::{widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_padding_f64, get_radius, get_width};
 use super::helpers::{try_extract_boolean, try_extract_f64, 
     try_extract_string, try_extract_u16, try_extract_vec_f64};
@@ -30,8 +28,8 @@ pub struct IpgTextInput {
     pub line_height: LineHeight,
     pub user_data: Option<PyObject>,
     // icon: Option<Message>,
-    style_id: Option<String>,
-    show: bool,
+    pub style_id: Option<String>,
+    pub show: bool,
 }
 
 impl IpgTextInput {
@@ -120,7 +118,9 @@ pub enum TIMessage {
     OnPaste(String),
 }
 
-pub fn construct_text_input(input: IpgTextInput) -> Element<'static, app::Message> {
+pub fn construct_text_input(input: IpgTextInput, 
+                            style: Option<IpgTextInputStyle>) 
+                            -> Element<'static, app::Message> {
 
     if !input.show {
         return Space::new(0.0, 0.0).into()
@@ -146,14 +146,14 @@ pub fn construct_text_input(input: IpgTextInput) -> Element<'static, app::Messag
                                             // })
                                             .style(move|theme, status|
                                                 get_styling(theme, status, 
-                                                    input.style_id.clone()
+                                                    style.clone()
                                                 ))
                                             .into();
 
     txt.map(move |message| app::Message::TextInput(input.id, message))
 }
 
-pub fn text_input_callback(id: usize, message: TIMessage) {
+pub fn text_input_callback(state: &mut IpgState, id: usize, message: TIMessage) {
     // During the input, the widget is assigned the value so that it shows
     // during typing.  On submit, the text box is cleared, so no value.
     // However, in both cases the value is passed to the callback.
@@ -163,7 +163,7 @@ pub fn text_input_callback(id: usize, message: TIMessage) {
     match message {
         TIMessage::OnInput(value) => {
             wci.value_str = Some(value.clone());
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_input".to_string();
             wco.value_str = Some(value);
@@ -171,7 +171,7 @@ pub fn text_input_callback(id: usize, message: TIMessage) {
         },
         TIMessage::OnSubmit(value) => {
             // wci.value_str = Some(value.clone());
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_submit".to_string();
             wco.value_str = Some(value);
@@ -179,7 +179,7 @@ pub fn text_input_callback(id: usize, message: TIMessage) {
         }
         TIMessage::OnPaste(value) => {
             wci.value_str = Some(value.clone());
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_paste".to_string();
             wco.value_str = Some(value);
@@ -312,21 +312,14 @@ fn try_extract_text_input_update(update_obj: PyObject) -> IpgTextInputParam {
 
 fn get_styling(theme: &Theme, 
                 status: Status, 
-                style_id: Option<String>
+                style_opt: Option<IpgTextInputStyle>
                 ) -> Style {
 
-    if style_id.is_none() {
+    if style_opt.is_none() {
         return text_input::default(theme, status)
     }     
 
-    let state = access_state();
-
-    let style_opt = state.text_input_style.get(&style_id.clone().unwrap());
-
-    let style = match style_opt {
-        Some(st) => st,
-        None => panic!("TextInput styling: Unable to find the style_id '{}'.", style_id.unwrap())
-    };
+    let style = style_opt.unwrap();
 
     let mut style_base = text_input::default(theme, Status::Active);
 

@@ -36,19 +36,22 @@ def selected_radio_2(rd_id: int, data: list[int, str], user_data: str):
 # The second parameter for update_item is from the imported params class.
 # This is the case for all widgets being updated.
 def change_direction(chk_id: int, checked: bool, radio_ids: list[int]):
-    radio1 = IpgRadioDirection.Vertical
-    radio2 = IpgRadioDirection.Horizontal
     if checked:
         radio1 = IpgRadioDirection.Horizontal
         radio2 = IpgRadioDirection.Vertical
+    else:
+        radio1 = IpgRadioDirection.Vertical
+        radio2 = IpgRadioDirection.Horizontal
     ipg.update_item(radio_ids[0], IpgRadioParam.Direction, radio1)
     ipg.update_item(radio_ids[1], IpgRadioParam.Direction, radio2)
 
 
 def change_selection(chk_id: int, checked: bool, radio_ids: list[int]):
-    selected = None
+    
     if checked:
         selected = 2
+    else:
+        selected = None
     ipg.update_item(radio_ids[0], IpgRadioParam.SelectedIndex, selected)
     ipg.update_item(radio_ids[1], IpgRadioParam.SelectedIndex, selected)
 
@@ -56,68 +59,77 @@ def change_selection(chk_id: int, checked: bool, radio_ids: list[int]):
 # When you change the labels you are actually replacing the radios, so the
 # lengths can change too.
 def change_labels(chk_id: int, checked: bool, radio_ids: list[int]):
-    labels = [["one", "two", "three", "four"], ["five", "six", "seven"]]
     if checked:
         labels = [["ants", "flies", "bees", "wasps"], ["cat", "dog", "horse"]]
+    else:
+        labels = [["one", "two", "three", "four"], ["five", "six", "seven"]]
 
-    ipg.update_item(radio_ids[0], IpgRadioParam.Labels, labels[0])
-    ipg.update_item(radio_ids[1], IpgRadioParam.Labels, labels[1])
     # unselecting any if selected
     ipg.update_item(radio_ids[0], IpgRadioParam.SelectedIndex, None)
     ipg.update_item(radio_ids[1], IpgRadioParam.SelectedIndex, None)
+    # now select
+    ipg.update_item(radio_ids[0], IpgRadioParam.Labels, labels[0])
+    ipg.update_item(radio_ids[1], IpgRadioParam.Labels, labels[1])
 
 
 def hide_left_radio(chk_id: int, checked: bool, rd_left_id: int):
-    show = True
     if checked:
         show = False
+    else:
+        show = True
     ipg.update_item(rd_left_id, IpgRadioParam.Show, show)
 
 
 def change_size(chk_id: int, checked: bool, radio_ids: list[int]):
-    size = 20.0
     if checked:
         size = 10.0
+    else:
+        size = 20.0
     ipg.update_item(radio_ids[0], IpgRadioParam.Size, size)
     ipg.update_item(radio_ids[1], IpgRadioParam.Size, size)
 
 
 def change_spacing(chk_id: int, checked: bool, radio_ids: list[int]):
-    spacing = 10.0
     if checked:
         spacing = 20.0
+    else:
+        spacing = 10.0
     ipg.update_item(radio_ids[0], IpgRadioParam.Spacing, spacing)
     ipg.update_item(radio_ids[1], IpgRadioParam.Spacing, spacing)
 
 
 def change_text_spacing(chk_id: int, checked: bool, radio_ids: list[int]):
-    ts = 15
     if checked:
         ts = 30.0
+    else:
+        ts = 15
     ipg.update_item(radio_ids[0], IpgRadioParam.TextSpacing, ts)
     ipg.update_item(radio_ids[1], IpgRadioParam.TextSpacing, ts)
 
 
 def change_text_size(chk_id: int, checked: bool, radio_ids: list[int]):
-    ts = 16.0
     if checked:
         ts = 20.0
+    else:
+        ts = 16.0
     ipg.update_item(radio_ids[0], IpgRadioParam.TextSize, ts)
     ipg.update_item(radio_ids[1], IpgRadioParam.TextSize, ts)
 
 
 def change_line_height_relative(chk_id: int, checked: bool, radio_ids: list[int]):
-    tlh = 1.3
     if checked:
         tlh = 3.0
+    else:
+        tlh = 1.3
     ipg.update_item(radio_ids[0], IpgRadioParam.LineHeightRelative, tlh)
     ipg.update_item(radio_ids[1], IpgRadioParam.LineHeightRelative, tlh)
 
 
 def change_width(chk_id: int, checked: bool, radio_ids: list[int]):
-    wd = None  # defaults to shrink
     if checked:
         wd = 150.0
+    else:
+        wd = None  # defaults to shrink
     ipg.update_item(radio_ids[0], IpgRadioParam.Width, wd)
     ipg.update_item(radio_ids[1], IpgRadioParam.Width, wd)
 
@@ -125,9 +137,10 @@ def change_width(chk_id: int, checked: bool, radio_ids: list[int]):
 def change_width_fill(chk_id: int, checked: bool, radio_ids: list[int]):
     # Width overrides WidthFill, so make sure to Width is not set
     # in this case, let's set the Width to none just in case.
-    wdf = False  # defaults to shrink
     if checked:
         wdf = True
+    else:
+        wdf = False  # defaults to shrink
     ipg.update_item(radio_ids[0], IpgRadioParam.Width, None)
     ipg.update_item(radio_ids[1], IpgRadioParam.Width, None)
 
@@ -136,9 +149,10 @@ def change_width_fill(chk_id: int, checked: bool, radio_ids: list[int]):
 
 
 def change_height(chk_id: int, checked: bool, radio_ids: list[int]):
-    ht = None  # defaults to shrink
     if checked:
         ht = 150.0
+    else:
+        ht = None  # defaults to shrink
     ipg.update_item(radio_ids[0], IpgRadioParam.Height, ht)
     ipg.update_item(radio_ids[1], IpgRadioParam.Height, ht)
 

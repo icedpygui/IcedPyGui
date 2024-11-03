@@ -59,9 +59,6 @@ pub fn construct_row(row: &IpgRow, content: Vec<Element<'static, Message>>) -> E
 }
 
 
-
-
-
 fn get_alignment(align: IpgAlignment) -> Alignment {
 
     match align {

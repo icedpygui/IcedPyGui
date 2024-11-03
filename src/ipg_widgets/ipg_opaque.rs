@@ -4,10 +4,10 @@ use iced::{Color, Element, Length, Theme};
 use iced::widget::{container, horizontal_space, mouse_area, opaque, Container};
 use pyo3::{pyclass, PyObject, Python};
 
-use crate::{access_callbacks, access_state};
+use crate::{access_callbacks, IpgState};
 use crate::app::Message;
 
-use super::callbacks::{get_set_container_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{container_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_horizontal_alignment, get_vertical_alignment, try_extract_boolean};
 use super::ipg_enums::{IpgHorizontalAlignment, IpgVerticalAlignment};
 
@@ -66,7 +66,10 @@ impl IpgOpaqueStyle {
     }
 }
 
-pub fn construct_opaque(op: IpgOpaque, mut content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
+pub fn construct_opaque(op: IpgOpaque, 
+                        mut content: Vec<Element<'static, Message>>, 
+                        style: Option<IpgOpaqueStyle> ) 
+                        -> Element<'static, Message> {
 
     let new_content = if content.len() > 0 {
         content.remove(0)
@@ -84,7 +87,7 @@ pub fn construct_opaque(op: IpgOpaque, mut content: Vec<Element<'static, Message
                 .align_y(align_v)
                 .style(move|theme|
                     get_styling(&theme, 
-                        op.style_id.clone(),
+                        style.clone(),
                         ))
                 .into();
     
@@ -101,22 +104,14 @@ pub fn construct_opaque(op: IpgOpaque, mut content: Vec<Element<'static, Message
 
 
 pub fn get_styling(theme: &Theme,
-                style_id: Option<String>,  
+                style_opt: Option<IpgOpaqueStyle>,  
                 ) -> container::Style {
     
-    let state = access_state();
-
-    if style_id.is_none() {
+    if style_opt.is_none() {
         return container::transparent(theme);
     }
 
-    let style_opt = state.opaque_style.get(&style_id.unwrap());
-
-    let style = if style_opt.is_some() {
-        style_opt.unwrap()
-    } else {
-        panic!("Opaque style: style_id not found.")
-    };
+    let style = style_opt.unwrap();
 
     let background_color = if style.background_color.is_some() {
         style.background_color.unwrap()
@@ -124,7 +119,6 @@ pub fn get_styling(theme: &Theme,
         Color::TRANSPARENT
     };
 
-    
     container::Style {
         background: Some(background_color.into()),
         ..Default::default()
@@ -162,12 +156,12 @@ pub fn try_extract_stack_update(update_obj: PyObject) -> IpgOpaqueParam {
     })
 }
 
-pub fn opaque_callback(id: usize, event_name: String) {
+pub fn opaque_callback(state: &mut IpgState, id: usize, event_name: String) {
     
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     wci.id = id;
 
-    let mut wco = get_set_container_callback_data(wci);
+    let mut wco = container_callback_data(state, wci);
     wco.id = id;
     wco.event_name = event_name;
     process_callback(wco);

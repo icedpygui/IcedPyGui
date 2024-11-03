@@ -84,7 +84,7 @@ impl IpgRadio {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct IpgRadioStyle {
     pub id: usize,
     pub background_color: Option<Color>,
@@ -134,7 +134,9 @@ pub enum RDMessage {
 }
 
 
-pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
+pub fn construct_radio(radio: IpgRadio, 
+                        style_opt: Option<IpgRadioStyle>) 
+                        -> Element<'static, app::Message> {
 
     if !radio.show {
         return Space::new(0.0, 0.0).into()
@@ -147,20 +149,20 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
 
     let mut radio_elements = vec![];
 
-    // Due to the closure in the style, had to covert to array of strings
-    let mut style: Vec<Option<String>> = vec![];
-    for _ in 0..radio.labels.len() {
-        style.push(radio.style_id.clone())
-    }
-
     for (i, label) in  radio.labels.iter().enumerate() {
+        let style:Option<IpgRadioStyle> = match style_opt {
+            Some(st) => 
+                Some(IpgRadioStyle{ id: st.id.clone(), 
+                            background_color: st.background_color.clone(), 
+                            background_color_hovered: st.background_color_hovered.clone(), 
+                            dot_color: st.dot_color.clone(), 
+                            dot_color_hovered: st.dot_color_hovered, 
+                            border_color: st.border_color, 
+                            border_width: st.border_width, 
+                            text_color: st.text_color }),
 
-        let style_id: Option<String> = if style[i].is_some() {
-            style[i].clone()
-        } else {
-            None
+            None => None,
         };
-        
         radio_elements.push(Radio::new(label.clone(), 
                                         CHOICES[radio.group_index][i],
                                         selected,
@@ -173,7 +175,7 @@ pub fn construct_radio(radio: IpgRadio) -> Element<'static, app::Message> {
                                     .text_shaping(radio.text_shaping)
                                     .style(move|theme: &Theme, status| {
                                         get_styling(theme, status, 
-                                        style_id.clone(),
+                                        style,
                                         )})
                                     .into());
     }
@@ -400,7 +402,6 @@ pub enum IpgRadioParam {
     HeightFill,
 }
 
-
 pub fn radio_item_update(rd: &mut IpgRadio,
                             item: PyObject,
                             value: PyObject,
@@ -522,23 +523,16 @@ pub fn try_extract_radio_direction(direct_obj: PyObject) -> IpgRadioDirection {
 }
 
 pub fn get_styling(theme: &Theme, status: Status, 
-                    style_id: Option<String>,
+                    style_opt: Option<IpgRadioStyle>,
                     ) -> radio::Style {
     
-    if style_id.is_none() {
+    if style_opt.is_none() {
         return radio::default(theme, status)
     }
     
     let mut base_style = radio::default(theme, status);
 
-    let state = access_state();
-
-    let style_opt = state.radio_style.get(&style_id.clone().unwrap());
-    
-    let style = match style_opt {
-        Some(st) => st,
-        None => panic!("Radio: The style_id '{}' for add_radio_style could not be found", style_id.unwrap())
-    };
+    let style = style_opt.unwrap();
 
     base_style.text_color = style.text_color;
     

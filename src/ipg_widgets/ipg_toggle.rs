@@ -1,10 +1,9 @@
 //! ipg_toggler
-use crate::{access_callbacks, access_state, app};
+use crate::{access_callbacks, app, IpgState};
 use super::helpers::{get_width, try_extract_boolean, try_extract_f64, 
     try_extract_ipg_horizontal_alignment, try_extract_string};
 use super::callbacks::{
-    WidgetCallbackIn, WidgetCallbackOut, 
-    get_set_widget_callback_data
+    widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
 };
 use super::ipg_enums::IpgHorizontalAlignment;
 use iced::widget::text::LineHeight;
@@ -117,7 +116,9 @@ pub enum TOGMessage {
 }
 
 
-pub fn construct_toggler(tog: IpgToggler) -> Element<'static, app::Message> {
+pub fn construct_toggler(tog: IpgToggler, 
+                        style: Option<IpgTogglerStyle>) 
+                        -> Element<'static, app::Message> {
 
     if !tog.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
@@ -141,7 +142,7 @@ pub fn construct_toggler(tog: IpgToggler) -> Element<'static, app::Message> {
                                                     .spacing(tog.spacing)
                                                     .style(move|theme: &Theme, status| {     
                                                         get_styling(theme, status, 
-                                                                    tog.style_id.clone()) 
+                                                                    style.clone()) 
                                                     })
                                                     .into();
 
@@ -149,7 +150,7 @@ pub fn construct_toggler(tog: IpgToggler) -> Element<'static, app::Message> {
 }
 
 
-pub fn toggle_callback(id: usize, message: TOGMessage) {
+pub fn toggle_callback(state: &mut IpgState, id: usize, message: TOGMessage) {
 
     let mut wci = WidgetCallbackIn::default();
     wci.id = id;
@@ -157,7 +158,7 @@ pub fn toggle_callback(id: usize, message: TOGMessage) {
     match message {
         TOGMessage::Toggled(on_toggle) => {
             wci.on_toggle = Some(on_toggle);
-            let mut wco: WidgetCallbackOut = get_set_widget_callback_data(wci);
+            let mut wco: WidgetCallbackOut = widget_callback_data(state, wci);
             wco.id = id;
             wco.on_toggle = Some(on_toggle);
             wco.event_name = "toggled".to_string();
@@ -294,23 +295,16 @@ fn get_text_alignment(ta: IpgHorizontalAlignment) -> alignment::Horizontal {
 
 
 pub fn get_styling(theme: &Theme, status: Status, 
-                    style_id: Option<String>,
+                    style_opt: Option<IpgTogglerStyle>,
                     ) -> toggler::Style {
     
     let mut tog_style = toggler::default(theme, status);
 
-    let state = access_state();
-
-    if style_id.is_none() {
+    if style_opt.is_none() {
         return tog_style
     }
-
-    let style_opt = state.toggler_style.get(&style_id.clone().unwrap());
     
-    let style = match style_opt {
-        Some(st) => st,
-        None => panic!("Toggler: The style_id '{}' for add_toggler_style could not be found", style_id.unwrap())
-    };
+    let style = style_opt.unwrap();
 
     // The background color for active or hovered can have two colors, one for untoggled and toggled.
     // The relationship of the bg and fg colors is:

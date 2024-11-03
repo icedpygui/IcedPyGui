@@ -2607,7 +2607,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, width, 
                         width_fill=true, 
                         thickness=1,
-                        style=None,
+                        style_id=None,
                         gen_id=None, 
                         ))]
     fn add_rule_horizontal(&mut self, 
@@ -2615,7 +2615,7 @@ impl IPG {
                             width: Option<f32>,
                             width_fill: bool,
                             thickness: u16,
-                            style: Option<String>,
+                            style_id: Option<String>,
                             gen_id: Option<usize>, 
                             ) -> PyResult<usize> 
     {
@@ -2636,7 +2636,7 @@ impl IPG {
                                                         height,
                                                         thickness,
                                                         rule_type,
-                                                        style,
+                                                        style_id,
                                                         )));
         state.last_id = id;
         drop(state);
@@ -2645,14 +2645,14 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, height=None, 
                         height_fill=true, thickness=1,
-                        style=None, gen_id=None 
+                        style_id=None, gen_id=None 
                         ))]
     fn add_rule_vertical(&mut self, 
                             parent_id: String,
                             height: Option<f32>,
                             height_fill: bool,
                             thickness: u16,
-                            style: Option<String>,
+                            style_id: Option<String>,
                             gen_id: Option<usize>, 
                             ) -> PyResult<usize> 
     {
@@ -2673,7 +2673,7 @@ impl IPG {
                                                         height,
                                                         thickness,
                                                         rule_type,
-                                                        style, 
+                                                        style_id, 
                                                         )));
         state.last_id = id;
         drop(state);

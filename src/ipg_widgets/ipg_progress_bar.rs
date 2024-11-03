@@ -81,7 +81,9 @@ impl IpgProgressBarStyle {
 }
 
 
-pub fn construct_progress_bar(bar: IpgProgressBar, style: Option<IpgProgressBarStyle>) -> Element<'static, app::Message> {
+pub fn construct_progress_bar(bar: IpgProgressBar, 
+                            style: Option<IpgProgressBarStyle>) 
+                            -> Element<'static, app::Message> {
     
     if !bar.show {
         return Space::new(0.0, 0.0).into();

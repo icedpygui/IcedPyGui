@@ -131,7 +131,9 @@ pub enum PLMessage {
 }
 
 
-pub fn construct_picklist(pick: IpgPickList, style: Option<IpgPickListStyle>) -> Element<'static, app::Message> {
+pub fn construct_picklist(pick: IpgPickList, 
+                        style: Option<IpgPickListStyle>) 
+                        -> Element<'static, app::Message> {
 
     if!pick.show {
         return Space::new(0.0, 0.0).into()
@@ -154,23 +156,24 @@ pub fn construct_picklist(pick: IpgPickList, style: Option<IpgPickListStyle>) ->
 
     let options =  convert_pyobject_vec_string(pick.options);
 
-    let pl: Element<'_, PLMessage> = PickList::new(options.clone(), 
-                                            pick.selected.clone(), 
-                                            PLMessage::OnSelect,
-                                        )
-                                        .placeholder(placeholder)
-                                        .width(pick.width)
-                                        .padding(pick.padding)
-                                        .text_size(text_size)
-                                        .text_line_height(pick.text_line_height)
-                                        .text_shaping(pick.text_shaping)
-                                        .handle(handle)
-                                        .style(move|theme: &Theme, status| {   
-                                            get_styling(theme, status, 
-                                                style.clone(),
-                                            )  
-                                            })
-                                        .into();
+    let pl: Element<'_, PLMessage> = 
+        PickList::new(options.clone(), 
+            pick.selected.clone(), 
+            PLMessage::OnSelect,
+        )
+        .placeholder(placeholder)
+        .width(pick.width)
+        .padding(pick.padding)
+        .text_size(text_size)
+        .text_line_height(pick.text_line_height)
+        .text_shaping(pick.text_shaping)
+        .handle(handle)
+        .style(move|theme: &Theme, status| {   
+            get_styling(theme, status, 
+                style.clone(),
+            )  
+            })
+        .into();
 
     pl.map(move |message| app::Message::PickList(pick.id, message))
 

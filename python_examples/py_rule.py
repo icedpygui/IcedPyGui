@@ -26,44 +26,44 @@ ipg.add_space(parent_id="col", width_fill=True, height=20.0)
 ipg.add_text(parent_id="col", content="Below are vertical and horizontal rules")
 
 # add some styling
-ipg.add_rule_style("v", 
+ipg.add_rule_style(style_id="v", 
                    color=IpgColor.YELLOW, 
                    border_radius=[10.0])
 
-ipg.add_rule_style("h", 
+ipg.add_rule_style(style_id="h", 
                    color=IpgColor.BLUE, 
                    border_radius=[10.0])
 
 # The fill_mode styling
-ipg.add_rule_style("fill_50", 
+ipg.add_rule_style(style_id="fill_50", 
                    color=IpgColor.BLUE, 
                    fillmode_percent=50.0)
 
 # The padding is almost like percent except it gives you
 # an unsymmetrical ability. It can be seen better if you uncomment the 
 # debug mode in the window.
-ipg.add_rule_style("pad",
+ipg.add_rule_style(style_id="pad",
                    color=IpgColor.BLUE,
                    fillmode_asymmetric_padding=(10, 50))
 
 
 # Add the rules
-ipg.add_rule_vertical("col", height=250, thickness=5, 
-                      style="v")
+ipg.add_rule_vertical(parent_id="col", height=250, thickness=5, 
+                      style_id="v")
 
-ipg.add_rule_horizontal("col", width=250, thickness=15,
-                        style="h", 
+ipg.add_rule_horizontal(parent_id="col", width=250, thickness=15,
+                        style_id="h", 
                         )
 
 ipg.add_text(parent_id="col", content="Styling added to above with color and corner radius")
 
 ipg.add_rule_horizontal("col", width=250, thickness=15,
-                        style="fill_50", 
+                        style_id="fill_50", 
                         )
 ipg.add_text(parent_id="col", content="Additional Styling added to above with 50% color fill")
 
 ipg.add_rule_horizontal("col", width=250, thickness=15, 
-                        style="pad")
+                        style_id="pad")
 
 ipg.add_text(parent_id="col", content="Additional Styling added to above with unsymmetrical padding")
 
