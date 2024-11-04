@@ -93,17 +93,17 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
 #[derive(Debug)]
 pub struct UpdateItems {
     // wid, (item, value)
-    pub updates: Lazy<HashMap<usize, (PyObject, PyObject)>>, 
+    pub updates: Vec<(usize, PyObject, PyObject)>, 
     // window_id_widget_id, (window_id, wid, arget_container_str_id, move_after(wid), move_before(wid))
-    pub moves: Lazy<HashMap<String, (String, usize, String, Option<usize>, Option<usize>)>>,
+    pub moves: Vec<(String, usize, String, Option<usize>, Option<usize>)>,
     // window_id, wid
-    pub deletes: Lazy<HashMap<String, usize>>,
+    pub deletes: Vec<(String, usize)>,
 }
 
 pub static UPDATE_ITEMS: Mutex<UpdateItems> = Mutex::new(UpdateItems {
-    updates: Lazy::new(||HashMap::new()),
-    moves: Lazy::new(||HashMap::new()),
-    deletes: Lazy::new(||HashMap::new()),
+    updates: vec![],
+    moves: vec![],
+    deletes: vec![],
 });
 
 pub fn access_update_items() -> MutexGuard<'static, UpdateItems> {
@@ -254,6 +254,7 @@ pub struct IpgState {
     pub window_debug: HashMap<window::Id, (usize, bool)>, // (wid, debug)
     pub window_theme: HashMap<window::Id, (usize, Theme)>, // (wid, window Theme)
     pub window_mode: HashMap<window::Id, (usize, window::Mode)>,
+    pub windows_opened: u16,
 
     pub container_style: HashMap<String, IpgContainerStyle>,
     pub button_style: HashMap<String, IpgButtonStyle>,
@@ -306,6 +307,7 @@ impl IpgState {
             window_debug: HashMap::new(),
             window_theme: HashMap::new(),
             window_mode: HashMap::new(),
+            windows_opened: 0,
 
             container_style: HashMap::new(),
             button_style: HashMap::new(),
@@ -3927,35 +3929,11 @@ impl IPG {
     #[pyo3(signature = (window_id, wid))]
     fn delete_item(&self, window_id: String, wid: usize) 
     {
-        let mut state = access_state();
+        let mut all_updates = access_update_items();
 
-        let iced_id = match state.windows_str_ids.get(&window_id) {
-            Some(id) => id.clone(),
-            None => panic!("Window_id {} not found in delete_item", window_id)
-        };
+        all_updates.deletes.push((window_id, wid));
 
-        let ipg_ids = match state.ids.get_mut(&iced_id) {
-            Some(ids) => ids,
-            None => panic!("Ids not found for window_id {} in delete_item", window_id)
-        };
-
-        let mut index: i32 = -1;
-
-        for (i, ipg_id) in ipg_ids.iter().enumerate() {
-            if ipg_id.id == wid {
-                index = i as i32;
-                break;
-            }
-        }
-
-        if index == -1 {
-            panic!("item with id {wid} could not be found to delete")
-        }
-
-        ipg_ids.remove(index as usize);
-
-        state.widgets.remove(&wid);
-        drop(state);
+        drop(all_updates);
 
     }
 
@@ -3963,7 +3941,7 @@ impl IPG {
     fn update_item(&self, wid: usize, item: PyObject, value: PyObject) {
         let mut all_updates = access_update_items();
 
-        all_updates.updates.insert(wid, (item, value));
+        all_updates.updates.push((wid, item, value));
 
         drop(all_updates);
 
@@ -3984,8 +3962,9 @@ impl IPG {
                     )
     {
         let mut all_updates = access_update_items();
-        let str_id = format!("{}_{}", window_id, widget_id);
-        all_updates.moves.insert(str_id, (window_id, widget_id, target_container_str_id, move_after, move_before));
+        
+        all_updates.moves.push((window_id, widget_id, target_container_str_id, move_after, move_before));
+        
         drop(all_updates);
     }
     

@@ -1,4 +1,6 @@
 //! helpers
+use std::collections::HashMap;
+
 use crate::graphics::colors::IpgColor;
 use crate::style::styling::IpgStyleStandard;
 use crate::access_state;
@@ -29,9 +31,9 @@ pub fn check_for_dup_container_ids(id: usize, container_id: Option<String>) {
     drop(state);
 }
 
-pub fn find_key_for_value(value: usize) -> window::Id {
+pub fn find_key_for_value(ids: HashMap<window::Id, usize>, value: usize) -> window::Id {
     let state = access_state();
-    let map = &state.windows_iced_ipg_ids;
+    let map = &ids;
     let id = map.iter()
         .find_map(|(key, &val)| if val == value { Some(key) } else { None });
     

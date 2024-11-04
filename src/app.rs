@@ -171,14 +171,11 @@ impl App {
                 Task::none()
             },
             Message::EventWindow((window_id, event)) => {
-                // if all windows are closed, returns a true else false.
-                let is_empty = process_window_event(&mut self.state, 
-                                                            event, 
-                                                            window_id);
-
-                if is_empty {
+                process_window_event(&mut self.state, event, window_id);
+                if self.state.windows_opened == 0 {
                     iced::exit()
                 } else {
+                    
                     // check for any other window changes
                     get_tasks(&mut self.state)
                 }
@@ -315,6 +312,7 @@ impl App {
                 get_tasks(&mut self.state)
             },
             Message::WindowOpened(_id, _position, size) => {
+                self.state.windows_opened += 1;
                 process_updates(&mut self.state);
                 Task::none()
             },
@@ -325,10 +323,6 @@ impl App {
     pub fn view(&self, window_id: window::Id) -> Element<self::Message> {
 
         let (_visible, debug, theme) = get_window_values(window_id, &self.state);
-        
-        // if !visible { 
-        //     return horizontal_space().into();
-        // }
  
         let content = create_content(window_id, &self.state);
         
@@ -426,14 +420,16 @@ fn get_window_values(iced_window_id: window::Id, state: &IpgState) -> (bool, boo
     (vis, debug, theme)
 }
 
-fn get_tasks(state: &mut IpgState) -> Task<Message> {
+fn get_tasks(ipg_state: &mut IpgState) -> Task<Message> {
     
+    let mut state = access_window_actions();
+
     let mut actions = vec![];
 
-    for (ipg_id, mode) in state.mode.iter_mut() {
-        let iced_id = find_key_for_value(*ipg_id);
+    for (ipg_id, mode) in state.mode.iter() {
+        let iced_id = find_key_for_value(ipg_state.windows_iced_ipg_ids.clone(), *ipg_id);
         actions.push(window::change_mode(iced_id, *mode));
-        let is_empty = handle_window_closing(iced_id, *mode);
+        let is_empty = handle_window_closing(ipg_state, iced_id, *mode);
         if is_empty {
             actions.push(iced::exit());
         }
@@ -441,36 +437,37 @@ fn get_tasks(state: &mut IpgState) -> Task<Message> {
     state.mode = vec![];
 
     for id in state.decorations.iter() {
-        let iced_id = find_key_for_value(*id);
+        let iced_id = find_key_for_value(ipg_state.windows_iced_ipg_ids.clone(), *id);
         actions.push(window::toggle_decorations(iced_id))
     }
     state.decorations = vec![];
 
     for (id, width, height) in state.resize.iter() {
-        let iced_id = find_key_for_value(*id);
+        let iced_id = find_key_for_value(ipg_state.windows_iced_ipg_ids.clone(), *id);
         let size = Size::new(*width, *height);
         actions.push(window::resize(iced_id, size))
     }
     state.resize = vec![];
 
     for (id, x, y) in state.position.iter() {
-        let iced_id = find_key_for_value(*id);
+        let iced_id = find_key_for_value(ipg_state.windows_iced_ipg_ids.clone(), *id);
         let point = Point::new(*x, *y);
         actions.push(window::move_to(iced_id, point))
     }
     state.position = vec![];
 
     for (ipg_id, level) in state.level.iter() {
-        let iced_id = find_key_for_value(*ipg_id);
+        let iced_id = find_key_for_value(ipg_state.windows_iced_ipg_ids.clone(), *ipg_id);
         actions.push(window::change_level(iced_id, *level));
     }
     state.level = vec![];
+
+    drop(state);
 
     if actions.is_empty() {
         actions.push(Task::none());
     }
     Task::batch(actions)
-
 }
 
 
@@ -871,8 +868,8 @@ fn process_updates(state: &mut IpgState) {
     let mut all_updates = access_update_items();
 
     let deletes = all_updates.deletes.clone();
-    for (window_id, wid) in deletes.into_iter() {
-        let iced_id = match state.windows_str_ids.get(&window_id) {
+    for (window_id, wid) in deletes.iter() {
+        let iced_id = match state.windows_str_ids.get(window_id) {
             Some(id) => id.clone(),
             None => panic!("Window_id {} not found in delete_item", window_id)
         };
@@ -885,7 +882,7 @@ fn process_updates(state: &mut IpgState) {
         let mut index: i32 = -1;
 
         for (i, ipg_id) in ipg_ids.iter().enumerate() {
-            if ipg_id.id == wid {
+            if ipg_id.id == *wid {
                 index = i as i32;
                 break;
             }
@@ -899,19 +896,19 @@ fn process_updates(state: &mut IpgState) {
 
         state.widgets.remove(&wid);   
     }
-    all_updates.deletes = Lazy::new(||HashMap::new());
+    all_updates.deletes = vec![];
 
     let moves = all_updates.moves.clone();
-    for (_, (window_id, widget_id, target_container_str_id, move_after, move_before)) in moves.into_iter() {
+    for (window_id, widget_id, target_container_str_id, move_after, move_before) in moves.iter() {
 
-        let container_str_id_opt = state.container_str_ids.get(&target_container_str_id);
+        let container_str_id_opt = state.container_str_ids.get(target_container_str_id);
 
         let container_usize_id = match container_str_id_opt {
             Some(id) => id.clone(),
             None => panic!("move_widget: unable to find the target container id based on the id {}", target_container_str_id)
         };
 
-        let window_id_usize_opt = state.windows_str_ids.get(&window_id);
+        let window_id_usize_opt = state.windows_str_ids.get(window_id);
 
         let window_id_usize = match window_id_usize_opt {
             Some(id) => id.clone(),
@@ -940,7 +937,7 @@ fn process_updates(state: &mut IpgState) {
         let mut target_index: usize = 1_000_000;
 
         for (i, ids) in window_widget_ids.iter_mut().enumerate() {
-            if ids.id == widget_id {
+            if ids.id == *widget_id {
                 ids.parent_uid = container_usize_id;
                 ids.parent_id = target_container_str_id.clone();
                 found_index = i;
@@ -965,24 +962,25 @@ fn process_updates(state: &mut IpgState) {
             }
         }
     }  
-    all_updates.moves = Lazy::new(||HashMap::new());
+    all_updates.moves = vec![];
 
-    let updates = all_updates.updates.clone();
-    for (wid, (item, value)) in updates.into_iter() {
+    let mut updates = all_updates.updates.clone();
+    for ((wid, item, value)) in updates.iter() {
         let widget = state.widgets.get_mut(&wid);
         if widget.is_some() {
-            match_widget(widget.unwrap(), item, value);
+            match_widget(widget.unwrap(), item.clone(), value.clone());
         } else {
+            dbg!("at containers");
             match state.containers.get_mut(&wid) {
                 Some(cnt) => {
-                    match_container(cnt, item, value);
+                    match_container(cnt, item.clone(), value.clone());
                     
                 },
                 None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
             }
         }  
     }
-    all_updates.updates = Lazy::new(||HashMap::new());
+    all_updates.updates = vec![];
     
 }
 

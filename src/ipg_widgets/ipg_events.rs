@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use crate::ipg_widgets::ipg_window::get_ipg_mode;
-use crate::{access_callbacks, access_state, access_window_actions, IpgState};
+use crate::{access_callbacks, access_window_actions, IpgState};
 
 use iced::event::Event;
 use iced::keyboard::Event::{KeyPressed, KeyReleased, ModifiersChanged};
@@ -348,9 +348,11 @@ pub fn process_window_event(state: &mut IpgState,
                 let mut actions = access_window_actions();
                         actions.mode.push((ipg_id, window::Mode::Hidden));
                         drop(actions);
-                        
-                let is_empty = handle_window_closing(window_id, window::Mode::Hidden);
-                return is_empty;
+
+                state.windows_opened -= 1;
+                if state.windows_opened == 0 {return true}
+                handle_window_closing(state, window_id, window::Mode::Hidden);
+                
             } else if !event_enabled {
                 return false
             }
@@ -358,14 +360,13 @@ pub fn process_window_event(state: &mut IpgState,
                 // Cannot use window open since a window need to be predefined.
                 // Py user will use show and hide to the same effect.
                 iced::window::Event::Opened { position: _, size: _ } => {
+                    state.windows_opened += 1;
                     let name = "opened".to_string();
                    (None, name)
                 },
                 iced::window::Event::Closed => {
-                    let is_empty = handle_window_closing(window_id, window::Mode::Hidden);
-                    if is_empty {
-                        return true;
-                    }
+                    state.windows_opened -= 1;
+                    handle_window_closing(state, window_id, window::Mode::Hidden);
                     let name = "closed".to_string();
                     let cb = get_callback(event_id, name.clone());
                     (cb, name)
@@ -403,7 +404,7 @@ pub fn process_window_event(state: &mut IpgState,
                         let mut actions = access_window_actions();
                         actions.mode.push((ipg_id, window::Mode::Hidden));
                         drop(actions);
-                        let is_empty = handle_window_closing(window_id, window::Mode::Hidden);
+                        let is_empty = handle_window_closing(state, window_id, window::Mode::Hidden);
                        
                         if is_empty {
                             return true;
@@ -461,8 +462,7 @@ pub fn process_window_event(state: &mut IpgState,
     return false
 }
 
-pub fn handle_window_closing(iced_id: window::Id, mode: window::Mode) -> bool {
-    let mut state = access_state();
+pub fn handle_window_closing(state: &mut IpgState, iced_id: window::Id, mode: window::Mode) -> bool {
 
     let mut all_hidden = true;
     for (ic_id, (_ipg_id, md)) in state.window_mode.iter_mut() {
@@ -507,7 +507,6 @@ pub fn handle_window_closing(iced_id: window::Id, mode: window::Mode) -> bool {
         }
         
     }
-    drop(state);
 
     return false;
 

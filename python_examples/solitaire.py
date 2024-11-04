@@ -43,13 +43,18 @@ class solitaire:
         self.foundation_top_card_value: list=[0] * 4
         self.foundation_top_card_suite: list=[None] * 4
 
+        # if the cards in the tableau going outside of this height,
+        # an error will occur.  Increase the window height and this
+        # if needed 
+        self.stack_height = 470.0 
+
     def start_game(self):
         self.create_styles()
         # add the main containers
         self.ipg.add_window(window_id="main", 
                             title="Solitaire",
                             width=1000.0,
-                            height=630.0,
+                            height=700.0,
                             pos_centered=True,
                             # debug=True
                             )
@@ -311,9 +316,9 @@ class solitaire:
                                     padding=[0.0],
                                     style_id="white_border")
 
-        # add a container off screen to hide widget that become unused, need if restart game used
+        # add a container off screen to hide widget that become unused
         self.ipg.add_space(parent_id="stock_row",
-                           width=50.0)
+                           width=200.0)
         self.ipg.add_stack(window_id="main",
                                container_id="hidden",
                                parent_id="stock_row",
@@ -349,7 +354,7 @@ class solitaire:
                                 container_id=f"tab_stack_{i}",
                                 parent_id="tableau_row",
                                 width=self.card_width,
-                                height=400.0,
+                                height=self.stack_height,
                                 )
             wid = self.ipg.add_mousearea(window_id="main",
                                         container_id=f"tab_stack_ma_{i}",
@@ -722,7 +727,7 @@ class solitaire:
         ids_to_move = []
         
         if len(self.stock) == 0:
-            self.ipg.move_widget("main", self.origin, "hidden")
+            self.ipg.move_widget("main", self.stock_cover_id, "hidden")
             
         if self.cards_to_play == "3":
             if len(self.stock) >= 3:
