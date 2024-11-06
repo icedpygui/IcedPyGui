@@ -14,6 +14,7 @@ use iced::Color;
 use once_cell::sync::Lazy;
 
 
+use crate::ipg_widgets::ipg_canvas_new::{canvas_new_callback, CanvasMessageNew, DrawCurveNew, IpgBuildCanvasNew};
 use crate::ipg_widgets::ipg_events::IpgKeyBoardEvent;
 use crate::{access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
@@ -58,6 +59,7 @@ use iced::widget::{scrollable, Space};
 pub enum Message {
     Button(usize, BTNMessage),
     Canvas,
+    CanvasNew(CanvasMessageNew),
     Card(usize, CardMessage),
     CheckBox(usize, CHKMessage),
     DatePicker(usize, DPMessage),
@@ -97,6 +99,7 @@ pub enum Message {
 
 pub struct App {
     state: IpgState,
+    canvas_state: IpgBuildCanvasNew,
 }
 
 
@@ -112,6 +115,7 @@ impl App {
         (
             Self {
                 state,
+                canvas_state: IpgBuildCanvasNew::default(),
             },
             
             Task::batch(open),
@@ -143,6 +147,10 @@ impl App {
             },
             Message::Canvas => {
                 canvas_callback();
+                get_tasks(&mut self.state)
+            },
+            Message::CanvasNew(canvas_message) => {
+                canvas_new_callback(canvas_message, &mut self.canvas_state);
                 get_tasks(&mut self.state)
             },
             Message::Card(id, message) => {

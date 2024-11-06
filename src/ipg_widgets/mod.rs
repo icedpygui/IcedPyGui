@@ -4,6 +4,7 @@ pub mod callbacks;
 pub mod helpers;
 pub mod ipg_button;
 pub mod ipg_canvas;
+pub mod ipg_canvas_new;
 pub mod ipg_card;
 pub mod ipg_checkbox;
 pub mod ipg_column;
