@@ -484,29 +484,9 @@ pub fn container_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> W
             let wco = WidgetCallbackOut::default();
             return wco
         },
-        IpgContainers::IpgColumn(_) => {
-            let wco = WidgetCallbackOut::default();
-            return wco
-        },
-        IpgContainers::IpgContainer(_) => {
-            let wco = WidgetCallbackOut::default();
-            return wco
-        },
         IpgContainers::IpgMouseArea(m_area) => {
             let mut wco = WidgetCallbackOut::default();
             wco.user_data = m_area.user_data.clone();
-            return wco
-        },
-        IpgContainers::IpgModal(_modal) => {
-            let wco = WidgetCallbackOut::default();
-            return wco
-        },
-        IpgContainers::IpgOpaque(_) => {
-            let wco = WidgetCallbackOut::default();
-            return wco
-        },
-        IpgContainers::IpgStack(_) => {
-            let wco = WidgetCallbackOut::default();
             return wco
         },
         IpgContainers::IpgTable(table) => {
@@ -517,23 +497,15 @@ pub fn container_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> W
             wco.scroller_user_data = table.scroller_user_data.clone();
             return wco
         }
-        IpgContainers::IpgRow(_) => {
-            let wco = WidgetCallbackOut::default();
-            return wco
-        },
         IpgContainers::IpgScrollable(scroll) => {
             let mut wco = WidgetCallbackOut::default();
             wco.user_data = scroll.user_data.clone();
             return wco
         }
-        IpgContainers::IpgToolTip(_) => {
+        _ => {
             let wco = WidgetCallbackOut::default();
             return wco
-        },
-        IpgContainers::IpgWindow(_) => {
-            let wco = WidgetCallbackOut::default();
-            return wco
-        },
+        }
     }
         
 }

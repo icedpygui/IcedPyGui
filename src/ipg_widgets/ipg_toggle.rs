@@ -117,8 +117,14 @@ pub enum TOGMessage {
 
 
 pub fn construct_toggler(tog: IpgToggler, 
-                        style: Option<IpgTogglerStyle>) 
+                        style: Option<&IpgTogglerStyle>) 
                         -> Element<'static, app::Message> {
+    
+    // extracted here due to lifetime in map statement
+    let style_opt = match style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
 
     if !tog.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
@@ -142,7 +148,7 @@ pub fn construct_toggler(tog: IpgToggler,
                                                     .spacing(tog.spacing)
                                                     .style(move|theme: &Theme, status| {     
                                                         get_styling(theme, status, 
-                                                                    style.clone()) 
+                                                                    style_opt.clone()) 
                                                     })
                                                     .into();
 

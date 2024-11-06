@@ -97,10 +97,18 @@ pub enum DPMessage {
     OnSubmit,
 }   
 
-pub fn construct_date_picker(dp: IpgDatePicker, btn_style: Option<IpgButtonStyle>) -> Element<'static, Message, Theme, Renderer> {
+pub fn construct_date_picker(dp: IpgDatePicker, 
+                            btn_style: Option<&IpgButtonStyle>) 
+                            -> Element<'static, Message, Theme, Renderer> {
+    
+    // extracted here due to lifetime
+    let btn_style_opt = match btn_style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
 
     if !dp.show {
-        return calendar_show_button(dp.clone(), btn_style);
+        return calendar_show_button(dp.clone(), btn_style_opt);
     }
     
     let width = Length::Fixed(dp.show_width * dp.size_factor);

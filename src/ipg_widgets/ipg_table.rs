@@ -11,6 +11,8 @@ use super::callbacks::{set_or_get_widget_callback_data,
 use super::helpers::{get_padding_f32, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f32};
 use super::ipg_button::IpgButtonStyle;
+use super::ipg_checkbox::IpgCheckboxStyle;
+use super::ipg_toggle::IpgTogglerStyle;
 use super::{ipg_button, ipg_checkbox, ipg_toggle};
 use crate::style::styling::{lighten, darken};
 
@@ -122,13 +124,6 @@ pub enum TableMessage {
     TableScrolled(Viewport, usize)
 }
 
-// #[derive(Debug, Clone, Copy)]
-// enum DataTypes {
-//     Bool,
-//     F64,
-//     String,
-// }
-
 #[derive(Debug, Clone, Copy)]
 #[pyclass]
 pub enum IpgTableRowHighLight {
@@ -147,8 +142,24 @@ pub enum IpgTableWidget {
 
 pub fn construct_table(table: IpgTable, 
                         content: Vec<Element<'static, Message>>, 
-                        button_fill_style: Option<IpgButtonStyle>) 
+                        button_fill_style: Option<&IpgButtonStyle>,
+                        checkbox_fill_style: Option<&IpgCheckboxStyle>,
+                        toggler_fill_style: Option<&IpgTogglerStyle>,) 
                         -> Element<'static, Message> {
+
+    // extracted here due to lifetime
+    let button_fill_style_opt = match button_fill_style {
+        Some(style) => Some(style.clone()),
+        None => None,
+    };
+    let checkbox_fill_style_opt = match checkbox_fill_style {
+        Some(style) => Some(style.clone()),
+        None => None,
+    };
+    let toggler_fill_style_opt = match toggler_fill_style {
+        Some(style) => Some(style.clone()),
+        None => None,
+    };
 
     let mut headers: Vec<Element<Message>>= vec![];
 
@@ -315,7 +326,9 @@ pub fn construct_table(table: IpgTable,
                                     col,
                                     col_width, 
                                     bl,
-                                    button_fill_style.clone(),
+                                    button_fill_style_opt.clone(),
+                                    None,
+                                    None,
                                     table.button_fill_style_standard.clone(),
                                     );
             }
@@ -332,7 +345,9 @@ pub fn construct_table(table: IpgTable,
                                     col_width, 
                                     bl,
                                     None,
-                                    table.checkbox_fill_style_standard.clone(),
+                                    checkbox_fill_style_opt.clone(),
+                                    None,
+                                    table.checkbox_fill_style_standard.clone()
                                     );
             }
 
@@ -348,6 +363,8 @@ pub fn construct_table(table: IpgTable,
                                     col_width, 
                                     bl,
                                     None,
+                                    None,
+                                    toggler_fill_style_opt.clone(),
                                     None,
                                     );
             }
@@ -497,6 +514,8 @@ fn add_widget(widget_type: IpgTableWidget,
                 column_width: f32,
                 is_toggled: bool,
                 btn_style: Option<IpgButtonStyle>,
+                chk_style: Option<IpgCheckboxStyle>,
+                tog_style: Option<IpgTogglerStyle>,
                 style_standard: Option<IpgStyleStandard>
                 ) -> Element<'static, Message> {
 
@@ -527,7 +546,7 @@ fn add_widget(widget_type: IpgTableWidget,
                                 .on_toggle(move|b| TableMessage::TableCheckbox(b, (row_index, col_index)))
                                 .style(move|theme, status|
                                     ipg_checkbox::get_styling(theme, status, 
-                                                                None, 
+                                                                chk_style.clone(), 
                                                                 style_standard.clone(), 
                                                                 is_toggled))
                                 .into();
@@ -540,7 +559,7 @@ fn add_widget(widget_type: IpgTableWidget,
                                     .on_toggle(move|b| TableMessage::TableToggler(b, (row_index, col_index)))
                                     .style(move|theme, status|
                                     ipg_toggle::get_styling(theme, status, 
-                                                            None,
+                                                            tog_style.clone(),
                                                             ))
                                     .into();
 

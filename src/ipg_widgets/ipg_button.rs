@@ -116,7 +116,15 @@ pub enum BTNMessage {
 }
 
 
-pub fn construct_button(btn: IpgButton, style: Option<IpgButtonStyle>) -> Element<'static, app::Message> {
+pub fn construct_button(btn: IpgButton, 
+                        style: Option<&IpgButtonStyle>) 
+                        -> Element<'static, app::Message> {
+    
+    // extracted here due to lifetime in map statement
+    let style_opt = match style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
 
     if !btn.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
@@ -137,7 +145,7 @@ pub fn construct_button(btn: IpgButton, style: Option<IpgButtonStyle>) -> Elemen
                                 .clip(btn.clip)
                                 .style(move|theme: &Theme, status| {   
                                     get_styling(theme, status,
-                                        style.clone(),
+                                        style_opt.clone(),
                                         btn.style_standard.clone(),
                                     )  
                                     })

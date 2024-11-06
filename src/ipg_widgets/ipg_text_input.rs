@@ -119,8 +119,14 @@ pub enum TIMessage {
 }
 
 pub fn construct_text_input(input: IpgTextInput, 
-                            style: Option<IpgTextInputStyle>) 
+                            style: Option<&IpgTextInputStyle>) 
                             -> Element<'static, app::Message> {
+    
+    // extracted here due to lifetime in map statement
+    let style_opt = match style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
 
     if !input.show {
         return Space::new(0.0, 0.0).into()
@@ -146,7 +152,7 @@ pub fn construct_text_input(input: IpgTextInput,
                                             // })
                                             .style(move|theme, status|
                                                 get_styling(theme, status, 
-                                                    style.clone()
+                                                    style_opt.clone()
                                                 ))
                                             .into();
 

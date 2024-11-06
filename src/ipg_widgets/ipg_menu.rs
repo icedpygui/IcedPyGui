@@ -36,8 +36,8 @@ pub struct IpgMenu {
     pub check_bounds_width: f32,
     pub item_spacings: Option<Vec<f32>>,
     pub item_offsets: Option<Vec<f32>>,
-    pub menu_bar_style: Option<String>, // style_id of add_menu_bar_style()
-    pub menu_style: Option<String>, // style_id of add_menu_style()
+    pub menu_bar_style_id: Option<String>, // style_id of add_menu_bar_style()
+    pub menu_style_id: Option<String>, // style_id of add_menu_style()
     // Option<String> in the below styles refer to the style_id of widget styles, not add_menu_style
     pub button_bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
     pub button_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
@@ -46,6 +46,7 @@ pub struct IpgMenu {
     pub dot_item_style_all: Option<String>,
     pub label_item_style_all: Option<String>,
     pub line_item_style_all: Option<String>,
+    pub separator_item_style_all: Option<String>,
     pub text_item_style_all: Option<String>,
     pub toggler_item_style_all: Option<String>,
     pub item_styles: Option<Vec<(usize, usize, Option<IpgStyleStandard>, Option<String>)>>,
@@ -71,8 +72,8 @@ impl IpgMenu {
         check_bounds_width: f32,
         item_spacings: Option<Vec<f32>>,
         item_offsets: Option<Vec<f32>>,
-        menu_bar_style: Option<String>,
-        menu_style: Option<String>,
+        menu_bar_style_id: Option<String>,
+        menu_style_id: Option<String>,
         button_bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
         button_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
         checkbox_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
@@ -80,6 +81,7 @@ impl IpgMenu {
         dot_item_style_all: Option<String>,
         label_item_style_all: Option<String>,
         line_item_style_all: Option<String>,
+        separator_item_style_all: Option<String>,
         text_item_style_all: Option<String>,
         toggler_item_style_all: Option<String>,
         item_styles: Option<Vec<(usize, usize, Option<IpgStyleStandard>, Option<String>)>>,
@@ -98,8 +100,8 @@ impl IpgMenu {
             check_bounds_width,
             item_spacings,
             item_offsets,
-            menu_bar_style,
-            menu_style,
+            menu_bar_style_id,
+            menu_style_id,
             button_bar_style_all,
             button_item_style_all,
             checkbox_item_style_all,
@@ -107,6 +109,7 @@ impl IpgMenu {
             dot_item_style_all,
             label_item_style_all,
             line_item_style_all,
+            separator_item_style_all,
             text_item_style_all,
             toggler_item_style_all,
             item_styles,
@@ -235,7 +238,26 @@ pub enum IpgMenuType {
     Toggler,
 }
 
-pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message, Theme, Renderer> {
+pub fn construct_menu(mut mn: IpgMenu, 
+                        menu_style_opt: Option<&IpgMenuStyle>,
+                        bar_style_opt: Option<&IpgMenuBarStyle>,
+                        sep_style_opt: Option<&IpgMenuSeparatorStyle>,)
+                        -> Element<'static, app::Message, Theme, Renderer> {
+
+    let mn_style = match menu_style_opt {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
+
+    let br_style = match bar_style_opt {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
+
+    let sp_style = match sep_style_opt {
+        Some(sep) => Some(sep),
+        None => None,
+    };
 
     let menu = try_extract_dict(mn.items);
     
@@ -349,8 +371,8 @@ pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message, Theme, 
                 .draw_path(DrawPath::Backdrop)
                 .style(move|theme:&iced::Theme, status: Status | 
                     get_mb_styling(theme, status, 
-                        mn.menu_bar_style.clone(), 
-                        mn.menu_style.clone()
+                        br_style.clone(), 
+                        mn_style.clone()
                     )
                 )
                 .spacing(mn.bar_spacing)
@@ -367,24 +389,19 @@ pub fn construct_menu(mut mn: IpgMenu) -> Element<'static, app::Message, Theme, 
 
 fn get_mb_styling(theme: &Theme, 
                     status: Status,
-                    bar_style_id: Option<String>,
-                    menu_style_id: Option<String>,
+                    br_style: Option<IpgMenuBarStyle>,
+                    mn_style: Option<IpgMenuStyle>,
                 ) -> Style {
-
-    let state = access_state();
 
     let mut menu_style = primary(theme, status);
 
-    if bar_style_id.is_none() && menu_style_id.is_none() {
+    if br_style.is_none() && mn_style.is_none() {
         return menu_style
     }
 
-    if bar_style_id.is_some() {
+    if br_style.is_some() {
 
-        let b_style = match state.menu_bar_style.get(&bar_style_id.clone().unwrap()){
-        Some(st) => st,
-        None => panic!("Bar Menu Style: Unable to find the style_id {}", bar_style_id.unwrap()),
-        };
+        let b_style = br_style.unwrap();
 
         if b_style.base.is_some() {
             menu_style.bar_background = b_style.base.unwrap().into();
@@ -426,12 +443,9 @@ fn get_mb_styling(theme: &Theme,
         }
     }
 
-    if menu_style_id.is_some() {
+    if mn_style.is_some() {
 
-        let m_style = match state.menu_style.get(&menu_style_id.clone().unwrap()){
-        Some(st) => st,
-        None => panic!("Menu Style: Unable to find the style_id {}", menu_style_id.unwrap()),
-        };
+        let m_style = mn_style.unwrap();
 
         if m_style.base.is_some() {
             menu_style.menu_background = m_style.base.unwrap().into();
@@ -494,7 +508,6 @@ fn get_mb_styling(theme: &Theme,
         }
     }
 
-    drop(state);
     menu_style
 
 }

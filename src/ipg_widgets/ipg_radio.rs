@@ -135,8 +135,14 @@ pub enum RDMessage {
 
 
 pub fn construct_radio(radio: IpgRadio, 
-                        style_opt: Option<IpgRadioStyle>) 
+                        style: Option<&IpgRadioStyle>) 
                         -> Element<'static, app::Message> {
+    
+    // extracted here due to lifetime in map statement
+    let style_opt = match style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
 
     if !radio.show {
         return Space::new(0.0, 0.0).into()

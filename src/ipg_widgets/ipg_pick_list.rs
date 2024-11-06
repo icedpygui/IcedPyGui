@@ -132,8 +132,14 @@ pub enum PLMessage {
 
 
 pub fn construct_picklist(pick: IpgPickList, 
-                        style: Option<IpgPickListStyle>) 
+                        style: Option<&IpgPickListStyle>) 
                         -> Element<'static, app::Message> {
+    
+    // extracted here due to lifetime in map statement
+    let style_opt = match style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
 
     if!pick.show {
         return Space::new(0.0, 0.0).into()
@@ -170,7 +176,7 @@ pub fn construct_picklist(pick: IpgPickList,
         .handle(handle)
         .style(move|theme: &Theme, status| {   
             get_styling(theme, status, 
-                style.clone(),
+                style_opt.clone(),
             )  
             })
         .into();

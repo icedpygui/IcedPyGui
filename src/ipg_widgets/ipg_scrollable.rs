@@ -174,8 +174,14 @@ pub enum IpgScrollableAlignment {
 
 pub fn construct_scrollable(scroll: IpgScrollable, 
                             content: Vec<Element<'static, app::Message>>,
-                            style: Option<IpgScrollableStyle> ) 
+                            style: Option<&IpgScrollableStyle> ) 
                             -> Element<'static, app::Message> {
+    
+    // extracted here due to lifetime
+    let style_opt = match style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
 
     let content: Element<'static, app::Message> = Column::with_children(content).into();
 
@@ -196,7 +202,7 @@ pub fn construct_scrollable(scroll: IpgScrollable,
                     .on_scroll(move|vp| app::Message::Scrolled(vp, scroll.id))
                     .style(move|theme, status| {
                         get_styling(theme, status,
-                                    style.clone(),
+                                    style_opt.clone(),
                                     )
                     })
                     .into()

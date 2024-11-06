@@ -70,13 +70,19 @@ impl IpgRuleStyle {
 // is the thickness of the line which is height.  The opposite for vertical.
 // To control the other dimension, need to put into a container.
 pub fn construct_rule(rule: IpgRule, 
-                        style: Option<IpgRuleStyle>) 
+                        style: Option<&IpgRuleStyle>) 
                         -> Element<'static, app::Message> {
 
+    // extracted here due to lifetime in map statement
+    let style_opt = match style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
+
     if rule.rule_type == "h".to_string() {
-        return construct_horizontal(rule, style)
+        return construct_horizontal(rule, style_opt)
     } else {
-        return construct_rule_vertical(rule, style)
+        return construct_rule_vertical(rule, style_opt)
     }
 
 }

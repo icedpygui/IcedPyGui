@@ -141,7 +141,7 @@ pub struct State {
     pub container_str_ids: Lazy<HashMap<String, usize>>, // get container usize id based on container string
     pub container_wnd_str_ids: Lazy<HashMap<String, String>>, // get window string id based on container string id
     pub container_window_usize_ids: Lazy<HashMap<usize, usize>>, //get window usize id based on container usize id
-
+    
     pub table_internal_ids_counter: usize,
 
     pub widgets: Lazy<HashMap<usize, IpgWidgets>>,
@@ -1905,6 +1905,7 @@ impl IPG {
                         dot_item_style_all=None,
                         label_item_style_all=None,
                         line_item_style_all=None,
+                        separator_item_style_all=None,
                         text_item_style_all=None,
                         toggler_item_style_all=None, 
                         item_styles=None,
@@ -1931,6 +1932,7 @@ impl IPG {
                     dot_item_style_all: Option<String>,
                     label_item_style_all: Option<String>,
                     line_item_style_all: Option<String>,
+                    separator_item_style_all: Option<String>,
                     text_item_style_all: Option<String>,
                     toggler_item_style_all: Option<String>,
                     item_styles: Option<Vec<(usize, usize, Option<IpgStyleStandard>, Option<String>)>>,
@@ -1989,6 +1991,7 @@ impl IPG {
                                                                 dot_item_style_all,
                                                                 label_item_style_all,
                                                                 line_item_style_all,
+                                                                separator_item_style_all,
                                                                 text_item_style_all,
                                                                 toggler_item_style_all,
                                                                 item_styles,
@@ -4476,10 +4479,6 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
 fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject) {
 
     match container {
-        IpgContainers::IpgCanvas(_) => {},
-        IpgContainers::IpgColumn(_) => {},
-        IpgContainers::IpgContainer(_) => {},
-        IpgContainers::IpgModal(_) => {},
         IpgContainers::IpgMouseArea(m_area) => {
             mousearea_item_update(m_area, item, value);
         },
@@ -4500,6 +4499,7 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
         IpgContainers::IpgWindow(wnd) => {
             window_item_update(wnd, item, value);
         },
+        _ => (),
     }
 }
 

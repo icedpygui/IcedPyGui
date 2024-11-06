@@ -82,9 +82,15 @@ impl IpgProgressBarStyle {
 
 
 pub fn construct_progress_bar(bar: IpgProgressBar, 
-                            style: Option<IpgProgressBarStyle>) 
+                            style: Option<&IpgProgressBarStyle>) 
                             -> Element<'static, app::Message> {
     
+    // extracted here due to lifetime
+    let style_opt = match style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
+
     if !bar.show {
         return Space::new(0.0, 0.0).into();
     }
@@ -95,7 +101,7 @@ pub fn construct_progress_bar(bar: IpgProgressBar,
                             .style(move|theme: &Theme | {   
                                 get_styling(theme, 
                                     bar.style_standard.clone(), 
-                                    style.clone(), 
+                                    style_opt.clone(), 
                                     )  
                                 })
                             .into()

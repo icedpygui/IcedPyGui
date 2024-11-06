@@ -127,7 +127,15 @@ pub enum CHKMessage {
     OnToggle(bool),
 }
 
-pub fn construct_checkbox(chk: IpgCheckBox, style: Option<IpgCheckboxStyle>) -> Element<'static, app::Message> {
+pub fn construct_checkbox(chk: IpgCheckBox, 
+                        style: Option<&IpgCheckboxStyle>) 
+                        -> Element<'static, app::Message> {
+
+    // extracted here due to lifetime in map statement
+    let style_opt = match style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
 
     if !chk.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
@@ -162,7 +170,7 @@ pub fn construct_checkbox(chk: IpgCheckBox, style: Option<IpgCheckboxStyle>) -> 
                             )
                             .style(move|theme: &Theme, status| {   
                                 get_styling(theme, status,
-                                    style.clone(), 
+                                    style_opt.clone(), 
                                     chk.style_standard.clone(),
                                     chk.is_checked,
                                     )  

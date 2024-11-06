@@ -111,8 +111,14 @@ pub enum SLMessage {
 }
 
 pub fn construct_slider(slider: IpgSlider, 
-                        style: Option<IpgSliderStyle>) 
+                        style: Option<&IpgSliderStyle>) 
                         -> Element<'static, app::Message> {
+
+    // extracted here due to lifetime in map statement
+    let style_opt = match style {
+        Some(st) => Some(st.clone()),
+        None => None,
+    };
 
     if !slider.show {
         return Space::new(0.0, 0.0).into()
@@ -128,7 +134,7 @@ pub fn construct_slider(slider: IpgSlider,
                                                     .height(slider.height)
                                                     .style(move|theme, status|
                                                     get_styling(theme, status,
-                                                        style.clone()
+                                                        style_opt.clone()
                                                     ))
                                                     .into();
 
