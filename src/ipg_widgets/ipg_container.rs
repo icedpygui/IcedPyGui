@@ -98,10 +98,10 @@ impl IpgContainerStyle {
 }
 
 
-pub fn construct_container(con: IpgContainer, 
-                            mut content: Vec<Element<'static, Message>>,
+pub fn construct_container<'a>(con: IpgContainer, 
+                            mut content: Vec<Element<'a, Message>>,
                             style: Option<IpgContainerStyle> ) 
-                            -> Element<'static, Message> {
+                            -> Element<'a, Message> {
 
     let align_h = get_horizontal_alignment(con.align_h.clone());
     let align_v = get_vertical_alignment(con.align_v.clone());

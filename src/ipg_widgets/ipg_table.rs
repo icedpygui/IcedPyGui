@@ -140,12 +140,12 @@ pub enum IpgTableWidget {
 }
 
 
-pub fn construct_table(table: IpgTable, 
-                        content: Vec<Element<'static, Message>>, 
+pub fn construct_table<'a>(table: IpgTable, 
+                        content: Vec<Element<'a, Message>>, 
                         button_fill_style: Option<&IpgButtonStyle>,
                         checkbox_fill_style: Option<&IpgCheckboxStyle>,
                         toggler_fill_style: Option<&IpgTogglerStyle>,) 
-                        -> Element<'static, Message> {
+                        -> Element<'a, Message> {
 
     // extracted here due to lifetime
     let button_fill_style_opt = match button_fill_style {

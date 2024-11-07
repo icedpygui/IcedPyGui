@@ -66,10 +66,10 @@ impl IpgOpaqueStyle {
     }
 }
 
-pub fn construct_opaque(op: IpgOpaque, 
-                        mut content: Vec<Element<'static, Message>>, 
+pub fn construct_opaque<'a>(op: IpgOpaque, 
+                        mut content: Vec<Element<'a, Message>>, 
                         style: Option<IpgOpaqueStyle> ) 
-                        -> Element<'static, Message> {
+                        -> Element<'a, Message> {
 
     let new_content = if content.len() > 0 {
         content.remove(0)

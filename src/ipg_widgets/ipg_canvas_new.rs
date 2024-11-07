@@ -1,14 +1,16 @@
 use iced::keyboard::key;
 use iced::widget::container;
-use iced::{keyboard, mouse, Size};
+use iced::{keyboard, mouse, Length, Size};
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Stroke};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Theme};
 
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
-use std::io::BufWriter;
-use std::fs::{self, File};
+use serde_json;
+use std::fs::File;
+use std::fs;
+use std::io::{BufWriter, Write};
 
 use crate::app::Message;
 
@@ -40,13 +42,36 @@ pub enum CurveStatus {
     Edit,
 }
 
+#[derive(Debug, Clone)]
+pub struct IpgCanvasNew {
+    pub id: usize,
+    pub width: Length,
+    pub height: Length,
+    pub show: bool,
+}
 
-pub fn get_canvas<'a>(state: &'a IpgBuildCanvasNew) -> Element<'a, Message>{
-    let draw =  
+impl IpgCanvasNew {
+    pub fn new(
+        id: usize,
+        width: Length,
+        height: Length,
+        show: bool,
+    ) -> Self {
+        Self {
+            id,
+            width,
+            height,
+            show, 
+        }
+    }
+}
+
+pub fn construct_canvas_new<'a>(state: &'a IpgBuildCanvasNew) -> Element<'a, Message>{
+    let draw: Element<CanvasMessageNew> =  
             container(state.view(&state.curves)
-                .map(Message::CanvasNew))
-                .into();
-    draw
+                .map(CanvasMessageNew::CanvasNew)).into();
+    draw.map(move |message| Message::CanvasNew(message))
+
 }
 
 #[derive(Default)]
@@ -183,6 +208,7 @@ impl IpgBuildCanvasNew {
                                     }
                                 },
                                 Choice::Line => {
+                                    dbg!("line");
                                     if return_curve.from.is_none() {
                                         return_curve.curve_type = Choice::Line;
                                         return_curve.status = CurveStatus::InProgress;
@@ -277,6 +303,7 @@ impl IpgBuildCanvasNew {
             bounds: Rectangle,
             _cursor: mouse::Cursor,
         ) -> Vec<Geometry> {
+            // dbg!("draw_all", &self.curves);
             let content =
                 self.state.cache.draw(renderer, bounds.size(), |frame| {
                     DrawCurveNew::draw_all(self.curves, frame, theme, self.state.mode);
@@ -547,11 +574,11 @@ pub fn canvas_new_callback(canvas_message: CanvasMessageNew, canvas_state: &mut 
         }
 }
 
-pub fn save(path: impl AsRef<Path>, data: &impl Serialize) -> std::io::Result<()> {
-    let mut w = BufWriter::new(File::create(path).expect("unable to create file"));
-    serde_json::to_writer_pretty(&mut w, data).expect("unable to format data");
-    w.write(b"\n").expect("unable to append to buffer");
-    w.flush().expect("unable to flush buffer");
+pub fn save(path: impl AsRef<std::path::Path>, data: &impl Serialize) -> std::io::Result<()> {
+    let mut w = BufWriter::new(File::create(path).expect("Unable to create file"));
+    serde_json::to_writer_pretty(&mut w, data).expect("serde_json failed");
+    w.write(b"\n").expect_err("Unable to append \n on buffer");
+    w.flush().expect_err("Unable to flush buffer");
     Ok(())
 }
 
@@ -572,7 +599,7 @@ pub struct IpgDrawCurve {
     pub points: Vec<IpgPoint>,
 }
 
-fn convert_to_iced_point(curves: Vec<IpgDrawCurve>) -> Vec<DrawCurve> {
+fn convert_to_iced_point(curves: Vec<IpgDrawCurve>) -> Vec<DrawCurveNew> {
     let mut iced_curves = vec![];
     for curve in curves {
         let from = to_point(curve.from);

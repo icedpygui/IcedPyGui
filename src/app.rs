@@ -14,7 +14,7 @@ use iced::Color;
 use once_cell::sync::Lazy;
 
 
-use crate::ipg_widgets::ipg_canvas_new::{canvas_new_callback, CanvasMessageNew, DrawCurveNew, IpgBuildCanvasNew};
+use crate::ipg_widgets::ipg_canvas_new::{canvas_new_callback, construct_canvas_new, CanvasMessageNew, DrawCurveNew, IpgBuildCanvasNew};
 use crate::ipg_widgets::ipg_events::IpgKeyBoardEvent;
 use crate::{access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
@@ -150,6 +150,7 @@ impl App {
                 get_tasks(&mut self.state)
             },
             Message::CanvasNew(canvas_message) => {
+                dbg!("message");
                 canvas_new_callback(canvas_message, &mut self.canvas_state);
                 get_tasks(&mut self.state)
             },
@@ -332,7 +333,8 @@ impl App {
 
         let (_visible, debug, theme) = get_window_values(window_id, &self.state);
  
-        let content = create_content(window_id, &self.state);
+        let content = 
+            create_content(window_id, &self.state, &self.canvas_state);
         
         if debug {
             let color = match_theme_with_color(theme);
@@ -480,7 +482,8 @@ fn get_tasks(ipg_state: &mut IpgState) -> Task<Message> {
 
 
 // Central method to get the structures stored in the mutex and then the children 
-fn create_content(iced_id: window::Id, state: &IpgState) -> Element<'static, Message> {
+fn create_content<'a>(iced_id: window::Id, state: &'a IpgState, canvas_state: &'a IpgBuildCanvasNew) 
+                -> Element<'a, Message> {
     
     let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_id);
 
@@ -499,7 +502,8 @@ fn create_content(iced_id: window::Id, state: &IpgState) -> Element<'static, Mes
     let content = get_children(&all_parent_ids,
                                                                 &0, 
                                                                 &unique_parent_ids,
-                                                                state);
+                                                                state,
+                                                                canvas_state,);
     content.into()
 }
 
@@ -547,19 +551,20 @@ fn get_combine_parents_and_children(parent_ids: &Vec<usize>, ids_opt: Option<&Ve
     parent_child_ids
 }
 
-fn get_children(parents: &Vec<ParentChildIds>, 
+fn get_children<'a>(parents: &Vec<ParentChildIds>, 
                 index: &usize, 
                 parent_ids: &Vec<usize>, 
                 state: &IpgState,
-                ) -> Element<'static, Message> 
+                canvas_state: &'a IpgBuildCanvasNew,
+                ) -> Element<'a, Message> 
 {
 
-    let mut content: Vec<Element<'static, Message>> = vec![];
+    let mut content= vec![];
 
     for child in &parents[*index].child_ids {
         if parent_ids.contains(&child) {
             let index = parents.iter().position(|r| &r.parent_id == child).unwrap();
-            content.push(get_children(&parents, &index, parent_ids, state));
+            content.push(get_children(&parents, &index, parent_ids, state, canvas_state));
         } else {
             content.push(get_widget(state, child));
         }
@@ -567,14 +572,18 @@ fn get_children(parents: &Vec<ParentChildIds>,
     let id = &parents[*index].parent_id;
 
     if id != &0 {
-        get_container(state, id, content)
+        get_container(state, id, content, canvas_state)
     } else {
         Column::with_children(content).into()  // the final container
     }
 }
 
 
-fn get_container(state: &IpgState, id: &usize, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
+fn get_container<'a>(state: &IpgState, 
+                id: &usize, 
+                content: Vec<Element<'a, Message>>,
+                canvas_state: &'a IpgBuildCanvasNew,
+                ) -> Element<'a, Message> {
 
     let container_opt: Option<&IpgContainers> = state.containers.get(id);
 
@@ -582,9 +591,11 @@ fn get_container(state: &IpgState, id: &usize, content: Vec<Element<'static, Mes
     {
         Some(container) => 
             match container {
-                IpgContainers::IpgCanvas(can) => {
-                    let canvas = can.clone();
-                    return construct_canvas(canvas)
+                IpgContainers::IpgCanvas(canvas) => {
+                    return construct_canvas(canvas.clone())
+                },
+                IpgContainers::IpgCanvasNew(_canvas) => {
+                    construct_canvas_new(canvas_state)
                 },
                 IpgContainers::IpgColumn(col) => {
                     return construct_column(col, content) 

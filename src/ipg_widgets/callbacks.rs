@@ -405,6 +405,11 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
             drop(state);
             return wco
         },
+        IpgContainers::IpgCanvasNew(_) => {
+            let wco = WidgetCallbackOut::default();
+            drop(state);
+            return wco
+        },
         IpgContainers::IpgColumn(_) => {
             let wco = WidgetCallbackOut::default();
             drop(state);

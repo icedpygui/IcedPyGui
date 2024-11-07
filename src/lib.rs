@@ -1,4 +1,5 @@
 //!lib for all of the python callable functions using pyo3
+use ipg_widgets::ipg_canvas_new::IpgCanvasNew;
 use palette::rgb::Rgb;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
@@ -637,7 +638,7 @@ impl IPG {
         canvas_state.geometries.insert(canvas_id, vec![]);
         drop(canvas_state);
 
-        state.containers.insert(self.id, IpgContainers::IpgCanvas(IpgCanvas::new(
+        state.containers.insert(self.id, IpgContainers::IpgCanvasNew(IpgCanvasNew::new(
                                                 id,
                                                 width,
                                                 height,

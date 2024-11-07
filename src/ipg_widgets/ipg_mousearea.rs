@@ -56,7 +56,7 @@ pub enum IpgMousePointer {
     ZoomIn,
 }
 
-pub fn construct_mousearea(m_area: IpgMouseArea, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
+pub fn construct_mousearea<'a>(m_area: IpgMouseArea, content: Vec<Element<'a, Message>>) -> Element<'a, Message> {
 
     let pointer: Interaction = get_interaction(m_area.mouse_pointer);
 

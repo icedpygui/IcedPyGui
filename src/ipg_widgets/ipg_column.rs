@@ -48,7 +48,7 @@ impl IpgColumn {
 }
 
 
-pub fn construct_column(col: &IpgColumn, content: Vec<Element<'static, Message>> ) -> Element<'static, Message> {
+pub fn construct_column<'a>(col: &IpgColumn, content: Vec<Element<'a, Message>> ) -> Element<'a, Message> {
 
     let align_x = get_alignment(col.align_items.clone());
 

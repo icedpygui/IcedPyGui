@@ -136,7 +136,7 @@ pub fn add_windows(state: &mut IpgState) -> Vec<Task<app::Message>> {
 
 }
 
-pub fn construct_window(content: Vec<Element<'static, app::Message>>) -> Element<'static, app::Message> {
+pub fn construct_window<'a>(content: Vec<Element<'a, app::Message>>) -> Element<'a, app::Message> {
     Column::with_children(content).into()
 }
 

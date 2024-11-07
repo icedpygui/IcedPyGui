@@ -44,7 +44,7 @@ impl IpgRow {
     }
 }
 
-pub fn construct_row(row: &IpgRow, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
+pub fn construct_row<'a>(row: &IpgRow, content: Vec<Element<'a, Message>>) -> Element<'a, Message> {
 
     let align = get_alignment(row.align_items.clone());
 

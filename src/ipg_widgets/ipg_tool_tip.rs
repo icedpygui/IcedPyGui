@@ -38,7 +38,7 @@ impl IpgToolTip {
     }
 }
 
-pub fn construct_tool_tip(tool: &IpgToolTip, content: Vec<Element<'static, Message>>) -> Element<'static, Message> {
+pub fn construct_tool_tip<'a>(tool: &IpgToolTip, content: Vec<Element<'a, Message>>) -> Element<'a, Message> {
         // TODO: tooltip work needed
         // let style = match tool.style.as_str() {
         //     "box" => theme::Container::Box,
@@ -55,7 +55,7 @@ pub fn construct_tool_tip(tool: &IpgToolTip, content: Vec<Element<'static, Messa
                             _ => panic!("Tooltip position must be eight: followcursor, top, botton, left, or right")
         };
         
-        let content: Element<'static, Message> = Column::with_children(content).into();
+        let content: Element<'a, Message> = Column::with_children(content).into();
 
         Tooltip::new(
                 content,

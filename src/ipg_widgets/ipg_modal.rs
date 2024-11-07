@@ -72,8 +72,8 @@ pub enum ModalMessage {
 }
 
 
-pub fn construct_modal(mdl: IpgModal, content: Vec<Element<'static, Message>> ) 
-            -> Element<'static, Message, Theme, Renderer> {
+pub fn construct_modal<'a>(mdl: IpgModal, content: Vec<Element<'a, Message>> ) 
+            -> Element<'a, Message, Theme, Renderer> {
 
     let label = Text::new(mdl.label.clone());            
     let button: Element<ModalMessage> = Button::new(label)
@@ -96,7 +96,7 @@ pub fn construct_modal(mdl: IpgModal, content: Vec<Element<'static, Message>> )
                                             .clip(mdl.clip)
                                             .into();
         
-        let ml: Element<'static, Message, Theme, Renderer> = 
+        let ml: Element<'a, Message, Theme, Renderer> = 
             opaque(
                 mouse_area(center(opaque(col)).style(|_theme| {
                     container::Style {
