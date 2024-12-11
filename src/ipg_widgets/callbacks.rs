@@ -82,7 +82,10 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
     if widget_opt.is_some() {
         match widget_opt.unwrap() {
             IpgWidgets::IpgButton(btn) => {
-                return WidgetCallbackOut{user_data: btn.user_data.clone(), ..Default::default()}
+                return WidgetCallbackOut{
+                    user_data: btn.user_data.clone(), 
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgCard(crd) => {
                 let is_open = match wci.value_bool {
@@ -90,7 +93,10 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     None => panic!("Card is_open value not found"),
                 };
                 crd.is_open = is_open;
-                return WidgetCallbackOut{user_data: crd.user_data.clone(), ..Default::default()}
+                return WidgetCallbackOut{
+                    user_data: crd.user_data.clone(),
+                     ..Default::default()
+                    }
             },
             IpgWidgets::IpgCheckBox(cbox) => {
                 cbox.is_checked = match wci.on_toggle {
@@ -147,18 +153,19 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 
                 if wci.selected_year.is_some() {
                     let yr = wci.selected_year.unwrap();
-                    dp.selected_year = yr + dp.selected_year;             
+                    dp.selected_year += yr;             
                 }
 
                 if wci.date_format.is_some() {
                     dp.selected_format = wci.date_format.unwrap();
                 }
-                dp.selected_date = format_date(
-                                                dp.selected_format.clone(), 
-                                                dp.selected_year, 
-                                                dp.selected_month_index, 
-                                                dp.selected_day
-                                                );
+                dp.selected_date = 
+                    format_date(
+                        dp.selected_format.clone(), 
+                        dp.selected_year, 
+                        dp.selected_month_index, 
+                        dp.selected_day
+                        );
                 
                 if wci.is_submitted.is_some() {
                     dp.is_submitted = wci.is_submitted.unwrap();
@@ -205,9 +212,10 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             },
             IpgWidgets::IpgPickList(pl) => {
                 pl.selected = wci.value_str;
-                let mut wco = WidgetCallbackOut::default();
-                wco.user_data = pl.user_data.clone();
-                return wco
+                return WidgetCallbackOut{
+                    user_data: pl.user_data.clone(),
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgProgressBar(_) => {
                 return WidgetCallbackOut::default()
@@ -219,9 +227,10 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 return WidgetCallbackOut::default()
             },
             IpgWidgets::IpgSelectableText(st) => {
-                let mut wco = WidgetCallbackOut::default();
-                wco.user_data = st.user_data.clone();
-                return wco
+                return WidgetCallbackOut{
+                    user_data: st.user_data.clone(),
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgSlider(slider) => {
                 // Do on_change if something
@@ -231,10 +240,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                         None => panic!("Slider submit value could not be found"),
                     };
                 }
-                let mut wco = WidgetCallbackOut::default();
-                wco.value_float = Some(slider.value.clone() as f64);
-                wco.user_data = slider.user_data.clone();
-                return wco
+                return WidgetCallbackOut{
+                    value_float: Some(slider.value as f64),
+                    user_data: slider.user_data.clone(),
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgSpace(_) => {
                 return WidgetCallbackOut::default();
@@ -251,10 +261,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     }
                 }
                 
-                let mut wco = WidgetCallbackOut::default();
-                wco.points = Some(points);
-                wco.user_data = isvg.user_data.clone();
-                return wco
+                return WidgetCallbackOut{
+                    points: Some(points),
+                    user_data: isvg.user_data.clone(),
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgText(_) => {
                 return WidgetCallbackOut::default()
@@ -279,10 +290,14 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 return wco
             },
             IpgWidgets::IpgTimer(tim) => {
-                match wci.started {
-                    Some(st) => tim.started = st,
-                    None => (),
-                }
+                if let Some(ct) = 
+                    wci.counter {
+                            if ct == 0 {
+                                tim.counter = 0;
+                            } else {
+                                tim.counter += ct
+                            }
+                        }
                 match wci.counter {
                     Some(ct) => {
                         if ct == 0 {
@@ -293,20 +308,19 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     },
                     None => (),
                 }
-                let mut wco = WidgetCallbackOut::default();
-                wco.user_data = tim.user_data.clone();
-                wco.counter = Some(tim.counter);
-                wco.duration = Some(tim.duration_ms);
-                return wco
+                return WidgetCallbackOut{
+                    user_data: tim.user_data.clone(),
+                    counter: Some(tim.counter),
+                    duration: Some(tim.duration_ms),
+                    ..Default::default()
+                }
             }
             IpgWidgets::IpgToggler(tog) => {
-                match wci.on_toggle {
-                    Some(tg) => tog.is_toggled = tg,
-                    None => (),
+                if let Some(tg) = wci.on_toggle { tog.is_toggled = tg }
+                return WidgetCallbackOut{
+                    user_data: tog.user_data.clone(),
+                    ..Default::default()
                 }
-                let mut wco = WidgetCallbackOut::default();
-                wco.user_data = tog.user_data.clone();
-                return wco
             },
         }
     } else {
@@ -315,10 +329,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
         if container_opt.is_some() {
             match container_opt.unwrap() {
                 IpgContainers::IpgModal(modal) => {
-                    let mut wco = WidgetCallbackOut::default();
                     modal.show = true;
-                    wco.user_data = modal.user_data.clone();
-                    return wco
+                    return WidgetCallbackOut{
+                        user_data: modal.user_data.clone(),
+                        ..Default::default()
+                    }
                 },
                 IpgContainers::IpgTable(tbl) => {
                     let mut wco = WidgetCallbackOut::default();

@@ -353,7 +353,7 @@ pub fn get_styling(theme: &Theme, status: Status,
     let mut base_style = button::primary(theme, status);
     let mut hover_style = button::primary(theme, status);
 
-    let style = style_opt.unwrap_or(IpgButtonStyle::default());
+    let style = style_opt.unwrap_or_default();
 
     if style.border_color.is_some() {
         border.color = style.border_color.unwrap();

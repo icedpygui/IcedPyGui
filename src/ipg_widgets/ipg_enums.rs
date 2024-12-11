@@ -1,4 +1,5 @@
 //! ipg_enums
+#![allow(clippy::enum_variant_names)]
 use pyo3::pyclass;
 
 use super::ipg_button::IpgButton;

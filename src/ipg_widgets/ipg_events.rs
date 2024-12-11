@@ -18,6 +18,8 @@ use iced::window;
 use pyo3::{PyObject, Python};
 use pyo3::types::IntoPyDict;
 
+use super::ipg_enums::IpgContainers;
+
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct IpgKeyBoardEvent {
     pub id: usize,
@@ -459,7 +461,7 @@ pub fn process_window_event(state: &mut IpgState,
         Event::Mouse(_) => (),
         Event::Touch(_) => (),   
     }
-    return false
+    false
 }
 
 pub fn handle_window_closing(state: &mut IpgState, iced_id: window::Id, mode: window::Mode) -> bool {
@@ -492,29 +494,29 @@ pub fn handle_window_closing(state: &mut IpgState, iced_id: window::Id, mode: wi
     // if any of the remaining windows are visible, then return false
     for (_iced_id, ipg_id) in iced_ipg_ids {
 
-        if let Some(cnt) = state.containers.get_mut(&ipg_id) {
-             if let super::ipg_enums::IpgContainers::IpgWindow(wnd) = cnt {
-                  if wnd.id == ipg_id_found {
-                      wnd.mode = get_ipg_mode(mode);
-                  }
-              }
-         }
+        match state.containers.get_mut(&ipg_id) {
+            Some(cnt) => {
+                if let IpgContainers::IpgWindow(wnd) = 
+                    cnt {
+                        if wnd.id == ipg_id_found {
+                                wnd.mode = get_ipg_mode(mode);
+                        }
+                    }
+            },
+            None => (),
+        }
         
     }
-
     false
-
 }
 
 fn get_callback(id: usize, event_name: String) -> Option<PyObject> {
     let cbs = access_callbacks();
 
-    let cb_opt = cbs.callback_events.get(&(id, event_name));
+    let cb = cbs.callback_events
+                                    .get(&(id, event_name))
+                                    .map(|cb| cb.clone());
 
-    let cb = match cb_opt{
-        Some(cb) => Some(cb.clone()),
-        None => None,
-    };
     drop(cbs);
     cb
 }

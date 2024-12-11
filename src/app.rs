@@ -934,7 +934,7 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
     let deletes = all_updates.deletes.clone();
     for (window_id, wid) in deletes.iter() {
         let iced_id = match state.windows_str_ids.get(window_id) {
-            Some(id) => id.clone(),
+            Some(id) => *id,
             None => panic!("Window_id {} not found in delete_item", window_id)
         };
 
@@ -958,7 +958,7 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
 
         ipg_ids.remove(index as usize);
 
-        state.widgets.remove(&wid);   
+        state.widgets.remove(wid);   
     }
     all_updates.deletes = vec![];
 
@@ -968,14 +968,14 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
         let container_str_id_opt = state.container_str_ids.get(target_container_str_id);
 
         let container_usize_id = match container_str_id_opt {
-            Some(id) => id.clone(),
+            Some(id) => *id,
             None => panic!("move_widget: unable to find the target container id based on the id {}", target_container_str_id)
         };
 
         let window_id_usize_opt = state.windows_str_ids.get(window_id);
 
         let window_id_usize = match window_id_usize_opt {
-            Some(id) => id.clone(),
+            Some(id) => *id,
             None => panic!("move_widget: unable to find the window_id using the id {}", window_id)
         };
 
@@ -1030,11 +1030,11 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
 
     let mut updates = all_updates.updates.clone();
     for ((wid, item, value)) in updates.iter() {
-        let widget = state.widgets.get_mut(&wid);
-        if widget.is_some() {
-            match_widget(widget.unwrap(), item.clone(), value.clone());
+        let widget = state.widgets.get_mut(wid);
+        if let Some(w) = widget {
+            match_widget(w, item.clone(), value.clone());
         } else {
-            match state.containers.get_mut(&wid) {
+            match state.containers.get_mut(wid) {
                 Some(cnt) => {
                     match_container(cnt, item.clone(), value.clone(), canvas_state);
                 },

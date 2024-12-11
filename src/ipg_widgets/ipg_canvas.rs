@@ -1059,14 +1059,14 @@ impl Pending {
                                     *edit_point_index, 
                                     *edit_mid_point,
                                 );
-
-                            let degrees = if end_angle.is_some() {
-                               to_degrees(&(end_angle.unwrap()-start_angle.unwrap()).0)
-                            } else {
-                                to_degrees(&start_angle.unwrap().0)
-                            };
                             
-                            (path, arc.color, arc.width, Some(degrees), mid_point)
+                            let degrees = if let Some(angle)  = end_angle {
+                               Some(to_degrees(&(angle-start_angle.unwrap()).0))
+                            } else {
+                                Some(to_degrees(&(start_angle.unwrap()).0))
+                            };
+                          
+                            (path, arc.color, arc.width, degrees, mid_point)
                         },
                         CanvasWidget::Bezier(bz) => {
                             let (path, degrees, mid_point) = 
@@ -1804,7 +1804,7 @@ fn update_edited_widget(widget: CanvasWidget,
             } else if mid_point {
                 let trans_pts = 
                     translate_geometry(
-                        &vec![pg.pg_point], 
+                        &[pg.pg_point], 
                         cursor,
                         pg.mid_point, 
                     );
@@ -1831,7 +1831,7 @@ fn update_edited_widget(widget: CanvasWidget,
                     );
                 pl.pl_point = 
                     translate_geometry(
-                        &vec![pl.pl_point], 
+                        &[pl.pl_point], 
                         mid_point, 
                         pl.mid_point
                     )[0];
@@ -2215,16 +2215,7 @@ fn find_closest_widget(curves: &HashMap<Id, CanvasWidget>, cursor: Point) -> Opt
             closest_id = Some(id);
         }
     }
-
-    match closest_id {
-        Some(id) => {
-            match curves.get(id) {
-                Some(cw) => Some(cw.clone()),
-                None => None,
-            }
-        },
-        None => None,
-    }
+    curves.get(closest_id.unwrap()).map(|cw| cw.clone())
 }
 
 // returns a bool if mid_point and an optional usize 
@@ -2668,7 +2659,7 @@ pub fn get_horizontal_angle_of_vector(center: Point, p2: Point) -> f32 {
     let p1 = Point::new(center.x-10.0, center.y);
     let pts = 
         translate_geometry(
-            &vec![p1, p2], 
+            &[p1, p2], 
             Point::default(), 
             center,
         );
@@ -2690,7 +2681,7 @@ pub fn get_angle_of_vectors(center: Point, p1: Point, p2: Point) -> Radians {
 
     let pts = 
         translate_geometry(
-            &vec![p1, p2], 
+            &[p1, p2], 
             Point::default(), 
             center,
         );
@@ -2941,7 +2932,7 @@ fn build_circle_path(cir: &IpgCircle,
 
                 if edit_mid_point {
                     cir_point = translate_geometry(
-                        &vec![cir_point], 
+                        &[cir_point], 
                         pending_cursor.unwrap(),
                         center,
                     )[0];
@@ -3031,7 +3022,7 @@ fn build_ellipse_path(ell: &IpgEllipse,
             },
             IpgCanvasDrawMode::New => {
                 let cursor = pending_cursor.unwrap();
-                if ell.points.len() > 0 {
+                if ell.points.is_empty() {
                     p.move_to(ell.points[0]);
 
                 }
@@ -3176,7 +3167,7 @@ fn build_polygon_path(pg: &IpgPolygon,
             IpgCanvasDrawMode::Edit => {
                 if edit_mid_point {
                     pg_point = translate_geometry(
-                        &vec![pg.pg_point], 
+                        &[pg.pg_point], 
                         pending_cursor.unwrap(),
                         pg.mid_point, 
                     )[0];
@@ -3291,7 +3282,7 @@ fn build_polyline_path(pl: &IpgPolyLine,
                     pts[edit_point_index.unwrap()] = pending_cursor.unwrap();
                     mid_point = get_mid_geometry(&pts, IpgCanvasWidget::PolyLine);
                     pl_point = translate_geometry(
-                                    &vec![pl_point], 
+                                    &[pl_point], 
                                     mid_point, 
                                     pl.mid_point,
                                 )[0];
@@ -3403,7 +3394,7 @@ fn build_right_triangle_path(tr: &IpgRightTriangle,
                     mid_point = get_mid_geometry(&pts, IpgCanvasWidget::RightTriangle);
                     tr_point = 
                         translate_geometry(
-                            &vec![tr_point], 
+                            &[tr_point], 
                             mid_point, 
                             tr.mid_point)[0];
                 }

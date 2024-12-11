@@ -147,9 +147,12 @@ pub fn construct_card (crd: IpgCard) -> Element<'static, Message> {
 pub fn card_callback(state: &mut IpgState, id: usize, message: CardMessage) {
     match message {
         CardMessage::OnClose => {
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
-            wci.value_bool = Some(false);
+            let wci: WidgetCallbackIn = 
+                WidgetCallbackIn{
+                    id,
+                    value_bool: Some(false),
+                    ..Default::default()
+                };
             let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_close".to_string();
