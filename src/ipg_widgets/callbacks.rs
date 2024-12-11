@@ -82,9 +82,7 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
     if widget_opt.is_some() {
         match widget_opt.unwrap() {
             IpgWidgets::IpgButton(btn) => {
-                let mut wco = WidgetCallbackOut::default();
-                wco.user_data = btn.user_data.clone();
-                return wco
+                return WidgetCallbackOut{user_data: btn.user_data.clone(), ..Default::default()}
             },
             IpgWidgets::IpgCard(crd) => {
                 let is_open = match wci.value_bool {
@@ -92,19 +90,18 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     None => panic!("Card is_open value not found"),
                 };
                 crd.is_open = is_open;
-                let mut wco = WidgetCallbackOut::default();
-                wco.user_data = crd.user_data.clone();
-                return wco
+                return WidgetCallbackOut{user_data: crd.user_data.clone(), ..Default::default()}
             },
             IpgWidgets::IpgCheckBox(cbox) => {
                 cbox.is_checked = match wci.on_toggle {
                     Some(data) => data,
                     None => panic!("Checkbox is_checked not found")
                 };
-                let mut wco = WidgetCallbackOut::default(); 
-                wco.is_checked = Some(cbox.is_checked);
-                wco.user_data = cbox.user_data.clone();
-                return wco
+                return WidgetCallbackOut{
+                    is_checked: Some(cbox.is_checked),
+                    user_data: cbox.user_data.clone(),
+                    ..Default::default()
+                } 
             },
             // IpgWidgets::IpgColorPicker(cp) => {
             //     cp.open = match wci.value_bool {
@@ -169,10 +166,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 if wci.show.is_some() {
                     dp.show = wci.show.unwrap();
                 };
-                let mut wco = WidgetCallbackOut::default();
-                wco.selected_date = Some(dp.selected_date.clone());
-                wco.user_data = dp.user_data.clone();
-                return wco
+                return WidgetCallbackOut{
+                    selected_date: Some(dp.selected_date.clone()),
+                    user_data: dp.user_data.clone(),
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgImage(img) => {
                 let mut points: Vec<(String, f32)> = vec![];
@@ -186,10 +184,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     }
                 }
                 
-                let mut wco = WidgetCallbackOut::default();
-                wco.points = Some(points);
-                wco.user_data = img.user_data.clone();
-                return wco
+                return WidgetCallbackOut{
+                    points: Some(points),
+                    user_data: img.user_data.clone(),
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgMenu(menu) => {
                 let mut wco = WidgetCallbackOut::default();
@@ -399,80 +398,29 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
         None => panic!("Container with id {} could not be found", wci.id),
     };
     
-    match container_type {
+    let wco = match container_type {
         IpgContainers::IpgCanvas(_) => {
-            let wco = WidgetCallbackOut::default();
-            drop(state);
-            return wco
-        },
-        IpgContainers::IpgCanvasNew(_) => {
-            let wco = WidgetCallbackOut::default();
-            drop(state);
-            return wco
-        },
-        IpgContainers::IpgColumn(_) => {
-            let wco = WidgetCallbackOut::default();
-            drop(state);
-            return wco
-        },
-        IpgContainers::IpgContainer(_) => {
-            let wco = WidgetCallbackOut::default();
-            drop(state);
-            return wco
+            WidgetCallbackOut::default()
         },
         IpgContainers::IpgMouseArea(m_area) => {
-            let mut wco = WidgetCallbackOut::default();
-            wco.user_data = m_area.user_data.clone();
-            drop(state);
-            return wco
-        },
-        IpgContainers::IpgModal(_modal) => {
-            let wco = WidgetCallbackOut::default();
-            drop(state);
-            return wco
-        },
-        IpgContainers::IpgOpaque(_) => {
-            let wco = WidgetCallbackOut::default();
-            drop(state);
-            return wco
-        },
-        IpgContainers::IpgStack(_) => {
-            let wco = WidgetCallbackOut::default();
-            drop(state);
-            return wco
+            WidgetCallbackOut{user_data: m_area.user_data.clone(), ..Default::default()}
         },
         IpgContainers::IpgTable(table) => {
-            let mut wco = WidgetCallbackOut::default();
-            wco.button_user_data = table.button_user_data.clone();
-            wco.checkbox_user_data = table.checkbox_user_data.clone();
-            wco.toggler_user_data = table.toggler_user_data.clone();
-            wco.scroller_user_data = table.scroller_user_data.clone();
-            drop(state);
-            return wco
+            WidgetCallbackOut{
+                button_user_data: table.button_user_data.clone(),
+                checkbox_user_data: table.checkbox_user_data.clone(),
+                toggler_user_data: table.toggler_user_data.clone(),
+                scroller_user_data: table.scroller_user_data.clone(),
+                ..Default::default()
+            }
         }
-        IpgContainers::IpgRow(_) => {
-            let wco = WidgetCallbackOut::default();
-            drop(state);
-            return wco
-        },
         IpgContainers::IpgScrollable(scroll) => {
-            let mut wco = WidgetCallbackOut::default();
-            wco.user_data = scroll.user_data.clone();
-            drop(state);
-            return wco
+            WidgetCallbackOut{user_data: scroll.user_data.clone(), ..Default::default()}
         }
-        IpgContainers::IpgToolTip(_) => {
-            let wco = WidgetCallbackOut::default();
-            drop(state);
-            return wco
-        },
-        IpgContainers::IpgWindow(_) => {
-            let wco = WidgetCallbackOut::default();
-            drop(state);
-            return wco
-        },
-    }
-        
+        _ => {WidgetCallbackOut::default()},
+    };
+    drop(state);
+    wco  
 }
 
 pub fn container_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> WidgetCallbackOut {
@@ -486,30 +434,25 @@ pub fn container_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> W
     
     match container_type {
         IpgContainers::IpgCanvas(_) => {
-            let wco = WidgetCallbackOut::default();
-            return wco
+            WidgetCallbackOut::default()
         },
         IpgContainers::IpgMouseArea(m_area) => {
-            let mut wco = WidgetCallbackOut::default();
-            wco.user_data = m_area.user_data.clone();
-            return wco
+            WidgetCallbackOut{user_data: m_area.user_data.clone(), ..Default::default()}
         },
         IpgContainers::IpgTable(table) => {
-            let mut wco = WidgetCallbackOut::default();
-            wco.button_user_data = table.button_user_data.clone();
-            wco.checkbox_user_data = table.checkbox_user_data.clone();
-            wco.toggler_user_data = table.toggler_user_data.clone();
-            wco.scroller_user_data = table.scroller_user_data.clone();
-            return wco
+            WidgetCallbackOut{
+                button_user_data: table.button_user_data.clone(),
+                checkbox_user_data: table.checkbox_user_data.clone(),
+                toggler_user_data: table.toggler_user_data.clone(),
+                scroller_user_data: table.scroller_user_data.clone(),
+                ..Default::default()
+            }
         }
         IpgContainers::IpgScrollable(scroll) => {
-            let mut wco = WidgetCallbackOut::default();
-            wco.user_data = scroll.user_data.clone();
-            return wco
+            WidgetCallbackOut{user_data: scroll.user_data.clone(), ..Default::default()}
         }
         _ => {
-            let wco = WidgetCallbackOut::default();
-            return wco
+            WidgetCallbackOut::default()
         }
     }
         

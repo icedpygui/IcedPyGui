@@ -116,8 +116,8 @@ pub fn add_windows(state: &mut IpgState) -> Vec<Task<app::Message>> {
             exit_on_close_request: state.windows[i].exit_on_close_request,
             ..Default::default()
         });
-        let id = state.windows[i].id.clone();
-        let debug = state.windows[i].debug.clone();
+        let id = state.windows[i].id;
+        let debug = state.windows[i].debug;
         let theme = state.windows[i].theme.clone();
         let mode = state.windows[i].mode.clone();
 
@@ -125,9 +125,9 @@ pub fn add_windows(state: &mut IpgState) -> Vec<Task<app::Message>> {
         state.window_theme.insert(iced_id, (id, theme));
         state.window_mode.insert(iced_id, (id, get_iced_mode(&mode)));
 
-        let ipg_id = state.windows[i].id.clone();
+        let ipg_id = state.windows[i].id;
         state.windows_iced_ipg_ids.insert(iced_id, ipg_id);
-        let size = state.windows[i].size.clone();
+        let size = state.windows[i].size;
         spawn_window.push(open.map(move|_|Message::WindowOpened(iced_id, None, size)));
         
     }
@@ -136,7 +136,7 @@ pub fn add_windows(state: &mut IpgState) -> Vec<Task<app::Message>> {
 
 }
 
-pub fn construct_window<'a>(content: Vec<Element<'a, app::Message>>) -> Element<'a, app::Message> {
+pub fn construct_window(content: Vec<Element<app::Message>>) -> Element<app::Message> {
     Column::with_children(content).into()
 }
 
@@ -168,7 +168,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 None => panic!("Window callback user_data not found."),
             };
             let res = callback.call1(py, (
-                                                                wco.id.clone(), 
+                                                                wco.id, 
                                                                 value, 
                                                                 user_data
                                                                 )
@@ -179,7 +179,7 @@ fn process_callback(wco: WidgetCallbackOut)
             }
         } else {
             let res = callback.call1(py, (
-                                                                wco.id.clone(), 
+                                                                wco.id, 
                                                                 value, 
                                                                 )
                                                                 );

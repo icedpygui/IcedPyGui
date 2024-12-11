@@ -5,6 +5,7 @@
 //! * [W3 Schools](https://www.w3schools.com/cssref/css_colors.asp)
 //! * [Corecoding](https://corecoding.com/utilities/rgb-or-hex-to-float.php)
 #![allow(non_camel_case_types)]
+#![allow(clippy::upper_case_acronyms)]
 use iced::Color;
 use pyo3::pyclass;
 
@@ -16,17 +17,17 @@ pub fn get_color(rgba: Option<[f32; 4]>, color: Option<IpgColor>, alpha: f32, in
         if invert {
             color.invert()
         }
-        return Some(color)
+        Some(color)
     } else if color.is_some() {
         let mut color: Color = match_ipg_color(color.unwrap());
         color = color.scale_alpha(alpha);
         if invert {
             color.invert()
         }
-        return Some(color)
+        Some(color)
     } else {
-        return None
-    };
+        None
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

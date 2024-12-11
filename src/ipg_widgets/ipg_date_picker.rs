@@ -98,15 +98,9 @@ pub enum DPMessage {
 }   
 
 pub fn construct_date_picker(dp: IpgDatePicker, 
-                            btn_style: Option<&IpgButtonStyle>) 
+                            btn_style_opt: Option<IpgButtonStyle>) 
                             -> Element<'static, Message, Theme, Renderer> {
     
-    // extracted here due to lifetime
-    let btn_style_opt = match btn_style {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
-
     if !dp.show {
         return calendar_show_button(dp.clone(), btn_style_opt);
     }
@@ -142,8 +136,8 @@ pub fn construct_date_picker(dp: IpgDatePicker,
                 // days of the month
                 Row::with_children(vec![Space::with_width(5.0*dp.size_factor).into(), 
                                         get_calendar_days(dp.id, 
-                                                            dp.selected_year.clone(),
-                                                            dp.selected_month_index.clone(),
+                                                            dp.selected_year,
+                                                            dp.selected_month_index,
                                                             dp.selected_day,
                                                             dp.size_factor),
                                         ])
@@ -183,7 +177,7 @@ pub fn construct_date_picker(dp: IpgDatePicker,
         modal
 
     } else {
-        content.into()
+        content
     }
         
 }
@@ -212,7 +206,7 @@ fn get_days_of_month(year: i32, month: u32) -> i64 {
 
     if month == 12 {
         mon = 1;
-        yr = yr + 1;
+        yr += 1;
     } else {
         mon += 1;
     }
@@ -373,10 +367,10 @@ fn get_calendar_days(id: usize, selected_year: i32,
             let mut day = week * 7 + d - start_correction;
             if !start_weekday {
             
-                if WEEKDAYS[d-1].to_string() == first_day.to_string() {
+                if *WEEKDAYS[d-1] == first_day.to_string() {
                     start_weekday = true;
                     start_correction = d-1;
-                    day = day - start_correction;
+                    day -= start_correction;
                     
                 } else {
                     row.push(Space::new(15.0*size_factor, 15.0*size_factor).into());
@@ -493,41 +487,32 @@ fn create_submit_row(id: usize, size_factor: f32, selected_date: String) -> Elem
 
 
 pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
 
     match message {
         DPMessage::ShowModal => {
             // Non callback just sending the values.
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
             wci.show = Some(true);
             wci.is_submitted = Some(false);
             let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::HideModal => {
             // Non callback just sending the values.
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
             wci.show = Some(false);
             let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::DayPressed(day) => {
             // Non callback just sending the values.
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
             wci.selected_day = Some(day);
             let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::DatePickerFormat(date_format) => {
             // Non callback just sending the values.
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
             wci.date_format = Some(date_format);
             let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::MonthRightPressed(index) => {
             // Non callback just sending the values.
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
             wci.index = Some(index);
             wci.increment_value = Some(1);
             wci.is_submitted = Some(false);
@@ -535,8 +520,6 @@ pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
         }
         DPMessage::MonthLeftPressed(index) => {
             // Non callback just sending the values.
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
             wci.index = Some(index);
             wci.increment_value = Some(-1);
             wci.is_submitted = Some(false);
@@ -544,23 +527,17 @@ pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
         }
         DPMessage::YearRightPressed => {
             // Non callback just sending the values.
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
             wci.selected_year = Some(1);
             wci.is_submitted = Some(false);
             let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::YearLeftPressed => {
             // Non callback just sending the values.
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
             wci.selected_year = Some(-1);
             wci.is_submitted = Some(false);
             let _ = set_or_get_widget_callback_data(state, wci);
         }
         DPMessage::OnSubmit => {
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
             wci.is_submitted = Some(true);
             let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
@@ -568,7 +545,6 @@ pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
             process_callback(wco);
         }
     }
-    
 }
 
 
@@ -595,7 +571,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 None => panic!("DatePicker user_data in callback not found"),
             };
             let res = callback.call1(py, (
-                                                                wco.id.clone(), 
+                                                                wco.id, 
                                                                 wco.selected_date, 
                                                                 user_data
                                                                 ));
@@ -605,7 +581,7 @@ fn process_callback(wco: WidgetCallbackOut)
             }
         } else {
             let res = callback.call1(py, (
-                                                                wco.id.clone(),
+                                                                wco.id,
                                                                 wco.selected_date, 
                                                                 ));
             match res {

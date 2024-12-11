@@ -39,7 +39,7 @@ pub fn find_key_for_value(ids: HashMap<window::Id, usize>, value: usize) -> wind
     
     match id {
         Some(id) => {
-            let iced_id = id.clone();
+            let iced_id = *id;
             drop(state);
             iced_id
         },
@@ -82,35 +82,29 @@ pub fn get_vertical_alignment(v_align: Option<IpgVerticalAlignment>,) -> Vertica
 // Standard method for Length using Width
 pub fn get_width(width: Option<f32>, width_fill: bool)-> Length {
     // width overrides width_fill
-    match width 
-            {
-                Some(wd) => Length::Fixed(wd),
-                None => {
-                    let wd = 
-                        match width_fill {
-                            true => Length::Fill,
-                            false => Length::Shrink,
-                        };
-                    wd
-                },
-            }
+    match width {
+        Some(wd) => Length::Fixed(wd),
+        None => {
+                match width_fill {
+                    true => Length::Fill,
+                    false => Length::Shrink,
+                }
+        },
+    }
 }
 
 // Standard method for Length using Height
 pub fn get_height(height: Option<f32>, height_fill: bool)-> Length {
     // height overrides height_fill
-    match height 
-            {
-                Some(ht) => Length::Fixed(ht),
-                None => {
-                    let ht = 
-                        match height_fill {
-                            true => Length::Fill,
-                            false => Length::Shrink,
-                        };
-                    ht
-                },
+    match height {
+        Some(ht) => Length::Fixed(ht),
+        None => {
+            match height_fill {
+                true => Length::Fill,
+                false => Length::Shrink,
             }
+        },
+    }
 }
 
 // Standard method for padding
@@ -133,7 +127,11 @@ pub fn get_padding_f64(padding: Vec<f64>)-> Padding {
     }
 }
 
-pub fn get_padding_f32(padding: Vec<f32>)-> Padding {
+pub fn get_padding_f32(padding: Option<Vec<f32>>)-> Padding {
+    let padding = match padding {
+        None => return Padding::ZERO,
+        Some(p) => p,
+    };
     let len = padding.len();
     match len {
     0 => panic!("Padding must have at List of at least 1, 2 or 4 items"),
@@ -177,21 +175,20 @@ fn vec_to_array2_f32(arr: &[f32]) -> [f32; 2] {
 
 pub fn get_shaping(shape: String) -> Shaping {
     match shape.as_str() {
-        "basic" => return Shaping::Basic,
-        "advanced" => return Shaping::Advanced,
+        "basic" => Shaping::Basic,
+        "advanced" => Shaping::Advanced,
         _ => panic!("The shape {shape} is not allowed, used either 'basic' or 'advanced'")
     }
 }
 
 pub fn get_line_height(pixels: Option<u16>, relative: Option<f32>) -> LineHeight {
     if pixels.is_some() {
-        return LineHeight::Absolute(Pixels(pixels.unwrap().into()))
+        LineHeight::Absolute(Pixels(pixels.unwrap().into()))
+    } else if relative.is_some() {
+        LineHeight::Relative(relative.unwrap())  
+    } else {
+        LineHeight::default()
     }
-    if relative.is_some() {
-        return LineHeight::Relative(relative.unwrap())
-    }
-    
-    LineHeight::default()
 }
 
 

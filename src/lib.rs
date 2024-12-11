@@ -1,12 +1,12 @@
 //!lib for all of the python callable functions using pyo3
-use ipg_widgets::ipg_canvas_new::IpgCanvasNew;
-use palette::rgb::Rgb;
+#![allow(clippy::too_many_arguments, clippy::redundant_closure)]
+
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
 
 use iced::window::{self, Position};
-use iced::{Color, Font, Length, Padding, Point, Size, Theme};
+use iced::{Color, Font, Length, Point, Size, Theme};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
@@ -22,45 +22,65 @@ mod iced_aw_widgets;
 mod graphics;
 mod style;
 
-use ipg_widgets::ipg_button::{button_item_update, IpgButton, IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
-use ipg_widgets::ipg_canvas::{CurveStatus, DrawCurve, IpgArc, IpgBezier, IpgCanvas, IpgCanvasMode, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgGeometry, IpgLine, IpgRectangle};
+use ipg_widgets::ipg_button::{button_item_update, IpgButton, 
+        IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
+use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, 
+        IpgCanvasDrawMode, IpgCanvasParam, IpgCanvasState, IpgCanvasWidget};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyle, IpgCardParam};
-use ipg_widgets::ipg_checkbox::{checkbox_item_update, IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle};
+use ipg_widgets::ipg_checkbox::{checkbox_item_update, 
+        IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle};
 use ipg_widgets::ipg_column::IpgColumn;
 use ipg_widgets::ipg_container::{IpgContainer, IpgContainerStyle};
-use ipg_widgets::ipg_date_picker::{date_picker_item_update, IpgDatePicker, IpgDatePickerParam};
+use ipg_widgets::ipg_date_picker::{date_picker_item_update, 
+        IpgDatePicker, IpgDatePickerParam};
 use ipg_widgets::ipg_events::IpgEvents;
-use ipg_widgets::ipg_image::{image_item_update, IpgImage, IpgImageContentFit, IpgImageFilterMethod, 
-    IpgImageParam, IpgImageRotation};
-use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuParam, IpgMenuSeparatorStyle, 
-    IpgMenuSeparatorType, IpgMenuBarStyle, IpgMenuStyle, IpgMenuType};
-// use ipg_widgets::ipg_modal::IpgModal;
-use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, IpgMouseAreaParam, IpgMousePointer};
-use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, IpgOpaqueParam, IpgOpaqueStyle};
-use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, IpgPickListHandle, IpgPickListParam, IpgPickListStyle};
-use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle};
-use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, IpgRadioDirection, IpgRadioParam, IpgRadioStyle};
+use ipg_widgets::ipg_image::{image_item_update, IpgImage, 
+        IpgImageContentFit, IpgImageFilterMethod, 
+        IpgImageParam, IpgImageRotation};
+use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, 
+        IpgMenuParam, IpgMenuSeparatorStyle, 
+        IpgMenuSeparatorType, IpgMenuBarStyle, 
+        IpgMenuStyle, IpgMenuType};
+use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, 
+        IpgMouseAreaParam, IpgMousePointer};
+use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, 
+    IpgOpaqueParam, IpgOpaqueStyle};
+use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, 
+        IpgPickListHandle, IpgPickListParam, IpgPickListStyle};
+use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, 
+        IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle};
+use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, 
+        IpgRadioDirection, IpgRadioParam, IpgRadioStyle};
 use ipg_widgets::ipg_row::IpgRow;
 use ipg_widgets::ipg_rule::{IpgRule, IpgRuleStyle};
-use ipg_widgets::ipg_scrollable::{scrollable_item_update, IpgScrollable, IpgScrollableAlignment, 
-                                    IpgScrollableDirection, IpgScrollableParam, IpgScrollableStyle};
-use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, IpgSelectableText, 
-                                        IpgSelectableTextParam};
-use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, IpgSliderParam, IpgSliderStyle};
+use ipg_widgets::ipg_scrollable::{scrollable_item_update, 
+        IpgScrollable, IpgScrollableAlignment, 
+        IpgScrollableDirection, IpgScrollableParam, IpgScrollableStyle};
+use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, 
+        IpgSelectableText, IpgSelectableTextParam};
+use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, 
+        IpgSliderParam, IpgSliderStyle};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
-use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, IpgSvgParam, IpgSvgRotation};
-use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam, IpgTableRowHighLight, IpgTableWidget,};
+use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, 
+        IpgSvgParam, IpgSvgRotation};
+use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam, 
+        IpgTableRowHighLight, IpgTableWidget,};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
-use ipg_widgets::ipg_text_input::{text_input_item_update, IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
+use ipg_widgets::ipg_text_input::{text_input_item_update, 
+        IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
-use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, IpgTogglerParam, IpgTogglerStyle};
+use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, 
+        IpgTogglerParam, IpgTogglerStyle};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
-use ipg_widgets::ipg_window::{get_iced_window_theme, window_item_update, IpgWindow, IpgWindowLevel, IpgWindowMode, IpgWindowParam, IpgWindowTheme};
+use ipg_widgets::ipg_window::{get_iced_window_theme, 
+        window_item_update, IpgWindow, IpgWindowLevel, IpgWindowMode, 
+        IpgWindowParam, IpgWindowTheme};
 use ipg_widgets::ipg_enums::{IpgAlignment, IpgContainers, IpgHorizontalAlignment, 
     IpgVerticalAlignment, IpgWidgets};
 
-use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_line_height, get_padding_f32, get_padding_f64, get_shaping, get_width};
+use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, 
+    get_line_height, get_padding_f32, get_padding_f64, get_shaping, get_width};
 
 use graphics::colors::{get_color, IpgColor};
 use style::styling::{readable, IpgStyleStandard};
@@ -342,54 +362,6 @@ impl IpgState {
     }
 }
 
-#[derive(Debug)]
-pub struct CanvasState {
-    pub geometries: Lazy<HashMap<String, Vec<IpgGeometry>>>,
-    pub escape_pressed: bool,
-    pub curve_index_to_edit: Option<usize>,
-    pub polygon_number: i8,
-    pub curve_editing: Option<DrawCurve>,
-    pub canvas_id: Option<String>,
-    pub mode: IpgCanvasMode,
-    pub selection: IpgCanvasWidget,
-    pub curves_update: bool,
-    pub return_curve: DrawCurve,
-}
-
-pub static CANVAS_STATE: Mutex<CanvasState> = Mutex::new(
-    CanvasState {
-        geometries: Lazy::new(||HashMap::new()),
-        escape_pressed: false,
-        curve_index_to_edit: None,
-        polygon_number: 0,
-        curve_editing: None,
-        canvas_id: None,
-        mode: IpgCanvasMode::New,
-        selection: IpgCanvasWidget::None,
-        curves_update: false,
-        return_curve: DrawCurve {
-            curve_type: IpgCanvasWidget::None,
-            mode: IpgCanvasMode::New,
-            status: CurveStatus::New,
-            from: Some(Point::ORIGIN),
-            to: Some(Point::ORIGIN),
-            control: Some(Point::ORIGIN),
-            points: vec![],
-            closed: false,
-            color: None,
-            width: 2.0,
-            fill: false,
-            edit_point_index: Some(0),
-            edit_index: Some(0),
-            
-        },
-    }
-);
-
-pub fn access_canvas_state() -> MutexGuard<'static, CanvasState> {
-    CANVAS_STATE.lock().unwrap()
-}
-
 #[derive(Debug, Clone)]
 pub enum IpgUpdateType {
     Add,
@@ -515,14 +487,8 @@ impl IPG {
         }
 
         if pos_x.is_some() && pos_y.is_some() {
-            let pos_x = match pos_x {
-                Some(x) => x,
-                None => 0.0,
-            };
-            let pos_y = match pos_y {
-                Some(y) => y,
-                None => 0.0,
-            };
+            let pos_x = pos_x.unwrap_or(0.0);
+            let pos_y = pos_y.unwrap_or(0.0);
             window_position = Position::Specific(Point { x: pos_x, y: pos_y })
         }
 
@@ -634,11 +600,7 @@ impl IPG {
 
         set_state_cont_wnd_ids(&mut state, &window_id, canvas_id.clone(), self.id, "add_canvas".to_string());
 
-        let mut canvas_state = access_canvas_state();
-        canvas_state.geometries.insert(canvas_id, vec![]);
-        drop(canvas_state);
-
-        state.containers.insert(self.id, IpgContainers::IpgCanvasNew(IpgCanvasNew::new(
+        state.containers.insert(self.id, IpgContainers::IpgCanvas(IpgCanvas::new(
                                                 id,
                                                 width,
                                                 height,
@@ -1948,25 +1910,13 @@ impl IPG {
             add_callback_to_mutex(id, "on_select".to_string(), on_select);
         }
 
-        let spacing = if bar_spacings.is_some() {
-            bar_spacings.unwrap()
-        } else {
-            0.0
-        };
+        let spacing = bar_spacings.unwrap_or(0.0);
 
-        let padding = if bar_paddings.is_some() {
-            get_padding_f32(bar_paddings.unwrap())
-        } else {
-            Padding::ZERO
-        };
+        let padding = get_padding_f32(bar_paddings);
         
         let height = get_height(bar_height, false);
  
-        let check_bounds_width = if bar_check_bounds_width.is_some() {
-            bar_check_bounds_width.unwrap()
-        } else {
-            50.0
-        };
+        let check_bounds_width = bar_check_bounds_width.unwrap_or(50.0) ;
         
         set_state_of_widget(id, parent_id);
 
@@ -2881,10 +2831,7 @@ impl IPG {
         }
         
         let width = get_width(width, width_fill);
-        let height = match height {
-            Some(ht) => ht,
-            None => 16.0,
-        };
+        let height = height.unwrap_or(16.0);
 
         set_state_of_widget(id, parent_id);
 
@@ -3193,13 +3140,13 @@ impl IPG {
                 for (row, widget) in table_widgets.iter().enumerate() {
                     match widget {
                         IpgTableWidget::Button => {
-                            button_ids.push((self.get_id(None), row, col.clone(), false));
+                            button_ids.push((self.get_id(None), row, *col, false));
                         },
                         IpgTableWidget::Checkbox => {
-                            checkbox_ids.push((self.get_id(None), row, col.clone(), false));
+                            checkbox_ids.push((self.get_id(None), row, *col, false));
                         },
                         IpgTableWidget::Toggler => {
-                            toggler_ids.push((self.get_id(None), row, col.clone(), false));
+                            toggler_ids.push((self.get_id(None), row, *col, false));
                         },
                     }
                 }
@@ -3703,17 +3650,11 @@ impl IPG {
 
         let mut callbacks = access_callbacks();
 
-        match on_key_press {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "key pressed".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_key_press {
+            callbacks.callback_events.insert((self.id, "key pressed".to_string()), py);
         }
-        match on_key_release {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "key released".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_key_release {
+            callbacks.callback_events.insert((self.id, "key released".to_string()), py);
         }
 
         callbacks.user_data.push((self.id, user_data));
@@ -3754,65 +3695,35 @@ impl IPG {
 
         let mut callbacks = access_callbacks();
 
-        match on_move {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "move".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_move {
+            callbacks.callback_events.insert((self.id, "move".to_string()), py);
         }
-        match on_enter_window {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "enter window".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_enter_window {
+            callbacks.callback_events.insert((self.id, "enter window".to_string()), py);
         }
-        match on_exit_window {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "exit window".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_exit_window {
+            callbacks.callback_events.insert((self.id, "exit window".to_string()), py);
         }
-        match on_left_press {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "left press".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_left_press {
+            callbacks.callback_events.insert((self.id, "left press".to_string()), py);
         }
-        match on_left_release {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "left release".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_left_release {
+            callbacks.callback_events.insert((self.id, "left release".to_string()), py);
         }
-        match on_middle_press {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "middle press".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_middle_press {
+            callbacks.callback_events.insert((self.id, "middle press".to_string()), py);
         }
-        match on_middle_release {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "middle release".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_middle_release {
+            callbacks.callback_events.insert((self.id, "middle release".to_string()), py);
         }
-        match on_right_press {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "right press".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_right_press {
+            callbacks.callback_events.insert((self.id, "right press".to_string()), py);
         }
-        match on_right_release {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "right release".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_right_release {
+            callbacks.callback_events.insert((self.id, "right release".to_string()), py);
         }
-        match on_middle_scroll_line {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "middle scroll line".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_middle_scroll_line {
+            callbacks.callback_events.insert((self.id, "middle scroll line".to_string()), py);
         }
 
         callbacks.user_data.push((self.id, user_data));
@@ -3856,67 +3767,38 @@ impl IPG {
 
         let mut callbacks = access_callbacks();
 
-        match on_closed {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "closed".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_closed {
+            callbacks.callback_events.insert((self.id, "closed".to_string()), py);
         }
-        match on_moved {
-            Some(py) => {
+        if let Some(py) = on_moved {
                 callbacks.callback_events.insert((self.id, "moved".to_string()), py);
-            },
-            None => (),
         }
-        match on_resized {
-            Some(py) => {
+        if let Some(py) = on_resized {
                 callbacks.callback_events.insert((self.id, "resized".to_string()), py);
-            },
-            None => (),
         }
-        match on_redraw_requested {
-            Some(py) => {
+        if let Some(py) = on_redraw_requested {
                 callbacks.callback_events.insert((self.id, "redraw requested".to_string()), py);
-            },
-            None => (),
         }
-        match on_close_requested {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "close requested".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_close_requested {
+            callbacks.callback_events.insert((self.id, "close requested".to_string()), py);
         }
-        match on_focused {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "focused".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_focused {
+            callbacks.callback_events.insert((self.id, "focused".to_string()), py);
         }
-        match on_unfocused {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "unfocused".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_unfocused {
+            callbacks.callback_events.insert((self.id, "unfocused".to_string()), py);
         }
-        match on_file_hovered {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "file hovered".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_file_hovered {
+            callbacks.callback_events.insert((self.id, "file hovered".to_string()), py);
         }
-        match on_file_dropped {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "file dropped".to_string()), py);
-            },
-            None => (),
-        }
-        match on_files_hovered_left {
-            Some(py) => {
-                callbacks.callback_events.insert((self.id, "files hovered left".to_string()), py);
-            },
-            None => (),
+        if let Some(py) = on_file_dropped {
+            callbacks.callback_events.insert((self.id, "file dropped".to_string()), py);
         }
 
+        if let Some(py) = on_files_hovered_left {
+            callbacks.callback_events.insert((self.id, "files hovered left".to_string()), py);
+        }
+       
         callbacks.user_data.push((self.id, user_data));
 
         drop(callbacks);
@@ -3975,15 +3857,14 @@ impl IPG {
     #[pyo3(signature = (color))]
     fn get_rgba_color(&mut self, color: IpgColor) -> PyResult<[f32; 4]>
     {
-        let base: Option<Color> = get_color(None, Some(color), 1.0, false);
-
-        let rgb = if base.is_some() {
-            Rgb::from(base.unwrap())
+ 
+        let rgb = if let Some(base) = get_color(None, Some(color), 1.0, false) {
+            base
         } else {
             panic!("Unable to get the rgba format of the color")
         };
 
-        Ok([rgb.red, rgb.green, rgb.blue, 1.0])
+        Ok([rgb.r, rgb.g, rgb.b, 1.0])
     }
 
     #[pyo3(signature = (base_color=None, base_rgba=None))]
@@ -4027,397 +3908,6 @@ impl IPG {
                 self.id
                 },
         }
-    }
-
-    #[pyo3(signature = (canvas_id,
-                        center_xy,
-                        radius,
-                        start_angle,
-                        end_angle,
-                        stroke_width,
-                        color=None,
-                        fill=false,
-                        gen_id=None,
-                        show=true,
-                        ))]
-    fn add_arc(&mut self,
-                    canvas_id: String,
-                    center_xy: (f32, f32),
-                    radius: f32,
-                    start_angle: f32,
-                    end_angle: f32,
-                    stroke_width: f32,
-                    color: Option<IpgColor>,
-                    fill: bool,
-                    gen_id: Option<usize>,
-                    show: bool,
-                    )  -> PyResult<usize> 
-    {
-        let mut state = access_state();
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
-        
-        if canvas_usize_opt.is_none() {
-            panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
-        }
-        
-        let id = self.get_id(gen_id);
-        state.last_id = self.id;
-        drop(state);
-
-        let center = Point::new(center_xy.0, center_xy.1);
-
-        let arc = IpgGeometry::IpgArc(IpgArc::new(
-                                                id,
-                                                canvas_id.clone(),
-                                                center,
-                                                radius,
-                                                start_angle,
-                                                end_angle,
-                                                stroke_width,
-                                                color,
-                                                fill,
-                                                show,
-                                            ));
-                                    
-        let mut canvas_state = access_canvas_state();
-
-        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
-
-        if geometries_opt.is_none() {
-            canvas_state.geometries.insert(canvas_id, vec![arc]);
-        } else {
-            let geo_vec = geometries_opt.unwrap();
-            geo_vec.push(arc)
-        }
-        canvas_state.curves_update = true;
-        drop(canvas_state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (canvas_id,
-                        points,
-                        stroke_width,
-                        color=None,
-                        fill=false,
-                        gen_id=None,
-                        show=true,
-                        ))]
-    fn add_bezier(&mut self,
-                    canvas_id: String,
-                    points: ((f32, f32), (f32, f32), (f32, f32)),
-                    stroke_width: f32,
-                    color: Option<IpgColor>,
-                    fill: bool,
-                    gen_id: Option<usize>,
-                    show: bool,
-                    )  -> PyResult<usize> 
-    {
-        let mut state = access_state();
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
-        
-        if canvas_usize_opt.is_none() {
-            panic!("Bezier: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
-        }
-        
-        let id = self.get_id(gen_id);
-        state.last_id = self.id;
-        drop(state);
-
-        let points = (Point::new(points.0.0, points.0.1),
-                                             Point::new(points.1.0, points.1.1),
-                                             Point::new(points.2.0, points.2.1));
-        
-        let bezier = IpgGeometry::IpgBezier(IpgBezier::new(
-                                                id,
-                                                canvas_id.clone(),
-                                                points,
-                                                stroke_width,
-                                                color,
-                                                fill,
-                                                show,
-                                            ));
-
-        let mut canvas_state = access_canvas_state();
-
-        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
-
-        if geometries_opt.is_none() {
-            canvas_state.geometries.insert(canvas_id, vec![bezier]);
-        } else {
-            let geo_vec = geometries_opt.unwrap();
-            geo_vec.push(bezier)
-        }
-        canvas_state.curves_update = true;
-        drop(canvas_state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (canvas_id,
-                        center_xy,
-                        radius,
-                        stroke_width,
-                        color=None,
-                        fill=false,
-                        gen_id=None,
-                        show=true,
-                        ))]
-    fn add_circle(&mut self,
-                    canvas_id: String,
-                    center_xy: (f32, f32),
-                    radius: f32,
-                    stroke_width: f32,
-                    color: Option<IpgColor>,
-                    fill: bool,
-                    gen_id: Option<usize>,
-                    show: bool,
-                    )  -> PyResult<usize> 
-    {
-        let mut state = access_state();
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
-        
-        if canvas_usize_opt.is_none() {
-            panic!("Circle: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
-        }
-        
-        let id = self.get_id(gen_id);
-        state.last_id = self.id;
-        drop(state);
-        
-        let center = Point::new(center_xy.0, center_xy.1);
-
-        let circle = IpgGeometry::IpgCircle(IpgCircle::new(
-                                                id,
-                                                canvas_id.clone(),
-                                                center,
-                                                radius,
-                                                stroke_width,
-                                                color,
-                                                fill,
-                                                show,
-                                            ));
-
-        let mut canvas_state = access_canvas_state();
-
-        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
-
-        if geometries_opt.is_none() {
-            canvas_state.geometries.insert(canvas_id, vec![circle]);
-        } else {
-            let geo_vec = geometries_opt.unwrap();
-            geo_vec.push(circle)
-        }
-        canvas_state.curves_update = true;
-        drop(canvas_state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (canvas_id,
-                        center_xy,
-                        radii,
-                        rotation,
-                        start_angle,
-                        end_angle,
-                        stroke_width,
-                        color=None,
-                        fill=false,
-                        gen_id=None,
-                        show=true,
-                        ))]
-    fn add_ellipse(&mut self,
-                    canvas_id: String,
-                    center_xy: (f32, f32),
-                    radii: (f32, f32),
-                    rotation: f32,
-                    start_angle: f32,
-                    end_angle: f32,
-                    stroke_width: f32,
-                    color: Option<IpgColor>,
-                    fill: bool,
-                    gen_id: Option<usize>,
-                    show: bool,
-                    )  -> PyResult<usize> 
-    {
-        let mut state = access_state();
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
-        
-        if canvas_usize_opt.is_none() {
-            panic!("Ellipse: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
-        }
-        
-        let id = self.get_id(gen_id);
-        state.last_id = self.id;
-        drop(state);
-
-        let center = Point::new(center_xy.0, center_xy.1);
-        let radii = Point::new(radii.0, radii.1);
-        
-        let ellipse = IpgGeometry::IpgEllipse(IpgEllipse::new(
-                                                id,
-                                                canvas_id.clone(),
-                                                center,
-                                                radii,
-                                                rotation,
-                                                start_angle,
-                                                end_angle,
-                                                stroke_width,
-                                                color,
-                                                fill,
-                                                show,
-                                            ));
-
-        let mut canvas_state = access_canvas_state();
-
-        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
-
-        if geometries_opt.is_none() {
-            canvas_state.geometries.insert(canvas_id, vec![ellipse]);
-        } else {
-            let geo_vec = geometries_opt.unwrap();
-            geo_vec.push(ellipse)
-        }
-        canvas_state.curves_update = true;
-        drop(canvas_state);
-        
-        Ok(id)
-    }
-
-    #[pyo3(signature = (canvas_id,
-                        start,
-                        end,
-                        stroke_width,
-                        color=None,
-                        gen_id=None,
-                        show=true,
-                        ))]
-    fn add_line(&mut self,
-                    canvas_id: String,
-                    start: (f32, f32),
-                    end: (f32, f32),
-                    stroke_width: f32,
-                    color: Option<IpgColor>,
-                    gen_id: Option<usize>,
-                    show: bool,
-                    )  -> PyResult<usize> 
-    {
-        let mut state = access_state();
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
-        
-        if canvas_usize_opt.is_none() {
-            panic!("Line: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
-        }
-        
-        let id = self.get_id(gen_id);
-        state.last_id = self.id;
-        drop(state);
-
-        let points = [Point::new(start.0, start.1), Point::new(end.0, end.1)];
-        
-        let line = IpgGeometry::IpgLine(IpgLine::new(
-                                                id,
-                                                canvas_id.clone(),
-                                                points,
-                                                stroke_width,
-                                                color,
-                                                show,
-                                            ));
-
-        let mut canvas_state = access_canvas_state();
-
-        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
-
-        if geometries_opt.is_none() {
-            canvas_state.geometries.insert(canvas_id, vec![line]);
-        } else {
-            let geo_vec = geometries_opt.unwrap();
-            geo_vec.push(line)
-        }
-        canvas_state.curves_update = true;
-        drop(canvas_state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (canvas_id,
-                        top_left_xy,
-                        width,
-                        height,
-                        stroke_width,
-                        color=None,
-                        fill=false,
-                        gen_id=None,
-                        show=true,
-                        ))]
-    fn add_rectangle(&mut self,
-                    canvas_id: String,
-                    top_left_xy: (f32, f32),
-                    width: f32,
-                    height: f32,
-                    stroke_width: f32,
-                    color: Option<IpgColor>,
-                    fill: bool,
-                    gen_id: Option<usize>,
-                    show: bool,
-                    )  -> PyResult<usize> 
-    {
-        let mut state = access_state();
-        let canvas_usize_opt = state.container_str_ids.get(&canvas_id);
-        
-        if canvas_usize_opt.is_none() {
-            panic!("Rectangle: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
-        }
-        
-        let id = self.get_id(gen_id);
-        state.last_id = self.id;
-        drop(state);
-
-        let top_left = Point::new(top_left_xy.0, top_left_xy.1);
-        
-        let rect = IpgGeometry::IpgRectangle(IpgRectangle::new(
-                                                id,
-                                                canvas_id.clone(),
-                                                top_left,
-                                                width,
-                                                height,
-                                                stroke_width,
-                                                color,
-                                                fill,
-                                                show,
-                                            ));
-
-        let mut canvas_state = access_canvas_state();
-
-        let geometries_opt = canvas_state.geometries.get_mut(&canvas_id);
-
-        if geometries_opt.is_none() {
-            canvas_state.geometries.insert(canvas_id, vec![rect]);
-        } else {
-            let geo_vec = geometries_opt.unwrap();
-            geo_vec.push(rect)
-        }
-        canvas_state.curves_update = true;
-        drop(canvas_state);
-
-        Ok(id)
-    }
-
-    #[pyo3(signature = (canvas_id,
-                        widget,
-                        mode,
-                        ))]
-    fn add_canvas_widget(& self,
-                        canvas_id: String,
-                        widget: IpgCanvasWidget,
-                        mode: IpgCanvasMode) 
-    {
-        let mut canvas_state = access_canvas_state();
-        canvas_state.canvas_id = Some(canvas_id);
-        canvas_state.selection = widget;
-        canvas_state.mode = mode;
-
-        drop(canvas_state);
     }
 }
 
@@ -4477,9 +3967,12 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
     }
 }
 
-fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject) {
+fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject, canvas_state: &mut IpgCanvasState) {
 
     match container {
+        IpgContainers::IpgCanvas(_can) => {
+            canvas_item_update(canvas_state, item, value);
+        }
         IpgContainers::IpgMouseArea(m_area) => {
             mousearea_item_update(m_area, item, value);
         },
@@ -4492,11 +3985,9 @@ fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObjec
         IpgContainers::IpgTable(table) => {
             table_item_update(table, item, value);
         },
-        IpgContainers::IpgRow(_) => {},
         IpgContainers::IpgScrollable(scroll) => {
             scrollable_item_update(scroll, item, value);
         },
-        IpgContainers::IpgToolTip(_) => {},
         IpgContainers::IpgWindow(wnd) => {
             window_item_update(wnd, item, value);
         },
@@ -4530,7 +4021,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgVerticalAlignment>()?;
     m.add_class::<IpgButtonArrow>()?;
     m.add_class::<IpgButtonParam>()?;
-    m.add_class::<IpgCanvasMode>()?;
+    m.add_class::<IpgCanvasParam>()?;
+    m.add_class::<IpgCanvasDrawMode>()?;
     m.add_class::<IpgCanvasWidget>()?;
     m.add_class::<IpgCardStyle>()?;
     m.add_class::<IpgCardParam>()?;
@@ -4584,7 +4076,7 @@ fn set_state_of_container(
     let state = access_state();
 
     let wnd_id_usize = match state.windows_str_ids.get(&window_id) {
-        Some(id) => id.clone(),
+        Some(id) => *id,
         None => panic!("The main window id could not be found using window_id {}", window_id)
     };
     drop(state);
@@ -4622,7 +4114,7 @@ fn set_state_of_widget(
     };
 
     let wnd_id_usize = match state.windows_str_ids.get(&wnd_id_str) {
-        Some(id) => id.clone(),
+        Some(id) => *id,
         None => panic!("window id {} could not be found in set_state_of_widget", wnd_id_str),
     };
 
@@ -4646,7 +4138,7 @@ fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>
         drop(app_cbs);
 }
 
-pub fn find_parent_uid(ipg_ids: &Vec<IpgIds>, parent_id: String) -> usize {
+pub fn find_parent_uid(ipg_ids: &[IpgIds], parent_id: String) -> usize {
 
     for id in ipg_ids.iter() {
         if id.container_id == Some(parent_id.clone()) {

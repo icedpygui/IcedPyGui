@@ -117,15 +117,9 @@ pub enum TOGMessage {
 
 
 pub fn construct_toggler(tog: IpgToggler, 
-                        style: Option<&IpgTogglerStyle>) 
-                        -> Element<'static, app::Message> {
+                        style_opt: Option<IpgTogglerStyle>,
+                        ) -> Element<'static, app::Message> {
     
-    // extracted here due to lifetime in map statement
-    let style_opt = match style {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
-
     if !tog.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
     }
@@ -158,8 +152,7 @@ pub fn construct_toggler(tog: IpgToggler,
 
 pub fn toggle_callback(state: &mut IpgState, id: usize, message: TOGMessage) {
 
-    let mut wci = WidgetCallbackIn::default();
-    wci.id = id;
+    let mut wci = WidgetCallbackIn{id, ..Default::default()};
 
     match message {
         TOGMessage::Toggled(on_toggle) => {
@@ -197,7 +190,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("User Data could not be found in Toggler callback"),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),
+                                                                    wco.id,
                                                                     wco.on_toggle,  
                                                                     user_data
                                                                     ));
@@ -207,7 +200,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),
+                                                                    wco.id,
                                                                     wco.on_toggle,  
                                                                     ));
                 match res {
@@ -317,11 +310,11 @@ pub fn get_styling(theme: &Theme, status: Status,
     // Untoggled: bg=color.strong & fg=color.base
     // Toggled: bg=color & fg=contrasting color  
     if style.background_color.is_some() {
-        tog_style.background = style.background_color.unwrap().into();
+        tog_style.background = style.background_color.unwrap();
     }
 
     if style.foreground_color.is_some() {
-        tog_style.foreground = style.foreground_color.unwrap().into();
+        tog_style.foreground = style.foreground_color.unwrap();
     }
     
     // background and foreground border color is the same for active, hover and toggled
@@ -345,7 +338,7 @@ pub fn get_styling(theme: &Theme, status: Status,
         Status::Active { is_toggled } | Status::Hovered { is_toggled } => {
             if is_toggled {
                 if style.background_color_toggled.is_some() {
-                    tog_style.background = style.background_color_toggled.unwrap().into();
+                    tog_style.background = style.background_color_toggled.unwrap();
                 }
             }
         }
@@ -356,7 +349,7 @@ pub fn get_styling(theme: &Theme, status: Status,
         Status::Active { is_toggled } => {
             if is_toggled {
                 if style.foreground_color_toggled.is_some() {
-                    tog_style.foreground = style.foreground_color_toggled.unwrap().into();
+                    tog_style.foreground = style.foreground_color_toggled.unwrap();
                 }
             }
         }
@@ -365,7 +358,7 @@ pub fn get_styling(theme: &Theme, status: Status,
                 if style.foreground_color_toggled.is_some() {
                     tog_style.foreground = Color {
                                                 a: 0.5,
-                                                ..style.foreground_color_toggled.unwrap().into()
+                                                ..style.foreground_color_toggled.unwrap()
                                             };
                 }
                 

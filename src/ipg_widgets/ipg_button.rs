@@ -117,14 +117,8 @@ pub enum BTNMessage {
 
 
 pub fn construct_button(btn: IpgButton, 
-                        style: Option<&IpgButtonStyle>) 
+                        style_opt: Option<IpgButtonStyle>) 
                         -> Element<'static, app::Message> {
-    
-    // extracted here due to lifetime in map statement
-    let style_opt = match style {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
 
     if !btn.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
@@ -158,8 +152,7 @@ pub fn construct_button(btn: IpgButton,
 
 pub fn button_callback(state: &mut IpgState, id: usize, message: BTNMessage) {
 
-    let mut wci = WidgetCallbackIn::default();
-    wci.id = id;
+    let wci = WidgetCallbackIn{id, ..Default::default()};
 
     match message {
         BTNMessage::OnPress => {
@@ -197,7 +190,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("User Data could not be found in Button callback"),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),  
+                                                                    wco.id,  
                                                                     user_data
                                                                     ));
                 match res {
@@ -206,7 +199,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),  
+                                                                    wco.id,  
                                                                     ));
                 match res {
                     Ok(_) => (),
@@ -360,11 +353,7 @@ pub fn get_styling(theme: &Theme, status: Status,
     let mut base_style = button::primary(theme, status);
     let mut hover_style = button::primary(theme, status);
 
-    let style = if style_opt.is_some() {
-        style_opt.unwrap().clone()
-    } else {
-        IpgButtonStyle::default()
-    };
+    let style = style_opt.unwrap_or(IpgButtonStyle::default());
 
     if style.border_color.is_some() {
         border.color = style.border_color.unwrap();
@@ -403,14 +392,12 @@ pub fn get_styling(theme: &Theme, status: Status,
     base_style.shadow = shadow;
     hover_style.shadow = shadow;
 
-    let style = match status {
+    match status {
         Status::Active | Status::Pressed => base_style,
         Status::Hovered => hover_style,
         Status::Disabled => disabled(base_style),
-    };
+    }
     
-    style
-
 }
 
 fn disabled(style: Style) -> Style {

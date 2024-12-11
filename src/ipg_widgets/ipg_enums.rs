@@ -3,7 +3,6 @@ use pyo3::pyclass;
 
 use super::ipg_button::IpgButton;
 use super::ipg_canvas::IpgCanvas;
-use super::ipg_canvas_new::IpgCanvasNew;
 use super::ipg_card::IpgCard;
 use super::ipg_checkbox::IpgCheckBox;
 // use super::ipg_color_picker::IpgColorPicker;
@@ -40,7 +39,6 @@ use super::ipg_window::IpgWindow;
 #[derive(Debug, Clone)]
 pub enum IpgContainers {
     IpgCanvas(IpgCanvas),
-    IpgCanvasNew(IpgCanvasNew),
     IpgColumn(IpgColumn),
     IpgContainer(IpgContainer),
     IpgModal(IpgModal),

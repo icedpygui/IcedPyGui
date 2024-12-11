@@ -1,4 +1,5 @@
 //! ipg_table
+#![allow(clippy::enum_variant_names)]
 #![allow(unused_assignments)]
 use std::collections::HashMap;
 use std::result::Result;
@@ -140,26 +141,12 @@ pub enum IpgTableWidget {
 }
 
 
-pub fn construct_table<'a>(table: IpgTable, 
-                        content: Vec<Element<'a, Message>>, 
-                        button_fill_style: Option<&IpgButtonStyle>,
-                        checkbox_fill_style: Option<&IpgCheckboxStyle>,
-                        toggler_fill_style: Option<&IpgTogglerStyle>,) 
-                        -> Element<'a, Message> {
-
-    // extracted here due to lifetime
-    let button_fill_style_opt = match button_fill_style {
-        Some(style) => Some(style.clone()),
-        None => None,
-    };
-    let checkbox_fill_style_opt = match checkbox_fill_style {
-        Some(style) => Some(style.clone()),
-        None => None,
-    };
-    let toggler_fill_style_opt = match toggler_fill_style {
-        Some(style) => Some(style.clone()),
-        None => None,
-    };
+pub fn construct_table(table: IpgTable, 
+                        content: Vec<Element<Message>>, 
+                        button_fill_style_opt: Option<IpgButtonStyle>,
+                        checkbox_fill_style_opt: Option<IpgCheckboxStyle>,
+                        toggler_fill_style_opt: Option<IpgTogglerStyle>,) 
+                        -> Element<Message> {
 
     let mut headers: Vec<Element<Message>>= vec![];
 
@@ -385,12 +372,12 @@ pub fn construct_table<'a>(table: IpgTable,
         let row_widget: Element<Message> = Row::with_children(row_vec)
                                                 .into();
         
-        body_column_vec.push(row_widget.into());
+        body_column_vec.push(row_widget);
     }
     
     let body_column: Element<Message> = Column::with_children(body_column_vec)
                                             .height(Length::Shrink)
-                                            .padding(get_padding_f32(vec![0.0, 5.0, 0.0, 5.0]))
+                                            .padding(get_padding_f32(Some(vec![0.0, 5.0, 0.0, 5.0])))
                                             .into();
 
     let title: Element<Message> = Text::new(table.title.clone()).into();
@@ -421,7 +408,7 @@ pub fn construct_table<'a>(table: IpgTable,
 
     let table_header_row: Element<Message> = Row::with_children(headers)
                 .width(Length::Fill)
-                .padding(get_padding_f32(vec![0.0, 5.0, 5.0, 2.0])) //bottom only
+                .padding(get_padding_f32(Some(vec![0.0, 5.0, 5.0, 2.0]))) //bottom only
                 .into();
 
         let scroller: Element<Message> = add_scroll(body_column, table.height, table.scroller_id);
@@ -440,7 +427,7 @@ pub fn construct_table<'a>(table: IpgTable,
         ])
             .width(Length::Fixed(table.width))
             .height(Length::Fixed(table.height))
-            .padding(get_padding_f32(vec![5.0, 10.0, 2.0, 5.0]))
+            .padding(get_padding_f32(Some(vec![5.0, 10.0, 2.0, 5.0])))
             .into()
 
     } else {
@@ -451,7 +438,7 @@ pub fn construct_table<'a>(table: IpgTable,
         ])
             .width(Length::Fixed(table.width))
             .height(Length::Fixed(table.height))
-            .padding(get_padding_f32(vec![5.0, 10.0, 2.0, 5.0]))
+            .padding(get_padding_f32(Some(vec![5.0, 10.0, 2.0, 5.0])))
             .into()
     };
     
@@ -499,8 +486,8 @@ fn add_row_container(content: Element<Message>, row_index: usize,
             .width(Length::Shrink)
             .align_x(alignment::Horizontal::Center)
             .align_y(alignment::Vertical::Center)
-            .style(move|theme| table_row_theme(theme, row_index.clone(), 
-                        highlight_amount.clone(),
+            .style(move|theme| table_row_theme(theme, row_index, 
+                        highlight_amount,
                         row_highlight))
             .clip(true)
             .into()
@@ -572,8 +559,7 @@ fn add_widget(widget_type: IpgTableWidget,
 
 pub fn table_callback(state: &mut IpgState, table_id: usize, message: TableMessage) {
 
-    let mut wci = WidgetCallbackIn::default();
-    wci.id = table_id;
+    let mut wci = WidgetCallbackIn{id: table_id, ..Default::default()};
 
     match message {
         TableMessage::TableButton((row_index, col_index)) => {
@@ -609,13 +595,13 @@ pub fn table_callback(state: &mut IpgState, table_id: usize, message: TableMessa
         TableMessage::TableScrolled(vp, scroller_id ) => {
             wci.id = scroller_id - TABLE_INTERNAL_IDS_START;
             wci.value_str = Some("scroller".to_string());
-            let mut offsets: Vec<(String, f32)> = vec![];
-            offsets.push(("abs_offset_x".to_string(), vp.absolute_offset().x));
-            offsets.push(("abs_offset_y".to_string(), vp.absolute_offset().y));
-            offsets.push(("rel_offset_x".to_string(), vp.relative_offset().x));
-            offsets.push(("rel_offset_y".to_string(), vp.relative_offset().y));
-            offsets.push(("rev_offset_x".to_string(), vp.absolute_offset_reversed().x));
-            offsets.push(("rev_offset_y".to_string(), vp.absolute_offset_reversed().y));
+            let offsets: Vec<(String, f32)> = vec![
+                ("abs_offset_x".to_string(), vp.absolute_offset().x),
+                ("abs_offset_y".to_string(), vp.absolute_offset().y),
+                ("rel_offset_x".to_string(), vp.relative_offset().x),
+                ("rel_offset_y".to_string(), vp.relative_offset().y),
+                ("rev_offset_x".to_string(), vp.absolute_offset_reversed().x),
+                ("rev_offset_y".to_string(), vp.absolute_offset_reversed().y)];
 
             let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = table_id;
@@ -655,20 +641,20 @@ pub fn process_callback(wco: WidgetCallbackOut)
             let res = 
                 if wco.event_name == "on_button" {
                     callback.call1(py, (
-                                wco.id.clone(),
+                                wco.id,
                                 table_index, 
                                 user_data
                                 ))
                     } else if wco.event_name == "on_checkbox" || wco.event_name == "on_toggler" {
                         callback.call1(py, (
-                            wco.id.clone(),
+                            wco.id,
                             table_index,
                             wco.on_toggle,  
                             user_data
                             ))
                     } else if wco.event_name == "on_scroll" {
                         callback.call1(py, (
-                            wco.id.clone(),
+                            wco.id,
                             wco.scroll_pos.into_py_dict_bound(py),  
                             user_data
                             ))
@@ -685,18 +671,18 @@ pub fn process_callback(wco: WidgetCallbackOut)
             let res = 
                 if wco.event_name == "on_button" {
                     callback.call1(py, (
-                                wco.id.clone(),
+                                wco.id,
                                 table_index, 
                                 ))
                     } else if wco.event_name == "on_checkbox" || wco.event_name == "on_toggler" {
                         callback.call1(py, (
-                            wco.id.clone(),
+                            wco.id,
                             table_index,
                             wco.on_toggle,  
                             ))
                     } else if wco.event_name == "on_scroll" {
                         callback.call1(py, (
-                            wco.id.clone(),
+                            wco.id,
                             wco.scroll_pos.into_py_dict_bound(py),  
                             ))
                     } else {
@@ -714,9 +700,9 @@ pub fn process_callback(wco: WidgetCallbackOut)
 }
 
 // widgets = (id, row idx, col idx, bool)
-fn check_for_widget(widgets: &Vec<(usize, usize, usize, bool)>, row_index: usize, col_index: usize) -> Option<usize> {
+fn check_for_widget(widgets: &[(usize, usize, usize, bool)], row_index: usize, col_index: usize) -> Option<usize> {
     // if empty return
-    if widgets.len() == 0 {return None}
+    if widgets.is_empty() {return None}
     // if not column return
     if widgets[0].2 != col_index {return None}
 
@@ -726,7 +712,7 @@ fn check_for_widget(widgets: &Vec<(usize, usize, usize, bool)>, row_index: usize
             return Some(index)
         } 
     }
-    return None
+    None
 }
 
 fn table_row_theme(theme: &Theme, idx: usize, amount: f32, 

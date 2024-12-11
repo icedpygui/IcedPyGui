@@ -132,27 +132,16 @@ pub enum PLMessage {
 
 
 pub fn construct_picklist(pick: IpgPickList, 
-                        style: Option<&IpgPickListStyle>) 
+                        style_opt: Option<IpgPickListStyle>) 
                         -> Element<'static, app::Message> {
     
-    // extracted here due to lifetime in map statement
-    let style_opt = match style {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
-
     if!pick.show {
         return Space::new(0.0, 0.0).into()
     }
 
-    let placeholder = match pick.placeholder.clone() {
-        Some(holder) => holder,
-        None => "".to_string(),
-    };
-    let text_size: f32 = match pick.text_size {
-        Some(size) => size,
-        None => 16.0,
-    };
+    let placeholder = pick.placeholder.unwrap_or("".to_string());
+
+    let text_size: f32 = pick.text_size.unwrap_or(16.0);
 
     let handle = get_handle(pick.handle, 
                                     pick.arrow_size, 
@@ -187,8 +176,8 @@ pub fn construct_picklist(pick: IpgPickList,
  
 
  pub fn pick_list_callback(state: &mut IpgState, id: usize, message: PLMessage) {
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = id;
+
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
 
     match message {
         PLMessage::OnSelect(value) => {
@@ -231,7 +220,7 @@ pub fn construct_picklist(pick: IpgPickList,
             None => panic!("PickList callback user_data not found."),
         };
             let res = callback.call1(py, (
-                                                                wco.id.clone(), 
+                                                                wco.id, 
                                                                 value, 
                                                                 user_data
                                                                 ));
@@ -241,7 +230,7 @@ pub fn construct_picklist(pick: IpgPickList,
             }
         } else {
             let res = callback.call1(py, (
-                                                                wco.id.clone(), 
+                                                                wco.id, 
                                                                 value, 
                                                                 ));
             match res {
@@ -263,7 +252,7 @@ pub fn construct_picklist(pick: IpgPickList,
     Python::with_gil(|py| {
 
         let res = options.extract::<Vec<bool>>(py);
-        if !res.is_err() {
+        if res.is_ok() {
             return match res {
                 Ok(res) => {
                     res.iter().map(|v| {
@@ -279,7 +268,7 @@ pub fn construct_picklist(pick: IpgPickList,
         }
 
         let res = options.extract::<Vec<String>>(py);
-        if !res.is_err() {
+        if res.is_ok() {
             return match res {
                 Ok(res) => res,
                 Err(_) => panic!("Picklist could not extract List[String]"),
@@ -287,7 +276,7 @@ pub fn construct_picklist(pick: IpgPickList,
         }
 
         let res = options.extract::<Vec<i64>>(py);
-        if !res.is_err() { 
+        if res.is_ok() { 
             return match res {
                 Ok(res) => res.iter().map(|v| v.to_string()).collect(),
                 Err(_) => panic!("Picklist could not extract List[int]"),
@@ -295,7 +284,7 @@ pub fn construct_picklist(pick: IpgPickList,
         } 
         
         let res = options.extract::<Vec<f64>>(py);
-        if !res.is_err() { 
+        if res.is_ok() { 
             return match res {
                 Ok(res) => res.iter().map(|v| v.to_string()).collect(),
                 Err(_) => panic!("Picklist could not extract List[float]"),
@@ -406,10 +395,9 @@ fn get_handle(ipg_handle: IpgPickListHandle,
     match ipg_handle {
         IpgPickListHandle::Default => Handle::default(),
         IpgPickListHandle::Arrow => {
-            if arrow_size.is_some() {
-                Handle::Arrow { size: Some(Pixels(arrow_size.unwrap())) }
-            } else {
-                Handle::Arrow { size: None }
+            match arrow_size {
+                Some(ars) => Handle::Arrow { size: Some(Pixels(ars)) },
+                None => Handle::Arrow { size: None },
             }
         },
         IpgPickListHandle::Dynamic => {
@@ -423,20 +411,16 @@ fn get_handle(ipg_handle: IpgPickListHandle,
                 None => get_bootstrap_arrow_char(IpgButtonArrow::ArrowBarRight),
             };
 
-            let size = if arrow_size.is_some() {
-                Some(Pixels(arrow_size.unwrap())) 
-            } else {
-                None
-            };
+            let size = arrow_size.map(Pixels);
 
             Handle::Dynamic { closed: Icon { code_point: arrow_closed, 
                                             font: iced::Font::with_name("bootstrap-icons"), 
-                                            size: size, 
+                                            size, 
                                             line_height: Default::default(), 
                                             shaping: Default::default()}, 
                                open: Icon {code_point: arrow_opened,
                                             font: iced::Font::with_name("bootstrap-icons"), 
-                                            size: size, 
+                                            size, 
                                             line_height: Default::default(), 
                                             shaping: Default::default()} 
                             }
@@ -447,15 +431,12 @@ fn get_handle(ipg_handle: IpgPickListHandle,
                     Some(cust) => get_bootstrap_arrow_char(cust),
                     None => get_bootstrap_arrow_char(IpgButtonArrow::ArrowBarRight),
                 };
-                let size = if arrow_size.is_some() {
-                    Some(Pixels(arrow_size.unwrap())) 
-                } else {
-                    None
-                };
+
+                let size = arrow_size.map(Pixels);
 
                 Handle::Static(Icon { code_point: custom_type, 
                     font: iced::Font::with_name("bootstrap-icons"), 
-                    size: size, 
+                    size, 
                     line_height: Default::default(), 
                     shaping: Default::default()
                 }
@@ -471,14 +452,14 @@ pub fn get_styling(theme: &Theme, status: Status,
     
     let mut active_style = pick_list::default(theme, Status::Active);
 
-    let style = if style_opt.is_none() {
+    if style_opt.is_none() {
         return match status {
-            Status::Active => active_style,
-            Status::Hovered | Status::Opened => pick_list::default(theme, Status::Hovered),
-        }
-    } else {
-        style_opt.unwrap()
-    };
+                Status::Active => active_style,
+                Status::Hovered | Status::Opened => pick_list::default(theme, Status::Hovered),
+            }
+    }
+
+    let style = style_opt.unwrap();
 
     if style.background_color.is_some() {
         active_style.background = style.background_color.unwrap().into();
@@ -504,7 +485,7 @@ pub fn get_styling(theme: &Theme, status: Status,
         active_style.border.color = style.border_color.unwrap();
     }
 
-    let mut hover_opened_style = active_style.clone();
+    let mut hover_opened_style = active_style;
     
     if style.border_color_hovered.is_some() {
         hover_opened_style.border.color = style.border_color_hovered.unwrap();

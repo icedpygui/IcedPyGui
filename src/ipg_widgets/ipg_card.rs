@@ -99,7 +99,7 @@ pub fn construct_card (crd: IpgCard) -> Element<'static, Message> {
 
     if !crd.is_open {
         let sp: Element<CardMessage> = Space::new(0.0, 0.0).into();
-        let sp_mapped: Element<Message> = sp.map(move |message| Message::Card(crd.id, message)).into();
+        let sp_mapped: Element<Message> = sp.map(move |message| Message::Card(crd.id, message));
         return sp_mapped
     }
 
@@ -182,7 +182,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("User Data could not be found in Card callback"),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),  
+                                                                    wco.id,  
                                                                     user_data
                                                                     ));
                 match res {
@@ -191,7 +191,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),  
+                                                                    wco.id,  
                                                                     ));
                 match res {
                     Ok(_) => (),

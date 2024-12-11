@@ -1,39 +1,45 @@
-from icedpygui import IPG, IpgCanvasMode, IpgCanvasWidget
+from icedpygui import IPG, IpgCanvasDrawMode, IpgCanvasParam, IpgCanvasWidget
 import math
+
 
 ipg = IPG()
 
-mode = IpgCanvasMode.New
-
 
 def widget_select(radio_id: int, selected: tuple[int, str]):
+    widget = IpgCanvasWidget.Line
     match selected[0]:
         case 0:
-            ipg.add_canvas_widget(canvas_id="canvas", widget=IpgCanvasWidget.Bezier, mode=mode)
+            widget = IpgCanvasWidget.Arc
         case 1:
-            ipg.add_canvas_widget(canvas_id="canvas", widget=IpgCanvasWidget.Circle, mode=mode)
+            widget = IpgCanvasWidget.Bezier
         case 2:
-            ipg.add_canvas_widget(canvas_id="canvas", widget=IpgCanvasWidget.Line, mode=mode)
+            widget = IpgCanvasWidget.Circle
         case 3:
-            ipg.add_canvas_widget(canvas_id="canvas", widget=IpgCanvasWidget.Polygon, mode=mode)
+            widget = IpgCanvasWidget.Line
         case 4:
-            ipg.add_canvas_widget(canvas_id="canvas", widget=IpgCanvasWidget.Rectangle, mode=mode)
+            widget = IpgCanvasWidget.Polygon
         case 5:
-            ipg.add_canvas_widget(canvas_id="canvas", widget=IpgCanvasWidget.RightTriangle, mode=mode)
+            widget = IpgCanvasWidget.PolyLine
         case 6:
-            ipg.add_canvas_widget(canvas_id="canvas", widget=IpgCanvasWidget.Triangle, mode=mode)
+            widget = IpgCanvasWidget.RightTriangle
+
+            
+    ipg.update_item(canvas_id, IpgCanvasParam.Widget, widget)
     
     
 def mode_select(id: int, selected: tuple[int, str]):
+    mode = IpgCanvasDrawMode.DrawAll
     match selected[0]:
         case 0:
-            mode = IpgCanvasMode.New
+            mode = IpgCanvasDrawMode.DrawAll
         case 1:
-            mode = IpgCanvasMode.Edit
+            mode = IpgCanvasDrawMode.New
         case 2:
-            mode = IpgCanvasMode.Freehand
+            mode = IpgCanvasDrawMode.Edit
         case 3:
-            mode = IpgCanvasMode.PicknPlace
+            mode = IpgCanvasDrawMode.Rotate
+    
+    ipg.update_item(canvas_id, IpgCanvasParam.Mode, mode)
 
 
 ipg.add_window(window_id="main", title="Canvas",
@@ -47,25 +53,20 @@ ipg.add_column(window_id="main", container_id="col",
                parent_id="row",
                width=200, height_fill=True)
 
-ipg.add_canvas(window_id="main", canvas_id="canvas",
+canvas_id = ipg.add_canvas(window_id="main", canvas_id="canvas",
                parent_id="row",
                width_fill=True, height_fill=True)
 
-mode_labels = ["New", "Edit", "Freehand", "Pick-n-Place"]
+mode_labels = ["DrawAll", "New", "Edit", "Rotate"]
 
 ipg.add_radio(parent_id="col", labels=mode_labels,
               on_select=mode_select)
 
-widget_labels = ["Bezier", "Circle", "Line", "Polygon",
-                "Rectangle", "RightTriangle", "Triangle"]
+widget_labels = ["Arc", "Bezier", "Circle", "Line", "Polygon",
+                "PolyLine", "RightTriangle"]
 
 ipg.add_radio(parent_id="col", labels=widget_labels,
               on_select=widget_select)
-
-ipg.add_line(canvas_id="canvas", 
-             start=(0.0, 0.0), 
-             end=(50.0, 50.0),
-             stroke_width=2.0)
 
 
 ipg.start_session()

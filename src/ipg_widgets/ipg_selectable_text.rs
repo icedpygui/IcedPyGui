@@ -1,4 +1,5 @@
 //!ipg_selectable_text
+#![allow(clippy::enum_variant_names)]
 use crate::app;
 use crate::access_callbacks;
 use crate::graphics::colors::get_color;
@@ -106,9 +107,7 @@ pub fn construct_selectable_text(sl_text: IpgSelectableText) -> Element<'static,
                             // font: Font,
                             .shaping(sl_text.shaping)
                             .style(move|_theme|{
-                                let mut style = Style::default();
-                                style.color = sl_text.text_color;
-                                style
+                                Style{color: sl_text.text_color}
                                 }
                             )
                             .into();
@@ -133,8 +132,7 @@ pub fn construct_selectable_text(sl_text: IpgSelectableText) -> Element<'static,
 
 pub fn selectable_text_callback(state: &mut IpgState, id: usize, message: SLTXTMessage) {
 
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = id;
+    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
 
     match message {
         SLTXTMessage::OnPress => {
@@ -180,9 +178,9 @@ pub fn selectable_text_callback(state: &mut IpgState, id: usize, message: SLTXTM
             process_callback(wco);
         },
         SLTXTMessage::OnMove(point) => {
-            let mut points: Vec<(String, f32)> = vec![];
-            points.push(("x".to_string(), point.x));
-            points.push(("y".to_string(), point.y));
+            let points: Vec<(String, f32)> = vec![
+                ("x".to_string(), point.x),
+                ("y".to_string(), point.y)];
             let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_move".to_string();
@@ -216,7 +214,7 @@ fn process_callback(wco: WidgetCallbackOut)
         None => panic!("SelectableText Callback could not be found with id {}", wco.id),
     };
                   
-    if wco.event_name == "on_move".to_string() {
+    if wco.event_name == *"on_move" {
 
         let points = match wco.points {
             Some(pts) => pts,
@@ -230,7 +228,7 @@ fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("SelectableText: user_data not found"),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     points.into_py_dict_bound(py), 
                                                                     user_data
                                                                     ));
@@ -240,7 +238,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     points.into_py_dict_bound(py), 
                                                                     )
                                                                     );
@@ -259,7 +257,7 @@ fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("SelectableText user_data not found"),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),
+                                                                    wco.id,
                                                                     user_data
                                                                     ));
                 match res {
@@ -268,7 +266,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 }                                                
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),  
+                                                                    wco.id,  
                                                                     ));
                 match res {
                     Ok(_) => (),

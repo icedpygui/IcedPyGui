@@ -1,6 +1,6 @@
 //! ipg_events
 #![allow(unused_assignments)]
-
+#![allow(clippy::enum_variant_names)]
 use std::collections::HashMap;
 
 use crate::ipg_widgets::ipg_window::get_ipg_mode;
@@ -339,12 +339,12 @@ pub fn process_window_event(state: &mut IpgState,
         Some(id) => id,
         None => panic!("Process window event: Unable to find the ipg window id using the iced id {:?}.", window_id)
     };
-    let ipg_id = ipg_window_id.clone();
+    let ipg_id = *ipg_window_id;
 
     match event {
         Event::Window(event) => {
             if (event == iced::window::Event::Closed && !event_enabled) || 
-                (event == iced::window::Event::CloseRequested && !event_enabled) {
+                (event == iced::window::Event::CloseRequested) && !event_enabled {
                 let mut actions = access_window_actions();
                         actions.mode.push((ipg_id, window::Mode::Hidden));
                         drop(actions);
@@ -482,7 +482,7 @@ pub fn handle_window_closing(state: &mut IpgState, iced_id: window::Id, mode: wi
     let ipg_id_opt = state.windows_iced_ipg_ids.get(&iced_id);
 
     let ipg_id_found = match ipg_id_opt {
-        Some(id) => id.clone(),
+        Some(id) => *id,
         None => panic!("Events: handle_window_closing: Unable to find ipg_id based on Iced_id {:?}", iced_id),
     };
 
@@ -492,23 +492,17 @@ pub fn handle_window_closing(state: &mut IpgState, iced_id: window::Id, mode: wi
     // if any of the remaining windows are visible, then return false
     for (_iced_id, ipg_id) in iced_ipg_ids {
 
-        match state.containers.get_mut(&ipg_id) {
-            Some(cnt) => {
-                match cnt {
-                    super::ipg_enums::IpgContainers::IpgWindow(wnd) => {
-                        if wnd.id == ipg_id_found {
-                            wnd.mode = get_ipg_mode(mode);
-                        }
-                    },
-                    _ => ()
-                }
-            },
-            None => (),
-        }
+        if let Some(cnt) = state.containers.get_mut(&ipg_id) {
+             if let super::ipg_enums::IpgContainers::IpgWindow(wnd) = cnt {
+                  if wnd.id == ipg_id_found {
+                      wnd.mode = get_ipg_mode(mode);
+                  }
+              }
+         }
         
     }
 
-    return false;
+    false
 
 }
 
@@ -517,9 +511,9 @@ fn get_callback(id: usize, event_name: String) -> Option<PyObject> {
 
     let cb_opt = cbs.callback_events.get(&(id, event_name));
 
-    let cb = match cb_opt {
+    let cb = match cb_opt{
         Some(cb) => Some(cb.clone()),
-        None => None
+        None => None,
     };
     drop(cbs);
     cb
@@ -626,7 +620,7 @@ fn process_mouse_callback(id: usize,
     let cb = cb.unwrap();
     Python::with_gil(|py| {
 
-        if !hmap_s_f.is_some() {
+        if hmap_s_f.is_none() {
             let result = match user_data {
                 Some(user_data) => {
                     cb.call1(py, (id, event_name, user_data))
@@ -640,26 +634,23 @@ fn process_mouse_callback(id: usize,
                 Err(er) => panic!("Window Event: 2 parameters (id, event name) and 3 if using user_data are required or a python error in this function. {er}"),
             }
         } else {
-            match hmap_s_f {
-                Some(sf) => {
-                    let dict = sf.into_py_dict_bound(py);
-                    let result = match user_data {
-                        Some(user_data) => {
-                            cb.call1(py, (id, event_name, dict, user_data))
-                        },
-                        None => {
-                            cb.call1(py, (id, event_name, dict))
-                        },
-                    };
-                    match result {
-                        Ok(_) => (),
-                        Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python error in this function. {er}"),
-                    }
-                },
-                None => (),
+            if let Some(sf) = hmap_s_f {
+                let dict = sf.into_py_dict_bound(py);
+                let result = match user_data {
+                    Some(user_data) => {
+                        cb.call1(py, (id, event_name, dict, user_data))
+                    },
+                    None => {
+                        cb.call1(py, (id, event_name, dict))
+                    },
+                };
+                match result {
+                    Ok(_) => (),
+                    Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python  in this function. {er}"),
+                }
             }
         }
-    });
+    })
 
 }
 
@@ -671,9 +662,7 @@ fn process_window_callback(id: usize,
                     user_data: Option<PyObject>, 
                     ) 
 {
-    if cb.is_none() {
-        return
-    }
+    if cb.is_none() { return }
     let cb = cb.unwrap();
 
     Python::with_gil(|py| {
@@ -691,52 +680,38 @@ fn process_window_callback(id: usize,
                 Ok(_) => (),
                 Err(er) => panic!("Window Event: 2 parameters (id, event name) and 3 if using user_data are required or a python error in this function. {er}"),
             }
-            return
+        } else 
+            if let Some(sf) = hmap_s_f {
+                let dict = sf.into_py_dict_bound(py);
+                let result = match user_data {
+                    Some(user_data) => {
+                        cb.call1(py, (id, event_name, dict, user_data))
+                    },
+                    None => {
+                        cb.call1(py, (id, event_name, dict))
+                    },
+                };
+                match result {
+                    Ok(_) => (),
+                    Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python  in this function. {er}"),
+                }
+        } else 
+            if let Some(ss) = hmap_s_s {
+                let dict = ss.into_py_dict_bound(py);
+                let result = match user_data {
+                    Some(user_data) => {
+                        cb.call1(py, (id, event_name, dict, user_data))
+                    },
+                    None => {
+                        cb.call1(py, (id, event_name, dict))
+                    },
+                };
+                match result {
+                    Ok(_) => (),
+                    Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python  in this function. {er}"),
+                }
         }
-        
-        if hmap_s_f.is_some() {
-            match hmap_s_f {
-                Some(sf) => {
-                    let dict = sf.into_py_dict_bound(py);
-                    let result = match user_data {
-                        Some(user_data) => {
-                            cb.call1(py, (id, event_name, dict, user_data))
-                        },
-                        None => {
-                            cb.call1(py, (id, event_name, dict))
-                        },
-                    };
-                    match result {
-                        Ok(_) => (),
-                        Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python error in this function. {er}"),
-                    }
-                },
-                None => (),
-            }
-        } else if hmap_s_s.is_some() {
-            match hmap_s_s {
-                Some(ss) => {
-                    let dict = ss.into_py_dict_bound(py);
-                    let result = match user_data {
-                        Some(user_data) => {
-                            cb.call1(py, (id, event_name, dict, user_data))
-                        },
-                        None => {
-                            cb.call1(py, (id, event_name, dict))
-                        },
-                    };
-                    match result {
-                        Ok(_) => (),
-                        Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python error in this function. {er}"),
-                    }
-                },
-                None => (),
-            }
-        }
-            
-        
-    });
-
+    })
 }
 
 fn process_touch_callback(id: usize,

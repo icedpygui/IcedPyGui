@@ -56,7 +56,7 @@ pub enum IpgMousePointer {
     ZoomIn,
 }
 
-pub fn construct_mousearea<'a>(m_area: IpgMouseArea, content: Vec<Element<'a, Message>>) -> Element<'a, Message> {
+pub fn construct_mousearea(m_area: IpgMouseArea, content: Vec<Element<Message>>) -> Element<Message> {
 
     let pointer: Interaction = get_interaction(m_area.mouse_pointer);
 
@@ -104,8 +104,7 @@ pub fn get_interaction(pointer: Option<IpgMousePointer>) -> Interaction {
 
 pub fn mousearea_callback(state: &mut IpgState, id: usize, event_name: String) {
     
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = id;
+    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
 
     let mut wco = container_callback_data(state, wci);
     wco.id = id;
@@ -114,14 +113,17 @@ pub fn mousearea_callback(state: &mut IpgState, id: usize, event_name: String) {
 
 }
 
-pub fn mousearea_callback_point(state: &mut IpgState, id: usize, point: Point, event_name: String) {
+pub fn mousearea_callback_point(state: &mut IpgState, 
+                                id: usize, 
+                                point: Point, 
+                                event_name: String,
+                                ) {
 
-    let mut points: Vec<(String, f32)> = vec![];
-    points.push(("x".to_string(), point.x));
-    points.push(("y".to_string(), point.y));
+    let points: Vec<(String, f32)> = vec![
+        ("x".to_string(), point.x),
+        ("y".to_string(), point.y)];
     
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = id;
+    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
 
     let mut wco = container_callback_data(state, wci);
     wco.id = id;
@@ -148,7 +150,7 @@ fn process_callback(wco: WidgetCallbackOut)
         None => panic!("MouseArea Callback could not be found with id {}", wco.id),
     };
               
-    if wco.event_name == "on_move".to_string() {
+    if wco.event_name == *"on_move" {
 
         let points = match wco.points {
             Some(pts) => pts,
@@ -162,7 +164,7 @@ fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("MouseArea callback user_data not found."),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     points.into_py_dict_bound(py), 
                                                                     user_data
                                                                     ));
@@ -172,7 +174,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     points.into_py_dict_bound(py), 
                                                                     ));
                 match res {
@@ -190,7 +192,7 @@ fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("MouseArea callback user_data not found."),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     user_data
                                                                     ));
                 match res {
@@ -199,7 +201,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),  
+                                                                    wco.id,  
                                                                     ));
                 match res {
                     Ok(_) => (),

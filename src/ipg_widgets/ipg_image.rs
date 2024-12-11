@@ -1,4 +1,5 @@
 //!ipg_image
+#![allow(clippy::enum_variant_names)]
 use crate::app;
 use crate::access_callbacks;
 use crate::IpgState;
@@ -176,8 +177,7 @@ fn match_rotation(rot: IpgImageRotation, radians: Radians) -> Rotation {
 
 pub fn image_callback(state: &mut IpgState, id: usize, message: ImageMessage) {
 
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = id;
+    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
 
     match message {
         ImageMessage::OnPress => {
@@ -223,9 +223,9 @@ pub fn image_callback(state: &mut IpgState, id: usize, message: ImageMessage) {
             process_callback(wco);
         },
         ImageMessage::OnMove(point) => {
-            let mut points: Vec<(String, f32)> = vec![];
-            points.push(("x".to_string(), point.x));
-            points.push(("y".to_string(), point.y));
+            let points: Vec<(String, f32)> = vec![
+                ("x".to_string(), point.x),
+                ("y".to_string(), point.y)];
             
             let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
@@ -259,7 +259,7 @@ fn process_callback(wco: WidgetCallbackOut)
         None => panic!("Image Callback could not be found with id {}", wco.id),
     };
               
-    if wco.event_name == "on_move".to_string() {
+    if wco.event_name == *"on_move" {
 
         let points = match wco.points {
             Some(pts) => pts,
@@ -273,7 +273,7 @@ fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("Image callback user_data not found."),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     points.into_py_dict_bound(py), 
                                                                     user_data
                                                                     ));
@@ -283,7 +283,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     points.into_py_dict_bound(py), 
                                                                     ));
                 match res {
@@ -301,7 +301,7 @@ fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("Image callback user_data not found."),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     user_data
                                                                     ));
                 match res {
@@ -310,7 +310,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),  
+                                                                    wco.id,  
                                                                     ));
                 match res {
                     Ok(_) => (),

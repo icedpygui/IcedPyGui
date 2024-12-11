@@ -98,16 +98,16 @@ impl IpgContainerStyle {
 }
 
 
-pub fn construct_container<'a>(con: IpgContainer, 
-                            mut content: Vec<Element<'a, Message>>,
+pub fn construct_container(con: IpgContainer, 
+                            mut content: Vec<Element<Message>>,
                             style: Option<IpgContainerStyle> ) 
-                            -> Element<'a, Message> {
+                            -> Element<Message> {
 
     let align_h = get_horizontal_alignment(con.align_h.clone());
     let align_v = get_vertical_alignment(con.align_v.clone());
 
     let mut new_content: Element<Message> = horizontal_space().into();
-    if content.len() > 0 {
+    if content.is_empty() {
         new_content = content.remove(0);
     }
 
@@ -119,11 +119,11 @@ pub fn construct_container<'a>(con: IpgContainer,
                 .align_y(align_v)
                 .clip(con.clip)
                 .style(move|theme|
-                    get_styling(&theme, 
+                    get_styling(theme, 
                         style.clone(),
                         ))
                 .into();
-    cont.into()
+    cont
 }
 
 

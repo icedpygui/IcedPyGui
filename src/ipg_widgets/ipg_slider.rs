@@ -111,40 +111,34 @@ pub enum SLMessage {
 }
 
 pub fn construct_slider(slider: IpgSlider, 
-                        style: Option<&IpgSliderStyle>) 
+                        style_opt: Option<IpgSliderStyle>) 
                         -> Element<'static, app::Message> {
-
-    // extracted here due to lifetime in map statement
-    let style_opt = match style {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
 
     if !slider.show {
         return Space::new(0.0, 0.0).into()
     }
 
-    let sld: Element<SLMessage, Theme> = Slider::new(slider.min..=slider.max, 
-                                                    slider.value, 
-                                                    SLMessage::OnChange
-                                                    )
-                                                    .on_release(SLMessage::OnRelease)
-                                                    .step(slider.step)
-                                                    .width(slider.width)
-                                                    .height(slider.height)
-                                                    .style(move|theme, status|
-                                                    get_styling(theme, status,
-                                                        style_opt.clone()
-                                                    ))
-                                                    .into();
+    let sld: Element<SLMessage, Theme> = 
+        Slider::new(slider.min..=slider.max, 
+                    slider.value, 
+                    SLMessage::OnChange
+                    )
+                    .on_release(SLMessage::OnRelease)
+                    .step(slider.step)
+                    .width(slider.width)
+                    .height(slider.height)
+                    .style(move|theme, status|
+                    get_styling(theme, status,
+                        style_opt.clone()
+                    ))
+                    .into();
 
     sld.map(move |message| app::Message::Slider(slider.id, message))
 }
 
 pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
 
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = id;
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
            
     match message {
         SLMessage::OnChange(value) => {
@@ -191,7 +185,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 None => panic!("Slider callback user_data not found."),
             };
             let res = callback.call1(py, (
-                                                                wco.id.clone(), 
+                                                                wco.id, 
                                                                 value, 
                                                                 user_data
                                                                 ));
@@ -201,7 +195,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
             }
         } else {
             let res = callback.call1(py, (
-                                                                wco.id.clone(), 
+                                                                wco.id, 
                                                                 value, 
                                                                 ));
             match res {
@@ -338,7 +332,7 @@ fn get_styling(theme: &Theme,
         base_style.handle.border_width = style.handle_border_width.unwrap();
     }
 
-    let mut hovered_style = base_style.clone();
+    let mut hovered_style = base_style;
 
     if style.rail_color_hovered.is_some() {
         hovered_style.rail.border.color = style.rail_color_hovered.unwrap();

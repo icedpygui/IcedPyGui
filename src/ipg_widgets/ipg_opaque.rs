@@ -66,12 +66,12 @@ impl IpgOpaqueStyle {
     }
 }
 
-pub fn construct_opaque<'a>(op: IpgOpaque, 
-                        mut content: Vec<Element<'a, Message>>, 
+pub fn construct_opaque(op: IpgOpaque, 
+                        mut content: Vec<Element<Message>>, 
                         style: Option<IpgOpaqueStyle> ) 
-                        -> Element<'a, Message> {
+                        -> Element<Message> {
 
-    let new_content = if content.len() > 0 {
+    let new_content = if content.is_empty() {
         content.remove(0)
     } else {
         horizontal_space().into()
@@ -86,7 +86,7 @@ pub fn construct_opaque<'a>(op: IpgOpaque,
                 .align_x(align_h)
                 .align_y(align_v)
                 .style(move|theme|
-                    get_styling(&theme, 
+                    get_styling(theme, 
                         style.clone(),
                         ))
                 .into();
@@ -96,7 +96,7 @@ pub fn construct_opaque<'a>(op: IpgOpaque,
             .on_press(Message::OpaqueOnPress(op.id))
             .interaction(Interaction::Pointer))
     } else {
-        opaque(cont).into()
+        opaque(cont)
     }
 
     
@@ -158,8 +158,7 @@ pub fn try_extract_stack_update(update_obj: PyObject) -> IpgOpaqueParam {
 
 pub fn opaque_callback(state: &mut IpgState, id: usize, event_name: String) {
     
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = id;
+    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
 
     let mut wco = container_callback_data(state, wci);
     wco.id = id;
@@ -187,7 +186,7 @@ fn process_callback(wco: WidgetCallbackOut)
               
     Python::with_gil(|py| {
         let res = callback.call1(py, (
-                                                            wco.id.clone(),  
+                                                            wco.id,  
                                                             ));
         match res {
             Ok(_) => (),

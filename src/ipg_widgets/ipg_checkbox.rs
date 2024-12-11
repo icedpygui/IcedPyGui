@@ -128,14 +128,8 @@ pub enum CHKMessage {
 }
 
 pub fn construct_checkbox(chk: IpgCheckBox, 
-                        style: Option<&IpgCheckboxStyle>) 
+                        style_opt: Option<IpgCheckboxStyle>) 
                         -> Element<'static, app::Message> {
-
-    // extracted here due to lifetime in map statement
-    let style_opt = match style {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
 
     if !chk.show {
         return Space::new(Length::Shrink, Length::Shrink).into()
@@ -184,8 +178,7 @@ pub fn checkbox_callback(state: &mut IpgState, id: usize, message: CHKMessage) {
 
     match message {
         CHKMessage::OnToggle(on_toggle) => {
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
+            let mut wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
             wci.on_toggle = Some(on_toggle);
             let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
@@ -219,7 +212,7 @@ fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("Checkbox callback user_Data could not be found"),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     wco.is_checked, 
                                                                     user_data
                                                                     ));
@@ -229,7 +222,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     wco.is_checked 
                                                                     ));
                 match res {

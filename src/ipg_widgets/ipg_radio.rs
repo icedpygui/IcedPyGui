@@ -135,15 +135,9 @@ pub enum RDMessage {
 
 
 pub fn construct_radio(radio: IpgRadio, 
-                        style: Option<&IpgRadioStyle>) 
+                        style_opt: Option<IpgRadioStyle>) 
                         -> Element<'static, app::Message> {
     
-    // extracted here due to lifetime in map statement
-    let style_opt = match style {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
-
     if !radio.show {
         return Space::new(0.0, 0.0).into()
     }
@@ -156,19 +150,17 @@ pub fn construct_radio(radio: IpgRadio,
     let mut radio_elements = vec![];
 
     for (i, label) in  radio.labels.iter().enumerate() {
-        let style:Option<IpgRadioStyle> = match style_opt {
-            Some(st) => 
-                Some(IpgRadioStyle{ id: st.id.clone(), 
-                            background_color: st.background_color.clone(), 
-                            background_color_hovered: st.background_color_hovered.clone(), 
-                            dot_color: st.dot_color.clone(), 
-                            dot_color_hovered: st.dot_color_hovered, 
-                            border_color: st.border_color, 
-                            border_width: st.border_width, 
-                            text_color: st.text_color }),
+        let style:Option<IpgRadioStyle> = 
+            style_opt.map(|st| IpgRadioStyle{
+                id: st.id, 
+                background_color: st.background_color, 
+                background_color_hovered: st.background_color_hovered, 
+                dot_color: st.dot_color, 
+                dot_color_hovered: st.dot_color_hovered, 
+                border_color: st.border_color, 
+                border_width: st.border_width, 
+                text_color: st.text_color });
 
-            None => None,
-        };
         radio_elements.push(Radio::new(label.clone(), 
                                         CHOICES[radio.group_index][i],
                                         selected,
@@ -350,7 +342,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 None => panic!("Radio callback user_data not found."),
             };
             let res = callback.call1(py, (
-                                                                wco.id.clone(), 
+                                                                wco.id, 
                                                                 (index, label),
                                                                 user_data
                                                                 ));
@@ -360,7 +352,7 @@ fn process_callback(wco: WidgetCallbackOut)
             }
         } else {
             let res = callback.call1(py, (
-                                    wco.id.clone(),
+                                    wco.id,
                                     (index, label), 
                                     )
                             );
@@ -379,7 +371,7 @@ fn process_callback(wco: WidgetCallbackOut)
 fn match_widgets (widget: &mut IpgWidgets) -> &mut IpgRadio {
     
     match widget {
-        IpgWidgets::IpgRadio(radio) => return radio,
+        IpgWidgets::IpgRadio(radio) => radio,
         _ => panic!("Radio expected to find radio in IpgWidgets")
     }
 }

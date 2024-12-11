@@ -109,8 +109,8 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
 
 pub fn timer_callback(state: &mut IpgState, id: usize, message: TIMMessage) -> u64 {
 
-    let mut wci = WidgetCallbackIn::default();
-    wci.id = id;
+    let mut wci = WidgetCallbackIn{id, ..Default::default()};
+
     let mut duration: u64 = 0;
 
     match message {
@@ -119,10 +119,7 @@ pub fn timer_callback(state: &mut IpgState, id: usize, message: TIMMessage) -> u
             wci.counter = Some(0);
             let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
-            duration = match wco.duration {
-                Some(dur) => dur,
-                None => 0,
-            };
+            duration = wco.duration.unwrap_or(0);
             wco.event_name = "on_start".to_string();
             process_callback(wco);
         }
@@ -140,8 +137,7 @@ pub fn timer_callback(state: &mut IpgState, id: usize, message: TIMMessage) -> u
 pub fn tick_callback(state: &mut IpgState) 
 {
     let id= state.timer_event_id_enabled.0;
-    let mut wci = WidgetCallbackIn::default();
-    wci.id = id;
+    let mut wci = WidgetCallbackIn{id, ..Default::default()};
 
     wci.counter = Some(1);
     let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
@@ -166,10 +162,7 @@ fn process_callback(wco: WidgetCallbackOut)
         None => panic!("Timer callback could not be found with id {}", wco.id),
     };
 
-    let counter = match wco.counter {
-        Some(ct) => ct,
-        None => 0,
-    };
+    let counter = wco.counter.unwrap_or(0);
 
     Python::with_gil(|py| {
             if wco.user_data.is_some() {
@@ -178,7 +171,7 @@ fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("User Data could not be found in Timer callback"),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),
+                                                                    wco.id,
                                                                     counter,  
                                                                     user_data
                                                                     ));
@@ -188,7 +181,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),
+                                                                    wco.id,
                                                                     counter,  
                                                                     ));
                 match res {

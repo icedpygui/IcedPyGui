@@ -1,4 +1,5 @@
 //! ipg_text_input
+#![allow(clippy::enum_variant_names)]
 use crate::{access_callbacks, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_padding_f64, get_radius, get_width};
@@ -119,15 +120,9 @@ pub enum TIMessage {
 }
 
 pub fn construct_text_input(input: IpgTextInput, 
-                            style: Option<&IpgTextInputStyle>) 
+                            style_opt: Option<IpgTextInputStyle>) 
                             -> Element<'static, app::Message> {
     
-    // extracted here due to lifetime in map statement
-    let style_opt = match style {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
-
     if !input.show {
         return Space::new(0.0, 0.0).into()
     }
@@ -152,19 +147,19 @@ pub fn construct_text_input(input: IpgTextInput,
                                             // })
                                             .style(move|theme, status|
                                                 get_styling(theme, status, 
-                                                    style_opt.clone()
+                                                    style_opt.clone(),
                                                 ))
                                             .into();
 
     txt.map(move |message| app::Message::TextInput(input.id, message))
+
 }
 
 pub fn text_input_callback(state: &mut IpgState, id: usize, message: TIMessage) {
     // During the input, the widget is assigned the value so that it shows
     // during typing.  On submit, the text box is cleared, so no value.
     // However, in both cases the value is passed to the callback.
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = id;
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
            
     match message {
         TIMessage::OnInput(value) => {
@@ -223,7 +218,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 None => panic!("TextInput callback user_data not found."),
             };
             let res = callback.call1(py, (
-                                                            wco.id.clone(), 
+                                                            wco.id, 
                                                             value, 
                                                             user_data
                                                             ));
@@ -233,7 +228,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
             }
         } else {
             let res = callback.call1(py, (
-                                                                wco.id.clone(), 
+                                                                wco.id, 
                                                                 value, 
                                                                 ));
             match res {

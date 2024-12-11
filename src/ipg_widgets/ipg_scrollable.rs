@@ -174,27 +174,22 @@ pub enum IpgScrollableAlignment {
 
 pub fn construct_scrollable<'a>(scroll: IpgScrollable, 
                             content: Vec<Element<'a, app::Message>>,
-                            style: Option<&IpgScrollableStyle> ) 
+                            style_opt: Option<IpgScrollableStyle> ) 
                             -> Element<'a, app::Message> {
     
-    // extracted here due to lifetime
-    let style_opt = match style {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
-
     let content: Element<'a, app::Message> = Column::with_children(content).into();
 
-    let direction: Direction = get_direction(scroll.direction.clone(),
-                                                        scroll.h_bar_width,
-                                                        scroll.h_bar_margin,
-                                                        scroll.h_scroller_width,
-                                                        scroll.h_bar_alignment.clone(),
-                                                        scroll.v_bar_width,
-                                                        scroll.v_bar_margin,
-                                                        scroll.v_scroller_width,
-                                                        scroll.v_bar_alignment.clone()
-                                                    );
+    let direction: Direction = 
+        get_direction(scroll.direction.clone(),
+                        scroll.h_bar_width,
+                        scroll.h_bar_margin,
+                        scroll.h_scroller_width,
+                        scroll.h_bar_alignment.clone(),
+                        scroll.v_bar_width,
+                        scroll.v_bar_margin,
+                        scroll.v_scroller_width,
+                        scroll.v_bar_alignment.clone()
+                    );
 
     Scrollable::with_direction(content, direction)
                     .width(scroll.width)
@@ -256,27 +251,22 @@ fn get_direction(direction: IpgScrollableDirection,
 
 pub fn scrollable_callback(state: &mut IpgState, id: usize, vp: Viewport) {
 
-    if id >= TABLE_INTERNAL_IDS_START && id <= TABLE_INTERNAL_IDS_END {
+    if (TABLE_INTERNAL_IDS_START..=TABLE_INTERNAL_IDS_END).contains(&id) {
         table_callback(state, id, TableMessage::TableScrolled(vp, id));
         return
     }
 
-    let mut wci = WidgetCallbackIn::default();
-    wci.id = id;
+    let wci = WidgetCallbackIn{id, ..Default::default()};
 
-    let mut offsets: Vec<(String, f32)> = vec![];
-    offsets.push(("abs_offset_x".to_string(), vp.absolute_offset().x));
-    offsets.push(("abs_offset_y".to_string(), vp.absolute_offset().y));
-    offsets.push(("rel_offset_x".to_string(), vp.relative_offset().x));
-    offsets.push(("rel_offset_y".to_string(), vp.relative_offset().y));
-    offsets.push(("rev_offset_x".to_string(), vp.absolute_offset_reversed().x));
-    offsets.push(("rev_offset_y".to_string(), vp.absolute_offset_reversed().y));
-    
-    let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-    wci.id = id;
+    let offsets: Vec<(String, f32)> = vec![
+        ("abs_offset_x".to_string(), vp.absolute_offset().x),
+        ("abs_offset_y".to_string(), vp.absolute_offset().y),
+        ("rel_offset_x".to_string(), vp.relative_offset().x),
+        ("rel_offset_y".to_string(), vp.relative_offset().y),
+        ("rev_offset_x".to_string(), vp.absolute_offset_reversed().x),
+        ("rev_offset_y".to_string(), vp.absolute_offset_reversed().y)];
     
     let mut wco = container_callback_data(state, wci);
-    wco.id = id;
     wco.scroll_pos = offsets;
     wco.event_name = "on_scroll".to_string();
     process_callback(wco);
@@ -306,7 +296,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("Scrollable callback user_data not found."),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     wco.scroll_pos.into_py_dict_bound(py), 
                                                                     user_data
                                                                     ));
@@ -316,7 +306,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(), 
+                                                                    wco.id, 
                                                                     wco.scroll_pos.into_py_dict_bound(py), 
                                                                     ));
                 match res {

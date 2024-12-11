@@ -1,6 +1,6 @@
 //! ipg_menu
 #![allow(dead_code, unused_variables)]
-
+#![allow(clippy::enum_variant_names)]
 use std::collections::BTreeMap;
 
 use iced::border::Radius;
@@ -239,25 +239,10 @@ pub enum IpgMenuType {
 }
 
 pub fn construct_menu(mut mn: IpgMenu, 
-                        menu_style_opt: Option<&IpgMenuStyle>,
-                        bar_style_opt: Option<&IpgMenuBarStyle>,
-                        sep_style_opt: Option<&IpgMenuSeparatorStyle>,)
+                        menu_style: Option<IpgMenuStyle>,
+                        bar_style: Option<IpgMenuBarStyle>,
+                        sep_style: Option<IpgMenuSeparatorStyle>,)
                         -> Element<'static, app::Message, Theme, Renderer> {
-
-    let mn_style = match menu_style_opt {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
-
-    let br_style = match bar_style_opt {
-        Some(st) => Some(st.clone()),
-        None => None,
-    };
-
-    let sp_style = match sep_style_opt {
-        Some(sep) => Some(sep),
-        None => None,
-    };
 
     let menu = try_extract_dict(mn.items);
     
@@ -371,8 +356,8 @@ pub fn construct_menu(mut mn: IpgMenu,
                 .draw_path(DrawPath::Backdrop)
                 .style(move|theme:&iced::Theme, status: Status | 
                     get_mb_styling(theme, status, 
-                        br_style.clone(), 
-                        mn_style.clone()
+                        bar_style.clone(), 
+                        menu_style.clone()
                     )
                 )
                 .spacing(mn.bar_spacing)
@@ -421,7 +406,7 @@ fn get_mb_styling(theme: &Theme,
 
         if b_style.border_radius.is_some() {
             menu_style.bar_border.radius = get_radius(b_style.border_radius.clone().unwrap(),
-                                                "Menu".to_string()).into();
+                                                "Menu".to_string());
         }
 
         if b_style.shadow_color.is_some() {
@@ -430,12 +415,14 @@ fn get_mb_styling(theme: &Theme,
 
         if b_style.shadow_offset_x.is_some() {
             let v = menu_style.bar_shadow.offset;
-            menu_style.bar_shadow.offset = Vector{ x: b_style.shadow_offset_x.unwrap(), y: v.y };
+            menu_style.bar_shadow.offset = 
+                Vector{ x: b_style.shadow_offset_x.unwrap(), y: v.y };
         }
 
         if b_style.shadow_offset_y.is_some() {
             let v = menu_style.bar_shadow.offset;
-            menu_style.bar_shadow.offset = Vector{ x: v.x , y: b_style.shadow_offset_y.unwrap() };
+            menu_style.bar_shadow.offset = 
+                Vector{ x: v.x , y: b_style.shadow_offset_y.unwrap() };
         }
 
         if b_style.shadow_blur_radius.is_some() {
@@ -464,8 +451,11 @@ fn get_mb_styling(theme: &Theme,
         }
 
         if m_style.border_radius.is_some() {
-            menu_style.menu_border.radius = get_radius(m_style.border_radius.clone().unwrap(),
-                                    "Menu".to_string()).into();
+            menu_style.menu_border.radius = 
+                get_radius(
+                    m_style.border_radius.clone().unwrap(),
+                    "Menu".to_string()
+                );
         }
 
         if m_style.shadow_color.is_some() {
@@ -474,16 +464,19 @@ fn get_mb_styling(theme: &Theme,
 
         if m_style.shadow_offset_x.is_some() {
             let v = menu_style.menu_shadow.offset;
-            menu_style.menu_shadow.offset = Vector{ x: m_style.shadow_offset_x.unwrap(), y: v.y };
+            menu_style.menu_shadow.offset = 
+                Vector{ x: m_style.shadow_offset_x.unwrap(), y: v.y };
         }
 
         if m_style.shadow_offset_y.is_some() {
             let v = menu_style.menu_shadow.offset;
-            menu_style.menu_shadow.offset = Vector{ x: v.x , y: m_style.shadow_offset_y.unwrap() };
+            menu_style.menu_shadow.offset = 
+                Vector{ x: v.x , y: m_style.shadow_offset_y.unwrap() };
         }
 
         if m_style.shadow_blur_radius.is_some() {
-            menu_style.menu_shadow.blur_radius = m_style.shadow_blur_radius.unwrap();
+            menu_style.menu_shadow.blur_radius = 
+                m_style.shadow_blur_radius.unwrap();
         }
 
         if m_style.path_base_color.is_some() {
@@ -503,8 +496,11 @@ fn get_mb_styling(theme: &Theme,
         }
 
         if m_style.path_border_radius.is_some() {
-            menu_style.path_border.radius = get_radius(m_style.path_border_radius.clone().unwrap(),
-                                    "Menu".to_string()).into();
+            menu_style.path_border.radius = 
+                get_radius(
+                    m_style.path_border_radius.clone().unwrap(),
+                    "Menu".to_string()
+                );
         }
     }
 
@@ -514,8 +510,7 @@ fn get_mb_styling(theme: &Theme,
 
 
 pub fn menu_callback(state: &mut IpgState, id: usize, message: MenuMessage) {
-    let mut wci = WidgetCallbackIn::default();
-    wci.id = id;
+    let mut wci = WidgetCallbackIn{id, ..Default::default()};
     
     match message {
         MenuMessage::ItemPressed((bar_index, menu_index)) => {
@@ -589,7 +584,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("User Data could not be found in Menu callback"),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),
+                                                                    wco.id,
                                                                     bar_index,
                                                                     menu_index_opt,
                                                                     toggled,  
@@ -601,7 +596,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),
+                                                                    wco.id,
                                                                     bar_index,
                                                                     menu_index_opt,
                                                                     toggled,  
@@ -704,17 +699,14 @@ fn get_menu_item(label: Option<String>,
     let mut style_standard: Option<IpgStyleStandard> = None;
 
     // Check if a certain style was used
-    match item_styles {
-        Some(s) => {
-            for (b_index, itm_index, std_style, istyle) in s.iter() {
-                if &bar_index == b_index && &item_index == itm_index {
-                    style = istyle.clone();
-                    style_standard = std_style.clone();
-                    break;
-                }
+    if let Some(s) = item_styles {
+        for (b_index, itm_index, std_style, istyle) in s.iter() {
+            if &bar_index == b_index && &item_index == itm_index {
+                style = istyle.clone();
+                style_standard = std_style.clone();
+                break;
             }
-        },
-        None => ()
+        }
     }
         
     // get the style
@@ -760,23 +752,22 @@ fn get_menu_item(label: Option<String>,
         IpgMenuType::Text => {
             if text_item_style_all.is_some(){
                 style = text_item_style_all;
-                
             }
         }
         IpgMenuType::Toggler => {
             if toggler_item_style_all.is_some(){
                 style = toggler_item_style_all;
-                
             }
         },
     }
     
-    return match_menu_item(item_type, 
-                style, 
-                style_standard, 
-                bar_index, item_index, 
-                is_checked, is_toggled, 
-                label, theme)
+    match_menu_item(
+        item_type, 
+        style, 
+        style_standard, 
+        bar_index, item_index, 
+        is_checked, is_toggled, 
+        label, theme)
             
 }
 
@@ -873,18 +864,14 @@ fn menu_bar_button(label: String,
                     bar_button_style: Option<(Option<IpgStyleStandard>, Option<String>)>,
                 ) -> Element<'static, MenuMessage, Theme, Renderer> {
 
-    let mut style: Option<String> = None;
-    let mut style_standard: Option<IpgStyleStandard> = None;
-
-    if bar_button_style.is_some() {
+    let (mut style_standard, style) = 
         match bar_button_style {
             Some(bbs) => {
-                style_standard = bbs.0;
-                style = bbs.1;
+                (bbs.0, bbs.1)
             },
-            None => (),
-        }
-    }
+            None => (None, None),
+        };
+    
 
     if style_standard.is_none() && style.is_some() {
         style_standard = Some(IpgStyleStandard::Primary);
@@ -1031,7 +1018,7 @@ pub fn get_separator(theme: &Theme,
     };
 
     if style_id.is_none() {
-            return default_separator(sep_type.clone(), quad_color, bg_color, label).into()
+            return default_separator(sep_type.clone(), quad_color, bg_color, label)
     }
 
     let state = access_state();
@@ -1155,7 +1142,7 @@ fn default_separator(quad_type: IpgMenuSeparatorType, quad_color: Color, bg_colo
     match quad_type {
         IpgMenuSeparatorType::Circle => {
             let radius = 10.0;
-            return Quad {
+            Quad {
                 height: Length::Fixed(20.0),
                 quad_color: Color::from([0.5; 3]).into(),
                 inner_bounds: InnerBounds::Square(radius * 2.0),
@@ -1170,7 +1157,7 @@ fn default_separator(quad_type: IpgMenuSeparatorType, quad_color: Color, bg_colo
         IpgMenuSeparatorType::Dot => {
             return row((0..20).map(|_| {
                 Quad {
-                    quad_color: Background::Color(Color::from([0.5; 3]).into()),
+                    quad_color: Background::Color(Color::from([0.5; 3])),
                     quad_border: Border {
                         radius: Radius::new(4.0),
                         ..Default::default()
@@ -1207,7 +1194,7 @@ fn default_separator(quad_type: IpgMenuSeparatorType, quad_color: Color, bg_colo
                                     .into()
         },
         IpgMenuSeparatorType::Line => {
-            return Quad {
+            Quad {
                 ..separator()
             }.into()
         },

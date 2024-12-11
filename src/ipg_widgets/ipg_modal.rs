@@ -83,7 +83,7 @@ pub fn construct_modal<'a>(mdl: IpgModal, content: Vec<Element<'a, Message>> )
 
     let btn: Element<Message, Theme, Renderer> = button.map(move |message| 
                                                     app::Message::Modal(mdl.id, message));
-    dbg!(&mdl.width, &mdl.height);                          
+                                                                             
     if mdl.show {
         let align_items = get_alignment(mdl.align_items.clone());
 
@@ -111,14 +111,13 @@ pub fn construct_modal<'a>(mdl: IpgModal, content: Vec<Element<'a, Message>> )
                     }
                 }))
                 // .on_press(on_blur)
-            )
-            .into();
+            );
+            
                                         // Modal::new(
                                         //     btn, 
                                         //     column
                                         // )
                                         // .into();
-        dbg!("show");
         ml
     } else {
         btn
@@ -129,13 +128,10 @@ pub fn construct_modal<'a>(mdl: IpgModal, content: Vec<Element<'a, Message>> )
 
 pub fn modal_callback(state: &mut IpgState, id: usize, message: ModalMessage) {
 
-    let mut wci = WidgetCallbackIn::default();
-    wci.id = id;
+    let wci = WidgetCallbackIn{id, ..Default::default()};
 
     match message {
         ModalMessage::OnOpen => {
-            let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
-            wci.id = id;
             let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_open".to_string();
@@ -168,7 +164,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     None => panic!("User Data could not be found in Modal callback"),
                 };
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),  
+                                                                    wco.id,  
                                                                     user_data
                                                                     ));
                 match res {
@@ -177,7 +173,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id.clone(),  
+                                                                    wco.id,  
                                                                     ));
                 match res {
                     Ok(_) => (),
