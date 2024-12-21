@@ -17,9 +17,10 @@ use iced::Color;
 use once_cell::sync::Lazy;
 
 
+use crate::canvas::draw_canvas::IpgCanvasState;
 use crate::{access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
-use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage, CanvasWidget, IpgCanvasState};
+use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
 use ipg_widgets::ipg_checkbox::{CHKMessage, construct_checkbox, checkbox_callback};
 use ipg_widgets::ipg_column::construct_column;

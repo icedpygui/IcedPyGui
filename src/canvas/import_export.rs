@@ -1,0 +1,346 @@
+//! import_export
+
+use std::{collections::HashMap, fs::File, io::{BufWriter, Write}, path::Path};
+
+use iced::{alignment, widget::{container::Id, text::{LineHeight, Shaping}}, Color, Font, Pixels, Point, Radians, Vector};
+use serde::{Deserialize, Serialize};
+
+use super::{draw_canvas::{IpgCanvasWidget, IpgDrawMode, IpgDrawStatus}, geometries::{IpgArc, IpgBezier, IpgCircle, IpgEllipse, IpgFreeHand, IpgLine, IpgPolyLine, IpgPolygon, IpgRightTriangle, IpgText, Widget}};
+
+
+pub fn save(path: impl AsRef<Path>, data: &impl Serialize) -> std::io::Result<()> {
+    let mut w = BufWriter::new(File::create(path).expect("unable to create file"));
+    serde_json::to_writer_pretty(&mut w, data).expect("unable to format data");
+    w.write_all(b"\n").expect("unable to append to buffer");
+    w.flush().expect("unable to flush buffer");
+    Ok(())
+}
+
+// iced Point does not derive any serialization 
+// so had to use own version for saving data.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct ExportPoint{
+    x: f32,
+    y: f32,
+}
+
+impl ExportPoint {
+    fn convert(point: &Point) -> Self {
+        ExportPoint {x: point.x, y: point.y}
+    }
+
+    pub fn distance(&self, to: Self) -> f32
+    {
+        let a = self.x - to.x;
+        let b = self.y - to.y;
+
+        a.hypot(b)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Default, Serialize, Deserialize)]
+pub struct ExportColor {
+    /// Red component, 0.0 - 1.0
+    pub r: f32,
+    /// Green component, 0.0 - 1.0
+    pub g: f32,
+    /// Blue component, 0.0 - 1.0
+    pub b: f32,
+    /// Transparency, 0.0 - 1.0
+    pub a: f32,
+}
+
+impl ExportColor {
+    pub const fn from_rgba(color: &Color) -> ExportColor {
+        ExportColor { r: color.r, g: color.g, b: color.b, a: color.a }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportWidget {
+    pub name: Widget,
+    pub content: String,
+    pub points: Vec<ExportPoint>,
+    pub poly_points: usize,
+    pub mid_point: ExportPoint,
+    pub other_point: ExportPoint,
+    pub rotation: f32,
+    pub radius: f32,
+    pub color: ExportColor,
+    pub width: f32,
+}
+
+#[allow(clippy::redundant_closure)]
+pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgCanvasWidget> {
+    
+    let mut curves: HashMap<Id, IpgCanvasWidget> = HashMap::new();
+
+    for widget in widgets.iter() {
+        let points: Vec<Point> = widget.points.iter().map(|p| convert_to_point(p)).collect();
+        let other_point = convert_to_point(&widget.other_point);
+        let color = convert_to_color(&widget.color);
+        let width = widget.width;
+        let draw_mode = IpgDrawMode::DrawAll;
+        let mid_point = if widget.name == Widget::Text {
+            Point::default()
+        } else {
+            convert_to_point(&widget.mid_point)
+        };
+        
+        match widget.name {
+            Widget::None => {
+            },
+            Widget::Arc => {
+                let id = Id::unique();
+                let arc = IpgArc {
+                    id: id.clone(),
+                    points,
+                    mid_point,
+                    radius: widget.radius,
+                    color,
+                    width,
+                    start_angle: Radians(other_point.x),
+                    end_angle: Radians(other_point.y),
+                    draw_mode,
+                    status: IpgDrawStatus::Completed,
+                };
+                
+                curves.insert(id, IpgCanvasWidget::Arc(arc));
+            },
+            Widget::Bezier => {
+                let id = Id::unique();
+                let bz = IpgBezier {
+                    id: id.clone(),
+                    points: points,
+                    mid_point,
+                    color,
+                    width,
+                    degrees: widget.rotation,
+                    draw_mode,
+                    status: IpgDrawStatus::Completed
+                };
+                
+                curves.insert(id, IpgCanvasWidget::Bezier(bz));
+            },
+            Widget::Circle => {
+                let id = Id::unique();
+                let cir = IpgCircle {
+                    id: id.clone(),
+                    center: mid_point,
+                    circle_point: convert_to_point(&widget.points[0]),
+                    radius: widget.radius,
+                    color,
+                    width,
+                    draw_mode,
+                    status: IpgDrawStatus::Completed,
+                };
+                
+                curves.insert(id, IpgCanvasWidget::Circle(cir));
+            },
+            Widget::Ellipse => {
+                let id = Id::unique();
+                let vx = points[1].distance(points[0]);
+                let vy = points[2].distance(points[0]);
+                let ell = IpgEllipse {
+                    id: id.clone(),
+                    points,
+                    center: convert_to_point(&widget.points[0]),
+                    radii: Vector { x: vx, y: vy },
+                    rotation: Radians(widget.rotation),
+                    color,
+                    width,
+                    draw_mode,
+                    status: IpgDrawStatus::Completed,
+                };
+                
+                curves.insert(id, IpgCanvasWidget::Ellipse(ell));
+            },
+            Widget::Line => {
+                let id = Id::unique();
+                let ln = IpgLine {
+                    id: id.clone(),
+                    points,
+                    mid_point,
+                    color,
+                    width,
+                    degrees: widget.rotation,
+                    draw_mode,
+                    status: IpgDrawStatus::Completed,
+                };
+                curves.insert(id, IpgCanvasWidget::Line(ln));
+            },
+            Widget::Polygon => {
+                let id = Id::unique();
+                let pg = IpgPolygon {
+                    id: id.clone(),
+                    points,
+                    poly_points: widget.poly_points,
+                    mid_point,
+                    pg_point: other_point,
+                    color,
+                    width,
+                    degrees: widget.rotation,
+                    draw_mode,
+                    status: IpgDrawStatus::Completed,
+                };
+                curves.insert(id, IpgCanvasWidget::Polygon(pg));
+            },
+            Widget::PolyLine => {
+                let id = Id::unique();
+                let pl = IpgPolyLine {
+                    id: id.clone(),
+                    points,
+                    poly_points: widget.poly_points,
+                    mid_point,
+                    pl_point: other_point,
+                    color,
+                    width,
+                    degrees: widget.rotation,
+                    draw_mode,
+                    status: IpgDrawStatus::Completed,
+                };
+                curves.insert(id, IpgCanvasWidget::PolyLine(pl));
+            },
+            Widget::RightTriangle => {
+                let id = Id::unique();
+                let tr = IpgRightTriangle {
+                    id: id.clone(),
+                    points,
+                    mid_point,
+                    tr_point: other_point,
+                    color,
+                    width,
+                    degrees: widget.rotation,
+                    draw_mode,
+                    status: IpgDrawStatus::Completed,
+                };
+                curves.insert(id, IpgCanvasWidget::RightTriangle(tr));
+            },
+            Widget::FreeHand => {
+                let id = Id::unique();
+                let fh = IpgFreeHand {
+                    id: id.clone(),
+                    points,
+                    color,
+                    width,
+                    draw_mode,
+                    status: IpgDrawStatus::Completed,
+                    completed: true,
+                };
+                curves.insert(id, IpgCanvasWidget::FreeHand(fh));
+            }
+            Widget::Text => {
+                let id = Id::unique();
+                let txt = IpgText {
+                    id: id.clone(),
+                    content: widget.content.clone(),
+                    position: other_point,
+                    color,
+                    size: Pixels(16.0),
+                    line_height: LineHeight::Relative(1.2),
+                    font: Font::default(),
+                    horizontal_alignment: alignment::Horizontal::Left,
+                    vertical_alignment: alignment::Vertical::Top,
+                    shaping: Shaping::Basic,
+                    degrees: widget.rotation,
+                    draw_mode,
+                    status: IpgDrawStatus::Completed,
+                    blink_position: widget.content.len(),
+                };
+                curves.insert(id, IpgCanvasWidget::Text(txt));
+            }
+        }
+    }
+
+    curves
+
+}
+
+pub fn convert_to_export(widgets: &HashMap<Id, IpgCanvasWidget>) -> Vec<ExportWidget> {
+     
+    let mut export = vec![];
+
+    for (_id, widget) in widgets.iter() {
+
+        let (name, 
+            points, 
+            mid_point,
+            other_point, 
+            poly_points, 
+            rotation,
+            radius,
+            color, 
+            width,
+            content ,
+            ) = 
+            match widget {
+                IpgCanvasWidget::None => {
+                    (Widget::None, &vec![], Point::default(), Point::default(), 0, 0.0, 0.0, Color::TRANSPARENT, 0.0, String::new())
+                },
+                IpgCanvasWidget::Arc(arc) => {
+                    let other_point = Point{ x: arc.start_angle.0, y: arc.end_angle.0 };
+                    (Widget::Arc, &arc.points, arc.mid_point, other_point, 0, 0.0, arc.radius, arc.color, arc.width, String::new())
+                },
+                IpgCanvasWidget::Bezier(bz) => {
+                    (Widget::Bezier, &bz.points, bz.mid_point, Point::default(), 0, bz.degrees, 0.0, bz.color, bz.width, String::new())
+                },
+                IpgCanvasWidget::Circle(cir) => {
+                    (Widget::Circle, &vec![cir.circle_point], cir.center, cir.circle_point, 0, 0.0, cir.radius, cir.color, cir.width, String::new())
+                },
+                IpgCanvasWidget::Ellipse(ell) => {
+                    (Widget::Ellipse, &ell.points, ell.center, Point::default(), 0, ell.rotation.0, 0.0, ell.color, ell.width, String::new())
+                },
+                IpgCanvasWidget::Line(ln) => {
+                    (Widget::Line, &ln.points, ln.mid_point, Point::default(), 0, ln.degrees, 0.0, ln.color, ln.width, String::new())
+                },
+                IpgCanvasWidget::Polygon(pg) => {
+                    (Widget::Polygon, &pg.points, pg.mid_point, pg.pg_point, pg.poly_points, pg.degrees, 0.0, pg.color, pg.width, String::new())
+                },
+                IpgCanvasWidget::PolyLine(pl) => {
+                    (Widget::PolyLine, &pl.points, pl.mid_point, pl.pl_point, pl.poly_points, pl.degrees, 0.0, pl.color, pl.width, String::new())
+                },
+                IpgCanvasWidget::RightTriangle(tr) => {
+                    (Widget::RightTriangle, &tr.points, tr.mid_point, tr.tr_point, 3, tr.degrees, 0.0, tr.color, tr.width, String::new())
+                },
+                IpgCanvasWidget::FreeHand(fh) => {
+                    (Widget::FreeHand, &fh.points, Point::default(), Point::default(), 0, 0.0, 0.0, fh.color, fh.width, String::new())
+                }
+                IpgCanvasWidget::Text(txt) => {
+                    (Widget::Text, &vec![], Point::default(), txt.position, 3, txt.degrees, 0.0, txt.color, 0.0, txt.content.clone())
+                },
+        };
+
+        let x_color = ExportColor::from_rgba(&color);
+        let x_mid_pt = ExportPoint::convert(&mid_point);
+        let x_other_point = ExportPoint::convert(&other_point);
+        let mut x_points = vec![];
+        for point in points.iter() {
+            x_points.push(ExportPoint::convert(point));
+        }
+        
+        export.push(
+            ExportWidget{
+                name,
+                content,
+                points: x_points,
+                poly_points, 
+                mid_point: x_mid_pt,
+                other_point: x_other_point,
+                rotation,
+                radius, 
+                color: x_color, 
+                width,  
+            })
+    }
+    
+    export
+
+}
+
+fn convert_to_point(point: &ExportPoint) -> Point {
+    Point { x: point.x, y: point.y }
+}
+
+fn convert_to_color(color: &ExportColor) -> Color {
+    Color::from_rgba(color.r, color.g, color.b, color.a)
+}

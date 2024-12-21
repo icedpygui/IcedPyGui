@@ -1,6 +1,7 @@
 //!lib for all of the python callable functions using pyo3
 #![allow(clippy::too_many_arguments, clippy::redundant_closure)]
 #![allow(clippy::type_complexity)]
+use canvas::draw_canvas::IpgCanvasState;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -21,11 +22,11 @@ mod iced_widgets;
 mod iced_aw_widgets;
 mod graphics;
 mod style;
+mod canvas;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, 
         IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
-use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, 
-        IpgCanvasDrawMode, IpgCanvasParam, IpgCanvasState, IpgCanvasWidget};
+use ipg_widgets::ipg_canvas::IpgCanvas;
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyle, IpgCardParam};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, 
         IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle};
