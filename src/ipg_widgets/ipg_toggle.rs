@@ -336,35 +336,29 @@ pub fn get_styling(theme: &Theme, status: Status,
         
     match status {
         Status::Active { is_toggled } | Status::Hovered { is_toggled } => {
-            if is_toggled {
-                if style.background_color_toggled.is_some() {
-                    tog_style.background = style.background_color_toggled.unwrap();
-                }
+            if is_toggled && style.background_color_toggled.is_some() {
+                tog_style.background = style.background_color_toggled.unwrap();
             }
         }
-        Status::Disabled => todo!(),
+        Status::Disabled => (),
     }
 
     match status {
         Status::Active { is_toggled } => {
-            if is_toggled {
-                if style.foreground_color_toggled.is_some() {
-                    tog_style.foreground = style.foreground_color_toggled.unwrap();
-                }
+            if is_toggled && style.foreground_color_toggled.is_some() {
+                tog_style.foreground = style.foreground_color_toggled.unwrap();
             }
         }
         Status::Hovered { is_toggled } => {
-            if is_toggled {
-                if style.foreground_color_toggled.is_some() {
-                    tog_style.foreground = Color {
-                                                a: 0.5,
-                                                ..style.foreground_color_toggled.unwrap()
-                                            };
-                }
-                
-            }
+            if is_toggled && style.foreground_color_toggled.is_some() {
+                tog_style.foreground = 
+                    Color {
+                        a: 0.5,
+                        ..style.foreground_color_toggled.unwrap()
+                    };
+                } 
         }
-        Status::Disabled => todo!(),
+        Status::Disabled => (),
     }
 
     tog_style

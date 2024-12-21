@@ -808,7 +808,7 @@ impl Pending {
                             let degrees: Option<f32> = if end_angle.is_some() && start_angle.is_some() {
                                 Some(to_degrees(&(end_angle.unwrap() - start_angle.unwrap()).0))
                             } else if start_angle.is_some() {
-                                Some(to_degrees(&(start_angle.unwrap().0))-180.0)
+                                Some(to_degrees(&(start_angle.unwrap().0)))
                             } else  {
                                 None
                             };
@@ -2092,7 +2092,7 @@ fn set_widget_point(widget: &CanvasWidget, cursor: Point) -> (CanvasWidget, bool
                         get_angle_of_vectors(
                             arc.points[0], 
                             arc.points[1], 
-                            cursor)+Radians::PI;
+                            cursor)+arc.start_angle;
                     true
                 },
                 _ => false
@@ -2215,7 +2215,7 @@ fn find_closest_widget(curves: &HashMap<Id, CanvasWidget>, cursor: Point) -> Opt
             closest_id = Some(id);
         }
     }
-    curves.get(closest_id.unwrap()).map(|cw| cw.clone())
+    curves.get(closest_id.unwrap()).cloned()
 }
 
 // returns a bool if mid_point and an optional usize 
@@ -2733,21 +2733,20 @@ fn build_arc_path(arc: &IpgArc,
                     ) -> (Path, Point, Option<Radians>, Option<Radians>) {
 
     let mut mid_point = arc.mid_point;
-    let adjustment = Radians::PI;
     let mut start_angle = None;
-    let end_angle = None;
+    let mut end_angle = None;
 
     let path = Path::new(|p| {
         match draw_mode {
             IpgCanvasDrawMode::DrawAll => {
-                let new_arc = 
+                let arc = 
                     canvas::path::Arc{ 
                         center: arc.mid_point, 
                         radius: arc.radius, 
                         start_angle: arc.start_angle, 
                         end_angle: arc.end_angle, 
                     };
-                p.arc(new_arc);
+                p.arc(arc);
             },
             IpgCanvasDrawMode::Edit => {
                 let mut pts = arc.points.clone();
@@ -2783,38 +2782,33 @@ fn build_arc_path(arc: &IpgArc,
                 let cursor = pending_cursor.unwrap();
                 let pts_len = arc.points.len();
                 
-                if pts_len >= 1 {
+                if pts_len == 1 {
                     p.move_to(arc.points[0]);
                     p.line_to(cursor);
-
-                    let mut p2 = cursor;
-                    if pts_len == 2 {p2 = arc.points[1]}
-
-                    if arc.points[0].y >= cursor.y {
-                        start_angle = 
-                            Some(get_angle_of_vectors(
-                                arc.points[0], 
-                                Point::new(-arc.points[0].x, arc.points[0].y), 
-                                p2)+adjustment);
-                    }
+                    start_angle = Some(get_angle_of_vectors(
+                            arc.points[0], 
+                            Point::new(arc.points[0].x*-1.0, arc.points[0].y), 
+                            cursor));
                 }
                 if pts_len == 2 {
+                    p.move_to(arc.points[0]);
                     p.line_to(arc.points[1]);
                     start_angle = Some(arc.start_angle);
-                    let end_angle = 
+                    let mut e_angle = 
                         get_angle_of_vectors(
                             arc.points[0], 
                             arc.points[1], 
-                            cursor)+adjustment;
-                    
+                            cursor);
+                    e_angle = arc.start_angle + e_angle;
                     let radius = arc.points[0].distance(arc.points[1]);
                     let new_arc = canvas::path::Arc{ 
                                             center: arc.points[0], 
                                             radius, 
                                             start_angle: arc.start_angle, 
-                                            end_angle, 
+                                            end_angle: e_angle, 
                                         };
-                    p.arc(new_arc)
+                    p.arc(new_arc);
+                    end_angle = Some(e_angle);
                 };
             },
             IpgCanvasDrawMode::Rotate => {

@@ -82,13 +82,13 @@ pub fn construct_rule(rule: IpgRule,
 
 // The width or height parameters seems to have no effect so set to 0.
 pub fn construct_horizontal(rule: IpgRule, 
-                            style: Option<IpgRuleStyle>) 
+                            style_opt: Option<IpgRuleStyle>) 
                             -> Element<'static, app::Message>{
 
     let rule_h: Element<app::Message> = Rule::horizontal(1)
                                             .style(move|theme: &Theme| {   
                                                 get_styling(theme,
-                                                    style.clone(),
+                                                    style_opt.clone(),
                                                     rule.thickness, 
                                                     )  
                                                 })
@@ -99,13 +99,13 @@ pub fn construct_horizontal(rule: IpgRule,
 }
 
 fn construct_rule_vertical(rule: IpgRule, 
-                            style: Option<IpgRuleStyle>) 
+                            style_opt: Option<IpgRuleStyle>) 
                             -> Element<'static, app::Message> {
 
     let rule_v: Element<app::Message> = Rule::vertical(1)
                                             .style(move|theme: &Theme| {   
                                                 get_styling(theme,
-                                                    style.clone(), 
+                                                    style_opt.clone(), 
                                                     rule.thickness,
                                                     )  
                                                 })

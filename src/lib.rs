@@ -1,6 +1,6 @@
 //!lib for all of the python callable functions using pyo3
 #![allow(clippy::too_many_arguments, clippy::redundant_closure)]
-
+#![allow(clippy::type_complexity)]
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -37,10 +37,7 @@ use ipg_widgets::ipg_events::IpgEvents;
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, 
         IpgImageContentFit, IpgImageFilterMethod, 
         IpgImageParam, IpgImageRotation};
-use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, 
-        IpgMenuParam, IpgMenuSeparatorStyle, 
-        IpgMenuSeparatorType, IpgMenuBarStyle, 
-        IpgMenuStyle, IpgMenuType};
+use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuBarStyle, IpgMenuParam, IpgMenuSeparatorStyle, IpgMenuSeparatorType, IpgMenuStyle, IpgMenuType, ItemStyles, MenuStyleAll};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, 
         IpgMouseAreaParam, IpgMousePointer};
 use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, 
@@ -511,7 +508,7 @@ impl IPG {
 
         state.windows_str_ids.insert(window_id.clone(), id);
 
-        state.ids.insert(id, vec![IpgIds{id: id, parent_uid: 0, container_id: Some(window_id.clone()),
+        state.ids.insert(id, vec![IpgIds{id, parent_uid: 0, container_id: Some(window_id.clone()),
                                                 parent_id: "".to_string(), is_container: true}]);
 
         state.container_ids.insert(id, vec![id]);
@@ -1847,7 +1844,6 @@ impl IPG {
         drop(state);
         Ok(id)
     }
-
     #[pyo3(signature = (parent_id, 
                         items,
                         bar_widths,
@@ -1874,7 +1870,7 @@ impl IPG {
                         item_styles=None,
                         show=true, 
                         user_data=None, gen_id=None))]
-    fn add_menu(&mut self, 
+    fn add_menu(&mut self,
                     parent_id: String, 
                     items: PyObject,
                     bar_widths: Vec<f32>,
@@ -1888,9 +1884,9 @@ impl IPG {
                     on_select: Option<PyObject>,
                     menu_bar_style: Option<String>,
                     menu_style: Option<String>,
-                    button_bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-                    button_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-                    checkbox_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
+                    button_bar_style_all: Option<MenuStyleAll>,
+                    button_item_style_all: Option<MenuStyleAll>,
+                    checkbox_item_style_all: Option<MenuStyleAll>,
                     circle_item_style_all: Option<String>,
                     dot_item_style_all: Option<String>,
                     label_item_style_all: Option<String>,
@@ -1898,7 +1894,7 @@ impl IPG {
                     separator_item_style_all: Option<String>,
                     text_item_style_all: Option<String>,
                     toggler_item_style_all: Option<String>,
-                    item_styles: Option<Vec<(usize, usize, Option<IpgStyleStandard>, Option<String>)>>,
+                    item_styles: Option<Vec<ItemStyles>>,
                     show: bool,
                     user_data: Option<PyObject>,
                     gen_id: Option<usize>,

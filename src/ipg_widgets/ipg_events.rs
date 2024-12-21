@@ -15,7 +15,7 @@ use iced::mouse::Button::{Left, Right, Middle, Back, Forward, Other,};
 use iced::mouse::ScrollDelta;
 
 use iced::window;
-use pyo3::{PyObject, Python};
+use pyo3::{Py, PyAny, PyObject, Python};
 use pyo3::types::IntoPyDict;
 
 use super::ipg_enums::IpgContainers;
@@ -337,16 +337,15 @@ pub fn process_window_event(state: &mut IpgState,
         None
     };
    
-    let ipg_window_id = match state.windows_iced_ipg_ids.get(&window_id) {
-        Some(id) => id,
+    let ipg_id = match state.windows_iced_ipg_ids.get(&window_id) {
+        Some(id) => *id,
         None => panic!("Process window event: Unable to find the ipg window id using the iced id {:?}.", window_id)
     };
-    let ipg_id = *ipg_window_id;
 
     match event {
         Event::Window(event) => {
-            if (event == iced::window::Event::Closed && !event_enabled) || 
-                (event == iced::window::Event::CloseRequested) && !event_enabled {
+            if ((event == iced::window::Event::CloseRequested) || 
+                event == iced::window::Event::Closed) && !event_enabled {
                 let mut actions = access_window_actions();
                         actions.mode.push((ipg_id, window::Mode::Hidden));
                         drop(actions);
@@ -494,31 +493,23 @@ pub fn handle_window_closing(state: &mut IpgState, iced_id: window::Id, mode: wi
     // if any of the remaining windows are visible, then return false
     for (_iced_id, ipg_id) in iced_ipg_ids {
 
-        match state.containers.get_mut(&ipg_id) {
-            Some(cnt) => {
-                if let IpgContainers::IpgWindow(wnd) = 
-                    cnt {
-                        if wnd.id == ipg_id_found {
-                                wnd.mode = get_ipg_mode(mode);
-                        }
-                    }
-            },
-            None => (),
-        }
-        
+        if let Some(IpgContainers::IpgWindow(wnd)) = 
+            state.containers.get_mut(&ipg_id) {
+                if wnd.id == ipg_id_found {
+                    wnd.mode = get_ipg_mode(mode);
+                }
+            }
     }
     false
 }
 
-fn get_callback(id: usize, event_name: String) -> Option<PyObject> {
+fn get_callback(id: usize, event_name: String) -> Option<Py<PyAny>> {
     let cbs = access_callbacks();
 
-    let cb = cbs.callback_events
-                                    .get(&(id, event_name))
-                                    .map(|cb| cb.clone());
-
+    let cb_opt= cbs.callback_events
+                                    .get(&(id, event_name)).cloned();
     drop(cbs);
-    cb
+    cb_opt
 }
 
 pub fn get_event_user_data(id: usize) -> Option<PyObject> {
@@ -635,21 +626,19 @@ fn process_mouse_callback(id: usize,
                 Ok(_) => (),
                 Err(er) => panic!("Window Event: 2 parameters (id, event name) and 3 if using user_data are required or a python error in this function. {er}"),
             }
-        } else {
-            if let Some(sf) = hmap_s_f {
-                let dict = sf.into_py_dict_bound(py);
-                let result = match user_data {
-                    Some(user_data) => {
-                        cb.call1(py, (id, event_name, dict, user_data))
-                    },
-                    None => {
-                        cb.call1(py, (id, event_name, dict))
-                    },
-                };
-                match result {
-                    Ok(_) => (),
-                    Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python  in this function. {er}"),
-                }
+        } else if let Some(sf) = hmap_s_f {
+            let dict = sf.into_py_dict_bound(py);
+            let result = match user_data {
+                Some(user_data) => {
+                    cb.call1(py, (id, event_name, dict, user_data))
+                },
+                None => {
+                    cb.call1(py, (id, event_name, dict))
+                },
+            };
+            match result {
+                Ok(_) => (),
+                Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python  in this function. {er}"),
             }
         }
     })
@@ -668,7 +657,6 @@ fn process_window_callback(id: usize,
     let cb = cb.unwrap();
 
     Python::with_gil(|py| {
-
         if hmap_s_f.is_none() && hmap_s_s.is_none() {
             let result = match user_data {
                 Some(user_data) => {
@@ -682,36 +670,34 @@ fn process_window_callback(id: usize,
                 Ok(_) => (),
                 Err(er) => panic!("Window Event: 2 parameters (id, event name) and 3 if using user_data are required or a python error in this function. {er}"),
             }
-        } else 
-            if let Some(sf) = hmap_s_f {
-                let dict = sf.into_py_dict_bound(py);
-                let result = match user_data {
-                    Some(user_data) => {
-                        cb.call1(py, (id, event_name, dict, user_data))
-                    },
-                    None => {
-                        cb.call1(py, (id, event_name, dict))
-                    },
-                };
-                match result {
-                    Ok(_) => (),
-                    Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python  in this function. {er}"),
-                }
-        } else 
-            if let Some(ss) = hmap_s_s {
-                let dict = ss.into_py_dict_bound(py);
-                let result = match user_data {
-                    Some(user_data) => {
-                        cb.call1(py, (id, event_name, dict, user_data))
-                    },
-                    None => {
-                        cb.call1(py, (id, event_name, dict))
-                    },
-                };
-                match result {
-                    Ok(_) => (),
-                    Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python  in this function. {er}"),
-                }
+        } else if let Some(sf) = hmap_s_f {
+            let dict = sf.into_py_dict_bound(py);
+            let result = match user_data {
+                Some(user_data) => {
+                    cb.call1(py, (id, event_name, dict, user_data))
+                },
+                None => {
+                    cb.call1(py, (id, event_name, dict))
+                },
+            };
+            match result {
+                Ok(_) => (),
+                Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python  in this function. {er}"),
+            }
+        } else if let Some(ss) = hmap_s_s {
+            let dict = ss.into_py_dict_bound(py);
+            let result = match user_data {
+                Some(user_data) => {
+                    cb.call1(py, (id, event_name, dict, user_data))
+                },
+                None => {
+                    cb.call1(py, (id, event_name, dict))
+                },
+            };
+            match result {
+                Ok(_) => (),
+                Err(er) => panic!("Window Event: 3 parameters (id, event name, dict) and 4 if using user_data are required or a python  in this function. {er}"),
+            }
         }
     })
 }

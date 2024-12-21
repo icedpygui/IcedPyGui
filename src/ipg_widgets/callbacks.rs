@@ -292,21 +292,18 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             IpgWidgets::IpgTimer(tim) => {
                 if let Some(ct) = 
                     wci.counter {
-                            if ct == 0 {
-                                tim.counter = 0;
-                            } else {
-                                tim.counter += ct
-                            }
-                        }
-                match wci.counter {
-                    Some(ct) => {
-                        if ct == 0 {
-                            tim.counter = 0;
-                        } else {
-                            tim.counter += ct
-                        }
-                    },
-                    None => (),
+                    if ct == 0 {
+                        tim.counter = 0;
+                    } else {
+                        tim.counter += ct
+                    }
+                }
+               if let Some(ct) = wci.counter {
+                    if ct == 0 {
+                        tim.counter = 0;
+                    } else {
+                        tim.counter += ct
+                    }
                 }
                 return WidgetCallbackOut{
                     user_data: tim.user_data.clone(),

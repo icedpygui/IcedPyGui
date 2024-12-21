@@ -182,24 +182,24 @@ pub fn get_shaping(shape: String) -> Shaping {
 }
 
 pub fn get_line_height(pixels: Option<u16>, relative: Option<f32>) -> LineHeight {
-    if pixels.is_some() {
-        LineHeight::Absolute(Pixels(pixels.unwrap().into()))
-    } else if relative.is_some() {
-        LineHeight::Relative(relative.unwrap())  
+    if let Some(pixs) =  pixels {
+        LineHeight::Absolute(Pixels(pixs.into()))
+    } else if let Some(rel) = relative {
+        LineHeight::Relative(rel)
     } else {
         LineHeight::default()
     }
 }
 
 
-pub const MONTH_NAMES: [&'static str; 13] = ["", "January", "Feburary", "March", 
+pub const MONTH_NAMES: [&str; 13] = ["", "January", "Feburary", "March", 
                                         "April", "May", "June", "July", 
                                         "August", "September", "October", 
                                         "November", "December"];
                                 
-pub const DATE_FORMATS: [&'static str; 3] = ["mm-dd-YYYY", "YYYY-mm-dd", "mm-dd-YY"];
-pub const WEEKDAYS: [&'static str; 7] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-pub const DAYS: [&'static str; 7] = ["S", "M", "T", "W", "T", "F", "S"];
+pub const DATE_FORMATS: [&str; 3] = ["mm-dd-YYYY", "YYYY-mm-dd", "mm-dd-YY"];
+pub const WEEKDAYS: [&str; 7] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+pub const DAYS: [&str; 7] = ["S", "M", "T", "W", "T", "F", "S"];
 
 pub fn format_date(format: String, year: i32, month: usize, day: usize) -> String {
 

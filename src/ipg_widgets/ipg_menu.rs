@@ -24,6 +24,9 @@ use super::{ipg_button, ipg_checkbox, ipg_toggle};
 
 use pyo3::{pyclass, PyObject, Python};
 
+pub type ItemStyles = (usize, usize, Option<IpgStyleStandard>, Option<String>);
+pub type MenuStyleAll = (Option<IpgStyleStandard>, Option<String>);
+
 #[derive(Debug, Clone)]
 pub struct IpgMenu {
     pub id: usize,
@@ -39,9 +42,9 @@ pub struct IpgMenu {
     pub menu_bar_style_id: Option<String>, // style_id of add_menu_bar_style()
     pub menu_style_id: Option<String>, // style_id of add_menu_style()
     // Option<String> in the below styles refer to the style_id of widget styles, not add_menu_style
-    pub button_bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-    pub button_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-    pub checkbox_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
+    pub button_bar_style_all: Option<MenuStyleAll>,
+    pub button_item_style_all: Option<MenuStyleAll>,
+    pub checkbox_item_style_all: Option<MenuStyleAll>,
     pub circle_item_style_all: Option<String>,
     pub dot_item_style_all: Option<String>,
     pub label_item_style_all: Option<String>,
@@ -49,7 +52,7 @@ pub struct IpgMenu {
     pub separator_item_style_all: Option<String>,
     pub text_item_style_all: Option<String>,
     pub toggler_item_style_all: Option<String>,
-    pub item_styles: Option<Vec<(usize, usize, Option<IpgStyleStandard>, Option<String>)>>,
+    pub item_styles: Option<Vec<ItemStyles>>,
     pub theme: Theme,
     pub show: bool,
     pub user_data: Option<PyObject>,
@@ -74,9 +77,9 @@ impl IpgMenu {
         item_offsets: Option<Vec<f32>>,
         menu_bar_style_id: Option<String>,
         menu_style_id: Option<String>,
-        button_bar_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-        button_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-        checkbox_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
+        button_bar_style_all: Option<MenuStyleAll>,
+        button_item_style_all: Option<MenuStyleAll>,
+        checkbox_item_style_all: Option<MenuStyleAll>,
         circle_item_style_all: Option<String>,
         dot_item_style_all: Option<String>,
         label_item_style_all: Option<String>,
@@ -84,7 +87,7 @@ impl IpgMenu {
         separator_item_style_all: Option<String>,
         text_item_style_all: Option<String>,
         toggler_item_style_all: Option<String>,
-        item_styles: Option<Vec<(usize, usize, Option<IpgStyleStandard>, Option<String>)>>,
+        item_styles: Option<Vec<ItemStyles>>,
         theme: Theme,
         show: bool,
         user_data: Option<PyObject>,
@@ -1218,8 +1221,8 @@ fn default_quad(quad_type: IpgMenuSeparatorType,
                     radius: Radius::new(radius),
                     ..Default::default()
                 },
-                width: width,
-                height: height,
+                width,
+                height,
                 ..Default::default()
             }
         },
@@ -1232,8 +1235,8 @@ fn default_quad(quad_type: IpgMenuSeparatorType,
         },
         IpgMenuSeparatorType::Label => {
             Quad {
-                width: width,
-                height: height,
+                width,
+                height,
                 ..separator()
             }
         },
