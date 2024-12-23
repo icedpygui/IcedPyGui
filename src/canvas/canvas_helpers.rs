@@ -6,7 +6,7 @@ use iced::{Point, Radians};
 
 use crate::canvas::fonts::FONT_SIZE;
 
-use super::geometries::Widget;
+use super::geometries::IpgCanvasWidget;
 
 
 pub fn build_polygon(mid_point: Point, pg_point: Point, poly_points: usize, mut degrees: f32) -> Vec<Point> {
@@ -21,7 +21,7 @@ pub fn build_polygon(mid_point: Point, pg_point: Point, poly_points: usize, mut 
     }
     
     degrees += 180.0;
-    let mut pts = rotate_geometry(&points, &mid_point, &degrees, Widget::Polygon);
+    let mut pts = rotate_geometry(&points, &mid_point, &degrees, IpgCanvasWidget::Polygon);
     pts.push(pts[0]);
     pts
 
@@ -104,10 +104,10 @@ pub fn rotate_geometry(
                     points: &[Point], 
                     mid_point: &Point, 
                     step_degrees: &f32, 
-                    widget: Widget,
+                    widget: IpgCanvasWidget,
                     ) -> Vec<Point> {
     match widget {
-        Widget::None => vec![],
+        IpgCanvasWidget::None => vec![],
         _ => {
             let theta = to_radians(step_degrees);
             let mut new_points = vec![];
@@ -266,7 +266,7 @@ fn test_rotate_geometry() {
     let mid_point = Point::new(0.0, 0.0);
     let degrees = &6.0;
     for _ in 0..2 {
-        points = rotate_geometry(&points.clone(), &mid_point, degrees, Widget::Line);
+        points = rotate_geometry(&points.clone(), &mid_point, degrees, IpgCanvasWidget::Line);
         dbg!(&points);
     }
 }

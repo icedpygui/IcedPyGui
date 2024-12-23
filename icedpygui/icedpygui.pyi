@@ -3147,11 +3147,12 @@ class IpgCanvasParam:
     Mode str
         The IpgCanvasDrawMode selected
     """
+    Clear: str
     Mode: str
     Widget: str
     
     
-class IpgCanvasDrawMode:
+class IpgDrawMode:
     DrawAll: str
     New: str
     Edit: str
@@ -3167,6 +3168,8 @@ class IpgCanvasWidget:
     Polygon: str
     PolyLine: str
     RightTriangle: str
+    FreeHand: str
+    Text: str
     
 
 class IpgCardStyle:

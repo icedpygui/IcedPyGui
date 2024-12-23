@@ -1,16 +1,20 @@
 //! ipg_canvas
 
 #![allow(dead_code)]
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
 use iced::widget::container;
 use iced::{Color, Element, Length};
+use pyo3::{pyclass, PyObject, Python};
 
 use crate::app::Message;
-use crate::canvas::draw_canvas::{IpgCanvasState, IpgCanvasWidget, IpgDrawMode, IpgDrawStatus};
-use crate::canvas::geometries::{get_draw_mode_and_status, get_widget_id, set_widget_mode_or_status, Widget};
+use crate::canvas::draw_canvas::{IpgCanvasState, IpgWidget, IpgDrawMode, IpgDrawStatus};
+use crate::canvas::geometries::{get_draw_mode_and_status, get_widget_id, set_widget_mode_or_status, IpgCanvasWidget};
 use crate::canvas::import_export::{convert_to_export, import_widgets, save};
+
+use super::helpers::try_extract_i64;
 
 
 #[derive(Debug, Clone)]
@@ -47,10 +51,10 @@ pub fn construct_canvas(canvas_state: &IpgCanvasState) -> Element<Message>{
 
 #[derive(Debug, Clone)]
 pub enum CanvasMessage {
-    WidgetDraw(IpgCanvasWidget),
+    WidgetDraw(IpgWidget),
     Clear,
     ModeSelected(String),
-    RadioSelected(Widget),
+    RadioSelected(IpgCanvasWidget),
     Load,
     Save,
     PolyInput(String),
@@ -65,7 +69,7 @@ pub enum CanvasMessage {
 }
 
 pub fn canvas_callback(canvas_message: CanvasMessage, 
-                        mut canvas_state: &mut IpgCanvasState,
+                        canvas_state: &mut IpgCanvasState,
                         ) {
     match canvas_message {
             CanvasMessage::WidgetDraw(mut widget) => {
@@ -114,7 +118,6 @@ pub fn canvas_callback(canvas_message: CanvasMessage,
             }
             CanvasMessage::Clear => {
                 canvas_state.curves.clear();
-                canvas_state = IpgCanvasState::default();
             }
             CanvasMessage::ModeSelected(mode) => {
                 let mode = IpgDrawMode::to_enum(mode.clone());
@@ -142,38 +145,38 @@ pub fn canvas_callback(canvas_message: CanvasMessage,
                 // the text only.
                 canvas_state.timer_event_enabled = false;
                 match choice {
-                    Widget::Arc => {
-                        canvas_state.selected_radio_widget = Some(Widget::Arc);
+                    IpgCanvasWidget::Arc => {
+                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Arc);
                     },
-                    Widget::Bezier => {
-                        canvas_state.selected_radio_widget = Some(Widget::Bezier);
+                    IpgCanvasWidget::Bezier => {
+                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Bezier);
                     },
-                    Widget::Circle => {
-                        canvas_state.selected_radio_widget = Some(Widget::Circle);
+                    IpgCanvasWidget::Circle => {
+                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Circle);
                     },
-                    Widget::Ellipse => {
-                        canvas_state.selected_radio_widget = Some(Widget::Ellipse);
+                    IpgCanvasWidget::Ellipse => {
+                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Ellipse);
                     },
-                    Widget::Line => {
-                        canvas_state.selected_radio_widget = Some(Widget::Line);
+                    IpgCanvasWidget::Line => {
+                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Line);
                     },
-                    Widget::PolyLine => {
-                        canvas_state.selected_radio_widget = Some(Widget::PolyLine);
+                    IpgCanvasWidget::PolyLine => {
+                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::PolyLine);
                     },
-                    Widget::Polygon => {
-                        canvas_state.selected_radio_widget = Some(Widget::Polygon);
+                    IpgCanvasWidget::Polygon => {
+                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Polygon);
                     },
-                    Widget::RightTriangle => {
-                        canvas_state.selected_radio_widget = Some(Widget::RightTriangle);
+                    IpgCanvasWidget::RightTriangle => {
+                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::RightTriangle);
                     },
-                    Widget::FreeHand => {
-                        canvas_state.selected_radio_widget = Some(Widget::FreeHand);
+                    IpgCanvasWidget::FreeHand => {
+                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::FreeHand);
                     }
-                    Widget::Text => {
-                        canvas_state.selected_radio_widget = Some(Widget::Text);
+                    IpgCanvasWidget::Text => {
+                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Text);
                         canvas_state.timer_event_enabled = true;
                     }
-                    Widget::None => (),
+                    IpgCanvasWidget::None => (),
                 } 
             },
             CanvasMessage::Tick => {
@@ -233,4 +236,67 @@ pub fn canvas_callback(canvas_message: CanvasMessage,
                 canvas_state.show_canvas_color_picker = false;
             },
         }
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgCanvasParam {
+    Clear,
+    Mode,
+    PolyPoints,
+    Widget,
+}
+
+pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
+                            item: PyObject,
+                            value: PyObject,
+                            )
+{
+    let update = try_extract_canvas_update(item);
+
+    match update {
+        IpgCanvasParam::Clear => {
+            canvas_state.curves = HashMap::new();
+            canvas_state.request_redraw();
+        }
+        IpgCanvasParam::Mode => {
+            canvas_state.draw_mode = try_extract_mode(value);
+        },
+        IpgCanvasParam::PolyPoints => {
+            canvas_state.selected_poly_points = try_extract_i64(value) as usize;
+        }
+        IpgCanvasParam::Widget => {
+            canvas_state.selected_radio_widget = Some(try_extract_widget(value));
+        },
+    }
+}
+
+pub fn try_extract_canvas_update(update_obj: PyObject) -> IpgCanvasParam {
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgCanvasParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Canvas update extraction failed"),
+        }
+    })
+}
+
+fn try_extract_mode(update_obj: PyObject) -> IpgDrawMode {
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgDrawMode>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Canvas mode update extraction failed"),
+        }
+    })
+}
+
+fn try_extract_widget(update_obj: PyObject) -> IpgCanvasWidget {
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgCanvasWidget>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Canvas widget update extraction failed"),
+        }
+    })
 }

@@ -1,7 +1,8 @@
 //!lib for all of the python callable functions using pyo3
 #![allow(clippy::too_many_arguments, clippy::redundant_closure)]
 #![allow(clippy::type_complexity)]
-use canvas::draw_canvas::IpgCanvasState;
+use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode};
+use canvas::geometries::IpgCanvasWidget;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -26,7 +27,7 @@ mod canvas;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, 
         IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
-use ipg_widgets::ipg_canvas::IpgCanvas;
+use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, IpgCanvasParam};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyle, IpgCardParam};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, 
         IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle};
@@ -4019,7 +4020,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgButtonArrow>()?;
     m.add_class::<IpgButtonParam>()?;
     m.add_class::<IpgCanvasParam>()?;
-    m.add_class::<IpgCanvasDrawMode>()?;
+    m.add_class::<IpgDrawMode>()?;
     m.add_class::<IpgCanvasWidget>()?;
     m.add_class::<IpgCardStyle>()?;
     m.add_class::<IpgCardParam>()?;
