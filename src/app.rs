@@ -81,6 +81,7 @@ pub enum Message {
     Table(usize, TableMessage),
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
+    CanvasTick,
     Tick,
     Timer(usize, TIMMessage),
     FontLoaded(Result<(), font::Error>),
@@ -296,6 +297,12 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
+            Message::CanvasTick => {
+                self.canvas_state.elapsed_time += self.canvas_state.timer_duration;
+                self.canvas_state.blink = !self.canvas_state.blink;
+                self.canvas_state.request_redraw();
+                Task::none()
+            },
             Message::Tick => {
                 tick_callback(&mut self.state);
                 process_updates(&mut self.state, &mut self.canvas_state);
@@ -364,7 +371,13 @@ impl App {
             .map(|(id, event)| Message::EventWindow((id, iced::Event::Window(event))));
 
         subscriptions.push(w_event);
-        
+
+        if self.canvas_state.timer_event_enabled {
+            subscriptions.push(time::every(
+                iced::time::Duration::from_millis(
+                    self.canvas_state.timer_duration))
+                    .map(|_| Message::CanvasTick));
+        }
         
         if !subscriptions.is_empty() {
             Subscription::batch(subscriptions)

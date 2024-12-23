@@ -146,34 +146,34 @@ pub fn canvas_callback(canvas_message: CanvasMessage,
                 canvas_state.timer_event_enabled = false;
                 match choice {
                     IpgCanvasWidget::Arc => {
-                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Arc);
+                        canvas_state.selected_widget = Some(IpgCanvasWidget::Arc);
                     },
                     IpgCanvasWidget::Bezier => {
-                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Bezier);
+                        canvas_state.selected_widget = Some(IpgCanvasWidget::Bezier);
                     },
                     IpgCanvasWidget::Circle => {
-                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Circle);
+                        canvas_state.selected_widget = Some(IpgCanvasWidget::Circle);
                     },
                     IpgCanvasWidget::Ellipse => {
-                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Ellipse);
+                        canvas_state.selected_widget = Some(IpgCanvasWidget::Ellipse);
                     },
                     IpgCanvasWidget::Line => {
-                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Line);
+                        canvas_state.selected_widget = Some(IpgCanvasWidget::Line);
                     },
                     IpgCanvasWidget::PolyLine => {
-                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::PolyLine);
+                        canvas_state.selected_widget = Some(IpgCanvasWidget::PolyLine);
                     },
                     IpgCanvasWidget::Polygon => {
-                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Polygon);
+                        canvas_state.selected_widget = Some(IpgCanvasWidget::Polygon);
                     },
                     IpgCanvasWidget::RightTriangle => {
-                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::RightTriangle);
+                        canvas_state.selected_widget = Some(IpgCanvasWidget::RightTriangle);
                     },
                     IpgCanvasWidget::FreeHand => {
-                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::FreeHand);
+                        canvas_state.selected_widget = Some(IpgCanvasWidget::FreeHand);
                     }
                     IpgCanvasWidget::Text => {
-                        canvas_state.selected_radio_widget = Some(IpgCanvasWidget::Text);
+                        canvas_state.selected_widget = Some(IpgCanvasWidget::Text);
                         canvas_state.timer_event_enabled = true;
                     }
                     IpgCanvasWidget::None => (),
@@ -266,8 +266,14 @@ pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
             canvas_state.selected_poly_points = try_extract_i64(value) as usize;
         }
         IpgCanvasParam::Widget => {
-            canvas_state.selected_radio_widget = Some(try_extract_widget(value));
-        },
+            let selected_widget = Some(try_extract_widget(value));
+            canvas_state.selected_widget = selected_widget;
+            if selected_widget == Some(IpgCanvasWidget::Text) {
+                canvas_state.timer_event_enabled = true;
+            } else {
+                canvas_state.timer_event_enabled = false;
+            }
+        }
     }
 }
 

@@ -81,7 +81,7 @@ pub struct IpgCanvasState {
     pub draw_mode: IpgDrawMode,
     pub edit_widget_id: Option<Id>,
     pub escape_pressed: bool,
-    pub selected_radio_widget: Option<IpgCanvasWidget>,
+    pub selected_widget: Option<IpgCanvasWidget>,
     pub selected_draw_color: Color,
     pub selected_canvas_color: Color,
     pub selected_poly_points: usize,
@@ -105,7 +105,7 @@ impl Default for IpgCanvasState {
             draw_mode: IpgDrawMode::DrawAll,
             edit_widget_id: None,
             escape_pressed: false,
-            selected_radio_widget: None,
+            selected_widget: None,
             selected_draw_color: Color::from_rgb(0.961, 0.871, 0.702),
             selected_canvas_color: Color::from_rgb(0.0, 0.502, 0.502),
             selected_poly_points: 3,
@@ -224,7 +224,7 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
                                         });
                                         // If a text widget, need to send back the curve so that the
                                         // cursor can be seen.  No access to the time event during pending.
-                                        if self.state.selected_radio_widget == Some(IpgCanvasWidget::Text) {
+                                        if self.state.selected_widget == Some(IpgCanvasWidget::Text) {
                                             Some(widget.clone())
                                         } else {
                                             None
@@ -262,18 +262,18 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
                                     None => {
                                         // in case the poly points, color, and width have changed since 
                                         // the widget selected
-                                        if self.state.selected_radio_widget.is_none() {
+                                        if self.state.selected_widget.is_none() {
                                             return (event::Status::Ignored, None)
                                         }
                                         let selected_widget = 
                                             add_new_widget(
-                                                self.state.selected_radio_widget.unwrap(), 
+                                                self.state.selected_widget.unwrap(), 
                                                 self.state.selected_poly_points,
                                                 self.state.selected_draw_color,
                                                 self.state.selected_width,
                                                 self.state.draw_mode,
                                             );
-
+                                            
                                         let (widget, _) = 
                                             set_widget_point(
                                                 &selected_widget, 
@@ -285,7 +285,7 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
 
                                         // If a text widget, need to send back the curve so that the
                                         // cursor can be seen.  No access to the time event during pending.
-                                        if self.state.selected_radio_widget == Some(IpgCanvasWidget::Text) {
+                                        if self.state.selected_widget == Some(IpgCanvasWidget::Text) {
                                             Some(widget)
                                         } else {
                                             None
@@ -311,7 +311,7 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
                                             });
                                             
                                             let some_text = 
-                                                if self.state.selected_radio_widget.unwrap() == IpgCanvasWidget::Text {
+                                                if self.state.selected_widget.unwrap() == IpgCanvasWidget::Text {
                                                     Some(widget)
                                                 } else {
                                                     None
