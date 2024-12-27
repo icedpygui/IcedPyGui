@@ -711,17 +711,22 @@ impl DrawCurve {
                         }
                     },
                     IpgWidget::Text(txt) => {
-                        let frame_path = 
-                            build_text_path (
-                                txt,
-                                txt.draw_mode,
-                                None,
-                                0.0,
-                                blink,
-                            );
-                        frame.fill_text(frame_path.0);
-                        
-                        (frame_path.1, Some(txt.color), Some(1.0))
+                        if txt.draw_mode != IpgDrawMode::Edit {
+                            let frame_path = 
+                                build_text_path (
+                                    txt,
+                                    txt.draw_mode,
+                                    None,
+                                    false,
+                                    0.0,
+                                    blink,
+                                );
+                            frame.fill_text(frame_path.0);
+                            
+                            (frame_path.1, Some(txt.color), Some(1.0))
+                        } else {
+                            (None, None, None)
+                        }
                     }
                     IpgWidget::None => (None, None, None),
                 };
@@ -1058,8 +1063,17 @@ impl Pending {
                                     );
                                 (path, fh.color, fh.width)
                             },
-                            IpgWidget::Text(_txt) => {
-                                (Path::new(|_| {}), Color::TRANSPARENT, 0.0)
+                            IpgWidget::Text(txt) => {
+                                let (text, path) = build_text_path (
+                                        txt,
+                                        IpgDrawMode::Edit,
+                                        Some(cursor),
+                                        false,
+                                        0.0,
+                                        false,
+                                    );
+                                frame.fill_text(text);
+                                (path.unwrap(), txt.color, 2.0)
                             }
                         };
 
@@ -1202,8 +1216,18 @@ impl Pending {
                                 );
                             (path, fh.color, fh.width, Point::default(), None, None)
                         },
-                        IpgWidget::Text(_txt) => {
-                            (Path::new(|_| {}), Color::TRANSPARENT, 0.0, Point::default(), None, None)
+                        IpgWidget::Text(txt) => {
+                            let (text, path) = build_text_path (
+                                        txt,
+                                        IpgDrawMode::Edit,
+                                        Some(cursor),
+                                        true,
+                                        0.0,
+                                        false,
+                                    );
+
+                            frame.fill_text(text);
+                            (path.unwrap(), Color::TRANSPARENT, 0.0, Point::default(), None, None)
                         }
                     };
 

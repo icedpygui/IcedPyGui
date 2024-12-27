@@ -37,7 +37,6 @@ def widget_select(radio_id: int, selected: tuple[int, str]):
     
     
 def mode_select(id: int, selected: str):
-    print(selected)
     mode = IpgDrawMode.DrawAll
     match selected:
         case "DrawAll":
@@ -74,6 +73,12 @@ ipg.add_button(parent_id="col", label="Clear",
                on_press=canvas_clear,
                )
 
+widget_labels = ["Arc", "Bezier", "Circle", "Ellipse", "Line", "Polygon",
+                "PolyLine", "RightTriangle", "FreeHand", "Text"]
+
+ipg.add_radio(parent_id="col", labels=widget_labels,
+              on_select=widget_select)
+
 mode_labels = ["DrawAll", "New", "Edit", "Rotate"]
 
 ipg.add_pick_list(parent_id="col", 
@@ -81,11 +86,7 @@ ipg.add_pick_list(parent_id="col",
                   placeholder="Select Mode",
                   on_select=mode_select)
 
-widget_labels = ["Arc", "Bezier", "Circle", "Ellipse", "Line", "Polygon",
-                "PolyLine", "RightTriangle", "FreeHand", "Text"]
 
-ipg.add_radio(parent_id="col", labels=widget_labels,
-              on_select=widget_select)
 
 
 ipg.start_session()

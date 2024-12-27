@@ -6,7 +6,7 @@ use iced::{widget::canvas::{self, path::arc::Elliptical, Path}, Point, Radians, 
 use crate::canvas::geometries::{IpgArc, IpgBezier, IpgCircle, IpgEllipse, IpgFreeHand, 
     IpgLine, IpgPolyLine, IpgPolygon, IpgRightTriangle, IpgText, IpgCanvasWidget};
 use crate::{canvas::draw_canvas::IpgDrawMode, 
-canvas::canvas_helpers::{build_polygon, get_angle_of_vectors, get_blink_position, 
+canvas::canvas_helpers::{build_polygon, get_angle_of_vectors, 
     get_horizontal_angle_of_vector, get_mid_point, rotate_geometry, to_degrees, 
     translate_geometry}};
 
@@ -864,7 +864,8 @@ pub fn build_free_hand_path(fh: &IpgFreeHand,
 
 pub fn build_text_path (txt: &IpgText, 
                     draw_mode: IpgDrawMode, 
-                    _pending_cursor: Option<Point>,
+                    pending_cursor: Option<Point>,
+                    edit_text_position: bool,
                     _degrees: f32,
                     blink: bool,
                     ) -> (canvas::Text, Option<Path>) {
@@ -885,9 +886,13 @@ pub fn build_text_path (txt: &IpgText,
                 (text, None)
             },
             IpgDrawMode::Edit => {
+                let mut cursor = txt.position;
+                if edit_text_position {
+                    cursor = pending_cursor.unwrap();
+                }
                 let text = canvas::Text {
                     content: txt.content.clone(),
-                    position: txt.position,
+                    position: cursor,
                     color: txt.color,
                     size: txt.size,
                     line_height: txt.line_height,
@@ -902,8 +907,12 @@ pub fn build_text_path (txt: &IpgText,
                 (text, path)
             },
             IpgDrawMode::New => {
+                let mut cont = txt.content.clone();
+                if blink {
+                    cont.push_str("|");
+                }
                 let text = canvas::Text {
-                    content: txt.content.clone(),
+                    content: cont,
                     position: txt.position,
                     color: txt.color,
                     size: txt.size,
@@ -913,21 +922,9 @@ pub fn build_text_path (txt: &IpgText,
                     vertical_alignment: txt.vertical_alignment,
                     shaping: txt.shaping,
                 };
-                let path: Option<Path> = if blink {
-                    Some(Path::new(|p| {
-                        let (from, to) = 
-                            get_blink_position( 
-                                &txt.content,
-                                txt.position, 
-                                txt.blink_position,
-                            );
-                        p.move_to(from);
-                        p.line_to(to);
-                    }))
-                } else {
-                    None
-                };
-                (text, path)
+                
+                    
+                (text, None)
             },
             IpgDrawMode::Rotate => {
                 let text = canvas::Text {

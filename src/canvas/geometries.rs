@@ -129,7 +129,6 @@ pub struct IpgText {
     pub degrees: f32,
     pub draw_mode: IpgDrawMode,
     pub status: IpgDrawStatus,
-    pub blink_position: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -318,7 +317,6 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
                     degrees: 0.0,
                     draw_mode,
                     status: IpgDrawStatus::TextInProgress,
-                    blink_position: 0,
                 }
             )
         },
@@ -694,7 +692,9 @@ pub fn update_edited_widget(widget: IpgWidget,
             fh.status = status;
             IpgWidget::FreeHand(fh)
         },
-        IpgWidget::Text(txt) => {
+        IpgWidget::Text(mut txt) => {
+            txt.position = cursor;
+            txt.status = status;
             IpgWidget::Text(txt)
         }
     }
@@ -809,51 +809,24 @@ pub fn add_keypress(widget: &mut IpgWidget, modified: Key) -> (Option<IpgWidget>
                     match named {
                         iced::keyboard::key::Named::Enter => {
                             txt.content.push_str("\r");
-                            txt.blink_position += 1;
                         },
                         iced::keyboard::key::Named::Tab => {
                             txt.content.push_str("    ");
-                            txt.blink_position += 4;
                         },
                         iced::keyboard::key::Named::Space => {
                             txt.content.push_str(" ");
-                            txt.blink_position += 1;
-                        },
-                        iced::keyboard::key::Named::Delete => {
-                            if txt.blink_position < txt.content.len() {
-                                txt.content.remove(txt.blink_position);
-                            }
                         },
                         iced::keyboard::key::Named::Escape => escape = true,
                         iced::keyboard::key::Named::Backspace => {
-                            if !txt.content.is_empty() && txt.blink_position != 0 {
-                                txt.content.remove(txt.blink_position-1);
-                                txt.blink_position -= 1;
+                            if !txt.content.is_empty() {
+                                txt.content.pop();
                             }
                         } 
-                        iced::keyboard::key::Named::ArrowLeft => {
-                            if txt.blink_position > 0 {
-                                txt.blink_position -= 1;
-                            }
-                        },
-                        iced::keyboard::key::Named::ArrowRight => {
-                            if txt.blink_position < txt.content.len() {
-                                txt.blink_position += 1;
-                            }
-                        }
                         _ => ()
                     }
                 },
                 Key::Character(c) => {
-                    if txt.content.is_empty() {
-                        txt.content.push_str(c);
-                    } else if txt.blink_position < txt.content.len() {
-                        let c_char = c.chars().next().expect("string is empty");
-                        txt.content.insert(txt.blink_position, c_char );
-                    } else if txt.blink_position == txt.content.len() {
-                            txt.content.push_str(c);
-                    }
-                    txt.blink_position += 1;
+                    txt.content.push_str(c);
                 },
                 Key::Unidentified => (),
             }

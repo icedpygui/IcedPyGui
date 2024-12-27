@@ -237,7 +237,6 @@ pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
                     degrees: widget.rotation,
                     draw_mode,
                     status: IpgDrawStatus::Completed,
-                    blink_position: widget.content.len(),
                 };
                 curves.insert(id, IpgWidget::Text(txt));
             }
