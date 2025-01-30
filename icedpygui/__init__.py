@@ -5,6 +5,7 @@ from .icedpygui import IpgDrawMode, IpgCanvasParam, IpgCanvasWidget
 from .icedpygui import IpgCardStyle, IpgCardParam
 from .icedpygui import IpgCheckboxParam
 from .icedpygui import IpgColor
+from .icedpygui import IpgColorPickerParam
 from .icedpygui import IpgDatePickerParam
 from .icedpygui import IpgImageParam, IpgImageContentFit, IpgImageFilterMethod, IpgImageRotation
 from .icedpygui import IpgMenuType, IpgMenuSeparatorType, IpgMenuParam

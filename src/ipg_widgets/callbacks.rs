@@ -4,7 +4,7 @@ use crate::{access_state, IpgState};
 use super::ipg_enums::IpgContainers;
 use super::{helpers::{format_date, MONTH_NAMES}, ipg_enums::IpgWidgets, ipg_radio::Choice};
 
-use iced::Point;
+use iced::{Color, Point};
 
 use pyo3::PyObject;
 
@@ -109,26 +109,25 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 } 
             },
-            // IpgWidgets::IpgColorPicker(cp) => {
-            //     cp.open = match wci.value_bool {
-            //         Some(s) => s,
-            //         None => panic!("The open value for color_picker could not be found"),
-            //     };
+            IpgWidgets::IpgColorPicker(cp) => {
+                cp.show = match wci.value_bool {
+                    Some(s) => s,
+                    None => panic!("The open value for color_picker could not be found"),
+                };
 
-            //     let mut wco = WidgetCallbackOut::default();
-            //     if wci.color.is_some() {
-            //         let color = match wci.color {
-            //             Some(c) => c,
-            //             None => panic!("The color value for color_picker could not be found"),
-            //         };
-            //         wco.color = Some(color.clone());
-            //         cp.color = Color::from_rgba(color[0] as f32, color[1] as f32, 
-            //                                 color[2] as f32, color[3] as f32);
-            //     }
-            //     wco.user_data = cp.user_data.clone();
-            //     drop(state);
-            //     wco
-            // },
+                let mut wco = WidgetCallbackOut::default();
+                if wci.color.is_some() {
+                    let color = match wci.color {
+                        Some(c) => c,
+                        None => panic!("The color value for color_picker could not be found"),
+                    };
+                    wco.color = Some(color.clone());
+                    cp.color = Color::from_rgba(color[0] as f32, color[1] as f32, 
+                                            color[2] as f32, color[3] as f32);
+                }
+                wco.user_data = cp.user_data.clone();
+                return wco
+            },
             IpgWidgets::IpgDatePicker(dp) => {
                 
                 if wci.selected_day.is_some() {

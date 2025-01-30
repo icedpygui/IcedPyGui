@@ -6,6 +6,7 @@ use super::ipg_button::IpgButton;
 use super::ipg_canvas::IpgCanvas;
 use super::ipg_card::IpgCard;
 use super::ipg_checkbox::IpgCheckBox;
+use super::ipg_color_picker::IpgColorPicker;
 // use super::ipg_color_picker::IpgColorPicker;
 use super::ipg_container::IpgContainer;
 use super::ipg_column::IpgColumn;
@@ -60,7 +61,7 @@ pub enum IpgWidgets {
     IpgButton(IpgButton),
     IpgCard(IpgCard),
     IpgCheckBox(IpgCheckBox),
-    // IpgColorPicker(IpgColorPicker),
+    IpgColorPicker(IpgColorPicker),
     IpgDatePicker(IpgDatePicker),
     IpgImage(IpgImage),
     IpgMenu(IpgMenu),

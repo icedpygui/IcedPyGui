@@ -18,7 +18,8 @@ use once_cell::sync::Lazy;
 
 
 use crate::canvas::draw_canvas::IpgCanvasState;
-use crate::{access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
+use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, construct_color_picker, ColPikMessage};
+use crate::{access_canvas_state, access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
@@ -64,6 +65,7 @@ pub enum Message {
     Canvas(CanvasMessage),
     Card(usize, CardMessage),
     CheckBox(usize, CHKMessage),
+    ColorPicker(usize, ColPikMessage),
     DatePicker(usize, DPMessage),
     EventKeyboard(Event),
     EventMouse(Event),
@@ -110,6 +112,9 @@ impl App {
     pub fn new() -> (Self, Task<Message>) {
         let mut state = IpgState::new();
         clone_state(&mut state);
+
+        let mut canvas_state = IpgCanvasState::default();
+        clone_canvas_state(&mut canvas_state);
         
         let mut open = add_windows(&mut state);
         open.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
@@ -117,7 +122,7 @@ impl App {
         (
             Self {
                 state,
-                canvas_state: IpgCanvasState::default(),
+                canvas_state,
             },
             
             Task::batch(open),
@@ -155,13 +160,18 @@ impl App {
             Message::Card(id, message) => {
                 card_callback(&mut self.state, id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
-                 Task::none()
+                Task::none()
             },
             Message::CheckBox(id, message) => {
                 checkbox_callback(&mut self.state, id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
                 get_tasks(&mut self.state)
             },
+            Message::ColorPicker(id, message ) => {
+                color_picker_callback(&mut self.state, id, message);
+                process_updates(&mut self.state, &mut self.canvas_state);
+                Task::none()
+            }
             Message::DatePicker(id, message) => {
                 date_picker_update(&mut self.state, id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
@@ -300,7 +310,7 @@ impl App {
             Message::CanvasTick => {
                 self.canvas_state.elapsed_time += self.canvas_state.timer_duration;
                 self.canvas_state.blink = !self.canvas_state.blink;
-                self.canvas_state.request_redraw();
+                self.canvas_state.request_text_redraw();
                 Task::none()
             },
             Message::Tick => {
@@ -364,6 +374,12 @@ impl App {
         if self.state.mouse_event_id_enabled.1 {
             subscriptions.push(iced::event::listen().map(Message::EventMouse));
         }
+        if self.canvas_state.timer_event_enabled {
+            subscriptions.push(time::every(
+                iced::time::Duration::from_millis(
+                    self.canvas_state.timer_duration))
+                    .map(|_| Message::CanvasTick));
+        }
         // window event is always enabled, since we are using iced::daemon, the windows
         // closing need to be followed and iced exited when the last window is closed.
         // The closing is the only event monitored unless the user enables the window events.
@@ -372,13 +388,6 @@ impl App {
 
         subscriptions.push(w_event);
 
-        if self.canvas_state.timer_event_enabled {
-            subscriptions.push(time::every(
-                iced::time::Duration::from_millis(
-                    self.canvas_state.timer_duration))
-                    .map(|_| Message::CanvasTick));
-        }
-        
         if !subscriptions.is_empty() {
             Subscription::batch(subscriptions)
         }
@@ -714,8 +723,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                     construct_button(btn.clone(), style_opt)
                 },
                 IpgWidgets::IpgCard(crd) => {
-                    let card = crd.clone();
-                    construct_card(card)
+                    construct_card(crd.clone())
                 },
                 IpgWidgets::IpgCheckBox(chk) => {
                     let style_opt = match chk.style_id.clone() {
@@ -726,6 +734,15 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                     };
                     construct_checkbox(chk.clone(), style_opt)
                 },
+                IpgWidgets::IpgColorPicker(cp) => {
+                    let style_opt = match cp.style_id.clone() {
+                        Some(id) => {
+                            state.button_style.get(&id).map(|st|st.clone())
+                        },
+                        None => None,
+                    };
+                    construct_color_picker(cp.clone(), style_opt)
+                }
                 IpgWidgets::IpgImage(img) => {
                     let image = img.clone();
                     construct_image(image)
@@ -1025,6 +1042,7 @@ fn clone_state(state: &mut IpgState) {
     state.container_style = mut_state.container_style.to_owned();
     state.button_style = mut_state.button_style.to_owned();
     state.checkbox_style = mut_state.checkbox_style.to_owned();
+    state.color_picker_style = mut_state.color_picker_style.to_owned();
     state.menu_bar_style = mut_state.menu_bar_style.to_owned();
     state.menu_style = mut_state.menu_style.to_owned();
     state.menu_separator_style = mut_state.menu_separator_style.to_owned();
@@ -1062,6 +1080,7 @@ fn clone_state(state: &mut IpgState) {
     mut_state.container_style = Lazy::new(||HashMap::new());
     mut_state.button_style = Lazy::new(||HashMap::new());
     mut_state.checkbox_style = Lazy::new(||HashMap::new());
+    mut_state.color_picker_style = Lazy::new(||HashMap::new());
     mut_state.menu_bar_style = Lazy::new(||HashMap::new());
     mut_state.menu_style = Lazy::new(||HashMap::new());
     mut_state.menu_separator_style = Lazy::new(||HashMap::new());
@@ -1082,4 +1101,12 @@ fn clone_state(state: &mut IpgState) {
     mut_state.timer_duration = 0;
 
     drop(mut_state);
+}
+
+fn clone_canvas_state(canvas_state: &mut IpgCanvasState) {
+    let mut cs = access_canvas_state();
+    canvas_state.curves = cs.curves.to_owned();
+    canvas_state.text_curves = cs.text_curves.to_owned();
+    canvas_state.image_curves = cs.image_curves.to_owned();
+    drop(cs);
 }

@@ -48,6 +48,57 @@ impl ExportColor {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub enum ExportHorizontal {
+   Left,
+   Center,
+   Right,
+   None,
+}
+
+
+pub fn convert_to_export_horizontal(h: alignment::Horizontal) -> ExportHorizontal {
+    match h {
+        alignment::Horizontal::Left => ExportHorizontal::Left,
+        alignment::Horizontal::Center => ExportHorizontal::Center,
+        alignment::Horizontal::Right => ExportHorizontal::Right,
+    }
+}
+
+pub fn convert_to_iced_horizontal(h: ExportHorizontal) -> alignment::Horizontal {
+    match h {
+        ExportHorizontal::Left => alignment::Horizontal::Left,
+        ExportHorizontal::Center => alignment::Horizontal::Center,
+        ExportHorizontal::Right => alignment::Horizontal::Right,
+        ExportHorizontal::None => panic!("no matching iced alingmnet::Horizontal"),
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub enum ExportVertical {
+   Top,
+   Center,
+   Bottom,
+   None,
+}
+
+pub fn convert_to_export_vertical(v: alignment::Vertical) -> ExportVertical {
+    match v {
+        alignment::Vertical::Top => ExportVertical::Top,
+        alignment::Vertical::Center => ExportVertical::Center,
+        alignment::Vertical::Bottom => ExportVertical::Bottom,
+    }
+}
+
+pub fn convert_to_iced_vertical(v: ExportVertical) -> alignment::Vertical {
+    match v {
+        ExportVertical::Top => alignment::Vertical::Top,
+        ExportVertical::Center => alignment::Vertical::Center,
+        ExportVertical::Bottom => alignment::Vertical::Bottom,
+        ExportVertical::None => panic!("no matching iced alingmnet::Vertical"),
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExportWidget {
     pub name: IpgCanvasWidget,
@@ -59,25 +110,34 @@ pub struct ExportWidget {
     pub rotation: f32,
     pub radius: f32,
     pub color: ExportColor,
+    pub fill_color: ExportColor,
     pub width: f32,
+    pub horizontal_alignment: ExportHorizontal,
+    pub vertical_alignment: ExportVertical,
 }
 
 #[allow(clippy::redundant_closure)]
-pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
+pub fn import_widgets(widgets: Vec<ExportWidget>) 
+                        -> (HashMap<Id, IpgWidget>, HashMap<Id, IpgWidget>) {
     
     let mut curves: HashMap<Id, IpgWidget> = HashMap::new();
+    let mut text_curves: HashMap<Id, IpgWidget> = HashMap::new();
 
     for widget in widgets.iter() {
         let points: Vec<Point> = widget.points.iter().map(|p| convert_to_point(p)).collect();
         let other_point = convert_to_point(&widget.other_point);
         let color = convert_to_color(&widget.color);
         let width = widget.width;
-        let draw_mode = IpgDrawMode::DrawAll;
-        let mid_point = if widget.name == IpgCanvasWidget::Text {
-            Point::default()
-        } else {
-            convert_to_point(&widget.mid_point)
-        };
+        let draw_mode = IpgDrawMode::Display;
+        let mid_point = convert_to_point(&widget.mid_point);
+        let status = IpgDrawStatus::Completed;
+        let no_color = ExportColor{r: 0.0, g: 0.0, b: 0.0, a: 0.0};
+        let fill_color = 
+            if widget.fill_color == no_color {
+                    None
+                } else {
+                    Some(convert_to_color(&widget.fill_color))
+                };
         
         match widget.name {
             IpgCanvasWidget::None => {
@@ -90,11 +150,12 @@ pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
                     mid_point,
                     radius: widget.radius,
                     color,
+                    fill_color,
                     width,
                     start_angle: Radians(other_point.x),
                     end_angle: Radians(other_point.y),
                     draw_mode,
-                    status: IpgDrawStatus::Completed,
+                    status,
                 };
                 
                 curves.insert(id, IpgWidget::Arc(arc));
@@ -103,13 +164,14 @@ pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
                 let id = Id::unique();
                 let bz = IpgBezier {
                     id: id.clone(),
-                    points: points,
+                    points,
                     mid_point,
                     color,
+                    fill_color,
                     width,
-                    degrees: widget.rotation,
+                    rotation: widget.rotation,
                     draw_mode,
-                    status: IpgDrawStatus::Completed
+                    status
                 };
                 
                 curves.insert(id, IpgWidget::Bezier(bz));
@@ -122,6 +184,7 @@ pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
                     circle_point: convert_to_point(&widget.points[0]),
                     radius: widget.radius,
                     color,
+                    fill_color,
                     width,
                     draw_mode,
                     status: IpgDrawStatus::Completed,
@@ -140,6 +203,7 @@ pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
                     radii: Vector { x: vx, y: vy },
                     rotation: Radians(widget.rotation),
                     color,
+                    fill_color,
                     width,
                     draw_mode,
                     status: IpgDrawStatus::Completed,
@@ -155,7 +219,7 @@ pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
                     mid_point,
                     color,
                     width,
-                    degrees: widget.rotation,
+                    rotation: widget.rotation,
                     draw_mode,
                     status: IpgDrawStatus::Completed,
                 };
@@ -170,8 +234,9 @@ pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
                     mid_point,
                     pg_point: other_point,
                     color,
+                    fill_color,
                     width,
-                    degrees: widget.rotation,
+                    rotation: widget.rotation,
                     draw_mode,
                     status: IpgDrawStatus::Completed,
                 };
@@ -187,7 +252,7 @@ pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
                     pl_point: other_point,
                     color,
                     width,
-                    degrees: widget.rotation,
+                    rotation: widget.rotation,
                     draw_mode,
                     status: IpgDrawStatus::Completed,
                 };
@@ -201,8 +266,9 @@ pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
                     mid_point,
                     tr_point: other_point,
                     color,
+                    fill_color,
                     width,
-                    degrees: widget.rotation,
+                    rotation: widget.rotation,
                     draw_mode,
                     status: IpgDrawStatus::Completed,
                 };
@@ -231,27 +297,34 @@ pub fn import_widgets(widgets: Vec<ExportWidget>) -> HashMap<Id, IpgWidget> {
                     size: Pixels(16.0),
                     line_height: LineHeight::Relative(1.2),
                     font: Font::default(),
-                    horizontal_alignment: alignment::Horizontal::Left,
-                    vertical_alignment: alignment::Vertical::Top,
+                    horizontal_alignment: convert_to_iced_horizontal(widget.horizontal_alignment),
+                    vertical_alignment: convert_to_iced_vertical(widget.vertical_alignment),
                     shaping: Shaping::Basic,
-                    degrees: widget.rotation,
+                    rotation: widget.rotation,
                     draw_mode,
                     status: IpgDrawStatus::Completed,
                 };
-                curves.insert(id, IpgWidget::Text(txt));
+                text_curves.insert(id, IpgWidget::Text(txt));
             }
         }
     }
 
-    curves
+   (curves, text_curves)
 
 }
 
-pub fn convert_to_export(widgets: &HashMap<Id, IpgWidget>) -> Vec<ExportWidget> {
-     
+pub fn convert_to_export(widgets: &HashMap<Id, IpgWidget>, 
+                        text: &HashMap<Id, IpgWidget>) 
+                        -> Vec<ExportWidget> {
+
+    let mut curves = widgets.clone();
+    for (k, v) in text.iter() {
+        curves.insert(k.clone(), v.clone());
+    }
+
     let mut export = vec![];
 
-    for (_id, widget) in widgets.iter() {
+    for (_id, widget) in curves.iter() {
 
         let (name, 
             points, 
@@ -260,48 +333,64 @@ pub fn convert_to_export(widgets: &HashMap<Id, IpgWidget>) -> Vec<ExportWidget> 
             poly_points, 
             rotation,
             radius,
-            color, 
+            color,
+            fill_color, 
             width,
             content ,
+            horizontal_alignment,
+            vertical_alignment,
             ) = 
             match widget {
-                IpgWidget::None => {
-                    (IpgCanvasWidget::None, &vec![], Point::default(), Point::default(), 0, 0.0, 0.0, Color::TRANSPARENT, 0.0, String::new())
-                },
                 IpgWidget::Arc(arc) => {
                     let other_point = Point{ x: arc.start_angle.0, y: arc.end_angle.0 };
-                    (IpgCanvasWidget::Arc, &arc.points, arc.mid_point, other_point, 0, 0.0, arc.radius, arc.color, arc.width, String::new())
+                    (IpgCanvasWidget::Arc, &arc.points, arc.mid_point, other_point, 0, 0.0, arc.radius, 
+                        arc.color, arc.fill_color, arc.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
                 IpgWidget::Bezier(bz) => {
-                    (IpgCanvasWidget::Bezier, &bz.points, bz.mid_point, Point::default(), 0, bz.degrees, 0.0, bz.color, bz.width, String::new())
+                    (IpgCanvasWidget::Bezier, &bz.points, bz.mid_point, Point::default(), 0, bz.rotation, 0.0, 
+                    bz.color, bz.fill_color, bz.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
                 IpgWidget::Circle(cir) => {
-                    (IpgCanvasWidget::Circle, &vec![cir.circle_point], cir.center, cir.circle_point, 0, 0.0, cir.radius, cir.color, cir.width, String::new())
+                    (IpgCanvasWidget::Circle, &vec![cir.circle_point], cir.center, cir.circle_point, 0, 0.0, cir.radius, 
+                        cir.color, cir.fill_color, cir.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
                 IpgWidget::Ellipse(ell) => {
-                    (IpgCanvasWidget::Ellipse, &ell.points, ell.center, Point::default(), 0, ell.rotation.0, 0.0, ell.color, ell.width, String::new())
+                    (IpgCanvasWidget::Ellipse, &ell.points, ell.center, Point::default(), 0, ell.rotation.0, 0.0, 
+                    ell.color, ell.fill_color, ell.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
                 IpgWidget::Line(ln) => {
-                    (IpgCanvasWidget::Line, &ln.points, ln.mid_point, Point::default(), 0, ln.degrees, 0.0, ln.color, ln.width, String::new())
+                    (IpgCanvasWidget::Line, &ln.points, ln.mid_point, Point::default(), 0, ln.rotation, 0.0, 
+                    ln.color, Some(Color::TRANSPARENT), ln.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
                 IpgWidget::Polygon(pg) => {
-                    (IpgCanvasWidget::Polygon, &pg.points, pg.mid_point, pg.pg_point, pg.poly_points, pg.degrees, 0.0, pg.color, pg.width, String::new())
+                    (IpgCanvasWidget::Polygon, &pg.points, pg.mid_point, pg.pg_point, pg.poly_points, pg.rotation, 0.0, 
+                        pg.color, pg.fill_color, pg.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
                 IpgWidget::PolyLine(pl) => {
-                    (IpgCanvasWidget::PolyLine, &pl.points, pl.mid_point, pl.pl_point, pl.poly_points, pl.degrees, 0.0, pl.color, pl.width, String::new())
+                    (IpgCanvasWidget::PolyLine, &pl.points, pl.mid_point, pl.pl_point, pl.poly_points, pl.rotation, 0.0, 
+                        pl.color, Some(Color::TRANSPARENT), pl.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
                 IpgWidget::RightTriangle(tr) => {
-                    (IpgCanvasWidget::RightTriangle, &tr.points, tr.mid_point, tr.tr_point, 3, tr.degrees, 0.0, tr.color, tr.width, String::new())
+                    (IpgCanvasWidget::RightTriangle, &tr.points, tr.mid_point, tr.tr_point, 3, tr.rotation, 0.0, 
+                        tr.color, tr.fill_color, tr.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
                 IpgWidget::FreeHand(fh) => {
-                    (IpgCanvasWidget::FreeHand, &fh.points, Point::default(), Point::default(), 0, 0.0, 0.0, fh.color, fh.width, String::new())
+                    (IpgCanvasWidget::FreeHand, &fh.points, Point::default(), Point::default(), 0, 0.0, 0.0, 
+                    fh.color, Some(Color::TRANSPARENT), fh.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 }
                 IpgWidget::Text(txt) => {
-                    (IpgCanvasWidget::Text, &vec![], Point::default(), txt.position, 3, txt.degrees, 0.0, txt.color, 0.0, txt.content.clone())
+                    (IpgCanvasWidget::Text, &vec![], Point::default(), txt.position, 0, txt.rotation, 0.0, 
+                    txt.color, Some(Color::TRANSPARENT), 0.0, txt.content.clone(), 
+                    convert_to_export_horizontal(txt.horizontal_alignment), convert_to_export_vertical(txt.vertical_alignment))
+                },
+                _ => {
+                    (IpgCanvasWidget::None, &vec![], Point::default(), Point::default(), 0, 0.0, 0.0, 
+                    Color::TRANSPARENT, Some(Color::TRANSPARENT), 0.0, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
         };
 
         let x_color = ExportColor::from_rgba(&color);
+        let x_fill_color = ExportColor::from_rgba(&fill_color.unwrap());
         let x_mid_pt = ExportPoint::convert(&mid_point);
         let x_other_point = ExportPoint::convert(&other_point);
         let mut x_points = vec![];
@@ -319,8 +408,11 @@ pub fn convert_to_export(widgets: &HashMap<Id, IpgWidget>) -> Vec<ExportWidget> 
                 other_point: x_other_point,
                 rotation,
                 radius, 
-                color: x_color, 
-                width,  
+                color: x_color,
+                fill_color: x_fill_color, 
+                width,
+                horizontal_alignment,
+                vertical_alignment,  
             })
     }
     

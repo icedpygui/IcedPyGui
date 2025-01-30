@@ -354,13 +354,25 @@ pub fn try_extract_boolean(value: PyObject) -> bool {
     })  
 }
 
-pub fn try_extract_ipg_horizontal_alignment(value: PyObject) -> IpgHorizontalAlignment {
+// These alignments return options so that only the canvas text alignment needs one py value type
+pub fn try_extract_ipg_horizontal_alignment(value: PyObject) -> Option<IpgHorizontalAlignment> {
     Python::with_gil(|py| {
 
         let res = value.extract::<IpgHorizontalAlignment>(py);
         match res {
-            Ok(val) => val,
-            Err(_) => panic!("Unable to extract python object for Horizontal Alignment"),
+            Ok(val) => Some(val),
+            Err(_) => None,
+        }
+    })
+}
+
+pub fn try_extract_ipg_vertical_alignment(value: PyObject) -> Option<IpgVerticalAlignment> {
+    Python::with_gil(|py| {
+
+        let res = value.extract::<IpgVerticalAlignment>(py);
+        match res {
+            Ok(val) => Some(val),
+            Err(_) => None,
         }
     })
 }
@@ -386,3 +398,15 @@ pub fn try_extract_ipg_color(value: PyObject) -> IpgColor {
         }
     })
 }
+
+pub fn try_extract_rgba_color(value: PyObject) -> [f32; 4] {
+    Python::with_gil(|py| {
+
+        let res = value.extract::<[f32; 4]>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python object for RGBA color"),
+        }
+    })
+}
+

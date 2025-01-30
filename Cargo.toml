@@ -16,6 +16,7 @@ crate-type = ["cdylib"]
 pyo3 = { version = "0.21.2", features = ["extension-module"] }
 iced = { version = "0.13.1", features = ["advanced", "canvas", "debug", "highlighter", "image", 
                                         "lazy", "smol", "svg", "tokio", "multi-window", "auto-detect-theme"] }
+iced_aw = {git = "https://github.com/iced-rs/iced_aw", rev = "3485f3a"}
 
 tokio = { version = "1.0", features = ["fs"]}
 rfd = "0.13"

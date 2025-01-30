@@ -252,8 +252,11 @@ pub fn toggler_item_update(tog: &mut IpgToggler,
             tog.width = get_width(None, val);
         },
         IpgTogglerParam::HorizontalAlignment => {
-            let val: IpgHorizontalAlignment = try_extract_ipg_horizontal_alignment(value);
-            tog.text_alignment = val;
+            let val = try_extract_ipg_horizontal_alignment(value);
+            if val.is_none() {
+                panic!("Unable to extract the toggler alignment")
+            }
+            tog.text_alignment = val.unwrap();
         },
         IpgTogglerParam::LineHeight => {
             let val = try_extract_f64(value) as f32; 

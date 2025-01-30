@@ -82,7 +82,7 @@ pub fn get_line_from_slope_intercept(points: &[Point],
 
 }
 
-pub fn translate_geometry(pts: &Vec<Point>, 
+pub fn translate_geometry(pts: &[Point], 
                         new_center: Point,
                         old_center: Point, 
                         ) 
@@ -130,7 +130,7 @@ pub fn get_horizontal_angle_of_vector(center: Point, p2: Point) -> f32 {
     let p1 = Point::new(center.x-10.0, center.y);
     let pts = 
         translate_geometry(
-            &vec![p1, p2], 
+            &[p1, p2], 
             Point::default(), 
             center,
         );
@@ -152,7 +152,7 @@ pub fn get_angle_of_vectors(center: Point, p1: Point, p2: Point) -> Radians {
 
     let pts = 
         translate_geometry(
-            &vec![p1, p2], 
+            &[p1, p2], 
             Point::default(), 
             center,
         );
@@ -177,6 +177,29 @@ pub fn to_degrees(radians_f32: &f32) -> f32 {
 pub fn to_radians(degrees: &f32) -> f32 {
     degrees * PI/180.0
 }
+
+
+// pub fn text_layout(content: &String, shaping: Shaping, font: Font, size: Pixels) -> Vec<LayoutLine> {
+//     let mut font_system =
+//         text::font_system().write().expect("Write font system");
+
+//     let mut buffer = cosmic_text::BufferLine::new(
+//         content,
+//         cosmic_text::LineEnding::default(),
+//         cosmic_text::AttrsList::new(text::to_attributes(font)),
+//         text::to_shaping(shaping),
+//     );
+
+//     let layout = buffer.layout(
+//         font_system.raw(),
+//         size.0,
+//         None,
+//         cosmic_text::Wrap::None,
+//         None,
+//         4,
+//     ).to_vec();
+//     layout
+// }
 
 
 #[test]
@@ -246,4 +269,5 @@ fn test_rotate_geometry() {
         dbg!(&points);
     }
 }
+
 
