@@ -283,16 +283,14 @@ pub fn access_state() -> MutexGuard<'static, State> {
 #[derive(Debug)]
 pub struct CanvasState {
     pub canvas_ids_str: Lazy<HashMap<String, usize>>,
-    pub widget_ids_usize: Lazy<HashMap<usize, container::Id>>,
-    pub curves: Lazy<HashMap<container::Id, IpgWidget>>,
-    pub text_curves: Lazy<HashMap<container::Id, IpgWidget>>,
-    pub image_curves: Lazy<HashMap<container::Id, IpgWidget>>,
+    pub curves: Lazy<HashMap<usize, IpgWidget>>,
+    pub text_curves: Lazy<HashMap<usize, IpgWidget>>,
+    pub image_curves: Lazy<HashMap<usize, IpgWidget>>,
 }
 
 pub static CANVAS_STATE: Mutex<CanvasState> = Mutex::new(
     CanvasState {
         canvas_ids_str: Lazy::new(||HashMap::new()),
-        widget_ids_usize: Lazy::new(||HashMap::new()),
         curves: Lazy::new(||HashMap::new()),
         text_curves: Lazy::new(||HashMap::new()),
         image_curves: Lazy::new(||HashMap::new()),
@@ -3876,12 +3874,10 @@ impl IPG {
             panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
-        let id = container::Id::unique();
-        let id_usize = self.get_id(gen_id);
-        canvas_state.widget_ids_usize.insert(id_usize, id.clone());
+        let id = self.get_id(gen_id);
 
         let arc = IpgArc { 
-                            id: id.clone(), 
+                            id, 
                             points: vec![], 
                             mid_point, 
                             radius, 
@@ -3897,8 +3893,11 @@ impl IPG {
 
         canvas_state.curves.insert(id, IpgWidget::Arc(arc));
         drop(canvas_state);
+        let mut state = access_state();
+        state.last_id = id;
+        drop(state);
 
-        Ok(id_usize)
+        Ok(id)
     }
 
     #[pyo3(signature = (canvas_id,
@@ -3944,12 +3943,10 @@ impl IPG {
             panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
-        let id = container::Id::unique();
-        let id_usize = self.get_id(gen_id);
-        canvas_state.widget_ids_usize.insert(id_usize, id.clone());
+        let id = self.get_id(gen_id);
 
         let bezier = IpgBezier{ 
-                                    id: id.clone(), 
+                                    id, 
                                     points, 
                                     mid_point, 
                                     color, 
@@ -3963,7 +3960,11 @@ impl IPG {
         canvas_state.curves.insert(id, IpgWidget::Bezier(bezier));
         drop(canvas_state);
 
-        Ok(id_usize)
+        let mut state = access_state();
+        state.last_id = id;
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (canvas_id,
@@ -4006,12 +4007,10 @@ impl IPG {
             panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
-        let id = container::Id::unique();
-        let id_usize = self.get_id(gen_id);
-        canvas_state.widget_ids_usize.insert(id_usize, id.clone());
+        let id = self.get_id(gen_id);
         
         let circle = IpgCircle{ 
-                                    id: id.clone(), 
+                                    id, 
                                     center, 
                                     circle_point, 
                                     radius, 
@@ -4025,7 +4024,11 @@ impl IPG {
         canvas_state.curves.insert(id, IpgWidget::Circle(circle));
         drop(canvas_state);
 
-        Ok(id_usize)
+        let mut state = access_state();
+        state.last_id = id;
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (canvas_id,
@@ -4074,12 +4077,10 @@ impl IPG {
             panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
-        let id = container::Id::unique();
-        let id_usize = self.get_id(gen_id);
-        canvas_state.widget_ids_usize.insert(id_usize, id.clone());
+        let id = self.get_id(gen_id);
 
         let ellipse = IpgEllipse{ 
-                                    id: id.clone(), 
+                                    id, 
                                     points, 
                                     center, 
                                     radii: Vector{x: 0.0, y: 0.0}, 
@@ -4094,7 +4095,11 @@ impl IPG {
         canvas_state.curves.insert(id, IpgWidget::Ellipse(ellipse));
         drop(canvas_state);
 
-        Ok(id_usize)
+        let mut state = access_state();
+        state.last_id = id;
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (canvas_id,
@@ -4134,12 +4139,10 @@ impl IPG {
             panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
-        let id = container::Id::unique();
-        let id_usize = self.get_id(gen_id);
-        canvas_state.widget_ids_usize.insert(id_usize, id.clone());
+        let id = self.get_id(gen_id);
         
         let line = IpgLine{ 
-                                id: id.clone(), 
+                                id, 
                                 points, 
                                 mid_point, 
                                 color, 
@@ -4152,7 +4155,11 @@ impl IPG {
         canvas_state.curves.insert(id, IpgWidget::Line(line));
         drop(canvas_state);
 
-        Ok(id_usize)
+        let mut state = access_state();
+        state.last_id = id;
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (canvas_id,
@@ -4200,12 +4207,10 @@ impl IPG {
             panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
-        let id = container::Id::unique();
-        let id_usize = self.get_id(gen_id);
-        canvas_state.widget_ids_usize.insert(id_usize, id.clone());
+        let id = self.get_id(gen_id);
         
         let pg = IpgPolygon{ 
-                                    id: id.clone(),
+                                    id,
                                     points: build_polygon(center, pg_point, sides, degrees),
                                     poly_points: sides-1,
                                     mid_point: center,
@@ -4221,7 +4226,11 @@ impl IPG {
         canvas_state.curves.insert(id, IpgWidget::Polygon(pg));
         drop(canvas_state);
 
-        Ok(id_usize)
+        let mut state = access_state();
+        state.last_id = id;
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (canvas_id,
@@ -4259,12 +4268,10 @@ impl IPG {
             panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
-        let id = container::Id::unique();
-        let id_usize = self.get_id(gen_id);
-        canvas_state.widget_ids_usize.insert(id_usize, id.clone());
+        let id = self.get_id(gen_id);
 
         let poly_line = IpgPolyLine{ 
-                                        id: id.clone(), 
+                                        id, 
                                         points: p_points, 
                                         poly_points: points.len(), 
                                         mid_point: Point::default(), 
@@ -4276,14 +4283,14 @@ impl IPG {
                                         status: IpgDrawStatus::Completed,
                                         };
         
-        let id = container::Id::unique();
-        let id_usize = self.get_id(gen_id);
-        canvas_state.widget_ids_usize.insert(id_usize, id.clone());
-        
         canvas_state.curves.insert(id, IpgWidget::PolyLine(poly_line));
         drop(canvas_state);
 
-        Ok(id_usize)
+        let mut state = access_state();
+        state.last_id = id;
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (canvas_id,
@@ -4328,12 +4335,10 @@ impl IPG {
             panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
-        let id = container::Id::unique();
-        let id_usize = self.get_id(gen_id);
-        canvas_state.widget_ids_usize.insert(id_usize, id.clone());
+        let id = self.get_id(gen_id);
 
         let canvas_image = IpgCanvasImage{ 
-                                                id: id.clone(), 
+                                                id, 
                                                 path,
                                                 position,
                                                 bounds,
@@ -4344,14 +4349,14 @@ impl IPG {
                                                 status: IpgDrawStatus::Completed,
                                                 };
 
-        let id = container::Id::unique();
-        let id_usize = self.get_id(gen_id);
-        canvas_state.widget_ids_usize.insert(id_usize, id.clone());
-        
         canvas_state.image_curves.insert(id, IpgWidget::Image(canvas_image));
         drop(canvas_state);
 
-        Ok(id_usize)
+        let mut state = access_state();
+        state.last_id = id;
+        drop(state);
+
+        Ok(id)
     }
 
     #[pyo3(signature = (enabled=false, on_key_press=None, on_key_release=None,
@@ -4697,8 +4702,12 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
     }
 }
 
-fn match_container(container: &mut IpgContainers, item: PyObject, value: PyObject, canvas_state: &mut IpgCanvasState) {
-
+fn match_container(container: &mut IpgContainers, 
+                    item: PyObject, 
+                    value: PyObject, 
+                    canvas_state: &mut IpgCanvasState,
+                    ) 
+{
     match container {
         IpgContainers::IpgCanvas(_can) => {
             canvas_item_update(canvas_state, item, value);

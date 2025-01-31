@@ -59,11 +59,12 @@ pub struct IpgCanvasState {
     cache: canvas::Cache,
     text_cache: Vec<canvas::Cache>,
     image_cache: Vec<canvas::Cache>,
-    pub curves: HashMap<Id, IpgWidget>,
-    pub text_curves: HashMap<Id, IpgWidget>,
-    pub image_curves: HashMap<Id, IpgWidget>,
+    pub last_id: usize,
+    pub curves: HashMap<usize, IpgWidget>,
+    pub text_curves: HashMap<usize, IpgWidget>,
+    pub image_curves: HashMap<usize, IpgWidget>,
     pub draw_mode: IpgDrawMode,
-    pub edit_widget_id: Option<Id>,
+    pub edit_widget_id: Option<usize>,
     pub escape_pressed: bool,
     pub selected_widget: Option<IpgCanvasWidget>,
     pub selected_canvas_color: Option<Color>,
@@ -95,6 +96,7 @@ impl Default for IpgCanvasState {
             cache: canvas::Cache::new(),
             text_cache,
             image_cache,
+            last_id: 0,
             curves: HashMap::new(),
             text_curves: HashMap::new(),
             image_curves: HashMap::new(),
@@ -121,9 +123,9 @@ impl Default for IpgCanvasState {
 
 impl IpgCanvasState {
     pub fn view<'a>(&'a self, 
-                    curves: &'a HashMap<Id, IpgWidget>, 
-                    text_curves: &'a HashMap<Id, IpgWidget>,
-                    image_curves: &'a HashMap<Id, IpgWidget>, 
+                    curves: &'a HashMap<usize, IpgWidget>, 
+                    text_curves: &'a HashMap<usize, IpgWidget>,
+                    image_curves: &'a HashMap<usize, IpgWidget>, 
                     ) -> Element<'a, IpgWidget> {
         Canvas::new(DrawPending {
             state: self,
@@ -164,9 +166,9 @@ impl IpgCanvasState {
 
 struct DrawPending<'a> {
     state: &'a IpgCanvasState,
-    curves: &'a HashMap<Id, IpgWidget>,
-    text_curves: &'a HashMap<Id, IpgWidget>,
-    image_curves: &'a HashMap<Id, IpgWidget>,
+    curves: &'a HashMap<usize, IpgWidget>,
+    text_curves: &'a HashMap<usize, IpgWidget>,
+    image_curves: &'a HashMap<usize, IpgWidget>,
 }
 
 impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
@@ -291,6 +293,7 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
                                         if self.state.selected_widget.is_none() {
                                             return (event::Status::Ignored, None)
                                         }
+                                        
                                         let selected_widget = 
                                             add_new_widget(
                                                 self.state.selected_widget.unwrap(), 
@@ -596,7 +599,7 @@ pub struct DrawCurve {
 }
 
 impl DrawCurve {
-    fn draw_all(curves: &HashMap<Id, IpgWidget>, frame: &mut Frame, _theme: &Theme) {
+    fn draw_all(curves: &HashMap<usize, IpgWidget>, frame: &mut Frame, _theme: &Theme) {
         // This draw only occurs at the completion of the 
         // widget(update occurs) and cache is cleared
         for (_id, widget) in curves.iter() {

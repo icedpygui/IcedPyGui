@@ -16,7 +16,7 @@ use super::{canvas_helpers::{build_polygon, get_angle_of_vectors,
 
 #[derive(Debug, Clone)]
 pub struct IpgArc {
-    pub id: Id,
+    pub id: usize,
     pub points: Vec<Point>,
     pub mid_point: Point,
     pub radius: f32,
@@ -31,7 +31,7 @@ pub struct IpgArc {
 
 #[derive(Debug, Clone)]
 pub struct IpgBezier {
-    pub id: Id,
+    pub id: usize,
     pub points: Vec<Point>,
     pub mid_point: Point,
     pub color: Color,
@@ -44,7 +44,7 @@ pub struct IpgBezier {
 
 #[derive(Debug, Clone)]
 pub struct IpgCircle {
-    pub id: Id,
+    pub id: usize,
     pub center: Point,
     pub circle_point: Point,
     pub radius: f32,
@@ -57,7 +57,7 @@ pub struct IpgCircle {
 
 #[derive(Debug, Clone)]
 pub struct IpgEllipse {
-    pub id: Id,
+    pub id: usize,
     pub points: Vec<Point>,
     pub center: Point,
     pub radii: Vector,
@@ -71,7 +71,7 @@ pub struct IpgEllipse {
 
 #[derive(Debug, Clone)]
 pub struct IpgCanvasImage {
-    pub id: Id,
+    pub id: usize,
     pub path: image::Handle,
     pub position: Point,
     pub bounds: Rectangle,
@@ -84,7 +84,7 @@ pub struct IpgCanvasImage {
 
 #[derive(Debug, Clone)]
 pub struct IpgLine {
-    pub id: Id,
+    pub id: usize,
     pub points: Vec<Point>,
     pub mid_point: Point,
     pub color: Color,
@@ -96,7 +96,7 @@ pub struct IpgLine {
 
 #[derive(Debug, Clone)]
 pub struct IpgPolyLine {
-    pub id: Id,
+    pub id: usize,
     pub points: Vec<Point>,
     pub poly_points: usize,
     pub mid_point: Point,
@@ -110,7 +110,7 @@ pub struct IpgPolyLine {
 
 #[derive(Debug, Clone)]
 pub struct IpgPolygon {
-    pub id: Id,
+    pub id: usize,
     pub points: Vec<Point>,
     pub poly_points: usize,
     pub mid_point: Point,
@@ -125,7 +125,7 @@ pub struct IpgPolygon {
 
 #[derive(Debug, Clone)]
 pub struct IpgRightTriangle {
-    pub id: Id,
+    pub id: usize,
     pub points: Vec<Point>,
     pub mid_point: Point,
     pub tr_point: Point,
@@ -139,7 +139,7 @@ pub struct IpgRightTriangle {
 
 #[derive(Debug, Clone)]
 pub struct IpgText {
-    pub id: Id,
+    pub id: usize,
     pub content: String,
     pub position: Point,
     pub color: Color,
@@ -156,7 +156,7 @@ pub struct IpgText {
 
 #[derive(Debug, Clone)]
 pub struct IpgFreeHand {
-    pub id: Id,
+    pub id: usize,
     pub points: Vec<Point>,
      pub color: Color,
     pub width: f32,
@@ -202,7 +202,7 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
         IpgCanvasWidget::Arc => {
             IpgWidget::Arc(
                 IpgArc {
-                    id: Id::unique(),
+                    id: 0,
                     points: vec![],
                     mid_point: Point::default(),
                     radius: 0.0,
@@ -219,7 +219,7 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
         IpgCanvasWidget::Bezier => {
             IpgWidget::Bezier(
                 IpgBezier { 
-                    id: Id::unique(),
+                    id: 0,
                     points: vec![],
                     mid_point: Point::default(),
                     color,
@@ -234,7 +234,7 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
         IpgCanvasWidget::Circle => {
             IpgWidget::Circle(
                 IpgCircle {
-                    id: Id::unique(),
+                    id: 0,
                     center: Point::default(),
                     circle_point: Point::default(),
                     radius: 0.0,
@@ -249,7 +249,7 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
         IpgCanvasWidget::Ellipse => {
             IpgWidget::Ellipse(
                 IpgEllipse {
-                    id: Id::unique(),
+                    id: 0,
                     points: vec![],
                     center: Point::default(),
                     radii: Vector{x: 0.0, y: 0.0},
@@ -265,7 +265,7 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
         IpgCanvasWidget::Line => {
             IpgWidget::Line(
                 IpgLine {
-                    id: Id::unique(),
+                    id: 0,
                     points: vec![],
                     mid_point: Point::default(),
                     color,
@@ -279,7 +279,7 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
         IpgCanvasWidget::PolyLine => {
             IpgWidget::PolyLine(
                 IpgPolyLine {
-                    id: Id::unique(),
+                    id: 0,
                     points: vec![],
                     poly_points,
                     mid_point: Point::default(),
@@ -295,7 +295,7 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
         IpgCanvasWidget::Polygon => {
             IpgWidget::Polygon(
                 IpgPolygon {
-                    id: Id::unique(),
+                    id: 0,
                     points: vec![],
                     poly_points,
                     mid_point: Point::default(),
@@ -312,7 +312,7 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
         IpgCanvasWidget::RightTriangle => {
             IpgWidget::RightTriangle(
                 IpgRightTriangle {
-                    id: Id::unique(),
+                    id: 0,
                     points: vec![],
                     mid_point: Point::default(),
                     tr_point: Point::default(),
@@ -328,7 +328,7 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
         IpgCanvasWidget::FreeHand => {
             IpgWidget::FreeHand(
                 IpgFreeHand {
-                    id: Id::unique(),
+                    id: 0,
                     points: vec![],
                     color,
                     width,
@@ -341,7 +341,7 @@ pub fn add_new_widget(widget: IpgCanvasWidget,
         IpgCanvasWidget::Text => {
             IpgWidget::Text(
                 IpgText {
-                    id: Id::unique(),
+                    id: 0,
                     content: String::new(),
                     position: Point::default(),
                     color,
@@ -1171,8 +1171,8 @@ pub fn set_widget_point(widget: &IpgWidget, cursor: Point) -> (IpgWidget, bool) 
     }
 }
 
-pub fn find_closest_widget(curves: &HashMap<Id, IpgWidget>, 
-                            text_curves: &HashMap<Id, IpgWidget>,
+pub fn find_closest_widget(curves: &HashMap<usize, IpgWidget>, 
+                            text_curves: &HashMap<usize, IpgWidget>,
                             cursor: Point) 
                             -> Option<IpgWidget> {
     let mut closest = f32::INFINITY;
@@ -1369,19 +1369,19 @@ pub fn find_closest_point_index(widget: &IpgWidget,
 }
 
 
-pub fn get_widget_id(widget: &IpgWidget) -> Id {
+pub fn get_widget_id(widget: &IpgWidget) -> usize {
     match widget {
-        IpgWidget::Arc(arc) => arc.id.clone(),
-        IpgWidget::Bezier(bz) => bz.id.clone(),
-        IpgWidget::Circle(cir) => cir.id.clone(),
-        IpgWidget::Ellipse(ell) => ell.id.clone(),
-        IpgWidget::Line(line) => line.id.clone(),
-        IpgWidget::PolyLine(pl) => pl.id.clone(),
-        IpgWidget::Polygon(pg) => pg.id.clone(),
-        IpgWidget::RightTriangle(tr) => tr.id.clone(),
-        IpgWidget::FreeHand(fh) => fh.id.clone(),
-        IpgWidget::Text(txt) => txt.id.clone(),
-        _=> Id::new("None"),
+        IpgWidget::Arc(arc) => arc.id,
+        IpgWidget::Bezier(bz) => bz.id,
+        IpgWidget::Circle(cir) => cir.id,
+        IpgWidget::Ellipse(ell) => ell.id,
+        IpgWidget::Line(line) => line.id,
+        IpgWidget::PolyLine(pl) => pl.id,
+        IpgWidget::Polygon(pg) => pg.id,
+        IpgWidget::RightTriangle(tr) => tr.id,
+        IpgWidget::FreeHand(fh) => fh.id,
+        IpgWidget::Text(txt) => txt.id,
+        _=> 0,
     }
 }
 

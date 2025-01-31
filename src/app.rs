@@ -114,7 +114,7 @@ impl App {
         clone_state(&mut state);
 
         let mut canvas_state = IpgCanvasState::default();
-        clone_canvas_state(&mut canvas_state);
+        clone_canvas_state(&mut canvas_state, state.last_id);
         
         let mut open = add_windows(&mut state);
         open.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
@@ -153,7 +153,7 @@ impl App {
                 get_tasks(&mut self.state)
             },
             Message::Canvas(canvas_message) => {
-                canvas_callback(canvas_message, &mut self.canvas_state);
+                canvas_callback(canvas_message, &mut self.state, &mut self.canvas_state);
                 process_updates(&mut self.state, &mut self.canvas_state);
                 get_tasks(&mut self.state)
             },
@@ -1033,106 +1033,97 @@ fn process_canvas_updates(cs: &mut IpgCanvasState) {
 
     // let mut updates = all_updates.updates.clone();
     for ((wid, item, value)) in update_items.updates.iter() {
-        let iced_id = cs.
         let widget = cs.image_curves.get_mut(wid);
-        if let Some(w) = widget {
-            match_widget(w, item.clone(), value.clone());
-        } else {
-            match state.containers.get_mut(wid) {
-                Some(cnt) => {
-                    match_container(cnt, item.clone(), value.clone(), canvas_state);
-                },
-                None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
-            }
-        }  
+        
     }
-    all_updates.updates = vec![];
+    update_items.updates = vec![];
 }
 
 fn clone_state(state: &mut IpgState) {
-    let mut mut_state = access_state();
-    state.ids = mut_state.ids.to_owned();
-    state.containers = mut_state.containers.to_owned();
-    state.container_ids = mut_state.container_ids.to_owned();
-    state.container_wnd_str_ids = mut_state.container_wnd_str_ids.to_owned();
-    state.container_str_ids = mut_state.container_str_ids.to_owned();
-    state.container_window_usize_ids = mut_state.container_window_usize_ids.to_owned();
-    state.widgets = mut_state.widgets.to_owned();
-    state.widget_container_ids = mut_state.widget_container_ids.to_owned();
-    state.windows_iced_ipg_ids = mut_state.windows_iced_ipg_ids.to_owned();
-    state.windows_str_ids = mut_state.windows_str_ids.to_owned();
-    state.windows = mut_state.windows.to_owned();
-    state.window_debug = mut_state.window_debug.to_owned();
-    state.window_theme = mut_state.window_theme.to_owned();
-    state.window_mode = mut_state.window_mode.to_owned();
-    state.container_style = mut_state.container_style.to_owned();
-    state.button_style = mut_state.button_style.to_owned();
-    state.checkbox_style = mut_state.checkbox_style.to_owned();
-    state.color_picker_style = mut_state.color_picker_style.to_owned();
-    state.menu_bar_style = mut_state.menu_bar_style.to_owned();
-    state.menu_style = mut_state.menu_style.to_owned();
-    state.menu_separator_style = mut_state.menu_separator_style.to_owned();
-    state.opaque_style = mut_state.opaque_style.to_owned();
-    state.pick_list_style = mut_state.pick_list_style.to_owned();
-    state.progress_bar_style = mut_state.progress_bar_style.to_owned();
-    state.radio_style = mut_state.radio_style.to_owned();
-    state.rule_style = mut_state.rule_style.to_owned();
-    state.slider_style = mut_state.slider_style.to_owned();
-    state.text_input_style = mut_state.text_input_style.to_owned();
-    state.toggler_style = mut_state.toggler_style.to_owned();
-    state.scrollable_style = mut_state.scrollable_style.to_owned();
-    state.keyboard_event_id_enabled = mut_state.keyboard_event_id_enabled.to_owned();
-    state.mouse_event_id_enabled = mut_state.mouse_event_id_enabled.to_owned();
-    state.timer_event_id_enabled = mut_state.timer_event_id_enabled.to_owned();
-    state.window_event_id_enabled = mut_state.window_event_id_enabled.to_owned();
-    state.touch_event_id_enabled = mut_state.touch_event_id_enabled.to_owned();
-    state.timer_duration = mut_state.timer_duration.to_owned();
+    let mut mutex_state = access_state();
+    state.ids = mutex_state.ids.to_owned();
+    state.last_id = mutex_state.last_id.to_owned();
+    state.containers = mutex_state.containers.to_owned();
+    state.container_ids = mutex_state.container_ids.to_owned();
+    state.container_wnd_str_ids = mutex_state.container_wnd_str_ids.to_owned();
+    state.container_str_ids = mutex_state.container_str_ids.to_owned();
+    state.container_window_usize_ids = mutex_state.container_window_usize_ids.to_owned();
+    state.widgets = mutex_state.widgets.to_owned();
+    state.widget_container_ids = mutex_state.widget_container_ids.to_owned();
+    state.windows_iced_ipg_ids = mutex_state.windows_iced_ipg_ids.to_owned();
+    state.windows_str_ids = mutex_state.windows_str_ids.to_owned();
+    state.windows = mutex_state.windows.to_owned();
+    state.window_debug = mutex_state.window_debug.to_owned();
+    state.window_theme = mutex_state.window_theme.to_owned();
+    state.window_mode = mutex_state.window_mode.to_owned();
+    state.container_style = mutex_state.container_style.to_owned();
+    state.button_style = mutex_state.button_style.to_owned();
+    state.checkbox_style = mutex_state.checkbox_style.to_owned();
+    state.color_picker_style = mutex_state.color_picker_style.to_owned();
+    state.menu_bar_style = mutex_state.menu_bar_style.to_owned();
+    state.menu_style = mutex_state.menu_style.to_owned();
+    state.menu_separator_style = mutex_state.menu_separator_style.to_owned();
+    state.opaque_style = mutex_state.opaque_style.to_owned();
+    state.pick_list_style = mutex_state.pick_list_style.to_owned();
+    state.progress_bar_style = mutex_state.progress_bar_style.to_owned();
+    state.radio_style = mutex_state.radio_style.to_owned();
+    state.rule_style = mutex_state.rule_style.to_owned();
+    state.slider_style = mutex_state.slider_style.to_owned();
+    state.text_input_style = mutex_state.text_input_style.to_owned();
+    state.toggler_style = mutex_state.toggler_style.to_owned();
+    state.scrollable_style = mutex_state.scrollable_style.to_owned();
+    state.keyboard_event_id_enabled = mutex_state.keyboard_event_id_enabled.to_owned();
+    state.mouse_event_id_enabled = mutex_state.mouse_event_id_enabled.to_owned();
+    state.timer_event_id_enabled = mutex_state.timer_event_id_enabled.to_owned();
+    state.window_event_id_enabled = mutex_state.window_event_id_enabled.to_owned();
+    state.touch_event_id_enabled = mutex_state.touch_event_id_enabled.to_owned();
+    state.timer_duration = mutex_state.timer_duration.to_owned();
 
-    mut_state.ids = Lazy::new(||HashMap::new());
-    mut_state.last_id = 0;
-    mut_state.containers = Lazy::new(||HashMap::new());
-    mut_state.container_ids = Lazy::new(||HashMap::new());
-    mut_state.container_str_ids = Lazy::new(||HashMap::new());
-    mut_state.container_wnd_str_ids = Lazy::new(||HashMap::new());
-    mut_state.container_window_usize_ids = Lazy::new(||HashMap::new());
-    mut_state.widgets = Lazy::new(||HashMap::new());
-    mut_state.widget_container_ids = Lazy::new(||HashMap::new());
-    // mut_state.windows = vec![];
-    // mut_state.windows_iced_ipg_ids = Lazy::new(||HashMap::new());
-    // mut_state.windows_str_ids = Lazy::new(||HashMap::new());
-    // mut_state.window_debug = Lazy::new(||HashMap::new());
-    // mut_state.window_theme = Lazy::new(||HashMap::new());
-    // mut_state.window_mode = Lazy::new(||HashMap::new());
-    mut_state.container_style = Lazy::new(||HashMap::new());
-    mut_state.button_style = Lazy::new(||HashMap::new());
-    mut_state.checkbox_style = Lazy::new(||HashMap::new());
-    mut_state.color_picker_style = Lazy::new(||HashMap::new());
-    mut_state.menu_bar_style = Lazy::new(||HashMap::new());
-    mut_state.menu_style = Lazy::new(||HashMap::new());
-    mut_state.menu_separator_style = Lazy::new(||HashMap::new());
-    mut_state.opaque_style = Lazy::new(||HashMap::new());
-    mut_state.pick_list_style = Lazy::new(||HashMap::new());
-    mut_state.progress_bar_style = Lazy::new(||HashMap::new());
-    mut_state.radio_style = Lazy::new(||HashMap::new());
-    mut_state.rule_style = Lazy::new(||HashMap::new());
-    mut_state.slider_style = Lazy::new(||HashMap::new());
-    mut_state.text_input_style = Lazy::new(||HashMap::new());
-    mut_state.toggler_style = Lazy::new(||HashMap::new());
-    mut_state.scrollable_style = Lazy::new(||HashMap::new());
-    mut_state.keyboard_event_id_enabled = (0, false);
-    mut_state.mouse_event_id_enabled = (0, false);
-    mut_state.timer_event_id_enabled = (0, false);
-    mut_state.window_event_id_enabled = (0, false);
-    mut_state.touch_event_id_enabled = (0, false);
-    mut_state.timer_duration = 0;
+    // zeroing out any vecs and hashmaps
+    mutex_state.ids = Lazy::new(||HashMap::new());
+    mutex_state.containers = Lazy::new(||HashMap::new());
+    mutex_state.container_ids = Lazy::new(||HashMap::new());
+    mutex_state.container_str_ids = Lazy::new(||HashMap::new());
+    mutex_state.container_wnd_str_ids = Lazy::new(||HashMap::new());
+    mutex_state.container_window_usize_ids = Lazy::new(||HashMap::new());
+    mutex_state.widgets = Lazy::new(||HashMap::new());
+    mutex_state.widget_container_ids = Lazy::new(||HashMap::new());
+    mutex_state.windows = vec![];
+    mutex_state.windows_iced_ipg_ids = Lazy::new(||HashMap::new());
+    mutex_state.windows_str_ids = Lazy::new(||HashMap::new());
+    mutex_state.window_debug = Lazy::new(||HashMap::new());
+    mutex_state.window_theme = Lazy::new(||HashMap::new());
+    mutex_state.window_mode = Lazy::new(||HashMap::new());
+    mutex_state.container_style = Lazy::new(||HashMap::new());
+    mutex_state.button_style = Lazy::new(||HashMap::new());
+    mutex_state.checkbox_style = Lazy::new(||HashMap::new());
+    mutex_state.color_picker_style = Lazy::new(||HashMap::new());
+    mutex_state.menu_bar_style = Lazy::new(||HashMap::new());
+    mutex_state.menu_style = Lazy::new(||HashMap::new());
+    mutex_state.menu_separator_style = Lazy::new(||HashMap::new());
+    mutex_state.opaque_style = Lazy::new(||HashMap::new());
+    mutex_state.pick_list_style = Lazy::new(||HashMap::new());
+    mutex_state.progress_bar_style = Lazy::new(||HashMap::new());
+    mutex_state.radio_style = Lazy::new(||HashMap::new());
+    mutex_state.rule_style = Lazy::new(||HashMap::new());
+    mutex_state.slider_style = Lazy::new(||HashMap::new());
+    mutex_state.text_input_style = Lazy::new(||HashMap::new());
+    mutex_state.toggler_style = Lazy::new(||HashMap::new());
+    mutex_state.scrollable_style = Lazy::new(||HashMap::new());
 
-    drop(mut_state);
+    drop(mutex_state);
 }
 
-fn clone_canvas_state(canvas_state: &mut IpgCanvasState) {
-    let mut cs = access_canvas_state();
-    canvas_state.curves = cs.curves.to_owned();
-    canvas_state.text_curves = cs.text_curves.to_owned();
-    canvas_state.image_curves = cs.image_curves.to_owned();
-    drop(cs);
+fn clone_canvas_state(canvas_state: &mut IpgCanvasState, last_id: usize) {
+    let mut mutex_cs = access_canvas_state();
+    canvas_state.curves = mutex_cs.curves.to_owned();
+    canvas_state.text_curves = mutex_cs.text_curves.to_owned();
+    canvas_state.image_curves = mutex_cs.image_curves.to_owned();
+    canvas_state.last_id = last_id;
+
+    // zeroing out any vecs and hashmaps
+    mutex_cs.curves = Lazy::new(||HashMap::new());
+    mutex_cs.text_curves = Lazy::new(||HashMap::new());
+    mutex_cs.image_curves = Lazy::new(||HashMap::new());
+    drop(mutex_cs);
 }

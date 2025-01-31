@@ -14,6 +14,7 @@ use crate::canvas::draw_canvas::{IpgCanvasState, IpgDrawMode,
 use crate::canvas::geometries::{get_draw_mode_and_status, 
     get_widget_id, set_widget_mode_or_status, IpgCanvasWidget};
 use crate::canvas::import_export::{convert_to_export, import_widgets, save};
+use crate::IpgState;
 
 use super::helpers::{get_horizontal_alignment, get_vertical_alignment, try_extract_f64, try_extract_ipg_horizontal_alignment, try_extract_ipg_vertical_alignment, try_extract_rgba_color, try_extract_string};
 
@@ -61,7 +62,8 @@ pub enum CanvasMessage {
     WidgetDraw(IpgWidget),
 }
 
-pub fn canvas_callback(canvas_message: CanvasMessage, 
+pub fn canvas_callback(canvas_message: CanvasMessage,
+                        app_state: &mut IpgState,
                         canvas_state: &mut IpgCanvasState,
                         ) {
     match canvas_message {
@@ -71,27 +73,34 @@ pub fn canvas_callback(canvas_message: CanvasMessage,
                 // Therefore, the pending has to return the curve at each change so that
                 // the curves can be updated.  The subscription clears the text cache at each tick.
                 match widget {
-                    IpgWidget::Text(_) => {
-                        let (_, draw_status) = get_draw_mode_and_status(&widget);
-                        let id = get_widget_id(&widget);
-                        match draw_status {
+                    IpgWidget::Text(ref txt) => {
+                        match txt.status {
                             IpgDrawStatus::Completed => {
-                                // widget = set_widget_mode_or_status(widget, Some(IpgDrawMode::DrawAll), None);
-                                canvas_state.text_curves.entry(id).and_modify(|k| *k= widget.clone());
+                                let id = if txt.id == 0 {
+                                    app_state.last_id +=1;
+                                    app_state.last_id
+                                } else {
+                                    txt.id
+                                };
+                                canvas_state.text_curves
+                                    .entry(id)
+                                    .and_modify(|k| *k= widget.clone());
                                 canvas_state.timer_event_enabled = false;
                             },
                             IpgDrawStatus::Delete => {
-                                canvas_state.text_curves.remove(&id);
+                                canvas_state.text_curves.remove(&txt.id);
                                 canvas_state.timer_event_enabled = false;
                             },
                             IpgDrawStatus::Inprogress => {
                                 // Since the text always returns a new curve or updated curve,
                                 // a check for the first return is need to see if a text is present. 
-                                let present = canvas_state.text_curves.get(&id);
-                                if present.is_none() {
-                                    canvas_state.text_curves.insert(id, widget.clone());
+                                if txt.id != 0 {
+                                    canvas_state.text_curves.insert(txt.id, widget.clone());
                                 } else {
-                                    canvas_state.text_curves.entry(id).and_modify(|k| *k= widget.clone());
+                                    app_state.last_id +=1;
+                                    canvas_state.text_curves
+                                        .entry(app_state.last_id)
+                                        .and_modify(|k| *k= widget.clone());
                                 }
                             },
                         }
@@ -110,13 +119,13 @@ pub fn canvas_callback(canvas_message: CanvasMessage,
                             _ => (),
                         }
                         if draw_mode == IpgDrawMode::New {
-                            let id = get_widget_id(&widget);
+                            app_state.last_id +=1;
                             let widget = set_widget_mode_or_status(widget.clone(), Some(IpgDrawMode::Display), Some(IpgDrawStatus::Completed));
-                            canvas_state.curves.insert(id, widget);
+                            canvas_state.curves.insert(app_state.last_id, widget);
                         } else {
                             // if not new must be in edit or rotate mode so modify.
                             let id = get_widget_id(&widget);
-                            canvas_state.edit_widget_id = Some(id.clone());
+                            canvas_state.edit_widget_id = Some(id);
                             canvas_state.curves.entry(id).and_modify(|k| *k= widget);
                         }
                         

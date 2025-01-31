@@ -118,10 +118,10 @@ pub struct ExportWidget {
 
 #[allow(clippy::redundant_closure)]
 pub fn import_widgets(widgets: Vec<ExportWidget>) 
-                        -> (HashMap<Id, IpgWidget>, HashMap<Id, IpgWidget>) {
+                        -> (HashMap<usize, IpgWidget>, HashMap<usize, IpgWidget>) {
     
-    let mut curves: HashMap<Id, IpgWidget> = HashMap::new();
-    let mut text_curves: HashMap<Id, IpgWidget> = HashMap::new();
+    let mut curves: HashMap<usize, IpgWidget> = HashMap::new();
+    let mut text_curves: HashMap<usize, IpgWidget> = HashMap::new();
 
     for widget in widgets.iter() {
         let points: Vec<Point> = widget.points.iter().map(|p| convert_to_point(p)).collect();
