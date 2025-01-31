@@ -154,7 +154,9 @@ impl App {
             },
             Message::Canvas(canvas_message) => {
                 canvas_callback(canvas_message, &mut self.state, &mut self.canvas_state);
+                self.canvas_state.last_id = self.state.last_id;
                 process_updates(&mut self.state, &mut self.canvas_state);
+                self.state.last_id = self.canvas_state.last_id;
                 get_tasks(&mut self.state)
             },
             Message::Card(id, message) => {
@@ -611,7 +613,7 @@ fn get_container<'a>(state: &IpgState,
     {
         Some(container) => 
             match container {
-                IpgContainers::IpgCanvas(_canvas) => {
+                IpgContainers::IpgCanvas(canvas) => {
                     construct_canvas(canvas_state)
                 },
                 IpgContainers::IpgColumn(col) => {
@@ -1029,10 +1031,11 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
 }
 
 fn process_canvas_updates(cs: &mut IpgCanvasState) {
-    let mut update_items = access_canvas_update_items();
+    let mut canvas_items = access_canvas_update_items();
 
     // let mut updates = all_updates.updates.clone();
-    for ((wid, item, value)) in update_items.updates.iter() {
+    for ((wid, item, value)) in canvas_items.updates.iter() {
+        let widget = if cs.image_curves.get_mut(wid)
         let widget = cs.image_curves.get_mut(wid);
         
     }
@@ -1120,6 +1123,11 @@ fn clone_canvas_state(canvas_state: &mut IpgCanvasState, last_id: usize) {
     canvas_state.text_curves = mutex_cs.text_curves.to_owned();
     canvas_state.image_curves = mutex_cs.image_curves.to_owned();
     canvas_state.last_id = last_id;
+    canvas_state.width = mutex_cs.width;
+    canvas_state.height = mutex_cs.height;
+    canvas_state.border_width = mutex_cs.border_width;
+    canvas_state.border_color = mutex_cs.border_color;
+    canvas_state.selected_canvas_color = mutex_cs.background;
 
     // zeroing out any vecs and hashmaps
     mutex_cs.curves = Lazy::new(||HashMap::new());

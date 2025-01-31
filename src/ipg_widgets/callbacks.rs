@@ -289,21 +289,22 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 return wco
             },
             IpgWidgets::IpgTimer(tim) => {
-                if let Some(ct) = 
-                    wci.counter {
-                    if ct == 0 {
-                        tim.counter = 0;
-                    } else {
-                        tim.counter += ct
-                    }
-                }
-               if let Some(ct) = wci.counter {
-                    if ct == 0 {
-                        tim.counter = 0;
-                    } else {
-                        tim.counter += ct
-                    }
-                }
+                tim.counter += 1;
+            //     if let Some(ct) = 
+            //         wci.counter {
+            //         if ct == 0 {
+            //             tim.counter = 0;
+            //         } else {
+            //             tim.counter += ct
+            //         }
+            //     }
+            //    if let Some(ct) = wci.counter {
+            //         if ct == 0 {
+            //             tim.counter = 0;
+            //         } else {
+            //             tim.counter += ct
+            //         }
+                // }
                 return WidgetCallbackOut{
                     user_data: tim.user_data.clone(),
                     counter: Some(tim.counter),

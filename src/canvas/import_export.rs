@@ -2,10 +2,11 @@
 
 use std::{collections::HashMap, fs::File, io::{BufWriter, Write}, path::Path};
 
-use iced::{alignment, widget::{container::Id, text::{LineHeight, Shaping}}, Color, Font, Pixels, Point, Radians, Vector};
+use iced::{alignment, widget::text::{LineHeight, Shaping}, Color, Font, Pixels, Point, Radians, Size, Vector};
 use serde::{Deserialize, Serialize};
 
-use super::{draw_canvas::{IpgWidget, IpgDrawMode, IpgDrawStatus}, geometries::{IpgArc, IpgBezier, IpgCircle, IpgEllipse, IpgFreeHand, IpgLine, IpgPolyLine, IpgPolygon, IpgRightTriangle, IpgText, IpgCanvasWidget}};
+use super::{draw_canvas::{IpgDrawMode, IpgDrawStatus, IpgWidget}, 
+    geometries::{IpgArc, IpgBezier, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgFreeHand, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle, IpgRightTriangle, IpgText}};
 
 
 pub fn save(path: impl AsRef<Path>, data: &impl Serialize) -> std::io::Result<()> {
@@ -117,8 +118,8 @@ pub struct ExportWidget {
 }
 
 #[allow(clippy::redundant_closure)]
-pub fn import_widgets(widgets: Vec<ExportWidget>) 
-                        -> (HashMap<usize, IpgWidget>, HashMap<usize, IpgWidget>) {
+pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize) 
+                        -> (HashMap<usize, IpgWidget>, HashMap<usize, IpgWidget>, usize) {
     
     let mut curves: HashMap<usize, IpgWidget> = HashMap::new();
     let mut text_curves: HashMap<usize, IpgWidget> = HashMap::new();
@@ -128,6 +129,7 @@ pub fn import_widgets(widgets: Vec<ExportWidget>)
         let other_point = convert_to_point(&widget.other_point);
         let color = convert_to_color(&widget.color);
         let width = widget.width;
+        let rotation = widget.rotation;
         let draw_mode = IpgDrawMode::Display;
         let mid_point = convert_to_point(&widget.mid_point);
         let status = IpgDrawStatus::Completed;
@@ -143,92 +145,102 @@ pub fn import_widgets(widgets: Vec<ExportWidget>)
             IpgCanvasWidget::None => {
             },
             IpgCanvasWidget::Arc => {
-                let id = Id::unique();
+                last_id += 1;
                 let arc = IpgArc {
-                    id: id.clone(),
+                    id: last_id,
                     points,
                     mid_point,
                     radius: widget.radius,
                     color,
                     fill_color,
                     width,
+                    stroke_dash_offset: None,
+                    stroke_dash_segments: None,
                     start_angle: Radians(other_point.x),
                     end_angle: Radians(other_point.y),
                     draw_mode,
                     status,
                 };
                 
-                curves.insert(id, IpgWidget::Arc(arc));
+                curves.insert(last_id, IpgWidget::Arc(arc));
             },
             IpgCanvasWidget::Bezier => {
-                let id = Id::unique();
+                last_id += 1;
                 let bz = IpgBezier {
-                    id: id.clone(),
+                    id: last_id,
                     points,
                     mid_point,
                     color,
                     fill_color,
                     width,
-                    rotation: widget.rotation,
+                    stroke_dash_offset: None,
+                    stroke_dash_segments: None,
+                    rotation,
                     draw_mode,
                     status
                 };
                 
-                curves.insert(id, IpgWidget::Bezier(bz));
+                curves.insert(last_id, IpgWidget::Bezier(bz));
             },
             IpgCanvasWidget::Circle => {
-                let id = Id::unique();
+                last_id += 1;
                 let cir = IpgCircle {
-                    id: id.clone(),
+                    id: last_id,
                     center: mid_point,
                     circle_point: convert_to_point(&widget.points[0]),
                     radius: widget.radius,
                     color,
                     fill_color,
                     width,
+                    stroke_dash_offset: 0,
+                    stroke_dash_segments: None,
                     draw_mode,
-                    status: IpgDrawStatus::Completed,
+                    status,
                 };
                 
-                curves.insert(id, IpgWidget::Circle(cir));
+                curves.insert(last_id, IpgWidget::Circle(cir));
             },
             IpgCanvasWidget::Ellipse => {
-                let id = Id::unique();
+                last_id += 1;
                 let vx = points[1].distance(points[0]);
                 let vy = points[2].distance(points[0]);
                 let ell = IpgEllipse {
-                    id: id.clone(),
+                    id: last_id,
                     points,
                     center: convert_to_point(&widget.points[0]),
                     radii: Vector { x: vx, y: vy },
-                    rotation: Radians(widget.rotation),
+                    rotation: Radians(rotation),
                     color,
                     fill_color,
                     width,
+                    stroke_dash_offset: None,
+                    stroke_dash_segments: None,
                     draw_mode,
-                    status: IpgDrawStatus::Completed,
+                    status,
                 };
                 
-                curves.insert(id, IpgWidget::Ellipse(ell));
+                curves.insert(last_id, IpgWidget::Ellipse(ell));
             },
             IpgCanvasWidget::Line => {
-                let id = Id::unique();
+                last_id += 1;
                 let ln = IpgLine {
-                    id: id.clone(),
+                    id: last_id,
                     points,
                     mid_point,
                     color,
                     width,
-                    rotation: widget.rotation,
+                    stroke_dash_offset: None,
+                    stroke_dash_segments: None,
+                    rotation,
                     draw_mode,
-                    status: IpgDrawStatus::Completed,
+                    status,
                 };
-                curves.insert(id, IpgWidget::Line(ln));
+                curves.insert(last_id, IpgWidget::Line(ln));
             },
             IpgCanvasWidget::Polygon => {
-                let id = Id::unique();
+                last_id += 1;
                 let pg = IpgPolygon {
-                    id: id.clone(),
+                    id: last_id,
                     points,
                     poly_points: widget.poly_points,
                     mid_point,
@@ -236,61 +248,87 @@ pub fn import_widgets(widgets: Vec<ExportWidget>)
                     color,
                     fill_color,
                     width,
-                    rotation: widget.rotation,
+                    stroke_dash_offset: None,
+                    stroke_dash_segments: None,
+                    rotation,
                     draw_mode,
-                    status: IpgDrawStatus::Completed,
+                    status,
                 };
-                curves.insert(id, IpgWidget::Polygon(pg));
+                curves.insert(last_id, IpgWidget::Polygon(pg));
             },
             IpgCanvasWidget::PolyLine => {
-                let id = Id::unique();
+                last_id += 1;
                 let pl = IpgPolyLine {
-                    id: id.clone(),
+                    id: last_id,
                     points,
                     poly_points: widget.poly_points,
                     mid_point,
                     pl_point: other_point,
                     color,
                     width,
-                    rotation: widget.rotation,
+                    stroke_dash_offset: None,
+                    stroke_dash_segments: None,
+                    rotation,
                     draw_mode,
-                    status: IpgDrawStatus::Completed,
+                    status,
                 };
-                curves.insert(id, IpgWidget::PolyLine(pl));
+                curves.insert(last_id, IpgWidget::PolyLine(pl));
             },
+            IpgCanvasWidget::Rectangle => {
+                last_id += 1;
+                let rect = IpgRectangle{ 
+                    id: last_id, 
+                    top_left: points[0], 
+                    size: Size::new(points[1].x, points[1].y), 
+                    mid_point, 
+                    color, 
+                    fill_color, 
+                    width,
+                    stroke_dash_offset: None,
+                    stroke_dash_segments: None, 
+                    rotation, 
+                    draw_mode, 
+                    status,
+                };
+                curves.insert(last_id, IpgWidget::Rectangle(rect));
+            }
             IpgCanvasWidget::RightTriangle => {
-                let id = Id::unique();
+                last_id += 1;
                 let tr = IpgRightTriangle {
-                    id: id.clone(),
+                    id: last_id,
                     points,
                     mid_point,
                     tr_point: other_point,
                     color,
                     fill_color,
                     width,
-                    rotation: widget.rotation,
+                    stroke_dash_offset: None,
+                    stroke_dash_segments: None,
+                    rotation,
                     draw_mode,
-                    status: IpgDrawStatus::Completed,
+                    status,
                 };
-                curves.insert(id, IpgWidget::RightTriangle(tr));
+                curves.insert(last_id, IpgWidget::RightTriangle(tr));
             },
             IpgCanvasWidget::FreeHand => {
-                let id = Id::unique();
+                last_id += 1;
                 let fh = IpgFreeHand {
-                    id: id.clone(),
+                    id: last_id,
                     points,
                     color,
                     width,
+                    stroke_dash_offset: None,
+                    stroke_dash_segments: None,
                     draw_mode,
-                    status: IpgDrawStatus::Completed,
+                    status,
                     completed: true,
                 };
-                curves.insert(id, IpgWidget::FreeHand(fh));
+                curves.insert(last_id, IpgWidget::FreeHand(fh));
             }
             IpgCanvasWidget::Text => {
-                let id = Id::unique();
+                last_id += 1;
                 let txt = IpgText {
-                    id: id.clone(),
+                    id: last_id,
                     content: widget.content.clone(),
                     position: other_point,
                     color,
@@ -300,21 +338,21 @@ pub fn import_widgets(widgets: Vec<ExportWidget>)
                     horizontal_alignment: convert_to_iced_horizontal(widget.horizontal_alignment),
                     vertical_alignment: convert_to_iced_vertical(widget.vertical_alignment),
                     shaping: Shaping::Basic,
-                    rotation: widget.rotation,
+                    rotation,
                     draw_mode,
-                    status: IpgDrawStatus::Completed,
+                    status,
                 };
-                text_curves.insert(id, IpgWidget::Text(txt));
+                text_curves.insert(last_id, IpgWidget::Text(txt));
             }
         }
     }
 
-   (curves, text_curves)
+   (curves, text_curves, last_id)
 
 }
 
-pub fn convert_to_export(widgets: &HashMap<Id, IpgWidget>, 
-                        text: &HashMap<Id, IpgWidget>) 
+pub fn convert_to_export(widgets: &HashMap<usize, IpgWidget>, 
+                        text: &HashMap<usize, IpgWidget>) 
                         -> Vec<ExportWidget> {
 
     let mut curves = widgets.clone();

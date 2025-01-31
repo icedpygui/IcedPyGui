@@ -5,7 +5,7 @@ use std::fs;
 use std::path::Path;
 
 use iced::widget::container;
-use iced::{Color, Element, Length};
+use iced::{Color, Element};
 use pyo3::{pyclass, PyObject, Python};
 
 use crate::app::Message;
@@ -22,26 +22,14 @@ use super::helpers::{get_horizontal_alignment, get_vertical_alignment, try_extra
 #[derive(Debug, Clone)]
 pub struct IpgCanvas {
     pub id: usize,
-    pub width: Length,
-    pub height: Length,
-    pub background: Option<Color>,
-    pub show: bool,
 }
 
 impl IpgCanvas {
     pub fn new(
         id: usize,
-        width: Length,
-        height: Length,
-        background: Option<Color>,
-        show: bool,
     ) -> Self {
         Self {
             id,
-            width,
-            height,
-            background,
-            show, 
         }
     }
 }
@@ -153,6 +141,8 @@ pub enum IpgCanvasParam {
     TextAlignment,
 }
 
+// update only the canvas, not the propterties of the canvas widgets.
+// see canvas_geometry_update
 pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
                             item: PyObject,
                             value: PyObject,
@@ -174,6 +164,9 @@ pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
             let rgba = try_extract_rgba_color(value);
             canvas_state.selected_draw_color = Color::from(rgba);
         },
+        IpgCanvasParam::FilePath => {
+            canvas_state.file_path = try_extract_string(value);
+        },
         IpgCanvasParam::FillColor => {
             let rgba = try_extract_rgba_color(value);
             canvas_state.selected_fill_color = Some(Color::from(rgba));
@@ -192,15 +185,12 @@ pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
                 Err(e) => panic!("PolyPoint input must be an integer, {}", e),
             }
         },
-        IpgCanvasParam::FilePath => {
-            canvas_state.file_path = try_extract_string(value);
-        },
         IpgCanvasParam::Load => {
             let path = Path::new(&canvas_state.file_path);
             let data = fs::read_to_string(path).expect("Unable to read file");
             let widgets = serde_json::from_str(&data).expect("Unable to parse file");
             canvas_state.clear_curves();
-            (canvas_state.curves, canvas_state.text_curves) = import_widgets(widgets);
+            (canvas_state.curves, canvas_state.text_curves, canvas_state.last_id) = import_widgets(widgets, canvas_state.last_id);
             canvas_state.request_redraw();
             canvas_state.request_text_redraw();
         },
@@ -264,7 +254,48 @@ fn try_extract_widget(update_obj: PyObject) -> IpgCanvasWidget {
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgCanvasImageParam {
+pub enum IpgCanvasGeometryParam {
     Position,
     Rotation,
+}
+
+pub fn canvas_geometry_update(geometry: &mut IpgCanvasWidget,
+                            item: PyObject,
+                            value: PyObject,) {
+
+    match geometry {
+        IpgCanvasWidget::None => (),
+        IpgCanvasWidget::Arc => todo!(),
+        IpgCanvasWidget::Bezier => todo!(),
+        IpgCanvasWidget::Circle => {
+            
+        },
+        IpgCanvasWidget::Ellipse => todo!(),
+        IpgCanvasWidget::Line => todo!(),
+        IpgCanvasWidget::PolyLine => todo!(),
+        IpgCanvasWidget::Polygon => todo!(),
+        IpgCanvasWidget::Rectangle => todo!(),
+        IpgCanvasWidget::RightTriangle => todo!(),
+        IpgCanvasWidget::Text => todo!(),
+        IpgCanvasWidget::FreeHand => todo!(),
+    }
+}
+
+fn match_geometry_item(item: PyObject, value: PyObject) {
+    let param = try_extract_geometry_update(item);
+
+    match param {
+        IpgCanvasGeometryParam::Position => todo!(),
+        IpgCanvasGeometryParam::Rotation => todo!(),
+    }
+}
+
+pub fn try_extract_geometry_update(update_obj: PyObject) -> IpgCanvasGeometryParam {
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgCanvasGeometryParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Canvas update extraction failed"),
+        }
+    })
 }

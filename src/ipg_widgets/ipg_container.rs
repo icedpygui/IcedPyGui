@@ -106,12 +106,16 @@ pub fn construct_container(con: IpgContainer,
     let align_h = get_horizontal_alignment(con.align_h.clone());
     let align_v = get_vertical_alignment(con.align_v.clone());
 
-    let mut new_content: Element<Message> = horizontal_space().into();
-    if content.is_empty() {
-        new_content = content.remove(0);
-    }
+    // Since a container can have only one element and the 
+    // the process sends a vec then if empty container, put in a
+    // space or remove the element in the vec.
+    let new_content: Element<Message> = if content.is_empty() {
+        horizontal_space().into()
+    } else {
+        content.remove(0)
+    };
 
-    let cont: Element<Message> = Container::new(new_content)
+    Container::new(new_content)
                 .padding(con.padding)
                 .width(con.width)
                 .height(con.height)
@@ -122,8 +126,8 @@ pub fn construct_container(con: IpgContainer,
                     get_styling(theme, 
                         style.clone(),
                         ))
-                .into();
-    cont
+                .into()
+    
 }
 
 

@@ -2,11 +2,10 @@
 
 use std::collections::HashMap;
 
-use iced::widget::container::Id;
-use iced::{alignment, mouse, Color, Vector};
+use iced::{alignment, mouse, Color, Length, Vector};
 use iced::widget::canvas::event::{self, Event};
-use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Stroke};
-use iced::{Element, Fill, Point, Renderer, Theme};
+use iced::widget::canvas::{self, stroke, Canvas, Frame, Geometry, LineDash, Path, Stroke};
+use iced::{Element, Point, Renderer, Theme};
 use pyo3::pyclass;
 
 use crate::canvas::canvas_helpers::to_degrees;
@@ -15,8 +14,7 @@ use crate::canvas::path_builds::{build_arc_path, build_bezier_path, build_circle
     build_polygon_path, build_polyline_path, build_right_triangle_path, build_text_path};
 
 use super::canvas_helpers::to_radians;
-use super::geometries::{add_keypress, add_new_widget, check_if_text_widget, complete_new_widget, find_closest_point_index, find_closest_widget, get_del_key, get_widget_degrees, set_widget_mode_or_status, set_widget_point, update_edited_widget, update_rotated_widget, IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgFreeHand, 
-    IpgLine, IpgPolyLine, IpgPolygon, IpgRightTriangle, IpgText};
+use super::geometries::{add_keypress, add_new_widget, check_if_text_widget, complete_new_widget, find_closest_point_index, find_closest_widget, get_del_key, get_widget_degrees, set_widget_mode_or_status, set_widget_point, update_edited_widget, update_rotated_widget, IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgFreeHand, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle, IpgRightTriangle, IpgText};
 
 
 #[derive(Debug, Clone, Default)]
@@ -31,6 +29,7 @@ pub enum IpgWidget {
     Line(IpgLine),
     PolyLine(IpgPolyLine),
     Polygon(IpgPolygon),
+    Rectangle(IpgRectangle),
     RightTriangle(IpgRightTriangle),
     Text(IpgText),
     FreeHand(IpgFreeHand),
@@ -57,6 +56,7 @@ pub enum IpgDrawStatus {
 #[derive(Debug)]
 pub struct IpgCanvasState {
     cache: canvas::Cache,
+    background_cache: canvas::Cache,
     text_cache: Vec<canvas::Cache>,
     image_cache: Vec<canvas::Cache>,
     pub last_id: usize,
@@ -64,6 +64,10 @@ pub struct IpgCanvasState {
     pub text_curves: HashMap<usize, IpgWidget>,
     pub image_curves: HashMap<usize, IpgWidget>,
     pub draw_mode: IpgDrawMode,
+    pub width: Length,
+    pub height: Length,
+    pub border_color: Option<Color>,
+    pub border_width: Option<f32>,
     pub edit_widget_id: Option<usize>,
     pub escape_pressed: bool,
     pub selected_widget: Option<IpgCanvasWidget>,
@@ -94,6 +98,7 @@ impl Default for IpgCanvasState {
         }
         Self { 
             cache: canvas::Cache::new(),
+            background_cache: canvas::Cache::new(),
             text_cache,
             image_cache,
             last_id: 0,
@@ -101,6 +106,10 @@ impl Default for IpgCanvasState {
             text_curves: HashMap::new(),
             image_curves: HashMap::new(),
             draw_mode: IpgDrawMode::Display,
+            width: Length::Fill,
+            height: Length::Fill,
+            border_color: None,
+            border_width: None,
             edit_widget_id: None,
             escape_pressed: false,
             selected_widget: None,
@@ -125,7 +134,7 @@ impl IpgCanvasState {
     pub fn view<'a>(&'a self, 
                     curves: &'a HashMap<usize, IpgWidget>, 
                     text_curves: &'a HashMap<usize, IpgWidget>,
-                    image_curves: &'a HashMap<usize, IpgWidget>, 
+                    image_curves: &'a HashMap<usize, IpgWidget>,
                     ) -> Element<'a, IpgWidget> {
         Canvas::new(DrawPending {
             state: self,
@@ -133,8 +142,8 @@ impl IpgCanvasState {
             text_curves,
             image_curves,
         })
-        .width(Fill)
-        .height(Fill)
+        .width(self.width)
+        .height(self.height)
         .into()
     }
 
@@ -532,8 +541,8 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
         cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
         
-        let content =
-            self.state.cache.draw(renderer, bounds.size(), 
+        let background =
+            self.state.background_cache.draw(renderer, bounds.size(), 
                             |frame| {
 
                 let background = Path::rectangle(Point::ORIGIN, frame.size());
@@ -541,14 +550,20 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
                     frame.fill(&background, self.state.selected_canvas_color.unwrap());
                 }
                 
-                DrawCurve::draw_all(self.curves, frame, theme);
-
                 frame.stroke(
                     &Path::rectangle(Point::ORIGIN, frame.size()),
                     Stroke::default()
                         .with_width(2.0)
                         .with_color(theme.palette().text),
                 );
+            });
+
+        let content =
+            self.state.cache.draw(renderer, bounds.size(), 
+                            |frame| {
+
+                DrawCurve::draw_all(self.curves, frame, theme);
+
             });
 
         let mut text_content = vec![];
@@ -566,12 +581,13 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
         }
             
         if let Some(pending) = state {
-            let mut content = vec![content, pending.draw(renderer, theme, bounds, cursor)];
+            let mut content = 
+            vec![background, content, pending.draw(renderer, theme, bounds, cursor)];
             content.append(&mut text_content);
             content.append(&mut image_content);
             content
         } else {
-            let mut content = vec![content];
+            let mut content = vec![background, content];
             content.append(&mut text_content);
             content.append(&mut image_content);
             content
@@ -608,12 +624,17 @@ impl DrawCurve {
             // during editing because there is no way to refresh
             // The pending routine will diplay the curve
 
-            let (path, color, width) = 
+            let (path, 
+                color, 
+                width, 
+                offset,
+                line_dash,
+                ) = 
                 match &widget {
                     IpgWidget::Arc(arc) => {
                         // skip if being editied or rotated
                         if arc.status == IpgDrawStatus::Inprogress {
-                            (None, None, None)
+                            (None, None, None, 0, None)
                         } else {
                             let (path, _, _,_,_,_) = 
                                 build_arc_path(
@@ -626,13 +647,13 @@ impl DrawCurve {
                             if arc.fill_color.is_some() {
                                 frame.fill(&path, arc.fill_color.unwrap());
                             }
-                            (Some(path), Some(arc.color), Some(arc.width))
+                            (Some(path), Some(arc.color), Some(arc.width), 0, None)
                         }
                     },
                     IpgWidget::Bezier(bz) => {
                         // skip if being editied or rotated
                         if bz.status == IpgDrawStatus::Inprogress {
-                            (None, None, None)
+                            (None, None, None, 0, None)
                         } else {
                             let (path, _, _) = 
                                 build_bezier_path(
@@ -646,13 +667,13 @@ impl DrawCurve {
                             if bz.fill_color.is_some() {
                                 frame.fill(&path, bz.fill_color.unwrap());
                             }
-                            (Some(path), Some(bz.color), Some(bz.width))
+                            (Some(path), Some(bz.color), Some(bz.width), 0, None)
                         }
                     },
                     IpgWidget::Circle(cir) => {
                         // skip if being editied or rotated
                         if cir.status== IpgDrawStatus::Inprogress {
-                            (None, None, None)
+                            (None, None, None, 0, None)
                         } else {
                             let path = 
                                 build_circle_path(
@@ -665,13 +686,13 @@ impl DrawCurve {
                             if cir.fill_color.is_some() {
                                 frame.fill(&path, cir.fill_color.unwrap());
                             }
-                            (Some(path), Some(cir.color), Some(cir.width))
+                            (Some(path), Some(cir.color), Some(cir.width), cir.stroke_dash_offset, cir.stroke_dash_segments.clone())
                         }
                     },
                     IpgWidget::Ellipse(ell) => {
                         // skip if being editied or rotated
                         if ell.status == IpgDrawStatus::Inprogress {
-                            (None, None, None)
+                            (None, None, None, 0, None)
                         } else {
                             let path = 
                                 build_ellipse_path(
@@ -684,13 +705,13 @@ impl DrawCurve {
                             if ell.fill_color.is_some() {
                                 frame.fill(&path, ell.fill_color.unwrap());
                             }
-                            (Some(path), Some(ell.color), Some(ell.width))
+                            (Some(path), Some(ell.color), Some(ell.width), 0, None)
                         }
                     },
                     IpgWidget::Line(line) => {
                         // skip if being editied or rotated
                         if line.status == IpgDrawStatus::Inprogress {
-                            (None, None, None)
+                            (None, None, None, 0, None)
                         } else {
                             let (path, _, _) = 
                                 build_line_path(
@@ -702,13 +723,13 @@ impl DrawCurve {
                                     None,
                                     );
 
-                            (Some(path), Some(line.color), Some(line.width))
+                            (Some(path), Some(line.color), Some(line.width), 0, None)
                         }
                     },
                     IpgWidget::PolyLine(pl) => {
                         // skip if being editied or rotated
                         if pl.status == IpgDrawStatus::Inprogress {
-                            (None, None, None)
+                            (None, None, None, 0, None)
                         } else {
                             let (path, _, _) = 
                                 build_polyline_path(
@@ -720,13 +741,13 @@ impl DrawCurve {
                                     false,
                                     None,
                                 );
-                            (Some(path), Some(pl.color), Some(pl.width))
+                            (Some(path), Some(pl.color), Some(pl.width), 0, None)
                         }
                     },
                     IpgWidget::Polygon(pg) => {
                         // skip if being editied or rotated
                         if pg.status == IpgDrawStatus::Inprogress {
-                            (None, None, None)
+                            (None, None, None, 0, None)
                         } else {
                             let (path, _, _) = 
                                 build_polygon_path(
@@ -740,13 +761,21 @@ impl DrawCurve {
                             if pg.fill_color.is_some() {
                                 frame.fill(&path, pg.fill_color.unwrap());
                             }    
-                            (Some(path), Some(pg.color), Some(pg.width))
+                            (Some(path), Some(pg.color), Some(pg.width), 0, None)
                         }
-                    }
+                    },
+                    IpgWidget::Rectangle(rect) => {
+                        let path =  Path::new(|p| {
+                            p.rectangle(rect.top_left, rect.size)});
+                            if rect.fill_color.is_some() {
+                                frame.fill(&path, rect.fill_color.unwrap());
+                            }    
+                            (Some(path), Some(rect.color), Some(rect.width), 0, None)
+                    },
                     IpgWidget::RightTriangle(tr) => {
                         // skip if being editied or rotated
                         if tr.status == IpgDrawStatus::Inprogress {
-                            (None, None, None)
+                            (None, None, None, 0, None)
                         } else {
                             let (path, _, _, _) = 
                                 build_right_triangle_path(
@@ -761,13 +790,13 @@ impl DrawCurve {
                             if tr.fill_color.is_some() {
                                 frame.fill(&path, tr.fill_color.unwrap());
                             }   
-                            (Some(path), Some(tr.color), Some(tr.width))
+                            (Some(path), Some(tr.color), Some(tr.width), 0, None)
                         }
                     },
                     IpgWidget::FreeHand(fh) => {
                         // skip if being editied or rotated
                         if fh.status == IpgDrawStatus::Inprogress {
-                            (None, None, None)
+                            (None, None, None, 0, None)
                         } else {
                             let path = 
                                 build_free_hand_path(
@@ -776,18 +805,36 @@ impl DrawCurve {
                                     None, 
                                     None, 
                                 );
-                            (Some(path), Some(fh.color), Some(fh.width))
+                            (Some(path), Some(fh.color), Some(fh.width), 0, None)
                         }
                     },
                     
-                    _ => (None, None, None),
+                    _ => (None, None, None, 0, None),
                 };
 
+                let stroke = if line_dash.is_some() && color.is_some() && width.is_some() {
+                    Stroke {
+                        style: stroke::Style::Solid(color.unwrap()),
+                        width: width.unwrap(),
+                        line_dash: LineDash {
+                            offset,
+                            segments: &line_dash.unwrap(),
+                        },
+                        ..Stroke::default()
+                    }
+                } else if line_dash.is_none() && color.is_some() && width.is_some() {
+                    Stroke {
+                        style: stroke::Style::Solid(color.unwrap()),
+                        width: width.unwrap(),
+                        ..Stroke::default()
+                    }
+                } else {
+                    Stroke::default()
+                };
+                
                 if let Some(path) = path { frame.stroke(
                     &path,
-                    Stroke::default()
-                    .with_width(width.unwrap())
-                    .with_color(color.unwrap()),
+                    stroke,
                     ) }
         }
 
@@ -831,8 +878,6 @@ impl DrawCurve {
     fn draw_image(image_curve: &IpgWidget, frame: &mut Frame, _theme: &Theme) {
         match &image_curve {
             IpgWidget::Image(img) => {
-                frame.fill_rectangle(Point::ORIGIN, frame.size(), Color::BLACK);
-                
                 frame.translate(Vector::new(img.position.x, img.position.y));
                 
                 frame.draw_image(

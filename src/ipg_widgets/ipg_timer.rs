@@ -137,9 +137,9 @@ pub fn timer_callback(state: &mut IpgState, id: usize, message: TIMMessage) -> u
 pub fn tick_callback(state: &mut IpgState) 
 {
     let id= state.timer_event_id_enabled.0;
-    let mut wci = WidgetCallbackIn{id, ..Default::default()};
+    let wci = WidgetCallbackIn{id, ..Default::default()};
 
-    wci.counter = Some(1);
+    // wci.counter = Some(1);
     let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
     wco.id = id;
     wco.event_name = "on_tick".to_string();

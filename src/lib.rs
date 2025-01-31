@@ -3,10 +3,12 @@
 #![allow(clippy::type_complexity)]
 use canvas::canvas_helpers::{build_polygon, get_mid_point, to_radians};
 use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode, IpgDrawStatus, IpgWidget};
-use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon};
-use iced::widget::{container, image};
+use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, 
+    IpgCanvasWidget, IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
+use iced::widget::image;
 use iced_aw::iced_fonts;
-use ipg_widgets::ipg_color_picker::{color_picker_update, IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle};
+use ipg_widgets::ipg_color_picker::{color_picker_update, IpgColorPicker, 
+    IpgColorPickerParam, IpgColorPickerStyle};
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -31,7 +33,7 @@ mod canvas;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, 
         IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
-use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, IpgCanvasImageParam, IpgCanvasParam};
+use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, IpgCanvasGeometryParam, IpgCanvasParam};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyle, IpgCardParam};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, 
         IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle};
@@ -286,6 +288,11 @@ pub struct CanvasState {
     pub curves: Lazy<HashMap<usize, IpgWidget>>,
     pub text_curves: Lazy<HashMap<usize, IpgWidget>>,
     pub image_curves: Lazy<HashMap<usize, IpgWidget>>,
+    pub width: Length,
+    pub height: Length,
+    pub background: Option<Color>,
+    pub border_color: Option<Color>,
+    pub border_width: Option<f32>,
 }
 
 pub static CANVAS_STATE: Mutex<CanvasState> = Mutex::new(
@@ -294,6 +301,11 @@ pub static CANVAS_STATE: Mutex<CanvasState> = Mutex::new(
         curves: Lazy::new(||HashMap::new()),
         text_curves: Lazy::new(||HashMap::new()),
         image_curves: Lazy::new(||HashMap::new()),
+        width: Length::Fill,
+        height: Length::Fill,
+        background: None,
+        border_color: None,
+        border_width: None,
         },
 );
 
@@ -617,11 +629,13 @@ impl IPG {
                         width_fill=false,
                         height=None,
                         height_fill=false,
+                        border_width=2.0,
+                        border_ipg_color=IpgColor::WHITE,
+                        border_rgba_color=None,
                         background_ipg_color=None,
                         background_rgba_color=None,
                         parent_id=None,
                         gen_id=None,
-                        show=true,
                         ))]
     fn add_canvas(&mut self,
                     window_id: String,
@@ -630,11 +644,13 @@ impl IPG {
                     width_fill: bool,
                     height: Option<f32>,
                     height_fill: bool,
+                    border_width: Option<f32>,
+                    border_ipg_color: Option<IpgColor>,
+                    border_rgba_color: Option<[f32; 4]>,
                     background_ipg_color: Option<IpgColor>,
                     background_rgba_color: Option<[f32; 4]>,
                     parent_id: Option<String>,
                     gen_id: Option<usize>,
-                    show: bool,
                     )  -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -642,6 +658,8 @@ impl IPG {
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
         let background: Option<Color> = get_color(background_rgba_color, background_ipg_color, 1.0, false);
+
+        let border_color = get_color(border_rgba_color, border_ipg_color, 1.0, false);
 
         let prt_id = match parent_id {
             Some(id) => id,
@@ -656,10 +674,6 @@ impl IPG {
 
         state.containers.insert(self.id, IpgContainers::IpgCanvas(IpgCanvas::new(
                                                 id,
-                                                width,
-                                                height,
-                                                background,
-                                                show,
                                             )));
         state.last_id = id;
         drop(state);
@@ -667,6 +681,11 @@ impl IPG {
         // set up the CanvasState
         let mut canvas_state = access_canvas_state();
         canvas_state.canvas_ids_str.insert(canvas_id, id);
+        canvas_state.width = width;
+        canvas_state.height = height;
+        canvas_state.background = background;
+        canvas_state.border_width = border_width;
+        canvas_state.border_color = border_color;
         drop(canvas_state);
 
         Ok(id)
@@ -3838,7 +3857,9 @@ impl IPG {
                             start_angle,
                             end_angle,
                             stroke_width=2.0,
-                            stroke_ipg_color=None,
+                            stroke_dash_offset=None,
+                            stroke_dash_segments=None,
+                            stroke_ipg_color=Some(IpgColor::WHITE),
                             stroke_rgba_color=None,
                             fill_ipg_color=None,
                             fill_rgba_color=None,
@@ -3851,6 +3872,8 @@ impl IPG {
                     start_angle: f32,
                     end_angle: f32,
                     stroke_width: f32,
+                    stroke_dash_offset: Option<usize>,
+                    stroke_dash_segments: Option<Vec<f32>>,
                     stroke_ipg_color: Option<IpgColor>,
                     stroke_rgba_color: Option<[f32; 4]>,
                     fill_ipg_color: Option<IpgColor>,
@@ -3859,10 +3882,10 @@ impl IPG {
                     )  -> PyResult<usize> 
     {   
         let mid_point = Point::new(center_xy.0, center_xy.1);
-        let color = if stroke_ipg_color.is_none() && stroke_rgba_color.is_none() {
-            Color::from_rgba(0.961, 0.871, 0.702, 1.0)
+        let color = if stroke_rgba_color.is_some() {
+            get_color(stroke_rgba_color, None, 1.0, false).unwrap()
         } else {
-            get_color(stroke_rgba_color, stroke_ipg_color, 1.0, false).unwrap()
+            get_color(None, stroke_ipg_color, 1.0, false).unwrap()
         };
          
         let fill_color =  get_color(fill_rgba_color, fill_ipg_color, 1.0, false);
@@ -3883,7 +3906,9 @@ impl IPG {
                             radius, 
                             color, 
                             fill_color, 
-                            width: stroke_width, 
+                            width: stroke_width,
+                            stroke_dash_offset,
+                            stroke_dash_segments,
                             start_angle: Radians(to_radians(&start_angle)), 
                             end_angle: Radians(to_radians(&end_angle)),
                             draw_mode: IpgDrawMode::Display, 
@@ -3903,7 +3928,9 @@ impl IPG {
     #[pyo3(signature = (canvas_id,
                         points,
                         stroke_width=2.0,
-                        stroke_ipg_color=None,
+                        stroke_dash_offset=None,
+                        stroke_dash_segments=None,
+                        stroke_ipg_color=IpgColor::WHITE,
                         stroke_rgba_color=None,
                         fill_ipg_color=None,
                         fill_rgba_color=None,
@@ -3914,6 +3941,8 @@ impl IPG {
                     canvas_id: String,
                     points: [(f32, f32); 3],
                     stroke_width: f32,
+                    stroke_dash_offset: Option<usize>,
+                    stroke_dash_segments: Option<Vec<f32>>,
                     stroke_ipg_color: Option<IpgColor>,
                     stroke_rgba_color: Option<[f32; 4]>,
                     fill_ipg_color: Option<IpgColor>,
@@ -3928,10 +3957,10 @@ impl IPG {
                                         Point::new(points[1].0, points[1].1), 
                                         Point::new(points[2].0, points[2].1)];
 
-        let color = if stroke_ipg_color.is_none() && stroke_rgba_color.is_none() {
-            Color::from_rgba(0.961, 0.871, 0.702, 1.0)
+        let color = if stroke_rgba_color.is_some() {
+            get_color(stroke_rgba_color, None, 1.0, false).unwrap()
         } else {
-            get_color(stroke_rgba_color, stroke_ipg_color, 1.0, false).unwrap()
+            get_color(None, stroke_ipg_color, 1.0, false).unwrap()
         };
          
         let fill_color =  get_color(fill_rgba_color, fill_ipg_color, 1.0, false);
@@ -3940,7 +3969,7 @@ impl IPG {
         let canvas_id_opt = canvas_state.canvas_ids_str.get(&canvas_id);
         
         if canvas_id_opt.is_none() {
-            panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+            panic!("Bezier: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
         let id = self.get_id(gen_id);
@@ -3951,7 +3980,9 @@ impl IPG {
                                     mid_point, 
                                     color, 
                                     fill_color, 
-                                    width: stroke_width, 
+                                    width: stroke_width,
+                                    stroke_dash_offset,
+                                    stroke_dash_segments, 
                                     rotation: degrees, 
                                     draw_mode: IpgDrawMode::Display, 
                                     status: IpgDrawStatus::Completed,
@@ -3968,43 +3999,51 @@ impl IPG {
     }
 
     #[pyo3(signature = (canvas_id,
-                        center_xy,
+                        position_xy,
                         radius,
                         stroke_width=2.0,
-                        stroke_ipg_color=None,
+                        stroke_dash_offset=0,
+                        stroke_dash_segments=None,
+                        stroke_ipg_color=IpgColor::WHITE,
                         stroke_rgba_color=None,
+                        stroke_color_alpha=1.0,
                         fill_ipg_color=None,
                         fill_rgba_color=None,
+                        fill_color_alpha=1.0,
                         gen_id=None,
                         ))]
     fn add_circle(&mut self,
                     canvas_id: String,
-                    center_xy: (f32, f32),
+                    position_xy: (f32, f32),
                     radius: f32,
                     stroke_width: f32,
+                    stroke_dash_offset: usize,
+                    stroke_dash_segments: Option<Vec<f32>>,
                     stroke_ipg_color: Option<IpgColor>,
                     stroke_rgba_color: Option<[f32; 4]>,
+                    stroke_color_alpha: f32,
                     fill_ipg_color: Option<IpgColor>,
                     fill_rgba_color: Option<[f32; 4]>,
+                    fill_color_alpha: f32,
                     gen_id: Option<usize>,
                     ) -> PyResult<usize> 
     {
-        let center = Point::new(center_xy.0, center_xy.1);
+        let center = Point::new(position_xy.0, position_xy.1);
         let circle_point = Point::new(center.x, center.y + radius);
 
-        let color = if stroke_ipg_color.is_none() && stroke_rgba_color.is_none() {
-            Color::from_rgba(0.961, 0.871, 0.702, 1.0)
+        let color = if stroke_rgba_color.is_some() {
+            get_color(stroke_rgba_color, None, stroke_color_alpha, false).unwrap()
         } else {
-            get_color(stroke_rgba_color, stroke_ipg_color, 1.0, false).unwrap()
+            get_color(None, stroke_ipg_color, stroke_color_alpha, false).unwrap()
         };
-         
-        let fill_color =  get_color(fill_rgba_color, fill_ipg_color, 1.0, false);
+       
+        let fill_color =  get_color(fill_rgba_color, fill_ipg_color, fill_color_alpha, false);
 
         let mut canvas_state = access_canvas_state();
         let canvas_id_opt = canvas_state.canvas_ids_str.get(&canvas_id);
         
         if canvas_id_opt.is_none() {
-            panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+            panic!("Circle: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
         let id = self.get_id(gen_id);
@@ -4016,7 +4055,9 @@ impl IPG {
                                     radius, 
                                     color, 
                                     fill_color, 
-                                    width: stroke_width, 
+                                    width: stroke_width,
+                                    stroke_dash_offset,
+                                    stroke_dash_segments, 
                                     draw_mode: IpgDrawMode::Display, 
                                     status: IpgDrawStatus::Completed,
                                     };
@@ -4032,12 +4073,14 @@ impl IPG {
     }
 
     #[pyo3(signature = (canvas_id,
-                        center_xy,
+                        position_xy,
                         radius_x,
                         radius_y,
                         degrees=0.0,
                         stroke_width=2.0,
-                        stroke_ipg_color=None,
+                        stroke_dash_offset=None,
+                        stroke_dash_segments=None,
+                        stroke_ipg_color=IpgColor::WHITE,
                         stroke_rgba_color=None,
                         fill_ipg_color=None,
                         fill_rgba_color=None,
@@ -4045,11 +4088,13 @@ impl IPG {
                         ))]
     fn add_ellipse(&mut self,
                     canvas_id: String,
-                    center_xy: (f32, f32),
+                    position_xy: (f32, f32),
                     radius_x: f32,
                     radius_y: f32,
                     degrees: f32,
                     stroke_width: f32,
+                    stroke_dash_offset: Option<usize>,
+                    stroke_dash_segments: Option<Vec<f32>>,
                     stroke_ipg_color: Option<IpgColor>,
                     stroke_rgba_color: Option<[f32; 4]>,
                     fill_ipg_color: Option<IpgColor>,
@@ -4057,15 +4102,15 @@ impl IPG {
                     gen_id: Option<usize>,
                     )  -> PyResult<usize> 
     {
-        let center = Point::new(center_xy.0, center_xy.1);
+        let center = Point::new(position_xy.0, position_xy.1);
 
         let points = vec![Point::new(center.x+radius_x, center.y), 
                                         Point::new(center.x, center.y+radius_y)];
 
-        let color = if stroke_ipg_color.is_none() && stroke_rgba_color.is_none() {
-            Color::from_rgba(0.961, 0.871, 0.702, 1.0)
+        let color = if stroke_rgba_color.is_some() {
+            get_color(stroke_rgba_color, None, 1.0, false).unwrap()
         } else {
-            get_color(stroke_rgba_color, stroke_ipg_color, 1.0, false).unwrap()
+            get_color(None, stroke_ipg_color, 1.0, false).unwrap()
         };
          
         let fill_color =  get_color(fill_rgba_color, fill_ipg_color, 1.0, false);
@@ -4074,7 +4119,7 @@ impl IPG {
         let canvas_id_opt = canvas_state.canvas_ids_str.get(&canvas_id);
         
         if canvas_id_opt.is_none() {
-            panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+            panic!("Ellipse: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
         let id = self.get_id(gen_id);
@@ -4087,7 +4132,9 @@ impl IPG {
                                     rotation: Radians(to_radians(&degrees)), 
                                     color, 
                                     fill_color, 
-                                    width: stroke_width, 
+                                    width: stroke_width,
+                                    stroke_dash_offset,
+                                    stroke_dash_segments, 
                                     draw_mode: IpgDrawMode::Display, 
                                     status: IpgDrawStatus::Completed,
                                     };
@@ -4107,7 +4154,9 @@ impl IPG {
                         end,
                         degrees=0.0,
                         stroke_width=2.0,
-                        stroke_ipg_color=None,
+                        stroke_dash_offset=None,
+                        stroke_dash_segments=None,
+                        stroke_ipg_color=IpgColor::WHITE,
                         stroke_rgba_color=None,
                         gen_id=None,
                         ))]
@@ -4117,6 +4166,8 @@ impl IPG {
                     end: (f32, f32),
                     degrees: f32,
                     stroke_width: f32,
+                    stroke_dash_offset: Option<usize>,
+                    stroke_dash_segments: Option<Vec<f32>>,
                     stroke_ipg_color: Option<IpgColor>,
                     stroke_rgba_color: Option<[f32; 4]>,
                     gen_id: Option<usize>,
@@ -4126,17 +4177,17 @@ impl IPG {
 
         let mid_point = get_mid_point(points[0], points[1]);
 
-        let color = if stroke_ipg_color.is_none() && stroke_rgba_color.is_none() {
-            Color::from_rgba(0.961, 0.871, 0.702, 1.0)
+        let color = if stroke_rgba_color.is_some() {
+            get_color(stroke_rgba_color, None, 1.0, false).unwrap()
         } else {
-            get_color(stroke_rgba_color, stroke_ipg_color, 1.0, false).unwrap()
+            get_color(None, stroke_ipg_color, 1.0, false).unwrap()
         };
 
         let mut canvas_state = access_canvas_state();
         let canvas_id_opt = canvas_state.canvas_ids_str.get(&canvas_id);
         
         if canvas_id_opt.is_none() {
-            panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+            panic!("Line: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
         let id = self.get_id(gen_id);
@@ -4146,7 +4197,9 @@ impl IPG {
                                 points, 
                                 mid_point, 
                                 color, 
-                                width: stroke_width, 
+                                width: stroke_width,
+                                stroke_dash_offset,
+                                stroke_dash_segments, 
                                 rotation: degrees, 
                                 draw_mode: IpgDrawMode::Display, 
                                 status: IpgDrawStatus::Completed,
@@ -4163,12 +4216,14 @@ impl IPG {
     }
 
     #[pyo3(signature = (canvas_id,
-                        center_xy,
+                        position_xy,
                         radius,
                         sides,
                         degrees=0.0,
                         stroke_width=2.0,
-                        stroke_ipg_color=None,
+                        stroke_dash_offset=None,
+                        stroke_dash_segments=None,
+                        stroke_ipg_color=IpgColor::WHITE,
                         stroke_rgba_color=None,
                         fill_ipg_color=None,
                         fill_rgba_color=None,
@@ -4176,11 +4231,13 @@ impl IPG {
                         ))]
     fn add_polygon(&mut self,
                     canvas_id: String,
-                    center_xy: (f32, f32),
+                    position_xy: (f32, f32),
                     radius: f32,
                     sides: usize,
                     degrees: f32,
                     stroke_width: f32,
+                    stroke_dash_offset: Option<usize>,
+                    stroke_dash_segments: Option<Vec<f32>>,
                     stroke_ipg_color: Option<IpgColor>,
                     stroke_rgba_color: Option<[f32; 4]>,
                     fill_ipg_color: Option<IpgColor>,
@@ -4188,14 +4245,14 @@ impl IPG {
                     gen_id: Option<usize>,
                     ) -> PyResult<usize> 
     {
-        let center = Point::new(center_xy.0, center_xy.1);
+        let center = Point::new(position_xy.0, position_xy.1);
 
         let pg_point = Point::new(center.x+radius, center.y);
 
-        let color = if stroke_ipg_color.is_none() && stroke_rgba_color.is_none() {
-            Color::from_rgba(0.961, 0.871, 0.702, 1.0)
+        let color = if stroke_rgba_color.is_some() {
+            get_color(stroke_rgba_color, None, 1.0, false).unwrap()
         } else {
-            get_color(stroke_rgba_color, stroke_ipg_color, 1.0, false).unwrap()
+            get_color(None, stroke_ipg_color, 1.0, false).unwrap()
         };
          
         let fill_color =  get_color(fill_rgba_color, fill_ipg_color, 1.0, false);
@@ -4204,24 +4261,26 @@ impl IPG {
         let canvas_id_opt = canvas_state.canvas_ids_str.get(&canvas_id);
         
         if canvas_id_opt.is_none() {
-            panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+            panic!("Polygon: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
         let id = self.get_id(gen_id);
         
         let pg = IpgPolygon{ 
-                                    id,
-                                    points: build_polygon(center, pg_point, sides, degrees),
-                                    poly_points: sides-1,
-                                    mid_point: center,
-                                    pg_point,
-                                    color,
-                                    fill_color,
-                                    width: stroke_width,
-                                    rotation: degrees,
-                                    draw_mode: IpgDrawMode::Display, 
-                                    status: IpgDrawStatus::Completed,
-                                    };
+                            id,
+                            points: build_polygon(center, pg_point, sides, degrees),
+                            poly_points: sides-1,
+                            mid_point: center,
+                            pg_point,
+                            color,
+                            fill_color,
+                            width: stroke_width,
+                            stroke_dash_offset,
+                            stroke_dash_segments,
+                            rotation: degrees,
+                            draw_mode: IpgDrawMode::Display, 
+                            status: IpgDrawStatus::Completed,
+                            };
 
         canvas_state.curves.insert(id, IpgWidget::Polygon(pg));
         drop(canvas_state);
@@ -4236,7 +4295,9 @@ impl IPG {
     #[pyo3(signature = (canvas_id,
                         points,
                         stroke_width,
-                        stroke_ipg_color=None,
+                        stroke_dash_offset=None,
+                        stroke_dash_segments=None,
+                        stroke_ipg_color=IpgColor::WHITE,
                         stroke_rgba_color=None,
                         gen_id=None,
                         ))]
@@ -4244,6 +4305,8 @@ impl IPG {
                     canvas_id: String,
                     points: Vec<(f32, f32)>,
                     stroke_width: f32,
+                    stroke_dash_offset: Option<usize>,
+                    stroke_dash_segments: Option<Vec<f32>>,
                     stroke_ipg_color: Option<IpgColor>,
                     stroke_rgba_color: Option<[f32; 4]>,
                     gen_id: Option<usize>,
@@ -4255,17 +4318,17 @@ impl IPG {
             p_points.push(Point::new(pt.0, pt.1))
         }
 
-        let color = if stroke_ipg_color.is_none() && stroke_rgba_color.is_none() {
-            Color::from_rgba(0.961, 0.871, 0.702, 1.0)
+        let color = if stroke_rgba_color.is_some() {
+            get_color(stroke_rgba_color, None, 1.0, false).unwrap()
         } else {
-            get_color(stroke_rgba_color, stroke_ipg_color, 1.0, false).unwrap()
+            get_color(None, stroke_ipg_color, 1.0, false).unwrap()
         };
 
         let mut canvas_state = access_canvas_state();
         let canvas_id_opt = canvas_state.canvas_ids_str.get(&canvas_id);
         
         if canvas_id_opt.is_none() {
-            panic!("Arc: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+            panic!("PolyLine: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
         }
         
         let id = self.get_id(gen_id);
@@ -4277,13 +4340,89 @@ impl IPG {
                                         mid_point: Point::default(), 
                                         pl_point: Point::default(), 
                                         color, 
-                                        width: stroke_width, 
+                                        width: stroke_width,
+                                        stroke_dash_offset,
+                                        stroke_dash_segments, 
                                         rotation: 0.0, 
                                         draw_mode: IpgDrawMode::Display, 
                                         status: IpgDrawStatus::Completed,
                                         };
         
         canvas_state.curves.insert(id, IpgWidget::PolyLine(poly_line));
+        drop(canvas_state);
+
+        let mut state = access_state();
+        state.last_id = id;
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (canvas_id,
+                        top_left_xy,
+                        width,
+                        height,
+                        stroke_width=2.0,
+                        stroke_dash_offset=None,
+                        stroke_dash_segments=None,
+                        stroke_ipg_color=IpgColor::WHITE,
+                        stroke_rgba_color=None,
+                        fill_ipg_color=None,
+                        fill_rgba_color=None,
+                        gen_id=None,
+                        ))]
+    fn add_rectangle(&mut self,
+                    canvas_id: String,
+                    top_left_xy: (f32, f32),
+                    width: f32,
+                    height: f32,
+                    stroke_width: f32,
+                    stroke_dash_offset: Option<usize>,
+                    stroke_dash_segments: Option<Vec<f32>>,
+                    stroke_ipg_color: Option<IpgColor>,
+                    stroke_rgba_color: Option<[f32; 4]>,
+                    fill_ipg_color: Option<IpgColor>,
+                    fill_rgba_color: Option<[f32; 4]>,
+                    gen_id: Option<usize>,
+                    ) -> PyResult<usize> 
+    {
+        let top_left = Point::new(top_left_xy.0, top_left_xy.1);
+        let size = Size::new(width, height);
+        let mid_point = Point::new(width/2.0, height/2.0);
+
+        let color = if stroke_rgba_color.is_some() {
+            get_color(stroke_rgba_color, None, 1.0, false).unwrap()
+        } else {
+            get_color(None, stroke_ipg_color, 1.0, false).unwrap()
+        };
+
+        let fill_color =  get_color(fill_rgba_color, fill_ipg_color, 1.0, false);
+
+        let mut canvas_state = access_canvas_state();
+        let canvas_id_opt = canvas_state.canvas_ids_str.get(&canvas_id);
+        
+        if canvas_id_opt.is_none() {
+            panic!("Rectangle: You need to define a canvas before adding geometries or your canvas_id is incorrect.")
+        }
+        
+        let id = self.get_id(gen_id);
+
+        let rectangle = IpgRectangle{ 
+                                        id, 
+                                        top_left, 
+                                        size, 
+                                        mid_point, 
+                                        color,
+                                        fill_color, 
+                                        width: stroke_width,
+                                        stroke_dash_offset,
+                                        stroke_dash_segments, 
+                                        rotation: 0.0, 
+                                        draw_mode: IpgDrawMode::Display, 
+                                        status: IpgDrawStatus::Completed,
+                                        };
+        
+        canvas_state.curves.insert(id, IpgWidget::Rectangle(rectangle));
         drop(canvas_state);
 
         let mut state = access_state();
@@ -4734,6 +4873,8 @@ fn match_container(container: &mut IpgContainers,
     }
 }
 
+
+
 fn set_state_cont_wnd_ids(state: &mut State, wnd_id: &String, cnt_str_id: String, 
                             cnt_id: usize, name: String) {
 
@@ -4761,7 +4902,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgButtonArrow>()?;
     m.add_class::<IpgButtonParam>()?;
     m.add_class::<IpgCanvasParam>()?;
-    m.add_class::<IpgCanvasImageParam>()?;
+    m.add_class::<IpgCanvasGeometryParam>()?;
     m.add_class::<IpgDrawMode>()?;
     m.add_class::<IpgCanvasWidget>()?;
     m.add_class::<IpgCardStyle>()?;

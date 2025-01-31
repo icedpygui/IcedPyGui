@@ -693,6 +693,7 @@ pub fn build_polyline_path(pl: &IpgPolyLine,
 
 }
 
+
 pub fn build_right_triangle_path(tr: &IpgRightTriangle, 
                             draw_mode: IpgDrawMode, 
                             pending_cursor: Option<Point>,

@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgDrawMode, IpgCanvasParam
+from icedpygui import IPG, IpgDrawMode, IpgCanvasParam, IpgColor
 from icedpygui import IpgCanvasWidget, IpgTextInputParam
 from icedpygui import IpgHorizontalAlignment, IpgVerticalAlignment
 import os
@@ -153,9 +153,12 @@ ipg.add_column(window_id="main", container_id="col",
                width=200, height_fill=True,
                padding=[10.0])
 
-canvas_id = ipg.add_canvas(window_id="main", canvas_id="canvas",
-               parent_id="row",
-               width_fill=True, height_fill=True)
+canvas_id = ipg.add_canvas(window_id="main", 
+                           canvas_id="canvas",
+                            parent_id="row",
+                            width_fill=True, 
+                            height_fill=True,
+                            )
 
 ipg.add_space(parent_id="col", height=10.0)
 
