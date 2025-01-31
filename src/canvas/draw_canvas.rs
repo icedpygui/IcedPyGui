@@ -3,8 +3,7 @@
 use std::collections::HashMap;
 
 use iced::widget::container::Id;
-use iced::widget::image;
-use iced::{alignment, mouse, Color, Rectangle, Vector};
+use iced::{alignment, mouse, Color, Vector};
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Stroke};
 use iced::{Element, Fill, Point, Renderer, Theme};

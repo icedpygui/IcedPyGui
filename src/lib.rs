@@ -31,7 +31,7 @@ mod canvas;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, 
         IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
-use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, IpgCanvasParam};
+use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, IpgCanvasImageParam, IpgCanvasParam};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyle, IpgCardParam};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, 
         IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle};
@@ -118,7 +118,7 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
 pub struct UpdateItems {
     // wid, (item, value)
     pub updates: Vec<(usize, PyObject, PyObject)>, 
-    // window_id_widget_id, (window_id, wid, arget_container_str_id, move_after(wid), move_before(wid))
+    // window_id_widget_id, (window_id, wid, target_container_str_id, move_after(wid), move_before(wid))
     pub moves: Vec<(String, usize, String, Option<usize>, Option<usize>)>,
     // window_id, wid
     pub deletes: Vec<(String, usize)>,
@@ -131,6 +131,26 @@ pub static UPDATE_ITEMS: Mutex<UpdateItems> = Mutex::new(UpdateItems {
 });
 
 pub fn access_update_items() -> MutexGuard<'static, UpdateItems> {
+    UPDATE_ITEMS.lock().unwrap()
+}
+
+#[derive(Debug)]
+pub struct UpdateCanvasItems {
+    // wid, (item, value)
+    pub updates: Vec<(usize, PyObject, PyObject)>, 
+    // window_id_widget_id, (window_id, wid, target_container_str_id, move_after(wid), move_before(wid))
+    pub moves: Vec<(String, usize, String, Option<usize>, Option<usize>)>,
+    // window_id, wid
+    pub deletes: Vec<(String, usize)>,
+}
+
+pub static UPDATE_CANVAS_ITEMS: Mutex<UpdateItems> = Mutex::new(UpdateItems {
+    updates: vec![],
+    moves: vec![],
+    deletes: vec![],
+});
+
+pub fn access_canvas_update_items() -> MutexGuard<'static, UpdateItems> {
     UPDATE_ITEMS.lock().unwrap()
 }
 
@@ -4289,7 +4309,7 @@ impl IPG {
                         ) -> PyResult<usize> 
     {
         let bounds = if align_center {
-            Rectangle::with_radius(width/2.0, height/2.0)
+            Rectangle::with_radius(width/2.0)
         } else if align_top_left_xy.is_some() {
             let top_left = align_top_left_xy.unwrap();
             Rectangle::new(Point::new(top_left[0], top_left[1]), Size::new(width, height))
@@ -4530,6 +4550,16 @@ impl IPG {
 
     }
 
+    #[pyo3(signature = (wid, item, value))]
+    fn update_canvas_item(&self, wid: usize, item: PyObject, value: PyObject) {
+        let mut all_updates = access_canvas_update_items();
+
+        all_updates.updates.push((wid, item, value));
+
+        drop(all_updates);
+
+    }
+
     #[pyo3(signature = (window_id, 
                         widget_id, 
                         target_container_str_id, 
@@ -4722,6 +4752,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgButtonArrow>()?;
     m.add_class::<IpgButtonParam>()?;
     m.add_class::<IpgCanvasParam>()?;
+    m.add_class::<IpgCanvasImageParam>()?;
     m.add_class::<IpgDrawMode>()?;
     m.add_class::<IpgCanvasWidget>()?;
     m.add_class::<IpgCardStyle>()?;

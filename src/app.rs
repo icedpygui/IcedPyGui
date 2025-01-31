@@ -19,7 +19,7 @@ use once_cell::sync::Lazy;
 
 use crate::canvas::draw_canvas::IpgCanvasState;
 use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, construct_color_picker, ColPikMessage};
-use crate::{access_canvas_state, access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
+use crate::{access_canvas_state, access_canvas_update_items, access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
@@ -316,6 +316,7 @@ impl App {
             Message::Tick => {
                 tick_callback(&mut self.state);
                 process_updates(&mut self.state, &mut self.canvas_state);
+                process_canvas_updates(&mut self.canvas_state);
                 Task::none()
             }
             Message::Timer(id, message) => {
@@ -942,7 +943,11 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
     all_updates.deletes = vec![];
 
     let moves = all_updates.moves.clone();
-    for (window_id, widget_id, target_container_str_id, move_after, move_before) in moves.iter() {
+    for (window_id, 
+        widget_id, 
+        target_container_str_id, 
+        move_after, 
+        move_before) in moves.iter() {
 
         let container_str_id_opt = state.container_str_ids.get(target_container_str_id);
 
@@ -1021,6 +1026,27 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
     }
     all_updates.updates = vec![];
     
+}
+
+fn process_canvas_updates(cs: &mut IpgCanvasState) {
+    let mut update_items = access_canvas_update_items();
+
+    // let mut updates = all_updates.updates.clone();
+    for ((wid, item, value)) in update_items.updates.iter() {
+        let iced_id = cs.
+        let widget = cs.image_curves.get_mut(wid);
+        if let Some(w) = widget {
+            match_widget(w, item.clone(), value.clone());
+        } else {
+            match state.containers.get_mut(wid) {
+                Some(cnt) => {
+                    match_container(cnt, item.clone(), value.clone(), canvas_state);
+                },
+                None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
+            }
+        }  
+    }
+    all_updates.updates = vec![];
 }
 
 fn clone_state(state: &mut IpgState) {

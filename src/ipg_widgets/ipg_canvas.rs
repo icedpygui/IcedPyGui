@@ -183,11 +183,6 @@ pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
                 Err(e) => panic!("PolyPoint input must be an integer, {}", e),
             }
         },
-        IpgCanvasParam::Widget => {
-            let selected_widget = Some(try_extract_widget(value));
-            canvas_state.selected_widget = selected_widget;
-            canvas_state.timer_event_enabled = selected_widget == Some(IpgCanvasWidget::Text);
-        },
         IpgCanvasParam::FilePath => {
             canvas_state.file_path = try_extract_string(value);
         },
@@ -218,7 +213,11 @@ pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
             if align.is_some() {
                 canvas_state.selected_v_text_alignment = get_vertical_alignment(align);
             }
-            
+        },
+        IpgCanvasParam::Widget => {
+            let selected_widget = Some(try_extract_widget(value));
+            canvas_state.selected_widget = selected_widget;
+            canvas_state.timer_event_enabled = selected_widget == Some(IpgCanvasWidget::Text);
         },
     }
 }
@@ -251,4 +250,12 @@ fn try_extract_widget(update_obj: PyObject) -> IpgCanvasWidget {
             Err(_) => panic!("Canvas widget update extraction failed"),
         }
     })
+}
+
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgCanvasImageParam {
+    Position,
+    Rotation,
 }

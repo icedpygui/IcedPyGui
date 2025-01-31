@@ -3213,9 +3213,11 @@ class IPG:
     def add_canvas_image(self,
                     canvas_id: str,
                     image_path: str,
-                    center_xy: tuple[float, float],
                     width: float,
                     height: float,
+                    position_xy: tuple[float, float],
+                    align_center: bool=True,
+                    align_top_left_xy: Optional[tuple[float, float]]=None,
                     gen_id: Optional[int]=None,
                     ) -> int:
         """
@@ -3569,10 +3571,9 @@ class IpgCanvasParam:
     FilePath: str
     Mode: str
     PolyPoints: int
-    Widget: str
+    Widget: IpgCanvasWidget
     Load: None
     Save: None
-    
     
     
 class IpgCanvasWidget:
@@ -3580,13 +3581,19 @@ class IpgCanvasWidget:
     Bezier: str
     Circle: str
     Ellipse: str
+    Image: str
     Line: str
     Polygon: str
     PolyLine: str
     RightTriangle: str
     FreeHand: str
     Text: str
-    
+
+
+class IpgCanvasImageParam:
+    Position: tuple[float, float]
+    Rotation: float
+
 
 class IpgCardStyle:
     """
