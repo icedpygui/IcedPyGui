@@ -74,8 +74,7 @@ pub struct WidgetCallbackOut {
 
 impl WidgetCallbackOut{}
 
-pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> WidgetCallbackOut
-                                            
+pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> WidgetCallbackOut                                     
 {
     let widget_opt = state.widgets.get_mut(&wci.id);
     

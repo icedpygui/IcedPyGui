@@ -136,7 +136,7 @@ pub fn canvas_timer_callback(state: &mut IpgState, id: usize, message: CanvasTim
 
 pub fn canvas_tick_callback(state: &mut IpgState) 
 {
-    let id= state.timer_event_id_enabled.0;
+    let id= state.canvas_timer_event_id_enabled.0;
     let wci = WidgetCallbackIn{id, ..Default::default()};
 
     let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);

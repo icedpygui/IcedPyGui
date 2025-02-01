@@ -327,6 +327,7 @@ impl App {
             Message::CanvasTick => {
                 canvas_tick_callback(&mut self.state);
                 process_canvas_updates(&mut self.canvas_state);
+                self.canvas_state.request_image_redraw();
                 Task::none()
             },
             Message::Timer(id, message) => {
@@ -373,7 +374,7 @@ impl App {
             create_content(window_id, &self.state, &self.canvas_state);
         
         if debug {
-            let color = match_theme_with_color(theme);
+            let color = match_theme_with_debug_color(theme);
                 content.explain(color)  
         } else {
             content
@@ -894,7 +895,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
     }
 }
 
-fn match_theme_with_color(theme: Theme) -> Color {
+fn match_theme_with_debug_color(theme: Theme) -> Color {
 
     match theme {
         Theme::Light => Color::BLACK,

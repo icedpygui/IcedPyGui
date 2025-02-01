@@ -5,6 +5,11 @@ import random
 import math
 
 
+# Moon orbits Earth 27.3 days
+# Sun rotates 25 earth days
+# earth orbits the sun 365.25 days
+
+
 def point_on_circle(center_x, center_y, radius, angle):
     x = center_x + radius * math.cos(angle)
     y = center_y + radius * math.sin(angle)
@@ -12,11 +17,17 @@ def point_on_circle(center_x, center_y, radius, angle):
 
 
 def on_tick(timer_id: int, elapsed: int):
-    angle = (2.0 * math.pi / 60.0) * elapsed + (2.0 * math.pi / 60_000.0) * elapsed/1000
-    point = point_on_circle(canvas_width/2.0, canvas_height/2.0, 150.0, angle)
-    ipg.update_canvas_item(earth_id, IpgCanvasGeometryParam.Position, point)
-
-
+    earth_rotation = 3.142 * elapsed
+    earth_orbit = earth_rotation/365.25
+    moon_orbit = earth_rotation/27.3
+    sun_rotation = earth_rotation/27
+    earth_point = point_on_circle(canvas_width/2.0, canvas_height/2.0, 150.0, earth_orbit)
+    ipg.update_canvas_item(earth_id, IpgCanvasGeometryParam.Position, earth_point)
+    ipg.update_canvas_item(earth_id, IpgCanvasGeometryParam.Rotation, earth_rotation)
+    moon_point = point_on_circle(earth_point[0], earth_point[1], 15.0, moon_orbit)
+    ipg.update_canvas_item(moon_id, IpgCanvasGeometryParam.Position, moon_point)
+    ipg.update_canvas_item(sun_id, IpgCanvasGeometryParam.Rotation, sun_rotation)
+    
 
 ipg = IPG()
 
@@ -39,7 +50,7 @@ ipg.add_column(window_id="main", container_id="col",
             width_fill=True, height_fill=True)
 
 ipg.add_canvas_timer(parent_id="col", 
-                    duration_ms=1000,
+                    duration_ms=15,
                     on_tick=on_tick,
                   )
 
@@ -58,19 +69,23 @@ sun_id = ipg.add_canvas_image(canvas_id="canvas",
                      align_center=True,
                      )
 
+earth_start = point_on_circle(canvas_width/2.0, canvas_height/2.0, 150.0, 0)
+
 earth_id = ipg.add_canvas_image(canvas_id="canvas",
                      image_path=earth_path,
                      width=24.0,
                      height=24.0,
-                     position_xy=(canvas_width/2.0, canvas_height/2.0-150.0),
+                     position_xy=earth_start,
                      align_center=True,
                      )
+
+moon_start = point_on_circle(earth_start[0], earth_start[1], 15.0, 0)
 
 moon_id = ipg.add_canvas_image(canvas_id="canvas",
                      image_path=moon_path,
                      width=8.0,
                      height=8.0,
-                     position_xy=(canvas_width/2.0+20.0, canvas_height/2.0-150.0-20.0),
+                     position_xy=moon_start,
                      align_center=True,
                      )
 

@@ -14,7 +14,7 @@ use crate::canvas::path_builds::{build_arc_path, build_bezier_path, build_circle
     build_polygon_path, build_polyline_path, build_right_triangle_path, build_text_path};
 
 use super::canvas_helpers::to_radians;
-use super::geometries::{add_keypress, add_new_widget, check_if_text_widget, complete_new_widget, find_closest_point_index, find_closest_widget, get_del_key, get_widget_degrees, set_widget_mode_or_status, set_widget_point, update_edited_widget, update_rotated_widget, IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgFreeHand, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle, IpgRightTriangle, IpgText};
+use super::geometries::{add_keypress, add_new_widget, check_if_text_widget, complete_new_widget, find_closest_point_index, find_closest_widget, get_del_key, get_widget_degrees, set_widget_mode_or_status_or_id, set_widget_point, update_edited_widget, update_rotated_widget, IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgFreeHand, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle, IpgRightTriangle, IpgText};
 
 
 #[derive(Debug, Clone, Default)]
@@ -148,6 +148,7 @@ impl IpgCanvasState {
     }
 
     pub fn request_redraw(&mut self) {
+        dbg!("clearing cache");
         self.cache.clear();
     }
 
@@ -159,7 +160,7 @@ impl IpgCanvasState {
 
     pub fn request_image_redraw(&mut self) {
         for i in 0..100 {
-            self.text_cache[i].clear();
+            self.image_cache[i].clear();
         }
     }
 
@@ -225,10 +226,11 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
 
                                         // set draw_mode to indicate being edited
                                         let widget = 
-                                            set_widget_mode_or_status(
+                                            set_widget_mode_or_status_or_id(
                                                 selected_widget, 
                                                 Some(IpgDrawMode::Edit),
                                                 Some(IpgDrawStatus::Inprogress),
+                                                None,
                                             );
                                         *program_state = Some(Pending::EditSecond {
                                             widget: widget.clone(),
@@ -382,10 +384,11 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
                                         // However, the below return of the draw curve 
                                         // the widget need to be in the rotate method.
                                         let widget = 
-                                            set_widget_mode_or_status(
+                                            set_widget_mode_or_status_or_id(
                                                 selected_widget, 
                                                 Some(IpgDrawMode::Rotate),
                                                 Some(IpgDrawStatus::Inprogress),
+                                                None,
                                             );
                                         
                                         *program_state = Some(Pending::Rotate {
@@ -507,10 +510,11 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
                                         widget }) => {
                                             let del_key = get_del_key(modified_key);
                                             let del_widget = if del_key {
-                                                set_widget_mode_or_status(
+                                                set_widget_mode_or_status_or_id(
                                                     widget.clone(), 
                                                     None, 
                                                     Some(IpgDrawStatus::Delete),
+                                                    None,
                                                 )
                                             } else {
                                                 widget.clone()
@@ -879,12 +883,12 @@ impl DrawCurve {
         match &image_curve {
             IpgWidget::Image(img) => {
                 frame.translate(Vector::new(img.position.x, img.position.y));
-                
+                frame.rotate(to_radians(&img.rotation));
                 frame.draw_image(
                     img.bounds,
                     &img.path,
                 );
-                // frame.rotate(to_radians(&img.rotation));
+                
             },
             _ => ()
         };

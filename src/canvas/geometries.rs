@@ -971,9 +971,10 @@ pub fn get_del_key(modified: Key) -> bool {
     }
 }
 
-pub fn set_widget_mode_or_status(widget: IpgWidget, 
+pub fn set_widget_mode_or_status_or_id(widget: IpgWidget, 
                     mode: Option<IpgDrawMode>,
                     status: Option<IpgDrawStatus>,
+                    id: Option<usize>,
                     ) -> IpgWidget {
     match widget {
         IpgWidget::Arc(mut arc) => {
@@ -982,6 +983,9 @@ pub fn set_widget_mode_or_status(widget: IpgWidget,
             }
             if status.is_some() {
                 arc.status = status.unwrap();
+            }
+            if id.is_some() {
+                arc.id = id.unwrap();
             }
             IpgWidget::Arc(arc)
         },
@@ -992,6 +996,9 @@ pub fn set_widget_mode_or_status(widget: IpgWidget,
             if status.is_some() {
                 bz.status = status.unwrap();
             }
+            if id.is_some() {
+                bz.id = id.unwrap();
+            }
             IpgWidget::Bezier(bz)
         },
         IpgWidget::Circle(mut cir) => {
@@ -1000,6 +1007,9 @@ pub fn set_widget_mode_or_status(widget: IpgWidget,
             }
             if status.is_some() {
                 cir.status = status.unwrap();
+            }
+            if id.is_some() {
+                cir.id = id.unwrap();
             }
             IpgWidget::Circle(cir)
         },
@@ -1010,7 +1020,22 @@ pub fn set_widget_mode_or_status(widget: IpgWidget,
             if status.is_some() {
                 ell.status = status.unwrap();
             }
+            if id.is_some() {
+                ell.id = id.unwrap();
+            }
             IpgWidget::Ellipse(ell)
+        },
+        IpgWidget::Image(mut img) => {
+            if mode.is_some() {
+                img.draw_mode = mode.unwrap();
+            }
+            if status.is_some() {
+                img.status = status.unwrap();
+            }
+            if id.is_some() {
+                img.id = id.unwrap();
+            }
+            IpgWidget::Image(img)
         },
         IpgWidget::Line(mut ln) => {
             if mode.is_some() {
@@ -1018,6 +1043,9 @@ pub fn set_widget_mode_or_status(widget: IpgWidget,
             }
             if status.is_some() {
                 ln.status = status.unwrap();
+            }
+            if id.is_some() {
+                ln.id = id.unwrap();
             }
             IpgWidget::Line(ln)
         },
@@ -1028,6 +1056,9 @@ pub fn set_widget_mode_or_status(widget: IpgWidget,
             if status.is_some() {
                 pl.status = status.unwrap();
             }
+            if id.is_some() {
+                pl.id = id.unwrap();
+            }
             IpgWidget::PolyLine(pl)
         },
         IpgWidget::Polygon(mut pg) => {
@@ -1037,7 +1068,22 @@ pub fn set_widget_mode_or_status(widget: IpgWidget,
             if status.is_some() {
                 pg.status = status.unwrap();
             }
+            if id.is_some() {
+                pg.id = id.unwrap();
+            }
             IpgWidget::Polygon(pg)
+        },
+        IpgWidget::Rectangle(mut rect) => {
+            if mode.is_some() {
+                rect.draw_mode = mode.unwrap();
+            }
+            if status.is_some() {
+                rect.status = status.unwrap();
+            }
+            if id.is_some() {
+                rect.id = id.unwrap();
+            }
+            IpgWidget::Rectangle(rect)
         },
         IpgWidget::RightTriangle(mut tr) => {
             if mode.is_some() {
@@ -1045,6 +1091,9 @@ pub fn set_widget_mode_or_status(widget: IpgWidget,
             }
             if status.is_some() {
                 tr.status = status.unwrap();
+            }
+            if id.is_some() {
+                tr.id = id.unwrap();
             }
             IpgWidget::RightTriangle(tr)
         },
@@ -1055,6 +1104,9 @@ pub fn set_widget_mode_or_status(widget: IpgWidget,
             if status.is_some() {
                 fh.status = status.unwrap();
             }
+            if id.is_some() {
+                fh.id = id.unwrap();
+            }
             IpgWidget::FreeHand(fh)
         },
         IpgWidget::Text(mut txt) => {
@@ -1064,9 +1116,12 @@ pub fn set_widget_mode_or_status(widget: IpgWidget,
             if status.is_some() {
                 txt.status = status.unwrap();
             }
+            if id.is_some() {
+                txt.id = id.unwrap();
+            }
             IpgWidget::Text(txt)
         },
-        _ => {
+        IpgWidget::None => {
             IpgWidget::None
         },
     }
@@ -1305,7 +1360,6 @@ pub fn find_closest_point_index(widget: &IpgWidget,
                         point_dist = dist;
                     }
                 }
-                
             };
             
             let mid_dist = arc.mid_point.distance(cursor);
@@ -1441,11 +1495,13 @@ pub fn find_closest_point_index(widget: &IpgWidget,
 
 
 pub fn get_widget_id(widget: &IpgWidget) -> usize {
+    dbg!(&widget);
     match widget {
         IpgWidget::Arc(arc) => arc.id,
         IpgWidget::Bezier(bz) => bz.id,
         IpgWidget::Circle(cir) => cir.id,
         IpgWidget::Ellipse(ell) => ell.id,
+        IpgWidget::Image(img) => img.id,
         IpgWidget::Line(line) => line.id,
         IpgWidget::PolyLine(pl) => pl.id,
         IpgWidget::Polygon(pg) => pg.id,
@@ -1453,7 +1509,7 @@ pub fn get_widget_id(widget: &IpgWidget) -> usize {
         IpgWidget::RightTriangle(tr) => tr.id,
         IpgWidget::FreeHand(fh) => fh.id,
         IpgWidget::Text(txt) => txt.id,
-        _=> 0,
+        IpgWidget::None => 0,
     }
 }
 
@@ -1466,10 +1522,10 @@ pub fn get_widget_degrees(widget: &IpgWidget) -> Option<f32> {
         IpgWidget::Ellipse(_ell) => Some(0.0),
         IpgWidget::Image(image) => Some(image.rotation),
         IpgWidget::Line(line) => Some(line.rotation),
-        IpgWidget::PolyLine(poly_line) => Some(poly_line.rotation),
-        IpgWidget::Polygon(polygon) => Some(polygon.rotation),
+        IpgWidget::PolyLine(pl) => Some(pl.rotation),
+        IpgWidget::Polygon(pg) => Some(pg.rotation),
         IpgWidget::Rectangle(rect) => Some(rect.rotation),
-        IpgWidget::RightTriangle(right_triangle) => Some(right_triangle.rotation),
+        IpgWidget::RightTriangle(tr) => Some(tr.rotation),
         IpgWidget::FreeHand(_) => None,
         IpgWidget::Text(txt) => Some(txt.rotation),
     }
