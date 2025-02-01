@@ -5,7 +5,7 @@ use std::fs;
 use std::path::Path;
 
 use iced::widget::container;
-use iced::{Color, Element};
+use iced::{Color, Element, Point};
 use pyo3::{pyclass, PyObject, Python};
 
 use crate::app::Message;
@@ -16,7 +16,7 @@ use crate::canvas::geometries::{get_draw_mode_and_status,
 use crate::canvas::import_export::{convert_to_export, import_widgets, save};
 use crate::IpgState;
 
-use super::helpers::{get_horizontal_alignment, get_vertical_alignment, try_extract_f64, try_extract_ipg_horizontal_alignment, try_extract_ipg_vertical_alignment, try_extract_rgba_color, try_extract_string};
+use super::helpers::{get_horizontal_alignment, get_vertical_alignment, try_extract_f64, try_extract_ipg_horizontal_alignment, try_extract_ipg_vertical_alignment, try_extract_point, try_extract_rgba_color, try_extract_string};
 
 
 #[derive(Debug, Clone)]
@@ -259,36 +259,70 @@ pub enum IpgCanvasGeometryParam {
     Rotation,
 }
 
-pub fn canvas_geometry_update(geometry: &mut IpgCanvasWidget,
-                            item: PyObject,
-                            value: PyObject,) {
+pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObject) {
 
-    match geometry {
-        IpgCanvasWidget::None => (),
-        IpgCanvasWidget::Arc => todo!(),
-        IpgCanvasWidget::Bezier => todo!(),
-        IpgCanvasWidget::Circle => {
-            
+    let update_item = try_extract_geometry_update(item);
+
+    match widget {
+        IpgWidget::None => (),
+        IpgWidget::Arc(arc) => {
+
         },
-        IpgCanvasWidget::Ellipse => todo!(),
-        IpgCanvasWidget::Line => todo!(),
-        IpgCanvasWidget::PolyLine => todo!(),
-        IpgCanvasWidget::Polygon => todo!(),
-        IpgCanvasWidget::Rectangle => todo!(),
-        IpgCanvasWidget::RightTriangle => todo!(),
-        IpgCanvasWidget::Text => todo!(),
-        IpgCanvasWidget::FreeHand => todo!(),
+        IpgWidget::Bezier(bz) => {
+
+        },
+        IpgWidget::Circle(cir) => {
+            match update_item {
+                IpgCanvasGeometryParam::Position => {
+                    let val = try_extract_point(value);
+                    cir.center = Point::from(val);
+                },
+                IpgCanvasGeometryParam::Rotation => {
+                    panic!("Circle update has not rotation property")
+                },
+            }
+        },
+        IpgWidget::Ellipse(ell) => {
+
+        }
+        IpgWidget::Image(img) => {
+            match update_item {
+                IpgCanvasGeometryParam::Position => {
+                    let val = try_extract_point(value);
+                    img.position = Point::from(val);
+                },
+                IpgCanvasGeometryParam::Rotation => {
+                    let val = try_extract_f64(value) as f32;
+                    img.rotation = val;
+                },
+            }
+        },
+        IpgWidget::Line(line) => {
+
+        }
+        IpgWidget::PolyLine(pl) => {
+
+        },
+        IpgWidget::Polygon(pg) => {
+
+        },
+        IpgWidget::Rectangle(ect) => {
+
+        },
+        IpgWidget::RightTriangle(tr) => {
+
+        },
+        IpgWidget::Text(txt) => {
+
+        },
+        IpgWidget::FreeHand(fh) => {
+
+        },
     }
 }
 
-fn match_geometry_item(item: PyObject, value: PyObject) {
-    let param = try_extract_geometry_update(item);
 
-    match param {
-        IpgCanvasGeometryParam::Position => todo!(),
-        IpgCanvasGeometryParam::Rotation => todo!(),
-    }
-}
+
 
 pub fn try_extract_geometry_update(update_obj: PyObject) -> IpgCanvasGeometryParam {
     Python::with_gil(|py| {

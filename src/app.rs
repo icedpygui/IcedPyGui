@@ -18,7 +18,9 @@ use once_cell::sync::Lazy;
 
 
 use crate::canvas::draw_canvas::IpgCanvasState;
+use crate::ipg_widgets::ipg_canvas::match_canvas_widget;
 use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, construct_color_picker, ColPikMessage};
+use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
 use crate::{access_canvas_state, access_canvas_update_items, access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage};
@@ -83,9 +85,11 @@ pub enum Message {
     Table(usize, TableMessage),
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
-    CanvasTick,
+    CanvasTextBlink,
     Tick,
+    CanvasTick,
     Timer(usize, TIMMessage),
+    CanvasTimer(usize, CanvasTimerMessage),
     FontLoaded(Result<(), font::Error>),
     WindowOpened(window::Id, Option<Point>, Size),
 
@@ -309,7 +313,7 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
-            Message::CanvasTick => {
+            Message::CanvasTextBlink => {
                 self.canvas_state.elapsed_time += self.canvas_state.timer_duration;
                 self.canvas_state.blink = !self.canvas_state.blink;
                 self.canvas_state.request_text_redraw();
@@ -318,9 +322,13 @@ impl App {
             Message::Tick => {
                 tick_callback(&mut self.state);
                 process_updates(&mut self.state, &mut self.canvas_state);
+                Task::none()
+            },
+            Message::CanvasTick => {
+                canvas_tick_callback(&mut self.state);
                 process_canvas_updates(&mut self.canvas_state);
                 Task::none()
-            }
+            },
             Message::Timer(id, message) => {
                 match message {
                     TIMMessage::OnStart => {
@@ -330,6 +338,17 @@ impl App {
                     TIMMessage::OnStop => self.state.timer_event_id_enabled.1 = false,
                 }
                 self.state.timer_duration = timer_callback(&mut self.state, id, message);
+                Task::none()
+            },
+            Message::CanvasTimer(id, message) => {
+                match message {
+                    CanvasTimerMessage::OnStart => {
+                        self.state.canvas_timer_event_id_enabled.0 = id;
+                        self.state.canvas_timer_event_id_enabled.1 = true;
+                    },
+                    CanvasTimerMessage::OnStop => self.state.canvas_timer_event_id_enabled.1 = false,
+                }
+                self.state.canvas_timer_duration = canvas_timer_callback(&mut self.state, id, message);
                 Task::none()
             },
             Message::Toggler(id, message) => {
@@ -367,8 +386,15 @@ impl App {
         let mut subscriptions = vec![];
         
         if self.state.timer_event_id_enabled.1 {
-            subscriptions.push(time::every(iced::time::Duration::from_millis(self.state.timer_duration)).map(|_| Message::Tick));
-        } 
+            subscriptions
+            .push(time::every(iced::time::Duration::from_millis(
+                self.state.timer_duration)).map(|_| Message::Tick));
+        }
+        if self.state.canvas_timer_event_id_enabled.1 {
+            subscriptions
+            .push(time::every(iced::time::Duration::from_millis(
+                self.state.canvas_timer_duration)).map(|_| Message::CanvasTick));
+        }
         
         if self.state.keyboard_event_id_enabled.1 {
             subscriptions.push(iced::event::listen().map(Message::EventKeyboard));
@@ -381,7 +407,7 @@ impl App {
             subscriptions.push(time::every(
                 iced::time::Duration::from_millis(
                     self.canvas_state.timer_duration))
-                    .map(|_| Message::CanvasTick));
+                    .map(|_| Message::CanvasTextBlink));
         }
         // window event is always enabled, since we are using iced::daemon, the windows
         // closing need to be followed and iced exited when the last window is closed.
@@ -851,6 +877,9 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgTimer(timer) => {
                     construct_timer(timer.clone())
                 },
+                IpgWidgets::IpgCanvasTimer(ctimer) => {
+                    construct_canvas_timer(ctimer.clone())
+                },
                 IpgWidgets::IpgToggler(tog) => {
                     let style_opt = match tog.style_id.clone() {
                         Some(id) => {
@@ -1035,11 +1064,18 @@ fn process_canvas_updates(cs: &mut IpgCanvasState) {
 
     // let mut updates = all_updates.updates.clone();
     for ((wid, item, value)) in canvas_items.updates.iter() {
-        let widget = if cs.image_curves.get_mut(wid)
-        let widget = cs.image_curves.get_mut(wid);
-        
+        let mut canvas_widget = if cs.curves.get_mut(wid).is_some(){
+            cs.curves.get_mut(wid).unwrap()
+        } else if cs.image_curves.get_mut(wid).is_some() {
+            cs.image_curves.get_mut(wid).unwrap()
+        } else if cs.text_curves.get_mut(wid).is_some() {
+            cs.text_curves.get_mut(wid).unwrap()
+        } else {
+            panic!("Canvas curve could not be found based in the id, {}", wid)
+        };
+        match_canvas_widget(canvas_widget, item.clone(), value.clone()); 
     }
-    update_items.updates = vec![];
+    canvas_items.updates = vec![];
 }
 
 fn clone_state(state: &mut IpgState) {
@@ -1078,9 +1114,11 @@ fn clone_state(state: &mut IpgState) {
     state.keyboard_event_id_enabled = mutex_state.keyboard_event_id_enabled.to_owned();
     state.mouse_event_id_enabled = mutex_state.mouse_event_id_enabled.to_owned();
     state.timer_event_id_enabled = mutex_state.timer_event_id_enabled.to_owned();
+    state.canvas_timer_event_id_enabled = mutex_state.canvas_timer_event_id_enabled.to_owned();
     state.window_event_id_enabled = mutex_state.window_event_id_enabled.to_owned();
     state.touch_event_id_enabled = mutex_state.touch_event_id_enabled.to_owned();
     state.timer_duration = mutex_state.timer_duration.to_owned();
+    state.canvas_timer_duration = mutex_state.canvas_timer_duration.to_owned();
 
     // zeroing out any vecs and hashmaps
     mutex_state.ids = Lazy::new(||HashMap::new());

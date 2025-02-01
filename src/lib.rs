@@ -9,6 +9,7 @@ use iced::widget::image;
 use iced_aw::iced_fonts;
 use ipg_widgets::ipg_color_picker::{color_picker_update, IpgColorPicker, 
     IpgColorPickerParam, IpgColorPickerStyle};
+use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, IpgCanvasTimer};
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -33,8 +34,10 @@ mod canvas;
 
 use ipg_widgets::ipg_button::{button_item_update, IpgButton, 
         IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
-use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, IpgCanvasGeometryParam, IpgCanvasParam};
-use ipg_widgets::ipg_card::{card_item_update, IpgCard, IpgCardStyle, IpgCardParam};
+use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, 
+    IpgCanvasGeometryParam, IpgCanvasParam};
+use ipg_widgets::ipg_card::{card_item_update, IpgCard, 
+    IpgCardStyle, IpgCardParam};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, 
         IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle};
 use ipg_widgets::ipg_column::IpgColumn;
@@ -45,7 +48,9 @@ use ipg_widgets::ipg_events::IpgEvents;
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, 
         IpgImageContentFit, IpgImageFilterMethod, 
         IpgImageParam, IpgImageRotation};
-use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuBarStyle, IpgMenuParam, IpgMenuSeparatorStyle, IpgMenuSeparatorType, IpgMenuStyle, IpgMenuType, ItemStyles, MenuStyleAll};
+use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuBarStyle, 
+    IpgMenuParam, IpgMenuSeparatorStyle, IpgMenuSeparatorType, IpgMenuStyle, 
+    IpgMenuType, ItemStyles, MenuStyleAll};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, 
         IpgMouseAreaParam, IpgMousePointer};
 use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, 
@@ -222,9 +227,12 @@ pub struct State {
     pub keyboard_event_id_enabled: (usize, bool),
     pub mouse_event_id_enabled: (usize, bool),
     pub timer_event_id_enabled: (usize, bool),
+    pub canvas_timer_event_id_enabled: (usize, bool),
     pub window_event_id_enabled: (usize, bool),
     pub touch_event_id_enabled: (usize, bool),
     pub timer_duration: u64,
+    pub canvas_timer_duration: u64,
+
 }
 
 pub static STATE: Mutex<State> = Mutex::new(
@@ -271,10 +279,13 @@ pub static STATE: Mutex<State> = Mutex::new(
         
         keyboard_event_id_enabled: (0, false),
         mouse_event_id_enabled: (0, false), 
-        timer_event_id_enabled: (0, false), 
+        timer_event_id_enabled: (0, false),
+        canvas_timer_event_id_enabled: (0, false),
         window_event_id_enabled: (0, false),
         touch_event_id_enabled: (0, false),
         timer_duration: 0,
+        canvas_timer_duration: 0,
+
     }
 );
 
@@ -355,9 +366,11 @@ pub struct IpgState {
     pub keyboard_event_id_enabled: (usize, bool),
     pub mouse_event_id_enabled: (usize, bool),
     pub timer_event_id_enabled: (usize, bool),
+    pub canvas_timer_event_id_enabled: (usize, bool),
     pub window_event_id_enabled: (usize, bool),
     pub touch_event_id_enabled: (usize, bool),
     pub timer_duration: u64,
+    pub canvas_timer_duration: u64,
 
     pub mode: Vec<(usize, window::Mode)>,
     pub decorations: Vec<usize>,
@@ -408,10 +421,12 @@ impl IpgState {
 
             keyboard_event_id_enabled: (0, false),
             mouse_event_id_enabled: (0, false), 
-            timer_event_id_enabled: (0, false), 
+            timer_event_id_enabled: (0, false),
+            canvas_timer_event_id_enabled: (0, false),
             window_event_id_enabled: (0, false),
             touch_event_id_enabled: (0, false),
             timer_duration: 0,
+            canvas_timer_duration: 0,
 
             mode: vec![],
             decorations: vec![],
@@ -3719,6 +3734,72 @@ impl IPG {
         Ok(id)
     }
 
+    #[pyo3(signature = (parent_id, duration_ms, on_start=None, on_tick=None, on_stop=None, 
+                        start_label="Start Timer".to_string(), 
+                        stop_label="Stop Timer".to_string(), width=None, height=None, 
+                        width_fill=false, height_fill=false, padding=vec![10.0], 
+                        button_style_id=None, button_style_standard=None, button_style_arrow=None, 
+                        user_data=None, gen_id=None))]
+    fn add_canvas_timer(&mut self,
+                        parent_id: String,
+                        duration_ms: u64,
+                        on_start: Option<PyObject>,
+                        on_tick: Option<PyObject>,
+                        on_stop: Option<PyObject>,
+                        start_label: String,
+                        stop_label: String,
+                        width: Option<f32>,
+                        height: Option<f32>,
+                        width_fill: bool,
+                        height_fill: bool,
+                        padding: Vec<f64>,
+                        button_style_id: Option<String>,
+                        button_style_standard: Option<IpgStyleStandard>,
+                        button_style_arrow: Option<IpgButtonArrow>,
+                        user_data: Option<PyObject>,
+                        gen_id: Option<usize>,
+                    ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        if on_start.is_some() {
+            add_callback_to_mutex(self.id, "on_start".to_string(), on_start);
+        }
+        if on_tick.is_some() {
+            add_callback_to_mutex(self.id, "on_tick".to_string(), on_tick);
+        }
+
+        if on_stop.is_some() {
+            add_callback_to_mutex(self.id, "on_stop".to_string(), on_stop);
+        }
+
+        let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
+
+        let padding = get_padding_f64(padding);
+
+        set_state_of_widget(self.id, parent_id);
+        
+        let mut state = access_state();
+
+        state.widgets.insert(self.id, IpgWidgets::IpgCanvasTimer(IpgCanvasTimer::new(
+                                                            id,
+                                                            duration_ms,
+                                                            start_label,
+                                                            stop_label,
+                                                            width,
+                                                            height,
+                                                            padding,
+                                                            button_style_id,
+                                                            button_style_standard,
+                                                            button_style_arrow,
+                                                            user_data, 
+                                                            )));
+        state.last_id = id;
+        drop(state);
+        Ok(id)
+    }
+
     #[pyo3(signature = (parent_id, label=None, gen_id=None, toggled=None, 
                         width=None, width_fill=false, size=20.0, text_size=16.0,
                         text_line_height=1.3, text_alignment=IpgHorizontalAlignment::Center, 
@@ -4835,6 +4916,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgTimer(tim) => {
             timer_item_update(tim, item, value);
         },
+        IpgWidgets::IpgCanvasTimer(ctim) => {
+            canvas_timer_item_update(ctim, item, value);
+        },
         IpgWidgets::IpgToggler(tog) => {
             toggler_item_update(tog, item, value);
         },
@@ -4872,8 +4956,6 @@ fn match_container(container: &mut IpgContainers,
         _ => (),
     }
 }
-
-
 
 fn set_state_cont_wnd_ids(state: &mut State, wnd_id: &String, cnt_str_id: String, 
                             cnt_id: usize, name: String) {

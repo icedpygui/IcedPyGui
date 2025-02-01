@@ -2819,6 +2819,71 @@ class IPG:
             The id of the event which can be used to modify the event through update_item.
         """
 
+    def add_canvas_timer(self,
+                        parent_id: str,
+                        duration_ms: int,
+                        *,
+                        on_start: Optional[Callable]=None,
+                        on_stop: Optional[Callable]=None,
+                        on_tick: Optional[Callable]=None,
+                        start_label: str="Start Timer",
+                        stop_label: str="Stop Timer",
+                        width: Optional[float]=None,
+                        height: Optional[float]=None,
+                        width_fill: bool=False,
+                        height_fill: bool=False,
+                        padding: list[float]=[10.0],
+                        button_style_id: Optional[str],
+                        button_style_standard: Optional[IpgStyleStandard]=None,
+                        button_style_arrow: Optional[IpgButtonArrow]=None,
+                        user_data: any=None,
+                        ) -> int:
+        """
+        Adds a canvas timer event in millisecond duration.
+
+        Parameters
+        ----------
+        parent_id: str
+            Id of another container.
+        duration_ms: int
+            The time when the on_tick function fires.
+        on_start: Optional[Callable]
+            The optional function that execute when the timer starts.
+        on_stop: Optional[Callable]
+            The optional function that executes when the timer stops.
+        on_tick: Optional[Callable]
+            The optional function that executes on every timer tick as indicated by duration_ms.
+        start_label: str="Start Timer"
+            The default start label of the timer button.
+        stop_label: str="Stop Timer"
+            The default stop label of the timer button.
+        width: Optional[float]
+            Width of the button, the default is the size of the label.
+        height: Optional[float]
+            Height of the button, the default is the size of the label.
+        width_fill: bool
+            Sets the width to fill the container, overrides width.
+        height_fill: bool
+            Sets the height to fill the container, overrides height.
+        padding: list
+            Sets the padding for widget.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+        button_style_id: Option<String>
+            Id of add_button_style
+        button_style_standard: Option<IpgStyleStandard>
+            One of the class IpgStyleStandard items.
+        button_style_arrow: Option<IpgButtonArrow>
+            One of the class of the IpgButtonArrow
+        user_data: any
+            Any data the user may need during a callback.
+
+        Returns
+        -------
+        id: int
+            The id of the event which can be used to modify the event through update_item.
+        """
 
     def add_toggler(self,
                     parent_id: str,

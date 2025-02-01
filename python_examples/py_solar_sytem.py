@@ -1,12 +1,20 @@
 from icedpygui import IPG, IpgDrawMode, IpgCanvasParam, IpgColor
-from icedpygui import IpgCanvasWidget, IpgWindowTheme
+from icedpygui import IpgCanvasWidget, IpgWindowTheme, IpgCanvasGeometryParam
 import os
 import random
+import math
 
 
+def point_on_circle(center_x, center_y, radius, angle):
+    x = center_x + radius * math.cos(angle)
+    y = center_y + radius * math.sin(angle)
+    return [x, y]
 
-def on_tick(timer_id, counter: int):
-    ipg.update_canvas_items()
+
+def on_tick(timer_id: int, elapsed: int):
+    angle = (2.0 * math.pi / 60.0) * elapsed + (2.0 * math.pi / 60_000.0) * elapsed/1000
+    point = point_on_circle(canvas_width/2.0, canvas_height/2.0, 150.0, angle)
+    ipg.update_canvas_item(earth_id, IpgCanvasGeometryParam.Position, point)
 
 
 
@@ -30,10 +38,10 @@ ipg.add_window(window_id="main", title="Canvas",
 ipg.add_column(window_id="main", container_id="col",
             width_fill=True, height_fill=True)
 
-ipg.add_timer(parent_id="col", 
-              duration_ms=1000,
-              on_tick=on_tick,
-             )
+ipg.add_canvas_timer(parent_id="col", 
+                    duration_ms=1000,
+                    on_tick=on_tick,
+                  )
 
 canvas_id = ipg.add_canvas(window_id="main", 
                            canvas_id="canvas",
@@ -41,7 +49,6 @@ canvas_id = ipg.add_canvas(window_id="main",
                            width=canvas_width, 
                            height=canvas_height,
                            background_ipg_color=IpgColor.BLACK)
-
 
 sun_id = ipg.add_canvas_image(canvas_id="canvas",
                      image_path=sun_path,
@@ -67,7 +74,7 @@ moon_id = ipg.add_canvas_image(canvas_id="canvas",
                      align_center=True,
                      )
 
-ipg.add_circle(canvas_id="canvas",
+earth_obit_id = ipg.add_circle(canvas_id="canvas",
                position_xy=(canvas_width/2.0, canvas_height/2.0),
                radius=150.0,
                stroke_width=1.0,
