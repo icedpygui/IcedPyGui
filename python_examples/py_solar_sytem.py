@@ -27,7 +27,9 @@ def on_tick(timer_id: int, elapsed: int):
     moon_point = point_on_circle(earth_point[0], earth_point[1], 15.0, moon_orbit)
     ipg.update_canvas_item(moon_id, IpgCanvasGeometryParam.Position, moon_point)
     ipg.update_canvas_item(sun_id, IpgCanvasGeometryParam.Rotation, sun_rotation)
-    
+
+
+
 
 ipg = IPG()
 
