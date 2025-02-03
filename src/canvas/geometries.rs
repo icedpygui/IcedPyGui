@@ -1495,7 +1495,6 @@ pub fn find_closest_point_index(widget: &IpgWidget,
 
 
 pub fn get_widget_id(widget: &IpgWidget) -> usize {
-    dbg!(&widget);
     match widget {
         IpgWidget::Arc(arc) => arc.id,
         IpgWidget::Bezier(bz) => bz.id,

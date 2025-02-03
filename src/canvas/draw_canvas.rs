@@ -148,7 +148,6 @@ impl IpgCanvasState {
     }
 
     pub fn request_redraw(&mut self) {
-        dbg!("clearing cache");
         self.cache.clear();
     }
 

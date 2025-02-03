@@ -428,7 +428,12 @@ pub fn convert_to_export(widgets: &HashMap<usize, IpgWidget>,
         };
 
         let x_color = ExportColor::from_rgba(&color);
-        let x_fill_color = ExportColor::from_rgba(&fill_color.unwrap());
+        let x_fill_color = if fill_color.is_some() {
+            ExportColor::from_rgba(&fill_color.unwrap())
+        } else {
+            ExportColor::from_rgba(& Color::from_rgba(0.0, 0.0, 0.0, 0.0))
+        };
+         
         let x_mid_pt = ExportPoint::convert(&mid_point);
         let x_other_point = ExportPoint::convert(&other_point);
         let mut x_points = vec![];

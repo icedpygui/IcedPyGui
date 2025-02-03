@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgDrawMode, IpgCanvasParam, IpgColor
+from icedpygui import IPG, IpgDrawMode, IpgCanvasParam, IpgColor, IpgColorPickerParam
 from icedpygui import IpgCanvasWidget, IpgTextInputParam
 from icedpygui import IpgHorizontalAlignment, IpgVerticalAlignment
 import os
@@ -13,6 +13,8 @@ default_file_path = f"{cwd}/python_examples/resources/canvas.json"
 
 global new_file_path
 new_file_path = ""
+
+
 
 def canvas_clear(btn_id: int):
     ipg.update_item(canvas_id, IpgCanvasParam.Clear, True)
@@ -102,7 +104,7 @@ def submit_draw_color_picker(cp_id: int, color: list):
     
 def submit_fill_color_picker(cp_id: int, color: list):
     ipg.update_item(canvas_id, IpgCanvasParam.FillColor, color)
-    
+
     
 def submit_canvas_color_picker(cp_id: int, color: list):
     print(color);
@@ -139,7 +141,7 @@ def set_vertical_text_alignment(pick_id: int, selected: str):
             
     ipg.update_item(canvas_id, IpgCanvasParam.TextAlignment, align)    
     
-    
+
 
 ipg.add_window(window_id="main", title="Canvas",
                width=1000.0, height=800.0,

@@ -98,7 +98,6 @@ pub fn canvas_callback(canvas_message: CanvasMessage,
                 },
                 _ => {
                     let (draw_mode, draw_status) = get_draw_mode_and_status(&widget);
-                    dbg!(&draw_status);
                     match draw_status {
                         IpgDrawStatus::Completed => {
                             widget = set_widget_mode_or_status_or_id(widget, Some(IpgDrawMode::Display), None, None);
