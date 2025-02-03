@@ -2,11 +2,10 @@
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
-use super::helpers::try_extract_i64;
-use super::ipg_button::{get_bootstrap_arrow, get_styling, 
-    IpgButtonArrow};
+use super::helpers::{get_height, get_padding_f64, get_width, try_extract_boolean, try_extract_f64, try_extract_i64, try_extract_string, try_extract_style_standard, try_extract_u64, try_extract_vec_f64};
+use super::ipg_button::{get_bootstrap_arrow, get_styling, try_extract_button_arrow, IpgButtonArrow};
 
-use iced::widget::{Button, Text};
+use iced::widget::{Button, Space, Text};
 use iced::{Element, Length, Padding, Theme};
 
 use pyo3::{pyclass, PyObject, Python};
@@ -15,49 +14,52 @@ use pyo3::{pyclass, PyObject, Python};
 pub struct IpgTimer {
     pub id: usize,
     pub duration_ms: u64,
-    pub start_label: String,
-    pub stop_label: String,
+    pub label: String,
     pub width: Length,
     pub height: Length,
     pub padding: Padding,
-    pub button_style_id: Option<String>,
-    pub button_style_standard: Option<IpgStyleStandard>,
-    pub button_style_arrow: Option<IpgButtonArrow>,
+    pub clip: bool,
+    pub style_id: Option<String>,
+    pub style_standard: Option<IpgStyleStandard>,
+    pub style_arrow: Option<IpgButtonArrow>,
     pub user_data: Option<PyObject>,
     pub counter: u64,
     pub started: bool,
     pub ticking: bool,
+    pub show: bool,
 }
 
 impl IpgTimer {
     pub fn new(
         id: usize,
         duration_ms: u64,
-        start_label: String,
-        stop_label: String,
+        label: String,
         width: Length,
         height: Length,
         padding: Padding,
-        button_style_id: Option<String>,
-        button_style_standard: Option<IpgStyleStandard>,
-        button_style_arrow: Option<IpgButtonArrow>,
+        clip: bool,
+        style_id: Option<String>,
+        style_standard: Option<IpgStyleStandard>,
+        style_arrow: Option<IpgButtonArrow>,
         user_data: Option<PyObject>,
+        show: bool,
         ) -> Self {
         Self {
             id,
             duration_ms,
-            start_label,
-            stop_label,
+            label,
             width,
             height,
             padding,
-            button_style_id,
-            button_style_standard,
-            button_style_arrow,
+            clip,
+            style_id,
+            style_standard,
+            style_arrow,
             user_data,
             counter: 0,
             started: false,
             ticking: false,
+            show,
         }
     }
 }
@@ -65,28 +67,38 @@ impl IpgTimer {
 
 #[derive(Debug, Clone)]
 pub enum TIMMessage {
-    OnStart,
-    OnStop,
+    OnStartStop,
 }
 
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub enum IpgTimerParams {
+pub enum IpgTimerParam {
     DurationMs,
+    ArrowStyle,
+    Counter,
+    Height,
+    HeightFill,
+    Label,
+    Padding,
+    Clip,
+    Show,
+    StyleId,
+    StyleStandard,
+    Width,
+    WidthFill,
 }
 
 pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
 
-    let mut on_press = TIMMessage::OnStart;
-    let mut label = Text::new(tim.start_label.clone());
-    if tim.started {
-        on_press = TIMMessage::OnStop;
-        label = Text::new(tim.stop_label.clone());
+    if !tim.show {
+        return Space::new(Length::Shrink, Length::Shrink).into()
     }
 
-    if tim.button_style_arrow.is_some() {
-        let arrow = get_bootstrap_arrow(tim.button_style_arrow.unwrap());
+    let mut label = Text::new(tim.label.clone());
+    
+    if tim.style_arrow.is_some() {
+        let arrow = get_bootstrap_arrow(tim.style_arrow.unwrap());
         label = Text::new(arrow).font(iced::Font::with_name("bootstrap-icons"));
     }
     
@@ -94,11 +106,11 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
                                 .height(tim.height)
                                 .padding(tim.padding)
                                 .width(tim.width)
-                                .on_press(on_press)
+                                .on_press(TIMMessage::OnStartStop)
                                 .style(move|theme: &Theme, status| {
                                     get_styling(theme, status,
                                         None,
-                                        tim.button_style_standard.clone(),
+                                        tim.style_standard.clone(),
                                     )  })
                                 .into();
     
@@ -107,39 +119,30 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
     
 }
 
-pub fn timer_callback(state: &mut IpgState, id: usize, message: TIMMessage) -> u64 {
-
+pub fn timer_callback(state: &mut IpgState, id: usize, started: bool) -> u64 {
+    // The timer callback tooggles the timer.started boolean value
+    // No variable is passed since this toggle corresponds to the
+    // timer event toggle
     let mut wci = WidgetCallbackIn{id, ..Default::default()};
-
-    let mut duration: u64 = 0;
-
-    match message {
-        TIMMessage::OnStart => {
-            wci.started = Some(true);
-            wci.counter = Some(0);
-            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            duration = wco.duration.unwrap_or(0);
-            wco.event_name = "on_start".to_string();
-            process_callback(wco);
-        }
-        TIMMessage::OnStop => {
-            wci.started = Some(false);
-            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_stop".to_string();
-            process_callback(wco);
-        },
+    wci.value_bool = Some(started);
+    let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
+    wco.id = id;
+    let duration = wco.duration.unwrap_or(1);
+    if wco.value_bool.unwrap() {
+        wco.event_name = "on_start".to_string();
+    } else {
+        wco.event_name = "on_stop".to_string();
     }
-    duration
+    
+    process_callback(wco);
+    duration       
 }
 
 pub fn tick_callback(state: &mut IpgState) 
 {
     let id= state.timer_event_id_enabled.0;
-    let wci = WidgetCallbackIn{id, ..Default::default()};
-
-    // wci.counter = Some(1);
+    let mut wci = WidgetCallbackIn{id, ..Default::default()};
+    wci.value_str = Some("on_tick".to_string());
     let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
     wco.id = id;
     wco.event_name = "on_tick".to_string();
@@ -161,7 +164,7 @@ fn process_callback(wco: WidgetCallbackOut)
         Some(cb) => cb,
         None => panic!("Timer callback could not be found with id {}", wco.id),
     };
-
+  
     let counter = wco.counter.unwrap_or(0);
 
     Python::with_gil(|py| {
@@ -196,26 +199,68 @@ fn process_callback(wco: WidgetCallbackOut)
 
 
 pub fn timer_item_update(tim: &mut IpgTimer,
-                            item: PyObject,
-                            value: PyObject,
-                            )
+                        item: PyObject,
+                        value: PyObject,
+                        )
 {
     let update = try_extract_timer_update(item);
 
     match update {
-        IpgTimerParams::DurationMs => {
+        IpgTimerParam::DurationMs => {
             tim.duration_ms = try_extract_i64(value) as u64;
         },
-        
+       IpgTimerParam::ArrowStyle => {
+            tim.style_arrow = Some(try_extract_button_arrow(value));
+        },
+        IpgTimerParam::Counter => {
+            tim.counter = try_extract_u64(value);
+        }
+        IpgTimerParam::Label => {
+            tim.label = try_extract_string(value);
+        },
+        IpgTimerParam::Height => {
+            let val = try_extract_f64(value);
+            tim.height = get_height(Some(val as f32), false);
+        },
+        IpgTimerParam::HeightFill => {
+            let val = try_extract_boolean(value);
+            tim.height = get_height(None, val);
+        },
+        IpgTimerParam::Padding => {
+            let val = try_extract_vec_f64(value);
+            tim.padding =  get_padding_f64(val);
+        },
+        IpgTimerParam::Clip => {
+            tim.clip = try_extract_boolean(value);
+        }
+        IpgTimerParam::Show => {
+            tim.show = try_extract_boolean(value);
+        },
+        IpgTimerParam::StyleId => {
+            let val = try_extract_string(value);
+            tim.style_id = Some(val);
+        },
+        IpgTimerParam::StyleStandard => {
+            let val = try_extract_style_standard(value);
+            tim.style_standard = Some(val);
+        },
+        IpgTimerParam::Width => {
+            let val = try_extract_f64(value);
+            tim.width = get_width(Some(val as f32), false);
+        },
+        IpgTimerParam::WidthFill => {
+            let val = try_extract_boolean(value);
+            tim.width = get_width(None, val);
+        }, 
     }
 
 }
 
 
-pub fn try_extract_timer_update(update_obj: PyObject) -> IpgTimerParams {
+pub fn try_extract_timer_update(update_obj: PyObject) -> IpgTimerParam {
 
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgTimerParams>(py);
+        let res = update_obj.extract::<IpgTimerParam>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Timer update extraction failed"),

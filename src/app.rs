@@ -327,29 +327,24 @@ impl App {
             Message::CanvasTick => {
                 canvas_tick_callback(&mut self.state);
                 process_canvas_updates(&mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state); 
                 self.canvas_state.request_image_redraw();
                 Task::none()
             },
-            Message::Timer(id, message) => {
-                match message {
-                    TIMMessage::OnStart => {
-                        self.state.timer_event_id_enabled.0 = id;
-                        self.state.timer_event_id_enabled.1 = true;
-                    },
-                    TIMMessage::OnStop => self.state.timer_event_id_enabled.1 = false,
-                }
-                self.state.timer_duration = timer_callback(&mut self.state, id, message);
+            Message::Timer(id, _) => {
+                self.state.timer_event_id_enabled.1 = !self.state.timer_event_id_enabled.1;
+                self.state.timer_event_id_enabled.0 = id;
+                let started = self.state.timer_event_id_enabled.1;
+                self.state.timer_duration = timer_callback(&mut self.state, id, started);
+                process_updates(&mut self.state, &mut self.canvas_state);    
                 Task::none()
             },
             Message::CanvasTimer(id, message) => {
-                match message {
-                    CanvasTimerMessage::OnStart => {
-                        self.state.canvas_timer_event_id_enabled.0 = id;
-                        self.state.canvas_timer_event_id_enabled.1 = true;
-                    },
-                    CanvasTimerMessage::OnStop => self.state.canvas_timer_event_id_enabled.1 = false,
-                }
-                self.state.canvas_timer_duration = canvas_timer_callback(&mut self.state, id, message);
+                self.state.canvas_timer_event_id_enabled.1 = !self.state.canvas_timer_event_id_enabled.1;
+                self.state.canvas_timer_event_id_enabled.0 = id;
+                let started = self.state.canvas_timer_event_id_enabled.1;
+                self.state.canvas_timer_duration = canvas_timer_callback(&mut self.state, id, started);
+                process_updates(&mut self.state, &mut self.canvas_state);    
                 Task::none()
             },
             Message::Toggler(id, message) => {
@@ -1063,7 +1058,6 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
 fn process_canvas_updates(cs: &mut IpgCanvasState) {
     let mut canvas_items = access_canvas_update_items();
 
-    // let mut updates = all_updates.updates.clone();
     for ((wid, item, value)) in canvas_items.updates.iter() {
         let mut canvas_widget = if cs.curves.get_mut(wid).is_some(){
             cs.curves.get_mut(wid).unwrap()
@@ -1072,11 +1066,12 @@ fn process_canvas_updates(cs: &mut IpgCanvasState) {
         } else if cs.text_curves.get_mut(wid).is_some() {
             cs.text_curves.get_mut(wid).unwrap()
         } else {
-            panic!("Canvas curve could not be found based in the id, {}", wid)
+           panic!("canvas_item_update: canvas item with id, {} not found", wid);
         };
-        match_canvas_widget(canvas_widget, item.clone(), value.clone()); 
+        match_canvas_widget(canvas_widget, item.clone(), value.clone());
     }
     canvas_items.updates = vec![];
+
 }
 
 fn clone_state(state: &mut IpgState) {

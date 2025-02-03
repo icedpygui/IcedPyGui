@@ -289,19 +289,31 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             },
             IpgWidgets::IpgTimer(tim) => {
                 tim.counter += 1;
+                // value_str is set when a tick occurs
+                // so no value_bool present
+                if wci.value_str.is_none() {
+                    tim.started = wci.value_bool.unwrap();
+                }
                 return WidgetCallbackOut{
                     user_data: tim.user_data.clone(),
                     counter: Some(tim.counter),
                     duration: Some(tim.duration_ms),
+                    value_bool: Some(tim.started),
                     ..Default::default()
                 }
             }
             IpgWidgets::IpgCanvasTimer(ctim) => {
                 ctim.counter += 1;
+                // value_str is set when a tick occurs
+                // so no value_bool present
+                if wci.value_str.is_none() {
+                    ctim.started = wci.value_bool.unwrap();
+                }
                 return WidgetCallbackOut{
                     user_data: ctim.user_data.clone(),
                     counter: Some(ctim.counter),
                     duration: Some(ctim.duration_ms),
+                    value_bool: Some(ctim.started),
                     ..Default::default()
                 }
             }

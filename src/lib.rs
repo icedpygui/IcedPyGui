@@ -9,7 +9,7 @@ use iced::widget::image;
 use iced_aw::iced_fonts;
 use ipg_widgets::ipg_color_picker::{color_picker_update, IpgColorPicker, 
     IpgColorPickerParam, IpgColorPickerStyle};
-use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, IpgCanvasTimer};
+use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, IpgCanvasTimer, IpgCanvasTimerParam};
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -79,7 +79,7 @@ use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam,
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, 
         IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
-use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParams};
+use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParam};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, 
         IpgTogglerParam, IpgTogglerStyle};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
@@ -151,14 +151,14 @@ pub struct UpdateCanvasItems {
     pub deletes: Vec<(String, usize)>,
 }
 
-pub static UPDATE_CANVAS_ITEMS: Mutex<UpdateItems> = Mutex::new(UpdateItems {
+pub static UPDATE_CANVAS_ITEMS: Mutex<UpdateCanvasItems> = Mutex::new(UpdateCanvasItems {
     updates: vec![],
     moves: vec![],
     deletes: vec![],
 });
 
-pub fn access_canvas_update_items() -> MutexGuard<'static, UpdateItems> {
-    UPDATE_ITEMS.lock().unwrap()
+pub fn access_canvas_update_items() -> MutexGuard<'static, UpdateCanvasItems> {
+    UPDATE_CANVAS_ITEMS.lock().unwrap()
 }
 
 #[derive(Debug)]
@@ -3668,30 +3668,34 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, duration_ms, on_start=None, on_tick=None, on_stop=None, 
-                        start_label="Start Timer".to_string(), 
-                        stop_label="Stop Timer".to_string(), width=None, height=None, 
-                        width_fill=false, height_fill=false, padding=vec![10.0], 
-                        button_style_id=None, button_style_standard=None, button_style_arrow=None, 
-                        user_data=None, gen_id=None))]
+    #[pyo3(signature = (parent_id, duration_ms, 
+                        on_start=None, on_tick=None, on_stop=None, 
+                        label="Start Timer".to_string(), 
+                        width=None, height=None, 
+                        width_fill=false, height_fill=false,
+                        padding=vec![10.0], clip=false, 
+                        style_id=None, style_standard=None, style_arrow=None, 
+                        user_data=None, gen_id=None, show=true
+                        ))]
     fn add_timer(&mut self,
                         parent_id: String,
                         duration_ms: u64,
                         on_start: Option<PyObject>,
                         on_tick: Option<PyObject>,
                         on_stop: Option<PyObject>,
-                        start_label: String,
-                        stop_label: String,
+                        label: String,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
                         height_fill: bool,
                         padding: Vec<f64>,
-                        button_style_id: Option<String>,
-                        button_style_standard: Option<IpgStyleStandard>,
-                        button_style_arrow: Option<IpgButtonArrow>,
+                        clip: bool,
+                        style_id: Option<String>,
+                        style_standard: Option<IpgStyleStandard>,
+                        style_arrow: Option<IpgButtonArrow>,
                         user_data: Option<PyObject>,
                         gen_id: Option<usize>,
+                        show: bool,
                     ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
@@ -3702,7 +3706,6 @@ impl IPG {
         if on_tick.is_some() {
             add_callback_to_mutex(self.id, "on_tick".to_string(), on_tick);
         }
-
         if on_stop.is_some() {
             add_callback_to_mutex(self.id, "on_stop".to_string(), on_stop);
         }
@@ -3719,45 +3722,50 @@ impl IPG {
         state.widgets.insert(self.id, IpgWidgets::IpgTimer(IpgTimer::new(
                                                             id,
                                                             duration_ms,
-                                                            start_label,
-                                                            stop_label,
+                                                            label,
                                                             width,
                                                             height,
                                                             padding,
-                                                            button_style_id,
-                                                            button_style_standard,
-                                                            button_style_arrow,
-                                                            user_data, 
+                                                            clip,
+                                                            style_id,
+                                                            style_standard,
+                                                            style_arrow,
+                                                            user_data,
+                                                            show,
                                                             )));
         state.last_id = id;
         drop(state);
         Ok(id)
     }
 
-    #[pyo3(signature = (parent_id, duration_ms, on_start=None, on_tick=None, on_stop=None, 
-                        start_label="Start Timer".to_string(), 
-                        stop_label="Stop Timer".to_string(), width=None, height=None, 
-                        width_fill=false, height_fill=false, padding=vec![10.0], 
-                        button_style_id=None, button_style_standard=None, button_style_arrow=None, 
-                        user_data=None, gen_id=None))]
+    #[pyo3(signature = (parent_id, duration_ms, 
+                        on_start=None, on_tick=None, on_stop=None, 
+                        label="Start Timer".to_string(), 
+                        width=None, height=None, 
+                        width_fill=false, height_fill=false,
+                        padding=vec![10.0], clip=false, 
+                        style_id=None, style_standard=None, style_arrow=None, 
+                        user_data=None, gen_id=None, show=true
+                        ))]
     fn add_canvas_timer(&mut self,
                         parent_id: String,
                         duration_ms: u64,
                         on_start: Option<PyObject>,
                         on_tick: Option<PyObject>,
                         on_stop: Option<PyObject>,
-                        start_label: String,
-                        stop_label: String,
+                        label: String,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
                         height_fill: bool,
                         padding: Vec<f64>,
-                        button_style_id: Option<String>,
-                        button_style_standard: Option<IpgStyleStandard>,
-                        button_style_arrow: Option<IpgButtonArrow>,
+                        clip: bool,
+                        style_id: Option<String>,
+                        style_standard: Option<IpgStyleStandard>,
+                        style_arrow: Option<IpgButtonArrow>,
                         user_data: Option<PyObject>,
                         gen_id: Option<usize>,
+                        show: bool,
                     ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
@@ -3768,7 +3776,6 @@ impl IPG {
         if on_tick.is_some() {
             add_callback_to_mutex(self.id, "on_tick".to_string(), on_tick);
         }
-
         if on_stop.is_some() {
             add_callback_to_mutex(self.id, "on_stop".to_string(), on_stop);
         }
@@ -3785,15 +3792,16 @@ impl IPG {
         state.widgets.insert(self.id, IpgWidgets::IpgCanvasTimer(IpgCanvasTimer::new(
                                                             id,
                                                             duration_ms,
-                                                            start_label,
-                                                            stop_label,
+                                                            label,
                                                             width,
                                                             height,
                                                             padding,
-                                                            button_style_id,
-                                                            button_style_standard,
-                                                            button_style_arrow,
-                                                            user_data, 
+                                                            clip,
+                                                            style_id,
+                                                            style_standard,
+                                                            style_arrow,
+                                                            user_data,
+                                                            show,
                                                             )));
         state.last_id = id;
         drop(state);
@@ -4777,11 +4785,11 @@ impl IPG {
 
     #[pyo3(signature = (wid, item, value))]
     fn update_canvas_item(&self, wid: usize, item: PyObject, value: PyObject) {
-        let mut all_updates = access_canvas_update_items();
+        let mut canvas_items = access_canvas_update_items();
 
-        all_updates.updates.push((wid, item, value));
+        canvas_items.updates.push((wid, item, value));
 
-        drop(all_updates);
+        drop(canvas_items);
 
     }
 
@@ -5020,7 +5028,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgTableWidget>()?;
     m.add_class::<IpgTextInputParam>()?;
     m.add_class::<IpgTextParam>()?;
-    m.add_class::<IpgTimerParams>()?;
+    m.add_class::<IpgTimerParam>()?;
+    m.add_class::<IpgCanvasTimerParam>()?;
     m.add_class::<IpgTogglerParam>()?;
     m.add_class::<IpgWindowParam>()?;
     m.add_class::<IpgWindowLevel>()?;

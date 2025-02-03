@@ -1,5 +1,6 @@
 from icedpygui import IPG, IpgDrawMode, IpgCanvasParam, IpgColor
-from icedpygui import IpgCanvasWidget, IpgWindowTheme, IpgCanvasGeometryParam
+from icedpygui import IpgCanvasWidget, IpgWindowTheme, IpgTextParam
+from icedpygui import IpgCanvasTimerParam, IpgCanvasGeometryParam
 import os
 import random
 import math
@@ -16,6 +17,14 @@ def point_on_circle(center_x, center_y, radius, angle):
     return [x, y]
 
 
+def on_start(timer_id: int, elapsed: int):
+    ipg.update_item(timer_id, IpgCanvasTimerParam.Label, "Stop Timer")
+    
+
+def on_stop(timer_id: int, elapsed: int):
+    ipg.update_item(timer_id, IpgCanvasTimerParam.Label, "Start Timer")
+
+
 def on_tick(timer_id: int, elapsed: int):
     earth_rotation = 3.142 * elapsed
     earth_orbit = earth_rotation/365.25
@@ -27,6 +36,7 @@ def on_tick(timer_id: int, elapsed: int):
     moon_point = point_on_circle(earth_point[0], earth_point[1], 15.0, moon_orbit)
     ipg.update_canvas_item(moon_id, IpgCanvasGeometryParam.Position, moon_point)
     ipg.update_canvas_item(sun_id, IpgCanvasGeometryParam.Rotation, sun_rotation)
+    
 
 
 
@@ -51,9 +61,16 @@ ipg.add_window(window_id="main", title="Canvas",
 ipg.add_column(window_id="main", container_id="col",
             width_fill=True, height_fill=True)
 
-ipg.add_canvas_timer(parent_id="col", 
+ipg.add_row(window_id="main",
+            container_id="row",
+            parent_id="col",
+            )
+
+ipg.add_canvas_timer(parent_id="row", 
                     duration_ms=15,
                     on_tick=on_tick,
+                    on_start=on_start,
+                    on_stop=on_stop,
                   )
 
 canvas_id = ipg.add_canvas(window_id="main", 

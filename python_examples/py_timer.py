@@ -1,19 +1,22 @@
-from icedpygui import IPG, IpgTextParam
+from icedpygui import IPG, IpgTextParam, IpgTimerParam
 
 
 # Fires when the timer is started
-def on_start(btn_id, counter):
-    ipg.update_item(text_id, IpgTextParam.Content, f"Count: {counter}")
+def on_start(timer_id: int, counter: int):
+    ipg.update_item(timer_id, IpgTimerParam.Label, "Stop Timer")
+    # Just in case of a restart, zero the counter
+    ipg.update_item(timer_id, IpgTimerParam.Counter, 0)
 
 
 # Fires on every tick
-def on_tick(timer_id, counter):
+def on_tick(timer_id: int, counter: int):
     ipg.update_item(text_id, IpgTextParam.Content, f"Count: {counter}")
 
 
 # Fires on stopping
-def on_stop(timer_id, counter):
+def on_stop(timer_id: int, counter: int):
     ipg.update_item(text_id, IpgTextParam.Content, f"Count stopped at {counter}")
+    ipg.update_item(timer_id, IpgTimerParam.Label, "Start Timer")
 
 ipg = IPG()
 
@@ -32,11 +35,15 @@ ipg.add_container(window_id="main",
 # Add the column to hold the widgets
 ipg.add_column(window_id="main", container_id="col", parent_id="cont")
 
-# Add the time, the duration is supplied a milliseconds, so 1 second interval, in this case.
-# The two callbacks are defined.
-# The button is part of the timer and you can style it as need, just like the button.
-ipg.add_timer(parent_id="col", duration_ms=1000,
-              on_start=on_start, on_tick=on_tick, on_stop=on_stop)
+# The time duration is in milliseconds, so 1 second interval, in this case.
+# The three callbacks start, stop, and tick are defined.
+# The timer button is part of the timer method but you can style it as need, 
+# just like the regular button.
+ipg.add_timer(parent_id="col", 
+              duration_ms=1000,
+              on_start=on_start, 
+              on_tick=on_tick, 
+              on_stop=on_stop)
 
 # Add a text widget to display the count.
 text_id = ipg.add_text(parent_id="col", content="Count: 0")
