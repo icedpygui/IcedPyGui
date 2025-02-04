@@ -2,11 +2,11 @@
 #![allow(clippy::enum_variant_names)]
 use pyo3::pyclass;
 
-use super::ipg_button::IpgButton;
+use super::ipg_button::{IpgButton, IpgButtonStyle};
 use super::ipg_canvas::IpgCanvas;
 use super::ipg_card::IpgCard;
-use super::ipg_checkbox::IpgCheckBox;
-use super::ipg_color_picker::IpgColorPicker;
+use super::ipg_checkbox::{IpgCheckBox, IpgCheckboxStyle};
+use super::ipg_color_picker::{IpgColorPicker, IpgColorPickerStyle};
 // use super::ipg_color_picker::IpgColorPicker;
 use super::ipg_container::IpgContainer;
 use super::ipg_column::IpgColumn;
@@ -60,9 +60,12 @@ pub enum IpgContainers {
 #[derive(Debug, Clone)]
 pub enum IpgWidgets {
     IpgButton(IpgButton),
+    IpgButtonStyle(IpgButtonStyle),
     IpgCard(IpgCard),
     IpgCheckBox(IpgCheckBox),
+    IpgCheckboxStyle(IpgCheckboxStyle),
     IpgColorPicker(IpgColorPicker),
+    IpgColorPickerStyle(IpgColorPickerStyle),
     IpgDatePicker(IpgDatePicker),
     IpgImage(IpgImage),
     IpgMenu(IpgMenu),

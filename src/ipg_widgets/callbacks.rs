@@ -86,6 +86,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 }
             },
+            IpgWidgets::IpgButtonStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgCard(crd) => {
                 let is_open = match wci.value_bool {
                     Some(open) => open,
@@ -108,6 +113,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 } 
             },
+            IpgWidgets::IpgCheckboxStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgColorPicker(cp) => {
                 cp.show = match wci.value_bool {
                     Some(s) => s,
@@ -126,6 +136,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 }
                 wco.user_data = cp.user_data.clone();
                 return wco
+            },
+            IpgWidgets::IpgColorPickerStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgDatePicker(dp) => {
                 

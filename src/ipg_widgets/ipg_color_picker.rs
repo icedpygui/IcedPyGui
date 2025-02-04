@@ -1,14 +1,17 @@
 //! ipg_color_picker
+use crate::graphics::colors::get_color;
 use crate::{access_callbacks, IpgState};
 use crate::app::Message;
 use crate::style::styling::IpgStyleStandard;
-use super::helpers::{get_height, get_padding_f64, get_width, try_extract_boolean, try_extract_f64, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f64};
-use super::ipg_button::{self, get_bootstrap_arrow, try_extract_button_arrow, IpgButtonArrow, IpgButtonStyle};
+use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32, try_extract_vec_f64};
+use super::ipg_button::{get_bootstrap_arrow, get_standard_style, try_extract_button_arrow, IpgButtonArrow};
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut 
                        };
+use super::ipg_enums::IpgWidgets;
 
-use iced::widget::{Button, text};
-use iced::{Color, Element, Length, Padding, Theme};
+use iced::widget::button::{Status, Style};
+use iced::widget::{button, text, Button};
+use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector};
 use iced_aw::ColorPicker;
 
 use pyo3::{pyclass, PyObject, Python};
@@ -27,7 +30,7 @@ pub struct IpgColorPicker {
     pub height: Length,
     pub padding: Padding,
     pub clip: bool,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
     pub style_standard: Option<IpgStyleStandard>,
     pub style_arrow: Option<IpgButtonArrow>,
 }
@@ -44,7 +47,7 @@ impl IpgColorPicker {
         height: Length,
         padding: Padding,
         clip: bool,
-        style_id: Option<String>,
+        style_id: Option<usize>,
         style_standard: Option<IpgStyleStandard>,
         style_arrow: Option<IpgButtonArrow>,
         ) -> Self {
@@ -121,15 +124,17 @@ pub enum ColPikMessage {
 
 
 pub fn construct_color_picker(cp: IpgColorPicker,
-                                style_opt: Option<IpgButtonStyle>,
-                                ) -> Element<'static, Message> {
+                                style_opt: Option<IpgWidgets>,
+                                ) -> Option<Element<'static, Message>> {
 
-   let mut label = text(cp.label.clone());
+    let mut label = text(cp.label.clone());
    
     if cp.style_arrow.is_some() {
         let arrow = get_bootstrap_arrow(cp.style_arrow.unwrap());
         label = text(arrow).font(iced::Font::with_name("bootstrap-icons"));
     }
+
+    let style = get_cp_style(style_opt);
 
     let btn: Element<ColPikMessage> = Button::new(label)
                                     .height(cp.height)
@@ -137,14 +142,14 @@ pub fn construct_color_picker(cp: IpgColorPicker,
                                     .width(cp.width)
                                     .on_press(ColPikMessage::OnPress)
                                     .style(move|theme: &Theme, status| {   
-                                        ipg_button::get_styling(theme, status,
-                                            style_opt.clone(),
+                                        get_styling(theme, status,
+                                            style.clone(),
                                             cp.style_standard.clone())
                                         })
                                     .into();
 
     if !cp.show {
-        return btn.map(move |message| Message::ColorPicker(cp.id, message));
+        return Some(btn.map(move |message| Message::ColorPicker(cp.id, message)));
     }
 
     let color_picker: Element<ColPikMessage> = ColorPicker::new(
@@ -155,7 +160,7 @@ pub fn construct_color_picker(cp: IpgColorPicker,
                                     ColPikMessage::OnSubmit,
                                 ).into();
 
-    color_picker.map(move |message| Message::ColorPicker(cp.id, message))
+    Some(color_picker.map(move |message| Message::ColorPicker(cp.id, message)))
 
 }
 
@@ -288,7 +293,7 @@ pub fn color_picker_update(cp: &mut IpgColorPicker,
             cp.show = try_extract_boolean(value);
         },
         IpgColorPickerParam::StyleId => {
-            let val = try_extract_string(value);
+            let val = try_extract_f64(value) as usize;
             cp.style_id = Some(val);
         },
         IpgColorPickerParam::StyleStandard => {
@@ -315,6 +320,187 @@ pub fn try_extract_cp_update(update_obj: PyObject) -> IpgColorPickerParam {
             Err(_) => panic!("Color Picker update extraction failed"),
         }
     })
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgColorPickerStyleParam {
+    BackgroundIpgColor,
+    BackgroundRbgaColor,
+    BackgroundIpgColorHovered,
+    BackgroundIpgRgbaHovered,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+    ShadowIpgColor,
+    ShadowRgbaColor,
+    ShadowOffsetX,
+    ShadowOffsetY,
+    ShadowBlurRadius,
+    TextIpgColor,
+    TextRgbaColor
+}
+
+pub fn color_picker_style_update_item(style: &mut IpgColorPickerStyle,
+                                        item: PyObject,
+                                        value: PyObject,) 
+{
+
+    let update = try_extract_color_picker_style_update(item);
+    match update {
+        IpgColorPickerStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgColorPickerStyleParam::BackgroundRbgaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgColorPickerStyleParam::BackgroundIpgColorHovered => {
+            let color = try_extract_ipg_color(value);
+            style.background_color_hovered = get_color(None, Some(color), 1.0, false);
+        },
+        IpgColorPickerStyleParam::BackgroundIpgRgbaHovered => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgColorPickerStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgColorPickerStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgColorPickerStyleParam::BorderRadius => {
+            style.border_radius = try_extract_vec_f32(value);
+        },
+        IpgColorPickerStyleParam::BorderWidth => {
+            style.border_width = try_extract_f64(value) as f32;
+        },
+        IpgColorPickerStyleParam::ShadowIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.shadow_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgColorPickerStyleParam::ShadowRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgColorPickerStyleParam::ShadowOffsetX => {
+            style.shadow_offset_x = try_extract_f64(value) as f32;
+        },
+        IpgColorPickerStyleParam::ShadowOffsetY => {
+            style.shadow_offset_y = try_extract_f64(value) as f32;
+        },
+        IpgColorPickerStyleParam::ShadowBlurRadius => {
+            style.shadow_blur_radius = try_extract_f64(value) as f32;
+        },
+        IpgColorPickerStyleParam::TextIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgColorPickerStyleParam::TextRgbaColor => {
+            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+    }
+}
+
+pub fn try_extract_color_picker_style_update(update_obj: PyObject) -> IpgColorPickerStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgColorPickerStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Color Picker style update extraction failed"),
+        }
+    })
+}
+
+fn get_cp_style(style: Option<IpgWidgets>) -> Option<IpgColorPickerStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgColorPickerStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
+
+pub fn get_styling(theme: &Theme, status: Status,
+                    style_opt: Option<IpgColorPickerStyle>,
+                    style_standard: Option<IpgStyleStandard>,
+                    ) -> button::Style 
+{
+    if style_standard.is_none() && style_opt.is_none() {
+        return button::primary(theme, status)
+    }
+
+    if style_opt.is_none() && style_standard.is_some() {
+            return get_standard_style(theme, status, style_standard, None, None)
+    }
+
+    let mut border = Border::default();
+    let mut shadow = Shadow::default();
+
+    let mut base_style = button::primary(theme, status);
+    let mut hover_style = button::primary(theme, status);
+
+    let style = style_opt.unwrap_or_default();
+
+    if style.border_color.is_some() {
+        border.color = style.border_color.unwrap();
+    }
+
+    border.radius = get_radius(style.border_radius.clone(), 
+                                "Button".to_string());
+    border.width = style.border_width;
+
+    if style.shadow_color.is_some() {
+        shadow.color = style.shadow_color.unwrap();
+        shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
+        shadow.blur_radius = style.shadow_blur_radius;
+    }
+
+    // style_standard overrides style except for border and shadow
+    let style_standard = get_standard_style(theme, status, 
+                                    style_standard, 
+                                    Some(border), Some(shadow));
+    
+    base_style.background = if style.background_color.is_some() {
+        Some(style.background_color.unwrap().into())
+    } else {
+        style_standard.background
+    };
+
+    hover_style.background = if style.background_color_hovered.is_some() {
+        Some(style.background_color_hovered.unwrap().into())
+    } else {
+        style_standard.background
+    };
+
+    base_style.border = border;
+    hover_style.border = border;
+
+    base_style.shadow = shadow;
+    hover_style.shadow = shadow;
+
+    match status {
+        Status::Active | Status::Pressed => base_style,
+        Status::Hovered => hover_style,
+        Status::Disabled => disabled(base_style),
+    }
+    
+}
+
+fn disabled(style: Style) -> Style {
+    Style {
+        background: style
+            .background
+            .map(|background| background.scale_alpha(0.5)),
+        text_color: style.text_color.scale_alpha(0.5),
+        ..style
+    }
 }
 
 fn convert_color_to_list(color: Color) -> Vec<f64> {

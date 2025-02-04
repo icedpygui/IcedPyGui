@@ -774,7 +774,7 @@ class IPG:
                     height_fill: bool=False,
                     padding: list=[10.0],
                     clip: bool=False, 
-                    style_id: Optional[str]=None,
+                    style_id: Optional[int]=None,
                     style_standard: Optional[IpgStyleStandard]=None,
                     style_arrow: Optional[IpgButtonArrow]=None,
                     user_data: Optional[any]=None,
@@ -825,8 +825,6 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
     def add_button_style(self,
-                            style_id: str, 
-                            *,
                             background_color: Optional[IpgColor]=None,
                             background_rgba: Optional[list[float, 4]]=None,
                             background_color_hovered: Optional[IpgColor]=None,
@@ -848,8 +846,6 @@ class IPG:
 
         Parameters
         ----------
-            style_id: str
-                Id of button you are styling. 
             background_color: Optional[IpgColor]=None
                 Color of the background.
             background_rgba: Optional[list[float, 4]]=None
@@ -1023,8 +1019,6 @@ class IPG:
         """
     
     def add_checkbox_style(self,
-                            style_id: str, 
-                            *,
                             background_color: Optional[IpgColor]=None,
                             background_rgba: Optional[list]=None,
                             accent_color: Optional[IpgColor]=None,
@@ -1043,8 +1037,6 @@ class IPG:
 
         Parameters
         ----------
-            style_id: str
-                Id of checkbox you are styling style. 
             background_color: Optional[IpgColor]=None
                 The background color of the box.
             background_rgba: list,
@@ -1142,8 +1134,6 @@ class IPG:
         """
         
     def add_color_picker_style(self,
-                            style_id: str, 
-                            *,
                             background_color: Optional[IpgColor]=None,
                             background_rgba: Optional[list[float, 4]]=None,
                             background_color_hovered: Optional[IpgColor]=None,
@@ -1165,8 +1155,6 @@ class IPG:
 
         Parameters
         ----------
-            style_id: str
-                Id of color picker button you are styling style. 
             background_color: Optional[IpgColor]=None
                 Color of the background.
             background_rgba: Optional[list[float, 4]]=None
@@ -3694,6 +3682,24 @@ class IpgButtonParam:
     WidthFill: bool
 
 
+class IpgButtonStyleParam:
+    BackgroundIpgColor=IpgColor
+    BackgroundRbgaColor=list[float, 4]
+    BackgroundIpgColorHovered=IpgColor
+    BackgroundIpgRgbaHovered=list[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderRadius=list
+    BorderWidth=float
+    ShadowIpgColor=IpgColor
+    ShadowRgbaColor=list[float, 4]
+    ShadowOffsetX=float
+    ShadowOffsetY=float
+    ShadowBlurRadius=float
+    TextIpgColor=IpgColor
+    TextRgbaColor=list[float, 4]
+    
+    
 class IpgDrawMode:
     Display: str
     New: str

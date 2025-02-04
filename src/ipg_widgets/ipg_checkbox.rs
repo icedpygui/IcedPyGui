@@ -1,11 +1,11 @@
 //! ipg_checkbox
+use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, IpgState};
 use crate::app;
-use super::helpers::{get_radius, get_shaping, get_width, 
-    try_extract_style_standard, try_extract_boolean, 
-    try_extract_f64, try_extract_string};
+use super::helpers::{get_radius, get_shaping, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32};
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::ipg_enums::IpgWidgets;
 
 use crate::graphics::BOOTSTRAP_FONT;
 use crate::graphics::bootstrap_icon::{Icon, icon_to_char};
@@ -13,7 +13,7 @@ use crate::graphics::bootstrap_icon::{Icon, icon_to_char};
 use iced::advanced::text;
 use iced::{Color, Element, Length, Theme};
 use iced::widget::text::{LineHeight, Shaping};
-use iced::widget::{Checkbox, Space};
+use iced::widget::Checkbox;
 use iced::widget::checkbox::{self, Status};
 
 use pyo3::{pyclass, PyObject, Python};
@@ -36,7 +36,7 @@ pub struct IpgCheckBox {
     // font: Option<Font>,
     pub icon_x: bool,
     pub icon_size: f32,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
     pub style_standard: Option<IpgStyleStandard>,
 }
 
@@ -56,7 +56,7 @@ impl IpgCheckBox {
         text_shaping: Shaping,
         icon_x: bool,
         icon_size: f32,
-        style_id: Option<String>,
+        style_id: Option<usize>,
         style_standard: Option<IpgStyleStandard>,
         ) -> Self {
             Self {
@@ -128,13 +128,15 @@ pub enum CHKMessage {
 }
 
 pub fn construct_checkbox(chk: IpgCheckBox, 
-                        style_opt: Option<IpgCheckboxStyle>) 
-                        -> Element<'static, app::Message> {
+                        style_opt: Option<IpgWidgets>) 
+                        -> Option<Element<'static, app::Message>> {
 
     if !chk.show {
-        return Space::new(Length::Shrink, Length::Shrink).into()
+        return None
     };
-    
+
+    let style = get_chk_style(style_opt);
+
     let ipg_chk: Element<'_, CHKMessage> = Checkbox::new(chk.label.clone(), 
                             chk.is_checked)
                             .on_toggle(CHKMessage::OnToggle)
@@ -164,14 +166,14 @@ pub fn construct_checkbox(chk: IpgCheckBox,
                             )
                             .style(move|theme: &Theme, status| {   
                                 get_styling(theme, status,
-                                    style_opt.clone(), 
+                                    style.clone(), 
                                     chk.style_standard.clone(),
                                     chk.is_checked,
                                     )  
                                 })
                             .into();
 
-    ipg_chk.map(move |message| app::Message::CheckBox(chk.id, message))
+    Some(ipg_chk.map(move |message| app::Message::CheckBox(chk.id, message)))
 }
 
 pub fn checkbox_callback(state: &mut IpgState, id: usize, message: CHKMessage) {
@@ -297,7 +299,7 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
             chk.text_size = try_extract_f64(value) as f32;
         },
         IpgCheckboxParam::Style => {
-            chk.style_id = Some(try_extract_string(value))
+            chk.style_id = Some(try_extract_f64(value) as usize)
         },
         IpgCheckboxParam::StyleStandard => {
             let val = try_extract_style_standard(value);
@@ -314,6 +316,91 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
     }
 }
 
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgCheckboxStyleParam {
+    BackgroundIpgColor,
+    BackgroundRgbaColor,
+    BackgroundIpgColorHovered,
+    BackgroundRgbaColorHovered,
+    AccentIpgColor,
+    AccentRgbagColor,
+    AccentIpgColorHovered,
+    AccentRgbaColorHovered,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+    IconIpgColor,
+    IconRgbaColor,
+    TextIpgColor,
+    TextRgbaColor,
+}
+
+pub fn checkbox_style_update_item(style: &mut IpgCheckboxStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+    let update = try_extract_checkbox_style_update(item);
+    match update {
+        IpgCheckboxStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCheckboxStyleParam::BackgroundRgbaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgCheckboxStyleParam::BackgroundIpgColorHovered => {
+            let color = try_extract_ipg_color(value);
+            style.background_color_hovered = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCheckboxStyleParam::BackgroundRgbaColorHovered => {
+            style.background_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgCheckboxStyleParam::AccentIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.accent_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCheckboxStyleParam::AccentRgbagColor => {
+            style.accent_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgCheckboxStyleParam::AccentIpgColorHovered => {
+            let color = try_extract_ipg_color(value);
+            style.accent_color_hovered = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCheckboxStyleParam::AccentRgbaColorHovered => {
+            style.accent_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgCheckboxStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCheckboxStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgCheckboxStyleParam::BorderRadius => {
+            style.border_radius = try_extract_vec_f32(value);
+        },
+        IpgCheckboxStyleParam::BorderWidth => {
+            style.border_width = try_extract_f64(value) as f32;
+        },
+        IpgCheckboxStyleParam::IconIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.icon_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCheckboxStyleParam::IconRgbaColor => {
+            style.icon_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgCheckboxStyleParam::TextIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCheckboxStyleParam::TextRgbaColor => {
+            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+    }
+}
 
 pub fn try_extract_checkbox_update(update_obj: PyObject) -> IpgCheckboxParam {
 
@@ -421,4 +508,29 @@ pub fn get_styling(theme: &Theme, status: Status,
         },
     }
     
+}
+
+pub fn try_extract_checkbox_style_update(update_obj: PyObject) -> IpgCheckboxStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgCheckboxStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Checkbox style update extraction failed"),
+        }
+    })
+}
+
+fn get_chk_style(style: Option<IpgWidgets>) -> Option<IpgCheckboxStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgCheckboxStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
 }

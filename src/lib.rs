@@ -7,8 +7,7 @@ use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage,
     IpgCanvasWidget, IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
 use iced::widget::image;
 use iced_aw::iced_fonts;
-use ipg_widgets::ipg_color_picker::{color_picker_update, IpgColorPicker, 
-    IpgColorPickerParam, IpgColorPickerStyle};
+use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, IpgCanvasTimer, IpgCanvasTimerParam};
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
@@ -32,14 +31,12 @@ mod graphics;
 mod style;
 mod canvas;
 
-use ipg_widgets::ipg_button::{button_item_update, IpgButton, 
-        IpgButtonArrow, IpgButtonParam, IpgButtonStyle};
+use ipg_widgets::ipg_button::{button_item_update, button_style_update_item, IpgButton, IpgButtonArrow, IpgButtonParam, IpgButtonStyle, IpgButtonStyleParam};
 use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, 
     IpgCanvasGeometryParam, IpgCanvasParam};
 use ipg_widgets::ipg_card::{card_item_update, IpgCard, 
     IpgCardStyle, IpgCardParam};
-use ipg_widgets::ipg_checkbox::{checkbox_item_update, 
-        IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle};
+use ipg_widgets::ipg_checkbox::{checkbox_item_update, checkbox_style_update_item, IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle, IpgCheckboxStyleParam};
 use ipg_widgets::ipg_column::IpgColumn;
 use ipg_widgets::ipg_container::{IpgContainer, IpgContainerStyle};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, 
@@ -1474,7 +1471,7 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         clip: bool,
-                        style_id: Option<String>,
+                        style_id: Option<usize>,
                         style_standard: Option<IpgStyleStandard>,
                         style_arrow: Option<IpgButtonArrow>,
                         user_data: Option<PyObject>,
@@ -1496,26 +1493,28 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgButton(IpgButton::new(
-                                                id,
-                                                show,
-                                                user_data,
-                                                label,
-                                                width,
-                                                height,
-                                                padding,
-                                                clip,
-                                                style_id,
-                                                style_standard,
-                                                style_arrow,                              
-                                                )));
+        state.widgets.insert(id, IpgWidgets::IpgButton(
+            IpgButton::new(
+                id,
+                show,
+                user_data,
+                label,
+                width,
+                height,
+                padding,
+                clip,
+                style_id,
+                style_standard,
+                style_arrow,                              
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
     
     }
 
-    #[pyo3(signature = (style_id, 
+    #[pyo3(signature = ( 
                         background_color=None, background_rgba=None,
                         background_color_hovered=None, background_rgba_hovered=None,
                         border_color=None, border_rgba=None,
@@ -1526,28 +1525,25 @@ impl IPG {
                         text_color=None, text_rgba=None,
                         gen_id=None))]
     fn add_button_style(&mut self,
-                            style_id: String,
-                            background_color: Option<IpgColor>,
-                            background_rgba: Option<[f32; 4]>,
-                            background_color_hovered: Option<IpgColor>,
-                            background_rgba_hovered: Option<[f32; 4]>,
-                            border_color: Option<IpgColor>,
-                            border_rgba: Option<[f32; 4]>,
-                            border_radius: Vec<f32>,
-                            border_width: f32,
-                            shadow_color: Option<IpgColor>,
-                            shadow_rgba: Option<[f32; 4]>,
-                            shadow_offset_x: f32,
-                            shadow_offset_y: f32,
-                            shadow_blur_radius: f32,
-                            text_color: Option<IpgColor>,
-                            text_rgba: Option<[f32; 4]>,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
+                        background_color: Option<IpgColor>,
+                        background_rgba: Option<[f32; 4]>,
+                        background_color_hovered: Option<IpgColor>,
+                        background_rgba_hovered: Option<[f32; 4]>,
+                        border_color: Option<IpgColor>,
+                        border_rgba: Option<[f32; 4]>,
+                        border_radius: Vec<f32>,
+                        border_width: f32,
+                        shadow_color: Option<IpgColor>,
+                        shadow_rgba: Option<[f32; 4]>,
+                        shadow_offset_x: f32,
+                        shadow_offset_y: f32,
+                        shadow_blur_radius: f32,
+                        text_color: Option<IpgColor>,
+                        text_rgba: Option<[f32; 4]>,
+                        gen_id: Option<usize>,
+                        ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
-
-        let mut state = access_state();
 
         let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
         let background_color_hovered: Option<Color> = get_color(background_rgba_hovered, background_color_hovered, 1.0, false);
@@ -1555,19 +1551,23 @@ impl IPG {
         let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
         let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
 
-        state.button_style.insert(style_id, IpgButtonStyle::new( 
-                                                    id,
-                                                    background_color,
-                                                    background_color_hovered,
-                                                    border_color,
-                                                    border_radius,
-                                                    border_width,
-                                                    shadow_color,
-                                                    shadow_offset_x,
-                                                    shadow_offset_y,
-                                                    shadow_blur_radius,
-                                                    text_color,
-                                                    ));
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgButtonStyle(
+            IpgButtonStyle::new( 
+                id,
+                background_color,
+                background_color_hovered,
+                border_color,
+                border_radius,
+                border_width,
+                shadow_color,
+                shadow_offset_x,
+                shadow_offset_y,
+                shadow_blur_radius,
+                text_color,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -1621,24 +1621,26 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgCard(IpgCard::new(
-                                                    id,
-                                                    is_open,
-                                                    user_data,
-                                                    min_max_id,
-                                                    width,
-                                                    height,
-                                                    max_width,
-                                                    max_height,
-                                                    padding_head,
-                                                    padding_body,
-                                                    padding_foot,
-                                                    close_size,
-                                                    head,
-                                                    body,
-                                                    foot,
-                                                    style,
-                                                )));
+        state.widgets.insert(id, IpgWidgets::IpgCard(
+            IpgCard::new(
+                id,
+                is_open,
+                user_data,
+                min_max_id,
+                width,
+                height,
+                max_width,
+                max_height,
+                padding_head,
+                padding_body,
+                padding_foot,
+                close_size,
+                head,
+                body,
+                foot,
+                style,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -1670,7 +1672,7 @@ impl IPG {
                         icon_size: f32,
                         user_data: Option<PyObject>,
                         show: bool,
-                        style_id: Option<String>,
+                        style_id: Option<usize>,
                         style_standard: Option<IpgStyleStandard>,
                         ) -> PyResult<usize> 
     {
@@ -1690,30 +1692,32 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgCheckBox(IpgCheckBox::new(
-                                                    id,
-                                                    show,
-                                                    user_data,
-                                                    is_checked,
-                                                    label,
-                                                    width,
-                                                    size,
-                                                    spacing,
-                                                    text_size,
-                                                    text_line_height,
-                                                    text_shaping,
-                                                    icon_x,
-                                                    icon_size,
-                                                    style_id,
-                                                    style_standard,
-                                                    )));
+        state.widgets.insert(id, IpgWidgets::IpgCheckBox(
+            IpgCheckBox::new(
+                id,
+                show,
+                user_data,
+                is_checked,
+                label,
+                width,
+                size,
+                spacing,
+                text_size,
+                text_line_height,
+                text_shaping,
+                icon_x,
+                icon_size,
+                style_id,
+                style_standard,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
 
     }
 
-    #[pyo3(signature = (style_id, 
+    #[pyo3(signature = ( 
                         background_color=None, 
                         background_rgba=None,
                         background_color_hovered=None,
@@ -1732,7 +1736,6 @@ impl IPG {
                         text_rgba=None,
                         gen_id=None))]
     fn add_checkbox_style(&mut self,
-                            style_id: String,
                             background_color: Option<IpgColor>,
                             background_rgba: Option<[f32; 4]>,
                             background_color_hovered: Option<IpgColor>,
@@ -1754,8 +1757,6 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let mut state = access_state();
-
         let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
         let background_color_hovered: Option<Color> = get_color(background_rgba_hovered, background_color_hovered, 1.0, false);
         let accent_color: Option<Color> = get_color(accent_rgba, accent_color, 1.0, false);
@@ -1764,18 +1765,22 @@ impl IPG {
         let icon_color: Option<Color> = get_color(icon_rgba, icon_color, 1.0, false);
         let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
 
-        state.checkbox_style.insert(style_id, IpgCheckboxStyle::new( 
-                                                    id,
-                                                    background_color,
-                                                    background_color_hovered,
-                                                    accent_color,
-                                                    accent_color_hovered,
-                                                    border_color,
-                                                    border_radius,
-                                                    border_width,
-                                                    icon_color,
-                                                    text_color,
-                                                    ));
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgCheckboxStyle(
+            IpgCheckboxStyle::new( 
+                id,
+                background_color,
+                background_color_hovered,
+                accent_color,
+                accent_color_hovered,
+                border_color,
+                border_radius,
+                border_width,
+                icon_color,
+                text_color,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -1805,7 +1810,7 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         clip: bool,
-                        style_id: Option<String>,
+                        style_id: Option<usize>,
                         style_standard: Option<IpgStyleStandard>,
                         style_arrow: Option<IpgButtonArrow>,
                         user_data: Option<PyObject>,
@@ -1838,28 +1843,29 @@ impl IPG {
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgColorPicker(
-                            IpgColorPicker::new(
-                                                id,
-                                                show,
-                                                color,
-                                                user_data,
-                                                // button related
-                                                label,
-                                                width,
-                                                height,
-                                                padding,
-                                                clip,
-                                                style_id,
-                                                style_standard,
-                                                style_arrow,                             
-                                                )));
+            IpgColorPicker::new(
+                id,
+                show,
+                color,
+                user_data,
+                // button related
+                label,
+                width,
+                height,
+                padding,
+                clip,
+                style_id,
+                style_standard,
+                style_arrow,                             
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
 
     }
 
-    #[pyo3(signature = (style_id, 
+    #[pyo3(signature = ( 
                         background_color=None, background_rgba=None,
                         background_color_hovered=None, background_rgba_hovered=None,
                         border_color=None, border_rgba=None,
@@ -1870,7 +1876,6 @@ impl IPG {
                         text_color=None, text_rgba=None,
                         gen_id=None))]
     fn add_color_picker_style(&mut self,
-                            style_id: String,
                             background_color: Option<IpgColor>,
                             background_rgba: Option<[f32; 4]>,
                             background_color_hovered: Option<IpgColor>,
@@ -1891,27 +1896,29 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let mut state = access_state();
-
         let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
         let background_color_hovered: Option<Color> = get_color(background_rgba_hovered, background_color_hovered, 1.0, false);
         let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
         let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
         let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
 
-        state.color_picker_style.insert(style_id, IpgColorPickerStyle::new( 
-                                                    id,
-                                                    background_color,
-                                                    background_color_hovered,
-                                                    border_color,
-                                                    border_radius,
-                                                    border_width,
-                                                    shadow_color,
-                                                    shadow_offset_x,
-                                                    shadow_offset_y,
-                                                    shadow_blur_radius,
-                                                    text_color,
-                                                    ));
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgColorPickerStyle(
+            IpgColorPickerStyle::new(
+                id,
+                background_color,
+                background_color_hovered,
+                border_color,
+                border_radius,
+                border_width,
+                shadow_color,
+                shadow_offset_x,
+                shadow_offset_y,
+                shadow_blur_radius,
+                text_color,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -4877,15 +4884,24 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgButton(btn) => {
             button_item_update(btn, item, value);
         },
+        IpgWidgets::IpgButtonStyle(btn_style) => {
+            button_style_update_item(btn_style, item, value);
+        },
         IpgWidgets::IpgCard(crd) => {
             card_item_update(crd, item, value);
         },
         IpgWidgets::IpgCheckBox(chk) => {
             checkbox_item_update(chk, item, value);
         },
+        IpgWidgets::IpgCheckboxStyle(chk_style) => {
+            checkbox_style_update_item(chk_style, item, value);
+        },
         IpgWidgets::IpgColorPicker(cp) => {
             color_picker_update(cp, item, value);
-        }
+        },
+        IpgWidgets::IpgColorPickerStyle(cp_style) => {
+            color_picker_style_update_item(cp_style, item, value);
+        },
         IpgWidgets::IpgDatePicker(dp) => {
             date_picker_item_update(dp, item, value);
         },
@@ -4991,6 +5007,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgVerticalAlignment>()?;
     m.add_class::<IpgButtonArrow>()?;
     m.add_class::<IpgButtonParam>()?;
+    m.add_class::<IpgButtonStyleParam>()?;
     m.add_class::<IpgCanvasParam>()?;
     m.add_class::<IpgCanvasGeometryParam>()?;
     m.add_class::<IpgDrawMode>()?;
@@ -4998,8 +5015,10 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgCardStyle>()?;
     m.add_class::<IpgCardParam>()?;
     m.add_class::<IpgCheckboxParam>()?;
+    m.add_class::<IpgCheckboxStyleParam>()?;
     m.add_class::<IpgColor>()?;
     m.add_class::<IpgColorPickerParam>()?;
+    m.add_class::<IpgColorPickerStyleParam>()?;
     m.add_class::<IpgDatePickerParam>()?;
     m.add_class::<IpgImageContentFit>()?;
     m.add_class::<IpgImageFilterMethod>()?;

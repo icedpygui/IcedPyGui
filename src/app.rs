@@ -610,7 +610,9 @@ fn get_children<'a>(parents: &Vec<ParentChildIds>,
             let index = parents.iter().position(|r| &r.parent_id == child).unwrap();
             content.push(get_children(parents, &index, parent_ids, state, canvas_state));
         } else {
-            content.push(get_widget(state, child));
+            if get_widget(state, child).is_some() {
+                content.push(get_widget(state, child).unwrap());
+            }
         }
     }
     let id = &parents[*index].parent_id;
@@ -730,7 +732,7 @@ fn get_container<'a>(state: &IpgState,
     
 }
 
-fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
+fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>> {
 
     let widget_opt: Option<&IpgWidgets> = state.widgets.get(id);
 
@@ -741,19 +743,20 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgButton(btn) => {
                     let style_opt = match btn.style_id.clone() {
                         Some(id) => {
-                            state.button_style.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st.clone())
                         },
                         None => None,
                     };
+                    
                     construct_button(btn.clone(), style_opt)
                 },
                 IpgWidgets::IpgCard(crd) => {
-                    construct_card(crd.clone())
+                    Some(construct_card(crd.clone()))
                 },
                 IpgWidgets::IpgCheckBox(chk) => {
                     let style_opt = match chk.style_id.clone() {
                         Some(id) => {
-                            state.checkbox_style.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st.clone())
                         },
                         None => None,
                     };
@@ -762,7 +765,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                 IpgWidgets::IpgColorPicker(cp) => {
                     let style_opt = match cp.style_id.clone() {
                         Some(id) => {
-                            state.button_style.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st.clone())
                         },
                         None => None,
                     };
@@ -770,7 +773,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                 }
                 IpgWidgets::IpgImage(img) => {
                     let image = img.clone();
-                    construct_image(image)
+                    Some(construct_image(image))
                 },
                 IpgWidgets::IpgMenu(menu) => {
                     let menu_style = match menu.menu_style_id.clone() {
@@ -791,7 +794,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                         },
                         None => None,
                      };
-                    construct_menu(menu.clone(), menu_style, bar_style, sep_style)
+                    Some(construct_menu(menu.clone(), menu_style, bar_style, sep_style))
                 },
                 IpgWidgets::IpgDatePicker(dp) => {
                     let style_opt = match dp.button_style_id.clone() {
@@ -800,7 +803,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                         },
                         None => None,
                     };
-                    construct_date_picker(dp.clone(), style_opt)
+                    Some(construct_date_picker(dp.clone(), style_opt))
                 },
                 IpgWidgets::IpgPickList(pick) => {
                     let style_opt = match pick.style_id.clone() {
@@ -809,7 +812,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                         },
                         None => None,
                     };
-                    construct_picklist(pick.clone(), style_opt)
+                    Some(construct_picklist(pick.clone(), style_opt))
                 },
                 IpgWidgets::IpgProgressBar(bar) => {
                     let style_opt = match bar.style_id.clone() {
@@ -818,7 +821,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                         },
                         None => None,
                     };
-                    construct_progress_bar(bar.clone(), style_opt)
+                    Some(construct_progress_bar(bar.clone(), style_opt))
                 },
                 IpgWidgets::IpgRadio(radio) => {
                     let style_opt = match radio.style_id.clone() {
@@ -827,7 +830,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                         },
                         None => None,
                     };
-                    construct_radio(radio.clone(), style_opt)
+                    Some(construct_radio(radio.clone(), style_opt))
                 },
                 IpgWidgets::IpgRule(rule) => {
                     let style_opt = match rule.style_id.clone() {
@@ -836,10 +839,10 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                         },
                         None => None,
                     };
-                    construct_rule(rule.clone(), style_opt)
+                    Some(construct_rule(rule.clone(), style_opt))
                 },
                 IpgWidgets::IpgSelectableText(sltxt) => {
-                    construct_selectable_text(sltxt.clone())
+                    Some(construct_selectable_text(sltxt.clone()))
                 },
                 IpgWidgets::IpgSlider(slider) => {
                     let style_opt = match slider.style_id.clone() {
@@ -848,18 +851,18 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                         },
                         None => None,
                     };
-                    construct_slider(slider.clone(), style_opt)
+                    Some(construct_slider(slider.clone(), style_opt))
                 },
                 IpgWidgets::IpgSpace(sp) => {
-                    construct_space(sp)
+                    Some(construct_space(sp))
                 },
                 IpgWidgets::IpgSvg(i_svg) => {
                     let svg = i_svg.clone();
-                    construct_svg(svg)
+                    Some(construct_svg(svg))
                 },
                 IpgWidgets::IpgText(text) => {
                     let txt = text.clone();
-                    construct_text(txt)
+                    Some(construct_text(txt))
                 },
                 IpgWidgets::IpgTextInput(input) => {
                     let style_opt = match input.style_id.clone() {
@@ -868,13 +871,13 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                         },
                         None => None,
                     };
-                    construct_text_input(input.clone(), style_opt)       
+                    Some(construct_text_input(input.clone(), style_opt))       
                 },
                 IpgWidgets::IpgTimer(timer) => {
-                    construct_timer(timer.clone())
+                    Some(construct_timer(timer.clone()))
                 },
                 IpgWidgets::IpgCanvasTimer(ctimer) => {
-                    construct_canvas_timer(ctimer.clone())
+                    Some(construct_canvas_timer(ctimer.clone()))
                 },
                 IpgWidgets::IpgToggler(tog) => {
                     let style_opt = match tog.style_id.clone() {
@@ -883,8 +886,10 @@ fn get_widget(state: &IpgState, id: &usize) -> Element<'static, Message> {
                         },
                         None => None,
                     };
-                    construct_toggler(tog.clone(), style_opt)     
+                    Some(construct_toggler(tog.clone(), style_opt))    
                 },
+                _ => None,
+
             },
         None => panic!("App: Widgets not found in fn get_widget id={}", id)
     }

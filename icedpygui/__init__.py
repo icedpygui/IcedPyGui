@@ -1,12 +1,12 @@
 from .icedpygui import IPG
 from .icedpygui import IpgAlignment, IpgHorizontalAlignment, IpgVerticalAlignment 
-from .icedpygui import IpgButtonArrow, IpgButtonParam
+from .icedpygui import IpgButtonArrow, IpgButtonParam, IpgButtonStyleParam
 from .icedpygui import IpgDrawMode, IpgCanvasParam, IpgCanvasWidget
 from .icedpygui import IpgCanvasGeometryParam
 from .icedpygui import IpgCardStyle, IpgCardParam
-from .icedpygui import IpgCheckboxParam
+from .icedpygui import IpgCheckboxParam, IpgCheckboxStyleParam
 from .icedpygui import IpgColor
-from .icedpygui import IpgColorPickerParam
+from .icedpygui import IpgColorPickerParam, IpgColorPickerStyleParam
 from .icedpygui import IpgDatePickerParam
 from .icedpygui import IpgImageParam, IpgImageContentFit, IpgImageFilterMethod, IpgImageRotation
 from .icedpygui import IpgMenuType, IpgMenuSeparatorType, IpgMenuParam

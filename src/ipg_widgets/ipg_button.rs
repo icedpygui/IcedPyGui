@@ -1,18 +1,18 @@
 //! ipg_button
 
+use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, app, IpgState};
-use super::helpers::{get_height, get_padding_f64, get_radius, get_width, 
-    try_extract_boolean, try_extract_f64, try_extract_string, 
-    try_extract_style_standard, try_extract_vec_f64};
+use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32, try_extract_vec_f64};
 use super::callbacks::{
     set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
 };
+use super::ipg_enums::IpgWidgets;
 
 use iced::widget::button::{self, Status, Style};
 use pyo3::{pyclass, PyObject, Python};
 
-use iced::widget::{Button, Space, Text};
+use iced::widget::{Button, Text};
 use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector };
 
 use crate::graphics::bootstrap::{self, icon_to_char, icon_to_string};
@@ -29,7 +29,7 @@ pub struct IpgButton {
     pub height: Length,
     pub padding: Padding,
     pub clip: bool,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
     pub style_standard: Option<IpgStyleStandard>,
     pub style_arrow: Option<IpgButtonArrow>,
 }
@@ -45,7 +45,7 @@ impl IpgButton {
         height: Length,
         padding: Padding,
         clip: bool,
-        style_id: Option<String>,
+        style_id: Option<usize>,
         style_standard: Option<IpgStyleStandard>,
         style_arrow: Option<IpgButtonArrow>,
         ) -> Self {
@@ -117,13 +117,13 @@ pub enum BTNMessage {
 
 
 pub fn construct_button(btn: IpgButton, 
-                        style_opt: Option<IpgButtonStyle>) 
-                        -> Element<'static, app::Message> {
+                        style_opt: Option<IpgWidgets>) 
+                        -> Option<Element<'static, app::Message>> {
 
     if !btn.show {
-        return Space::new(Length::Shrink, Length::Shrink).into()
+        return None
     }
-
+    let style = get_btn_style(style_opt);
     let mut label = Text::new(btn.label.clone());
 
     if btn.style_arrow.is_some() {
@@ -139,13 +139,13 @@ pub fn construct_button(btn: IpgButton,
                                 .clip(btn.clip)
                                 .style(move|theme: &Theme, status| {   
                                     get_styling(theme, status,
-                                        style_opt.clone(),
+                                        style.clone(),
                                         btn.style_standard.clone(),
                                     )  
                                     })
                                 .into();
 
-    ipg_btn.map(move |message| app::Message::Button(btn.id, message))
+    Some(ipg_btn.map(move |message| app::Message::Button(btn.id, message)))
     
 }
 
@@ -253,8 +253,7 @@ pub fn button_item_update(btn: &mut IpgButton,
             btn.height = get_height(None, val);
         },
         IpgButtonParam::Padding => {
-            let val = try_extract_vec_f64(value);
-            btn.padding =  get_padding_f64(val);
+            btn.padding =  get_padding_f64(try_extract_vec_f64(value));
         },
         IpgButtonParam::Clip => {
             btn.clip = try_extract_boolean(value);
@@ -263,12 +262,10 @@ pub fn button_item_update(btn: &mut IpgButton,
             btn.show = try_extract_boolean(value);
         },
         IpgButtonParam::StyleId => {
-            let val = try_extract_string(value);
-            btn.style_id = Some(val);
+            btn.style_id = Some(try_extract_f64(value) as usize);
         },
         IpgButtonParam::StyleStandard => {
-            let val = try_extract_style_standard(value);
-            btn.style_standard = Some(val);
+            btn.style_standard = Some(try_extract_style_standard(value));
         },
         IpgButtonParam::Width => {
             let val = try_extract_f64(value);
@@ -282,6 +279,99 @@ pub fn button_item_update(btn: &mut IpgButton,
 
 }
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgButtonStyleParam {
+    BackgroundIpgColor,
+    BackgroundRbgaColor,
+    BackgroundIpgColorHovered,
+    BackgroundIpgRgbaHovered,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+    ShadowIpgColor,
+    ShadowRgbaColor,
+    ShadowOffsetX,
+    ShadowOffsetY,
+    ShadowBlurRadius,
+    TextIpgColor,
+    TextRgbaColor
+}
+
+pub fn button_style_update_item(style: &mut IpgButtonStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+
+    let update = try_extract_button_style_update(item);
+    match update {
+        IpgButtonStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgButtonStyleParam::BackgroundRbgaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgButtonStyleParam::BackgroundIpgColorHovered => {
+            let color = try_extract_ipg_color(value);
+            style.background_color_hovered = get_color(None, Some(color), 1.0, false);
+        },
+        IpgButtonStyleParam::BackgroundIpgRgbaHovered => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgButtonStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgButtonStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgButtonStyleParam::BorderRadius => {
+            style.border_radius = try_extract_vec_f32(value);
+        },
+        IpgButtonStyleParam::BorderWidth => {
+            style.border_width = try_extract_f64(value) as f32;
+        },
+        IpgButtonStyleParam::ShadowIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.shadow_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgButtonStyleParam::ShadowRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgButtonStyleParam::ShadowOffsetX => {
+            style.shadow_offset_x = try_extract_f64(value) as f32;
+        },
+        IpgButtonStyleParam::ShadowOffsetY => {
+            style.shadow_offset_y = try_extract_f64(value) as f32;
+        },
+        IpgButtonStyleParam::ShadowBlurRadius => {
+            style.shadow_blur_radius = try_extract_f64(value) as f32;
+        },
+        IpgButtonStyleParam::TextIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgButtonStyleParam::TextRgbaColor => {
+            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+    }
+}
+
+fn get_btn_style(style: Option<IpgWidgets>) -> Option<IpgButtonStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgButtonStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
 
 pub fn get_standard_style(theme: &Theme, status: Status, 
                             std_style: Option<IpgStyleStandard>,
@@ -432,6 +522,16 @@ pub fn try_extract_button_arrow(update_obj: PyObject) -> IpgButtonArrow {
     })
 }
 
+pub fn try_extract_button_style_update(update_obj: PyObject) -> IpgButtonStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgButtonStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Button style update extraction failed"),
+        }
+    })
+}
 
 #[derive(Debug, Clone)]
 #[pyclass]
