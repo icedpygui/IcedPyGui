@@ -1,13 +1,15 @@
 //! ipg_progress_bar
 use iced::{Color, Element, Length, Theme};
-use iced::widget::{progress_bar, ProgressBar, Space};
+use iced::widget::{progress_bar, ProgressBar};
 use pyo3::{pyclass, PyObject, Python};
+use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
 use crate::app;
 
-use super::helpers::{get_height, get_radius, get_width, 
-    try_extract_boolean, try_extract_f64, try_extract_string, 
-    try_extract_style_standard};
+use super::helpers::{get_height, get_radius, get_width, try_extract_boolean,
+    try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, 
+    try_extract_style_standard, try_extract_vec_f32};
+use super::ipg_enums::IpgWidgets;
 
 
 #[derive(Debug, Clone)]
@@ -21,7 +23,7 @@ pub struct IpgProgressBar {
     pub width: Length,
     pub height: Length,
     pub style_standard: Option<IpgStyleStandard>,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
 }
 
 impl IpgProgressBar {
@@ -34,7 +36,7 @@ impl IpgProgressBar {
         width: Length,
         height: Length,
         style_standard: Option<IpgStyleStandard>,
-        style: Option<String>,
+        style_id: Option<usize>,
     ) -> Self {
         Self {
             id,
@@ -45,7 +47,7 @@ impl IpgProgressBar {
             width,
             height,
             style_standard,
-            style_id: style,
+            style_id,
         }
     }
 }
@@ -82,23 +84,26 @@ impl IpgProgressBarStyle {
 
 
 pub fn construct_progress_bar(bar: IpgProgressBar, 
-                            style_opt: Option<IpgProgressBarStyle>) 
-                            -> Element<'static, app::Message> {
+                            style_opt: Option<IpgWidgets>) 
+                            -> Option<Element<'static, app::Message>> {
     
     if !bar.show {
-        return Space::new(0.0, 0.0).into();
+        return None
     }
 
-    ProgressBar::new(bar.min..=bar.max, bar.value)
+    let style = get_progress_bar_style(style_opt);
+
+    Some(ProgressBar::new(bar.min..=bar.max, bar.value)
                             .width(bar.width)
                             .height(bar.height)
                             .style(move|theme: &Theme | {   
                                 get_styling(theme, 
                                     bar.style_standard.clone(), 
-                                    style_opt.clone(), 
+                                    style.clone(), 
                                     )  
                                 })
                             .into()
+    )
 }
 
 
@@ -141,7 +146,7 @@ pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
             pb.style_standard = Some(try_extract_style_standard(value))
         },
         IpgProgressBarParam::Style => {
-            pb.style_id = Some(try_extract_string(value))
+            pb.style_id = Some(try_extract_f64(value) as usize)
         },
         IpgProgressBarParam::Value => {
             pb.value = try_extract_f64(value) as f32;
@@ -237,4 +242,79 @@ pub fn get_styling(theme: &Theme,
 
     custom
  
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgProgressBarStyleParam {
+    BackgroundIpgColor,
+    BackgroundRgbaColor,
+    BarIpgColor,
+    BarRgbaColor,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+}
+
+pub fn progress_bar_style_update_item(style: &mut IpgProgressBarStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+
+    let update = try_extract_progress_bar_style_update(item);
+    match update {
+        IpgProgressBarStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgProgressBarStyleParam::BackgroundRgbaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgProgressBarStyleParam::BarIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.bar_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgProgressBarStyleParam::BarRgbaColor => {
+            style.bar_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgProgressBarStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgProgressBarStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgProgressBarStyleParam::BorderRadius => {
+            style.border_radius = Some(try_extract_vec_f32(value));
+        },
+        IpgProgressBarStyleParam::BorderWidth => {
+            style.border_width = Some(try_extract_f64(value) as f32);
+        },
+    }
+}
+
+fn get_progress_bar_style(style: Option<IpgWidgets>) -> Option<IpgProgressBarStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgProgressBarStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
+
+pub fn try_extract_progress_bar_style_update(update_obj: PyObject) -> IpgProgressBarStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgProgressBarStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Button style update extraction failed"),
+        }
+    })
 }

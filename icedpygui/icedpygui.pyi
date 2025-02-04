@@ -808,8 +808,8 @@ class IPG:
                 use [float, float, float, float] for [top, right, bottom, left]
             clip: bool
                 Whether to clip the label if width exceeded.
-            style: str
-                style_id of the add_button_style.
+            style: Optional[int]
+                Id of the add_button_style.
             style_standard: class
                 IpgStyleStandard: Primary, Success, Danger, Text
             style_arrow: IpgButtonArrows
@@ -963,7 +963,7 @@ class IPG:
                     text_size: float=16.0,
                     icon_x: bool=False,
                     icon_size: float=25.0,
-                    style_id: Optional[str]=None,
+                    style_id: Optional[int]=None,
                     style_standard: Optional[IpgStyleStandard]=None,
                     user_data: Optional[Any]=None,
                     show: bool=True,
@@ -1003,8 +1003,8 @@ class IPG:
                 If true, uses the x versus the check mark icon.
             icon_size: float
                 Sets the size of either the check or x icon.
-            style_id: str
-                style_id of the add_checkbox_style.
+            style_id: int
+                Id of the add_checkbox_style.
             style_standard: class
                 IpgStyleStandard: Primary, Success, Danger, Text(not valid)
             user_data: any 
@@ -1079,7 +1079,7 @@ class IPG:
                         height_fill: bool=False,
                         padding: List=[10.0],
                         clip: bool=False,
-                        style_id: Optional[str]=None,
+                        style_id: Optional[int]=None,
                         style_standard: Optional[IpgStyleStandard]=None,
                         style_arrow: Optional[IpgButtonArrow]=None,
                         user_data: Optional[Any]=None,
@@ -1118,6 +1118,8 @@ class IPG:
                 use [float, float, float, float] for [top, right, bottom, left]
             clip: bool
                 Whether to clip the label or not.
+            style_id: Optional[int]
+                Id of the add_color_picker_style
             style: IpgStyleStandard
                 Sets the style of the button.
             style_arrow: IpgStyleArrow
@@ -1637,10 +1639,10 @@ class IPG:
                         text_shaping: str="basic",
                         handle: Optional[IpgPickListHandle]=None,
                         arrow_size: Optional[float]=None,
-                        dynamic_closed: Union[None| IpgButtonArrow]=None,
+                        dynamic_closed: Optional[IpgButtonArrow]=None,
                         dynamic_opened: Optional[IpgButtonArrow]=None,
                         custom_static: Optional[IpgButtonArrow]=None,
-                        style: Union[None, str]=None,
+                        style_id: Optional[int]=None,
                         user_data: Optional[any]=None,
                         show: bool=True,
                       ) -> int:
@@ -1686,10 +1688,8 @@ class IPG:
                 The type of arrow wanted for when the picklist is opened.
             custom_static: IpgArrows
                 The type of arrow wanted for the picklist.
-            style_color: str
-                style_id of the add_styling_color.
-            style_border: str
-                style_id of the add_styling_border.
+            style_id: int
+                Id of the add_pick_list_style.
             user_data: any
                 Any data in any form needed by user to be passed through as a callback.
             show: bool
@@ -1702,8 +1702,6 @@ class IPG:
         """
 
     def add_pick_list_style(self,
-                            style_id: str,
-                            *,
                             background_color: Optional[IpgColor]=None,
                             background_rgba: Optional[list[float, 4]]=None,
                             text_color: Optional[IpgColor]=None,
@@ -1725,8 +1723,6 @@ class IPG:
 
         Parameters
         -----------
-
-            style_id: str,
             background_color: Optional[IpgColor]=None,
                 Color of the background.
             background_rgba: Optional[list[float, 4]]=None,
@@ -1770,7 +1766,7 @@ class IPG:
                         width_fill: bool=False,
                         height: float=1.0,
                         style_standard: Optional[IpgStyleStandard]=None,
-                        style: Union[None, str]=None,
+                        style_id: Union[None, int]=None,
                         user_data: Union[None, any]=None,
                         show: bool=True,
                          ) -> int:
@@ -1797,8 +1793,8 @@ class IPG:
                 Sets the height of the bar.
             style_standard: Optional[IpgStyleStandard]=None
                 A standard style for the widget.
-            style: str
-                style_id of the add_progress_bar_style.
+            style_id: int
+                Id of the add_progress_bar_style.
             user_data: any
                 Any data in any form needed by user to be passed through as a callback.
             show: bool
@@ -1811,8 +1807,6 @@ class IPG:
         """
 
     def add_progress_bar_style(self,
-                                style_id: str,
-                                *,
                                 background_color: Optional[IpgColor]=None,
                                 background_rgba: Optional[list[float, 4]]=None,
                                 bar_color: Optional[IpgColor]=None,
@@ -1828,8 +1822,6 @@ class IPG:
 
         Parameters
         ----------
-            style_id: str
-                The style id used in add_progress_bar(style_id=style_id)
             background_color: Optional[IpgColor]=None
                 Color of the background.
             background_rgba: Optional[list[float, 4]]=None
@@ -1870,7 +1862,7 @@ class IPG:
                     text_shaping: str="basic",
                     user_data: Union[None, any]=None,
                     show: bool=True,
-                    style_id: Optional[str]=None,
+                    style_id: Optional[int]=None,
                   ) -> int:
         """
         Adds a radio button to the gui
@@ -1920,8 +1912,8 @@ class IPG:
                 Any data that might be needed in the callback function.
             show: bool
                 Shows or hides the widget.
-            style_id: Optional[str]
-                Style if of add_radio_style(
+            style_id: Optional[in]
+                Id of of add_radio_style
     
         Returns
         -------
@@ -1930,8 +1922,6 @@ class IPG:
         """
 
     def add_radio_style(self,
-                        style_id: str,
-                        *,
                         background_color: Optional[IpgColor]=None,
                         background_rgba: Optional[list[float, 4]]=None,
                         background_color_hover: Optional[IpgColor]=None,
@@ -1952,8 +1942,6 @@ class IPG:
 
         Parameter
         ---------
-            style_id: str,
-                The id of the style to use in ipg.add_radio.
             background_color: Optional[IpgColor]=None,
                 The color of the background of the radio button.
                 Defaults to background transparent.
@@ -3683,6 +3671,42 @@ class IpgButtonParam:
 
 
 class IpgButtonStyleParam:
+    """
+    Button parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    BackgroundIpgColorHovered: IpgColor
+        When hovered, the Background color in IpgColor format
+    BackgroundIpgRgbaHovered: list[float, 4]
+        When hovered, the background color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list
+        The border radius [float]=all, [float, 4]=each individual one       
+    BorderWidth: float
+        The width of the border line
+    ShadowIpgColor: IpgColor
+        Shadow color in IpgColor format
+    ShadowRgbaColor: list[float, 4]
+        Shadow color in rgba format
+    ShadowOffsetX: float
+        The offfset of the show towards the x direction
+    ShadowOffsetY: float
+        The offfset of the show towards the y direction
+    ShadowBlurRadius: float
+        How much to blur the shadow radius
+    TextIpgColor: IpgColor
+        The label text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        The label text color in rgba format
+    """
     BackgroundIpgColor=IpgColor
     BackgroundRbgaColor=list[float, 4]
     BackgroundIpgColorHovered=IpgColor
@@ -3848,6 +3872,54 @@ class IpgCheckboxParam:
     Width: float
     WidthFill: bool
 
+
+class IpgCheckboxStyleParam:
+    """
+    Checkbox style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    BackgroundIpgColorHovered: IpgColor
+        When hovered, the Background color in IpgColor format
+    BackgroundIpgRgbaHovered: list[float, 4]
+        When hovered, the background color in rgba format
+    AccentIpgColor: IpgColor
+    AccentRgbaColor: list[float, 4]
+    AccentIpgColorHovered: IpgColor
+    AccentRgbaColorHovered: list[float, 4]
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list
+        The border radius [float]=all, [float, 4]=each individual one       
+    BorderWidth: float
+        The width of the border line
+    TextIpgColor: IpgColor
+        The label text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        The label text color in rgba format
+    """
+    BackgroundIpgColor=IpgColor
+    BackgroundRgbaColor=list[float, 4]
+    BackgroundIpgColorHovered=IpgColor
+    BackgroundRgbaColorHovered=list[float, 4]
+    AccentIpgColor=IpgColor
+    AccentRgbaColor=list[float, 4]
+    AccentIpgColorHovered=IpgColor
+    AccentRgbaColorHovered=list[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderRadius=list[float]
+    BorderWidth=float
+    IconIpgColor=IpgColor
+    IconRgbaColor=list[float, 4]
+    TextIpgColor=IpgColor
+    TextRgbaColor=list[float, 4]
 
 class IpgColor:
     """
@@ -4054,6 +4126,60 @@ class IpgColorPickerParam:
     StyleStandard: IpgStyleStandard
     Width: float
     WidthFill: bool
+
+
+class IpgColorPickerStyleParam:
+    """
+    Color Picker Style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    BackgroundIpgColorHovered: IpgColor
+        When hovered, the Background color in IpgColor format
+    BackgroundIpgRgbaHovered: list[float, 4]
+        When hovered, the background color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list
+        The border radius [float]=all, [float, 4]=each individual one       
+    BorderWidth: float
+        The width of the border line
+    ShadowIpgColor: IpgColor
+        Shadow color in IpgColor format
+    ShadowRgbaColor: list[float, 4]
+        Shadow color in rgba format
+    ShadowOffsetX: float
+        The offfset of the show towards the x direction
+    ShadowOffsetY: float
+        The offfset of the show towards the y direction
+    ShadowBlurRadius: float
+        How much to blur the shadow radius
+    TextIpgColor: IpgColor
+        The label text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        The label text color in rgba format
+    """
+    BackgroundIpgColor=IpgColor
+    BackgroundRbgaColor=list[float, 4]
+    BackgroundIpgColorHovered=IpgColor
+    BackgroundIpgRgbaHovered=list[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderRadius=list
+    BorderWidth=float
+    ShadowIpgColor=IpgColor
+    ShadowRgbaColor=list[float, 4]
+    ShadowOffsetX=float
+    ShadowOffsetY=float
+    ShadowBlurRadius=float
+    TextIpgColor=IpgColor
+    TextRgbaColor=list[float, 4]
 
 
 class IpgDatePickerParam:
@@ -4287,6 +4413,50 @@ class IpgPickListHandle:
     Static=''
 
 
+class IpgPickListStyleParam:
+    """
+    PickList style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list
+        The border radius [float]=all, [float, 4]=each individual one       
+    BorderWidth: float
+        The width of the border line
+    HandleIpgColor: IpgColor
+        Handle color in IpgColor format
+    HandleRgbaColor: list[float, 4]
+        Handle color in rgba format
+    PlaceholderIpgColor: IpgColor
+        Placeholder color in IpgColor format
+    PlaceholderRgbaColor: list[float, 4]
+        Placeholder color in rgba format
+    TextIpgColor: IpgColor
+        The label text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        The label text color in rgba format
+    """
+    BackgroundIpgColor=IpgColor
+    BackgroundRbgaColor=List[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderRadius=list
+    BorderWidth=float
+    HandleIpgColor=IpgColor
+    HandleRgbaColor=list[float, 4]
+    PlaceholderIpgColor=IpgColor
+    PlaceholderRgbaColor=list[float, 4]
+    TextIpgColor=IpgColor
+    TextRgbaColor=list[float, 4]
+
 class IpgProgressBarParam:
     """
     The ProgressBar update parameters.
@@ -4326,6 +4496,38 @@ class IpgProgressBarParam:
     WidthFill: bool
 
 
+class IpgProgressBarStyleParam:
+    """
+    Progress Bar style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    BarIpgColor: IpgColor
+        Bar color in IpgColor format
+    BarRgbaColor: list[float, 4]
+        Bar color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list
+        The border radius [float]=all, [float, 4]=each individual one       
+    BorderWidth: float
+        The width of the border line
+    """
+    BackgroundIpgColor=IpgColor
+    BackgroundRbgaColor=List[float, 4]
+    BarIpgColor=IpgColor
+    BarRgbaColor=list[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderRadius=list
+    BorderWidth=float
+    
 
 class IpgRadioDirection:
     """

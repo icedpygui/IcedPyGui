@@ -1,19 +1,24 @@
 //! ipg_pick_list
 use crate::access_callbacks;
 use crate::app;
+use crate::graphics::colors::get_color;
 use crate::IpgState;
 use super::callbacks::set_or_get_widget_callback_data;
 use super::callbacks::{WidgetCallbackIn, 
     WidgetCallbackOut};
+use super::helpers::try_extract_ipg_color;
+use super::helpers::try_extract_rgba_color;
+use super::helpers::try_extract_vec_f32;
 use super::helpers::{get_padding_f64, get_radius, get_width};
 use super::helpers::{try_extract_boolean, try_extract_f64,
     try_extract_string, try_extract_vec_f64};
 use super::ipg_button::{IpgButtonArrow, get_bootstrap_arrow_char};
+use super::ipg_enums::IpgWidgets;
 
 use iced::widget::pick_list::{self, Status};
 use iced::{Color, Font, Pixels, Theme};
 use iced::{Padding, Length, Element};
-use iced::widget::{PickList, Space};
+use iced::widget::PickList;
 use iced::widget::pick_list::{Handle, Icon};
 use iced::widget::text::{LineHeight, Shaping};
 
@@ -40,7 +45,7 @@ pub struct IpgPickList {
     pub dynamic_closed: Option<IpgButtonArrow>,
     pub dynamic_open: Option<IpgButtonArrow>,
     pub custom_static: Option<IpgButtonArrow>,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
 }
 
 impl IpgPickList {
@@ -62,7 +67,7 @@ impl IpgPickList {
         dynamic_closed: Option<IpgButtonArrow>,
         dynamic_open: Option<IpgButtonArrow>,
         custom_static: Option<IpgButtonArrow>,
-        style: Option<String>,
+        style: Option<usize>,
         ) -> Self {
         Self {
             id,
@@ -132,13 +137,13 @@ pub enum PLMessage {
 
 
 pub fn construct_picklist(pick: IpgPickList, 
-                        style_opt: Option<IpgPickListStyle>) 
-                        -> Element<'static, app::Message> {
+                        style_opt: Option<IpgWidgets>) 
+                        -> Option<Element<'static, app::Message>> {
     
     if!pick.show {
-        return Space::new(0.0, 0.0).into()
+        return None
     }
-
+    let style = get_pick_list_style(style_opt);
     let placeholder = pick.placeholder.unwrap_or("".to_string());
 
     let text_size: f32 = pick.text_size.unwrap_or(16.0);
@@ -165,12 +170,12 @@ pub fn construct_picklist(pick: IpgPickList,
         .handle(handle)
         .style(move|theme: &Theme, status| {   
             get_styling(theme, status, 
-                style_opt.clone(),
+                style.clone(),
             )  
             })
         .into();
 
-    pl.map(move |message| app::Message::PickList(pick.id, message))
+    Some(pl.map(move |message| app::Message::PickList(pick.id, message)))
 
 }
  
@@ -330,8 +335,7 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
             pl.selected = None;
         },
         IpgPickListParam::Padding => {
-            let val = try_extract_vec_f64(value);
-            pl.padding =  get_padding_f64(val);
+            pl.padding =  get_padding_f64(try_extract_vec_f64(value));
         },
         IpgPickListParam::Selected => {
             pl.selected = Some(try_extract_string(value));
@@ -340,16 +344,13 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
             pl.show = try_extract_boolean(value);
         },
         IpgPickListParam::Style => {
-            let val = try_extract_string(value);
-            pl.style_id = Some(val);
+            pl.style_id = Some(try_extract_f64(value) as usize);
         },
         IpgPickListParam::TextSize => {
-            let size = try_extract_f64(value);
-            pl.text_size = Some(size as f32);
+            pl.text_size = Some(try_extract_f64(value) as f32);
         },
         IpgPickListParam::TextLineHeight => {
-            let val = try_extract_f64(value) as f32;
-            pl.text_line_height = LineHeight::Relative(val);
+            pl.text_line_height = LineHeight::Relative(try_extract_f64(value) as f32);
         },
         IpgPickListParam::Width => {
             let val = try_extract_f64(value);
@@ -445,6 +446,74 @@ fn get_handle(ipg_handle: IpgPickListHandle,
     }
 }
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgPickListStyleParam {
+    BackgroundIpgColor,
+    BackgroundRbgaColor,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+    HandleIpgColor,
+    HandleRgbaColor,
+    PlaceholderIpgColor,
+    PlaceholderRgbaColor,
+    TextIpgColor,
+    TextRgbaColor,
+}
+
+pub fn pick_list_style_update_item(style: &mut IpgPickListStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+
+    let update = try_extract_pick_list_style_update(item);
+    match update {
+        IpgPickListStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgPickListStyleParam::BackgroundRbgaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgPickListStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgPickListStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgPickListStyleParam::BorderRadius => {
+            style.border_radius = try_extract_vec_f32(value);
+        },
+        IpgPickListStyleParam::BorderWidth => {
+            style.border_width = try_extract_f64(value) as f32;
+        },
+        IpgPickListStyleParam::HandleIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.handle_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgPickListStyleParam::HandleRgbaColor => {
+            style.handle_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgPickListStyleParam::PlaceholderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.placeholder_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgPickListStyleParam::PlaceholderRgbaColor => {
+            style.placeholder_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgPickListStyleParam::TextIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgPickListStyleParam::TextRgbaColor => {
+            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        
+    }
+}
 
 pub fn get_styling(theme: &Theme, status: Status, 
                     style_opt: Option<IpgPickListStyle>, 
@@ -496,4 +565,29 @@ pub fn get_styling(theme: &Theme, status: Status,
         Status::Hovered | Status::Opened => hover_opened_style,
     }
 
+}
+
+pub fn try_extract_pick_list_style_update(update_obj: PyObject) -> IpgPickListStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgPickListStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Pick List style update extraction failed"),
+        }
+    })
+}
+
+fn get_pick_list_style(style: Option<IpgWidgets>) -> Option<IpgPickListStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgPickListStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
 }

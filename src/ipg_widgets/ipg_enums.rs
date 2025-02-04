@@ -17,8 +17,8 @@ use super::ipg_modal::IpgModal;
 use super::ipg_mousearea::IpgMouseArea;
 use super::ipg_opaque::IpgOpaque;
 // use super::ipg_pane_grid::{IpgPaneGrid, IpgPane};
-use super::ipg_pick_list::IpgPickList;
-use super::ipg_progress_bar::IpgProgressBar;
+use super::ipg_pick_list::{IpgPickList, IpgPickListStyle};
+use super::ipg_progress_bar::{IpgProgressBar, IpgProgressBarStyle};
 use super::ipg_radio::IpgRadio;
 use super::ipg_row::IpgRow;
 use super::ipg_rule::IpgRule;
@@ -70,7 +70,9 @@ pub enum IpgWidgets {
     IpgImage(IpgImage),
     IpgMenu(IpgMenu),
     IpgPickList(IpgPickList),
+    IpgPickListStyle(IpgPickListStyle),
     IpgProgressBar(IpgProgressBar),
+    IpgProgressBarStyle(IpgProgressBarStyle),
     IpgRadio(IpgRadio),
     IpgRule(IpgRule),
     IpgSelectableText(IpgSelectableText),

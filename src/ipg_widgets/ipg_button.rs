@@ -296,7 +296,7 @@ pub enum IpgButtonStyleParam {
     ShadowOffsetY,
     ShadowBlurRadius,
     TextIpgColor,
-    TextRgbaColor
+    TextRgbaColor,
 }
 
 pub fn button_style_update_item(style: &mut IpgButtonStyle,

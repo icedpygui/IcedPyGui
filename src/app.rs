@@ -808,20 +808,20 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                 IpgWidgets::IpgPickList(pick) => {
                     let style_opt = match pick.style_id.clone() {
                         Some(id) => {
-                            state.pick_list_style.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st.clone())
                         },
                         None => None,
                     };
-                    Some(construct_picklist(pick.clone(), style_opt))
+                    construct_picklist(pick.clone(), style_opt)
                 },
                 IpgWidgets::IpgProgressBar(bar) => {
                     let style_opt = match bar.style_id.clone() {
                         Some(id) => {
-                            state.progress_bar_style.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st.clone())
                         },
                         None => None,
                     };
-                    Some(construct_progress_bar(bar.clone(), style_opt))
+                    construct_progress_bar(bar.clone(), style_opt)
                 },
                 IpgWidgets::IpgRadio(radio) => {
                     let style_opt = match radio.style_id.clone() {

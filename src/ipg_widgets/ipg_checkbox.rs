@@ -325,7 +325,7 @@ pub enum IpgCheckboxStyleParam {
     BackgroundIpgColorHovered,
     BackgroundRgbaColorHovered,
     AccentIpgColor,
-    AccentRgbagColor,
+    AccentRgbaColor,
     AccentIpgColorHovered,
     AccentRgbaColorHovered,
     BorderIpgColor,
@@ -362,7 +362,7 @@ pub fn checkbox_style_update_item(style: &mut IpgCheckboxStyle,
             let color = try_extract_ipg_color(value);
             style.accent_color = get_color(None, Some(color), 1.0, false);
         },
-        IpgCheckboxStyleParam::AccentRgbagColor => {
+        IpgCheckboxStyleParam::AccentRgbaColor => {
             style.accent_color = Some(Color::from(try_extract_rgba_color(value)));
         },
         IpgCheckboxStyleParam::AccentIpgColorHovered => {

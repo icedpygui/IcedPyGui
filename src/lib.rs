@@ -52,10 +52,8 @@ use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea,
         IpgMouseAreaParam, IpgMousePointer};
 use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, 
     IpgOpaqueParam, IpgOpaqueStyle};
-use ipg_widgets::ipg_pick_list::{pick_list_item_update, IpgPickList, 
-        IpgPickListHandle, IpgPickListParam, IpgPickListStyle};
-use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, 
-        IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle};
+use ipg_widgets::ipg_pick_list::{pick_list_item_update, pick_list_style_update_item, IpgPickList, IpgPickListHandle, IpgPickListParam, IpgPickListStyle, IpgPickListStyleParam};
+use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, progress_bar_style_update_item, IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle, IpgProgressBarStyleParam};
 use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, 
         IpgRadioDirection, IpgRadioParam, IpgRadioStyle};
 use ipg_widgets::ipg_row::IpgRow;
@@ -1960,16 +1958,17 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgDatePicker(IpgDatePicker::new(
-                                                    id,
-                                                    label,
-                                                    size_factor,
-                                                    padding,
-                                                    show,
-                                                    user_data,
-                                                    button_style_standard,
-                                                    button_style_id,
-                                                    )));
+        state.widgets.insert(id, IpgWidgets::IpgDatePicker(
+            IpgDatePicker::new(
+                id,
+                label,
+                size_factor,
+                padding,
+                show,
+                user_data,
+                button_style_standard,
+                button_style_id,
+                )));
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -2065,21 +2064,22 @@ impl IPG {
 
     let mut state = access_state();
 
-    state.widgets.insert(id, IpgWidgets::IpgImage(IpgImage::new(
-                                                id,
-                                                image_path,
-                                                width,
-                                                height,
-                                                padding,
-                                                content_fit,
-                                                filter_method,
-                                                rotation,
-                                                rotation_radians,
-                                                opacity,
-                                                mouse_pointer,
-                                                show,
-                                                user_data,
-                                            )));
+    state.widgets.insert(id, IpgWidgets::IpgImage(
+        IpgImage::new(
+            id,
+            image_path,
+            width,
+            height,
+            padding,
+            content_fit,
+            filter_method,
+            rotation,
+            rotation_radians,
+            opacity,
+            mouse_pointer,
+            show,
+            user_data,
+        )));
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -2158,34 +2158,35 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgMenu(IpgMenu::new(
-                                                                id,
-                                                                items,
-                                                                bar_widths,
-                                                                item_widths,
-                                                                spacing,
-                                                                padding,
-                                                                height,
-                                                                check_bounds_width,
-                                                                item_spacings,
-                                                                item_offsets,
-                                                                menu_bar_style,
-                                                                menu_style,
-                                                                button_bar_style_all,
-                                                                button_item_style_all,
-                                                                checkbox_item_style_all,
-                                                                circle_item_style_all,
-                                                                dot_item_style_all,
-                                                                label_item_style_all,
-                                                                line_item_style_all,
-                                                                separator_item_style_all,
-                                                                text_item_style_all,
-                                                                toggler_item_style_all,
-                                                                item_styles,
-                                                                self.theme.clone(),
-                                                                show,
-                                                                user_data,
-                                                                )));
+        state.widgets.insert(id, IpgWidgets::IpgMenu(
+            IpgMenu::new(
+                id,
+                items,
+                bar_widths,
+                item_widths,
+                spacing,
+                padding,
+                height,
+                check_bounds_width,
+                item_spacings,
+                item_offsets,
+                menu_bar_style,
+                menu_style,
+                button_bar_style_all,
+                button_item_style_all,
+                checkbox_item_style_all,
+                circle_item_style_all,
+                dot_item_style_all,
+                label_item_style_all,
+                line_item_style_all,
+                separator_item_style_all,
+                text_item_style_all,
+                toggler_item_style_all,
+                item_styles,
+                self.theme.clone(),
+                show,
+                user_data,
+                )));
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -2429,7 +2430,7 @@ impl IPG {
                         text_line_height=1.2, text_shaping="basic".to_string(), 
                         handle=IpgPickListHandle::Default, arrow_size=None, 
                         dynamic_closed=None, dynamic_opened=None, custom_static=None,
-                        style=None, user_data=None, show=true,
+                        style_id=None, user_data=None, show=true,
                         ))]
     fn add_pick_list(&mut self,
                         parent_id: String,
@@ -2450,7 +2451,7 @@ impl IPG {
                         dynamic_closed: Option<IpgButtonArrow>,
                         dynamic_opened: Option<IpgButtonArrow>,
                         custom_static: Option<IpgButtonArrow>,
-                        style: Option<String>,
+                        style_id: Option<usize>,
                         user_data: Option<PyObject>,
                         show: bool,
                     ) -> PyResult<usize>
@@ -2474,31 +2475,32 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgPickList(IpgPickList::new(  
-                                                        id,
-                                                        show,
-                                                        user_data,
-                                                        options,
-                                                        placeholder,
-                                                        selected,
-                                                        width,
-                                                        padding,
-                                                        text_size,
-                                                        text_line_height,
-                                                        text_shaping,
-                                                        handle,
-                                                        arrow_size,
-                                                        dynamic_closed,
-                                                        dynamic_opened,
-                                                        custom_static,
-                                                        style,
-                                                    )));
+        state.widgets.insert(id, IpgWidgets::IpgPickList(
+            IpgPickList::new(  
+                id,
+                show,
+                user_data,
+                options,
+                placeholder,
+                selected,
+                width,
+                padding,
+                text_size,
+                text_line_height,
+                text_shaping,
+                handle,
+                arrow_size,
+                dynamic_closed,
+                dynamic_opened,
+                custom_static,
+                style_id,
+            )));
         state.last_id = id;
         drop(state);
         Ok(id)
     }
 
-#[pyo3(signature = (style_id,
+#[pyo3(signature = (
                     background_color=None,
                     background_rgba=None,
                     text_color=None,
@@ -2515,7 +2517,6 @@ impl IPG {
                     border_width=1.0,
                     gen_id=None))]
     fn add_pick_list_style(&mut self,
-                            style_id: String,
                             background_color: Option<IpgColor>,
                             background_rgba: Option<[f32; 4]>,
                             text_color: Option<IpgColor>,
@@ -2544,17 +2545,18 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.pick_list_style.insert(style_id, IpgPickListStyle::new( 
-                                                    id,
-                                                    background_color,
-                                                    text_color,
-                                                    handle_color,
-                                                    placeholder_color,
-                                                    border_color,
-                                                    border_color_hovered,
-                                                    border_radius,
-                                                    border_width,
-                                                    ));
+        state.widgets.insert(id, IpgWidgets::IpgPickListStyle(
+            IpgPickListStyle::new( 
+                id,
+                background_color,
+                text_color,
+                handle_color,
+                placeholder_color,
+                border_color,
+                border_color_hovered,
+                border_radius,
+                border_width,
+                )));
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -2563,7 +2565,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, min, max, value,
                         gen_id=None, width=None, height=Some(16.0), 
                         width_fill=true, height_fill=false,
-                        style_standard=None, style=None, 
+                        style_standard=None, style_id=None, 
                         show=true, 
                         ))]
     fn add_progress_bar(&mut self,
@@ -2578,7 +2580,7 @@ impl IPG {
                             width_fill: bool,
                             height_fill: bool,
                             style_standard: Option<IpgStyleStandard>,
-                            style: Option<String>,
+                            style_id: Option<usize>,
                             show: bool,
                             ) -> PyResult<usize> 
     {
@@ -2592,31 +2594,31 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgProgressBar(IpgProgressBar::new(   
-                                                id,
-                                                show,
-                                                min,
-                                                max,
-                                                value,
-                                                width,
-                                                height,
-                                                style_standard,
-                                                style,
-                                            )));
+        state.widgets.insert(id, IpgWidgets::IpgProgressBar(
+            IpgProgressBar::new(   
+                id,
+                show,
+                min,
+                max,
+                value,
+                width,
+                height,
+                style_standard,
+                style_id,
+                )));
         state.last_id = id;
         drop(state);
         Ok(id)
 
     }
 
-    #[pyo3(signature = (style_id, 
+    #[pyo3(signature = ( 
                         background_color=None, background_rgba=None,
                         bar_color=None, bar_rgba=None,
                         border_color=None, border_rgba=None,
                         border_radius=None, border_width=None,
                         gen_id=None))]
     fn add_progress_bar_style(&mut self,
-                                style_id: String,
                                 background_color: Option<IpgColor>,
                                 background_rgba: Option<[f32; 4]>,
                                 bar_color: Option<IpgColor>,
@@ -2630,20 +2632,21 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let mut state = access_state();
-
         let background: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
         let bar_color: Option<Color> = get_color(bar_rgba, bar_color, 1.0, false);
         let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
 
-        state.progress_bar_style.insert(style_id, IpgProgressBarStyle::new( 
-                                                    id,
-                                                    background,
-                                                    bar_color,
-                                                    border_color,
-                                                    border_radius,
-                                                    border_width,
-                                                    ));
+        let mut state = access_state();
+
+         state.widgets.insert(id, IpgWidgets::IpgProgressBarStyle(
+            IpgProgressBarStyle::new(  
+                id,
+                background,
+                bar_color,
+                border_color,
+                border_radius,
+                border_width,
+                )));
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -4914,8 +4917,14 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgPickList(pl) => {
             pick_list_item_update(pl, item, value);
         },
+        IpgWidgets::IpgPickListStyle(style) => {
+            pick_list_style_update_item(style, item, value);
+        },
         IpgWidgets::IpgProgressBar(pb) => {
             progress_bar_item_update(pb, item, value);
+        },
+        IpgWidgets::IpgProgressBarStyle(style) => {
+            progress_bar_style_update_item(style, item, value);
         },
         IpgWidgets::IpgRadio(rd) => {
             radio_item_update(rd, item, value);
@@ -5031,8 +5040,10 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgMousePointer>()?;
     m.add_class::<IpgOpaqueParam>()?;
     m.add_class::<IpgPickListParam>()?;
+    m.add_class::<IpgPickListStyleParam>()?;
     m.add_class::<IpgPickListHandle>()?;
     m.add_class::<IpgProgressBarParam>()?;
+    m.add_class::<IpgProgressBarStyleParam>()?;
     m.add_class::<IpgRadioDirection>()?;
     m.add_class::<IpgRadioParam>()?;
     m.add_class::<IpgScrollableDirection>()?;

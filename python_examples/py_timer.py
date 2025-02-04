@@ -1,6 +1,6 @@
 from icedpygui import IPG, IpgTextParam, IpgTimerParam, IpgButtonStyleParam
-from icedpygui import IpgCheckboxStyleParam, IpgColorPickerStyleParam
-from icedpygui import IpgColor
+from icedpygui import IpgCheckboxStyleParam, IpgColorPickerStyleParam, IpgPickListStyleParam
+from icedpygui import IpgColor, IpgProgressBarStyleParam
 
 
 colors = [IpgColor.PRIMARY, IpgColor.SECONDARY, IpgColor.SUCCESS, IpgColor.DANGER, IpgColor.WARNING, 
@@ -51,6 +51,8 @@ def on_tick(timer_id: int, counter: int):
     ipg.update_item(btn_style, IpgButtonStyleParam.BackgroundIpgColor, colors[counter])
     ipg.update_item(chk_style, IpgCheckboxStyleParam.BackgroundIpgColor, colors[counter])
     ipg.update_item(cp_style, IpgColorPickerStyleParam.BackgroundIpgColor, colors[counter])
+    ipg.update_item(pl_style, IpgPickListStyleParam.BackgroundIpgColor, colors[counter])
+    ipg.update_item(pb_style, IpgProgressBarStyleParam.BackgroundIpgColor, colors[counter])
 
 
 # Fires on stopping
@@ -79,6 +81,9 @@ ipg.add_column(window_id="main", container_id="col", parent_id="cont")
 btn_style = ipg.add_button_style(background_color=IpgColor.PRIMARY)
 chk_style = ipg.add_checkbox_style(background_color=IpgColor.PRIMARY)
 cp_style = ipg.add_color_picker_style(background_color=IpgColor.PRIMARY)
+pl_style = ipg.add_pick_list_style(background_color=IpgColor.PRIMARY)
+pb_style = ipg.add_progress_bar_style(background_color=IpgColor.PRIMARY)
+
 
 btn_id = ipg.add_button(parent_id="col",
                         label="Button",
@@ -93,6 +98,16 @@ cp_id = ipg.add_color_picker(parent_id="col",
                              label="Color Picker",
                              style_id=cp_style)
 
+
+pl_id = ipg.add_pick_list(parent_id="col",
+                          options=["1", "2", "3"],
+                          placeholder="Pick a number",
+                          style_id=pl_style)
+
+pb_id = ipg.add_progress_bar(parent_id="col",
+                             min=0.0,
+                             max=100.0,
+                             style_id=pb_style)
 
 # The time duration is in milliseconds, so 1 second interval, in this case.
 # The three callbacks start, stop, and tick are defined.

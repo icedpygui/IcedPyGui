@@ -203,7 +203,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                         None => panic!("Image Point could not be found")
                     }
                 }
-                
                 return WidgetCallbackOut{
                     points: Some(points),
                     user_data: img.user_data.clone(),
@@ -230,8 +229,18 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 }
             },
+            IpgWidgets::IpgPickListStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgProgressBar(_) => {
                 return WidgetCallbackOut::default()
+            },
+            IpgWidgets::IpgProgressBarStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgRadio(_) => {
                 return WidgetCallbackOut::default()

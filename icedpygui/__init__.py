@@ -12,8 +12,8 @@ from .icedpygui import IpgImageParam, IpgImageContentFit, IpgImageFilterMethod, 
 from .icedpygui import IpgMenuType, IpgMenuSeparatorType, IpgMenuParam
 from .icedpygui import IpgMousePointer
 from .icedpygui import IpgOpaqueParam
-from .icedpygui import IpgPickListParam, IpgPickListHandle
-from .icedpygui import IpgProgressBarParam
+from .icedpygui import IpgPickListParam, IpgPickListHandle, IpgPickListStyleParam
+from .icedpygui import IpgProgressBarParam, IpgProgressBarStyleParam
 from .icedpygui import IpgRadioParam, IpgRadioDirection
 from .icedpygui import IpgScrollableDirection, IpgScrollableParam
 from .icedpygui import IpgSelectableTextParam
