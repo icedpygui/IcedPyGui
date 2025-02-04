@@ -245,6 +245,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             IpgWidgets::IpgRadio(_) => {
                 return WidgetCallbackOut::default()
             },
+            IpgWidgets::IpgRadioStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgRule(_) => {
                 return WidgetCallbackOut::default()
             },

@@ -54,8 +54,7 @@ use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque,
     IpgOpaqueParam, IpgOpaqueStyle};
 use ipg_widgets::ipg_pick_list::{pick_list_item_update, pick_list_style_update_item, IpgPickList, IpgPickListHandle, IpgPickListParam, IpgPickListStyle, IpgPickListStyleParam};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, progress_bar_style_update_item, IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle, IpgProgressBarStyleParam};
-use ipg_widgets::ipg_radio::{radio_item_update, IpgRadio, 
-        IpgRadioDirection, IpgRadioParam, IpgRadioStyle};
+use ipg_widgets::ipg_radio::{radio_item_update, radio_style_update_item, IpgRadio, IpgRadioDirection, IpgRadioParam, IpgRadioStyle, IpgRadioStyleParam};
 use ipg_widgets::ipg_row::IpgRow;
 use ipg_widgets::ipg_rule::{IpgRule, IpgRuleStyle};
 use ipg_widgets::ipg_scrollable::{scrollable_item_update, 
@@ -2655,7 +2654,8 @@ impl IPG {
     #[pyo3(signature = (parent_id, labels, gen_id=None,
                         direction=IpgRadioDirection::Vertical, 
                         spacing= 10.0, padding=vec![10.0], 
-                        width=None, width_fill=false, height=None, height_fill=false,
+                        width=None, width_fill=false, 
+                        height=None, height_fill=false,
                         on_select=None, selected_index=None, 
                         size=20.0, style_id=None,
                         text_spacing=15.0, text_size=16.0,
@@ -2679,7 +2679,7 @@ impl IPG {
                     on_select: Option<PyObject>,
                     selected_index: Option<usize>,
                     size: f32,
-                    style_id: Option<String>,
+                    style_id: Option<usize>,
                     text_spacing: f32,
                     text_size: f32,
                     text_line_height_pixels: Option<u16>,
@@ -2720,25 +2720,26 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgRadio(IpgRadio::new( 
-                                        id,
-                                        labels,
-                                        direction,
-                                        spacing,
-                                        padding,
-                                        show,
-                                        user_data,
-                                        is_selected,
-                                        width,
-                                        height,
-                                        size,
-                                        text_spacing,
-                                        text_size,
-                                        text_line_height,
-                                        text_shaping,
-                                        self.group_index,
-                                        style_id,
-                                    )));
+        state.widgets.insert(id, IpgWidgets::IpgRadio(
+            IpgRadio::new( 
+                id,
+                labels,
+                direction,
+                spacing,
+                padding,
+                show,
+                user_data,
+                is_selected,
+                width,
+                height,
+                size,
+                text_spacing,
+                text_size,
+                text_line_height,
+                text_shaping,
+                self.group_index,
+                style_id,
+                )));
         self.group_index += 1;
         state.last_id = id;
         drop(state);                                      
@@ -2746,7 +2747,7 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (style_id,
+    #[pyo3(signature = (
                         background_color=None,
                         background_rgba=None,
                         background_color_hovered=None,
@@ -2762,7 +2763,6 @@ impl IPG {
                         text_rgba=None,
                         gen_id=None))]
     fn add_radio_style(&mut self,
-                            style_id: String,
                             background_color: Option<IpgColor>,
                             background_rgba: Option<[f32; 4]>,
                             background_color_hovered: Option<IpgColor>,
@@ -2790,16 +2790,18 @@ impl IPG {
         let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
         let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
 
-        state.radio_style.insert(style_id, IpgRadioStyle::new( 
-                                                    id,
-                                                    background_color,
-                                                    background_color_hovered,
-                                                    dot_color,
-                                                    dot_color_hovered,
-                                                    border_color,
-                                                    border_width,
-                                                    text_color,
-                                                    ));
+        state.widgets.insert(id, IpgWidgets::IpgRadioStyle(
+            IpgRadioStyle::new( 
+                id,
+                background_color,
+                background_color_hovered,
+                dot_color,
+                dot_color_hovered,
+                border_color,
+                border_width,
+                text_color,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -4929,6 +4931,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgRadio(rd) => {
             radio_item_update(rd, item, value);
         },
+        IpgWidgets::IpgRadioStyle(style) => {
+            radio_style_update_item(style, item, value);
+        },
         IpgWidgets::IpgRule(_) => (),
         IpgWidgets::IpgSelectableText(st) => {
             selectable_text_item_update(st, item, value);
@@ -5046,6 +5051,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgProgressBarStyleParam>()?;
     m.add_class::<IpgRadioDirection>()?;
     m.add_class::<IpgRadioParam>()?;
+    m.add_class::<IpgRadioStyleParam>()?;
     m.add_class::<IpgScrollableDirection>()?;
     m.add_class::<IpgScrollableParam>()?;
     m.add_class::<IpgSelectableTextParam>()?;

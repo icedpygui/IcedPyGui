@@ -123,7 +123,9 @@ pub fn construct_button(btn: IpgButton,
     if !btn.show {
         return None
     }
+    
     let style = get_btn_style(style_opt);
+
     let mut label = Text::new(btn.label.clone());
 
     if btn.style_arrow.is_some() {

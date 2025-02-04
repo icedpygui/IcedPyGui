@@ -324,16 +324,6 @@ pub fn try_extract_string(value: PyObject) -> String {
     })  
 }
 
-pub fn try_extract_option_string(value: PyObject) -> Option<String> {
-    Python::with_gil(|py| {
-        let res = value.extract::<String>(py);
-        match res {
-            Ok(val) => Some(val),
-            Err(_) => None,
-        }
-    })  
-}
-
 pub fn try_extract_vec_str(value: PyObject) -> Vec<String> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<String>>(py);

@@ -4597,6 +4597,47 @@ class IpgRadioParam:
     HeightFill: bool
 
 
+class IpgRadioStyleParam:
+    """
+    Radio style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    DotIpgColor: IpgColor
+        Dot color in IpgColor format
+    DotRgbaColor: list[float, 4]
+        Dot color in rgba format
+    DotIpgColorHovered: IpgColor
+        Dot hover color in IpgColor format
+    DotRgbaColorHovered: list[float, 4]
+        Dot hover color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format    
+    BorderWidth: float
+        The width of the border line
+    TextIpgColor: IpgColor
+        The label text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        The label text color in rgba format
+    """
+    BackgroundIpgColor=IpgColor
+    BackgroundRbgaColor=List[float, 4]
+    DotIpgColor=IpgColor
+    DotRgbaColor=list[float, 4]
+    DotIpgColorHovered=IpgColor
+    DotRgbaColorHovered=list[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderWidth=float
+    TextIpgColor=IpgColor
+    TextRgbaColor=list[float, 4]
+
 class IpgScrollableDirection:
     """
     The scroll direction of the Scrollable

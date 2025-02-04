@@ -1,10 +1,11 @@
 //!ipg_radio
+use crate::graphics::colors::get_color;
 use crate::ipg_widgets::helpers::try_extract_boolean;
 use crate::{access_callbacks, IpgState};
 use crate::app;
-use super::helpers::{get_height, get_padding_f64, 
-    get_width, try_extract_f64, try_extract_f64_option,
-    try_extract_i64_option, try_extract_option_string, try_extract_u16, 
+use super::helpers::{get_height, get_padding_f64, get_width, 
+    try_extract_f64, try_extract_f64_option, try_extract_i64_option, 
+    try_extract_ipg_color, try_extract_rgba_color, try_extract_u16, 
     try_extract_vec_f64, try_extract_vec_str};
 use super::ipg_enums::IpgWidgets;
 use super::callbacks::WidgetCallbackOut;
@@ -13,7 +14,7 @@ use super::callbacks::WidgetCallbackOut;
 use iced::widget::radio::{self, Status};
 use iced::{Color, Element, Length, Padding, Pixels, Theme};
 use iced::widget::text::{LineHeight, Shaping};
-use iced::widget::{Column, Radio, Row, Space};
+use iced::widget::{Column, Radio, Row};
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -37,7 +38,7 @@ pub struct IpgRadio {
     pub text_shaping: Shaping,
     pub group_index: usize,
     // pub font: Option<Font>,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
 }
 
 impl IpgRadio {
@@ -59,7 +60,7 @@ impl IpgRadio {
         text_shaping: Shaping,
         radio_index: usize,
         // font: Option<Font>,
-        style_id: Option<String>,
+        style_id: Option<usize>,
         ) -> Self {
         Self {
             id,
@@ -135,12 +136,14 @@ pub enum RDMessage {
 
 
 pub fn construct_radio(radio: IpgRadio, 
-                        style_opt: Option<IpgRadioStyle>) 
-                        -> Element<'static, app::Message> {
+                        style_opt: Option<IpgWidgets>) 
+                        -> Option<Element<'static, app::Message>> {
     
     if !radio.show {
-        return Space::new(0.0, 0.0).into()
+        return None
     }
+
+    let style_opt = get_radio_style(style_opt);
 
     let selected = match radio.is_selected {
         Some(is) => Some(CHOICES[radio.group_index][is]),
@@ -150,7 +153,7 @@ pub fn construct_radio(radio: IpgRadio,
     let mut radio_elements = vec![];
 
     for (i, label) in  radio.labels.iter().enumerate() {
-        let style:Option<IpgRadioStyle> = 
+        let style: Option<IpgRadioStyle> = 
             style_opt.map(|st| IpgRadioStyle{
                 id: st.id, 
                 background_color: st.background_color, 
@@ -193,7 +196,7 @@ pub fn construct_radio(radio: IpgRadio,
                                                     .into(),
     };
 
-    rd.map(move |message| app::Message::Radio(radio.id, message))
+    Some(rd.map(move |message| app::Message::Radio(radio.id, message)))
 
 }
 
@@ -443,7 +446,7 @@ pub fn radio_item_update(rd: &mut IpgRadio,
             rd.spacing = try_extract_f64(value) as f32;
         },
         IpgRadioParam::StyleId => {
-            rd.style_id = try_extract_option_string(value);
+            rd.style_id = Some(try_extract_f64(value) as usize);
         },
         IpgRadioParam::TextSpacing => {
             rd.text_spacing = try_extract_f64(value) as f32;
@@ -565,6 +568,94 @@ pub fn get_styling(theme: &Theme, status: Status,
 
 }
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgRadioStyleParam {
+    BackgroundIpgColor,
+    BackgroundRbgaColor,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderWidth,
+    DotIpgColor,
+    DotRgbaColor,
+    DotIpgColorHovered,
+    DotRgbaColorHovered,
+    TextIpgColor,
+    TextRgbaColor,
+}
+
+pub fn radio_style_update_item(style: &mut IpgRadioStyle,
+                                item: PyObject,
+                                value: PyObject,) 
+{
+
+    let update = try_extract_radio_style_update(item);
+    match update {
+        IpgRadioStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgRadioStyleParam::BackgroundRbgaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgRadioStyleParam::DotIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.dot_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgRadioStyleParam::DotRgbaColor => {
+            style.dot_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgRadioStyleParam::DotIpgColorHovered => {
+            let color = try_extract_ipg_color(value);
+            style.dot_color_hovered = get_color(None, Some(color), 1.0, false);
+        },
+        IpgRadioStyleParam::DotRgbaColorHovered => {
+            style.dot_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgRadioStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgRadioStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgRadioStyleParam::BorderWidth => {
+            style.border_width = Some(try_extract_f64(value) as f32);
+        },
+        IpgRadioStyleParam::TextIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgRadioStyleParam::TextRgbaColor => {
+            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+    }
+}
+
+fn get_radio_style(style: Option<IpgWidgets>) -> Option<IpgRadioStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgRadioStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
+
+pub fn try_extract_radio_style_update(update_obj: PyObject) -> IpgRadioStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgRadioStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Radio style update extraction failed"),
+        }
+    })
+}
 
 // The number of radio buttons per group is based on the number of Choices.
 // Therefore, they are currently limited to 26 per group, but can easily be extended

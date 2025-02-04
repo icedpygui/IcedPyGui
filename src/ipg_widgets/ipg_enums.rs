@@ -19,7 +19,7 @@ use super::ipg_opaque::IpgOpaque;
 // use super::ipg_pane_grid::{IpgPaneGrid, IpgPane};
 use super::ipg_pick_list::{IpgPickList, IpgPickListStyle};
 use super::ipg_progress_bar::{IpgProgressBar, IpgProgressBarStyle};
-use super::ipg_radio::IpgRadio;
+use super::ipg_radio::{IpgRadio, IpgRadioStyle};
 use super::ipg_row::IpgRow;
 use super::ipg_rule::IpgRule;
 use super::ipg_scrollable::IpgScrollable;
@@ -74,6 +74,7 @@ pub enum IpgWidgets {
     IpgProgressBar(IpgProgressBar),
     IpgProgressBarStyle(IpgProgressBarStyle),
     IpgRadio(IpgRadio),
+    IpgRadioStyle(IpgRadioStyle),
     IpgRule(IpgRule),
     IpgSelectableText(IpgSelectableText),
     IpgSlider(IpgSlider),

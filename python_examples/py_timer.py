@@ -1,6 +1,6 @@
 from icedpygui import IPG, IpgTextParam, IpgTimerParam, IpgButtonStyleParam
 from icedpygui import IpgCheckboxStyleParam, IpgColorPickerStyleParam, IpgPickListStyleParam
-from icedpygui import IpgColor, IpgProgressBarStyleParam
+from icedpygui import IpgColor, IpgProgressBarStyleParam, IpgRadioStyleParam
 
 
 colors = [IpgColor.PRIMARY, IpgColor.SECONDARY, IpgColor.SUCCESS, IpgColor.DANGER, IpgColor.WARNING, 
@@ -53,6 +53,7 @@ def on_tick(timer_id: int, counter: int):
     ipg.update_item(cp_style, IpgColorPickerStyleParam.BackgroundIpgColor, colors[counter])
     ipg.update_item(pl_style, IpgPickListStyleParam.BackgroundIpgColor, colors[counter])
     ipg.update_item(pb_style, IpgProgressBarStyleParam.BackgroundIpgColor, colors[counter])
+    ipg.update_item(rd_style, IpgRadioStyleParam.BackgroundIpgColor, colors[counter])
 
 
 # Fires on stopping
@@ -64,7 +65,7 @@ ipg = IPG()
 
 # Add a window
 ipg.add_window(window_id="main", title="Timer Demo",
-               width=400.0, height=400.0,  
+               width=400.0, height=600.0,  
                pos_centered=True)
 
 # Add the container to center everything
@@ -83,6 +84,7 @@ chk_style = ipg.add_checkbox_style(background_color=IpgColor.PRIMARY)
 cp_style = ipg.add_color_picker_style(background_color=IpgColor.PRIMARY)
 pl_style = ipg.add_pick_list_style(background_color=IpgColor.PRIMARY)
 pb_style = ipg.add_progress_bar_style(background_color=IpgColor.PRIMARY)
+rd_style = ipg.add_radio_style(background_color=IpgColor.PRIMARY)
 
 
 btn_id = ipg.add_button(parent_id="col",
@@ -107,7 +109,12 @@ pl_id = ipg.add_pick_list(parent_id="col",
 pb_id = ipg.add_progress_bar(parent_id="col",
                              min=0.0,
                              max=100.0,
+                             value=0.0,
                              style_id=pb_style)
+
+rd_id = ipg.add_radio(parent_id="col",
+                      labels=["One", "Two", "Three"],
+                      style_id=rd_style)
 
 # The time duration is in milliseconds, so 1 second interval, in this case.
 # The three callbacks start, stop, and tick are defined.

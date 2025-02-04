@@ -826,11 +826,11 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                 IpgWidgets::IpgRadio(radio) => {
                     let style_opt = match radio.style_id.clone() {
                         Some(id) => {
-                            state.radio_style.get(&id).map(|st|*st)
+                            state.widgets.get(&id).map(|st|st.clone())
                         },
                         None => None,
                     };
-                    Some(construct_radio(radio.clone(), style_opt))
+                    construct_radio(radio.clone(), style_opt)
                 },
                 IpgWidgets::IpgRule(rule) => {
                     let style_opt = match rule.style_id.clone() {
