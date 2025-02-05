@@ -842,7 +842,7 @@ class IPG:
                             text_rgba: Optional[list[float, 4]]=None
                         ) -> int:
         """
-        Adds styling to container
+        Adds styling to button
 
         Parameters
         ----------
@@ -2792,6 +2792,61 @@ class IPG:
         -------
         id: int
             The id of the event which can be used to modify the event through update_item.
+        """
+
+    def add_timer_style(self,
+                            background_color: Optional[IpgColor]=None,
+                            background_rgba: Optional[list[float, 4]]=None,
+                            background_color_hovered: Optional[IpgColor]=None,
+                            background_rgba_hovered: Optional[list[float, 4]]=None,
+                            border_color: Optional[IpgColor]=None, 
+                            border_rgba: Optional[list[float, 4]]=None,
+                            border_radius: list[float | float, 4]=[0.0], 
+                            border_width: float=1.0,
+                            shadow_color: Optional[IpgColor]=None, 
+                            shadow_rgba: Optional[list]=None,
+                            shadow_offset_x: float=0.0, 
+                            shadow_offset_y: float=0.0,
+                            shadow_blur_radius: float=1.0,
+                            text_color: Optional[IpgColor]=None, 
+                            text_rgba: Optional[list[float, 4]]=None
+                        ) -> int:
+        """
+        Adds styling to timer button
+
+        Parameters
+        ----------
+            background_color: Optional[IpgColor]=None
+                Color of the background.
+            background_rgba: Optional[list[float, 4]]=None
+                Color of the background in rgba format.
+            background_color_hovered: Optional[IpgColor]=None,
+                Color to use when the mouse hovers.
+            background_rgba_hovered: Optional[list[float, 4]]=None,
+                Color to use when the mouse hovers in rgba format.
+            border_color: Optional[IpgColor]=None
+                Color used for the border.
+            border_rgba: list[float; 4]=None
+                Color of the border in rgba format.
+            border_radius: Optional[list[float]]=None
+                The radius border, [float]=all corners, 
+                [float, 4]=[top-left, top-right, bottom-right, bottom-left].
+            border_width: float
+                Border width.
+            shadow_color: IpgColor
+                The color of the shadow.
+            shadow_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            shadow_offset_x: float
+                Shadow offset in the horizontal direction.
+            shadow_offset_y: float
+                Shadow offset in the vertical direction.
+            shadow_blur_radius: float
+                The blur radius of the shadow.
+            text_color: IpgColor
+                The text color, if not defined, will either be a Black or White variation based on theme background.
+            text_rgba: list]
+                The color in rgba format [float; 4] used as state above.
         """
 
     def add_canvas_timer(self,
@@ -5037,6 +5092,60 @@ class IpgTimerParam:
     StyleStandard=str
     Width=float
     WidthFill=bool
+
+
+class IpgTimerStyleParam:
+    """
+    Timer button parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    BackgroundIpgColorHovered: IpgColor
+        When hovered, the Background color in IpgColor format
+    BackgroundIpgRgbaHovered: list[float, 4]
+        When hovered, the background color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list
+        The border radius [float]=all, [float, 4]=each individual one       
+    BorderWidth: float
+        The width of the border line
+    ShadowIpgColor: IpgColor
+        Shadow color in IpgColor format
+    ShadowRgbaColor: list[float, 4]
+        Shadow color in rgba format
+    ShadowOffsetX: float
+        The offfset of the show towards the x direction
+    ShadowOffsetY: float
+        The offfset of the show towards the y direction
+    ShadowBlurRadius: float
+        How much to blur the shadow radius
+    TextIpgColor: IpgColor
+        The label text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        The label text color in rgba format
+    """
+    BackgroundIpgColor=IpgColor
+    BackgroundRbgaColor=list[float, 4]
+    BackgroundIpgColorHovered=IpgColor
+    BackgroundIpgRgbaHovered=list[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderRadius=list
+    BorderWidth=float
+    ShadowIpgColor=IpgColor
+    ShadowRgbaColor=list[float, 4]
+    ShadowOffsetX=float
+    ShadowOffsetY=float
+    ShadowBlurRadius=float
+    TextIpgColor=IpgColor
+    TextRgbaColor=list[float, 4]
 
 
 class IpgCanvasTimerParam:

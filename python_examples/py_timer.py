@@ -2,6 +2,7 @@ from icedpygui import IPG, IpgTextParam, IpgTimerParam, IpgButtonStyleParam
 from icedpygui import IpgCheckboxStyleParam, IpgColorPickerStyleParam, IpgPickListStyleParam
 from icedpygui import IpgColor, IpgProgressBarStyleParam, IpgRadioStyleParam
 from icedpygui import IpgRuleStyleParam, IpgSliderStyleParam, IpgTextInputStyleParam
+from icedpygui import IpgTimerStyleParam
 
 
 colors = [IpgColor.PRIMARY, IpgColor.SECONDARY, IpgColor.SUCCESS, IpgColor.DANGER, IpgColor.WARNING, 
@@ -59,6 +60,7 @@ def on_tick(timer_id: int, counter: int):
     ipg.update_item(sl_style, IpgSliderStyleParam.RailIpgColor, colors[counter])
     ipg.update_item(sl_style, IpgSliderStyleParam.HandleIpgColor, colors[counter])
     ipg.update_item(ti_style, IpgTextInputStyleParam.BackgroundIpgColor, colors[counter])
+    ipg.update_item(tim_style, IpgTimerStyleParam.BackgroundIpgColor, colors[counter])
 
 
 # Fires on stopping
@@ -93,6 +95,7 @@ rd_style = ipg.add_radio_style(background_color=IpgColor.PRIMARY)
 rl_style = ipg.add_rule_style(color=IpgColor.PRIMARY)
 sl_style = ipg.add_slider_style(rail_color=IpgColor.PRIMARY, handle_color=IpgColor.PRIMARY)
 ti_style = ipg.add_text_input_style(background_color=IpgColor.PRIMARY, placeholder_color=IpgColor.WHITE)
+tim_style = ipg.add_timer_style(background_color=IpgColor.PRIMARY)
 
 
 btn_id = ipg.add_button(parent_id="col",
@@ -150,7 +153,8 @@ ipg.add_timer(parent_id="col",
               duration_ms=300,
               on_start=on_start, 
               on_tick=on_tick, 
-              on_stop=on_stop)
+              on_stop=on_stop,
+              style_id=tim_style)
 
 # Add a text widget to display the count.
 text_id = ipg.add_text(parent_id="col", content="Count: 0")

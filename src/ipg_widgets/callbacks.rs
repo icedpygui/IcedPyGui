@@ -345,7 +345,12 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     value_bool: Some(tim.started),
                     ..Default::default()
                 }
-            }
+            },
+            IpgWidgets::IpgTimerStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgCanvasTimer(ctim) => {
                 ctim.counter += 1;
                 // value_str is set when a tick occurs

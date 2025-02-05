@@ -874,7 +874,13 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                     construct_text_input(input.clone(), style_opt)       
                 },
                 IpgWidgets::IpgTimer(timer) => {
-                    Some(construct_timer(timer.clone()))
+                    let style_opt = match timer.style_id.clone() {
+                        Some(id) => {
+                            state.widgets.get(&id).cloned()
+                        },
+                        None => None,
+                    };
+                    construct_timer(timer.clone(), style_opt)
                 },
                 IpgWidgets::IpgCanvasTimer(ctimer) => {
                     Some(construct_canvas_timer(ctimer.clone()))

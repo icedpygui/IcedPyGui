@@ -1,12 +1,15 @@
 //! ipg_timer
+use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
-use super::helpers::{get_height, get_padding_f64, get_width, try_extract_boolean, try_extract_f64, try_extract_i64, try_extract_string, try_extract_style_standard, try_extract_u64, try_extract_vec_f64};
-use super::ipg_button::{get_bootstrap_arrow, get_styling, try_extract_button_arrow, IpgButtonArrow};
+use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_i64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_u64, try_extract_vec_f32, try_extract_vec_f64};
+use super::ipg_button::{get_bootstrap_arrow, get_standard_style, try_extract_button_arrow, IpgButtonArrow};
+use super::ipg_enums::IpgWidgets;
 
-use iced::widget::{Button, Space, Text};
-use iced::{Element, Length, Padding, Theme};
+use iced::widget::button::{self, Status};
+use iced::widget::{Button, Text};
+use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector};
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -19,7 +22,7 @@ pub struct IpgTimer {
     pub height: Length,
     pub padding: Padding,
     pub clip: bool,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
     pub style_standard: Option<IpgStyleStandard>,
     pub style_arrow: Option<IpgButtonArrow>,
     pub user_data: Option<PyObject>,
@@ -38,7 +41,7 @@ impl IpgTimer {
         height: Length,
         padding: Padding,
         clip: bool,
-        style_id: Option<String>,
+        style_id: Option<usize>,
         style_standard: Option<IpgStyleStandard>,
         style_arrow: Option<IpgButtonArrow>,
         user_data: Option<PyObject>,
@@ -64,6 +67,50 @@ impl IpgTimer {
     }
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct IpgTimerStyle {
+    pub id: usize,
+    pub background_color: Option<Color>,
+    pub background_color_hovered: Option<Color>,
+    pub border_color: Option<Color>,
+    pub border_radius: Vec<f32>,
+    pub border_width: f32,
+    pub shadow_color: Option<Color>,
+    pub shadow_offset_x: f32,
+    pub shadow_offset_y: f32,
+    pub shadow_blur_radius: f32,
+    pub text_color: Option<Color>,
+}
+
+impl IpgTimerStyle {
+    pub fn new(
+        id: usize,
+        background_color: Option<Color>,
+        background_color_hovered: Option<Color>,
+        border_color: Option<Color>,
+        border_radius: Vec<f32>,
+        border_width: f32,
+        shadow_color: Option<Color>,
+        shadow_offset_x: f32,
+        shadow_offset_y: f32,
+        shadow_blur_radius: f32,
+        text_color: Option<Color>,
+    ) -> Self {
+        Self {
+            id,
+            background_color,
+            background_color_hovered,
+            border_color,
+            border_radius,
+            border_width,
+            shadow_color,
+            shadow_offset_x,
+            shadow_offset_y,
+            shadow_blur_radius,
+            text_color,
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum TIMMessage {
@@ -89,11 +136,13 @@ pub enum IpgTimerParam {
     WidthFill,
 }
 
-pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
+pub fn construct_timer(tim: IpgTimer, style_opt: Option<IpgWidgets>) -> Option<Element<'static, app::Message>> {
 
     if !tim.show {
-        return Space::new(Length::Shrink, Length::Shrink).into()
+        return None
     }
+
+    let style = get_timer_style(style_opt);
 
     let mut label = Text::new(tim.label.clone());
     
@@ -109,12 +158,12 @@ pub fn construct_timer(tim: IpgTimer) -> Element<'static, app::Message> {
                                 .on_press(TIMMessage::OnStartStop)
                                 .style(move|theme: &Theme, status| {
                                     get_styling(theme, status,
-                                        None,
+                                        style.clone(),
                                         tim.style_standard.clone(),
                                     )  })
                                 .into();
     
-    timer_btn.map(move |message: TIMMessage| app::Message::Timer(tim.id, message))
+    Some(timer_btn.map(move |message: TIMMessage| app::Message::Timer(tim.id, message)))
 
     
 }
@@ -227,8 +276,7 @@ pub fn timer_item_update(tim: &mut IpgTimer,
             tim.height = get_height(None, val);
         },
         IpgTimerParam::Padding => {
-            let val = try_extract_vec_f64(value);
-            tim.padding =  get_padding_f64(val);
+            tim.padding =  get_padding_f64(try_extract_vec_f64(value));
         },
         IpgTimerParam::Clip => {
             tim.clip = try_extract_boolean(value);
@@ -237,12 +285,10 @@ pub fn timer_item_update(tim: &mut IpgTimer,
             tim.show = try_extract_boolean(value);
         },
         IpgTimerParam::StyleId => {
-            let val = try_extract_string(value);
-            tim.style_id = Some(val);
+            tim.style_id = Some(try_extract_f64(value) as usize);
         },
         IpgTimerParam::StyleStandard => {
-            let val = try_extract_style_standard(value);
-            tim.style_standard = Some(val);
+            tim.style_standard = Some(try_extract_style_standard(value));
         },
         IpgTimerParam::Width => {
             let val = try_extract_f64(value);
@@ -256,7 +302,6 @@ pub fn timer_item_update(tim: &mut IpgTimer,
 
 }
 
-
 pub fn try_extract_timer_update(update_obj: PyObject) -> IpgTimerParam {
 
     Python::with_gil(|py| {
@@ -264,6 +309,186 @@ pub fn try_extract_timer_update(update_obj: PyObject) -> IpgTimerParam {
         match res {
             Ok(update) => update,
             Err(_) => panic!("Timer update extraction failed"),
+        }
+    })
+}
+
+pub fn get_styling(theme: &Theme, status: Status,
+                    style_opt: Option<IpgTimerStyle>,
+                    style_standard: Option<IpgStyleStandard>,
+                    ) -> button::Style 
+{
+    if style_standard.is_none() && style_opt.is_none() {
+        return button::primary(theme, status)
+    }
+
+    if style_opt.is_none() && style_standard.is_some() {
+            return get_standard_style(theme, status, style_standard, None, None)
+    }
+
+    let mut border = Border::default();
+    let mut shadow = Shadow::default();
+
+    let mut base_style = button::primary(theme, status);
+    let mut hover_style = button::primary(theme, status);
+
+    let style = style_opt.unwrap_or_default();
+
+    if style.border_color.is_some() {
+        border.color = style.border_color.unwrap();
+    }
+
+    border.radius = get_radius(style.border_radius.clone(), 
+                                "Button".to_string());
+    border.width = style.border_width;
+
+    if style.shadow_color.is_some() {
+        shadow.color = style.shadow_color.unwrap();
+        shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
+        shadow.blur_radius = style.shadow_blur_radius;
+    }
+
+    // style_standard overrides style except for border and shadow
+    let style_standard = get_standard_style(theme, status, 
+                                    style_standard, 
+                                    Some(border), Some(shadow));
+    
+    base_style.background = if style.background_color.is_some() {
+        Some(style.background_color.unwrap().into())
+    } else {
+        style_standard.background
+    };
+
+    hover_style.background = if style.background_color_hovered.is_some() {
+        Some(style.background_color_hovered.unwrap().into())
+    } else {
+        style_standard.background
+    };
+
+    base_style.border = border;
+    hover_style.border = border;
+
+    base_style.shadow = shadow;
+    hover_style.shadow = shadow;
+
+    match status {
+        Status::Active | Status::Pressed => base_style,
+        Status::Hovered => hover_style,
+        Status::Disabled => disabled(base_style),
+    }
+    
+}
+
+fn disabled(style: button::Style) -> button::Style {
+    button::Style {
+        background: style
+            .background
+            .map(|background| background.scale_alpha(0.5)),
+        text_color: style.text_color.scale_alpha(0.5),
+        ..style
+    }
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgTimerStyleParam {
+    BackgroundIpgColor,
+    BackgroundRbgaColor,
+    BackgroundIpgColorHovered,
+    BackgroundIpgRgbaHovered,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+    ShadowIpgColor,
+    ShadowRgbaColor,
+    ShadowOffsetX,
+    ShadowOffsetY,
+    ShadowBlurRadius,
+    TextIpgColor,
+    TextRgbaColor,
+}
+
+pub fn timer_style_update_item(style: &mut IpgTimerStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+    let update = try_extract_timer_style_update(item);
+    match update {
+        IpgTimerStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTimerStyleParam::BackgroundRbgaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTimerStyleParam::BackgroundIpgColorHovered => {
+            let color = try_extract_ipg_color(value);
+            style.background_color_hovered = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTimerStyleParam::BackgroundIpgRgbaHovered => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTimerStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTimerStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTimerStyleParam::BorderRadius => {
+            style.border_radius = try_extract_vec_f32(value);
+        },
+        IpgTimerStyleParam::BorderWidth => {
+            style.border_width = try_extract_f64(value) as f32;
+        },
+        IpgTimerStyleParam::ShadowIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.shadow_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTimerStyleParam::ShadowRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTimerStyleParam::ShadowOffsetX => {
+            style.shadow_offset_x = try_extract_f64(value) as f32;
+        },
+        IpgTimerStyleParam::ShadowOffsetY => {
+            style.shadow_offset_y = try_extract_f64(value) as f32;
+        },
+        IpgTimerStyleParam::ShadowBlurRadius => {
+            style.shadow_blur_radius = try_extract_f64(value) as f32;
+        },
+        IpgTimerStyleParam::TextIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTimerStyleParam::TextRgbaColor => {
+            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+    }
+}
+
+fn get_timer_style(style: Option<IpgWidgets>) -> Option<IpgTimerStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgTimerStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
+
+fn try_extract_timer_style_update(update_obj: PyObject) -> IpgTimerStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgTimerStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Timer style update extraction failed"),
         }
     })
 }
