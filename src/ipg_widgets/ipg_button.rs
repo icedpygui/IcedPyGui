@@ -123,7 +123,7 @@ pub fn construct_button(btn: IpgButton,
     if !btn.show {
         return None
     }
-    
+
     let style = get_btn_style(style_opt);
 
     let mut label = Text::new(btn.label.clone());
@@ -320,7 +320,7 @@ pub fn button_style_update_item(style: &mut IpgButtonStyle,
             style.background_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgButtonStyleParam::BackgroundIpgRgbaHovered => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
         },
         IpgButtonStyleParam::BorderIpgColor => {
             let color = try_extract_ipg_color(value);

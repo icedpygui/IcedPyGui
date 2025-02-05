@@ -2,9 +2,10 @@ from icedpygui import IPG, IpgTextParam, IpgTimerParam, IpgButtonStyleParam
 from icedpygui import IpgCheckboxStyleParam, IpgColorPickerStyleParam, IpgPickListStyleParam
 from icedpygui import IpgColor, IpgProgressBarStyleParam, IpgRadioStyleParam
 from icedpygui import IpgRuleStyleParam, IpgSliderStyleParam, IpgTextInputStyleParam
-from icedpygui import IpgTimerStyleParam, IpgCanvasTimerStyleParam
+from icedpygui import IpgTimerStyleParam, IpgCanvasTimerStyleParam, IpgTogglerStyleParam
 
 
+# Colors defined for later use in changing the background style of the widgets every 300 ms 
 colors = [IpgColor.PRIMARY, IpgColor.SECONDARY, IpgColor.SUCCESS, IpgColor.DANGER, IpgColor.WARNING, 
           IpgColor.INFO, IpgColor.LIGHT, IpgColor.DARK, IpgColor.ALICE_BLUE, IpgColor.ANTIQUE_WHITE, 
           IpgColor.AQUA, IpgColor.AQUAMARINE, IpgColor.AZURE, IpgColor.BEIGE, IpgColor.BISQUE, 
@@ -62,6 +63,7 @@ def on_tick(timer_id: int, counter: int):
     ipg.update_item(ti_style, IpgTextInputStyleParam.BackgroundIpgColor, colors[counter])
     ipg.update_item(tim_style, IpgTimerStyleParam.BackgroundIpgColor, colors[counter])
     ipg.update_item(cv_tim_style, IpgCanvasTimerStyleParam.BackgroundIpgColor, colors[counter])
+    ipg.update_item(tog_style, IpgTogglerStyleParam.BackgroundIpgColor, colors[counter])
 
 
 # Fires on stopping
@@ -86,7 +88,13 @@ ipg.add_container(window_id="main",
 # Add the column to hold the widgets
 ipg.add_column(window_id="main", container_id="col", parent_id="cont")
 
+ipg.add_text(parent_id="col",
+             content="Press the timer button at the bottom\n to start the demo")
 
+
+# These style and the following widgets were added to test a more dynamic
+# way to update the widgets styles.  This section just defines the styles
+# with a default background.
 btn_style = ipg.add_button_style(background_color=IpgColor.PRIMARY)
 chk_style = ipg.add_checkbox_style(background_color=IpgColor.PRIMARY)
 cp_style = ipg.add_color_picker_style(background_color=IpgColor.PRIMARY)
@@ -98,59 +106,66 @@ sl_style = ipg.add_slider_style(rail_color=IpgColor.PRIMARY, handle_color=IpgCol
 ti_style = ipg.add_text_input_style(background_color=IpgColor.PRIMARY, placeholder_color=IpgColor.WHITE)
 tim_style = ipg.add_timer_style(background_color=IpgColor.PRIMARY)
 cv_tim_style = ipg.add_canvas_timer_style(background_color=IpgColor.PRIMARY)
+tog_style = ipg.add_toggler_style(background_color=IpgColor.PRIMARY)
 
 
-btn_id = ipg.add_button(parent_id="col",
-                        label="Button",
-                        style_id=btn_style,
-                        )
+# Note: the style ids are now integers as defined above.
+# The change is new in version 0.4.0.  The previous way was to
+# use a string id in the add style definition above
+ipg.add_button(parent_id="col",
+               label="Button",
+               style_id=btn_style)
 
-chk_id = ipg.add_checkbox(parent_id="col",
-                          label="Checkbox",
-                          style_id=chk_style)
+ipg.add_checkbox(parent_id="col",
+                 label="Checkbox",
+                 style_id=chk_style)
 
-cp_id = ipg.add_color_picker(parent_id="col",
-                             label="Color Picker",
-                             style_id=cp_style)
+ipg.add_color_picker(parent_id="col",
+                     label="Color Picker",
+                     style_id=cp_style)
 
 
-pl_id = ipg.add_pick_list(parent_id="col",
-                          options=["1", "2", "3"],
-                          placeholder="Pick a number",
-                          style_id=pl_style)
+ipg.add_pick_list(parent_id="col",
+                  options=["1", "2", "3"],
+                  placeholder="Pick a number",
+                  style_id=pl_style)
 
-pb_id = ipg.add_progress_bar(parent_id="col",
-                             min=0.0,
-                             max=100.0,
-                             value=0.0,
-                             style_id=pb_style)
+ipg.add_progress_bar(parent_id="col",
+                     min=0.0,
+                     max=100.0,
+                     value=0.0,
+                     style_id=pb_style)
 
-rd_id = ipg.add_radio(parent_id="col",
-                      labels=["One", "Two", "Three"],
-                      style_id=rd_style)
+ipg.add_radio(parent_id="col",
+             labels=["One", "Two", "Three"],
+             style_id=rd_style)
 
-rl_id = ipg.add_rule_horizontal(parent_id="col",
-                                width=150.0,
-                                thickness=3,
-                                style_id=rl_style)
+ipg.add_rule_horizontal(parent_id="col",
+                        width=150.0,
+                        thickness=3,
+                        style_id=rl_style)
 
-sl_id = ipg.add_slider(parent_id="col",
-                       min=0.0,
-                       max=100.0,
-                       step=1.0,
-                       value=50.0,
-                       width=300.0,
-                       style_id=sl_style)
+ipg.add_slider(parent_id="col",
+               min=0.0,
+               max=100.0,
+               step=1.0,
+               value=50.0,
+               width=300.0,
+               style_id=sl_style)
 
-ti_id = ipg.add_text_input(parent_id="col",
-                           placeholder="Text Input",
-                           width=200.0,
-                           style_id=ti_style)
+ipg.add_text_input(parent_id="col",
+                   placeholder="Text Input",
+                   width=200.0,
+                   style_id=ti_style)
 
 ipg.add_canvas_timer(parent_id="col", 
                      label="canvas button",
                      duration_ms=300,
                      style_id=cv_tim_style)
+
+ipg.add_toggler(parent_id="col",
+                label="Toggler",
+                style_id=tog_style)
 
 # The time duration is in milliseconds, so 1 second interval, in this case.
 # The three callbacks start, stop, and tick are defined.

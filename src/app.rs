@@ -894,11 +894,11 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                 IpgWidgets::IpgToggler(tog) => {
                     let style_opt = match tog.style_id.clone() {
                         Some(id) => {
-                            state.toggler_style.get(&id).cloned()
+                            state.widgets.get(&id).cloned()
                         },
                         None => None,
                     };
-                    Some(construct_toggler(tog.clone(), style_opt))    
+                    construct_toggler(tog.clone(), style_opt)   
                 },
                 _ => None,
 

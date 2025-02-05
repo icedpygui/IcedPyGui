@@ -72,8 +72,7 @@ use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam,
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, text_input_style_update_item, IpgTextInput, IpgTextInputParam, IpgTextInputStyle, IpgTextInputStyleParam};
 use ipg_widgets::ipg_timer::{timer_item_update, timer_style_update_item, IpgTimer, IpgTimerParam, IpgTimerStyle, IpgTimerStyleParam};
-use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, 
-        IpgTogglerParam, IpgTogglerStyle};
+use ipg_widgets::ipg_toggle::{toggler_item_update, toggler_style_update_item, IpgToggler, IpgTogglerParam, IpgTogglerStyle, IpgTogglerStyleParam};
 use ipg_widgets::ipg_tool_tip::IpgToolTip;
 use ipg_widgets::ipg_window::{get_iced_window_theme, 
         window_item_update, IpgWindow, IpgWindowLevel, IpgWindowMode, 
@@ -3970,7 +3969,7 @@ impl IPG {
                         spacing: f32,
                         user_data: Option<PyObject>,
                         show: bool,
-                        style_id: Option<String>,
+                        style_id: Option<usize>,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -3987,26 +3986,28 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgToggler(IpgToggler::new(
-                                                id,
-                                                show,
-                                                user_data,
-                                                label,
-                                                width,
-                                                size,
-                                                text_size,
-                                                text_line_height,
-                                                text_alignment,
-                                                spacing,
-                                                style_id,                           
-                                                )));
+        state.widgets.insert(id, IpgWidgets::IpgToggler(
+            IpgToggler::new(
+                id,
+                show,
+                user_data,
+                label,
+                width,
+                size,
+                text_size,
+                text_line_height,
+                text_alignment,
+                spacing,
+                style_id,                           
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
     
     }
 
-    #[pyo3(signature = (style_id, 
+    #[pyo3(signature = (
                         background_color=None,
                         background_rgba=None,
                         background_color_toggled=None,
@@ -4028,7 +4029,6 @@ impl IPG {
                         gen_id=None,
                         ))]
     fn add_toggler_style(&mut self,
-                        style_id: String, 
                         background_color: Option<IpgColor>,
                         background_rgba: Option<[f32; 4]>,
                         background_color_toggled: Option<IpgColor>,
@@ -4064,19 +4064,21 @@ impl IPG {
 
         let mut state = access_state();
        
-        state.toggler_style.insert(style_id, IpgTogglerStyle::new( 
-                                                id,
-                                                background_color,
-                                                background_color_toggled,
-                                                background_color_disabled,
-                                                background_border_color,
-                                                background_border_width,
-                                                foreground_color,
-                                                foreground_color_toggled,
-                                                foreground_color_disabled,
-                                                foreground_border_color,
-                                                foreground_border_width,
-                                                ));
+        state.widgets.insert(id, IpgWidgets::IpgTogglerStyle(
+            IpgTogglerStyle::new(
+                id,
+                background_color,
+                background_color_toggled,
+                background_color_disabled,
+                background_border_color,
+                background_border_width,
+                foreground_color,
+                foreground_color_toggled,
+                foreground_color_disabled,
+                foreground_border_color,
+                foreground_border_width,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -5105,6 +5107,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgToggler(tog) => {
             toggler_item_update(tog, item, value);
         },
+        IpgWidgets::IpgTogglerStyle(style) => {
+            toggler_style_update_item(style, item, value);
+        },
     }
 }
 
@@ -5215,8 +5220,9 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgTimerParam>()?;
     m.add_class::<IpgTimerStyleParam>()?;
     m.add_class::<IpgCanvasTimerParam>()?;
-     m.add_class::<IpgCanvasTimerStyleParam>()?;
+    m.add_class::<IpgCanvasTimerStyleParam>()?;
     m.add_class::<IpgTogglerParam>()?;
+    m.add_class::<IpgTogglerStyleParam>()?;
     m.add_class::<IpgWindowParam>()?;
     m.add_class::<IpgWindowLevel>()?;
     m.add_class::<IpgWindowTheme>()?;

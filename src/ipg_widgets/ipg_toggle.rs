@@ -1,16 +1,20 @@
 //! ipg_toggler
+use crate::graphics::colors::get_color;
 use crate::{access_callbacks, app, IpgState};
-use super::helpers::{get_width, try_extract_boolean, try_extract_f64, 
-    try_extract_ipg_horizontal_alignment, try_extract_string};
+use super::helpers::{get_width, try_extract_boolean, 
+    try_extract_f64, try_extract_ipg_color, 
+    try_extract_ipg_horizontal_alignment, 
+    try_extract_rgba_color, try_extract_string};
 use super::callbacks::{
-    set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
+    set_or_get_widget_callback_data, 
+    WidgetCallbackIn, WidgetCallbackOut
 };
-use super::ipg_enums::IpgHorizontalAlignment;
+use super::ipg_enums::{IpgHorizontalAlignment, IpgWidgets};
 use iced::widget::text::LineHeight;
 use iced::widget::toggler::{self, Status};
 use pyo3::{pyclass, PyObject, Python};
 
-use iced::widget::{Space, Toggler};
+use iced::widget::Toggler;
 use iced::{alignment, Color, Element, Length, Theme};
 
 
@@ -29,7 +33,7 @@ pub struct IpgToggler {
     pub text_line_height: LineHeight,
     pub text_alignment: IpgHorizontalAlignment,
     pub spacing: f32,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
 }
 
 impl IpgToggler {
@@ -45,7 +49,7 @@ impl IpgToggler {
         text_line_height: LineHeight,
         text_alignment: IpgHorizontalAlignment,
         spacing: f32,
-        style_id: Option<String>,
+        style_id: Option<usize>,
         ) -> Self {
         Self {
             id,
@@ -117,12 +121,14 @@ pub enum TOGMessage {
 
 
 pub fn construct_toggler(tog: IpgToggler, 
-                        style_opt: Option<IpgTogglerStyle>,
-                        ) -> Element<'static, app::Message> {
+                        style_opt: Option<IpgWidgets>,
+                        ) -> Option<Element<'static, app::Message>> {
     
     if !tog.show {
-        return Space::new(Length::Shrink, Length::Shrink).into()
+        return None
     }
+
+    let style = get_toggler_style(style_opt);
 
     let text_alignment = get_text_alignment(tog.text_alignment);
 
@@ -142,11 +148,11 @@ pub fn construct_toggler(tog: IpgToggler,
                                                     .spacing(tog.spacing)
                                                     .style(move|theme: &Theme, status| {     
                                                         get_styling(theme, status, 
-                                                                    style_opt.clone()) 
+                                                                    style.clone()) 
                                                     })
                                                     .into();
 
-    ipg_tog.map(move |message| app::Message::Toggler(tog.id, message))
+    Some(ipg_tog.map(move |message| app::Message::Toggler(tog.id, message)))
 }
 
 
@@ -165,7 +171,6 @@ pub fn toggle_callback(state: &mut IpgState, id: usize, message: TOGMessage) {
         }
     }
 }
-
 
 pub fn process_callback(wco: WidgetCallbackOut) 
 {
@@ -366,4 +371,124 @@ pub fn get_styling(theme: &Theme, status: Status,
 
     tog_style
 
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgTogglerStyleParam {
+    BackgroundIpgColor,
+    BackgroundRbgaColor,
+    BackgroundIpgColorToggled,
+    BackgroundRgbaToggled,
+    BackgroundIpgColorDisabled,
+    BackgroundRbgaColorDisabled,
+    BackgroundBorderIpgColor,
+    BackgroundBorderRgbaColor,
+    BackgroundBorderWidth,
+
+    ForegroundIpgColor,
+    ForegroundRbgaColor,
+    ForegroundIpgColorToggled,
+    ForegroundRgbaToggled,
+    ForegroundIpgColorDisabled,
+    ForegroundRbgaColorDisabled,
+    ForegroundBorderIpgColor,
+    ForegroundBorderRgbaColor,
+    ForegroundBorderWidth,
+}
+
+pub fn toggler_style_update_item(style: &mut IpgTogglerStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+    let update = try_extract_toggler_style_update(item);
+    match update {
+        IpgTogglerStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTogglerStyleParam::BackgroundRbgaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTogglerStyleParam::BackgroundIpgColorToggled => {
+            let color = try_extract_ipg_color(value);
+            style.background_color_toggled = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTogglerStyleParam::BackgroundRgbaToggled => {
+            style.background_color_toggled = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTogglerStyleParam::BackgroundIpgColorDisabled => {
+            let color = try_extract_ipg_color(value);
+            style.background_color_toggled = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTogglerStyleParam::BackgroundRbgaColorDisabled => {
+            style.background_color_toggled = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTogglerStyleParam::BackgroundBorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTogglerStyleParam::BackgroundBorderRgbaColor => {
+            style.background_border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTogglerStyleParam::BackgroundBorderWidth => {
+            style.background_border_width = Some(try_extract_f64(value) as f32);
+        },
+        IpgTogglerStyleParam::ForegroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.foreground_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTogglerStyleParam::ForegroundRbgaColor => {
+            style.foreground_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTogglerStyleParam::ForegroundIpgColorToggled => {
+            let color = try_extract_ipg_color(value);
+            style.foreground_color_toggled = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTogglerStyleParam::ForegroundRgbaToggled => {
+            style.foreground_color_toggled = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTogglerStyleParam::ForegroundIpgColorDisabled => {
+            let color = try_extract_ipg_color(value);
+            style.foreground_color_toggled = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTogglerStyleParam::ForegroundRbgaColorDisabled => {
+            style.foreground_color_toggled = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTogglerStyleParam::ForegroundBorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.foreground_border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTogglerStyleParam::ForegroundBorderRgbaColor => {
+            style.foreground_border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTogglerStyleParam::ForegroundBorderWidth => {
+            style.foreground_border_width = Some(try_extract_f64(value) as f32);
+        },
+    }
+}
+
+fn get_toggler_style(style: Option<IpgWidgets>) -> Option<IpgTogglerStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgTogglerStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
+
+pub fn try_extract_toggler_style_update(update_obj: PyObject) -> IpgTogglerStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgTogglerStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Toggler style update extraction failed"),
+        }
+    })
 }

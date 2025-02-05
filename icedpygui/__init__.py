@@ -27,5 +27,5 @@ from .icedpygui import IpgTextInputParam, IpgTextInputStyleParam
 from .icedpygui import IpgTextParam
 from .icedpygui import IpgTimerParam, IpgTimerStyleParam
 from .icedpygui import IpgCanvasTimerParam, IpgCanvasTimerStyleParam
-from .icedpygui import IpgTogglerParam
+from .icedpygui import IpgTogglerParam, IpgTogglerStyleParam
 from .icedpygui import IpgWindowLevel, IpgWindowMode, IpgWindowTheme, IpgWindowParam

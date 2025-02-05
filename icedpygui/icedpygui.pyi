@@ -2987,7 +2987,7 @@ class IPG:
                     spacing: float=10.0,
                     user_data: Optional[Any]=None,
                     show: bool=True,
-                    style: Optional[str]=None,
+                    style_id: Optional[int]=None,
                     ) -> int:
         """
         Adds a toggler to the gui
@@ -3029,8 +3029,6 @@ class IPG:
             The id of the event which can be used to modify the event through update_item.
         """
     def add_toggler_style(self,
-                            style_id: str,
-                            *,
                             background_color: Optional[IpgColor]=None,
                             background_rgba: Optional[list[float, 4]]=None,
                             background_color_toggled: Optional[IpgColor]=None,
@@ -3051,7 +3049,6 @@ class IPG:
         
         Parameters
         ----------
-            style_id: str,
             background_color: Optional[IpgColor]
             background_rgba: Optional[list[float, 4]]
             background_color_toggled: Optional[IpgColor]
@@ -3071,7 +3068,9 @@ class IPG:
         id: int
             The id of the event which can be used to modify the event through update_item.
         """
+        
     # ******************************canvas widgets******************************************************
+    
     def add_arc(self,
                 canvas_id: str,
                 center_xy: tuple[float, float],
