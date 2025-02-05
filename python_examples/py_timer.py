@@ -1,7 +1,7 @@
 from icedpygui import IPG, IpgTextParam, IpgTimerParam, IpgButtonStyleParam
 from icedpygui import IpgCheckboxStyleParam, IpgColorPickerStyleParam, IpgPickListStyleParam
 from icedpygui import IpgColor, IpgProgressBarStyleParam, IpgRadioStyleParam
-from icedpygui import IpgRuleStyleParam
+from icedpygui import IpgRuleStyleParam, IpgSliderStyleParam
 
 
 colors = [IpgColor.PRIMARY, IpgColor.SECONDARY, IpgColor.SUCCESS, IpgColor.DANGER, IpgColor.WARNING, 
@@ -56,6 +56,8 @@ def on_tick(timer_id: int, counter: int):
     ipg.update_item(pb_style, IpgProgressBarStyleParam.BackgroundIpgColor, colors[counter])
     ipg.update_item(rd_style, IpgRadioStyleParam.BackgroundIpgColor, colors[counter])
     ipg.update_item(rl_style, IpgRuleStyleParam.IpgColor, colors[counter])
+    ipg.update_item(sl_style, IpgSliderStyleParam.RailIpgColor, colors[counter])
+    ipg.update_item(sl_style, IpgSliderStyleParam.HandleIpgColor, colors[counter])
 
 
 # Fires on stopping
@@ -88,6 +90,7 @@ pl_style = ipg.add_pick_list_style(background_color=IpgColor.PRIMARY)
 pb_style = ipg.add_progress_bar_style(background_color=IpgColor.PRIMARY)
 rd_style = ipg.add_radio_style(background_color=IpgColor.PRIMARY)
 rl_style = ipg.add_rule_style(color=IpgColor.PRIMARY)
+sl_style = ipg.add_slider_style(rail_color=IpgColor.PRIMARY, handle_color=IpgColor.PRIMARY)
 
 
 btn_id = ipg.add_button(parent_id="col",
@@ -123,6 +126,14 @@ rl_id = ipg.add_rule_horizontal(parent_id="col",
                                 width=150.0,
                                 thickness=3,
                                 style_id=rl_style)
+
+sl_id = ipg.add_slider(parent_id="col",
+                       min=0.0,
+                       max=100.0,
+                       step=1.0,
+                       value=50.0,
+                       width=300.0,
+                       style_id=sl_style)
 
 # The time duration is in milliseconds, so 1 second interval, in this case.
 # The three callbacks start, stop, and tick are defined.

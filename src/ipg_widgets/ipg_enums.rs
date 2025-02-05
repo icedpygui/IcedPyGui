@@ -24,7 +24,7 @@ use super::ipg_row::IpgRow;
 use super::ipg_rule::{IpgRule, IpgRuleStyle};
 use super::ipg_scrollable::IpgScrollable;
 use super::ipg_selectable_text::IpgSelectableText;
-use super::ipg_slider::IpgSlider;
+use super::ipg_slider::{IpgSlider, IpgSliderStyle};
 use super::ipg_space::IpgSpace;
 use super::ipg_stack::IpgStack;
 use super::ipg_svg::IpgSvg;
@@ -79,6 +79,7 @@ pub enum IpgWidgets {
     IpgRuleStyle(IpgRuleStyle),
     IpgSelectableText(IpgSelectableText),
     IpgSlider(IpgSlider),
+    IpgSliderStyle(IpgSliderStyle),
     IpgSpace(IpgSpace),
     IpgSvg(IpgSvg),
     IpgText(IpgText),

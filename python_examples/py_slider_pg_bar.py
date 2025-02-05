@@ -50,10 +50,6 @@ def change_value(btn_id):
     ipg.update_item(sl_id, IpgSliderParam.Value, 100.0)
 
 
-def add_styling(btn_id):
-    ipg.update_item(sl_id, IpgSliderParam.Style, "color")
-
-
 def toggle_show(btn_id):
     global show
     show = not show
@@ -62,16 +58,16 @@ def toggle_show(btn_id):
 
 
 # Add a slider style for the colors
-ipg.add_slider_style(style_id="color",
-                     rail_color=IpgColor.GREEN, 
-                     rail_color_hovered=IpgColor.GREEN_YELLOW,
-                     handle_color=IpgColor.DARK_GREEN,
-                     rail_width=10.0,
-                     rail_border_radius=[8.0],
-                     handle_rectangle_width=20,
-                     handle_rectangle_border_radius=[5.0],
-                     handle_border_width=2.0,
-                     handle_border_color=IpgColor.DARK_GREEN,)
+sl_style = ipg.add_slider_style(
+                                rail_color=IpgColor.GREEN, 
+                                rail_color_hovered=IpgColor.GREEN_YELLOW,
+                                handle_color=IpgColor.LIGHT_GREEN,
+                                rail_width=10.0,
+                                rail_border_radius=[8.0],
+                                handle_rectangle_width=20,
+                                handle_rectangle_border_radius=[5.0],
+                                handle_border_width=2.0,
+                                handle_border_color=IpgColor.DARK_GREEN,)
 
 # Add the window
 ipg.add_window(window_id="main", title="Slider Demo", width=600, height=600,
@@ -98,6 +94,7 @@ sl_id = ipg.add_slider(parent_id="col",
                        width=300.0, 
                        on_change=slider_on_change, 
                        on_release=slider_on_release,
+                       style_id=sl_style,
                        )
 
 # Add some value at beginning and end
@@ -131,9 +128,6 @@ ipg.add_button(parent_id="row_3", label="Press Me to Change Step", on_press=chan
 ipg.add_button(parent_id="row_3", label="Press Me to Change Value", on_press=change_value)
 
 ipg.add_row(window_id="main", container_id="row_4", parent_id="col")
-ipg.add_button(parent_id="row_4", label="Press Me to Add Styling", on_press=add_styling)
-
-
 
 ipg.add_row(window_id="main", container_id="row_10", parent_id="col")
 ipg.add_button(parent_id="row_10", label="Press Me to Toggle Show", on_press=toggle_show)

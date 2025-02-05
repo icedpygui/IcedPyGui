@@ -1,18 +1,20 @@
 //! ipg_slider
+use crate::graphics::colors::get_color;
 use crate::{access_callbacks, app, IpgState};
-use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{set_or_get_widget_callback_data, 
+    WidgetCallbackIn, WidgetCallbackOut};
 
-use super::helpers::{get_radius, get_width};
-use super::helpers::{try_extract_boolean, try_extract_f64, 
-    try_extract_string};
+use super::helpers::{get_radius, get_width, try_extract_ipg_color, 
+    try_extract_rgba_color, try_extract_u16, try_extract_vec_f32, 
+    try_extract_boolean, try_extract_f64};
+use super::ipg_enums::IpgWidgets;
 
 use iced::border::Radius;
 use iced::widget::slider::{self, HandleShape, Status, Style};
 use iced::{Background, Color, Element, Length, Theme};
-use iced::widget::{Slider, Space};
+use iced::widget::Slider;
 
-use pyo3::pyclass;
-use pyo3::{PyObject, Python};
+use pyo3::{PyObject, pyclass, Python};
 
 
 #[derive(Debug, Clone)]
@@ -27,7 +29,7 @@ pub struct IpgSlider {
     pub value: f32,
     pub width: Length,
     pub height: f32,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
 }
 
 impl IpgSlider {
@@ -41,7 +43,7 @@ impl IpgSlider {
         value: f32,
         width: Length,
         height: f32,
-        style_id: Option<String>,
+        style_id: Option<usize>,
     ) -> Self {
         Self {
             id,
@@ -111,12 +113,14 @@ pub enum SLMessage {
 }
 
 pub fn construct_slider(slider: IpgSlider, 
-                        style_opt: Option<IpgSliderStyle>) 
-                        -> Element<'static, app::Message> {
+                        style_opt: Option<IpgWidgets>) 
+                        -> Option<Element<'static, app::Message>> {
 
     if !slider.show {
-        return Space::new(0.0, 0.0).into()
+        return None
     }
+
+    let style = get_slider_style(style_opt);
 
     let sld: Element<SLMessage, Theme> = 
         Slider::new(slider.min..=slider.max, 
@@ -129,11 +133,11 @@ pub fn construct_slider(slider: IpgSlider,
                     .height(slider.height)
                     .style(move|theme, status|
                     get_styling(theme, status,
-                        style_opt.clone()
+                        style.clone()
                     ))
                     .into();
 
-    sld.map(move |message| app::Message::Slider(slider.id, message))
+    Some(sld.map(move |message| app::Message::Slider(slider.id, message)))
 }
 
 pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
@@ -252,7 +256,7 @@ pub fn slider_item_update(sldr: &mut IpgSlider, item: PyObject, value: PyObject)
             sldr.height = try_extract_f64(value) as f32;
         },
         IpgSliderParam::Style => {
-            sldr.style_id = Some(try_extract_string(value));
+            sldr.style_id = Some(try_extract_f64(value) as usize);
         }
         IpgSliderParam::Show => {
             sldr.show = try_extract_boolean(value);
@@ -286,7 +290,7 @@ fn get_styling(theme: &Theme,
     let mut base_style = slider::default(theme, status);
 
     if style.handle_color.is_some() {
-        base_style.handle.border_color = style.handle_color.unwrap()
+        base_style.handle.background = Background::Color(style.handle_color.unwrap());
     };
 
 
@@ -346,4 +350,105 @@ fn get_styling(theme: &Theme,
     }
 
 
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgSliderStyleParam {
+    RailIpgColor,
+    RailRbgaColor,
+    RailIpgColorHovered,
+    RailIpgRgbaHovered,
+    RailBorderRadius,
+    RailWidth,
+
+    HandleIpgColor,
+    HandleRgbaColor,
+    HandleBorderIpgColor,
+    HandleBorderRgbaColor,
+    HandleBorderWidth,
+    HandleCircleRadius,
+    HandleRectangleWidth,
+    HandleRectangleBorderRadius,
+}
+
+pub fn slider_style_update_item(style: &mut IpgSliderStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+
+    let update = try_extract_slider_style_update(item);
+    match update {
+        IpgSliderStyleParam::RailIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.rail_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgSliderStyleParam::RailRbgaColor => {
+            style.rail_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgSliderStyleParam::RailIpgColorHovered => {
+            let color = try_extract_ipg_color(value);
+            style.rail_color_hovered = get_color(None, Some(color), 1.0, false);
+        },
+        IpgSliderStyleParam::RailIpgRgbaHovered => {
+            style.rail_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgSliderStyleParam::RailBorderRadius => {
+            style.rail_border_radius = Some(try_extract_vec_f32(value));
+        },
+        IpgSliderStyleParam::RailWidth => {
+            style.rail_width = Some(try_extract_f64(value) as f32);
+        },
+        IpgSliderStyleParam::HandleIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.handle_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgSliderStyleParam::HandleRgbaColor => {
+            style.handle_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgSliderStyleParam::HandleBorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.handle_border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgSliderStyleParam::HandleBorderRgbaColor => {
+            style.handle_border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgSliderStyleParam::HandleBorderWidth => {
+            style.handle_border_width = Some(try_extract_f64(value) as f32);
+        },
+        IpgSliderStyleParam::HandleCircleRadius => {
+            style.handle_circle_radius = Some(try_extract_f64(value) as f32);
+        },
+        IpgSliderStyleParam::HandleRectangleWidth => {
+            style.handle_rectangle_width = Some(try_extract_u16(value));
+        },
+        IpgSliderStyleParam::HandleRectangleBorderRadius => {
+            style.handle_rectangle_border_radius = Some(try_extract_vec_f32(value));
+        },
+    }
+}
+
+pub fn try_extract_slider_style_update(update_obj: PyObject) -> IpgSliderStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgSliderStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Slider style update extraction failed"),
+        }
+    })
+}
+
+fn get_slider_style(style: Option<IpgWidgets>) -> Option<IpgSliderStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgSliderStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
 }

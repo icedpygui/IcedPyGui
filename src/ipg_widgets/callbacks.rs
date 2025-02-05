@@ -278,6 +278,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 }
             },
+            IpgWidgets::IpgSliderStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgSpace(_) => {
                 return WidgetCallbackOut::default();
             },

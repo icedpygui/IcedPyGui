@@ -62,8 +62,7 @@ use ipg_widgets::ipg_scrollable::{scrollable_item_update,
         IpgScrollableDirection, IpgScrollableParam, IpgScrollableStyle};
 use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, 
         IpgSelectableText, IpgSelectableTextParam};
-use ipg_widgets::ipg_slider::{slider_item_update, IpgSlider, 
-        IpgSliderParam, IpgSliderStyle};
+use ipg_widgets::ipg_slider::{slider_item_update, slider_style_update_item, IpgSlider, IpgSliderParam, IpgSliderStyle, IpgSliderStyleParam};
 use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, 
@@ -3048,7 +3047,7 @@ impl IPG {
     #[pyo3(signature = (parent_id, min, max, step, value, 
                         gen_id=None, width=None, height=None, 
                         width_fill=false, on_change=None, 
-                        on_release=None, style=None,
+                        on_release=None, style_id=None,
                         user_data=None, show=true, 
                         ))]
     fn add_slider(&mut self,
@@ -3063,7 +3062,7 @@ impl IPG {
                         width_fill: bool,
                         on_change: Option<PyObject>,
                         on_release: Option<PyObject>,
-                        style: Option<String>,
+                        style_id: Option<usize>,
                         user_data: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
@@ -3085,24 +3084,26 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.widgets.insert(id, IpgWidgets::IpgSlider(IpgSlider::new( 
-                                                id,
-                                                show,
-                                                user_data,
-                                                min,
-                                                max,
-                                                step,
-                                                value,
-                                                width,
-                                                height,
-                                                style,
-                                                )));
+        state.widgets.insert(id, IpgWidgets::IpgSlider(
+            IpgSlider::new( 
+                id,
+                show,
+                user_data,
+                min,
+                max,
+                step,
+                value,
+                width,
+                height,
+                style_id,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id,
+    #[pyo3(signature = (
                         rail_color=None,
                         rail_rgba=None,
                         rail_color_hovered=None,
@@ -3120,7 +3121,6 @@ impl IPG {
                         gen_id=None,
                         ))]
     fn add_slider_style(&mut self,
-                        style_id: String,
                         rail_color: Option<IpgColor>,
                         rail_rgba: Option<[f32; 4]>,
                         rail_color_hovered: Option<IpgColor>,
@@ -3140,27 +3140,28 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let mut state = access_state();
-
-        
         let rail_color = get_color(rail_rgba, rail_color, 1.0, false);
         let rail_color_hovered = get_color(rail_rgba_hovered, rail_color_hovered, 1.0, false);
         let handle_color = get_color(handle_rgba, handle_color, 1.0, false);
         let handle_border_color = get_color(handle_border_rgba,handle_border_color,1.0, false);
+
+        let mut state = access_state();
         
-        state.slider_style.insert(style_id, IpgSliderStyle::new( 
-                                                    id,
-                                                    rail_color,
-                                                    rail_color_hovered,
-                                                    rail_width,
-                                                    rail_border_radius,
-                                                    handle_circle_radius,
-                                                    handle_rectangle_width,
-                                                    handle_rectangle_border_radius,
-                                                    handle_color,
-                                                    handle_border_width,
-                                                    handle_border_color,
-                                                    ));
+        state.widgets.insert(id, IpgWidgets::IpgSliderStyle(
+            IpgSliderStyle::new(
+                id,
+                rail_color,
+                rail_color_hovered,
+                rail_width,
+                rail_border_radius,
+                handle_circle_radius,
+                handle_rectangle_width,
+                handle_rectangle_border_radius,
+                handle_color,
+                handle_border_width,
+                handle_border_color,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -4951,6 +4952,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgSlider(slider) => {
             slider_item_update(slider, item, value)
         },
+        IpgWidgets::IpgSliderStyle(slider) => {
+            slider_style_update_item(slider, item, value)
+        },
         IpgWidgets::IpgSpace(_) => (),
         IpgWidgets::IpgSvg(sg) => {
             svg_item_update(sg, item, value);
@@ -5067,6 +5071,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgScrollableParam>()?;
     m.add_class::<IpgSelectableTextParam>()?;
     m.add_class::<IpgSliderParam>()?;
+    m.add_class::<IpgSliderStyleParam>()?;
     m.add_class::<IpgStackParam>()?;
     m.add_class::<IpgStyleStandard>()?;
     m.add_class::<IpgSvgParam>()?;

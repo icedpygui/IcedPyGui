@@ -847,11 +847,11 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                 IpgWidgets::IpgSlider(slider) => {
                     let style_opt = match slider.style_id.clone() {
                         Some(id) => {
-                            state.slider_style.get(&id).cloned()
+                            state.widgets.get(&id).cloned()
                         },
                         None => None,
                     };
-                    Some(construct_slider(slider.clone(), style_opt))
+                    construct_slider(slider.clone(), style_opt)
                 },
                 IpgWidgets::IpgSpace(sp) => {
                     Some(construct_space(sp))

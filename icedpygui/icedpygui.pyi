@@ -4779,6 +4779,24 @@ class IpgSliderParam:
     Show: bool
 
 
+class IpgSliderStyleParam:
+    RailIpgColor=IpgColor
+    RailRbgaColor=list[float, 4]
+    RailIpgColorHovered=IpgColor
+    RailIpgRgbaHovered=list[float, 4]
+    RailBorderRadius=list[float]
+    RailWidth=float
+
+    HandleIpgColor=IpgColor
+    HandleRgbaColor=list[float, 4]
+    HandleBorderIpgColor=IpgColor
+    HandleBorderRgbaColor=list[float, 4]
+    HandleBorderWidth=float
+    HandleCircleRadius=float
+    HandleRectangleWidth=int
+    HandleRectangleBorderRadius=list[float]
+    
+    
 class IpgStackParam:
     """
     Stack update parameters
