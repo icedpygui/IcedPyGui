@@ -8,7 +8,7 @@ use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage,
 use iced::widget::image;
 use iced_aw::iced_fonts;
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
-use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, IpgCanvasTimer, IpgCanvasTimerParam};
+use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, canvas_timer_style_update_item, IpgCanvasTimer, IpgCanvasTimerParam, IpgCanvasTimerStyle, IpgCanvasTimerStyleParam};
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -3843,7 +3843,7 @@ impl IPG {
                         height_fill: bool,
                         padding: Vec<f64>,
                         clip: bool,
-                        style_id: Option<String>,
+                        style_id: Option<usize>,
                         style_standard: Option<IpgStyleStandard>,
                         style_arrow: Option<IpgButtonArrow>,
                         user_data: Option<PyObject>,
@@ -3886,6 +3886,65 @@ impl IPG {
                                                             user_data,
                                                             show,
                                                             )));
+        state.last_id = id;
+        drop(state);
+        Ok(id)
+    }
+
+    #[pyo3(signature = ( 
+                        background_color=None, background_rgba=None,
+                        background_color_hovered=None, background_rgba_hovered=None,
+                        border_color=None, border_rgba=None,
+                        border_radius = vec![0.0], border_width=1.0,
+                        shadow_color=None, shadow_rgba=None,
+                        shadow_offset_x=0.0, shadow_offset_y=0.0,
+                        shadow_blur_radius=1.0,
+                        text_color=None, text_rgba=None,
+                        gen_id=None))]
+    fn add_canvas_timer_style(&mut self,
+                        background_color: Option<IpgColor>,
+                        background_rgba: Option<[f32; 4]>,
+                        background_color_hovered: Option<IpgColor>,
+                        background_rgba_hovered: Option<[f32; 4]>,
+                        border_color: Option<IpgColor>,
+                        border_rgba: Option<[f32; 4]>,
+                        border_radius: Vec<f32>,
+                        border_width: f32,
+                        shadow_color: Option<IpgColor>,
+                        shadow_rgba: Option<[f32; 4]>,
+                        shadow_offset_x: f32,
+                        shadow_offset_y: f32,
+                        shadow_blur_radius: f32,
+                        text_color: Option<IpgColor>,
+                        text_rgba: Option<[f32; 4]>,
+                        gen_id: Option<usize>,
+                        ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
+        let background_color_hovered: Option<Color> = get_color(background_rgba_hovered, background_color_hovered, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
+        let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgCanvasTimerStyle(
+            IpgCanvasTimerStyle::new( 
+                id,
+                background_color,
+                background_color_hovered,
+                border_color,
+                border_radius,
+                border_width,
+                shadow_color,
+                shadow_offset_x,
+                shadow_offset_y,
+                shadow_blur_radius,
+                text_color,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -5040,6 +5099,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgCanvasTimer(ctim) => {
             canvas_timer_item_update(ctim, item, value);
         },
+        IpgWidgets::IpgCanvasTimerStyle(style) => {
+            canvas_timer_style_update_item(style, item, value);
+        },
         IpgWidgets::IpgToggler(tog) => {
             toggler_item_update(tog, item, value);
         },
@@ -5153,6 +5215,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgTimerParam>()?;
     m.add_class::<IpgTimerStyleParam>()?;
     m.add_class::<IpgCanvasTimerParam>()?;
+     m.add_class::<IpgCanvasTimerStyleParam>()?;
     m.add_class::<IpgTogglerParam>()?;
     m.add_class::<IpgWindowParam>()?;
     m.add_class::<IpgWindowLevel>()?;

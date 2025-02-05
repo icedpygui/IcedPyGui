@@ -365,7 +365,12 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     value_bool: Some(ctim.started),
                     ..Default::default()
                 }
-            }
+            },
+            IpgWidgets::IpgCanvasTimerStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgToggler(tog) => {
                 if let Some(tg) = wci.on_toggle { tog.is_toggled = tg }
                 return WidgetCallbackOut{

@@ -2917,6 +2917,61 @@ class IPG:
             The id of the event which can be used to modify the event through update_item.
         """
 
+    def add_canvas_timer_style(self,
+                            background_color: Optional[IpgColor]=None,
+                            background_rgba: Optional[list[float, 4]]=None,
+                            background_color_hovered: Optional[IpgColor]=None,
+                            background_rgba_hovered: Optional[list[float, 4]]=None,
+                            border_color: Optional[IpgColor]=None, 
+                            border_rgba: Optional[list[float, 4]]=None,
+                            border_radius: list[float | float, 4]=[0.0], 
+                            border_width: float=1.0,
+                            shadow_color: Optional[IpgColor]=None, 
+                            shadow_rgba: Optional[list]=None,
+                            shadow_offset_x: float=0.0, 
+                            shadow_offset_y: float=0.0,
+                            shadow_blur_radius: float=1.0,
+                            text_color: Optional[IpgColor]=None, 
+                            text_rgba: Optional[list[float, 4]]=None
+                        ) -> int:
+        """
+        Adds styling to canvas timer button
+
+        Parameters
+        ----------
+            background_color: Optional[IpgColor]=None
+                Color of the background.
+            background_rgba: Optional[list[float, 4]]=None
+                Color of the background in rgba format.
+            background_color_hovered: Optional[IpgColor]=None,
+                Color to use when the mouse hovers.
+            background_rgba_hovered: Optional[list[float, 4]]=None,
+                Color to use when the mouse hovers in rgba format.
+            border_color: Optional[IpgColor]=None
+                Color used for the border.
+            border_rgba: list[float; 4]=None
+                Color of the border in rgba format.
+            border_radius: Optional[list[float]]=None
+                The radius border, [float]=all corners, 
+                [float, 4]=[top-left, top-right, bottom-right, bottom-left].
+            border_width: float
+                Border width.
+            shadow_color: IpgColor
+                The color of the shadow.
+            shadow_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            shadow_offset_x: float
+                Shadow offset in the horizontal direction.
+            shadow_offset_y: float
+                Shadow offset in the vertical direction.
+            shadow_blur_radius: float
+                The blur radius of the shadow.
+            text_color: IpgColor
+                The text color, if not defined, will either be a Black or White variation based on theme background.
+            text_rgba: list]
+                The color in rgba format [float; 4] used as state above.
+        """
+
     def add_toggler(self,
                     parent_id: str,
                     *,

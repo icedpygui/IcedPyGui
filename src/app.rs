@@ -883,7 +883,13 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                     construct_timer(timer.clone(), style_opt)
                 },
                 IpgWidgets::IpgCanvasTimer(ctimer) => {
-                    Some(construct_canvas_timer(ctimer.clone()))
+                    let style_opt = match ctimer.style_id.clone() {
+                        Some(id) => {
+                            state.widgets.get(&id).cloned()
+                        },
+                        None => None,
+                    };
+                    construct_canvas_timer(ctimer.clone(), style_opt)
                 },
                 IpgWidgets::IpgToggler(tog) => {
                     let style_opt = match tog.style_id.clone() {
