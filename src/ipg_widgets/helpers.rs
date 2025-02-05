@@ -314,6 +314,16 @@ pub fn try_extract_vec_f32(value: PyObject) -> Vec<f32> {
     })  
 }
 
+pub fn try_extract_vec_u16(value: PyObject) -> Vec<u16> {
+    Python::with_gil(|py| {
+        let res = value.extract::<Vec<u16>>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python list[uint]"),
+        }
+    })  
+}
+
 pub fn try_extract_string(value: PyObject) -> String {
     Python::with_gil(|py| {
         let res = value.extract::<String>(py);

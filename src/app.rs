@@ -835,11 +835,11 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                 IpgWidgets::IpgRule(rule) => {
                     let style_opt = match rule.style_id.clone() {
                         Some(id) => {
-                            state.rule_style.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st.clone())
                         },
                         None => None,
                     };
-                    Some(construct_rule(rule.clone(), style_opt))
+                    construct_rule(rule.clone(), style_opt)
                 },
                 IpgWidgets::IpgSelectableText(sltxt) => {
                     Some(construct_selectable_text(sltxt.clone()))

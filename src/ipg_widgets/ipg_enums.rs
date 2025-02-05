@@ -21,7 +21,7 @@ use super::ipg_pick_list::{IpgPickList, IpgPickListStyle};
 use super::ipg_progress_bar::{IpgProgressBar, IpgProgressBarStyle};
 use super::ipg_radio::{IpgRadio, IpgRadioStyle};
 use super::ipg_row::IpgRow;
-use super::ipg_rule::IpgRule;
+use super::ipg_rule::{IpgRule, IpgRuleStyle};
 use super::ipg_scrollable::IpgScrollable;
 use super::ipg_selectable_text::IpgSelectableText;
 use super::ipg_slider::IpgSlider;
@@ -76,6 +76,7 @@ pub enum IpgWidgets {
     IpgRadio(IpgRadio),
     IpgRadioStyle(IpgRadioStyle),
     IpgRule(IpgRule),
+    IpgRuleStyle(IpgRuleStyle),
     IpgSelectableText(IpgSelectableText),
     IpgSlider(IpgSlider),
     IpgSpace(IpgSpace),

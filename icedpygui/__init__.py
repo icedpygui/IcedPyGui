@@ -15,6 +15,7 @@ from .icedpygui import IpgOpaqueParam
 from .icedpygui import IpgPickListParam, IpgPickListHandle, IpgPickListStyleParam
 from .icedpygui import IpgProgressBarParam, IpgProgressBarStyleParam
 from .icedpygui import IpgRadioParam, IpgRadioDirection, IpgRadioStyleParam
+from .icedpygui import IpgRuleStyleParam
 from .icedpygui import IpgScrollableDirection, IpgScrollableParam
 from .icedpygui import IpgSelectableTextParam
 from .icedpygui import IpgSliderParam

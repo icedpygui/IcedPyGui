@@ -56,7 +56,7 @@ use ipg_widgets::ipg_pick_list::{pick_list_item_update, pick_list_style_update_i
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, progress_bar_style_update_item, IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle, IpgProgressBarStyleParam};
 use ipg_widgets::ipg_radio::{radio_item_update, radio_style_update_item, IpgRadio, IpgRadioDirection, IpgRadioParam, IpgRadioStyle, IpgRadioStyleParam};
 use ipg_widgets::ipg_row::IpgRow;
-use ipg_widgets::ipg_rule::{IpgRule, IpgRuleStyle};
+use ipg_widgets::ipg_rule::{rule_style_update_item, IpgRule, IpgRuleStyle, IpgRuleStyleParam};
 use ipg_widgets::ipg_scrollable::{scrollable_item_update, 
         IpgScrollable, IpgScrollableAlignment, 
         IpgScrollableDirection, IpgScrollableParam, IpgScrollableStyle};
@@ -2781,14 +2781,14 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let mut state = access_state();
-
         let background_color = get_color(background_rgba, background_color, 1.0, false);
         let background_color_hovered = get_color(background_rgba_hovered, background_color_hovered, 1.0, false);
         let dot_color: Option<Color> = get_color(dot_rgba, dot_color, 1.0, false);
         let dot_color_hovered: Option<Color> = get_color(dot_rgba_hovered, dot_color_hovered, 1.0, false);
         let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
         let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
+
+        let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgRadioStyle(
             IpgRadioStyle::new( 
@@ -2811,15 +2811,17 @@ impl IPG {
                         width_fill=true, 
                         thickness=1,
                         style_id=None,
-                        gen_id=None, 
+                        gen_id=None,
+                        show=true,
                         ))]
     fn add_rule_horizontal(&mut self, 
                             parent_id: String,
                             width: Option<f32>,
                             width_fill: bool,
                             thickness: u16,
-                            style_id: Option<String>,
-                            gen_id: Option<usize>, 
+                            style_id: Option<usize>,
+                            gen_id: Option<usize>,
+                            show: bool
                             ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -2840,6 +2842,7 @@ impl IPG {
                                                         thickness,
                                                         rule_type,
                                                         style_id,
+                                                        show,
                                                         )));
         state.last_id = id;
         drop(state);
@@ -2848,15 +2851,17 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, height=None, 
                         height_fill=true, thickness=1,
-                        style_id=None, gen_id=None 
+                        style_id=None, gen_id=None,
+                        show=true
                         ))]
     fn add_rule_vertical(&mut self, 
                             parent_id: String,
                             height: Option<f32>,
                             height_fill: bool,
                             thickness: u16,
-                            style_id: Option<String>,
-                            gen_id: Option<usize>, 
+                            style_id: Option<usize>,
+                            gen_id: Option<usize>,
+                            show: bool, 
                             ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -2876,14 +2881,15 @@ impl IPG {
                                                         height,
                                                         thickness,
                                                         rule_type,
-                                                        style_id, 
+                                                        style_id,
+                                                        show, 
                                                         )));
         state.last_id = id;
         drop(state);
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id,
+    #[pyo3(signature = (
                         color=None, 
                         color_rgba=None,
                         border_radius=None,
@@ -2892,30 +2898,31 @@ impl IPG {
                         fillmode_asymmetric_padding=None,
                         gen_id=None))]
     fn add_rule_style(&mut self,
-                            style_id: String,
-                            color: Option<IpgColor>,
-                            color_rgba: Option<[f32; 4]>,
-                            border_radius: Option<Vec<f32>>,
-                            fillmode_percent: Option<f32>,
-                            fillmode_padded: Option<u16>,
-                            fillmode_asymmetric_padding: Option<Vec<u16>>,
-                            gen_id: Option<usize>,
-                            ) -> PyResult<usize>
+                        color: Option<IpgColor>,
+                        color_rgba: Option<[f32; 4]>,
+                        border_radius: Option<Vec<f32>>,
+                        fillmode_percent: Option<f32>,
+                        fillmode_padded: Option<u16>,
+                        fillmode_asymmetric_padding: Option<Vec<u16>>,
+                        gen_id: Option<usize>,
+                        ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
 
-        let mut state = access_state();
-
         let color = get_color(color_rgba, color, 1.0, false);
         
-        state.rule_style.insert(style_id, IpgRuleStyle::new( 
-                                                    id,
-                                                    color,
-                                                    border_radius,
-                                                    fillmode_percent,
-                                                    fillmode_padded,
-                                                    fillmode_asymmetric_padding,
-                                                    ));
+       let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgRuleStyle(
+            IpgRuleStyle::new(
+                id,
+                color,
+                border_radius,
+                fillmode_percent,
+                fillmode_padded,
+                fillmode_asymmetric_padding,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -4935,6 +4942,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
             radio_style_update_item(style, item, value);
         },
         IpgWidgets::IpgRule(_) => (),
+        IpgWidgets::IpgRuleStyle(style) => {
+            rule_style_update_item(style, item, value);
+        },
         IpgWidgets::IpgSelectableText(st) => {
             selectable_text_item_update(st, item, value);
         },
@@ -5052,6 +5062,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgRadioDirection>()?;
     m.add_class::<IpgRadioParam>()?;
     m.add_class::<IpgRadioStyleParam>()?;
+    m.add_class::<IpgRuleStyleParam>()?;
     m.add_class::<IpgScrollableDirection>()?;
     m.add_class::<IpgScrollableParam>()?;
     m.add_class::<IpgSelectableTextParam>()?;

@@ -253,6 +253,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             IpgWidgets::IpgRule(_) => {
                 return WidgetCallbackOut::default()
             },
+            IpgWidgets::IpgRuleStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgSelectableText(st) => {
                 return WidgetCallbackOut{
                     user_data: st.user_data.clone(),
