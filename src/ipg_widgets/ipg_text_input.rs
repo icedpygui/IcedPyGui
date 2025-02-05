@@ -1,16 +1,18 @@
 //! ipg_text_input
 #![allow(clippy::enum_variant_names)]
+use crate::graphics::colors::get_color;
 use crate::{access_callbacks, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
-use super::helpers::{get_padding_f64, get_radius, get_width};
+use super::helpers::{get_padding_f64, get_radius, get_width, try_extract_ipg_color, try_extract_rgba_color, try_extract_vec_f32};
 use super::helpers::{try_extract_boolean, try_extract_f64, 
     try_extract_string, try_extract_u16, try_extract_vec_f64};
+use super::ipg_enums::IpgWidgets;
 
 use iced::widget::text::LineHeight;
 use iced::widget::text_input;
 use iced::widget::text_input::{Style, Status};
 use iced::{Color, Element, Length, Padding, Pixels, Theme};
-use iced::widget::{TextInput, Space};
+use iced::widget::TextInput;
 
 use pyo3::pyclass;
 use pyo3::{PyObject, Python};
@@ -29,7 +31,7 @@ pub struct IpgTextInput {
     pub line_height: LineHeight,
     pub user_data: Option<PyObject>,
     // icon: Option<Message>,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
     pub show: bool,
 }
 
@@ -45,7 +47,7 @@ impl IpgTextInput {
         line_height: LineHeight,
         user_data: Option<PyObject>,
         // icon: Option<Message>,
-        style_id: Option<String>,
+        style_id: Option<usize>,
         show: bool,
         ) -> Self {
         Self {
@@ -120,12 +122,14 @@ pub enum TIMessage {
 }
 
 pub fn construct_text_input(input: IpgTextInput, 
-                            style_opt: Option<IpgTextInputStyle>) 
-                            -> Element<'static, app::Message> {
+                            style_opt: Option<IpgWidgets>) 
+                            -> Option<Element<'static, app::Message>> {
     
     if !input.show {
-        return Space::new(0.0, 0.0).into()
+        return None
     }
+
+    let style = get_text_input_style(style_opt);
     
     let txt: Element<TIMessage> =  TextInput::new(input.placeholder.as_str(), 
                                                 input.value.as_str()
@@ -147,11 +151,11 @@ pub fn construct_text_input(input: IpgTextInput,
                                             // })
                                             .style(move|theme, status|
                                                 get_styling(theme, status, 
-                                                    style_opt.clone(),
+                                                    style.clone(),
                                                 ))
                                             .into();
 
-    txt.map(move |message| app::Message::TextInput(input.id, message))
+    Some(txt.map(move |message| app::Message::TextInput(input.id, message)))
 
 }
 
@@ -294,7 +298,7 @@ pub fn text_input_item_update(ti: &mut IpgTextInput,
             ti.line_height = LineHeight::Relative(val);
         },
         IpgTextInputParam::StyleId => {
-            ti.style_id = Some(try_extract_string(value));
+            ti.style_id = Some(try_extract_f64(value) as usize);
         },
     }
 }
@@ -384,6 +388,116 @@ fn get_styling(theme: &Theme,
             style_base
         }
     }
+}
 
+fn get_text_input_style(style: Option<IpgWidgets>) -> Option<IpgTextInputStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgTextInputStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgTextInputStyleParam {
+    BackgroundIpgColor,
+    BackgroundRgbaColor,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderIpgColorHovered,
+    BorderRgbaColorHovered,
+    BorderIpgColorFocused,
+    BorderRgbaColorFocused,
+    BorderWidth,
+    BorderRadius,
+    // icon_color,
+    PlaceholderIpgColor,
+    PlaceholderRgbaColor,
+    ValueIpgColor,
+    ValueRgbaColor,
+    SelectionIpgColor,
+    SelectionRgbaColor,
+}
+
+pub fn text_input_style_update_item(style: &mut IpgTextInputStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+    let update = try_extract_text_input_style_update(item);
+    match update {
+        IpgTextInputStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTextInputStyleParam::BackgroundRgbaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTextInputStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTextInputStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTextInputStyleParam::BorderIpgColorHovered => {
+            let color = try_extract_ipg_color(value);
+            style.border_color_hovered = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTextInputStyleParam::BorderRgbaColorHovered => {
+            style.border_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTextInputStyleParam::BorderIpgColorFocused => {
+            let color = try_extract_ipg_color(value);
+            style.border_color_focused = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTextInputStyleParam::BorderRgbaColorFocused => {
+            style.border_color_focused = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTextInputStyleParam::BorderWidth => {
+            style.border_width = Some(try_extract_f64(value) as f32);
+        },
+        IpgTextInputStyleParam::BorderRadius => {
+            style.border_radius = Some(try_extract_vec_f32(value))
+        },
+        IpgTextInputStyleParam::PlaceholderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.placeholder_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTextInputStyleParam::PlaceholderRgbaColor => {
+            style.placeholder_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTextInputStyleParam::ValueIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.value_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTextInputStyleParam::ValueRgbaColor => {
+            style.value_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgTextInputStyleParam::SelectionIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.selection_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTextInputStyleParam::SelectionRgbaColor => {
+            style.selection_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+    }
+
+}
+
+fn try_extract_text_input_style_update(update_obj: PyObject) -> IpgTextInputStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgTextInputStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Text Input style update extraction failed"),
+        }
+    })
 }

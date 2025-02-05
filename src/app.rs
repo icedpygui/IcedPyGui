@@ -867,11 +867,11 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                 IpgWidgets::IpgTextInput(input) => {
                     let style_opt = match input.style_id.clone() {
                         Some(id) => {
-                            state.text_input_style.get(&id).cloned()
+                            state.widgets.get(&id).cloned()
                         },
                         None => None,
                     };
-                    Some(construct_text_input(input.clone(), style_opt))       
+                    construct_text_input(input.clone(), style_opt)       
                 },
                 IpgWidgets::IpgTimer(timer) => {
                     Some(construct_timer(timer.clone()))

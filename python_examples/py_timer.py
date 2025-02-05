@@ -1,7 +1,7 @@
 from icedpygui import IPG, IpgTextParam, IpgTimerParam, IpgButtonStyleParam
 from icedpygui import IpgCheckboxStyleParam, IpgColorPickerStyleParam, IpgPickListStyleParam
 from icedpygui import IpgColor, IpgProgressBarStyleParam, IpgRadioStyleParam
-from icedpygui import IpgRuleStyleParam, IpgSliderStyleParam
+from icedpygui import IpgRuleStyleParam, IpgSliderStyleParam, IpgTextInputStyleParam
 
 
 colors = [IpgColor.PRIMARY, IpgColor.SECONDARY, IpgColor.SUCCESS, IpgColor.DANGER, IpgColor.WARNING, 
@@ -58,6 +58,7 @@ def on_tick(timer_id: int, counter: int):
     ipg.update_item(rl_style, IpgRuleStyleParam.IpgColor, colors[counter])
     ipg.update_item(sl_style, IpgSliderStyleParam.RailIpgColor, colors[counter])
     ipg.update_item(sl_style, IpgSliderStyleParam.HandleIpgColor, colors[counter])
+    ipg.update_item(ti_style, IpgTextInputStyleParam.BackgroundIpgColor, colors[counter])
 
 
 # Fires on stopping
@@ -91,6 +92,7 @@ pb_style = ipg.add_progress_bar_style(background_color=IpgColor.PRIMARY)
 rd_style = ipg.add_radio_style(background_color=IpgColor.PRIMARY)
 rl_style = ipg.add_rule_style(color=IpgColor.PRIMARY)
 sl_style = ipg.add_slider_style(rail_color=IpgColor.PRIMARY, handle_color=IpgColor.PRIMARY)
+ti_style = ipg.add_text_input_style(background_color=IpgColor.PRIMARY, placeholder_color=IpgColor.WHITE)
 
 
 btn_id = ipg.add_button(parent_id="col",
@@ -134,6 +136,11 @@ sl_id = ipg.add_slider(parent_id="col",
                        value=50.0,
                        width=300.0,
                        style_id=sl_style)
+
+ti_id = ipg.add_text_input(parent_id="col",
+                           placeholder="Text Input",
+                           width=200.0,
+                           style_id=ti_style)
 
 # The time duration is in milliseconds, so 1 second interval, in this case.
 # The three callbacks start, stop, and tick are defined.

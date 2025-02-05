@@ -70,8 +70,7 @@ use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit,
 use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam, 
         IpgTableRowHighLight, IpgTableWidget,};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
-use ipg_widgets::ipg_text_input::{text_input_item_update, 
-        IpgTextInputStyle, IpgTextInput, IpgTextInputParam};
+use ipg_widgets::ipg_text_input::{text_input_item_update, text_input_style_update_item, IpgTextInput, IpgTextInputParam, IpgTextInputStyle, IpgTextInputStyleParam};
 use ipg_widgets::ipg_timer::{timer_item_update, IpgTimer, IpgTimerParam};
 use ipg_widgets::ipg_toggle::{toggler_item_update, IpgToggler, 
         IpgTogglerParam, IpgTogglerStyle};
@@ -3522,20 +3521,22 @@ impl IPG {
 
         let mut state = access_state();
         
-        state.widgets.insert(id, IpgWidgets::IpgText(IpgText::new(
-                                        id,
-                                        content,
-                                        size,
-                                        line_height,
-                                        width,
-                                        height,
-                                        horizontal_alignment,
-                                        vertical_alignment,
-                                        // font: Font,
-                                        shaping,
-                                        show,
-                                        style,
-                                    )));
+        state.widgets.insert(id, IpgWidgets::IpgText(
+            IpgText::new(
+                id,
+                content,
+                size,
+                line_height,
+                width,
+                height,
+                horizontal_alignment,
+                vertical_alignment,
+                // font: Font,
+                shaping,
+                show,
+                style,
+            )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -3568,7 +3569,7 @@ impl IPG {
                             line_height_relative: Option<f32>,
                             user_data: Option<PyObject>,
                             is_secure: bool,
-                            style_id: Option<String>,
+                            style_id: Option<usize>,
                             show: bool,
                         ) -> PyResult<usize> 
     {
@@ -3596,25 +3597,27 @@ impl IPG {
 
         let mut state = access_state();
         
-        state.widgets.insert(id, IpgWidgets::IpgTextInput(IpgTextInput::new( 
-                                                                id,
-                                                                placeholder,
-                                                                is_secure,
-                                                                // font,
-                                                                width,
-                                                                padding,
-                                                                size,
-                                                                line_height,
-                                                                user_data,
-                                                                style_id,
-                                                                show,
-                                                                )));
+        state.widgets.insert(id, IpgWidgets::IpgTextInput(
+            IpgTextInput::new( 
+                id,
+                placeholder,
+                is_secure,
+                // font,
+                width,
+                padding,
+                size,
+                line_height,
+                user_data,
+                style_id,
+                show,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id, 
+    #[pyo3(signature = ( 
                         background_color=None,
                         background_rgba=None,
                         border_color=None,
@@ -3635,27 +3638,26 @@ impl IPG {
                         selection_rgba=None,
                         gen_id=None))]
     fn add_text_input_style(&mut self,
-                                style_id: String,
-                                background_color: Option<IpgColor>,
-                                background_rgba: Option<[f32; 4]>,
-                                border_color: Option<IpgColor>,
-                                border_rgba: Option<[f32; 4]>,
-                                border_color_hovered: Option<IpgColor>,
-                                border_rgba_hovered: Option<[f32; 4]>,
-                                border_color_focused: Option<IpgColor>,
-                                border_rgba_focused: Option<[f32; 4]>,
-                                border_width: Option<f32>,
-                                border_radius: Option<Vec<f32>>,
-                                // icon_color: Option<IpgColor>,
-                                // icon_rgba: Option<[f32; 4]>,
-                                placeholder_color: Option<IpgColor>,
-                                placeholder_rgba: Option<[f32; 4]>,
-                                value_color: Option<IpgColor>,
-                                value_rgba: Option<[f32; 4]>,
-                                selection_color: Option<IpgColor>,
-                                selection_rgba: Option<[f32; 4]>,
-                                gen_id: Option<usize>,
-                                ) -> PyResult<usize>
+                            background_color: Option<IpgColor>,
+                            background_rgba: Option<[f32; 4]>,
+                            border_color: Option<IpgColor>,
+                            border_rgba: Option<[f32; 4]>,
+                            border_color_hovered: Option<IpgColor>,
+                            border_rgba_hovered: Option<[f32; 4]>,
+                            border_color_focused: Option<IpgColor>,
+                            border_rgba_focused: Option<[f32; 4]>,
+                            border_width: Option<f32>,
+                            border_radius: Option<Vec<f32>>,
+                            // icon_color: Option<IpgColor>,
+                            // icon_rgba: Option<[f32; 4]>,
+                            placeholder_color: Option<IpgColor>,
+                            placeholder_rgba: Option<[f32; 4]>,
+                            value_color: Option<IpgColor>,
+                            value_rgba: Option<[f32; 4]>,
+                            selection_color: Option<IpgColor>,
+                            selection_rgba: Option<[f32; 4]>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
 
@@ -3670,19 +3672,21 @@ impl IPG {
 
         let mut state = access_state();
        
-        state.text_input_style.insert(style_id, IpgTextInputStyle::new( 
-                                                id,
-                                                background_color,
-                                                border_color,
-                                                border_color_hovered,
-                                                border_color_focused,
-                                                border_width,
-                                                border_radius,
-                                                // icon_color,
-                                                placeholder_color,
-                                                value_color,
-                                                selection_color,
-                                                ));
+        state.widgets.insert(id, IpgWidgets::IpgTextInputStyle(
+            IpgTextInputStyle::new( 
+                id,
+                background_color,
+                border_color,
+                border_color_hovered,
+                border_color_focused,
+                border_width,
+                border_radius,
+                // icon_color,
+                placeholder_color,
+                value_color,
+                selection_color,
+                )));
+
         state.last_id = id;                                        
         drop(state);
         Ok(id)
@@ -4952,8 +4956,8 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgSlider(slider) => {
             slider_item_update(slider, item, value)
         },
-        IpgWidgets::IpgSliderStyle(slider) => {
-            slider_style_update_item(slider, item, value)
+        IpgWidgets::IpgSliderStyle(style) => {
+            slider_style_update_item(style, item, value)
         },
         IpgWidgets::IpgSpace(_) => (),
         IpgWidgets::IpgSvg(sg) => {
@@ -4964,6 +4968,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         },
         IpgWidgets::IpgTextInput(ti) => {
             text_input_item_update(ti, item, value);
+        },
+        IpgWidgets::IpgTextInputStyle(style) => {
+            text_input_style_update_item(style, item, value);
         },
         IpgWidgets::IpgTimer(tim) => {
             timer_item_update(tim, item, value);
@@ -5079,6 +5086,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgTableParam>()?;
     m.add_class::<IpgTableWidget>()?;
     m.add_class::<IpgTextInputParam>()?;
+    m.add_class::<IpgTextInputStyleParam>()?;
     m.add_class::<IpgTextParam>()?;
     m.add_class::<IpgTimerParam>()?;
     m.add_class::<IpgCanvasTimerParam>()?;

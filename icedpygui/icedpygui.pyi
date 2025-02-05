@@ -5004,6 +5004,25 @@ class IpgTextParam:
     Show: bool
 
 
+class IpgTextInputStyleParam:
+    BackgroundIpgColor=IpgColor
+    BackgroundRgbaColor=list[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderIpgColorHovered=IpgColor
+    BorderRgbaColorHovered=list[float, 4]
+    BorderIpgColorFocused=IpgColor
+    BorderRgbaColorFocused=list[float, 4]
+    BorderWidth=float
+    BorderRadius=list[float]
+    PlaceholderIpgColor=IpgColor
+    PlaceholderRgbaColor=list[float, 4]
+    ValueIpgColor=IpgColor
+    ValueRgbaColor=list[float, 4]
+    SelectionIpgColor=IpgColor
+    SelectionRgbaColor=list[float, 4]
+
+
 class IpgTimerParam:
     DurationMs=int
     ArrowStyle=str

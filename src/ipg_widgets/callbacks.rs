@@ -326,6 +326,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 wco.user_data = input.user_data.clone();
                 return wco
             },
+            IpgWidgets::IpgTextInputStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgTimer(tim) => {
                 tim.counter += 1;
                 // value_str is set when a tick occurs

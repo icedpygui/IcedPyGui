@@ -23,7 +23,7 @@ from .icedpygui import IpgStackParam
 from .icedpygui import IpgStyleStandard
 from .icedpygui import IpgSvgParam
 from .icedpygui import IpgTableRowHighLight, IpgTableWidget, IpgTableParam
-from .icedpygui import IpgTextInputParam
+from .icedpygui import IpgTextInputParam, IpgTextInputStyleParam
 from .icedpygui import IpgTextParam
 from .icedpygui import IpgTimerParam, IpgCanvasTimerParam
 from .icedpygui import IpgTogglerParam
