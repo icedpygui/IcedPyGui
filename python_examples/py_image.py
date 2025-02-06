@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgImageParam, IpgTextParam, IpgSvgParam
-from icedpygui import IpgAlignment, IpgMousePointer
+from icedpygui import IpgAlignment, IpgMousePointer, IpgTimerParam
 import os, math
 
 
@@ -87,6 +87,8 @@ def increment_radians(timer_id: int, counter: int):
     ipg.update_item(tiger_ids[3], IpgSvgParam.RotationRadians, radians)
 
 
+def change_label(timer_id: int, counter: int):
+    ipg.update_item(timer_id, IpgTimerParam.Label, "Stop Ferris")
 
 # Add the window
 ipg.add_window(window_id="main", title="Date Picker Demo", width=600, height=500,
@@ -155,8 +157,12 @@ ipg.add_row(window_id="main", container_id="row3", parent_id="col")
 for i in range(0, 4):
     text_points.append(ipg.add_text(parent_id="row3", content="Point", width=100.0))
 
-ipg.add_timer(parent_id="col", start_label="Rotate Ferris", stop_label="Stop Ferris",
-              duration_ms=1000, on_tick=increment_radians)
+ipg.add_timer(
+        parent_id="col",
+        label="Rotate Ferris",
+        duration_ms=300, 
+        on_tick=increment_radians,
+        on_start=change_label)
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

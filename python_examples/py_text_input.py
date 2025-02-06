@@ -95,69 +95,135 @@ def change_line_height(_btn_id):
 
 # Add some styling
 def add_style(_btn_id):
-    ipg.update_item(ti_id, IpgTextInputParam.StyleId, "ti_style")
+    ipg.update_item(ti_id, IpgTextInputParam.StyleId, ti_style)
 
 
 # add the window
-ipg.add_window("main", "Text Input Demo", 600, 600,
-                pos_x=100, pos_y=25)
+ipg.add_window(
+        window_id="main", 
+        title="Text Input Demo", 
+        width=600, 
+        height=600,
+        pos_x=100, 
+        pos_y=25)
 
 # add the column for the widgets, centered
-ipg.add_column("main", container_id="col",
-               align_items=IpgAlignment.Center,
-               height_fill=True, width_fill=True, spacing=10)
+ipg.add_column(
+        window_id="main", 
+        container_id="col",
+        align_items=IpgAlignment.Center,
+        height_fill=True, 
+        width_fill=True, 
+        spacing=10)
 
 # Add some instructions
-ipg.add_text(parent_id="col", content="It's best to see the effects by pressing the buttons left to right and top to "
-                                      "bottom")
+ipg.add_text(
+        parent_id="col", 
+        content="It's best to see the effects by pressing the buttons left to right and top to bottom")
 
-ipg.add_space(parent_id="col", height=25.0)
+ipg.add_space(
+        parent_id="col", 
+        height=25.0)
 
 # Add the text_input widget
-ti_id = ipg.add_text_input(parent_id="col", placeholder="Input Some Text",
-                           width=200.0,
-                           on_input=on_input,
-                           on_submit=on_submit,
-                           on_paste=on_paste)
+ti_id = ipg.add_text_input(
+                parent_id="col", 
+                placeholder="Input Some Text",
+                width=200.0,
+                on_input=on_input,
+                on_submit=on_submit,
+                on_paste=on_paste)
 
 # Add the text widget to display the info
-text_on_input_id = ipg.add_text(parent_id="col", content="Text here will be added when typed")
+text_on_input_id = ipg.add_text(
+                            parent_id="col", 
+                            content="Text here will be added when typed")
 
-text_on_submit_id = ipg.add_text(parent_id="col", content="Text here will be added when submitted")
+text_on_submit_id = ipg.add_text(
+                            parent_id="col", 
+                            content="Text here will be added when submitted")
 
-text_on_paste_id = ipg.add_text(parent_id="col", content="Text here will be added when pasted")
+text_on_paste_id = ipg.add_text(
+                            parent_id="col", 
+                            content="Text here will be added when pasted")
 
 # Add row for buttons
-ipg.add_row(window_id="main", container_id="row_1", parent_id="col")
-ipg.add_button(parent_id="row_1", label="Press Me to Change Placeholder", on_press=change_placeholder)
-ipg.add_button(parent_id="row_1", label="Press Me to Change Value", on_press=change_value)
+ipg.add_row(
+        window_id="main", 
+        container_id="row_1", 
+        parent_id="col")
 
-ipg.add_row(window_id="main", container_id="row_2", parent_id="col")
-ipg.add_button(parent_id="row_2", label="Toggle the Secure Setting", on_press=toggle_secure)
-ipg.add_button(parent_id="row_2", label="Press Me to Change the Width", on_press=change_width)
+ipg.add_button(
+        parent_id="row_1", 
+        label="Press Me to Change Placeholder", 
+        on_press=change_placeholder)
 
-ipg.add_row(window_id="main", container_id="row_3", parent_id="col")
-ipg.add_button(parent_id="row_3", label="Press Me to Change the Padding", on_press=change_padding)
-ipg.add_button(parent_id="row_3", label="Press Me to Change the Size", on_press=change_size)
+ipg.add_button(
+        parent_id="row_1", 
+        label="Press Me to Change Value", 
+        on_press=change_value)
 
-ipg.add_row(window_id="main", container_id="row_4", parent_id="col")
-ipg.add_button(parent_id="row_4", label="Press Me to Change the LineHeight", on_press=change_line_height)
+ipg.add_row(
+        window_id="main", 
+        container_id="row_2", 
+        parent_id="col")
 
-ipg.add_row(window_id="main", container_id="row_5", parent_id="col")
-ipg.add_button(parent_id="row_5", label="Press Me to Add Some Styling", on_press=add_style)
+ipg.add_button(
+        parent_id="row_2", 
+        label="Toggle the Secure Setting", 
+        on_press=toggle_secure)
+
+ipg.add_button(
+        parent_id="row_2", 
+        label="Press Me to Change the Width", 
+        on_press=change_width)
+
+ipg.add_row(
+        window_id="main", 
+        container_id="row_3", 
+        parent_id="col")
+
+ipg.add_button(
+        parent_id="row_3", 
+        label="Press Me to Change the Padding", 
+        on_press=change_padding)
+
+ipg.add_button(
+        parent_id="row_3", 
+        label="Press Me to Change the Size", 
+        on_press=change_size)
+
+ipg.add_row(
+        window_id="main", 
+        container_id="row_4", 
+        parent_id="col")
+
+ipg.add_button(
+        parent_id="row_4", 
+        label="Press Me to Change the LineHeight", 
+        on_press=change_line_height)
+
+ipg.add_row(
+        window_id="main", 
+        container_id="row_5", 
+        parent_id="col")
+
+ipg.add_button(
+        parent_id="row_5", 
+        label="Press Me to Add Some Styling", 
+        on_press=add_style)
 
 # the add style functions can be place anywhere as long as they are before the start_session
-ipg.add_text_input_style(style_id="ti_style", 
-                         background_color=IpgColor.CADET_BLUE,
-                         border_color=IpgColor.YELLOW,
-                         border_color_focused=IpgColor.PALE_GOLDEN_ROD,
-                         border_color_hovered=IpgColor.CHARTREUSE,
-                         border_width=5.0,
-                         border_radius=[8.0],
-                         placeholder_color=IpgColor.BLACK,
-                         value_color=IpgColor.LIGHT_STEEL_BLUE,
-                         selection_color=IpgColor.DARK_SLATE_GRAY
-                         )
+ti_style = ipg.add_text_input_style( 
+                    background_color=IpgColor.CADET_BLUE,
+                    border_color=IpgColor.YELLOW,
+                    border_color_focused=IpgColor.PALE_GOLDEN_ROD,
+                    border_color_hovered=IpgColor.CHARTREUSE,
+                    border_width=5.0,
+                    border_radius=[8.0],
+                    placeholder_color=IpgColor.BLACK,
+                    value_color=IpgColor.LIGHT_STEEL_BLUE,
+                    selection_color=IpgColor.DARK_SLATE_GRAY)
 
 
 # Required to be the last widget sent to Iced,  If you start the program

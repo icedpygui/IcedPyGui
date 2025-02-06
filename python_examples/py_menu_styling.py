@@ -84,10 +84,11 @@ items = OrderedDict({"Menu0": [(None, IpgMenuType.Dot),
 
 # Add styling to all the buttons
 # To add styling to any widget, use that widgets style command.
-ipg.add_button_style("btn", border_radius=[10.0])
-ipg.add_button_style("bar-btn-dark", border_radius=[10.0], 
-                     border_color=IpgColor.LIGHT_BLUE,
-                     border_width=2.0,)
+btn = ipg.add_button_style(border_radius=[10.0])
+bar_btn_dark = ipg.add_button_style(
+                    border_radius=[10.0], 
+                    border_color=IpgColor.LIGHT_BLUE,
+                    border_width=2.0,)
 
 # To modify the separators in the menu, use the separator style
 ipg.add_menu_separator_style(style_id="line-dark", 
@@ -95,7 +96,7 @@ ipg.add_menu_separator_style(style_id="line-dark",
                              separator_color=IpgColor.BLUE)
 
 
-ipg.add_button_style("bar-btn-light", border_radius=[10.0])
+bar_btn_light = ipg.add_button_style(border_radius=[10.0])
 
 
 

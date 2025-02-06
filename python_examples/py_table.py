@@ -16,20 +16,28 @@ def widget_toggler(tbl_id: int, index: tuple[int, int], on_toggle: bool):
     print(tbl_id, index, on_toggle)
 
 
-ipg.add_button_style("btn_style", border_radius=[10.0])
-ipg.add_checkbox_style("chk_style", border_width=3.0)
-ipg.add_toggler_style("tog_style",
-                      background_border_width=2.0, 
-                      background_border_color=IpgColor.YELLOW)
+btn_style = ipg.add_button_style(border_radius=[10.0])
+chk_style = ipg.add_checkbox_style(border_width=3.0)
+tog_style = ipg.add_toggler_style(
+                    background_border_width=2.0, 
+                    background_border_color=IpgColor.YELLOW)
 
 # Add the window
-ipg.add_window(window_id="main", title="Table Demo", width=800, height=800,
-               pos_x=100, pos_y=25)
+ipg.add_window(
+        window_id="main", 
+        title="Table Demo",
+        width=800, 
+        height=800,
+        pos_x=100, 
+        pos_y=25)
 
 # Add the container, since the table requires a width and height,
 # the container can shrink(default) to fit.
-ipg.add_container(window_id="main", container_id="cont",
-                  width_fill=True, height_fill=True)
+ipg.add_container(
+        window_id="main", 
+        container_id="cont",
+        width_fill=True, 
+        height_fill=True)
 
 # Initialize the lists.
 col0 = []
@@ -89,26 +97,26 @@ col_widths = [90, 100, 150, 75, 75, 75, 75]
 table_width = sum(col_widths)
 
 # The table is added.
-ipg.add_table(window_id="main",
-              table_id="table",
-              parent_id="cont",
-              title="My Table",
-              data=data,
-              data_length=len(col1),
-              column_widths=col_widths,
-              width=table_width,
-              height=300.0,
-              row_highlight=IpgTableRowHighLight.Lighter,
-              button_fill_columns=[0],
-              button_fill_style_id="btn_style",
-              checkbox_fill_columns=[1],
-              checkbox_fill_style_id="chk_style",
-              toggler_fill_columns=[2],
-              toggler_fill_style_id="tog_style",
-              on_button=widget_button,
-              on_checkbox=widget_checkbox,
-              on_toggler=widget_toggler,
-              )
+ipg.add_table(
+        window_id="main",
+        table_id="table",
+        parent_id="cont",
+        title="My Table",
+        data=data,
+        data_length=len(col1),
+        column_widths=col_widths,
+        width=table_width,
+        height=300.0,
+        row_highlight=IpgTableRowHighLight.Lighter,
+        button_fill_columns=[0],
+        button_fill_style_id="btn_style",
+        checkbox_fill_columns=[1],
+        checkbox_fill_style_id="chk_style",
+        toggler_fill_columns=[2],
+        toggler_fill_style_id="tog_style",
+        on_button=widget_button,
+        on_checkbox=widget_checkbox,
+        on_toggler=widget_toggler)
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

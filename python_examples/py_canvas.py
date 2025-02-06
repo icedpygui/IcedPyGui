@@ -23,25 +23,24 @@ ipg.add_bezier(canvas_id="canvas",
                stroke_width=2.0)
 
 ipg.add_circle(canvas_id="canvas",
-               center_xy=(100.0, 100.0),
+               position_xy=(100.0, 100.0),
                radius=25.0,
                stroke_width=1.0,
-               color=IpgColor.DARK_OLIVE_GREEN,
-               fill=True)
+               fill_ipg_color=IpgColor.DARK_OLIVE_GREEN,
+               )
 
 ipg.add_ellipse(canvas_id="canvas",
-                center_xy=(100.0, 275.0),
-                radii=(60.0, 10.0),
-                rotation=math.pi,
-                start_angle=0.0,
-                end_angle=math.pi*2,
+                position_xy=(100.0, 275.0),
+                radius_x=60.0, 
+                radius_y=10.0,
+                degrees=math.pi,
                 stroke_width=2.0,
                 )
 
 ipg.add_line(canvas_id="canvas",
              start=(50.0, 350.0), 
              end=(300.0, 370.0),
-             color=IpgColor.YELLOW,
+             stroke_ipg_color=IpgColor.YELLOW,
              stroke_width=2.0,)
 
 ipg.add_rectangle(canvas_id="canvas",

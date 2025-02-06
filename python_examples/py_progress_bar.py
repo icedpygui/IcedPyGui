@@ -65,30 +65,53 @@ def hide_bar(_btn_id: int, pg_id: any):
 
 
 # Add the window
-ipg.add_window(window_id="main", title="CheckBox Demo",
-               width=600, height=600, 
-               pos_centered=True)
+ipg.add_window(
+        window_id="main", 
+        title="CheckBox Demo",
+        width=600, 
+        height=600, 
+        pos_centered=True)
 
 # Add the container to help with alignment
-ipg.add_container(window_id="main", container_id="cont", width_fill=True,
-                  height_fill=True)
+ipg.add_container(
+        window_id="main", 
+        container_id="cont", 
+        width_fill=True,
+        height_fill=True)
 
 # Add a column for the widgets
-ipg.add_column("main", "col", parent_id="cont",
-               align_items=IpgAlignment.Center, spacing=2)
+ipg.add_column(
+        window_id="main", 
+        container_id="col", 
+        parent_id="cont",
+        align_items=IpgAlignment.Center, spacing=2)
 
-ipg.add_space(parent_id="col", height=50.0)
+ipg.add_space(
+        parent_id="col", 
+        height=50.0)
 
 # add a row for the  for the pg bar
-ipg.add_row(window_id="main", container_id="row1", parent_id="col",
-            width=400.0, padding=[0])
+ipg.add_row(
+        window_id="main", 
+        container_id="row1", 
+        parent_id="col",
+        width=400.0, 
+        padding=[0])
 
 # Add the pg bar
-pg_id = ipg.add_progress_bar("row1", 50.0, 100.0, value)
+pg_id = ipg.add_progress_bar(
+                parent_id="row1", 
+                min=50.0, 
+                max=100.0, 
+                value=value)
 
 # add a row to display text value at the start and end of the pg bar
-ipg.add_row(window_id="main", container_id="row2", parent_id="col",
-            width=400.0, padding=[0])
+ipg.add_row(
+        window_id="main", 
+        container_id="row2", 
+        parent_id="col",
+        width=400.0, 
+        padding=[0])
 
 # The text, space and more text just below the pg bar.
 min_text = ipg.add_text("row2", "50")
@@ -98,66 +121,112 @@ max_text = ipg.add_text("row2", "100")
 # Adding new column because current column has too small of a spacing value
 # This column can go into the column above because container only holds 1 widget
 # If this was more complex, you could add another container to the window then proceed.
-ipg.add_column("main", "col2", parent_id="col",
-               align_items=IpgAlignment.Center)
+ipg.add_column(
+        window_id="main", 
+        container_id="col2", 
+        parent_id="col",
+        align_items=IpgAlignment.Center)
 
 # Add a text widget for current value
-current_value_id = ipg.add_text(parent_id="col2", content=f"Current Value = {value}")
+current_value_id = ipg.add_text(
+                            parent_id="col2", 
+                            content=f"Current Value = {value}")
 
 # Add row for increment and decrement buttons
-ipg.add_row("main", "value_row", parent_id="col2")
+ipg.add_row(
+        window_id="main", 
+        container_id="value_row", 
+        parent_id="col2")
 
 # Increment button
-ipg.add_button("value_row", "Press Me to + ",
-               on_press=change_value_plus, user_data=pg_id)
+ipg.add_button(
+        parent_id="value_row", 
+        label="Press Me to + ",
+        on_press=change_value_plus, 
+        user_data=pg_id)
 
 # Decrement button
-ipg.add_button("value_row", "Press Me to - ",
-               on_press=change_value_minus, user_data=pg_id)
+ipg.add_button(
+        parent_id="value_row", 
+        label="Press Me to - ",
+        on_press=change_value_minus, 
+        user_data=pg_id)
 
 # add row for min and max
-ipg.add_row("main", "min_max_row", parent_id="col2")
+ipg.add_row(
+        window_id="main", 
+        container_id="min_max_row", 
+        parent_id="col2")
 
 # text input widgets are used for the inputs which you convert to floats in the callback
 # Numeric input widgets to come.  No error checking done.
-ipg.add_text_input("min_max_row", "Enter Min",
-                   on_submit=change_min, width=150.0, user_data=pg_id)
-ipg.add_text_input("min_max_row", "Enter Max",
-                   on_submit=change_max, width=150.0, user_data=pg_id)
+ipg.add_text_input(
+        parent_id="min_max_row", 
+        placeholder="Enter Min",
+        on_submit=change_min, 
+        width=150.0, 
+        user_data=pg_id)
+
+ipg.add_text_input(
+        parent_id="min_max_row", 
+        placeholder="Enter Max",
+        on_submit=change_max, 
+        width=150.0, 
+        user_data=pg_id)
 
 # Add a button the short the bar
-ipg.add_button("col2", "Press Me to shorten the bar",
-               on_press=change_width, user_data=pg_id)
+ipg.add_button(
+        parent_id="col2", 
+        label="Press Me to shorten the bar",
+        on_press=change_width, 
+        user_data=pg_id)
 
 # Add a button the lengthen the bar
-ipg.add_button("col2", "Press Me to to fill the bar width, do the above first",
-               on_press=change_width_to_fill, user_data=pg_id)
+ipg.add_button(
+        parent_id="col2", 
+        label="Press Me to to fill the bar width, do the above first",
+        on_press=change_width_to_fill, 
+        user_data=pg_id)
 
 # Add a button to hide the bar
-ipg.add_button("col2", "Press me to hide/show the bar.",
-               on_press=hide_bar, user_data=pg_id)
-
+ipg.add_button(
+        parent_id="col2", 
+        label="Press me to hide/show the bar.",
+        on_press=hide_bar, 
+        user_data=pg_id)
 
 # add some styling to a new bar
-ipg.add_progress_bar_style("border", 
-                           border_radius=[8.0], 
-                           border_color=IpgColor.BLUE,
-                           border_width=3.0,
-                           background_color=IpgColor.LIGHT_BLUE,
-                           bar_color=IpgColor.ALICE_BLUE)
+border = ipg.add_progress_bar_style( 
+                border_radius=[8.0], 
+                border_color=IpgColor.BLUE,
+                border_width=3.0,
+                background_color=IpgColor.LIGHT_BLUE,
+                bar_color=IpgColor.ALICE_BLUE)
 
 
 # Adding another bar and styling with a new background, bar color, and border.
-ipg.add_progress_bar("col2", 0.0, 100.0, 50.0,
-                     style="border")
+ipg.add_progress_bar(
+        parent_id="col2", 
+        min=0.0, 
+        max=100.0, 
+        value=50.0,
+        style_id=border)
 
-ipg.add_text(parent_id="col2", content="Styling with a new bar color, background color, and border")
+ipg.add_text(
+        parent_id="col2", 
+        content="Styling with a new bar color, background color, and border")
 
 # Adding another bar with just a standard styling.
-ipg.add_progress_bar("col2", 0.0, 100.0, 50.0,
-                     style_standard=IpgStyleStandard.Danger)
+ipg.add_progress_bar(
+        parent_id="col2", 
+        min=0.0, 
+        max=100.0, 
+        value=50.0,
+        style_standard=IpgStyleStandard.Danger)
 
-ipg.add_text(parent_id="col2", content="Styling with Danger standard style only")
+ipg.add_text(
+        parent_id="col2", 
+        content="Styling with Danger standard style only")
 
 
 # Required to be the last widget sent to Iced,  If you start the program

@@ -48,31 +48,31 @@ def add_buttons(window: str):
     ipg.add_row(window_id=window, container_id="row_btn2", parent_id="col",
                 align_items=IpgAlignment.Center)
 
-    ipg.add_button_style(style_id="dodger", 
-                        background_color=IpgColor.DODGER_BLUE)
+    dodger = ipg.add_button_style(background_color=IpgColor.DODGER_BLUE)
 
     ipg.add_button(parent_id="row_btn2", label="Custom Base Only Defined",
-                    style_id="dodger")
+                    style_id=dodger)
 
-    ipg.add_button_style(style_id="custom", 
-                      background_color=IpgColor.DODGER_BLUE,
-                      background_color_hovered=IpgColor.BLUE,
-                      border_color=IpgColor.DARK_GOLDEN_ROD,
-                      shadow_color=IpgColor.DARK_ORANGE,
-                      text_color=IpgColor.BLACK,
-                      border_radius=[12.0], 
-                      border_width=5.0,
-                      shadow_offset_x=0.0, 
-                      shadow_offset_y=0.0, 
-                      shadow_blur_radius=15.0)
+    custom = ipg.add_button_style(
+                    background_color=IpgColor.DODGER_BLUE,
+                    background_color_hovered=IpgColor.BLUE,
+                    border_color=IpgColor.DARK_GOLDEN_ROD,
+                    shadow_color=IpgColor.DARK_ORANGE,
+                    text_color=IpgColor.BLACK,
+                    border_radius=[12.0], 
+                    border_width=5.0,
+                    shadow_offset_x=0.0, 
+                    shadow_offset_y=0.0, 
+                    shadow_blur_radius=15.0)
     
-    ipg.add_button(parent_id="row_btn2", label="All Colors Custom",
-                   style_id="custom")
+    ipg.add_button(parent_id="row_btn2", 
+                   label="All Colors Custom",
+                   style_id=custom)
     
     ipg.add_row(window_id=window, container_id="row_btn3", parent_id="col",
                 align_items=IpgAlignment.Center)
     
-    ipg.add_button_style(style_id="std_border",
+    std_border = ipg.add_button_style(
                          border_color=IpgColor.GREEN,
                          border_radius=[12.0],
                          border_width=5.0,
@@ -83,7 +83,7 @@ def add_buttons(window: str):
                          )
     
     ipg.add_button(parent_id="row_btn3", label="Standard with Border and shadow",
-                    style_id="std_border",
+                    style_id=std_border,
                     style_standard=IpgStyleStandard.Success)
 
 # Add the windows

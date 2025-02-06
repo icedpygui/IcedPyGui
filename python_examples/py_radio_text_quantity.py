@@ -14,26 +14,41 @@ def radio_cb(id: int, selected: tuple):
     radio_label=selected[1]
     print(id, radio_index, radio_label)
 
-ipg.add_window("main", "Radio Demo", 1400, 600,
-                pos_x=100, pos_y=25)
+ipg.add_window(
+        window_id="main", 
+        title="Radio Demo", 
+        width=1400, 
+        height=600,
+        pos_x=100, 
+        pos_y=25)
 
-ipg.add_scrollable(window_id="main", container_id="scroller")
+ipg.add_scrollable(
+        window_id="main", 
+        container_id="scroller")
 
-ipg.add_column(window_id="main", container_id="col",
-               parent_id="scroller",
-               align_items=IpgAlignment.Start, 
-               padding=[5])
+ipg.add_column(
+        window_id="main", 
+        container_id="col",
+        parent_id="scroller",
+        align_items=IpgAlignment.Start, 
+        padding=[5])
 
 # The radio button limits are 26 groups with 26 items
 for i in range(0, 25):
-    ipg.add_row(window_id="main", container_id=f"row{i}", parent_id="col")
-    ipg.add_text(parent_id=f"row{i}", content=F"Row-{i}")
-    ipg.add_radio(parent_id=f"row{i}", 
-                    labels=["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-                            "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
-                    direction=IpgRadioDirection.Horizontal,
-                    size=15.0,
-                    on_select=radio_cb)
+    ipg.add_row(
+            window_id="main", 
+            container_id=f"row{i}", 
+            parent_id="col")
+    ipg.add_text(
+            parent_id=f"row{i}", 
+            content=F"Row-{i}")
+    ipg.add_radio(
+            parent_id=f"row{i}", 
+            labels=["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+                    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
+            direction=IpgRadioDirection.Horizontal,
+            size=15.0,
+            on_select=radio_cb)
 
 
 # Required to be the last widget sent to Iced,  If you start the program
