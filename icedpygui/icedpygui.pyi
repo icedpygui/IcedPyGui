@@ -636,7 +636,6 @@ class IPG:
         """
 
     def add_scrollable_style(self,
-                            style_id: str,
                             background_color: Optional[IpgColor]=None,
                             background_rgba: Optional[list[float, 4]]=None,
                             border_color: Optional[IpgColor]=None,
@@ -669,8 +668,6 @@ class IPG:
 
         Parameters
         ----------
-        style_id: str,
-            Id used in the add_scrollable widget
         background_color: Optional[IpgColor]=None
             Background color of the container.
         background_rgba: Optional[list[float, 4]]=None
@@ -1343,7 +1340,7 @@ class IPG:
                 bar_check_bounds_width: Optional[float]=None,
                 item_spacings: Optional[list[float]]=None,
                 item_offsets: Optional[list[float]]=None,
-                menu_bar_style: Optional[str]=None,
+                menu_bar_style: Optional[int]=None,
                 menu_style: Optional[str]=None,
                 button_bar_style_all: Optional[tuple]=None,
                 button_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None,
@@ -1431,8 +1428,6 @@ class IPG:
         """
 
     def add_menu_bar_style(self,
-                            style_id: str,
-                            *,
                             base_color: Optional[IpgColor]=None,
                             base_rgba: Optional[list[float, 4]]=None,
                             border_color: Optional[IpgColor]=None,
@@ -1451,8 +1446,6 @@ class IPG:
 
         Parameters
         ----------
-            style_id: str,
-                Style id use in add_menu(menu_bar_style=style_id)
             base_color: Optional[IpgColor]=None,
                 Base color of the menu bar
             base_rgba: Optional[list[float, 4]]=None,
@@ -1485,8 +1478,6 @@ class IPG:
         """
 
     def add_menu_style(self,
-                       style_id: str,
-                        *,
                         base_color: Optional[IpgColor]=None,
                         base_rgba: Optional[list[float, 4]]=None,
                         border_color: Optional[IpgColor]=None,
@@ -1511,9 +1502,6 @@ class IPG:
 
         Parameters
         ----------
-
-            style_id: str
-                Style id used in add_menu(menu_style=style_id
             base_color: Optional[IpgColor]=None
                 Base color of menu.
             base_rgba: Optional[list[float, 4]]=None
@@ -4426,6 +4414,68 @@ class IpgMenuParam:
     Show: bool
 
 
+class IpgMenuStyleParam:
+    BaseIpgColor=IpgColor
+    BaseRgbaColor=list[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderRadius=list[float]
+    BorderWidth=float
+    ShadowIpgColor=IpgColor
+    ShadowRgbaColor=list[float, 4]
+    ShadowOffsetX=float
+    ShadowOffsetY=float
+    ShadowBlurRadius=float
+    PathBaseIpgColor=IpgColor
+    PathBaseRgbaColor=list[float, 4]
+    PathBorderIpgColor=IpgColor
+    PathBorderRgbaColor=list[float, 4]
+    PathBorderRadius=list[float]
+    PathBorderWidth=float
+
+class IpgMenuBarStyleParam:
+    BaseIpgColor=IpgColor
+    BaseRgbaColor=list[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderRadius=list[float]
+    BorderWidth=float
+    ShadowIpgColor=IpgColor
+    ShadowRgbaColor=list[float, 4]
+    ShadowOffsetX=float
+    ShadowOffsetY=float
+    ShadowBlurRadius=float
+
+
+class IpgMenuSeparatorStyleParam:
+    SeparatorType=IpgMenuSeparatorType
+    Width=float
+    WidthFill=bool
+    Height=float
+    HeightFill=bool
+    QuadRatios=list[float, 2]
+    SeparatorIpgColor=IpgColor
+    SeparatorRgbaColor=list[float, 4]
+    SeparatorBorderIpgColor=IpgColor
+    SeparatorBorderRgbaColor=list[float, 4]
+    SeparatorBorderRadius=list[float]
+    SeparatorBorderWidth=float
+    SeparatorShadowIpgColor=IpgColor
+    SeparatorShadowRgbaColor=list[float, 4]
+    SeparatorShadowOffset=float
+    SeparatorShadowBlurRadius=float
+    BackgroundIpgColor=IpgColor
+    BackgroundRgbaColor=list[float, 4]
+    BackgroundBorderIpgColor=IpgColor
+    BackgroundBorderRbgaColor=list[float, 4]
+    BackgroundBorderWidth=float
+    BackgroundBorderRadius=list[float]
+    BackgroundShadowIpgColor=IpgColor
+    BackgroundShadowRbgaColor=list[float, 4]
+    BackgroundShadowOffset=float
+    BackgroundShadowBlurRadius=float
+
+
 class IpgMenuType:
     """
     The type of widgets a menu item can be.  Used in item_styles parameter.
@@ -4806,6 +4856,90 @@ class IpgScrollableParam:
     VBarMargin: float
     VScrollerWidth: float
     VBarAlignment: IpgAlignment
+
+
+class IpgScrollableStyleParam:
+    """
+    The Scrollable style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor: list[float, 4]
+        Background color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list[float]
+        Border radius as a list of 1 or 4
+    BorderWidth: float
+        Border widt as a float
+    ShadowIpgColor: IpgColor
+        Shadow color in IpgColor format
+    ShadowRgbaColor: list[float, 4]
+        Shadow color in rgba format
+    ShadowOffsetX: float
+        Amount of offset shadow in x irection
+    ShadowOffsetY: float
+        Amount of offset shadow in y direction
+    ShadowBlurRadius: list[float]
+        How much to blur the radius
+    TextIpgColor: IpgColor
+        Text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        Text color in rgba format
+    ScrollbarIpgColor: IpgColor
+        Scrollbar color in IpgColor format
+    ScrollbarRgbaColor: list[float, 4]
+        Scrollbar color in rgba format
+    ScrollbarBorderRadius: list[float]
+        Border radius as a list of 1 or 4
+    ScrollbarBorderWidth: float
+        Width of the border
+    ScrollbarBorderIpgColor: IpgColor
+        Scrollbar border color in IpgColor format
+    ScrollbarBorderRgbaColor: list[float, 4]
+        Scrollbar border color in rgba format
+    ScrollerIpgColor: IpgColor
+        Scroller color in IpgColor format
+    ScrollerRgbaColor: list[float, 4]
+        Scroller color in rgba format
+    ScrollerIpgColorHovered: IpgColor
+        Scroller hover color in IpgColor format
+    ScrollerRgbaColorHovered: list[float, 4]
+        Scroller hover color in rgba format
+    ScrollerIpgColorDragged: IpgColor
+        Scroller drag color in IpgColor format
+    ScrollerRgbaColorDragged: list[float, 4]
+        Scroller drag color in rgba format
+    """
+    BackgroundIpgColor=IpgColor
+    BackgroundRbgaColor=list[float, 4]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 4]
+    BorderRadius=list[float]
+    BorderWidth=float
+    ShadowIpgColor=IpgColor
+    ShadowRgbaColor=list[float, 4]
+    ShadowOffsetX=float
+    ShadowOffsetY=float
+    ShadowBlurRadius=list[float]
+    TextIpgColor=IpgColor
+    TextRgbaColor=list[float, 4]
+    ScrollbarIpgColor=IpgColor
+    ScrollbarRgbaColor=list[float, 4]
+    ScrollbarBorderRadius=list[float]
+    ScrollbarBorderWidth=float
+    ScrollbarBorderIpgColor=IpgColor
+    ScrollbarBorderRgbaColor=list[float, 4]
+    ScrollerIpgColor=IpgColor
+    ScrollerRgbaColor=list[float, 4]
+    ScrollerIpgColorHovered=IpgColor
+    ScrollerRgbaColorHovered=list[float, 4]
+    ScrollerIpgColorDragged=IpgColor
+    ScrollerRgbaColorDragged=list[float, 4]
 
 
 class IpgSelectableTextParam:

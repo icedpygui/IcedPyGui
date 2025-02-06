@@ -12,7 +12,7 @@ use super::ipg_container::IpgContainer;
 use super::ipg_column::IpgColumn;
 use super::ipg_date_picker::IpgDatePicker;
 use super::ipg_image::IpgImage;
-use super::ipg_menu::IpgMenu;
+use super::ipg_menu::{IpgMenu, IpgMenuBarStyle, IpgMenuSeparatorStyle, IpgMenuStyle};
 use super::ipg_modal::IpgModal;
 use super::ipg_mousearea::IpgMouseArea;
 use super::ipg_opaque::IpgOpaque;
@@ -22,7 +22,7 @@ use super::ipg_progress_bar::{IpgProgressBar, IpgProgressBarStyle};
 use super::ipg_radio::{IpgRadio, IpgRadioStyle};
 use super::ipg_row::IpgRow;
 use super::ipg_rule::{IpgRule, IpgRuleStyle};
-use super::ipg_scrollable::IpgScrollable;
+use super::ipg_scrollable::{IpgScrollable, IpgScrollableStyle};
 use super::ipg_selectable_text::IpgSelectableText;
 use super::ipg_slider::{IpgSlider, IpgSliderStyle};
 use super::ipg_space::IpgSpace;
@@ -69,6 +69,9 @@ pub enum IpgWidgets {
     IpgDatePicker(IpgDatePicker),
     IpgImage(IpgImage),
     IpgMenu(IpgMenu),
+    IpgMenuStyle(IpgMenuStyle),
+    IpgMenuBarStyle(IpgMenuBarStyle),
+    IpgMenuSeparatorStyle(IpgMenuSeparatorStyle),
     IpgPickList(IpgPickList),
     IpgPickListStyle(IpgPickListStyle),
     IpgProgressBar(IpgProgressBar),
@@ -77,6 +80,7 @@ pub enum IpgWidgets {
     IpgRadioStyle(IpgRadioStyle),
     IpgRule(IpgRule),
     IpgRuleStyle(IpgRuleStyle),
+    IpgScrollableStyle(IpgScrollableStyle),
     IpgSelectableText(IpgSelectableText),
     IpgSlider(IpgSlider),
     IpgSliderStyle(IpgSliderStyle),

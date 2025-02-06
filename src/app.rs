@@ -618,6 +618,7 @@ fn get_children<'a>(parents: &Vec<ParentChildIds>,
     let id = &parents[*index].parent_id;
 
     if id != &0 {
+
         get_container(state, id, content, canvas_state)
     } else {
         Column::with_children(content).into()  // the final container
@@ -626,10 +627,10 @@ fn get_children<'a>(parents: &Vec<ParentChildIds>,
 
 
 fn get_container<'a>(state: &IpgState, 
-                id: &usize, 
-                content: Vec<Element<'a, Message>>,
-                canvas_state: &'a IpgCanvasState,
-                ) -> Element<'a, Message> {
+                    id: &usize, 
+                    content: Vec<Element<'a, Message>>,
+                    canvas_state: &'a IpgCanvasState,
+                    ) -> Element<'a, Message> {
 
     let container_opt: Option<&IpgContainers> = state.containers.get(id);
 
@@ -709,7 +710,7 @@ fn get_container<'a>(state: &IpgState,
                 IpgContainers::IpgScrollable(scroll) => {
                     let style_opt = match scroll.style_id.clone() {
                         Some(id) => {
-                            state.scrollable_style.get(&id).map(|st| st.clone())
+                            state.widgets.get(&id).map(|st| st.clone())
                         },
                         None => None,
                     };
@@ -776,25 +777,25 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                     Some(construct_image(image))
                 },
                 IpgWidgets::IpgMenu(menu) => {
-                    let menu_style = match menu.menu_style_id.clone() {
+                    let menu_style_opt = match menu.menu_style_id.clone() {
                         Some(id) => {
-                            state.menu_style.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st.clone())
                         },
                         None => None,
                     };
-                    let bar_style = match menu.menu_bar_style_id.clone() {
+                    let bar_style_opt = match menu.menu_bar_style_id.clone() {
                         Some(id) => {
-                            state.menu_bar_style.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st.clone())
                         },
                         None => None,
                     };
-                    let sep_style = match menu.separator_item_style_all.clone() {
+                    let sep_style_opt = match menu.separator_item_style_all.clone() {
                         Some(id) => {
-                            state.menu_separator_style.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st.clone())
                         },
                         None => None,
                      };
-                    Some(construct_menu(menu.clone(), menu_style, bar_style, sep_style))
+                    Some(construct_menu(menu.clone(), menu_style_opt, bar_style_opt, sep_style_opt))
                 },
                 IpgWidgets::IpgDatePicker(dp) => {
                     let style_opt = match dp.button_style_id.clone() {

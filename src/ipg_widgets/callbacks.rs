@@ -222,6 +222,21 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 wco.user_data = menu.user_data.clone();
                 return wco
             },
+            IpgWidgets::IpgMenuStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
+            IpgWidgets::IpgMenuBarStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
+            IpgWidgets::IpgMenuSeparatorStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgPickList(pl) => {
                 pl.selected = wci.value_str;
                 return WidgetCallbackOut{
@@ -254,6 +269,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 return WidgetCallbackOut::default()
             },
             IpgWidgets::IpgRuleStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
+            IpgWidgets::IpgScrollableStyle(_) => {
                 return WidgetCallbackOut{
                     ..Default::default()
                 }

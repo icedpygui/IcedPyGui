@@ -324,6 +324,17 @@ pub fn try_extract_vec_u16(value: PyObject) -> Vec<u16> {
     })  
 }
 
+pub fn try_extract_array_2(value: PyObject) -> [f32; 2] {
+    Python::with_gil(|py| {
+
+        let res = value.extract::<[f32; 2]>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("Unable to extract python object for 2 item list"),
+        }
+    })
+}
+
 pub fn try_extract_string(value: PyObject) -> String {
     Python::with_gil(|py| {
         let res = value.extract::<String>(py);
@@ -420,3 +431,4 @@ pub fn try_extract_point(value: PyObject) -> [f32; 2] {
         }
     })
 }
+

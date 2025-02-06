@@ -45,9 +45,7 @@ use ipg_widgets::ipg_events::IpgEvents;
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, 
         IpgImageContentFit, IpgImageFilterMethod, 
         IpgImageParam, IpgImageRotation};
-use ipg_widgets::ipg_menu::{menu_item_update, IpgMenu, IpgMenuBarStyle, 
-    IpgMenuParam, IpgMenuSeparatorStyle, IpgMenuSeparatorType, IpgMenuStyle, 
-    IpgMenuType, ItemStyles, MenuStyleAll};
+use ipg_widgets::ipg_menu::{menu_bar_style_update_item, menu_item_update, menu_separator_style_update_item, menu_style_update_item, IpgMenu, IpgMenuBarStyle, IpgMenuBarStyleParam, IpgMenuParam, IpgMenuSeparatorStyle, IpgMenuSeparatorStyleParam, IpgMenuSeparatorType, IpgMenuStyle, IpgMenuStyleParam, IpgMenuType, ItemStyles, MenuStyleAll};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, 
         IpgMouseAreaParam, IpgMousePointer};
 use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, 
@@ -57,9 +55,7 @@ use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, progress_bar_style
 use ipg_widgets::ipg_radio::{radio_item_update, radio_style_update_item, IpgRadio, IpgRadioDirection, IpgRadioParam, IpgRadioStyle, IpgRadioStyleParam};
 use ipg_widgets::ipg_row::IpgRow;
 use ipg_widgets::ipg_rule::{rule_style_update_item, IpgRule, IpgRuleStyle, IpgRuleStyleParam};
-use ipg_widgets::ipg_scrollable::{scrollable_item_update, 
-        IpgScrollable, IpgScrollableAlignment, 
-        IpgScrollableDirection, IpgScrollableParam, IpgScrollableStyle};
+use ipg_widgets::ipg_scrollable::{scroll_style_update_item, scrollable_item_update, IpgScrollable, IpgScrollableAlignment, IpgScrollableDirection, IpgScrollableParam, IpgScrollableStyle, IpgScrollableStyleParam};
 use ipg_widgets::ipg_selectable_text::{selectable_text_item_update, 
         IpgSelectableText, IpgSelectableTextParam};
 use ipg_widgets::ipg_slider::{slider_item_update, slider_style_update_item, IpgSlider, IpgSliderParam, IpgSliderStyle, IpgSliderStyleParam};
@@ -1260,7 +1256,7 @@ impl IPG {
                             v_bar_alignment: IpgScrollableAlignment,
                             on_scroll: Option<PyObject>,
                             user_data: Option<PyObject>,
-                            style_id: Option<String>,
+                            style_id: Option<usize>,
                             ) -> PyResult<usize>
     {
         self.id += 1;
@@ -1286,29 +1282,30 @@ impl IPG {
 
         set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_scrollable".to_string());
       
-        state.containers.insert(self.id, IpgContainers::IpgScrollable(IpgScrollable::new( 
-                                                    self.id,
-                                                    width,
-                                                    height,
-                                                    direction,
-                                                    h_bar_width,
-                                                    h_bar_margin,
-                                                    h_scroller_width,
-                                                    h_bar_alignment,
-                                                    v_bar_width,
-                                                    v_bar_margin,
-                                                    v_scroller_width,
-                                                    v_bar_alignment,
-                                                    user_data,
-                                                    style_id,
-                                                    )));
+        state.containers.insert(self.id, IpgContainers::IpgScrollable(
+            IpgScrollable::new( 
+                self.id,
+                width,
+                height,
+                direction,
+                h_bar_width,
+                h_bar_margin,
+                h_scroller_width,
+                h_bar_alignment,
+                v_bar_width,
+                v_bar_margin,
+                v_scroller_width,
+                v_bar_alignment,
+                user_data,
+                style_id,
+                )));
         state.last_id = self.id;
         drop(state);
         Ok(self.id)
 
     }
 
-    #[pyo3(signature = (style_id, 
+    #[pyo3(signature = ( 
                         background_color=None, background_rgba=None,
                         border_color=None, border_rgba=None,
                         border_radius = vec![0.0], border_width=1.0,
@@ -1330,7 +1327,6 @@ impl IPG {
                         scroller_rgba_dragged=None,
                         gen_id=None))]
     fn add_scrollable_style(&mut self,
-                            style_id: String,
                             background_color: Option<IpgColor>,
                             background_rgba: Option<[f32; 4]>,
                             border_color: Option<IpgColor>,
@@ -1361,8 +1357,6 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let mut state = access_state();
-
         let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
         let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
         let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
@@ -1375,25 +1369,29 @@ impl IPG {
         let scroller_color_hovered: Option<Color> = get_color(scroller_rgba_hovered, scroller_color_hovered, 1.0, false);
         let scroller_color_dragged: Option<Color> = get_color(scroller_rgba_dragged, scroller_color_dragged, 1.0, false);
 
-        state.scrollable_style.insert(style_id, IpgScrollableStyle::new( 
-                                                    id,
-                                                    background_color,
-                                                    border_color,
-                                                    border_radius,
-                                                    border_width,
-                                                    shadow_color,
-                                                    shadow_offset_x,
-                                                    shadow_offset_y,
-                                                    shadow_blur_radius,
-                                                    text_color,
-                                                    scrollbar_color,
-                                                    scrollbar_border_radius,
-                                                    scrollbar_border_width,
-                                                    scrollbar_border_color,
-                                                    scroller_color,
-                                                    scroller_color_hovered,
-                                                    scroller_color_dragged,
-                                                    ));
+        let mut state = access_state();
+
+        state.widgets.insert(self.id, IpgWidgets::IpgScrollableStyle(
+            IpgScrollableStyle::new(  
+                id,
+                background_color,
+                border_color,
+                border_radius,
+                border_width,
+                shadow_color,
+                shadow_offset_x,
+                shadow_offset_y,
+                shadow_blur_radius,
+                text_color,
+                scrollbar_color,
+                scrollbar_border_radius,
+                scrollbar_border_width,
+                scrollbar_border_color,
+                scroller_color,
+                scroller_color_hovered,
+                scroller_color_dragged,
+                )));
+
         state.last_id = id;
         drop(state);
 
@@ -2118,8 +2116,8 @@ impl IPG {
                     item_spacings: Option<Vec<f32>>,
                     item_offsets: Option<Vec<f32>>,
                     on_select: Option<PyObject>,
-                    menu_bar_style: Option<String>,
-                    menu_style: Option<String>,
+                    menu_bar_style: Option<usize>,
+                    menu_style: Option<usize>,
                     button_bar_style_all: Option<MenuStyleAll>,
                     button_item_style_all: Option<MenuStyleAll>,
                     checkbox_item_style_all: Option<MenuStyleAll>,
@@ -2127,7 +2125,7 @@ impl IPG {
                     dot_item_style_all: Option<String>,
                     label_item_style_all: Option<String>,
                     line_item_style_all: Option<String>,
-                    separator_item_style_all: Option<String>,
+                    separator_item_style_all: Option<usize>,
                     text_item_style_all: Option<String>,
                     toggler_item_style_all: Option<String>,
                     item_styles: Option<Vec<ItemStyles>>,
@@ -2188,7 +2186,7 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id,
+    #[pyo3(signature = (
                         base_color=None,
                         base_rgba=None,
                         border_color=None,
@@ -2202,7 +2200,6 @@ impl IPG {
                         shadow_blur_radius=None,
                         gen_id=None))]
     fn add_menu_bar_style(&mut self,
-                            style_id: String,
                             base_color: Option<IpgColor>,
                             base_rgba: Option<[f32; 4]>,
                             border_color: Option<IpgColor>,
@@ -2225,23 +2222,25 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.menu_bar_style.insert(style_id, IpgMenuBarStyle::new( 
-                                                    id,
-                                                    base,
-                                                    border_color,
-                                                    border_radius,
-                                                    border_width,
-                                                    shadow_color,
-                                                    shadow_offset_x,
-                                                    shadow_offset_y,
-                                                    shadow_blur_radius,
-                                                    ));
+        state.widgets.insert(id, IpgWidgets::IpgMenuBarStyle(
+            IpgMenuBarStyle::new( 
+                id,
+                base,
+                border_color,
+                border_radius,
+                border_width,
+                shadow_color,
+                shadow_offset_x,
+                shadow_offset_y,
+                shadow_blur_radius,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id,
+    #[pyo3(signature = (
                         base_color=None,
                         base_rgba=None,
                         border_color=None,
@@ -2261,7 +2260,6 @@ impl IPG {
                         path_border_width=None,
                         gen_id=None))]
     fn add_menu_style(&mut self,
-                            style_id: String,
                             base_color: Option<IpgColor>,
                             base_rgba: Option<[f32; 4]>,
                             border_color: Option<IpgColor>,
@@ -2284,7 +2282,7 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
         
-        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+        let base_color: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
         let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
         let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
         let path_base: Option<Color> = get_color(path_base_rgba, path_base_color, 1.0, false);
@@ -2292,27 +2290,28 @@ impl IPG {
 
         let mut state = access_state();
 
-        state.menu_style.insert(style_id, IpgMenuStyle::new( 
-                                                    id,
-                                                    base,
-                                                    border_color,
-                                                    border_radius,
-                                                    border_width,
-                                                    shadow_color,
-                                                    shadow_offset_x,
-                                                    shadow_offset_y,
-                                                    shadow_blur_radius,
-                                                    path_base,
-                                                    path_border_color,
-                                                    path_border_radius,
-                                                    path_border_width,
-                                                    ));
+        state.widgets.insert(id, IpgWidgets::IpgMenuStyle(
+            IpgMenuStyle::new(  
+                id,
+                base_color,
+                border_color,
+                border_radius,
+                border_width,
+                shadow_color,
+                shadow_offset_x,
+                shadow_offset_y,
+                shadow_blur_radius,
+                path_base,
+                path_border_color,
+                path_border_radius,
+                path_border_width,
+                )));
         state.last_id = id;
         drop(state);
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id,
+    #[pyo3(signature = (
                         separator_type,
                         height=20.0,
                         height_fill=false,
@@ -2342,7 +2341,6 @@ impl IPG {
                         gen_id=None,
                         ))]
     fn add_menu_separator_style(&mut self,
-                                style_id: String,
                                 separator_type: IpgMenuSeparatorType,
                                 height: f32,
                                 height_fill: bool,
@@ -2393,28 +2391,29 @@ impl IPG {
 
         let mut state = access_state();
         
-        state.menu_separator_style.insert(style_id, 
-                    IpgMenuSeparatorStyle::new( 
-                                                id,
-                                                separator_type,
-                                                width,
-                                                height,
-                                                quad_ratios,
-                                                sep_color,
-                                                sep_border_color,
-                                                separator_border_width,
-                                                separator_border_radius,
-                                                sep_shadow_color,
-                                                separator_shadow_offset,
-                                                separator_shadow_blur_radius,
-                                                bg_color,
-                                                bg_border_color,
-                                                background_border_width,
-                                                background_border_radius,
-                                                bg_shadow_color,
-                                                background_shadow_offset,
-                                                background_shadow_blur_radius,
-                                                ));
+        state.widgets.insert(id, IpgWidgets::IpgMenuSeparatorStyle(
+            IpgMenuSeparatorStyle::new(
+                id,
+                separator_type,
+                width,
+                height,
+                quad_ratios,
+                sep_color,
+                sep_border_color,
+                separator_border_width,
+                separator_border_radius,
+                sep_shadow_color,
+                separator_shadow_offset,
+                separator_shadow_blur_radius,
+                bg_color,
+                bg_border_color,
+                background_border_width,
+                background_border_radius,
+                bg_shadow_color,
+                background_shadow_offset,
+                background_shadow_blur_radius,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -5048,6 +5047,15 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgMenu(menu) => {
             menu_item_update(menu, item, value);
         },
+        IpgWidgets::IpgMenuStyle(style) => {
+            menu_style_update_item(style, item, value);
+        },
+        IpgWidgets::IpgMenuBarStyle(style) => {
+            menu_bar_style_update_item(style, item, value);
+        },
+        IpgWidgets::IpgMenuSeparatorStyle(style) => {
+            menu_separator_style_update_item(style, item, value);
+        },
         IpgWidgets::IpgPickList(pl) => {
             pick_list_item_update(pl, item, value);
         },
@@ -5069,6 +5077,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgRule(_) => (),
         IpgWidgets::IpgRuleStyle(style) => {
             rule_style_update_item(style, item, value);
+        },
+        IpgWidgets::IpgScrollableStyle(style) => {
+            scroll_style_update_item(style, item, value)
         },
         IpgWidgets::IpgSelectableText(st) => {
             selectable_text_item_update(st, item, value);
@@ -5191,6 +5202,9 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgMenuParam>()?;
     m.add_class::<IpgMenuSeparatorType>()?;
     m.add_class::<IpgMenuType>()?;
+    m.add_class::<IpgMenuStyleParam>()?;
+    m.add_class::<IpgMenuBarStyleParam>()?;
+    m.add_class::<IpgMenuSeparatorStyleParam>()?;
     m.add_class::<IpgMouseAreaParam>()?;
     m.add_class::<IpgMousePointer>()?;
     m.add_class::<IpgOpaqueParam>()?;
@@ -5205,6 +5219,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgRuleStyleParam>()?;
     m.add_class::<IpgScrollableDirection>()?;
     m.add_class::<IpgScrollableParam>()?;
+    m.add_class::<IpgScrollableStyleParam>()?;
     m.add_class::<IpgSelectableTextParam>()?;
     m.add_class::<IpgSliderParam>()?;
     m.add_class::<IpgSliderStyleParam>()?;

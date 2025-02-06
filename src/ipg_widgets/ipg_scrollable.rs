@@ -1,4 +1,5 @@
 //! ipg_scrollable
+use crate::graphics::colors::get_color;
 use crate::{access_callbacks, app, IpgState};
 use crate::TABLE_INTERNAL_IDS_END;
 use crate::TABLE_INTERNAL_IDS_START;
@@ -6,7 +7,8 @@ use super::callbacks::container_callback_data;
 use super::callbacks::WidgetCallbackIn;
 use super::callbacks::WidgetCallbackOut;
 use super::helpers::{get_height, get_radius, get_width, 
-    try_extract_f64};
+    try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_vec_f32};
+use super::ipg_enums::IpgWidgets;
 use super::ipg_table::{TableMessage, table_callback};
 
 use iced::widget::container;
@@ -40,12 +42,11 @@ pub struct IpgScrollable {
     pub v_scroller_width: f32,
     pub v_bar_alignment: IpgScrollableAlignment,
     pub user_data: Option<PyObject>,
-    pub style_id: Option<String>,
+    pub style_id: Option<usize>,
     pub scroll_y_pos: f32,
     pub scroll_x_pos: f32,
     pub bounds: Rectangle,
     pub content_bounds: Rectangle,
-
 }
 
 impl IpgScrollable {
@@ -63,7 +64,7 @@ impl IpgScrollable {
         v_scroller_width: f32,
         v_bar_alignment: IpgScrollableAlignment,
         user_data: Option<PyObject>,
-        style_id: Option<String>,
+        style_id: Option<usize>,
     ) -> Self {
         Self {
             id,
@@ -174,9 +175,11 @@ pub enum IpgScrollableAlignment {
 
 pub fn construct_scrollable<'a>(scroll: IpgScrollable, 
                             content: Vec<Element<'a, app::Message>>,
-                            style_opt: Option<IpgScrollableStyle> ) 
+                            style_opt: Option<IpgWidgets> ) 
                             -> Element<'a, app::Message> {
     
+    let style = get_scroll_style(style_opt);
+
     let content: Element<'a, app::Message> = Column::with_children(content).into();
 
     let direction: Direction = 
@@ -197,12 +200,11 @@ pub fn construct_scrollable<'a>(scroll: IpgScrollable,
                     .on_scroll(move|vp| app::Message::Scrolled(vp, scroll.id))
                     .style(move|theme, status| {
                         get_styling(theme, status,
-                                    style_opt.clone(),
+                                    style.clone(),
                                     )
                     })
                     .into()
     
-  
 }
 
 
@@ -555,4 +557,154 @@ fn get_styling(theme: &Theme, status: Status,
         }
     }
     
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgScrollableStyleParam {
+    BackgroundIpgColor,
+    BackgroundRbgaColor,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+    ShadowIpgColor,
+    ShadowRgbaColor,
+    ShadowOffsetX,
+    ShadowOffsetY,
+    ShadowBlurRadius,
+    TextIpgColor,
+    TextRgbaColor,
+    // above container style
+    ScrollbarIpgColor,
+    ScrollbarRgbaColor,
+    ScrollbarBorderRadius,
+    ScrollbarBorderWidth,
+    ScrollbarBorderIpgColor,
+    ScrollbarBorderRgbaColor,
+    ScrollerIpgColor,
+    ScrollerRgbaColor,
+    ScrollerIpgColorHovered,
+    ScrollerRgbaColorHovered,
+    ScrollerIpgColorDragged,
+    ScrollerRgbaColorDragged,
+}
+
+pub fn scroll_style_update_item(style: &mut IpgScrollableStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+
+    let update = try_extract_scroll_style_update(item);
+    match update {
+        IpgScrollableStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgScrollableStyleParam::BackgroundRbgaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgScrollableStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgScrollableStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgScrollableStyleParam::BorderRadius => {
+            style.border_radius = try_extract_vec_f32(value);
+        },
+        IpgScrollableStyleParam::BorderWidth => {
+            style.border_width = try_extract_f64(value) as f32;
+        },
+        IpgScrollableStyleParam::ShadowIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.shadow_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgScrollableStyleParam::ShadowRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgScrollableStyleParam::ShadowOffsetX => {
+            style.shadow_offset_x = try_extract_f64(value) as f32;
+        },
+        IpgScrollableStyleParam::ShadowOffsetY => {
+            style.shadow_offset_y = try_extract_f64(value) as f32;
+        },
+        IpgScrollableStyleParam::ShadowBlurRadius => {
+            style.shadow_blur_radius = try_extract_f64(value) as f32;
+        },
+        IpgScrollableStyleParam::TextIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgScrollableStyleParam::TextRgbaColor => {
+            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgScrollableStyleParam::ScrollbarIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.scrollbar_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgScrollableStyleParam::ScrollbarRgbaColor => {
+            style.scrollbar_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgScrollableStyleParam::ScrollbarBorderRadius => {
+            style.scrollbar_border_radius = try_extract_vec_f32(value);
+        },
+        IpgScrollableStyleParam::ScrollbarBorderWidth => {
+            style.scrollbar_border_width = try_extract_f64(value) as f32;
+        },
+        IpgScrollableStyleParam::ScrollbarBorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.scrollbar_border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgScrollableStyleParam::ScrollbarBorderRgbaColor => {
+            style.scrollbar_border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgScrollableStyleParam::ScrollerIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.scroller_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgScrollableStyleParam::ScrollerRgbaColor => {
+            style.scroller_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgScrollableStyleParam::ScrollerIpgColorHovered => {
+            let color = try_extract_ipg_color(value);
+            style.scroller_color_hovered = get_color(None, Some(color), 1.0, false);
+        },
+        IpgScrollableStyleParam::ScrollerRgbaColorHovered => {
+            style.scroller_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgScrollableStyleParam::ScrollerIpgColorDragged => {
+            let color = try_extract_ipg_color(value);
+            style.scroller_color_dragged = get_color(None, Some(color), 1.0, false);
+        },
+        IpgScrollableStyleParam::ScrollerRgbaColorDragged => {
+            style.scroller_color_dragged = Some(Color::from(try_extract_rgba_color(value)));
+        },
+    }
+}
+
+fn get_scroll_style(style: Option<IpgWidgets>) -> Option<IpgScrollableStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgScrollableStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
+
+pub fn try_extract_scroll_style_update(update_obj: PyObject) -> IpgScrollableStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgScrollableStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Button style update extraction failed"),
+        }
+    })
 }

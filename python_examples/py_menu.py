@@ -1,4 +1,5 @@
 from icedpygui import IPG, IpgMenuType, IpgWindowTheme
+from icedpygui import IpgMenuBarStyleParam
 from collections import OrderedDict
 
 

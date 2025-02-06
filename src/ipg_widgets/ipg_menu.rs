@@ -1,5 +1,5 @@
 //! ipg_menu
-#![allow(dead_code, unused_variables)]
+// #![allow(dead_code, unused_variables)]
 #![allow(clippy::enum_variant_names)]
 use std::collections::BTreeMap;
 
@@ -8,6 +8,7 @@ use iced::widget::button;
 use iced::widget::{row, Button, Checkbox, Container, Row, Text, Toggler};
 use iced::{alignment, Background, Border, Color, Element, Length, Padding, Renderer, Theme, Vector};
 
+use crate::graphics::colors::get_color;
 use crate::iced_aw_widgets::menu::menu_tree::{Item, Menu};
 use crate::iced_aw_widgets::menu::menu_bar::MenuBar;
 use crate::iced_aw_widgets::menu::common::DrawPath;
@@ -17,9 +18,13 @@ use crate::iced_aw_widgets::menu::menu_bar_style::{primary, Style};
 
 use crate::style::styling::{is_dark, IpgStyleStandard};
 use crate::{access_callbacks, access_state, app, IpgState};
-use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{set_or_get_widget_callback_data, 
+    WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_height, get_padding_f64, get_radius, 
-    try_extract_boolean, try_extract_f64, try_extract_vec_f32, try_extract_vec_f64};
+    try_extract_array_2, try_extract_boolean, try_extract_f64, 
+    try_extract_ipg_color, try_extract_rgba_color, 
+    try_extract_vec_f32, try_extract_vec_f64};
+use super::ipg_enums::IpgWidgets;
 use super::{ipg_button, ipg_checkbox, ipg_toggle};
 
 use pyo3::{pyclass, PyObject, Python};
@@ -39,8 +44,8 @@ pub struct IpgMenu {
     pub check_bounds_width: f32,
     pub item_spacings: Option<Vec<f32>>,
     pub item_offsets: Option<Vec<f32>>,
-    pub menu_bar_style_id: Option<String>, // style_id of add_menu_bar_style()
-    pub menu_style_id: Option<String>, // style_id of add_menu_style()
+    pub menu_bar_style_id: Option<usize>, // style_id of add_menu_bar_style()
+    pub menu_style_id: Option<usize>, // style_id of add_menu_style()
     // Option<String> in the below styles refer to the style_id of widget styles, not add_menu_style
     pub button_bar_style_all: Option<MenuStyleAll>,
     pub button_item_style_all: Option<MenuStyleAll>,
@@ -49,7 +54,7 @@ pub struct IpgMenu {
     pub dot_item_style_all: Option<String>,
     pub label_item_style_all: Option<String>,
     pub line_item_style_all: Option<String>,
-    pub separator_item_style_all: Option<String>,
+    pub separator_item_style_all: Option<usize>,
     pub text_item_style_all: Option<String>,
     pub toggler_item_style_all: Option<String>,
     pub item_styles: Option<Vec<ItemStyles>>,
@@ -75,8 +80,8 @@ impl IpgMenu {
         check_bounds_width: f32,
         item_spacings: Option<Vec<f32>>,
         item_offsets: Option<Vec<f32>>,
-        menu_bar_style_id: Option<String>,
-        menu_style_id: Option<String>,
+        menu_bar_style_id: Option<usize>,
+        menu_style_id: Option<usize>,
         button_bar_style_all: Option<MenuStyleAll>,
         button_item_style_all: Option<MenuStyleAll>,
         checkbox_item_style_all: Option<MenuStyleAll>,
@@ -84,7 +89,7 @@ impl IpgMenu {
         dot_item_style_all: Option<String>,
         label_item_style_all: Option<String>,
         line_item_style_all: Option<String>,
-        separator_item_style_all: Option<String>,
+        separator_item_style_all: Option<usize>,
         text_item_style_all: Option<String>,
         toggler_item_style_all: Option<String>,
         item_styles: Option<Vec<ItemStyles>>,
@@ -132,7 +137,7 @@ impl IpgMenu {
 #[derive(Debug, Clone, Default)]
 pub struct IpgMenuBarStyle {
     pub id: usize,
-    pub base: Option<Color>, // background
+    pub base_color: Option<Color>, // background
     pub border_color: Option<Color>,
     pub border_radius: Option<Vec<f32>>,
     pub border_width: Option<f32>,
@@ -145,7 +150,7 @@ pub struct IpgMenuBarStyle {
 impl IpgMenuBarStyle {
     pub fn new(
         id: usize,
-        base: Option<Color>,
+        base_color: Option<Color>,
         border_color: Option<Color>,
         border_radius: Option<Vec<f32>>,
         border_width: Option<f32>,
@@ -156,7 +161,7 @@ impl IpgMenuBarStyle {
     ) -> Self {
         Self {
             id,
-            base,
+            base_color,
             border_color,
             border_radius,
             border_width,
@@ -171,7 +176,7 @@ impl IpgMenuBarStyle {
 #[derive(Debug, Clone, Default)]
 pub struct IpgMenuStyle {
     pub id: usize,
-    pub base: Option<Color>, // background
+    pub base_color: Option<Color>, // background
     pub border_color: Option<Color>,
     pub border_radius: Option<Vec<f32>>,
     pub border_width: Option<f32>,
@@ -188,7 +193,7 @@ pub struct IpgMenuStyle {
 impl IpgMenuStyle {
     pub fn new(
         id: usize,
-        base: Option<Color>,
+        base_color: Option<Color>,
         border_color: Option<Color>,
         border_radius: Option<Vec<f32>>,
         border_width: Option<f32>,
@@ -203,7 +208,7 @@ impl IpgMenuStyle {
     ) -> Self {
         Self {
             id,
-            base,
+            base_color,
             border_color,
             border_radius,
             border_width,
@@ -242,9 +247,9 @@ pub enum IpgMenuType {
 }
 
 pub fn construct_menu(mut mn: IpgMenu, 
-                        menu_style: Option<IpgMenuStyle>,
-                        bar_style: Option<IpgMenuBarStyle>,
-                        sep_style: Option<IpgMenuSeparatorStyle>,)
+                        menu_style_opt: Option<IpgWidgets>,
+                        bar_style_opt: Option<IpgWidgets>,
+                        sep_style_opt: Option<IpgWidgets>)
                         -> Element<'static, app::Message, Theme, Renderer> {
 
     let menu = try_extract_dict(mn.items);
@@ -354,6 +359,8 @@ pub fn construct_menu(mut mn: IpgMenu,
 
         bar_items.push(bar_item); 
     }
+    let bar_style = get_menu_bar_style(bar_style_opt);
+    let menu_style = get_menu_style(menu_style_opt);
 
     let mb = MenuBar::new(bar_items)
                 .draw_path(DrawPath::Backdrop)
@@ -391,8 +398,8 @@ fn get_mb_styling(theme: &Theme,
 
         let b_style = br_style.unwrap();
 
-        if b_style.base.is_some() {
-            menu_style.bar_background = b_style.base.unwrap().into();
+        if b_style.base_color.is_some() {
+            menu_style.bar_background = b_style.base_color.unwrap().into();
         }
 
         if b_style.border_width.is_some() {
@@ -437,8 +444,8 @@ fn get_mb_styling(theme: &Theme,
 
         let m_style = mn_style.unwrap();
 
-        if m_style.base.is_some() {
-            menu_style.menu_background = m_style.base.unwrap().into();
+        if m_style.base_color.is_some() {
+            menu_style.menu_background = m_style.base_color.unwrap().into();
         }
 
         if m_style.border_width.is_some() {
@@ -1032,7 +1039,7 @@ pub fn get_separator(theme: &Theme,
         Some(st) => st,
         None => panic!("Menu Separator: Unable to find the style_id {}", style_id_str),
     };
-
+    
     let mut quad = default_quad(sep_type.clone(), 
                                         quad_color, 
                                         bg_color, 
@@ -1246,4 +1253,373 @@ fn default_quad(quad_type: IpgMenuSeparatorType,
             }
         },
     }
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgMenuBarStyleParam {
+    BaseIpgColor,
+    BaseRgbaColor,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+    ShadowIpgColor,
+    ShadowRgbaColor,
+    ShadowOffsetX,
+    ShadowOffsetY,
+    ShadowBlurRadius,
+}
+
+pub fn menu_bar_style_update_item(style: &mut IpgMenuBarStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+
+    let update = try_extract_menu_bar_style_update(item);
+    match update {
+        IpgMenuBarStyleParam::BaseIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.base_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuBarStyleParam::BaseRgbaColor => {
+            style.base_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuBarStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuBarStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuBarStyleParam::BorderRadius => {
+            style.border_radius = Some(try_extract_vec_f32(value));
+        },
+        IpgMenuBarStyleParam::BorderWidth => {
+            style.border_width = Some(try_extract_f64(value) as f32);
+        },
+        IpgMenuBarStyleParam::ShadowIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.shadow_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuBarStyleParam::ShadowRgbaColor => {
+            style.shadow_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuBarStyleParam::ShadowOffsetX => {
+            style.shadow_offset_x = Some(try_extract_f64(value) as f32);
+        },
+        IpgMenuBarStyleParam::ShadowOffsetY => {
+            style.shadow_offset_y = Some(try_extract_f64(value) as f32);
+        },
+        IpgMenuBarStyleParam::ShadowBlurRadius => {
+            style.shadow_blur_radius = Some(try_extract_f64(value) as f32);
+        },
+    }
+}
+
+fn get_menu_bar_style(style: Option<IpgWidgets>) -> Option<IpgMenuBarStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgMenuBarStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
+
+pub fn try_extract_menu_bar_style_update(update_obj: PyObject) -> IpgMenuBarStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgMenuBarStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Menu Bar style parameter update extraction failed"),
+        }
+    })
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgMenuStyleParam {
+    BaseIpgColor,
+    BaseRgbaColor,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+    ShadowIpgColor,
+    ShadowRgbaColor,
+    ShadowOffsetX,
+    ShadowOffsetY,
+    ShadowBlurRadius,
+    PathBaseIpgColor,
+    PathBaseRgbaColor,
+    PathBorderIpgColor,
+    PathBorderRgbaColor,
+    PathBorderRadius,
+    PathBorderWidth,
+}
+
+pub fn menu_style_update_item(style: &mut IpgMenuStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+    let update = try_extract_menu_style_update(item);
+    match update {
+        IpgMenuStyleParam::BaseIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.base_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuStyleParam::BaseRgbaColor => {
+            style.base_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuStyleParam::BorderRadius => {
+            style.border_radius = Some(try_extract_vec_f32(value));
+        },
+        IpgMenuStyleParam::BorderWidth => {
+            style.border_width = Some(try_extract_f64(value) as f32);
+        },
+        IpgMenuStyleParam::ShadowIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.shadow_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuStyleParam::ShadowRgbaColor => {
+            style.shadow_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuStyleParam::ShadowOffsetX => {
+            style.shadow_offset_x = Some(try_extract_f64(value) as f32);
+        },
+        IpgMenuStyleParam::ShadowOffsetY => {
+            style.shadow_offset_y = Some(try_extract_f64(value) as f32);
+        },
+        IpgMenuStyleParam::ShadowBlurRadius => {
+            style.shadow_blur_radius = Some(try_extract_f64(value) as f32);
+        },
+        IpgMenuStyleParam::PathBaseIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.path_base_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuStyleParam::PathBaseRgbaColor => {
+            style.path_base_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuStyleParam::PathBorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.path_border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuStyleParam::PathBorderRgbaColor => {
+            style.path_border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuStyleParam::PathBorderRadius => {
+            style.path_border_radius = Some(try_extract_vec_f32(value));
+        },
+        IpgMenuStyleParam::PathBorderWidth => {
+            style.path_border_width = Some(try_extract_f64(value) as f32);
+        },
+    }
+}
+
+fn get_menu_style(style: Option<IpgWidgets>) -> Option<IpgMenuStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgMenuStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
+
+pub fn try_extract_menu_style_update(update_obj: PyObject) -> IpgMenuStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgMenuStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Menu style parameter update extraction failed"),
+        }
+    })
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgMenuSeparatorStyleParam {
+    SeparatorType,
+    Width,
+    WidthFill,
+    Height,
+    HeightFill,
+    QuadRatios,
+    SeparatorIpgColor,
+    SeparatorRgbaColor,
+    SeparatorBorderIpgColor,
+    SeparatorBorderRgbaColor,
+    SeparatorBorderRadius,
+    SeparatorBorderWidth,
+    SeparatorShadowIpgColor,
+    SeparatorShadowRgbaColor,
+    SeparatorShadowOffset,
+    SeparatorShadowBlurRadius,
+    BackgroundIpgColor,
+    BackgroundRgbaColor,
+    BackgroundBorderIpgColor,
+    BackgroundBorderRbgaColor,
+    BackgroundBorderWidth,
+    BackgroundBorderRadius,
+    BackgroundShadowIpgColor,
+    BackgroundShadowRbgaColor,
+    BackgroundShadowOffset,
+    BackgroundShadowBlurRadius,
+}
+
+pub fn menu_separator_style_update_item(style: &mut IpgMenuSeparatorStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+
+    let update = try_extract_menu_separator_style_update(item);
+    match update {
+        IpgMenuSeparatorStyleParam::SeparatorType => {
+            style.separator_type = try_extract_menu_separator_type(value)
+        },
+        IpgMenuSeparatorStyleParam::Width => {
+            style.width = Length::Fixed(try_extract_f64(value) as f32);
+        },
+        IpgMenuSeparatorStyleParam::WidthFill => {
+            let width = try_extract_boolean(value);
+            if width {
+                style.width = Length::Fill;
+            } else {
+                style.width = Length::Shrink;
+            }
+        },
+        IpgMenuSeparatorStyleParam::Height => {
+            style.height = Length::Fixed(try_extract_f64(value) as f32);
+        },
+        IpgMenuSeparatorStyleParam::HeightFill => {
+            let height = try_extract_boolean(value);
+            if height {
+                style.height = Length::Fill;
+            } else {
+                style.height = Length::Shrink;
+            }
+        },
+        IpgMenuSeparatorStyleParam::QuadRatios => {
+            style.quad_ratios = Some(try_extract_array_2(value));
+        },
+        IpgMenuSeparatorStyleParam::SeparatorIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.separator_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuSeparatorStyleParam::SeparatorRgbaColor => {
+            style.separator_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuSeparatorStyleParam::SeparatorBorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.separator_border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuSeparatorStyleParam::SeparatorBorderRgbaColor => {
+            style.separator_border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuSeparatorStyleParam::SeparatorBorderRadius => {
+            style.separator_border_radius = Some(try_extract_vec_f32(value));
+        },
+        IpgMenuSeparatorStyleParam::SeparatorBorderWidth => {
+            style.separator_border_width = Some(try_extract_f64(value) as f32);
+        },
+        IpgMenuSeparatorStyleParam::SeparatorShadowIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.separator_shadow_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuSeparatorStyleParam::SeparatorShadowRgbaColor => {
+            style.separator_shadow_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuSeparatorStyleParam::SeparatorShadowOffset => {
+            style.separator_shadow_offset = Some(try_extract_array_2(value));
+        },
+        IpgMenuSeparatorStyleParam::SeparatorShadowBlurRadius => {
+            style.separator_shadow_blur_radius = Some(try_extract_f64(value) as f32);
+        },
+        IpgMenuSeparatorStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuSeparatorStyleParam::BackgroundRgbaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuSeparatorStyleParam::BackgroundBorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuSeparatorStyleParam::BackgroundBorderRbgaColor => {
+            style.background_border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuSeparatorStyleParam::BackgroundBorderWidth => {
+            style.background_border_width = Some(try_extract_f64(value) as f32);
+        },
+        IpgMenuSeparatorStyleParam::BackgroundBorderRadius => {
+            style.background_border_radius = Some(try_extract_vec_f32(value));
+        },
+        IpgMenuSeparatorStyleParam::BackgroundShadowIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_shadow_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgMenuSeparatorStyleParam::BackgroundShadowRbgaColor => {
+            style.background_shadow_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgMenuSeparatorStyleParam::BackgroundShadowOffset => {
+            style.background_shadow_offset = Some(try_extract_array_2(value));
+        },
+        IpgMenuSeparatorStyleParam::BackgroundShadowBlurRadius => {
+            style.background_shadow_blur_radius = Some(try_extract_f64(value) as f32);
+        },
+    }
+}
+
+fn get_menu_separator_style(style: Option<IpgWidgets>) -> Option<IpgMenuSeparatorStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgMenuSeparatorStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
+
+pub fn try_extract_menu_separator_style_update(update_obj: PyObject) -> IpgMenuSeparatorStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgMenuSeparatorStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Menu separator style parameter update extraction failed"),
+        }
+    })
+}
+pub fn try_extract_menu_separator_type(value_obj: PyObject) -> IpgMenuSeparatorType {
+
+    Python::with_gil(|py| {
+        let res = value_obj.extract::<IpgMenuSeparatorType>(py);
+        match res {
+            Ok(m_type) => m_type,
+            Err(_) => panic!("Menu separator type parameter value extraction failed"),
+        }
+    })
 }
