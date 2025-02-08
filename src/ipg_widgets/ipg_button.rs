@@ -361,7 +361,7 @@ pub fn button_style_update_item(style: &mut IpgButtonStyle,
     }
 }
 
-fn get_btn_style(style: Option<IpgWidgets>) -> Option<IpgButtonStyle>{
+pub fn get_btn_style(style: Option<IpgWidgets>) -> Option<IpgButtonStyle>{
     match style {
         Some(st) => {
             match st {

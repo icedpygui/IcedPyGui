@@ -54,7 +54,7 @@ ipg.add_window(
 # bit of padding will need to be added to the 
 # container so that the menu border is not cut off.
 ipg.add_column(
-        parent_id="main-dark", 
+        window_id="main-dark", 
         container_id="col-dark",
         padding=[5.0],
         spacing=125.0,)
@@ -63,9 +63,10 @@ ipg.add_column(
 ipg.add_container("main-light", "cont")
 ipg.add_text(parent_id="cont", content="The window debug flag is set to better show the changes that occur when the sliders are changed and the offsets for the menu items.")
 
-ipg.add_column("main-light", 
-               container_id="col-light",
-               spacing=125.0,)
+ipg.add_column(
+        window_id="main-light", 
+        container_id="col-light",
+        spacing=125.0,)
 
 # A menu needs an ordered dictionary since
 # the order needs to be maintained.  The key values become the 
@@ -94,9 +95,10 @@ items = OrderedDict({"Menu0": [(None, IpgMenuType.Dot),
 # To add styling to any widget, use that widgets style command.
 btn = ipg.add_button_style(border_radius=[10.0])
 
-bar_btn_dark = ipg.add_button_style(border_radius=[10.0], 
-                     border_color=IpgColor.LIGHT_BLUE,
-                     border_width=2.0,)
+bar_btn_dark = ipg.add_button_style(
+                    border_radius=[10.0], 
+                    border_color=IpgColor.LIGHT_BLUE,
+                    border_width=2.0,)
 
 # To modify the separators in the menu, use the separator style
 line_dark = ipg.add_menu_separator_style( 
@@ -133,7 +135,7 @@ item_offsets = [10.0, 40.0, 60.0]
 # are not tuples but a str because they have no standard style.
 ipg.add_menu(
         parent_id="col-dark", 
-        item_offsets=items,
+        items=items,
         bar_widths=bar_widths,
         item_widths=item_widths,
         on_select=menu_pressed,
@@ -179,7 +181,7 @@ mn_style = ipg.add_menu_style(
 # Add some styling to the menu bar and menu
 ipg.add_menu(
         parent_id="col-dark", 
-        item_offsets=items,
+        items=items,
         bar_widths=bar_widths,
         item_widths=item_widths,
         menu_bar_style=mb_style,
@@ -189,7 +191,8 @@ ipg.add_menu(
 # Adding to second window
 
 menu_id = ipg.add_menu(
-                    parent_id="col-light", item_styles=items,
+                    parent_id="col-light", 
+                    items=items,
                     bar_widths=bar_widths, 
                     item_widths=item_widths, 
                     item_spacings=item_spacings,

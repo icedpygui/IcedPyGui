@@ -20,6 +20,7 @@ use once_cell::sync::Lazy;
 use crate::canvas::draw_canvas::IpgCanvasState;
 use crate::ipg_widgets::ipg_canvas::match_canvas_widget;
 use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, construct_color_picker, ColPikMessage};
+use crate::ipg_widgets::ipg_separator::construct_separator;
 use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
 use crate::{access_canvas_state, access_canvas_update_items, access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
@@ -34,7 +35,7 @@ use ipg_widgets::ipg_events::{IpgKeyBoardEvent, handle_window_closing, process_k
     process_mouse_events, process_touch_events, process_window_event};
 use ipg_widgets::helpers::find_key_for_value;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
-use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
+// use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
 use ipg_widgets::ipg_modal::{construct_modal, modal_callback, ModalMessage};
 use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_point, construct_mousearea};
 use ipg_widgets::ipg_opaque::{construct_opaque, opaque_callback};
@@ -74,7 +75,7 @@ pub enum Message {
     EventWindow((window::Id, Event)),
     EventTouch(Event),
     Image(usize, ImageMessage),
-    Menu(usize, MenuMessage),
+    // Menu(usize, MenuMessage),
     Modal(usize, ModalMessage),
     PickList(usize, PLMessage),
     Radio(usize, RDMessage),
@@ -213,11 +214,11 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
-            Message::Menu(id, message) => {
-                menu_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
-                Task::none()
-            },
+            // Message::Menu(id, message) => {
+            //     menu_callback(&mut self.state, id, message);
+            //     process_updates(&mut self.state, &mut self.canvas_state);
+            //     Task::none()
+            // },
             Message::Modal(id, message) => {
                 modal_callback(&mut self.state, id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
@@ -776,27 +777,9 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                     let image = img.clone();
                     Some(construct_image(image))
                 },
-                IpgWidgets::IpgMenu(menu) => {
-                    let menu_style_opt = match menu.menu_style_id.clone() {
-                        Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
-                        },
-                        None => None,
-                    };
-                    let bar_style_opt = match menu.menu_bar_style_id.clone() {
-                        Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
-                        },
-                        None => None,
-                    };
-                    let sep_style_opt = match menu.separator_item_style_all.clone() {
-                        Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
-                        },
-                        None => None,
-                     };
-                    Some(construct_menu(menu.clone(), menu_style_opt, bar_style_opt, sep_style_opt))
-                },
+                // IpgWidgets::IpgMenu(menu) => {
+                //     Some(construct_menu(menu.clone(), state))
+                // },
                 IpgWidgets::IpgDatePicker(dp) => {
                     let style_opt = match dp.button_style_id.clone() {
                         Some(id) => {
@@ -845,6 +828,15 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                 IpgWidgets::IpgSelectableText(sltxt) => {
                     Some(construct_selectable_text(sltxt.clone()))
                 },
+                IpgWidgets::IpgSeparator(sep) => {
+                    let style_opt = match sep.style_id.clone() {
+                        Some(id) => {
+                            state.widgets.get(&id).map(|st|st.clone())
+                        },
+                        None => None,
+                    };
+                    construct_separator(sep.clone(), style_opt)
+                }
                 IpgWidgets::IpgSlider(slider) => {
                     let style_opt = match slider.style_id.clone() {
                         Some(id) => {
@@ -1113,9 +1105,9 @@ fn clone_state(state: &mut IpgState) {
     state.button_style = mutex_state.button_style.to_owned();
     state.checkbox_style = mutex_state.checkbox_style.to_owned();
     state.color_picker_style = mutex_state.color_picker_style.to_owned();
-    state.menu_bar_style = mutex_state.menu_bar_style.to_owned();
-    state.menu_style = mutex_state.menu_style.to_owned();
-    state.menu_separator_style = mutex_state.menu_separator_style.to_owned();
+    // state.menu_bar_style = mutex_state.menu_bar_style.to_owned();
+    // state.menu_style = mutex_state.menu_style.to_owned();
+    // state.menu_separator_style = mutex_state.menu_separator_style.to_owned();
     state.opaque_style = mutex_state.opaque_style.to_owned();
     state.pick_list_style = mutex_state.pick_list_style.to_owned();
     state.progress_bar_style = mutex_state.progress_bar_style.to_owned();
@@ -1153,9 +1145,9 @@ fn clone_state(state: &mut IpgState) {
     mutex_state.button_style = Lazy::new(||HashMap::new());
     mutex_state.checkbox_style = Lazy::new(||HashMap::new());
     mutex_state.color_picker_style = Lazy::new(||HashMap::new());
-    mutex_state.menu_bar_style = Lazy::new(||HashMap::new());
-    mutex_state.menu_style = Lazy::new(||HashMap::new());
-    mutex_state.menu_separator_style = Lazy::new(||HashMap::new());
+    // mutex_state.menu_bar_style = Lazy::new(||HashMap::new());
+    // mutex_state.menu_style = Lazy::new(||HashMap::new());
+    // mutex_state.menu_separator_style = Lazy::new(||HashMap::new());
     mutex_state.opaque_style = Lazy::new(||HashMap::new());
     mutex_state.pick_list_style = Lazy::new(||HashMap::new());
     mutex_state.progress_bar_style = Lazy::new(||HashMap::new());

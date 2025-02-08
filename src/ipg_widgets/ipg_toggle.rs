@@ -468,7 +468,7 @@ pub fn toggler_style_update_item(style: &mut IpgTogglerStyle,
     }
 }
 
-fn get_toggler_style(style: Option<IpgWidgets>) -> Option<IpgTogglerStyle>{
+pub fn get_toggler_style(style: Option<IpgWidgets>) -> Option<IpgTogglerStyle>{
     match style {
         Some(st) => {
             match st {

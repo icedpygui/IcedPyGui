@@ -1329,7 +1329,7 @@ class IPG:
 
     def add_menu(self, 
                 parent_id: str,  
-                items: OrderedDict[str, list[str]],
+                items: list[tuple[str, IpgMenuType, Optional[int]]],
                 bar_widths: list[float],
                 item_widths: list[float],  
                 *,
@@ -1342,16 +1342,6 @@ class IPG:
                 item_offsets: Optional[list[float]]=None,
                 menu_bar_style: Optional[int]=None,
                 menu_style: Optional[str]=None,
-                button_bar_style_all: Optional[tuple]=None,
-                button_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None,
-                checkbox_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None,
-                toggler_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None,
-                circle_item_style_all: Optional[str]=None,
-                dot_item_style_all: Optional[str]=None,
-                label_item_style_all: Optional[str]=None,
-                line_item_style_all: Optional[str]=None,
-                text_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None,
-                item_styles: Optional[list[tuple[int, int, IpgMenuType, IpgStyleStandard]]]=None,
                 gen_id: Optional[int]=None,
                 user_data: Optional[Any]=None,
                 ) -> int:
@@ -1362,8 +1352,8 @@ class IPG:
         ----------
             parent_id: str
                 Id of another container to place the widget in.
-            items: OrderedDict[str, list[str]]
-                Sets the menu items with the key being the bar item and values the menu items.
+            items: list[tuple[str, IpgMenuType, Optional[int]]]
+                menu items where the first list is the bar menu items.
             bar_widths: list[float]
                 Widths of the bars.
             item_widths: list[float]
@@ -2161,6 +2151,83 @@ class IPG:
         -------
         id: int
             Internal id of widget and can be used by user if equated.
+        """
+
+    def add_separator(self,
+                        parent_id,
+                        separator_type,
+                        *,
+                        label: Optional[str]=None,
+                        circle_radius: float=4.0,
+                        dot_radius: float=4.0,
+                        quad_ratios: Optional[list[float, 2]]=None,
+                        width: float,
+                        width_fill: bool=False,
+                        height: float,
+                        height_fill: bool=False,
+                        padding: list[float]=[10.0],
+                        style_id: Optional[int]=None,
+                        gen_id: Optional[int]=None,
+                        show: bool=True
+                        ) -> int:
+        """
+        Adds a selectable text widget.  This selectable text allows more mouse interaction than
+        a button with a style of text only.
+
+        Parameters
+        ----------
+        
+        """
+    
+    def add_separator_style(self,
+                            separator_color: Optional[IpgColor]=None,
+                            separator_rgba: Optional[list[float]]=None,
+                            separator_border_color: Optional[IpgColor]=None,
+                            separator_border_rgba: Optional[list[float]]=None,
+                            separator_border_width: Optional[float]=None,
+                            separator_border_radius: Optional[list[float]]=None,
+                            separator_shadow_color: Optional[IpgColor]=None,
+                            separator_shadow_rgba: Optional[list[float]]=None,
+                            separator_shadow_offset: Optional[list[float]]=None,
+                            separator_shadow_blur_radius: Optional[float]=None,
+                            background_color: Optional[IpgColor]=None,
+                            background_rgba: Optional[list[float]]=None,
+                            background_border_color: Optional[IpgColor]=None,
+                            background_border_rgba: Optional[list[float]]=None,
+                            background_border_width: Optional[float]=None,
+                            background_border_radius: Optional[list[float]]=None,
+                            background_shadow_color: Optional[IpgColor]=None,
+                            background_shadow_rgba: Optional[list[float]]=None,
+                            background_shadow_offset: Optional[list[float]]=None,
+                            background_shadow_blur_radius: Optional[float]=None,
+                            gen_id: Optional[int]=None,
+                            ) -> int:
+        """
+        The styling of the separators.
+
+        Parameters
+        ----------
+            separator_color: Optional[IpgColor]=None
+            separator_rgba: Optional[list[float]]=None
+            separator_border_color: Optional[IpgColor]=None
+            separator_border_rgba: Optional[list[float]]=None
+            separator_border_width: Optional[float]=None
+            separator_border_radius: Optional[list[float]]=None
+            separator_shadow_color: Optional[IpgColor]=None
+            separator_shadow_rgba: Optional[list[float]]=None
+            separator_shadow_offset: Optional[list[float]]=None
+            separator_shadow_blur_radius: Optional[float]=None
+            background_color: Optional[IpgColor]=None
+            background_rgba: Optional[list[float]]=None
+            background_border_color: Optional[IpgColor]=None
+            background_border_rgba: Optional[list[float]]=None
+            background_border_width: Optional[float]=None
+            background_border_radius: Optional[list[float]]=None
+            background_shadow_color: Optional[IpgColor]=None
+            background_shadow_rgba: Optional[list[float]]=None
+            background_shadow_offset: Optional[list[float]]=None
+            background_shadow_blur_radius: Optional[float]=None
+            gen_id: Optional[int]=None
         """
 
     def add_slider(self, 

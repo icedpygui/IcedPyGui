@@ -521,7 +521,7 @@ pub fn try_extract_checkbox_style_update(update_obj: PyObject) -> IpgCheckboxSty
     })
 }
 
-fn get_chk_style(style: Option<IpgWidgets>) -> Option<IpgCheckboxStyle>{
+pub fn get_chk_style(style: Option<IpgWidgets>) -> Option<IpgCheckboxStyle>{
     match style {
         Some(st) => {
             match st {

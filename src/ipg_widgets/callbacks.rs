@@ -209,34 +209,34 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 }
             },
-            IpgWidgets::IpgMenu(menu) => {
-                let mut wco = WidgetCallbackOut::default();
-                if wci.is_checked.is_some() {
-                    menu.is_checked = wci.is_checked.unwrap();
-                    wco.is_checked = wci.is_checked;
-                }
-                if wci.on_toggle.is_some() {
-                    menu.is_toggled = wci.on_toggle.unwrap();
-                    wco.on_toggle = wci.on_toggle;
-                }
-                wco.user_data = menu.user_data.clone();
-                return wco
-            },
-            IpgWidgets::IpgMenuStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
-            },
-            IpgWidgets::IpgMenuBarStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
-            },
-            IpgWidgets::IpgMenuSeparatorStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
-            },
+            // IpgWidgets::IpgMenu(menu) => {
+            //     let mut wco = WidgetCallbackOut::default();
+            //     if wci.is_checked.is_some() {
+            //         menu.is_checked = wci.is_checked.unwrap();
+            //         wco.is_checked = wci.is_checked;
+            //     }
+            //     if wci.on_toggle.is_some() {
+            //         menu.is_toggled = wci.on_toggle.unwrap();
+            //         wco.on_toggle = wci.on_toggle;
+            //     }
+            //     wco.user_data = menu.user_data.clone();
+            //     return wco
+            // },
+            // IpgWidgets::IpgMenuStyle(_) => {
+            //     return WidgetCallbackOut{
+            //         ..Default::default()
+            //     }
+            // },
+            // IpgWidgets::IpgMenuBarStyle(_) => {
+            //     return WidgetCallbackOut{
+            //         ..Default::default()
+            //     }
+            // },
+            // IpgWidgets::IpgMenuSeparatorStyle(_) => {
+            //     return WidgetCallbackOut{
+            //         ..Default::default()
+            //     }
+            // },
             IpgWidgets::IpgPickList(pl) => {
                 pl.selected = wci.value_str;
                 return WidgetCallbackOut{
@@ -281,6 +281,16 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             IpgWidgets::IpgSelectableText(st) => {
                 return WidgetCallbackOut{
                     user_data: st.user_data.clone(),
+                    ..Default::default()
+                }
+            },
+            IpgWidgets::IpgSeparator(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
+            IpgWidgets::IpgSeparatorStyle(_) => {
+                return WidgetCallbackOut{
                     ..Default::default()
                 }
             },

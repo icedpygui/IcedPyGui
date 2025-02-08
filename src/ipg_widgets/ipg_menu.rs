@@ -24,18 +24,18 @@ use super::helpers::{get_height, get_padding_f64, get_radius,
     try_extract_array_2, try_extract_boolean, try_extract_f64, 
     try_extract_ipg_color, try_extract_rgba_color, 
     try_extract_vec_f32, try_extract_vec_f64};
+use super::ipg_button::get_btn_style;
+use super::ipg_checkbox::get_chk_style;
 use super::ipg_enums::IpgWidgets;
+use super::ipg_toggle::get_toggler_style;
 use super::{ipg_button, ipg_checkbox, ipg_toggle};
 
 use pyo3::{pyclass, PyObject, Python};
 
-pub type ItemStyles = (usize, usize, Option<IpgStyleStandard>, Option<String>);
-pub type MenuStyleAll = (Option<IpgStyleStandard>, Option<String>);
-
 #[derive(Debug, Clone)]
 pub struct IpgMenu {
     pub id: usize,
-    pub items: PyObject, //ordered py dictionary
+    pub items: Vec<Vec<(Option<String>, IpgMenuType, Option<usize>)>>,
     pub bar_widths: Vec<f32>,
     pub item_widths: Vec<f32>,
     pub bar_spacing: f32,
@@ -46,22 +46,9 @@ pub struct IpgMenu {
     pub item_offsets: Option<Vec<f32>>,
     pub menu_bar_style_id: Option<usize>, // style_id of add_menu_bar_style()
     pub menu_style_id: Option<usize>, // style_id of add_menu_style()
-    // Option<String> in the below styles refer to the style_id of widget styles, not add_menu_style
-    pub button_bar_style_all: Option<MenuStyleAll>,
-    pub button_item_style_all: Option<MenuStyleAll>,
-    pub checkbox_item_style_all: Option<MenuStyleAll>,
-    pub circle_item_style_all: Option<String>,
-    pub dot_item_style_all: Option<String>,
-    pub label_item_style_all: Option<String>,
-    pub line_item_style_all: Option<String>,
-    pub separator_item_style_all: Option<usize>,
-    pub text_item_style_all: Option<String>,
-    pub toggler_item_style_all: Option<String>,
-    pub item_styles: Option<Vec<ItemStyles>>,
     pub theme: Theme,
     pub show: bool,
     pub user_data: Option<PyObject>,
-    menu_columns: usize,
     new_menu: bool, 
     updating_separators: bool,
     pub is_checked: bool,
@@ -71,7 +58,7 @@ pub struct IpgMenu {
 impl IpgMenu {
     pub fn new(
         id: usize,
-        items: PyObject,
+        items: Vec<Vec<(Option<String>, IpgMenuType, Option<usize>)>>,
         bar_widths: Vec<f32>,
         item_widths: Vec<f32>,
         bar_spacing: f32,
@@ -82,17 +69,6 @@ impl IpgMenu {
         item_offsets: Option<Vec<f32>>,
         menu_bar_style_id: Option<usize>,
         menu_style_id: Option<usize>,
-        button_bar_style_all: Option<MenuStyleAll>,
-        button_item_style_all: Option<MenuStyleAll>,
-        checkbox_item_style_all: Option<MenuStyleAll>,
-        circle_item_style_all: Option<String>,
-        dot_item_style_all: Option<String>,
-        label_item_style_all: Option<String>,
-        line_item_style_all: Option<String>,
-        separator_item_style_all: Option<usize>,
-        text_item_style_all: Option<String>,
-        toggler_item_style_all: Option<String>,
-        item_styles: Option<Vec<ItemStyles>>,
         theme: Theme,
         show: bool,
         user_data: Option<PyObject>,
@@ -110,21 +86,9 @@ impl IpgMenu {
             item_offsets,
             menu_bar_style_id,
             menu_style_id,
-            button_bar_style_all,
-            button_item_style_all,
-            checkbox_item_style_all,
-            circle_item_style_all,
-            dot_item_style_all,
-            label_item_style_all,
-            line_item_style_all,
-            separator_item_style_all,
-            text_item_style_all,
-            toggler_item_style_all,
-            item_styles,
             theme,
             show,
             user_data,
-            menu_columns: 0,
             new_menu: false,
             updating_separators: false,
             is_checked: false,
@@ -247,62 +211,69 @@ pub enum IpgMenuType {
 }
 
 pub fn construct_menu(mut mn: IpgMenu, 
-                        menu_style_opt: Option<IpgWidgets>,
-                        bar_style_opt: Option<IpgWidgets>,
-                        sep_style_opt: Option<IpgWidgets>)
+                        state: &IpgState)
                         -> Element<'static, app::Message, Theme, Renderer> {
 
-    let menu = try_extract_dict(mn.items);
+    let menu_style_opt = match mn.menu_style_id.clone() {
+                        Some(id) => {
+                            state.widgets.get(&id).map(|st|st.clone())
+                        },
+                        None => None,
+                    };
+                    
+    let bar_style_opt = match mn.menu_bar_style_id.clone() {
+        Some(id) => {
+            state.widgets.get(&id).map(|st|st.clone())
+        },
+        None => None,
+    };
     
-    // Labels are the keys of the dictionary items
-    let labels: Vec<String> = menu.clone().into_keys().collect();
-
-    mn.menu_columns = labels.len();
-
+    let column_count = mn.items[0].len();
+;
     // default the spacing and widths if new menu.
     // Occurs during menu updating.
     if mn.new_menu {
-        mn.item_spacings = Some(vec![0.0; mn.menu_columns]);
-        mn.item_widths = vec![0.0; mn.menu_columns];
-        mn.item_offsets = Some(vec![0.0; mn.menu_columns]);
+        mn.item_spacings = Some(vec![0.0; column_count]);
+        mn.item_widths = vec![0.0; column_count];
+        mn.item_offsets = Some(vec![0.0; column_count]);
         mn.new_menu = false;
     }
 
-    let mut item_spacings = vec![0.0; mn.menu_columns];
+    let mut item_spacings = vec![0.0; column_count];
     if mn.item_spacings.is_some() {
         let spacings = mn.item_spacings.unwrap();
         if spacings.len() == 1 {
-            item_spacings = vec![spacings[0]; mn.menu_columns]
-        } else if spacings.len() != mn.menu_columns {
-            panic!("Menu spacings: The number of spacings {} must be 1 or match the number of bar items {}.", spacings.len(), mn.menu_columns)
+            item_spacings = vec![spacings[0]; column_count]
+        } else if spacings.len() != column_count {
+            panic!("Menu spacings: The number of spacings {} must be 1 or match the number of bar items {}.", spacings.len(), column_count)
         } else {
             item_spacings = spacings;
         }
     }
 
     let item_widths = if mn.item_widths.len() == 1 {
-        vec![mn.item_widths[0]; mn.menu_columns]
-    } else if mn.item_widths.len() != mn.menu_columns {
-        panic!("Menu item widths: The number of widths {} must be 1 or match the number of bar items {}.", mn.item_widths.len(), mn.menu_columns)
+        vec![mn.item_widths[0]; column_count]
+    } else if mn.item_widths.len() != column_count {
+        panic!("Menu item widths: The number of widths {} must be 1 or match the number of bar items {}.", mn.item_widths.len(), column_count)
     } else {
         mn.item_widths
     };
     
     let bar_widths = if mn.bar_widths.len() == 1 {
-        vec![mn.bar_widths[0]; mn.menu_columns]
-    } else if mn.bar_widths.len() != mn.menu_columns {
-        panic!("Menu bar_widths: The number of widths {} must be 1 or match the number of bar items {}.", mn.bar_widths.len(), mn.menu_columns)
+        vec![mn.bar_widths[0]; column_count]
+    } else if mn.bar_widths.len() != column_count {
+        panic!("Menu bar_widths: The number of widths {} must be 1 or match the number of bar items {}.", mn.bar_widths.len(), column_count)
     } else {
         mn.bar_widths
     };
 
-    let mut item_offsets = vec![0.0; mn.menu_columns];
+    let mut item_offsets = vec![0.0; column_count];
     if mn.item_offsets.is_some() {
         let offsets = mn.item_offsets.unwrap();
         if offsets.len() == 1 {
-            item_offsets = vec![offsets[0]; mn.menu_columns]
-        } else if offsets.len() != mn.menu_columns {
-            panic!("Menu offsets: The number of offsets {} must be 1 or match the number of bar items {}.", item_offsets.len(), mn.menu_columns)
+            item_offsets = vec![offsets[0]; column_count]
+        } else if offsets.len() != column_count {
+            panic!("Menu offsets: The number of offsets {} must be 1 or match the number of bar items {}.", item_offsets.len(), column_count)
         } else {
             item_offsets = offsets;
         }
@@ -312,32 +283,18 @@ pub fn construct_menu(mut mn: IpgMenu,
 
     let mut bar_items: Vec<Item<MenuMessage, Theme, Renderer>> = vec![];
 
-    for (bar_index, (bar_label, menu_items)) 
-        in menu.iter().enumerate() {
+    for (bar_index, (bar_label, bar_item_type, bar_item_style_id)) 
+        in mn.items[0].iter().enumerate() {
         
         let mut items: Vec<Item<'static, MenuMessage, Theme, Renderer>> = vec![];
-
-        let bar_style = mn.button_bar_style_all.clone();
-
-        for (item_index, (item_label, item_type)) 
-            in menu_items.iter().enumerate() {
-
-            items.push(get_menu_item(item_label.clone(),
-                                    item_type.clone(),
+        
+        for item_index in 1..mn.items[bar_index].len() {
+            items.push(get_menu_item(mn.items[bar_index][item_index].0.clone(),
+                                    mn.items[bar_index][item_index].1.clone(),
+                                    mn.items[bar_index][item_index].2.clone(),
                                     bar_index,
                                     item_index,
-                                    mn.item_styles.clone(),
-                                    mn.button_item_style_all.clone(),
-                                    mn.checkbox_item_style_all.clone(),
-                                    mn.circle_item_style_all.clone(),
-                                    mn.dot_item_style_all.clone(),
-                                    mn.label_item_style_all.clone(),
-                                    mn.line_item_style_all.clone(),
-                                    mn.text_item_style_all.clone(),
-                                    mn.toggler_item_style_all.clone(),
-                                    mn.is_checked,
-                                    mn.is_toggled,
-                                    mn.theme.clone(),
+                                    state,
                                     ));
         }
         
@@ -353,7 +310,7 @@ pub fn construct_menu(mut mn: IpgMenu,
                                                         bar_label.clone(),
                                                         item_widths[bar_index],
                                                         bar_index,
-                                                        bar_style), 
+                                                        *bar_item_style_id), 
                                                         menu_tpl(items)
                                                         );
 
@@ -688,106 +645,34 @@ pub fn try_extract_menu_update(update_obj: PyObject) -> IpgMenuParam {
 
 fn get_menu_item(label: Option<String>,
                 item_type: IpgMenuType,
+                item_style_id: Option<usize>,
                 bar_index: usize,
                 item_index: usize,
-                item_styles: Option<Vec<(usize, usize, Option<IpgStyleStandard>, Option<String>)>>,
-                button_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-                checkbox_item_style_all: Option<(Option<IpgStyleStandard>, Option<String>)>,
-                circle_item_style_all: Option<String>,
-                dot_item_style_all: Option<String>,
-                label_item_style_all: Option<String>,
-                line_item_style_all: Option<String>,
-                text_item_style_all: Option<String>,
-                toggler_item_style_all: Option<String>,
-                is_checked: bool,
-                is_toggled: bool,
-                theme: Theme,
+                state: &IpgState,
                 ) -> Item<'static, MenuMessage, Theme, Renderer> {
     
 
-    let mut style: Option<String> = None;
-    let mut style_standard: Option<IpgStyleStandard> = None;
-
-    // Check if a certain style was used
-    if let Some(s) = item_styles {
-        for (b_index, itm_index, std_style, istyle) in s.iter() {
-            if &bar_index == b_index && &item_index == itm_index {
-                style = istyle.clone();
-                style_standard = std_style.clone();
-                break;
-            }
-        }
-    }
-        
-    // get the style
-    match item_type {
-        IpgMenuType::Button => {
-            if button_item_style_all.is_some(){
-                (style_standard, style) = button_item_style_all.unwrap();
-                // Need a default style if only using style
-                if style_standard.is_none() && style.is_some() {
-                    style_standard = Some(IpgStyleStandard::Primary);
-                }
-            }
-        }
-        IpgMenuType::Checkbox => {
-            if checkbox_item_style_all.is_some(){
-                (style_standard, style) = checkbox_item_style_all.unwrap();
-                // Need a default style if only using style
-                if style_standard.is_none() && style.is_some() {
-                    style_standard = Some(IpgStyleStandard::Primary);
-                }
-            }
+    let style_opt = match item_style_id {
+        Some(id) => {
+            state.widgets.get(&id).map(|st|st.clone())
         },
-        IpgMenuType::Circle => {
-            if circle_item_style_all.is_some(){
-                style = circle_item_style_all;  
-            }
-        },
-        IpgMenuType::Dot => {
-            if dot_item_style_all.is_some(){
-                style = dot_item_style_all;
-            }
-        },
-        IpgMenuType::Label => {
-            if label_item_style_all.is_some(){
-                style = label_item_style_all;
-            }
-        },
-        IpgMenuType::Line => {
-            if line_item_style_all.is_some(){
-                style = line_item_style_all;
-            }
-        },
-        IpgMenuType::Text => {
-            if text_item_style_all.is_some(){
-                style = text_item_style_all;
-            }
-        }
-        IpgMenuType::Toggler => {
-            if toggler_item_style_all.is_some(){
-                style = toggler_item_style_all;
-            }
-        },
-    }
-    
+        None => None,
+    };
+  
     match_menu_item(
         item_type, 
-        style, 
-        style_standard, 
+        style_opt, 
         bar_index, item_index, 
-        is_checked, is_toggled, 
-        label, theme)
+        false, false, 
+        label)
             
 }
 
 fn match_menu_item(item_type: IpgMenuType,
-                    style: Option<String>,
-                    style_standard: Option<IpgStyleStandard>,
+                    style: Option<IpgWidgets>,
                     bar_index: usize, item_index: usize, 
                     is_checked: bool, is_toggled: bool,
                     label: Option<String>,
-                    theme: Theme,
                     ) -> Item<'static, MenuMessage, Theme, Renderer> 
 {
     let mut lbl = "".to_string();
@@ -799,33 +684,52 @@ fn match_menu_item(item_type: IpgMenuType,
         IpgMenuType::Button => {
             let label_txt: Element<MenuMessage, Theme, Renderer> = Text::new(lbl).into();
 
+            let style_opt = get_btn_style(style);
+            let style_standard = if style_opt.is_none() {
+                Some(IpgStyleStandard::Primary)
+            } else {
+                None
+            };
+
             let btn: Element<MenuMessage, Theme, Renderer> = 
                             Button::new(label_txt)
                                     .on_press(MenuMessage::ItemPressed((bar_index, item_index)))
                                     .width(Length::Fill)
                                     .style(move|theme: &Theme, status| {
                                         ipg_button::get_styling(theme, status, 
-                                                                None,
-                                                                style_standard.clone()) 
+                                                                style_opt,
+                                                                style_standard) 
                                         })
                                     .into();
             Item::new(btn)
         },
         IpgMenuType::Checkbox => {
+            let style_opt = get_chk_style(style);
+            let style_standard = if style_opt.is_none() {
+                Some(IpgStyleStandard::Primary)
+            } else {
+                None
+            };
             let chkbx: Element<MenuMessage, Theme, Renderer> = 
                         Checkbox::new(lbl, 
                             is_checked)
                             .on_toggle(move|b| MenuMessage::ItemCheckToggled(b, (bar_index, item_index)))
                             .style(move|theme: &Theme, status| {
                                 ipg_checkbox::get_styling(theme, status, 
-                                                        None,
-                                                        style_standard.clone(),
+                                                        style_opt,
+                                                        style_standard,
                                                         is_checked) 
                             })
                             .into();
             Item::new(chkbx)
         },
         IpgMenuType::Toggler => {
+            let style_opt = get_toggler_style(style);
+            let style_standard = if style_opt.is_none() {
+                Some(IpgStyleStandard::Primary)
+            } else {
+                None
+            };
             let tog: Element<MenuMessage, Theme, Renderer> = 
                         Toggler::new(is_toggled)
                             .on_toggle(move|b| 
@@ -871,19 +775,14 @@ fn match_menu_item(item_type: IpgMenuType,
 fn menu_bar_button(label: String, 
                     width: f32, 
                     bar_index: usize, 
-                    bar_button_style: Option<(Option<IpgStyleStandard>, Option<String>)>,
+                    bar_style_id: Option<usize>,
                 ) -> Element<'static, MenuMessage, Theme, Renderer> {
 
-    let (mut style_standard, style) = 
-        match bar_button_style {
-            Some(bbs) => {
-                (bbs.0, bbs.1)
-            },
-            None => (None, None),
-        };
-    
-
-    if style_standard.is_none() && style.is_some() {
+    let mut style = None;
+    let mut style_standard = Noe;                
+    if item_style_id.is_some() {
+        style = Some(state.widgets.get(&item_style_id.unwrap()).map(|st|st.clone()));
+    } else {       
         style_standard = Some(IpgStyleStandard::Primary);
     }
 
@@ -1001,10 +900,10 @@ fn separator() -> Quad {
     }
 }
 
-fn try_extract_dict(items: PyObject) -> BTreeMap<String, Vec<(Option<String>, IpgMenuType)>> {
+fn try_extract_dict(items: PyObject) -> BTreeMap<String, Vec<(Option<String>, IpgMenuType, usize)>> {
     Python::with_gil(|py| {
 
-        let res = items.extract::<BTreeMap<String, Vec<(Option<String>, IpgMenuType)>>>(py);
+        let res = items.extract::<BTreeMap<String, Vec<(Option<String>, IpgMenuType, usize)>>>(py);
         match res {
             Ok(val) => val,
             Err(_) => panic!("Menu: Unable to extract python menu dict"),
