@@ -5203,6 +5203,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgSelectableTextParam>()?;
     m.add_class::<IpgSeparatorParam>()?;
     m.add_class::<IpgSeparatorType>()?;
+    m.add_class::<IpgSeparatorParam>()?;
     m.add_class::<IpgSeparatorStyleParam>()?;
     m.add_class::<IpgSliderParam>()?;
     m.add_class::<IpgSliderStyleParam>()?;

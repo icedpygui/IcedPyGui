@@ -7,4 +7,10 @@
     
     "editor.selectionClipboard": false,
     "rust-analyzer.hover.documentation.keywords.enable": true,
+
+    "[python]": {
+        "editor.detectIndentation": false,
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    }
 }

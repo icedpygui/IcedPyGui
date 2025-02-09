@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, OrderedDict, Optional, Tuple, Union
 
 
@@ -5022,6 +5023,28 @@ class IpgSelectableTextParam:
     TextColor: IpgColor
     TextRgba: list[float, 4]
     Show: bool
+
+
+class IpgSeparatorParam:
+    DotCount: int
+    DotFill: bool
+    DotBorderWidth: float
+    DotRadius: float
+    Height: float
+    HeightFill: bool
+    Label: str
+    Spacing: float
+    Show: bool
+    StyleId: int
+    Width: float
+    WidthFill: bool
+
+
+class IpgSeparatorType:
+    Dot=""
+    Label=""
+    Line=""
+
 
 class IpgSliderParam:
     """

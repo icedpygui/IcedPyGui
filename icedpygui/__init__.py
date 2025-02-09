@@ -18,7 +18,7 @@ from .icedpygui import IpgRadioParam, IpgRadioDirection, IpgRadioStyleParam
 from .icedpygui import IpgRuleStyleParam
 from .icedpygui import IpgScrollableDirection, IpgScrollableParam, IpgScrollableStyleParam
 from .icedpygui import IpgSelectableTextParam
-from .icedpygui import IpgSeparatorType, IpgSeparatorStyleParam
+from .icedpygui import IpgSeparatorType, IpgSeparatorParam, IpgSeparatorStyleParam
 from .icedpygui import IpgSliderParam, IpgSliderStyleParam
 from .icedpygui import IpgStackParam
 from .icedpygui import IpgStyleStandard
