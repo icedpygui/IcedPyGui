@@ -94,7 +94,7 @@ use ipg_widgets::ipg_enums::{IpgAlignment, IpgContainers, IpgHorizontalAlignment
     IpgVerticalAlignment, IpgWidgets};
 
 use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, 
-    get_line_height, get_padding_f32, get_padding_f64, get_shaping, get_width};
+    get_line_height, get_padding_f64, get_shaping, get_width};
 
 use graphics::colors::{get_color, IpgColor};
 use style::styling::{readable, IpgStyleStandard};
@@ -2922,11 +2922,11 @@ impl IPG {
                         separator_type=IpgSeparatorType::Line,
                         label=None, label_left_width=20.0,
                         label_right_width=20.0,
-                        dot_radius=0.0, dot_count=1,
-                        dot_fill=true, quad_ratios=None, 
+                        dot_radius=4.0, dot_count=1,
+                        dot_fill=true, dot_border_width=0.0,
                         width=None, width_fill=false, 
                         height=None, height_fill=false,
-                        padding=None, style_id=None,
+                        spacing=0.0, style_id=None,
                         gen_id=None, show=true))]
     fn add_separator(&mut self,
                         parent_id: String,
@@ -2937,12 +2937,12 @@ impl IPG {
                         dot_radius: f32,
                         dot_count: usize,
                         dot_fill: bool,
-                        quad_ratios: Option<[f32; 2]>,
+                        dot_border_width: f32,
                         width: Option<f32>, 
                         width_fill: bool,
                         height: Option<f32>,
                         height_fill: bool,
-                        padding: Option<Vec<f32>>,
+                        spacing: f32,
                         style_id: Option<usize>,
                         gen_id: Option<usize>,
                         show: bool,
@@ -2953,7 +2953,6 @@ impl IPG {
 
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
-        let padding = get_padding_f32(padding);
 
         set_state_of_widget(id, parent_id);
 
@@ -2969,10 +2968,10 @@ impl IPG {
                 dot_radius,
                 dot_count,
                 dot_fill,
-                quad_ratios,
+                dot_border_width,
                 width,
                 height,
-                padding,
+                spacing,
                 style_id,
                 show,
                 )));
@@ -2985,27 +2984,15 @@ impl IPG {
     #[pyo3(signature = (
                         ipg_color=None,
                         rgba_color=None,
-                        border_color=None,
-                        border_rgba=None,
-                        border_width=None,
-                        border_radius=None,
-                        shadow_color=None,
-                        shadow_rgba=None,
-                        shadow_offset=None,
-                        shadow_blur_radius=None,
+                        border_ipg_color=None,
+                        border_rgba_color=None,
                         gen_id=None,
                         ))]
     fn add_separator_style(&mut self,
                                 ipg_color: Option<IpgColor>,
                                 rgba_color: Option<[f32; 4]>,
-                                border_color: Option<IpgColor>,
-                                border_rgba: Option<[f32; 4]>,
-                                border_width: Option<f32>,
-                                border_radius: Option<f32>,
-                                shadow_color: Option<IpgColor>,
-                                shadow_rgba: Option<[f32; 4]>,
-                                shadow_offset: Option<[f32; 2]>,
-                                shadow_blur_radius: Option<f32>,
+                                border_ipg_color: Option<IpgColor>,
+                                border_rgba_color: Option<[f32; 4]>,
                                 gen_id: Option<usize>,
                                 ) -> PyResult<usize> 
     {
@@ -3014,9 +3001,7 @@ impl IPG {
         let color: Option<Color> = 
             get_color(rgba_color, ipg_color, 1.0, false);
         let border_color = 
-            get_color(border_rgba, border_color, 1.0, false);
-        let shadow_color = 
-            get_color(shadow_rgba, shadow_color, 1.0, false);
+            get_color(border_rgba_color, border_ipg_color, 1.0, false);
 
         let mut state = access_state();
         
@@ -3025,11 +3010,6 @@ impl IPG {
                 id,
                 color,
                 border_color,
-                border_width,
-                border_radius,
-                shadow_color,
-                shadow_offset,
-                shadow_blur_radius,
                 )));
 
         state.last_id = id;

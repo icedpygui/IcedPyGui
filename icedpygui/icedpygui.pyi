@@ -2158,14 +2158,17 @@ class IPG:
                         separator_type,
                         *,
                         label: Optional[str]=None,
-                        circle_radius: float=4.0,
+                        label_left_width: float=0.0,
+                        label_right_width: float=0.0,
                         dot_radius: float=4.0,
-                        quad_ratios: Optional[list[float, 2]]=None,
+                        dot_count: int=1,
+                        dot_fill: bool=True,
+                        dot_border_width: float=0.0,
                         width: float,
                         width_fill: bool=False,
                         height: float,
                         height_fill: bool=False,
-                        padding: list[float]=[10.0],
+                        spacing: float=0.0,
                         style_id: Optional[int]=None,
                         gen_id: Optional[int]=None,
                         show: bool=True
@@ -2180,26 +2183,10 @@ class IPG:
         """
     
     def add_separator_style(self,
-                            separator_color: Optional[IpgColor]=None,
-                            separator_rgba: Optional[list[float]]=None,
-                            separator_border_color: Optional[IpgColor]=None,
-                            separator_border_rgba: Optional[list[float]]=None,
-                            separator_border_width: Optional[float]=None,
-                            separator_border_radius: Optional[list[float]]=None,
-                            separator_shadow_color: Optional[IpgColor]=None,
-                            separator_shadow_rgba: Optional[list[float]]=None,
-                            separator_shadow_offset: Optional[list[float]]=None,
-                            separator_shadow_blur_radius: Optional[float]=None,
-                            background_color: Optional[IpgColor]=None,
-                            background_rgba: Optional[list[float]]=None,
-                            background_border_color: Optional[IpgColor]=None,
-                            background_border_rgba: Optional[list[float]]=None,
-                            background_border_width: Optional[float]=None,
-                            background_border_radius: Optional[list[float]]=None,
-                            background_shadow_color: Optional[IpgColor]=None,
-                            background_shadow_rgba: Optional[list[float]]=None,
-                            background_shadow_offset: Optional[list[float]]=None,
-                            background_shadow_blur_radius: Optional[float]=None,
+                            ipg_color: Optional[IpgColor]=None,
+                            rgba_color: Optional[list[float]]=None,
+                            border_ipg_color: Optional[IpgColor]=None,
+                            border_rgba: Optional[list[float]]=None,
                             gen_id: Optional[int]=None,
                             ) -> int:
         """
@@ -2207,27 +2194,10 @@ class IPG:
 
         Parameters
         ----------
-            separator_color: Optional[IpgColor]=None
-            separator_rgba: Optional[list[float]]=None
-            separator_border_color: Optional[IpgColor]=None
-            separator_border_rgba: Optional[list[float]]=None
-            separator_border_width: Optional[float]=None
-            separator_border_radius: Optional[list[float]]=None
-            separator_shadow_color: Optional[IpgColor]=None
-            separator_shadow_rgba: Optional[list[float]]=None
-            separator_shadow_offset: Optional[list[float]]=None
-            separator_shadow_blur_radius: Optional[float]=None
-            background_color: Optional[IpgColor]=None
-            background_rgba: Optional[list[float]]=None
-            background_border_color: Optional[IpgColor]=None
-            background_border_rgba: Optional[list[float]]=None
-            background_border_width: Optional[float]=None
-            background_border_radius: Optional[list[float]]=None
-            background_shadow_color: Optional[IpgColor]=None
-            background_shadow_rgba: Optional[list[float]]=None
-            background_shadow_offset: Optional[list[float]]=None
-            background_shadow_blur_radius: Optional[float]=None
-            gen_id: Optional[int]=None
+            ipg_color: Optional[IpgColor]=None
+            rgba_color: Optional[list[float, 4]]=None
+            border_ipg_color: Optional[IpgColor]=None
+            border_rgba_color: Optional[list[float, 4]]=None
         """
 
     def add_slider(self, 

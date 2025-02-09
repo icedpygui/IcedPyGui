@@ -5,7 +5,10 @@ use crate::graphics::colors::{get_color, IpgColor};
 use crate::iced_aw_widgets::menu::quad::{InnerBounds, Quad};
 
 use crate::app;
-use super::helpers::{get_height, get_padding_f64, get_width, try_extract_array_2, try_extract_boolean, try_extract_f64, try_extract_i64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_vec_f64};
+use super::helpers::{get_height, get_width, 
+    try_extract_boolean, try_extract_f64, try_extract_i64, 
+    try_extract_ipg_color, try_extract_rgba_color, 
+    try_extract_string};
 use super::ipg_enums::IpgWidgets;
 
 use iced::border::Radius;
@@ -13,8 +16,9 @@ use iced::border::Radius;
 
 use pyo3::{pyclass, PyObject, Python};
 
-use iced::widget::{Row, Text};
-use iced::{Background, Border, Color, Element, Length, Padding, Renderer, Shadow, Theme };
+use iced::widget::{row, Row, Text};
+use iced::{Background, Border, Color, Element, 
+    Length, Renderer, Theme };
 
 
 #[derive(Debug, Clone)]
@@ -27,10 +31,10 @@ pub struct IpgSeparator {
     pub dot_radius: f32,
     pub dot_count: usize,
     pub dot_fill: bool,
-    pub quad_ratios: Option<[f32; 2]>,
+    pub dot_border_width: f32,
     pub width: Length,
     pub height: Length,
-    pub padding: Padding,
+    pub spacing: f32,
     pub style_id: Option<usize>,
     pub show: bool,
 }
@@ -45,10 +49,10 @@ impl IpgSeparator {
         dot_radius: f32,
         dot_count: usize,
         dot_fill: bool,
-        quad_ratios: Option<[f32; 2]>,
+        dot_border_width: f32,
         width: Length,
         height: Length,
-        padding: Padding,
+        spacing: f32,
         style_id: Option<usize>,
         show: bool,
         ) -> Self {
@@ -61,10 +65,10 @@ impl IpgSeparator {
             dot_radius,
             dot_count,
             dot_fill,
-            quad_ratios,
+            dot_border_width,
             width,
             height,
-            padding,
+            spacing,
             style_id,
             show,
         }
@@ -76,11 +80,6 @@ pub struct IpgSeparatorStyle {
     pub id: usize,
     pub color: Option<Color>,
     pub border_color: Option<Color>,
-    pub border_width: Option<f32>,
-    pub border_radius: Option<f32>,
-    pub shadow_color: Option<Color>,
-    pub shadow_offset: Option<[f32; 2]>,
-    pub shadow_blur_radius: Option<f32>,
 }
 
 impl IpgSeparatorStyle {
@@ -88,21 +87,11 @@ impl IpgSeparatorStyle {
         id: usize,
         color: Option<Color>,
         border_color: Option<Color>,
-        border_width: Option<f32>,
-        border_radius: Option<f32>,
-        shadow_color: Option<Color>,
-        shadow_offset: Option<[f32; 2]>,
-        shadow_blur_radius: Option<f32>,
     ) -> Self {
         Self {
             id,
             color,
             border_color,
-            border_width,
-            border_radius,
-            shadow_color,
-            shadow_offset,
-            shadow_blur_radius,
         }
     }
 }
@@ -124,11 +113,18 @@ pub fn construct_separator(sep: IpgSeparator,
     }
 
     let style_opt = get_sep_style(style_opt);
+
+    let mut sep_color = get_color(
+                                    None, 
+                                    Some(IpgColor::PRIMARY), 
+                                    1.0, 
+                                    false).unwrap();
+    let mut border = Border::default();
     
     let separator: Element<'static, app::Message>  = if style_opt.is_some() {
         let style = style_opt.unwrap();
 
-        let sep_color = if style.color.is_some() {
+        sep_color = if style.color.is_some() {
             style.color.unwrap().into()
         } else {
             get_color(
@@ -138,69 +134,51 @@ pub fn construct_separator(sep: IpgSeparator,
                 false).unwrap()
         };
 
-        let mut border = Border::default();
-
         border.color = if style.border_color.is_some() {
-            style.color.unwrap()
+            style.border_color.unwrap()
         } else {
             border.color
         };
 
-        border.width = if style.border_width.is_some() {
-            style.border_width.unwrap()
-        } else {
-            0.0
-        };
-
-        border.radius = if style.border_radius.is_some() {
-            Radius::new(style.border_radius.unwrap())
-        } else {
-            border.radius
-        };
-
-        let mut shadow = Shadow::default();
-
-        shadow.blur_radius = if style.shadow_blur_radius.is_some() {
-            style.shadow_blur_radius.unwrap()
-        } else {
-            shadow.blur_radius
-        };
-
-        shadow.color = if style.shadow_color.is_some() {
-            style.shadow_color.unwrap()
-        } else {
-            shadow.color
-        };
-
-        shadow.offset = if style.shadow_offset.is_some() {
-            style.shadow_offset.unwrap().into()
-        } else {
-            shadow.offset
-        };
-
         match sep.separator_type {
             IpgSeparatorType::Dot => {  
-                let radius = sep.dot_radius;            
+                let color = if sep.dot_fill {
+                    sep_color
+                } else {
+                    Color::TRANSPARENT
+                };
+                let radius = sep.dot_radius;
+                // Shrink doesn't seem to work so sub in radius
                 let width = if sep.width == Length::Shrink {
                     Length::Fixed(radius*2.0)
                 } else {
                     sep.width
                 };
+                
                 let height = if sep.height == Length::Shrink {
                     Length::Fixed(radius*2.0)
                 } else {
                     sep.height
                 };
-
-                Quad {
-                    width,
-                    height,
-                    inner_bounds: InnerBounds::Square(radius * 2.0),
-                    quad_color: sep_color.into(),
-                    quad_border: border,
-                    quad_shadow: shadow,
-                    ..Quad::default()
-                }.into()
+                dbg!(width, height);
+                row((0..sep.dot_count).map(|_| {
+                    Quad {
+                        inner_bounds: InnerBounds::Square(radius * 2.0),
+                        quad_border: Border {
+                            radius: Radius::new(radius),
+                            color: border.color,
+                            width: sep.dot_border_width,
+                            ..Default::default()
+                        },
+                        width,
+                        height,
+                        quad_color: color.into(),
+                        ..Default::default()
+                    }.into()
+                }))
+                .height(height)
+                .spacing(sep.spacing)
+                .into()
             },
             IpgSeparatorType::Label => {
                 let q_1: Element<Message, Theme, Renderer> = Quad {
@@ -222,6 +200,7 @@ pub fn construct_separator(sep: IpgSeparator,
                                     Text::new(lbl).into(),
                                     q_2,
                                     ])
+                                    .spacing(sep.spacing)
                                     .into()
             },
             IpgSeparatorType::Line => {
@@ -231,30 +210,35 @@ pub fn construct_separator(sep: IpgSeparator,
             },
         }
     } else {
-        let quad_color = get_color(
-                                    None, 
-                                    Some(IpgColor::PRIMARY), 
-                                    1.0, 
-                                    false).unwrap();
-
+    
         match sep.separator_type {
             IpgSeparatorType::Dot => {
-                default_quad(sep.separator_type, 
-                            quad_color,
+                let color = if sep.dot_fill {
+                    sep_color
+                } else {
+                    Color::TRANSPARENT
+                };
+                row((0..sep.dot_count).map(|_| {
+                    default_quad(sep.separator_type.clone(), 
+                            color.into(),
                             sep.width,
                             sep.height,
                             sep.dot_radius).into()
+                }))
+                .height(20.0)
+                .spacing(sep.spacing)
+                .into()
             },
             IpgSeparatorType::Label => {
                 let q_1: Element<Message, Theme, Renderer> = Quad {
                     width: Length::Fixed(sep.label_left_width),
                     height: sep.height,
-                    ..separator(quad_color.into())
+                    ..separator(sep_color.into())
                 }.into();
                 let q_2: Element<Message, Theme, Renderer> = Quad {
                     width: Length::Fixed(sep.label_right_width),
                     height: sep.height,
-                    ..separator(quad_color.into())
+                    ..separator(sep_color.into())
                 }.into();
             
                 let lbl = match sep.label {
@@ -267,13 +251,14 @@ pub fn construct_separator(sep: IpgSeparator,
                                     Text::new(lbl).into(),
                                     q_2,
                                     ])
+                                    .spacing(sep.spacing)
                                     .into()
             },
             IpgSeparatorType::Line => {
                 Quad {
                     width: sep.width,
                     height: sep.height,
-                    ..separator(quad_color.into())
+                    ..separator(sep_color.into())
                 }.into()
             },
         }
@@ -291,13 +276,13 @@ pub fn construct_separator(sep: IpgSeparator,
 pub enum IpgSeparatorParam {
     DotCount,
     DotFill,
+    DotBorderWidth,
     DotRadius,
     Height,
     HeightFill,
     Label,
-    Padding,
-    QuadRatios,
     SeparatorType,
+    Spacing,
     Show,
     StyleId,
     Width,
@@ -313,6 +298,9 @@ pub fn separator_item_update(sep: &mut IpgSeparator,
     let update = try_extract_separator_update(item);
 
     match update {
+        IpgSeparatorParam::DotBorderWidth => {
+            sep.dot_border_width = try_extract_f64(value) as f32;
+        },
         IpgSeparatorParam::DotCount => {
             sep.dot_count = try_extract_i64(value) as usize;
         },
@@ -333,14 +321,11 @@ pub fn separator_item_update(sep: &mut IpgSeparator,
             let val = try_extract_boolean(value);
             sep.height = get_height(None, val);
         },
-        IpgSeparatorParam::Padding => {
-            sep.padding =  get_padding_f64(try_extract_vec_f64(value));
-        },
-        IpgSeparatorParam::QuadRatios => {
-            sep.quad_ratios = Some(try_extract_array_2(value));
-        },
         IpgSeparatorParam::SeparatorType => {
             sep.separator_type = try_extract_sep_type(value);
+        },
+        IpgSeparatorParam::Spacing => {
+            sep.spacing = try_extract_f64(value) as f32;
         },
         IpgSeparatorParam::Show => {
             sep.show = try_extract_boolean(value);
@@ -385,16 +370,10 @@ fn try_extract_sep_type(update_obj: PyObject) -> IpgSeparatorType {
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum IpgSeparatorStyleParam {
-    SeparatorIpgColor,
-    SeparatorRbgaColor,
-    SeparatorBorderIpgColor,
-    SeparatorBorderRgbaColor,
-    SeparatorBorderRadius,
-    SeparatorBorderWidth,
-    SeparatorShadowIpgColor,
-    SeparatorShadowRgbaColor,
-    SeparatorShadowOffset,
-    SeparatorShadowBlurRadius,
+    IpgColor,
+    RbgaColor,
+    BorderIpgColor,
+    BorderRgbaColor,
 }
 
 pub fn separator_style_update_item(style: &mut IpgSeparatorStyle,
@@ -403,38 +382,19 @@ pub fn separator_style_update_item(style: &mut IpgSeparatorStyle,
 {
     let update = try_extract_separator_style_update(item);
     match update {
-        IpgSeparatorStyleParam::SeparatorIpgColor => {
+        IpgSeparatorStyleParam::IpgColor => {
             let color = try_extract_ipg_color(value);
             style.color = get_color(None, Some(color), 1.0, false);
         },
-        IpgSeparatorStyleParam::SeparatorRbgaColor => {
+        IpgSeparatorStyleParam::RbgaColor => {
             style.color = Some(Color::from(try_extract_rgba_color(value)));
         },
-        IpgSeparatorStyleParam::SeparatorBorderIpgColor => {
+        IpgSeparatorStyleParam::BorderIpgColor => {
             let color = try_extract_ipg_color(value);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
-        IpgSeparatorStyleParam::SeparatorBorderRgbaColor => {
+        IpgSeparatorStyleParam::BorderRgbaColor => {
             style.border_color = Some(Color::from(try_extract_rgba_color(value)));
-        },
-        IpgSeparatorStyleParam::SeparatorBorderRadius => {
-            style.border_radius = Some(try_extract_f64(value) as f32);
-        },
-        IpgSeparatorStyleParam::SeparatorBorderWidth => {
-            style.border_width = Some(try_extract_f64(value) as f32);
-        },
-        IpgSeparatorStyleParam::SeparatorShadowIpgColor => {
-            let color = try_extract_ipg_color(value);
-            style.shadow_color = get_color(None, Some(color), 1.0, false);
-        },
-        IpgSeparatorStyleParam::SeparatorShadowRgbaColor => {
-            style.shadow_color = Some(Color::from(try_extract_rgba_color(value)));
-        },
-        IpgSeparatorStyleParam::SeparatorShadowOffset => {
-            style.shadow_offset = Some(try_extract_array_2(value));
-        },
-        IpgSeparatorStyleParam::SeparatorShadowBlurRadius => {
-            style.shadow_blur_radius = Some(try_extract_f64(value) as f32);
         },
     }
 }
@@ -489,15 +449,15 @@ fn default_quad(quad_type: IpgSeparatorType,
         IpgSeparatorType::Dot => {
             let radius = dot_radius;
             let width = if width == Length::Shrink {
-                    Length::Fixed(radius*2.0)
-                } else {
-                    width
-                };
+                Length::Fixed(radius*2.0)
+            } else {
+                width
+            };
             let height = if height == Length::Shrink {
-                    Length::Fixed(radius*2.0)
-                } else {
-                    height
-                };
+                Length::Fixed(radius*2.0)
+            } else {
+                height
+            };
             Quad {
                 inner_bounds: InnerBounds::Square(radius * 2.0),
                 quad_border: Border {
@@ -508,7 +468,7 @@ fn default_quad(quad_type: IpgSeparatorType,
                 },
                 width,
                 height,
-                quad_color: Color::TRANSPARENT.into(),
+                quad_color: quad_color.into(),
                 ..Default::default()
             }
         },

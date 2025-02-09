@@ -21,9 +21,9 @@ pub fn get_theme_color(wnd_theme: &Theme) -> Color {
     palette.background
 }
 
-pub fn is_dark(color: Color) -> bool {
-    to_hsl(color).lightness < 0.6
-}
+// pub fn is_dark(color: Color) -> bool {
+//     to_hsl(color).lightness < 0.6
+// }
 
 pub fn darken(color: Color, amount: f32) -> Color {
     let mut hsl = to_hsl(color);
