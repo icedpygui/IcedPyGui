@@ -19,10 +19,14 @@ use once_cell::sync::Lazy;
 
 use crate::canvas::draw_canvas::IpgCanvasState;
 use crate::ipg_widgets::ipg_canvas::match_canvas_widget;
-use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, construct_color_picker, ColPikMessage};
+use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, 
+    construct_color_picker, ColPikMessage};
+use crate::ipg_widgets::ipg_menu::{IpgMenuBarStyle, IpgMenuStyle};
 use crate::ipg_widgets::ipg_separator::construct_separator;
-use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
-use crate::{access_canvas_state, access_canvas_update_items, access_update_items, access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
+use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, 
+    canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
+use crate::{access_canvas_state, access_canvas_update_items, access_update_items, 
+    access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
@@ -35,9 +39,10 @@ use ipg_widgets::ipg_events::{IpgKeyBoardEvent, handle_window_closing, process_k
     process_mouse_events, process_touch_events, process_window_event};
 use ipg_widgets::helpers::find_key_for_value;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
-// use ipg_widgets::ipg_menu::{MenuMessage, construct_menu, menu_callback};
+use ipg_widgets::ipg_menu::construct_menu;
 use ipg_widgets::ipg_modal::{construct_modal, modal_callback, ModalMessage};
-use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_point, construct_mousearea};
+use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_point, 
+    construct_mousearea};
 use ipg_widgets::ipg_opaque::{construct_opaque, opaque_callback};
 use ipg_widgets::ipg_pick_list::{PLMessage, construct_picklist, pick_list_callback};
 use ipg_widgets::ipg_progress_bar::construct_progress_bar;
@@ -45,7 +50,8 @@ use ipg_widgets::ipg_radio::{RDMessage, construct_radio, radio_callback};
 use ipg_widgets::ipg_row::construct_row;
 use ipg_widgets::ipg_rule::construct_rule;
 use ipg_widgets::ipg_scrollable::{construct_scrollable, scrollable_callback};
-use ipg_widgets::ipg_selectable_text::{SLTXTMessage, construct_selectable_text, selectable_text_callback};
+use ipg_widgets::ipg_selectable_text::{SLTXTMessage, construct_selectable_text, 
+    selectable_text_callback};
 use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_callback};
 use ipg_widgets::ipg_space::construct_space;
 use ipg_widgets::ipg_stack::construct_stack;
@@ -75,7 +81,6 @@ pub enum Message {
     EventWindow((window::Id, Event)),
     EventTouch(Event),
     Image(usize, ImageMessage),
-    // Menu(usize, MenuMessage),
     Modal(usize, ModalMessage),
     PickList(usize, PLMessage),
     Radio(usize, RDMessage),
@@ -214,11 +219,6 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
-            // Message::Menu(id, message) => {
-            //     menu_callback(&mut self.state, id, message);
-            //     process_updates(&mut self.state, &mut self.canvas_state);
-            //     Task::none()
-            // },
             Message::Modal(id, message) => {
                 modal_callback(&mut self.state, id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
@@ -619,7 +619,6 @@ fn get_children<'a>(parents: &Vec<ParentChildIds>,
     let id = &parents[*index].parent_id;
 
     if id != &0 {
-
         get_container(state, id, content, canvas_state)
     } else {
         Column::with_children(content).into()  // the final container
@@ -659,9 +658,27 @@ fn get_container<'a>(state: &IpgState,
 
                     construct_container(con.clone(), content, style)
                 },
+                IpgContainers::IpgMenu(menu) => {
+                    let bar_style: Option<IpgWidgets> = 
+                        match menu.menu_bar_style_id.clone() {
+                            Some(id) => {
+                                state.widgets.get(&id).map(|st| st.clone())
+                            },
+                            None => None,
+                        };;
+                    let menu_style: Option<IpgWidgets> = 
+                        match menu.menu_style_id.clone() {
+                            Some(id) => {
+                                state.widgets.get(&id).map(|st| st.clone())
+                            },
+                            None => None,
+                        };
+
+                    construct_menu(menu.clone(), content, bar_style, menu_style)
+                },
                 IpgContainers::IpgModal(modal) => {
                     construct_modal(modal.clone(), content)
-                }
+                },
                 IpgContainers::IpgMouseArea(m_area) => {
                     construct_mousearea(m_area.clone(), content)
                 },
@@ -675,7 +692,7 @@ fn get_container<'a>(state: &IpgState,
                         };
 
                     construct_opaque(op.clone(), content, style)
-                }
+                },
                 IpgContainers::IpgTable(table) => {
                     let button_fill_style = 
                         match table.button_fill_style_id.clone() {
@@ -726,7 +743,7 @@ fn get_container<'a>(state: &IpgState,
                 },
                 IpgContainers::IpgWindow(_wnd) => {
                     construct_window(content)
-                }
+                },
             },
         
         None => panic!("Container not found in fn get_container id={}", id),        

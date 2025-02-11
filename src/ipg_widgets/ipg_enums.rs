@@ -12,7 +12,7 @@ use super::ipg_container::IpgContainer;
 use super::ipg_column::IpgColumn;
 use super::ipg_date_picker::IpgDatePicker;
 use super::ipg_image::IpgImage;
-// use super::ipg_menu::{IpgMenu, IpgMenuBarStyle, IpgMenuSeparatorStyle, IpgMenuStyle};
+use super::ipg_menu::{IpgMenu, IpgMenuBarStyle, IpgMenuStyle};
 use super::ipg_modal::IpgModal;
 use super::ipg_mousearea::IpgMouseArea;
 use super::ipg_opaque::IpgOpaque;
@@ -45,6 +45,7 @@ pub enum IpgContainers {
     IpgCanvas(IpgCanvas),
     IpgColumn(IpgColumn),
     IpgContainer(IpgContainer),
+    IpgMenu(IpgMenu),
     IpgModal(IpgModal),
     IpgMouseArea(IpgMouseArea),
     IpgOpaque(IpgOpaque),
@@ -69,10 +70,8 @@ pub enum IpgWidgets {
     IpgColorPickerStyle(IpgColorPickerStyle),
     IpgDatePicker(IpgDatePicker),
     IpgImage(IpgImage),
-    // IpgMenu(IpgMenu),
-    // IpgMenuStyle(IpgMenuStyle),
-    // IpgMenuBarStyle(IpgMenuBarStyle),
-    // IpgMenuSeparatorStyle(IpgMenuSeparatorStyle),
+    IpgMenuStyle(IpgMenuStyle),
+    IpgMenuBarStyle(IpgMenuBarStyle),
     IpgPickList(IpgPickList),
     IpgPickListStyle(IpgPickListStyle),
     IpgProgressBar(IpgProgressBar),

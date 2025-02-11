@@ -413,6 +413,16 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 }
             },
+            IpgWidgets::IpgMenuStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
+            IpgWidgets::IpgMenuBarStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
         }
     } else {
 

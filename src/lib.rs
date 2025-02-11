@@ -3,13 +3,14 @@
 #![allow(clippy::type_complexity)]
 use canvas::canvas_helpers::{build_polygon, get_mid_point, to_radians};
 use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode, IpgDrawStatus, IpgWidget};
-use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, 
-    IpgCanvasWidget, IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
+use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, 
+    IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
 use iced::widget::image;
 use iced_aw::iced_fonts;
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
-use ipg_widgets::ipg_separator::{separator_item_update, separator_style_update_item, IpgSeparator, IpgSeparatorParam, IpgSeparatorStyle, IpgSeparatorStyleParam, IpgSeparatorType};
+use ipg_widgets::ipg_separator::{separator_item_update, separator_style_update_item, 
+    IpgSeparator, IpgSeparatorParam, IpgSeparatorStyle, IpgSeparatorStyleParam, IpgSeparatorType};
 use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, canvas_timer_style_update_item, 
     IpgCanvasTimer, IpgCanvasTimerParam, IpgCanvasTimerStyle, IpgCanvasTimerStyleParam};
 use pyo3::prelude::*;
@@ -50,10 +51,7 @@ use ipg_widgets::ipg_events::IpgEvents;
 use ipg_widgets::ipg_image::{image_item_update, IpgImage, 
         IpgImageContentFit, IpgImageFilterMethod, 
         IpgImageParam, IpgImageRotation};
-// use ipg_widgets::ipg_menu::{menu_bar_style_update_item, menu_item_update, 
-//     menu_separator_style_update_item, menu_style_update_item, IpgMenu, IpgMenuBarStyle, 
-//     IpgMenuBarStyleParam, IpgMenuParam, IpgMenuSeparatorStyle, IpgMenuSeparatorStyleParam, 
-//     IpgMenuSeparatorType, IpgMenuStyle, IpgMenuStyleParam, IpgMenuType, ItemStyles, MenuStyleAll};
+use ipg_widgets::ipg_menu::{menu_bar_style_update_item, menu_item_update, menu_style_update_item, IpgMenu, IpgMenuBarStyle, IpgMenuBarStyleParam, IpgMenuParam, IpgMenuStyle, IpgMenuStyleParam};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, 
         IpgMouseAreaParam, IpgMousePointer};
 use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, 
@@ -93,8 +91,7 @@ use ipg_widgets::ipg_window::{get_iced_window_theme,
 use ipg_widgets::ipg_enums::{IpgAlignment, IpgContainers, IpgHorizontalAlignment, 
     IpgVerticalAlignment, IpgWidgets};
 
-use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, 
-    get_line_height, get_padding_f64, get_shaping, get_width};
+use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_line_height, get_padding_f32, get_padding_f64, get_shaping, get_width};
 
 use graphics::colors::{get_color, IpgColor};
 use style::styling::{readable, IpgStyleStandard};
@@ -870,21 +867,245 @@ impl IPG {
 
         set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_column".to_string());
 
-        state.containers.insert(self.id, IpgContainers::IpgColumn(IpgColumn::new(
-                                        self.id,  
-                                        show, 
-                                        spacing, 
-                                        padding, 
-                                        width, 
-                                        height, 
-                                        max_width, 
-                                        align_items,
-                                        clip,
-                                    )));
+        state.containers.insert(self.id, IpgContainers::IpgColumn(
+                            IpgColumn::new(
+                                self.id,  
+                                show, 
+                                spacing, 
+                                padding, 
+                                width, 
+                                height, 
+                                max_width, 
+                                align_items,
+                                clip,
+                            )));
+
     state.last_id = self.id;
     drop(state);
     Ok(self.id)
 
+    }
+
+    #[pyo3(signature = ( 
+                        window_id,
+                        container_id,
+                        bar_items,
+                        menu_items,
+                        bar_width=None,
+                        item_widths=None,
+                        parent_id=None, 
+                        bar_spacing=None,
+                        bar_padding=None,
+                        bar_height=None,
+                        bar_check_bounds_width=None,
+                        item_spacing=None,
+                        item_offset=None, 
+                        on_select=None,
+                        menu_bar_style=None,
+                        menu_style=None,
+                        show=true, 
+                        user_data=None, gen_id=None))]
+    fn add_menu(&mut self,
+                    window_id: String,
+                    container_id: String,
+                    bar_items: usize,
+                    menu_items: Vec<usize>,
+                    bar_width: Option<f32>,
+                    item_widths: Option<Vec<f32>>,
+                    parent_id: Option<String>,
+                    bar_spacing: Option<f32>,
+                    bar_padding: Option<Vec<f32>>,
+                    bar_height: Option<f32>,
+                    bar_check_bounds_width: Option<f32>,
+                    item_spacing: Option<Vec<f32>>,
+                    item_offset: Option<Vec<f32>>,
+                    on_select: Option<PyObject>,
+                    menu_bar_style: Option<usize>,
+                    menu_style: Option<usize>,
+                    show: bool,
+                    user_data: Option<PyObject>,
+                    gen_id: Option<usize>,
+                ) -> PyResult<usize> 
+    {
+        let id = self.get_id(gen_id);
+
+        if on_select.is_some() {
+            add_callback_to_mutex(id, "on_select".to_string(), on_select);
+        }
+
+        let spacing = bar_spacing.unwrap_or(0.0);
+
+        let padding = get_padding_f32(bar_padding);
+        
+        let height = get_height(bar_height, false);
+
+        let bar_width = get_width(bar_width, false);
+
+        let item_widths = if item_widths.is_some() {
+            let mut widths = vec![];
+            for w in item_widths.unwrap() {
+                widths.push(get_width(Some(w), false));
+            }
+            widths
+        } else {
+            vec![Length::Shrink]
+        };
+ 
+        let check_bounds_width = bar_check_bounds_width.unwrap_or(50.0) ;
+
+        let prt_id = match parent_id {
+            Some(id) => id,
+            None => window_id.clone(),
+        };
+        
+        set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
+
+        let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_menu".to_string());
+
+        state.containers.insert(id, IpgContainers::IpgMenu(
+                            IpgMenu::new(
+                                id,
+                                bar_items,
+                                menu_items,
+                                bar_width,
+                                item_widths,
+                                spacing,
+                                padding,
+                                height,
+                                check_bounds_width,
+                                item_spacing,
+                                item_offset,
+                                menu_bar_style,
+                                menu_style,
+                                self.theme.clone(),
+                                show,
+                                user_data,
+                                )));
+
+        state.last_id = id;
+        drop(state);
+        Ok(id)
+    }
+
+    #[pyo3(signature = (
+                        base_color=None,
+                        base_rgba=None,
+                        border_color=None,
+                        border_rgba=None,
+                        border_radius=None,
+                        border_width=None,
+                        shadow_color=None,
+                        shadow_rgba=None,
+                        shadow_offset_xy=None,
+                        shadow_blur_radius=None,
+                        gen_id=None))]
+    fn add_menu_bar_style(&mut self,
+                            base_color: Option<IpgColor>,
+                            base_rgba: Option<[f32; 4]>,
+                            border_color: Option<IpgColor>,
+                            border_rgba: Option<[f32; 4]>,
+                            border_radius: Option<Vec<f32>>,
+                            border_width: Option<f32>,
+                            shadow_color: Option<IpgColor>,
+                            shadow_rgba: Option<[f32; 4]>,
+                            shadow_offset_xy: Option<[f32; 2]>,
+                            shadow_blur_radius: Option<f32>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgMenuBarStyle(
+            IpgMenuBarStyle::new( 
+                id,
+                base,
+                border_color,
+                border_radius,
+                border_width,
+                shadow_color,
+                shadow_offset_xy,
+                shadow_blur_radius,
+                )));
+
+        state.last_id = id;
+        drop(state);
+        Ok(id)
+    }
+
+    #[pyo3(signature = (
+                        base_color=None,
+                        base_rgba=None,
+                        border_color=None,
+                        border_rgba=None,
+                        border_radius=None,
+                        border_width=None,
+                        shadow_color=None,
+                        shadow_rgba=None,
+                        shadow_offset_xy=None,
+                        shadow_blur_radius=None,
+                        path_base_color=None,
+                        path_base_rgba=None,
+                        path_border_color=None,
+                        path_border_rgba=None,
+                        path_border_radius=None,
+                        path_border_width=None,
+                        gen_id=None))]
+    fn add_menu_style(&mut self,
+                            base_color: Option<IpgColor>,
+                            base_rgba: Option<[f32; 4]>,
+                            border_color: Option<IpgColor>,
+                            border_rgba: Option<[f32; 4]>,
+                            border_radius: Option<Vec<f32>>,
+                            border_width: Option<f32>,
+                            shadow_color: Option<IpgColor>,
+                            shadow_rgba: Option<[f32; 4]>,
+                            shadow_offset_xy: Option<[f32; 2]>,
+                            shadow_blur_radius: Option<f32>,
+                            path_base_color: Option<IpgColor>,
+                            path_base_rgba: Option<[f32; 4]>,
+                            path_border_color: Option<IpgColor>,
+                            path_border_rgba: Option<[f32; 4]>,
+                            path_border_radius: Option<Vec<f32>>,
+                            path_border_width: Option<f32>,
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+        
+        let base_color: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
+        let path_base: Option<Color> = get_color(path_base_rgba, path_base_color, 1.0, false);
+        let path_border_color: Option<Color> = get_color(path_border_rgba, path_border_color, 1.0, false);
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgMenuStyle(
+            IpgMenuStyle::new(  
+                id,
+                base_color,
+                border_color,
+                border_radius,
+                border_width,
+                shadow_color,
+                shadow_offset_xy,
+                shadow_blur_radius,
+                path_base,
+                path_border_color,
+                path_border_radius,
+                path_border_width,
+                )));
+        state.last_id = id;
+        drop(state);
+        Ok(id)
     }
 
     // #[pyo3(signature = (window_id, container_id, label,
@@ -2095,206 +2316,6 @@ impl IPG {
         drop(state);
         Ok(id)
     }
-
-    // #[pyo3(signature = (parent_id, 
-    //                     items,
-    //                     bar_widths,
-    //                     item_widths, 
-    //                     bar_spacings=None,
-    //                     bar_paddings=None,
-    //                     bar_height=None,
-    //                     bar_check_bounds_width=None,
-    //                     item_spacings=None,
-    //                     item_offsets=None, 
-    //                     on_select=None,
-    //                     menu_bar_style=None,
-    //                     menu_style=None,
-    //                     show=true, 
-    //                     user_data=None, gen_id=None))]
-    // fn add_menu(&mut self,
-    //                 parent_id: String, 
-    //                 items: Vec<Vec<(Option<String>, IpgMenuType, Option<usize>)>>,
-    //                 bar_widths: Vec<f32>,
-    //                 item_widths: Vec<f32>,
-    //                 bar_spacings: Option<f32>,
-    //                 bar_paddings: Option<Vec<f32>>,
-    //                 bar_height: Option<f32>,
-    //                 bar_check_bounds_width: Option<f32>,
-    //                 item_spacings: Option<Vec<f32>>,
-    //                 item_offsets: Option<Vec<f32>>,
-    //                 on_select: Option<PyObject>,
-    //                 menu_bar_style: Option<usize>,
-    //                 menu_style: Option<usize>,
-    //                 show: bool,
-    //                 user_data: Option<PyObject>,
-    //                 gen_id: Option<usize>,
-    //             ) -> PyResult<usize> 
-    // {
-    //     let id = self.get_id(gen_id);
-
-    //     if on_select.is_some() {
-    //         add_callback_to_mutex(id, "on_select".to_string(), on_select);
-    //     }
-
-    //     let spacing = bar_spacings.unwrap_or(0.0);
-
-    //     let padding = get_padding_f32(bar_paddings);
-        
-    //     let height = get_height(bar_height, false);
- 
-    //     let check_bounds_width = bar_check_bounds_width.unwrap_or(50.0) ;
-        
-    //     set_state_of_widget(id, parent_id);
-
-    //     let mut state = access_state();
-
-    //     state.widgets.insert(id, IpgWidgets::IpgMenu(
-    //         IpgMenu::new(
-    //             id,
-    //             items,
-    //             bar_widths,
-    //             item_widths,
-    //             spacing,
-    //             padding,
-    //             height,
-    //             check_bounds_width,
-    //             item_spacings,
-    //             item_offsets,
-    //             menu_bar_style,
-    //             menu_style,
-    //             self.theme.clone(),
-    //             show,
-    //             user_data,
-    //             )));
-    //     state.last_id = id;
-    //     drop(state);
-    //     Ok(id)
-    // }
-
-    // #[pyo3(signature = (
-    //                     base_color=None,
-    //                     base_rgba=None,
-    //                     border_color=None,
-    //                     border_rgba=None,
-    //                     border_radius=None,
-    //                     border_width=None,
-    //                     shadow_color=None,
-    //                     shadow_rgba=None,
-    //                     shadow_offset_x=None,
-    //                     shadow_offset_y=None,
-    //                     shadow_blur_radius=None,
-    //                     gen_id=None))]
-    // fn add_menu_bar_style(&mut self,
-    //                         base_color: Option<IpgColor>,
-    //                         base_rgba: Option<[f32; 4]>,
-    //                         border_color: Option<IpgColor>,
-    //                         border_rgba: Option<[f32; 4]>,
-    //                         border_radius: Option<Vec<f32>>,
-    //                         border_width: Option<f32>,
-    //                         shadow_color: Option<IpgColor>,
-    //                         shadow_rgba: Option<[f32; 4]>,
-    //                         shadow_offset_x: Option<f32>,
-    //                         shadow_offset_y: Option<f32>,
-    //                         shadow_blur_radius: Option<f32>,
-    //                         gen_id: Option<usize>,
-    //                         ) -> PyResult<usize>
-    // {
-    //     let id = self.get_id(gen_id);
-
-    //     let base: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
-    //     let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
-    //     let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
-
-    //     let mut state = access_state();
-
-    //     state.widgets.insert(id, IpgWidgets::IpgMenuBarStyle(
-    //         IpgMenuBarStyle::new( 
-    //             id,
-    //             base,
-    //             border_color,
-    //             border_radius,
-    //             border_width,
-    //             shadow_color,
-    //             shadow_offset_x,
-    //             shadow_offset_y,
-    //             shadow_blur_radius,
-    //             )));
-
-    //     state.last_id = id;
-    //     drop(state);
-    //     Ok(id)
-    // }
-
-    // #[pyo3(signature = (
-    //                     base_color=None,
-    //                     base_rgba=None,
-    //                     border_color=None,
-    //                     border_rgba=None,
-    //                     border_radius=None,
-    //                     border_width=None,
-    //                     shadow_color=None,
-    //                     shadow_rgba=None,
-    //                     shadow_offset_x=None,
-    //                     shadow_offset_y=None,
-    //                     shadow_blur_radius=None,
-    //                     path_base_color=None,
-    //                     path_base_rgba=None,
-    //                     path_border_color=None,
-    //                     path_border_rgba=None,
-    //                     path_border_radius=None,
-    //                     path_border_width=None,
-    //                     gen_id=None))]
-    // fn add_menu_style(&mut self,
-    //                         base_color: Option<IpgColor>,
-    //                         base_rgba: Option<[f32; 4]>,
-    //                         border_color: Option<IpgColor>,
-    //                         border_rgba: Option<[f32; 4]>,
-    //                         border_radius: Option<Vec<f32>>,
-    //                         border_width: Option<f32>,
-    //                         shadow_color: Option<IpgColor>,
-    //                         shadow_rgba: Option<[f32; 4]>,
-    //                         shadow_offset_x: Option<f32>,
-    //                         shadow_offset_y: Option<f32>,
-    //                         shadow_blur_radius: Option<f32>,
-    //                         path_base_color: Option<IpgColor>,
-    //                         path_base_rgba: Option<[f32; 4]>,
-    //                         path_border_color: Option<IpgColor>,
-    //                         path_border_rgba: Option<[f32; 4]>,
-    //                         path_border_radius: Option<Vec<f32>>,
-    //                         path_border_width: Option<f32>,
-    //                         gen_id: Option<usize>,
-    //                         ) -> PyResult<usize>
-    // {
-    //     let id = self.get_id(gen_id);
-        
-    //     let base_color: Option<Color> = get_color(base_rgba, base_color, 1.0, false);
-    //     let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
-    //     let shadow_color: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
-    //     let path_base: Option<Color> = get_color(path_base_rgba, path_base_color, 1.0, false);
-    //     let path_border_color: Option<Color> = get_color(path_border_rgba, path_border_color, 1.0, false);
-
-    //     let mut state = access_state();
-
-    //     state.widgets.insert(id, IpgWidgets::IpgMenuStyle(
-    //         IpgMenuStyle::new(  
-    //             id,
-    //             base_color,
-    //             border_color,
-    //             border_radius,
-    //             border_width,
-    //             shadow_color,
-    //             shadow_offset_x,
-    //             shadow_offset_y,
-    //             shadow_blur_radius,
-    //             path_base,
-    //             path_border_color,
-    //             path_border_radius,
-    //             path_border_width,
-    //             )));
-    //     state.last_id = id;
-    //     drop(state);
-    //     Ok(id)
-    // }
 
     #[pyo3(signature = (parent_id, options, gen_id=None, on_select=None, 
                         width=None, width_fill=false, padding=vec![5.0],  
@@ -5020,18 +5041,12 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgImage(img) => {
             image_item_update(img, item, value);
         },
-        // IpgWidgets::IpgMenu(menu) => {
-        //     menu_item_update(menu, item, value);
-        // },
-        // IpgWidgets::IpgMenuStyle(style) => {
-        //     menu_style_update_item(style, item, value);
-        // },
-        // IpgWidgets::IpgMenuBarStyle(style) => {
-        //     menu_bar_style_update_item(style, item, value);
-        // },
-        // IpgWidgets::IpgMenuSeparatorStyle(style) => {
-        //     menu_separator_style_update_item(style, item, value);
-        // },
+        IpgWidgets::IpgMenuStyle(style) => {
+            menu_style_update_item(style, item, value);
+        },
+        IpgWidgets::IpgMenuBarStyle(style) => {
+            menu_bar_style_update_item(style, item, value);
+        },
         IpgWidgets::IpgPickList(pl) => {
             pick_list_item_update(pl, item, value);
         },
@@ -5115,7 +5130,10 @@ fn match_container(container: &mut IpgContainers,
     match container {
         IpgContainers::IpgCanvas(_can) => {
             canvas_item_update(canvas_state, item, value);
-        }
+        },
+        IpgContainers::IpgMenu(menu) => {
+            menu_item_update(menu, item, value);
+        },
         IpgContainers::IpgMouseArea(m_area) => {
             mousearea_item_update(m_area, item, value);
         },
@@ -5181,10 +5199,9 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgImageFilterMethod>()?;
     m.add_class::<IpgImageParam>()?;
     m.add_class::<IpgImageRotation>()?;
-    // m.add_class::<IpgMenuParam>()?;
-    // m.add_class::<IpgMenuType>()?;
-    // m.add_class::<IpgMenuStyleParam>()?;
-    // m.add_class::<IpgMenuBarStyleParam>()?;
+    m.add_class::<IpgMenuParam>()?;
+    m.add_class::<IpgMenuStyleParam>()?;
+    m.add_class::<IpgMenuBarStyleParam>()?;
     m.add_class::<IpgMouseAreaParam>()?;
     m.add_class::<IpgMousePointer>()?;
     m.add_class::<IpgOpaqueParam>()?;

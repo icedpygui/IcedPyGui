@@ -1328,23 +1328,24 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
 
-    def add_menu(self, 
-                parent_id: str,  
-                items: list[tuple[str, IpgMenuType, Optional[int]]],
-                bar_widths: list[float],
-                item_widths: list[float],  
-                *,
-                on_select: Optional[Callable]=None,
-                bar_spacing: Optional[float]=None,
-                bar_padding: Optional[list[float] | list[float, 4]]=None,
-                bar_height: Optional[float]=None,
-                bar_check_bounds_width: Optional[float]=None,
-                item_spacings: Optional[list[float]]=None,
-                item_offsets: Optional[list[float]]=None,
-                menu_bar_style: Optional[int]=None,
-                menu_style: Optional[str]=None,
-                gen_id: Optional[int]=None,
-                user_data: Optional[Any]=None,
+    def add_menu(self,
+                 window_id: str,
+                 container_id: str, 
+                 items: list[tuple[IpgMenuType, int]],
+                 bar_widths: list[float],
+                 item_widths: list[float],  
+                 *,
+                 parent_id: Optional[str], 
+                 bar_spacing: Optional[float]=None,
+                 bar_padding: Optional[list[float] | list[float, 4]]=None,
+                 bar_height: Optional[float]=None,
+                 bar_check_bounds_width: Optional[float]=None,
+                 item_spacing: Optional[list[float]]=None,
+                 item_offset: Optional[list[float]]=None,
+                 menu_bar_style: Optional[int]=None,
+                 menu_style: Optional[str]=None,
+                 gen_id: Optional[int]=None,
+                 user_data: Optional[Any]=None,
                 ) -> int:
         """
         Add a menu dropdown list to the gui.
@@ -1357,20 +1358,6 @@ class IPG:
                 menu items where the first list is the bar menu items.
             bar_widths: list[float]
                 Widths of the bars.
-            item_widths: list[float]
-                The widths of the bar items.
-            item_spacings: list[float]
-                The space between labels
-            item_offsets: Optional[list[float]]=None
-                Offsets from the bar of the dropdown items.
-            menu_bar_style: Optional[str]=None
-                Style_id of the menu bars.
-            menu_style: Optional[str]=None
-                menu_style id.
-            button_bar_style_all: Optional[tuple]=None
-                Button style id from the add_button_style() method.
-            on_select: Callable
-                The callback for when the menu item is selected.
             bar_spacing: Optional[float]=None
                 Spacing betweens bars.
             bar_padding: Optional[list[float] | list[float, 4]]=None
@@ -1379,34 +1366,18 @@ class IPG:
                 Height of bars.
             bar_check_bounds_width: Optional[float]=None
                 Widths of the dropdowns.
-            bar_style_all: IpgStandardStyle or style_id
-                Styles all of the menu bar items.
-                if using custom style_id, use add_menu_bar_style()
-            button_item_style_all: IpgStandardStyle or style_id
-                Styles all of the buttons used in the menu items, if added.
-                if using custom style_id, use the add_button_style()
-            checkbox_item_style_all: IpgStandardStyle or style_id
-                Styles all of the checkboxes used in the menu items, if added.
-                if using custom style_id, use the add_checkbox_style()
-            toggler_item_style_all: Optional[tuple[IpgStyleStandard, str]]=None
-                Style all of the toggler used in the menu items.
-            circle_item_style_all: style_id
-                Styles all the circles used in the menu items, if added.
-                if using custom style_id, use the add_menu_separator_style()
-            dot_item_style_all: style_id
-                Styles all the dotted line separators used in the menu items, if added.
-                if using custom style_id, use the add_menu_separator_style()
-            label_item_style_all: style_id
-                Styles all the label separators used in the menu items, if added.
-                if using custom style_id, use the add_menu_separator_style()
-            line_item_style_all: style_id
-                Styles all the line separators used in the menu items, if added.
-                if using custom style_id, use the add_menu_separator_style()
-            text_item_style_all: IpgStandardStyle or style_id
-                Styles all the text used in the menu.
-                if using custom style_id, use the add_menu_text_style()
-            item_styles: Optional[list[tuple[int, int, IpgMenuType, IpgStyleStandard]]]=None
-                Styling individual items, row, col, type, or standard style.
+            item_widths: list[float]
+                The widths of the bar items.
+            item_spacing: list[float]
+                The space between labels
+            item_offset: Optional[list[float]]=None
+                Offsets from the bar of the dropdown items.
+            menu_bar_style: Optional[str]=None
+                Style_id of the menu bars.
+            menu_style: Optional[str]=None
+                menu_style id.
+            on_select: Callable
+                The callback for when the menu item is selected.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
             user_data: any
@@ -1427,8 +1398,7 @@ class IPG:
                             border_width: Optional[float]=None,
                             shadow_color: Optional[IpgColor]=None,
                             shadow_rgba: Optional[list[float, 4]]=None,
-                            shadow_offset_x: Optional[float]=None,
-                            shadow_offset_y:Optional[float]=None,
+                            shadow_offset_xy: Optional[list[float, 2]]=None,
                             shadow_blur_radius: Optional[float]=None,
                             gen_id: Optional[int]=None,
                        ) -> int:
@@ -1453,10 +1423,8 @@ class IPG:
                 Shadow color.
             shadow_rgba: Optional[list[float, 4]]=None,
                 Shadow color in rgba format.
-            shadow_offset_x: Optional[float]=None,
-                Shadow offset in x direction.
-            shadow_offset_y:Optional[float]=None,
-                Shadow offset in y direction.
+            shadow_offset_xy: Optional[list[float, 2]]=None,
+                Shadow offset in x and y direction.
             shadow_blur_radius: Optional[float]=None,
                 Radius of the blur.
             gen_id: Optional[int]=None,
@@ -1477,8 +1445,7 @@ class IPG:
                         border_width: Optional[float]=None,
                         shadow_color: Optional[IpgColor]=None,
                         shadow_rgba: Optional[list[float, 4]]=None,
-                        shadow_offset_x: Optional[float]=None,
-                        shadow_offset_y:Optional[float]=None,
+                        shadow_offset_xy: Optional[list[float, 2]]=None,
                         shadow_blur_radius: Optional[float]=None,
                         path_base_color: Optional[IpgColor]=None,
                         path_base_rgba: Optional[list[float, 4]]=None,
@@ -1509,10 +1476,8 @@ class IPG:
                 Color of the shadow.
             shadow_rgba: Optional[list[float, 4]]=None
                 Color of the shadow in rgba format.
-            shadow_offset_x: Optional[float]=None
-                Offset of the show in the x direction.
-            shadow_offset_y:Optional[float]=None
-                Offset of the show in the y direction.
+            shadow_offset_xy: Optional[list[float, 2]]=None
+                Offset of the show in the x and y direction.
             shadow_blur_radius: Optional[float]=None
                 The radius of the blur.
             path_base_color: Optional[IpgColor]=None
@@ -4461,8 +4426,7 @@ class IpgMenuStyleParam:
     BorderWidth=float
     ShadowIpgColor=IpgColor
     ShadowRgbaColor=list[float, 4]
-    ShadowOffsetX=float
-    ShadowOffsetY=float
+    ShadowOffsetXY=list[float, 2]
     ShadowBlurRadius=float
     PathBaseIpgColor=IpgColor
     PathBaseRgbaColor=list[float, 4]
@@ -4480,8 +4444,7 @@ class IpgMenuBarStyleParam:
     BorderWidth=float
     ShadowIpgColor=IpgColor
     ShadowRgbaColor=list[float, 4]
-    ShadowOffsetX=float
-    ShadowOffsetY=float
+    ShadowOffsetXY=list[float, 2]
     ShadowBlurRadius=float
 
 
@@ -4520,7 +4483,6 @@ class IpgMenuType:
     """
     Button=''
     Checkbox=''
-    Circle=''
     Dot=''
     Label=''
     Line=''
