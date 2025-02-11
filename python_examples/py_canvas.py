@@ -12,10 +12,10 @@ ipg.add_canvas(window_id="main", canvas_id="canvas",
                width_fill=True, height_fill=True)
 
 ipg.add_arc(canvas_id="canvas",
-               center_xy=(300.0, 100.0),
+               center_xy=(250.0, 100.0),
                radius=50.0,
-               start_angle=math.pi,
-               end_angle=math.pi*2,
+               start_angle=0.0,
+               end_angle=180.0,
                stroke_width=2.0)
 
 ipg.add_bezier(canvas_id="canvas",

@@ -4111,6 +4111,9 @@ impl IPG {
                     )  -> PyResult<usize> 
     {   
         let mid_point = Point::new(center_xy.0, center_xy.1);
+        let start_angle = start_angle-180.0;
+        let end_angle = end_angle-180.0;
+        
         let color = if stroke_rgba_color.is_some() {
             get_color(stroke_rgba_color, None, 1.0, false).unwrap()
         } else {
@@ -4357,7 +4360,7 @@ impl IPG {
                                     id, 
                                     points, 
                                     center, 
-                                    radii: Vector{x: 0.0, y: 0.0}, 
+                                    radii: Vector{x: radius_x, y: radius_y}, 
                                     rotation: Radians(to_radians(&degrees)), 
                                     color, 
                                     fill_color, 
