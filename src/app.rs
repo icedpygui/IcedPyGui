@@ -648,15 +648,15 @@ fn get_container<'a>(state: &IpgState,
                     if content.len() > 1 {
                         panic!("A container can have only one widget, place your multiple widgets into a column or row")
                     }
-                    let style = 
+                    let style_opt = 
                         match con.style_id.clone() {
                             Some(id) => {
-                                state.container_style.get(&id).map(|st| st.clone())
+                                state.widgets.get(&id).map(|st| st.clone())
                             },
                             None => None,
                         };
 
-                    construct_container(con.clone(), content, style)
+                    construct_container(con.clone(), content, style_opt)
                 },
                 IpgContainers::IpgMenu(menu) => {
                     let bar_style: Option<IpgWidgets> = 

@@ -8,7 +8,7 @@ use super::ipg_card::IpgCard;
 use super::ipg_checkbox::{IpgCheckBox, IpgCheckboxStyle};
 use super::ipg_color_picker::{IpgColorPicker, IpgColorPickerStyle};
 // use super::ipg_color_picker::IpgColorPicker;
-use super::ipg_container::IpgContainer;
+use super::ipg_container::{IpgContainer, IpgContainerStyle};
 use super::ipg_column::IpgColumn;
 use super::ipg_date_picker::IpgDatePicker;
 use super::ipg_image::IpgImage;
@@ -68,6 +68,7 @@ pub enum IpgWidgets {
     IpgCheckboxStyle(IpgCheckboxStyle),
     IpgColorPicker(IpgColorPicker),
     IpgColorPickerStyle(IpgColorPickerStyle),
+    IpgContainerStyle(IpgContainerStyle),
     IpgDatePicker(IpgDatePicker),
     IpgImage(IpgImage),
     IpgMenuStyle(IpgMenuStyle),

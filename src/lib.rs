@@ -44,7 +44,7 @@ use ipg_widgets::ipg_card::{card_item_update, IpgCard,
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, checkbox_style_update_item, 
     IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle, IpgCheckboxStyleParam};
 use ipg_widgets::ipg_column::IpgColumn;
-use ipg_widgets::ipg_container::{IpgContainer, IpgContainerStyle};
+use ipg_widgets::ipg_container::{container_item_update, container_style_update_item, IpgContainer, IpgContainerParam, IpgContainerStyle, IpgContainerStyleParam};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, 
         IpgDatePicker, IpgDatePickerParam};
 use ipg_widgets::ipg_events::IpgEvents;
@@ -710,7 +710,8 @@ impl IPG {
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         width=None, width_fill=false, 
                         height=None, height_fill=false, 
-                        clip=false, max_height=f32::INFINITY, max_width=f32::INFINITY,
+                        clip=false, centered=true,
+                        max_height=f32::INFINITY, max_width=f32::INFINITY,
                         horizontal_alignment=None, vertical_alignment=None,
                         padding=vec![0.0], show=true, style_id=None, 
                         
@@ -725,13 +726,14 @@ impl IPG {
                         height: Option<f32>,
                         height_fill: bool,
                         clip: bool,
+                        centered: bool,
                         max_height: f32,
                         max_width: f32,
-                        horizontal_alignment: Option<IpgHorizontalAlignment>,
-                        vertical_alignment: Option<IpgVerticalAlignment>, 
+                        mut horizontal_alignment: Option<IpgHorizontalAlignment>,
+                        mut vertical_alignment: Option<IpgVerticalAlignment>, 
                         padding: Vec<f64>, 
                         show: bool,
-                        style_id: Option<String>,
+                        style_id: Option<usize>,
                         ) -> PyResult<usize>
     {
         self.id += 1;
@@ -744,6 +746,11 @@ impl IPG {
             Some(id) => id,
             None => window_id.clone(),
         };
+
+        if centered {
+            horizontal_alignment = Some(IpgHorizontalAlignment::Center);
+            vertical_alignment = Some(IpgVerticalAlignment::Center);
+        }
 
         set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
 
@@ -771,17 +778,16 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (style_id, 
+    #[pyo3(signature = ( 
                         background_color=None, background_rgba=None,
                         border_color=None, border_rgba=None,
-                        border_radius = vec![0.0], border_width=1.0,
+                        border_radius = vec![0.0], border_width=0.0,
                         shadow_color=None, shadow_rgba=None,
-                        shadow_offset_x=0.0, shadow_offset_y=0.0,
-                        shadow_blur_radius=1.0,
+                        shadow_offset_xy=[0.0, 0.0],
+                        shadow_blur_radius=0.0,
                         text_color=None, text_rgba=None,
                         gen_id=None))]
     fn add_container_style(&mut self,
-                            style_id: String,
                             background_color: Option<IpgColor>,
                             background_rgba: Option<[f32; 4]>,
                             border_color: Option<IpgColor>,
@@ -790,8 +796,7 @@ impl IPG {
                             border_width: f32,
                             shadow_color: Option<IpgColor>,
                             shadow_rgba: Option<[f32; 4]>,
-                            shadow_offset_x: f32,
-                            shadow_offset_y: f32,
+                            shadow_offset_xy: [f32; 2],
                             shadow_blur_radius: f32,
                             text_color: Option<IpgColor>,
                             text_rgba: Option<[f32; 4]>,
@@ -800,25 +805,26 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let mut state = access_state();
-
         let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
         let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
         let shadow: Option<Color> = get_color(shadow_rgba, shadow_color, 1.0, false);
         let text_color: Option<Color> = get_color(text_rgba, text_color, 1.0, false);
 
-        state.container_style.insert(style_id, IpgContainerStyle::new( 
-                                                    id,
-                                                    background_color,
-                                                    border_color,
-                                                    border_radius,
-                                                    border_width,
-                                                    shadow,
-                                                    shadow_offset_x,
-                                                    shadow_offset_y,
-                                                    shadow_blur_radius,
-                                                    text_color,
-                                                    ));
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgContainerStyle(
+            IpgContainerStyle::new( 
+                id,
+                background_color,
+                border_color,
+                border_radius,
+                border_width,
+                shadow,
+                shadow_offset_xy,
+                shadow_blur_radius,
+                text_color,
+                )));
+
         state.last_id = id;
         drop(state);
 
@@ -1103,6 +1109,7 @@ impl IPG {
                 path_border_radius,
                 path_border_width,
                 )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -4113,7 +4120,7 @@ impl IPG {
         let mid_point = Point::new(center_xy.0, center_xy.1);
         let start_angle = start_angle-180.0;
         let end_angle = end_angle-180.0;
-        
+
         let color = if stroke_rgba_color.is_some() {
             get_color(stroke_rgba_color, None, 1.0, false).unwrap()
         } else {
@@ -5038,6 +5045,9 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
         IpgWidgets::IpgColorPickerStyle(cp_style) => {
             color_picker_style_update_item(cp_style, item, value);
         },
+        IpgWidgets::IpgContainerStyle(cont_style) => {
+            container_style_update_item(cont_style, item, value);
+        },
         IpgWidgets::IpgDatePicker(dp) => {
             date_picker_item_update(dp, item, value);
         },
@@ -5134,6 +5144,9 @@ fn match_container(container: &mut IpgContainers,
         IpgContainers::IpgCanvas(_can) => {
             canvas_item_update(canvas_state, item, value);
         },
+        IpgContainers::IpgContainer(cont) => {
+            container_item_update(cont, item, value);
+        }
         IpgContainers::IpgMenu(menu) => {
             menu_item_update(menu, item, value);
         },
@@ -5197,6 +5210,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgColor>()?;
     m.add_class::<IpgColorPickerParam>()?;
     m.add_class::<IpgColorPickerStyleParam>()?;
+    m.add_class::<IpgContainerParam>()?;
+    m.add_class::<IpgContainerStyleParam>()?;
     m.add_class::<IpgDatePickerParam>()?;
     m.add_class::<IpgImageContentFit>()?;
     m.add_class::<IpgImageFilterMethod>()?;

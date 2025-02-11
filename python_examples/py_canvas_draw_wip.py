@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgDrawMode, IpgCanvasParam, IpgColor, IpgColorPickerParam
-from icedpygui import IpgCanvasWidget, IpgTextInputParam
+from icedpygui import IpgCanvasWidget, IpgTextInputParam, IpgColorPickerStyleParam
 from icedpygui import IpgHorizontalAlignment, IpgVerticalAlignment
 import os
 
@@ -107,8 +107,8 @@ def submit_fill_color_picker(cp_id: int, color: list):
 
     
 def submit_canvas_color_picker(cp_id: int, color: list):
-    print(color);
     ipg.update_item(canvas_id, IpgCanvasParam.CanvasColor, color)
+    # ipg.update_item(cp_style_canvas, IpgColorPickerStyleParam.BackgroundRgbaColor, color)
 
 
 def set_draw_width(input_id: int, width: str):
@@ -141,11 +141,14 @@ def set_vertical_text_alignment(pick_id: int, selected: str):
             
     ipg.update_item(canvas_id, IpgCanvasParam.TextAlignment, align)    
     
+cp_style_canvas = ipg.add_color_picker_style(background_color=IpgColor.PRIMARY)
 
-
-ipg.add_window(window_id="main", title="Canvas",
-               width=1000.0, height=800.0,
-               pos_centered=True)
+ipg.add_window(
+        window_id="main", 
+        title="Canvas",
+        width=1000.0, 
+        height=800.0,
+        pos_centered=True)
 
 ipg.add_row(window_id="main", container_id="row",
             width_fill=True, height_fill=True)
@@ -216,10 +219,11 @@ ipg.add_color_picker(parent_id="col",
                      on_submit=submit_fill_color_picker,
                      )
 
-ipg.add_color_picker(parent_id="col",
-                     label="Set Canvas Color",
-                     on_submit=submit_canvas_color_picker,
-                     )
+cp_canvas_color_id = ipg.add_color_picker(parent_id="col",
+                                        label="Set Canvas Color",
+                                        style_id=cp_style_canvas,
+                                        on_submit=submit_canvas_color_picker,
+                                        )
 
 ipg.add_text_input(parent_id="col",
                    placeholder="PolyPoints(3)",

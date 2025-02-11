@@ -1,11 +1,13 @@
 //! ipg_container
 use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector};
 use iced::widget::{container, horizontal_space, Container};
+use pyo3::{pyclass, PyObject, Python};
 
 use crate::app::Message;
+use crate::graphics::colors::get_color;
 
-use super::helpers::{get_horizontal_alignment, get_radius, get_vertical_alignment};
-use super::ipg_enums::{IpgHorizontalAlignment, IpgVerticalAlignment};
+use super::helpers::{get_height, get_horizontal_alignment, get_padding_f64, get_radius, get_vertical_alignment, get_width, try_extract_array_2, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_ipg_horizontal_alignment, try_extract_ipg_vertical_alignment, try_extract_rgba_color, try_extract_vec_f32, try_extract_vec_f64};
+use super::ipg_enums::{IpgHorizontalAlignment, IpgVerticalAlignment, IpgWidgets};
 
 
 #[derive(Debug, Clone)]
@@ -21,7 +23,7 @@ pub struct IpgContainer {
     pub align_h: Option<IpgHorizontalAlignment>,
     pub align_v: Option<IpgVerticalAlignment>,
     pub clip: bool,
-    pub style_id: Option<String>, 
+    pub style_id: Option<usize>, 
 }
 
 impl IpgContainer {
@@ -37,7 +39,7 @@ impl IpgContainer {
         align_h: Option<IpgHorizontalAlignment>,
         align_v: Option<IpgVerticalAlignment>,
         clip: bool,
-        style_id: Option<String>,
+        style_id: Option<usize>,
     ) -> Self {
         Self {
             id,
@@ -63,8 +65,7 @@ pub struct IpgContainerStyle {
     pub border_radius: Vec<f32>,
     pub border_width: f32,
     pub shadow_color: Option<Color>,
-    pub shadow_offset_x: f32,
-    pub shadow_offset_y: f32,
+    pub shadow_offset_xy: [f32; 2],
     pub shadow_blur_radius: f32,
     pub text_color: Option<Color>,
 }
@@ -77,8 +78,7 @@ impl IpgContainerStyle {
         border_radius: Vec<f32>,
         border_width: f32,
         shadow: Option<Color>,
-        shadow_offset_x: f32,
-        shadow_offset_y: f32,
+        shadow_offset_xy: [f32; 2],
         shadow_blur_radius: f32,
         text_color: Option<Color>,
     ) -> Self {
@@ -89,8 +89,7 @@ impl IpgContainerStyle {
             border_radius,
             border_width,
             shadow_color: shadow,
-            shadow_offset_x,
-            shadow_offset_y,
+            shadow_offset_xy,
             shadow_blur_radius,
             text_color,
         }
@@ -100,8 +99,10 @@ impl IpgContainerStyle {
 
 pub fn construct_container(con: IpgContainer, 
                             mut content: Vec<Element<Message>>,
-                            style: Option<IpgContainerStyle> ) 
+                            style_opt: Option<IpgWidgets> ) 
                             -> Element<Message> {
+
+    let style = get_cont_style(style_opt);
 
     let align_h = get_horizontal_alignment(con.align_h.clone());
     let align_v = get_vertical_alignment(con.align_v.clone());
@@ -130,6 +131,88 @@ pub fn construct_container(con: IpgContainer,
     
 }
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgContainerParam {
+    AlignHorizontal,
+    AlignVertical,
+    Centered,
+    Padding,
+    Width,
+    WidthFill,
+    Height,
+    HeightFill,
+}
+
+pub fn container_item_update(cont: &mut IpgContainer,
+                            item: PyObject,
+                            value: PyObject,
+                            )
+{
+    let update = try_extract_container_update(item);
+
+    match update {
+        IpgContainerParam::AlignHorizontal => {
+            cont.align_h = try_extract_ipg_horizontal_alignment(value);
+        },
+        IpgContainerParam::AlignVertical => {
+            cont.align_v = try_extract_ipg_vertical_alignment(value);
+        },
+        IpgContainerParam::Centered => {
+            let centered = try_extract_boolean(value);
+            if centered {
+                cont.align_h = Some(IpgHorizontalAlignment::Center);
+                cont.align_v = Some(IpgVerticalAlignment::Center);
+            } else {
+                cont.align_h = None;
+                cont.align_v = None;
+            }
+        },
+        IpgContainerParam::Padding => {
+            let pad = try_extract_vec_f64(value);
+            cont.padding = get_padding_f64(pad);
+        },
+        IpgContainerParam::Width => {
+            let w = Some(try_extract_f64(value) as f32);
+            cont.width = get_width(w, false)
+        },
+        IpgContainerParam::WidthFill => {
+            cont.width = get_width(None, try_extract_boolean(value));
+        },
+        IpgContainerParam::Height => {
+            let h = Some(try_extract_f64(value) as f32);
+            cont.height = get_height(h, false)
+        },
+        IpgContainerParam::HeightFill => {
+            cont.height = get_height(None, try_extract_boolean(value));
+        },
+    }
+}
+
+pub fn try_extract_container_update(update_obj: PyObject) -> IpgContainerParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgContainerParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Container update extraction failed"),
+        }
+    })
+}
+
+pub fn get_cont_style(style: Option<IpgWidgets>) -> Option<IpgContainerStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgContainerStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
 
 pub fn get_styling(theme: &Theme,
                 style_opt: Option<IpgContainerStyle>,  
@@ -161,7 +244,7 @@ pub fn get_styling(theme: &Theme,
     if style.shadow_color.is_some() {
         shadow.color = style.shadow_color.unwrap();
         shadow.blur_radius = style.shadow_blur_radius;
-        shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y }
+        shadow.offset = Vector{ x: style.shadow_offset_xy[0], y: style.shadow_offset_xy[1] }
     }
 
     container::Style {
@@ -173,3 +256,80 @@ pub fn get_styling(theme: &Theme,
     
 }
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgContainerStyleParam {
+    BackgroundIpgColor,
+    BackgroundRgbaColor,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+    ShadowIpgColor,
+    ShadowRgbaColor,
+    ShadowOffsetXY,
+    ShadowBlurRadius,
+    TextIpgColor,
+    TextRgbaColor,
+}
+
+pub fn container_style_update_item(style: &mut IpgContainerStyle,
+                            item: PyObject,
+                            value: PyObject,) 
+{
+    let update = try_extract_container_style_update(item);
+    match update {
+        IpgContainerStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgContainerStyleParam::BackgroundRgbaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgContainerStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgContainerStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgContainerStyleParam::BorderRadius => {
+            style.border_radius = try_extract_vec_f32(value);
+        },
+        IpgContainerStyleParam::BorderWidth => {
+            style.border_width = try_extract_f64(value) as f32;
+        },
+        IpgContainerStyleParam::ShadowIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.shadow_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgContainerStyleParam::ShadowRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+        IpgContainerStyleParam::ShadowOffsetXY => {
+            style.shadow_offset_xy = try_extract_array_2(value);
+        },
+        IpgContainerStyleParam::ShadowBlurRadius => {
+            style.shadow_blur_radius = try_extract_f64(value) as f32;
+        },
+        IpgContainerStyleParam::TextIpgColor => {
+            let color = try_extract_ipg_color(value);
+            style.text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgContainerStyleParam::TextRgbaColor => {
+            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+        },
+    }
+
+}
+
+pub fn try_extract_container_style_update(update_obj: PyObject) -> IpgContainerStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgContainerStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Container style parameter update extraction failed"),
+        }
+    })
+}

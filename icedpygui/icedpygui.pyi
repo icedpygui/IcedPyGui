@@ -195,29 +195,22 @@ class IPG:
         """
 
     def add_container_style(self,
-                            style_id: str, 
-                            *,
                             background_color: Optional[IpgColor]=None,
                             background_rgba: Optional[list[float, 4]]=None,
                             border_color: Optional[IpgColor]=None, 
                             border_rgba: Optional[list[float, 4]]=None,
                             border_radius: list[float]=[0.0], 
-                            border_width: float=1.0,
+                            border_width: float=0.0,
                             shadow_color: Optional[IpgColor]=None, 
                             shadow_rgba: Optional[list]=None,
-                            shadow_offset_x: float=0.0, 
-                            shadow_offset_y: float=0.0,
-                            shadow_blur_radius: float=1.0,
-                            text_color: Optional[IpgColor]=None, 
-                            text_rgba: Optional[list[float, 4]]=None,
+                            shadow_offset_xy: list[float, 2]=[0.0, 0.0], 
+                            shadow_blur_radius: float=0.0,
                         ) -> int:
         """
         Adds styling to container
 
         Parameters
         ----------
-            style_id: str
-                Id of container_style. 
             background_color: IpgColor]
                 The Color::TRANSPARENT is used unless defined.
             background_rgba: list,
@@ -235,16 +228,10 @@ class IPG:
                 The color of the shadow.
             shadow_rgba: list
                 The color in rgba format [float; 4] used as state above.
-            shadow_offset_x: float
-                Shadow offset in the horizontal direction.
-            shadow_offset_y: float
-                Shadow offset in the vertical direction.
+            shadow_offset_xy: list[float, 2]
+                Shadow offset in the x and y direction.
             shadow_blur_radius: float
                 The blur radius of the shadow.
-            text_color: IpgColor
-                The text color, if not defined, will either be a Black or White variation based on theme background.
-            text_rgba: list]
-                The color in rgba format [float; 4] used as state above.
         """
 
     def add_column(self,
@@ -4279,6 +4266,31 @@ class IpgColorPickerStyleParam:
     TextRgbaColor=list[float, 4]
 
 
+class IpgContainerParam:
+    AlignHorizontal=IpgHorizontalAlignment
+    AlignVertical=IpgVerticalAlignment
+    Centered=bool
+    Padding=list[float]
+    Width=float
+    WidthFill=bool
+    Height=float
+    HeightFill=bool
+
+
+class IpgContainerStyleParam:
+    BackgroundIpgColor=IpgColor
+    BackgroundRgbaColor=list[float, 2]
+    BorderIpgColor=IpgColor
+    BorderRgbaColor=list[float, 2],
+    BorderRadius=float
+    BorderWidth=float
+    ShadowIpgColor=IpgColor,
+    ShadowRgbaColor=list[float, 2],
+    ShadowOffsetXY=list[float, 2]
+    ShadowBlurRadius=float
+    TextIpgColor=IpgColor,
+    TextRgbaColor=list[float, 2],
+    
 class IpgDatePickerParam:
     """
     Date Picker parameters

@@ -7,6 +7,7 @@ from .icedpygui import IpgCardStyle, IpgCardParam
 from .icedpygui import IpgCheckboxParam, IpgCheckboxStyleParam
 from .icedpygui import IpgColor
 from .icedpygui import IpgColorPickerParam, IpgColorPickerStyleParam
+from .icedpygui import IpgContainerParam, IpgContainerStyleParam
 from .icedpygui import IpgDatePickerParam
 from .icedpygui import IpgImageParam, IpgImageContentFit, IpgImageFilterMethod, IpgImageRotation
 from .icedpygui import IpgMenuParam, IpgMenuStyleParam, IpgMenuBarStyleParam
