@@ -3,15 +3,14 @@ use crate::graphics::colors::get_color;
 use crate::{access_callbacks, IpgState};
 use crate::app::Message;
 use crate::style::styling::IpgStyleStandard;
-use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32, try_extract_vec_f64};
-use super::ipg_button::{get_bootstrap_arrow, get_standard_style, try_extract_button_arrow, IpgButtonArrow};
+use super::helpers::{get_height, get_padding_f64, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32, try_extract_vec_f64};
+use super::ipg_button::{self, get_bootstrap_arrow, try_extract_button_arrow, IpgButtonArrow, IpgButtonStyle};
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut 
                        };
 use super::ipg_enums::IpgWidgets;
 
-use iced::widget::button::{Status, Style};
-use iced::widget::{button, text, Button};
-use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector};
+use iced::widget::{text, Button};
+use iced::{Color, Element, Length, Padding, Theme};
 use iced_aw::ColorPicker;
 
 use pyo3::{pyclass, PyObject, Python};
@@ -142,7 +141,7 @@ pub fn construct_color_picker(cp: IpgColorPicker,
                                     .width(cp.width)
                                     .on_press(ColPikMessage::OnPress)
                                     .style(move|theme: &Theme, status| {   
-                                        get_styling(theme, status,
+                                        ipg_button::get_styling(theme, status,
                                             style.clone(),
                                             cp.style_standard.clone())
                                         })
@@ -168,10 +167,12 @@ pub fn color_picker_callback(state: &mut IpgState, id: usize, message: ColPikMes
     let mut wci: WidgetCallbackIn = WidgetCallbackIn::default();
     match message {
         ColPikMessage::OnCancel => {
-            // Non callback just setting the show value.
             wci.id = id;
             wci.value_bool = Some(false);
-            let _ = set_or_get_widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
+            wco.id = id;
+            wco.event_name = "on_cancel".to_string();
+            process_callback(wco);
         },
         ColPikMessage::OnSubmit(color) => {
             wci.id = id;
@@ -181,11 +182,14 @@ pub fn color_picker_callback(state: &mut IpgState, id: usize, message: ColPikMes
             wco.id = id;
             wco.event_name = "on_submit".to_string();
             process_callback(wco);
-        }
+        },
         ColPikMessage::OnPress => {
             wci.id = id;
             wci.value_bool = Some(true);
-            let _ = set_or_get_widget_callback_data(state, wci);
+            let mut wco = set_or_get_widget_callback_data(state, wci);
+            wco.id = id;
+            wco.event_name = "on_press".to_string();
+            process_callback(wco);
         },
     }
 }
@@ -222,7 +226,7 @@ fn process_callback(wco: WidgetCallbackOut)
                 Ok(_) => (),
                 Err(er) =>panic!("ColorPicker: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
             }
-        } else {
+        } else  if wco.color.is_some(){
             let res = callback.call1(py, (
                                                                 wco.id,
                                                                 wco.color, 
@@ -230,6 +234,14 @@ fn process_callback(wco: WidgetCallbackOut)
             match res {
                 Ok(_) => (),
                 Err(er) => panic!("ColorPicker: 2 parameters (id, value) are required or a python error in this function. {er}"),
+            }
+        } else {
+            let res = callback.call1(py, (
+                                                                wco.id,
+                                                                ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("ColorPicker: 1 parameter (id) is required or a python error in this function. {er}"),
             }
         } 
     });
@@ -413,12 +425,24 @@ pub fn try_extract_color_picker_style_update(update_obj: PyObject) -> IpgColorPi
     })
 }
 
-fn get_cp_style(style: Option<IpgWidgets>) -> Option<IpgColorPickerStyle>{
+fn get_cp_style(style: Option<IpgWidgets>) -> Option<IpgButtonStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgColorPickerStyle(style) => {
-                    Some(style)
+                    Some(IpgButtonStyle {
+                        id: style.id,
+                        background_color: style.background_color,
+                        background_color_hovered: style.background_color_hovered,
+                        border_color: style.border_color,
+                        border_radius: style.border_radius,
+                        border_width: style.border_width,
+                        shadow_color: style.shadow_color,
+                        shadow_offset_x: style.shadow_offset_x,
+                        shadow_offset_y: style.shadow_offset_y,
+                        shadow_blur_radius: style.shadow_blur_radius,
+                        text_color: style.text_color,
+                    })
                 }
                 _ => None,
             }
@@ -427,81 +451,81 @@ fn get_cp_style(style: Option<IpgWidgets>) -> Option<IpgColorPickerStyle>{
     }
 }
 
-pub fn get_styling(theme: &Theme, status: Status,
-                    style_opt: Option<IpgColorPickerStyle>,
-                    style_standard: Option<IpgStyleStandard>,
-                    ) -> button::Style 
-{
-    if style_standard.is_none() && style_opt.is_none() {
-        return button::primary(theme, status)
-    }
+// pub fn get_styling(theme: &Theme, status: Status,
+//                     style_opt: Option<IpgColorPickerStyle>,
+//                     style_standard: Option<IpgStyleStandard>,
+//                     ) -> button::Style 
+// {
+//     if style_standard.is_none() && style_opt.is_none() {
+//         return button::primary(theme, status)
+//     }
 
-    if style_opt.is_none() && style_standard.is_some() {
-            return get_standard_style(theme, status, style_standard, None, None)
-    }
+//     if style_opt.is_none() && style_standard.is_some() {
+//             return get_standard_style(theme, status, style_standard, None, None)
+//     }
 
-    let mut border = Border::default();
-    let mut shadow = Shadow::default();
+//     let mut border = Border::default();
+//     let mut shadow = Shadow::default();
 
-    let mut base_style = button::primary(theme, status);
-    let mut hover_style = button::primary(theme, status);
+//     let mut base_style = button::primary(theme, status);
+//     let mut hover_style = button::primary(theme, status);
 
-    let style = style_opt.unwrap_or_default();
+//     let style = style_opt.unwrap_or_default();
 
-    if style.border_color.is_some() {
-        border.color = style.border_color.unwrap();
-    }
+//     if style.border_color.is_some() {
+//         border.color = style.border_color.unwrap();
+//     }
 
-    border.radius = get_radius(style.border_radius.clone(), 
-                                "Button".to_string());
-    border.width = style.border_width;
+//     border.radius = get_radius(style.border_radius.clone(), 
+//                                 "Button".to_string());
+//     border.width = style.border_width;
 
-    if style.shadow_color.is_some() {
-        shadow.color = style.shadow_color.unwrap();
-        shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
-        shadow.blur_radius = style.shadow_blur_radius;
-    }
+//     if style.shadow_color.is_some() {
+//         shadow.color = style.shadow_color.unwrap();
+//         shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
+//         shadow.blur_radius = style.shadow_blur_radius;
+//     }
 
-    // style_standard overrides style except for border and shadow
-    let style_standard = get_standard_style(theme, status, 
-                                    style_standard, 
-                                    Some(border), Some(shadow));
+//     // style_standard overrides style except for border and shadow
+//     let style_standard = get_standard_style(theme, status, 
+//                                     style_standard, 
+//                                     Some(border), Some(shadow));
     
-    base_style.background = if style.background_color.is_some() {
-        Some(style.background_color.unwrap().into())
-    } else {
-        style_standard.background
-    };
+//     base_style.background = if style.background_color.is_some() {
+//         Some(style.background_color.unwrap().into())
+//     } else {
+//         style_standard.background
+//     };
 
-    hover_style.background = if style.background_color_hovered.is_some() {
-        Some(style.background_color_hovered.unwrap().into())
-    } else {
-        style_standard.background
-    };
+//     hover_style.background = if style.background_color_hovered.is_some() {
+//         Some(style.background_color_hovered.unwrap().into())
+//     } else {
+//         style_standard.background
+//     };
 
-    base_style.border = border;
-    hover_style.border = border;
+//     base_style.border = border;
+//     hover_style.border = border;
 
-    base_style.shadow = shadow;
-    hover_style.shadow = shadow;
+//     base_style.shadow = shadow;
+//     hover_style.shadow = shadow;
 
-    match status {
-        Status::Active | Status::Pressed => base_style,
-        Status::Hovered => hover_style,
-        Status::Disabled => disabled(base_style),
-    }
+//     match status {
+//         Status::Active | Status::Pressed => base_style,
+//         Status::Hovered => hover_style,
+//         Status::Disabled => disabled(base_style),
+//     }
     
-}
+// }
 
-fn disabled(style: Style) -> Style {
-    Style {
-        background: style
-            .background
-            .map(|background| background.scale_alpha(0.5)),
-        text_color: style.text_color.scale_alpha(0.5),
-        ..style
-    }
-}
+// fn disabled(style: Style) -> Style {
+//     Style {
+//         background: style
+//             .background
+//             .map(|background| background.scale_alpha(0.5)),
+//         text_color: style.text_color.scale_alpha(0.5),
+//         ..style
+//     }
+// }
 
 fn convert_color_to_list(color: Color) -> Vec<f64> {
 

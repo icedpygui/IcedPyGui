@@ -20,26 +20,42 @@ def on_toggle(_chkbx_id: int, is_checked: bool):
 
 
 # Add a window first
-ipg.add_window("main", "CheckBox Demo",
-               600, 600,  pos_centered=True)
+ipg.add_window(
+        window_id="main", 
+        title="CheckBox Demo",
+        width=600, 
+        height=600,  
+        pos_centered=True)
 
 # Add a container to center the widgets in the middle
-ipg.add_container(window_id="main", container_id="cont", width_fill=True,
-                  height_fill=True)
+ipg.add_container(
+        window_id="main", 
+        container_id="cont", 
+        width_fill=True,
+        height_fill=True)
 
 # Since a container can only hold one widget, use a column to hold the
 # two checkboxes.  We let the width and height default to shrink, so no entry.
 # The alignment defaults to Start but for demonstration purpose, we
 # added the IpgColumnAlignment.Start
-ipg.add_column(window_id="main", container_id="col", parent_id="cont",
-               align_items=IpgAlignment.Start)
+ipg.add_column(
+        window_id="main", 
+        container_id="col", 
+        parent_id="cont",
+        align_x=IpgAlignment.Start)
 
 # Add the first checkbox with the callback on_toggle.
-ipg.add_checkbox(parent_id="col", label="Check Me!!!",
-                 on_toggle=on_toggle)
+ipg.add_checkbox(
+        parent_id="col", 
+        label="Check Me!!!",
+        on_toggle=on_toggle)
 
 # Add the second checkbox.  This has no callback since it not used.
-ipg.add_checkbox(parent_id="col", gen_id=x_id, label="See my check check change to an x", is_checked=True)
+ipg.add_checkbox(
+        parent_id="col", 
+        gen_id=x_id, 
+        label="See my check check change to an x", 
+        is_checked=True)
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

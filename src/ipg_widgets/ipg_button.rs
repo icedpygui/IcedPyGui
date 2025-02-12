@@ -484,6 +484,11 @@ pub fn get_styling(theme: &Theme, status: Status,
     base_style.shadow = shadow;
     hover_style.shadow = shadow;
 
+    if style.text_color.is_some() {
+        base_style.text_color = style.text_color.unwrap();
+        hover_style.text_color = style.text_color.unwrap();
+    }
+
     match status {
         Status::Active | Status::Pressed => base_style,
         Status::Hovered => hover_style,
