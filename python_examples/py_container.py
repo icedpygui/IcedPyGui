@@ -3,8 +3,8 @@ from icedpygui import IPG, IpgColor, IpgContainerParam, IpgHorizontalAlignment, 
 
 # Moves the text to the top left position
 def change_alignment(btn_id):
-    ipg.update_item(cont2, IpgContainerParam.AlignHorizontal, IpgHorizontalAlignment.Left)
-    ipg.update_item(cont2, IpgContainerParam.AlignVertical, IpgVerticalAlignment.Top)
+    ipg.update_item(cont2, IpgContainerParam.AlignX, IpgHorizontalAlignment.Left)
+    ipg.update_item(cont2, IpgContainerParam.AlignY, IpgVerticalAlignment.Top)
     
     
 # Moves the text to the center position
@@ -26,22 +26,6 @@ def width(btn_id):
 def height(btn_id):
     ipg.update_item(cont2, IpgContainerParam.Height, 300.0)
  
-    
- # change container width
-def width_fill(btn_id):
-    ipg.update_item(cont2, IpgContainerParam.WidthFill, True)
-    
-    
-# change container height
-def height_fill(btn_id):
-    ipg.update_item(cont2, IpgContainerParam.HeightFill, True)
-    
-    
-# To change the style of the container, 
-# use the style id, not the container id.
-def change_container(btn_id):
-    print()
-    
 
 ipg = IPG()
 

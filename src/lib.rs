@@ -43,7 +43,7 @@ use ipg_widgets::ipg_card::{card_item_update, IpgCard,
     IpgCardStyle, IpgCardParam};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, checkbox_style_update_item, 
     IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle, IpgCheckboxStyleParam};
-use ipg_widgets::ipg_column::IpgColumn;
+use ipg_widgets::ipg_column::{column_item_update, IpgColumn, IpgColumnParam};
 use ipg_widgets::ipg_container::{container_item_update, container_style_update_item, IpgContainer, IpgContainerParam, IpgContainerStyle, IpgContainerStyleParam};
 use ipg_widgets::ipg_date_picker::{date_picker_item_update, 
         IpgDatePicker, IpgDatePickerParam};
@@ -712,7 +712,7 @@ impl IPG {
                         height=None, height_fill=false, 
                         clip=false, centered=true,
                         max_height=f32::INFINITY, max_width=f32::INFINITY,
-                        horizontal_alignment=None, vertical_alignment=None,
+                        align_x=IpgHorizontalAlignment::Left, align_y=IpgVerticalAlignment::Top,
                         padding=vec![0.0], show=true, style_id=None, 
                         
                        ))]
@@ -729,8 +729,8 @@ impl IPG {
                         centered: bool,
                         max_height: f32,
                         max_width: f32,
-                        mut horizontal_alignment: Option<IpgHorizontalAlignment>,
-                        mut vertical_alignment: Option<IpgVerticalAlignment>, 
+                        mut align_x: IpgHorizontalAlignment,
+                        mut align_y: IpgVerticalAlignment, 
                         padding: Vec<f64>, 
                         show: bool,
                         style_id: Option<usize>,
@@ -748,9 +748,9 @@ impl IPG {
         };
 
         if centered {
-            horizontal_alignment = Some(IpgHorizontalAlignment::Center);
-            vertical_alignment = Some(IpgVerticalAlignment::Center);
-        }
+            align_x = IpgHorizontalAlignment::Center;
+            align_y = IpgVerticalAlignment::Center;
+        };
 
         set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
 
@@ -766,8 +766,8 @@ impl IPG {
                                                 height,
                                                 max_width,
                                                 max_height,
-                                                horizontal_alignment,
-                                                vertical_alignment,
+                                                align_x,
+                                                align_y,
                                                 clip,
                                                 style_id, 
                                             )));
@@ -832,7 +832,8 @@ impl IPG {
     }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
-                        align_items=IpgAlignment::Start, width=None, height=None,
+                        align_x=IpgAlignment::Start, 
+                        width=None, height=None,
                         width_fill=false, height_fill=false,
                         max_width=f32::INFINITY, padding=vec![0.0], 
                         spacing=10.0, clip=false, show=true,
@@ -842,7 +843,7 @@ impl IPG {
                         container_id: String,
                         // **above required
                         parent_id: Option<String>,
-                        align_items: IpgAlignment,
+                        align_x: IpgAlignment,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
@@ -882,7 +883,7 @@ impl IPG {
                                 width, 
                                 height, 
                                 max_width, 
-                                align_items,
+                                align_x,
                                 clip,
                             )));
 
@@ -1277,7 +1278,9 @@ impl IPG {
     #[pyo3(signature = (window_id, container_id, parent_id=None,
                         width=None, height=None, 
                         width_fill=false, height_fill=false,
-                        horizontal_alignment=None, vertical_alignment=None,
+                        centered=true,
+                        align_x=IpgHorizontalAlignment::Left, 
+                        align_y=IpgVerticalAlignment::Top,
                         mouse_on_press=None,
                         show=true, style_id=None,
                         gen_id=None,
@@ -1291,8 +1294,9 @@ impl IPG {
                             height: Option<f32>,
                             width_fill: bool,
                             height_fill: bool,
-                            horizontal_alignment: Option<IpgHorizontalAlignment>,
-                            vertical_alignment: Option<IpgVerticalAlignment>,
+                            centered: bool,
+                            mut align_x: IpgHorizontalAlignment,
+                            mut align_y: IpgVerticalAlignment,
                             mouse_on_press: Option<PyObject>,
                             show: bool,
                             style_id: Option<String>,
@@ -1303,6 +1307,11 @@ impl IPG {
 
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
+
+        if centered {
+            align_x = IpgHorizontalAlignment::Center;
+            align_y = IpgVerticalAlignment::Center;
+        };
 
         let include_mouse_area = if mouse_on_press.is_some() {
             add_callback_to_mutex(id, "on_press".to_string(), mouse_on_press);
@@ -1322,16 +1331,18 @@ impl IPG {
 
         set_state_cont_wnd_ids(&mut state, &window_id, container_id, id, "add_opaque".to_string());
 
-        state.containers.insert(id, IpgContainers::IpgOpaque(IpgOpaque::new(
-                                    id,  
-                                    width, 
-                                    height,
-                                    horizontal_alignment,
-                                    vertical_alignment,
-                                    include_mouse_area,
-                                    show,
-                                    style_id
-                                    )));
+        state.containers.insert(id, IpgContainers::IpgOpaque(
+            IpgOpaque::new(
+                id,  
+                width, 
+                height,
+                align_x,
+                align_y,
+                include_mouse_area,
+                show,
+                style_id
+                )));
+
         state.last_id = id;
         drop(state);         
         Ok(id)
@@ -3481,8 +3492,9 @@ impl IPG {
     #[pyo3(signature = (parent_id, content, gen_id=None, 
                         width=None, width_fill=false, 
                         height=None, height_fill=false,
-                        horizontal_alignment=None, 
-                        vertical_alignment=None,
+                        centered=true,
+                        align_x=IpgHorizontalAlignment::Left, 
+                        align_y=IpgVerticalAlignment::Top,
                         line_height=1.3, size=16.0, 
                         shaping="basic".to_string(), 
                         text_color=None, text_rgba=None,
@@ -3497,8 +3509,9 @@ impl IPG {
                     width_fill: bool,
                     height: Option<f32>,
                     height_fill: bool,
-                    horizontal_alignment: Option<IpgHorizontalAlignment>,
-                    vertical_alignment: Option<IpgVerticalAlignment>,
+                    centered: bool,
+                    mut align_x: IpgHorizontalAlignment,
+                    mut align_y: IpgVerticalAlignment,
                     line_height: f32,
                     size: f32,
                     shaping: String,
@@ -3512,6 +3525,11 @@ impl IPG {
 
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
+
+        if centered {
+            align_x = IpgHorizontalAlignment::Center;
+            align_y = IpgVerticalAlignment::Center;
+        }
 
         let line_height = LineHeight::Relative(line_height);
 
@@ -3531,8 +3549,8 @@ impl IPG {
                 line_height,
                 width,
                 height,
-                horizontal_alignment,
-                vertical_alignment,
+                align_x,
+                align_y,
                 // font: Font,
                 shaping,
                 show,
@@ -5144,9 +5162,12 @@ fn match_container(container: &mut IpgContainers,
         IpgContainers::IpgCanvas(_can) => {
             canvas_item_update(canvas_state, item, value);
         },
+        IpgContainers::IpgColumn(col) => {
+            column_item_update(col, item, value);
+        },
         IpgContainers::IpgContainer(cont) => {
             container_item_update(cont, item, value);
-        }
+        },
         IpgContainers::IpgMenu(menu) => {
             menu_item_update(menu, item, value);
         },
@@ -5210,6 +5231,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgColor>()?;
     m.add_class::<IpgColorPickerParam>()?;
     m.add_class::<IpgColorPickerStyleParam>()?;
+    m.add_class::<IpgColumnParam>()?;
     m.add_class::<IpgContainerParam>()?;
     m.add_class::<IpgContainerStyleParam>()?;
     m.add_class::<IpgDatePickerParam>()?;

@@ -21,8 +21,8 @@ pub struct IpgText {
     pub line_height: LineHeight,
     pub width: Length,
     pub height: Length,
-    pub horizontal_alignment: Option<IpgHorizontalAlignment>,
-    pub vertical_alignment: Option<IpgVerticalAlignment>,
+    pub align_x: IpgHorizontalAlignment,
+    pub align_y: IpgVerticalAlignment,
     // pub font: Font,
     pub shaping: Shaping,
     pub show: bool,
@@ -37,8 +37,8 @@ impl IpgText {
         line_height: LineHeight,
         width: Length,
         height: Length,
-        horizontal_alignment: Option<IpgHorizontalAlignment>,
-        vertical_alignment: Option<IpgVerticalAlignment>,
+        align_x: IpgHorizontalAlignment,
+        align_y: IpgVerticalAlignment,
         // font: Font,
         shaping: Shaping,
         show: bool,
@@ -51,8 +51,8 @@ impl IpgText {
             line_height,
             width,
             height,
-            horizontal_alignment,
-            vertical_alignment,
+            align_x,
+            align_y,
             // font,
             shaping,
             show,
@@ -67,8 +67,8 @@ pub fn construct_text(text: IpgText) -> Element<'static, Message> {
         return Space::new(Length::Shrink, Length::Shrink).into()
     }
 
-    let hor_align = get_horizontal_alignment(text.horizontal_alignment);
-    let vert_align = get_vertical_alignment(text.vertical_alignment);
+    let hor_align = get_horizontal_alignment(text.align_x);
+    let vert_align = get_vertical_alignment(text.align_y);
 
     Text::new(text.content.clone()
                         )
@@ -97,14 +97,14 @@ pub enum IpgTextParam {
     // Font,
     Height,
     HeightFill,
-    HorizontalAlignment,
+    AlignX,
+    AlignY,
     LineHeight,
     Show,
     // Shaping,
     Size,
     TextColor, 
     TextRgba,
-    VerticalAlignment,
     Width,
     WidthFill,
 }
@@ -125,11 +125,11 @@ pub fn text_item_update(txt: &mut IpgText, item: PyObject, value: PyObject) {
             let val = try_extract_boolean(value);
             txt.height = get_height(None, val);
         },
-        IpgTextParam::HorizontalAlignment => {
-            txt.horizontal_alignment = try_extract_hor_alignment(value);
+        IpgTextParam::AlignX => {
+            txt.align_x = try_extract_hor_alignment(value);
         },
-        IpgTextParam::VerticalAlignment => {
-            txt.vertical_alignment = try_extract_vert_alignment(value);
+        IpgTextParam::AlignY => {
+            txt.align_y = try_extract_vert_alignment(value);
         },
         IpgTextParam::LineHeight => {
             let val = try_extract_f64(value) as f32;
@@ -173,23 +173,23 @@ fn try_extract_text_update(update_obj: PyObject) -> IpgTextParam {
     })
 }
 
-fn try_extract_hor_alignment(update_obj: PyObject) -> Option<IpgHorizontalAlignment> {
+fn try_extract_hor_alignment(update_obj: PyObject) -> IpgHorizontalAlignment {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgHorizontalAlignment>(py);
         match res {
-            Ok(update) => Some(update),
+            Ok(update) => update,
             Err(_) => panic!("Text HorizontalAlignment extraction failed"),
         }
     })
 }
 
-fn try_extract_vert_alignment(update_obj: PyObject) -> Option<IpgVerticalAlignment> {
+fn try_extract_vert_alignment(update_obj: PyObject) -> IpgVerticalAlignment {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgVerticalAlignment>(py);
         match res {
-            Ok(update) => Some(update),
+            Ok(update) => update,
             Err(_) => panic!("Text VerticalAlignment extraction failed"),
         }
     })

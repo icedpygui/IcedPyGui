@@ -17,8 +17,8 @@ pub struct IpgOpaque {
     pub id: usize,
     pub width: Length,
     pub height: Length,
-    pub align_h: Option<IpgHorizontalAlignment>,
-    pub align_v: Option<IpgVerticalAlignment>,
+    pub align_x: IpgHorizontalAlignment,
+    pub align_y: IpgVerticalAlignment,
     pub include_mouse_area: bool,
     pub show: bool,
     pub style_id: Option<String>, 
@@ -29,8 +29,8 @@ impl IpgOpaque {
         id: usize,
         width: Length,
         height: Length,
-        align_h: Option<IpgHorizontalAlignment>,
-        align_v: Option<IpgVerticalAlignment>,
+        align_x: IpgHorizontalAlignment,
+        align_y: IpgVerticalAlignment,
         include_mouse_area: bool,
         show: bool,
         style_id: Option<String>,
@@ -39,8 +39,8 @@ impl IpgOpaque {
             id,
             width,
             height,
-            align_h,
-            align_v,
+            align_x,
+            align_y,
             include_mouse_area,
             show,
             style_id, 
@@ -77,8 +77,8 @@ pub fn construct_opaque(op: IpgOpaque,
         horizontal_space().into()
     };
 
-    let align_h = get_horizontal_alignment(op.align_h.clone());
-    let align_v = get_vertical_alignment(op.align_v.clone());
+    let align_h = get_horizontal_alignment(op.align_x);
+    let align_v = get_vertical_alignment(op.align_y);
 
     let cont: Element<Message> = Container::new(new_content)
                 .width(op.width)

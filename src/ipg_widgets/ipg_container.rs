@@ -20,8 +20,8 @@ pub struct IpgContainer {
     pub height: Length,
     pub max_width: f32,
     pub max_height: f32,
-    pub align_h: Option<IpgHorizontalAlignment>,
-    pub align_v: Option<IpgVerticalAlignment>,
+    pub align_x: IpgHorizontalAlignment,
+    pub align_y: IpgVerticalAlignment,
     pub clip: bool,
     pub style_id: Option<usize>, 
 }
@@ -30,14 +30,13 @@ impl IpgContainer {
     pub fn new(
         id: usize,
         show: bool,
-        
         padding: Padding,
         width: Length,
         height: Length,
         max_width: f32,
         max_height: f32,
-        align_h: Option<IpgHorizontalAlignment>,
-        align_v: Option<IpgVerticalAlignment>,
+        align_x: IpgHorizontalAlignment,
+        align_y: IpgVerticalAlignment,
         clip: bool,
         style_id: Option<usize>,
     ) -> Self {
@@ -49,8 +48,8 @@ impl IpgContainer {
             height,
             max_width,
             max_height,
-            align_h,
-            align_v,
+            align_x,
+            align_y,
             clip,
             style_id, 
         }
@@ -102,10 +101,9 @@ pub fn construct_container(con: IpgContainer,
                             style_opt: Option<IpgWidgets> ) 
                             -> Element<Message> {
 
+    let align_h = get_horizontal_alignment(con.align_x);
+    let align_v = get_vertical_alignment(con.align_y);
     let style = get_cont_style(style_opt);
-
-    let align_h = get_horizontal_alignment(con.align_h.clone());
-    let align_v = get_vertical_alignment(con.align_v.clone());
 
     // Since a container can have only one element and the 
     // the process sends a vec then if empty container, put in a
@@ -134,14 +132,15 @@ pub fn construct_container(con: IpgContainer,
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum IpgContainerParam {
-    AlignHorizontal,
-    AlignVertical,
+    AlignX,
+    AlignY,
     Centered,
     Padding,
     Width,
     WidthFill,
     Height,
     HeightFill,
+    Clip,
 }
 
 pub fn container_item_update(cont: &mut IpgContainer,
@@ -152,20 +151,20 @@ pub fn container_item_update(cont: &mut IpgContainer,
     let update = try_extract_container_update(item);
 
     match update {
-        IpgContainerParam::AlignHorizontal => {
-            cont.align_h = try_extract_ipg_horizontal_alignment(value);
+        IpgContainerParam::AlignX => {
+            cont.align_x = try_extract_ipg_horizontal_alignment(value).unwrap();
         },
-        IpgContainerParam::AlignVertical => {
-            cont.align_v = try_extract_ipg_vertical_alignment(value);
+        IpgContainerParam::AlignY => {
+            cont.align_y = try_extract_ipg_vertical_alignment(value).unwrap();
         },
         IpgContainerParam::Centered => {
             let centered = try_extract_boolean(value);
             if centered {
-                cont.align_h = Some(IpgHorizontalAlignment::Center);
-                cont.align_v = Some(IpgVerticalAlignment::Center);
+                cont.align_x = IpgHorizontalAlignment::Center;
+                cont.align_y = IpgVerticalAlignment::Center;
             } else {
-                cont.align_h = None;
-                cont.align_v = None;
+                cont.align_x = IpgHorizontalAlignment::Left;
+                cont.align_y = IpgVerticalAlignment::Top;
             }
         },
         IpgContainerParam::Padding => {
@@ -185,6 +184,9 @@ pub fn container_item_update(cont: &mut IpgContainer,
         },
         IpgContainerParam::HeightFill => {
             cont.height = get_height(None, try_extract_boolean(value));
+        },
+        IpgContainerParam::Clip => {
+            cont.clip = try_extract_boolean(value);
         },
     }
 }

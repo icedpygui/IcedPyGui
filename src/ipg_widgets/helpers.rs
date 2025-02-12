@@ -57,22 +57,18 @@ pub fn get_alignment(align: IpgAlignment) -> Alignment {
     }
 }
 
-pub fn get_horizontal_alignment(h_align: Option<IpgHorizontalAlignment>) -> Horizontal {
+pub fn get_horizontal_alignment(h_align: IpgHorizontalAlignment) -> Horizontal {
 
-    if h_align.is_none() {return Horizontal::Center}
-
-    match h_align.unwrap() {
+    match h_align {
         IpgHorizontalAlignment::Left => Horizontal::Left,
         IpgHorizontalAlignment::Center => Horizontal::Center,
         IpgHorizontalAlignment::Right => Horizontal::Right,
     }
 }
 
-pub fn get_vertical_alignment(v_align: Option<IpgVerticalAlignment>,) -> Vertical {
+pub fn get_vertical_alignment(v_align: IpgVerticalAlignment) -> Vertical {
     
-    if v_align.is_none() {return Vertical::Center}
-
-    match v_align.unwrap() {
+    match v_align {
         IpgVerticalAlignment::Top => Vertical::Top,
         IpgVerticalAlignment::Center => Vertical::Center,
         IpgVerticalAlignment::Bottom => Vertical::Bottom,
@@ -381,6 +377,17 @@ pub fn try_extract_ipg_vertical_alignment(value: PyObject) -> Option<IpgVertical
     Python::with_gil(|py| {
 
         let res = value.extract::<IpgVerticalAlignment>(py);
+        match res {
+            Ok(val) => Some(val),
+            Err(_) => None,
+        }
+    })
+}
+
+pub fn try_extract_ipg_alignment(value: PyObject) -> Option<IpgAlignment> {
+    Python::with_gil(|py| {
+
+        let res = value.extract::<IpgAlignment>(py);
         match res {
             Ok(val) => Some(val),
             Err(_) => None,

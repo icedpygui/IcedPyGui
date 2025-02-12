@@ -133,8 +133,9 @@ class IPG:
                         height_fill: bool=False,
                         max_height: float=float('inf'),
                         max_width: float=float('inf'),
-                        horizontal_alignment: Optional[IpgAlignment]=None,
-                        vertical_alignment: Optional[IpgAlignment]=None,
+                        centered: bool=True,
+                        align_x: IpgAlignment.Left,
+                        align_y: IpgAlignment.Top,
                         padding: list[float]=[10.0],
                         clip: bool=False,
                         show: bool=True,
@@ -169,10 +170,12 @@ class IPG:
                 Sets the maximum width the container is allowed to be.
             max_height: float
                 Sets a maximum height the container is allowed to be.
-            horizontal_alignment: IpgHorizontalAlignment
-                Aligns the container horizontally; Start, Center=default, End
-            vertical_alignment: IpgVerticalAlignment
-                Aligns the container vertically; Start, Center=default, End
+            centered: bool
+               Centers the containing element if true.
+            align_x: IpgHorizontalAlignment
+                Aligns the container horizontally; Start=default, Center, End
+            align_y: IpgVerticalAlignment
+                Aligns the container vertically; Start=default, Center, End
             padding: List[float]
                 Sets the padding for container.
                 use [float] for all sides,
@@ -239,7 +242,7 @@ class IPG:
                     container_id: str,
                     *,
                     parent_id: Optional[str]=None,
-                    align_items: IpgAlignment=IpgAlignment.Start,
+                    align_x: IpgAlignment=IpgAlignment.Start,
                     width: Optional[float]=None,
                     height: Optional[float]=None,
                     width_fill: bool=False,
@@ -263,7 +266,7 @@ class IPG:
             parent_id: str
                 If parent_id == window_id then not required, 
                 If another container then required.
-            align_items: IpgAlignment
+            align_x: IpgAlignment
                 Sets the vertical alignment of the items in the column; Start, Center, End.
             width: float
                 Sets the width of the widget.
@@ -2496,8 +2499,9 @@ class IPG:
                  height: Optional[float]=None,
                  width_fill: bool=False,
                  height_fill: bool=False,
-                 horizontal_alignment: Optional[IpgHorizontalAlignment]=None,
-                 vertical_alignment: Optional[IpgVerticalAlignment]=None,
+                 centered: bool,
+                 align_x: IpgHorizontalAlignment=IpgHorizontalAlignment.Left,
+                 align_y: IpgVerticalAlignment=IpgVerticalAlignment.Top,
                  line_height: str="default",
                  size: float=16.0,
                  shaping: str="basic",
@@ -2522,9 +2526,11 @@ class IPG:
                 Sets the height of the widget.   
             height_fill: bool
                 Sets the height to fill the available space, overrides height.
-            horizontal_alignment: str
+            centered: bool
+                Centers text if true
+            align_x: str
                 Aligns text horizontally "Left", "Center", or "Right", width needs to be larger than text.
-            vertical_alignment: str
+            align_y: str
                 Aligns text vertically "Left", "Center", or "Right", height needs to be larger than text.
             line_height: float
                 Sets the line height of the text.
@@ -4266,10 +4272,22 @@ class IpgColorPickerStyleParam:
     TextRgbaColor=list[float, 4]
 
 
+class IpgColumnParam:
+    AlignX=IpgAlignment
+    Clip=bool
+    Padding=list[float]
+    Width=float
+    WidthFill=bool
+    Height=float
+    HeightFill=bool
+    Spacing=float
+    
+
 class IpgContainerParam:
-    AlignHorizontal=IpgHorizontalAlignment
-    AlignVertical=IpgVerticalAlignment
+    AlignX=IpgHorizontalAlignment
+    AlignY=IpgVerticalAlignment
     Centered=bool
+    Clip=bool
     Padding=list[float]
     Width=float
     WidthFill=bool
