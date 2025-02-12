@@ -95,12 +95,18 @@ ipg.add_window(window_id="main", title="Date Picker Demo", width=600, height=500
                pos_x=100, pos_y=25)
 
 # Add a column to hold the widgets
-ipg.add_column(window_id="main", container_id="col", parent_id="main",
-               width_fill=True, height_fill=True,
-               align_items=IpgAlignment.Center)
+ipg.add_column(
+        window_id="main", 
+        container_id="col", 
+        parent_id="main",
+        width_fill=True, 
+        height_fill=True,
+        align_x=IpgAlignment.Center)
 
 # Add a space for readability
-ipg.add_space(parent_id="col", height=50.0)
+ipg.add_space(
+        parent_id="col", 
+        height=50.0)
 
 # Add some text info
 ipg.add_text("col",
@@ -111,36 +117,48 @@ ipg.add_text("col",
              width=600.0)
 
 # adding a row for the line of images
-ipg.add_row(window_id="main", container_id="row1", parent_id="col", spacing=0)
+ipg.add_row(
+        window_id="main", 
+        container_id="row1", 
+        parent_id="col", 
+        spacing=0)
 
 # Looping to add the images, each will have the same callback
 # but they could be different depending on your needs.
 for i in range(0, 4):
 
-    ferris_ids.append(ipg.add_image(parent_id="row1", image_path=ferris,
-                                   width=100.0, height=50.0,
-                                   on_press=image_selected,
-                                   on_move=on_mouse_move,
-                                   on_exit=on_mouse_exit,
-                                   on_right_press=toggle_images,
-                                   mouse_pointer=IpgMousePointer.Pointer,
-                                   show=True))
+    ferris_ids.append(ipg.add_image(parent_id="row1", 
+                                    image_path=ferris,
+                                    width=100.0, height=50.0,
+                                    on_press=image_selected,
+                                    on_move=on_mouse_move,
+                                    on_exit=on_mouse_exit,
+                                    on_right_press=toggle_images,
+                                    mouse_pointer=IpgMousePointer.Pointer,
+                                    show=True))
     
-    tiger_ids.append(ipg.add_svg(parent_id="row1", svg_path=tiger,
-                                   width=100.0, height=50.0,
-                                   on_press=image_selected,
-                                   on_move=on_mouse_move,
-                                   on_exit=on_mouse_exit,
-                                   on_right_press=toggle_images,
-                                   mouse_pointer=IpgMousePointer.Pointer,
-                                   show=False))
+    tiger_ids.append(ipg.add_svg(parent_id="row1", 
+                                 svg_path=tiger,
+                                 width=100.0, height=50.0,
+                                 on_press=image_selected,
+                                 on_move=on_mouse_move,
+                                 on_exit=on_mouse_exit,
+                                 on_right_press=toggle_images,
+                                 mouse_pointer=IpgMousePointer.Pointer,
+                                 show=False))
     
     # Spacing was added last because because the two images occupy the same space
     # So spacing is between the pairs
-    ipg.add_space(parent_id="row1", width=10.0)
+    ipg.add_space(
+            parent_id="row1", 
+            width=10.0)
+
 
 # add a row for the information
-ipg.add_row(window_id="main", container_id="row2", parent_id="col")
+ipg.add_row(
+        window_id="main", 
+        container_id="row2", 
+        parent_id="col")
 
 # Using some global variables for the ids needed for the callbacks
 text_ids = []
@@ -149,13 +167,22 @@ text_points = []
 # Add the text below each image.  There are a number of ways this could be done,
 # Another way is to add a column with the image, info, and points then put the columns into row.
 for i in range(0, 4):
-    text_ids.append(ipg.add_text(parent_id="row2", content="Press image above me", width=100.0))
+    text_ids.append(ipg.add_text(
+                            parent_id="row2", 
+                            content="Press image above me", 
+                            width=100.0))
 
 # adding a final row for the points display
-ipg.add_row(window_id="main", container_id="row3", parent_id="col")
+ipg.add_row(
+        window_id="main", 
+        container_id="row3", 
+        parent_id="col")
 
 for i in range(0, 4):
-    text_points.append(ipg.add_text(parent_id="row3", content="Point", width=100.0))
+    text_points.append(ipg.add_text(
+                                parent_id="row3", 
+                                content="Point", 
+                                width=100.0))
 
 ipg.add_timer(
         parent_id="col",

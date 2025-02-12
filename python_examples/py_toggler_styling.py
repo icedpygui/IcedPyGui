@@ -11,8 +11,7 @@ ipg.add_window(
         title="Toggler Demo", 
         width=700, 
         height=625,  
-        pos_x=100.0, 
-        pos_y=25.0)
+        pos_centered=True)
 
 # Add a main column to hold everything
 ipg.add_column(
@@ -20,7 +19,7 @@ ipg.add_column(
         container_id="col", 
         width_fill=True, 
         height_fill=True,
-        align_items=IpgAlignment.Center, 
+        align_x=IpgAlignment.Center, 
         spacing=5.0)
 
 ipg.add_space(

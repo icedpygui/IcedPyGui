@@ -66,13 +66,18 @@ def decrease_size(btn_id):
 ipg = IPG()
 
 ipg.add_window(
-        window_id="main", title="Main",
-        width=600, height=600,
-        pos_centered=True, debug=True)
+        window_id="main", 
+        title="Main",
+        width=600, 
+        height=600,
+        pos_centered=True,
+        debug=True)
 
 ipg.add_container(
         window_id="main", 
-        container_id="cont")
+        container_id="cont",
+        width_fill=True,
+        centered=True)
 
 # Setting up the image path
 cwd = os.getcwd()
@@ -81,7 +86,7 @@ tiger_path = cwd + "/python_examples/resources/tiger_0.svg"
 ipg.add_column(
         window_id="main", 
         container_id="col",
-        align_items=IpgAlignment.Center)
+        align_x=IpgAlignment.Center)
 
 
 svg_id = ipg.add_svg(

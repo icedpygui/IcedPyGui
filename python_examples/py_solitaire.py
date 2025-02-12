@@ -42,6 +42,9 @@ class solitaire:
         
         self.foundation_top_card_value: list=[0] * 4
         self.foundation_top_card_suite: list=[None] * 4
+        
+        # styles
+        self.white_border = 0
 
         # if the cards in the tableau going outside of this height,
         # an error will occur.  Increase the window height and this
@@ -70,7 +73,7 @@ class solitaire:
                                parent_id="main_row",
                                width=175.0,
                                height_fill=True,
-                               style_id="white_border")
+                               style_id=self.white_border)
         
         self.ipg.add_column(window_id="main",
                             container_id="control_col",
@@ -83,7 +86,7 @@ class solitaire:
                                parent_id="main_row",
                                width_fill=True,
                                height_fill=True,
-                               style_id="white_border")
+                               style_id=self.white_border)
         
         self.ipg.add_column(window_id="main",
                             container_id="main_col",
@@ -189,9 +192,9 @@ class solitaire:
             self.cards[ma.get("wid")] = ma        
                 
     def create_styles(self):
-        self.ipg.add_container_style(style_id="white_border", 
-                                    border_color=IpgColor.WHITE,
-                                    border_width=2.0)
+        self.white_border = self.ipg.add_container_style( 
+                                        border_color=IpgColor.WHITE,
+                                        border_width=2.0)
 
     def define_controls(self):
         self.ipg.add_button(parent_id="control_col",
@@ -232,7 +235,7 @@ class solitaire:
                         container_id="stock",
                         parent_id="stock_row",
                         padding=[0.0],
-                        style_id="white_border")
+                        style_id=self.white_border)
         
         # add the stack in
         self.ipg.add_stack(window_id="main",
@@ -267,7 +270,7 @@ class solitaire:
                                 width=self.card_width,
                                 height=self.card_height,
                                 padding=[0.0],
-                                style_id="white_border")
+                                style_id=self.white_border)
 
         # add the stack in
         self.ipg.add_stack(window_id="main",
@@ -314,7 +317,7 @@ class solitaire:
                                     width=self.card_width,
                                     height=self.card_height,
                                     padding=[0.0],
-                                    style_id="white_border")
+                                    style_id=self.white_border)
 
         # add a container off screen to hide widget that become unused
         self.ipg.add_space(parent_id="stock_row",

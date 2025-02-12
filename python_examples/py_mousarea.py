@@ -44,14 +44,23 @@ def on_exit(id, _user_data):
 
 ipg = IPG()
 
-ipg.add_window(window_id="main", title="Main", width=400, height=400, 
-               pos_centered=True, debug=True)
+ipg.add_window(
+        window_id="main", 
+        title="Main", 
+        width=400, 
+        height=400, 
+        pos_centered=True, 
+        debug=True)
 
-ipg.add_container(window_id="main", container_id="cont", 
-                  width_fill=True, height_fill=True,
-                  )
+ipg.add_container(
+        window_id="main", 
+        container_id="cont", 
+        width_fill=True, 
+        height_fill=True)
 
-ipg.add_mousearea(window_id="main", container_id="ma", parent_id="cont",
+ipg.add_mousearea(window_id="main", 
+                  container_id="ma", 
+                  parent_id="cont",
                   on_enter=on_enter,
                   on_exit=on_exit,
                   on_move=on_move,

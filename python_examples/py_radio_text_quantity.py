@@ -30,7 +30,7 @@ ipg.add_column(
         window_id="main", 
         container_id="col",
         parent_id="scroller",
-        align_items=IpgAlignment.Start, 
+        align_x=IpgAlignment.Start, 
         padding=[5])
 
 # The radio button limits are 26 groups with 26 items

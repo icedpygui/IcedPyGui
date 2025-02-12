@@ -50,6 +50,7 @@ def change_direction(chk_id: int, checked: bool, radio_ids: list[int]):
     else:
         radio1 = IpgRadioDirection.Vertical
         radio2 = IpgRadioDirection.Horizontal
+        
     ipg.update_item(
             radio_ids[0], 
             IpgRadioParam.Direction, 
@@ -61,11 +62,11 @@ def change_direction(chk_id: int, checked: bool, radio_ids: list[int]):
 
 
 def change_selection(chk_id: int, checked: bool, radio_ids: list[int]):
-    
     if checked:
         selected = 2
     else:
         selected = None
+        
     ipg.update_item(
             radio_ids[0], 
             IpgRadioParam.SelectedIndex, 
@@ -109,6 +110,7 @@ def hide_left_radio(chk_id: int, checked: bool, rd_left_id: int):
         show = False
     else:
         show = True
+        
     ipg.update_item(
             rd_left_id, 
             IpgRadioParam.Show, 
@@ -120,6 +122,7 @@ def change_size(chk_id: int, checked: bool, radio_ids: list[int]):
         size = 10.0
     else:
         size = 20.0
+        
     ipg.update_item(
             radio_ids[0], 
             IpgRadioParam.Size, 
@@ -135,6 +138,7 @@ def change_spacing(chk_id: int, checked: bool, radio_ids: list[int]):
         spacing = 20.0
     else:
         spacing = 10.0
+        
     ipg.update_item(
             radio_ids[0], 
             IpgRadioParam.Spacing, 
@@ -150,6 +154,7 @@ def change_text_spacing(chk_id: int, checked: bool, radio_ids: list[int]):
         ts = 30.0
     else:
         ts = 15
+        
     ipg.update_item(
             radio_ids[0], 
             IpgRadioParam.TextSpacing, 
@@ -165,6 +170,7 @@ def change_text_size(chk_id: int, checked: bool, radio_ids: list[int]):
         ts = 20.0
     else:
         ts = 16.0
+        
     ipg.update_item(
             radio_ids[0], 
             IpgRadioParam.TextSize, 
@@ -180,6 +186,7 @@ def change_line_height_relative(chk_id: int, checked: bool, radio_ids: list[int]
         tlh = 3.0
     else:
         tlh = 1.3
+        
     ipg.update_item(
             radio_ids[0], 
             IpgRadioParam.LineHeightRelative, 
@@ -195,6 +202,7 @@ def change_width(chk_id: int, checked: bool, radio_ids: list[int]):
         wd = 150.0
     else:
         wd = None  # defaults to shrink
+        
     ipg.update_item(
             radio_ids[0], 
             IpgRadioParam.Width, 
@@ -212,6 +220,7 @@ def change_width_fill(chk_id: int, checked: bool, radio_ids: list[int]):
         wdf = True
     else:
         wdf = False  # defaults to shrink
+        
     ipg.update_item(
             radio_ids[0], 
             IpgRadioParam.Width, 
@@ -236,6 +245,7 @@ def change_height(chk_id: int, checked: bool, radio_ids: list[int]):
         ht = 150.0
     else:
         ht = None  # defaults to shrink
+        
     ipg.update_item(
             radio_ids[0], 
             IpgRadioParam.Height, 
@@ -294,7 +304,7 @@ ipg.add_column(
         window_id="main", 
         container_id="col", 
         parent_id="cont",
-        align_items=IpgAlignment.Center, 
+        align_x=IpgAlignment.Center, 
         height=600.0, 
         width=500.0)
 

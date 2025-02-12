@@ -22,7 +22,7 @@ ipg.add_window("main", "Pick List Demo", 800, 600,
 ipg.add_column(
         window_id="main", 
         container_id="col",
-        align_items=IpgAlignment.Start, 
+        align_x=IpgAlignment.Start, 
         width_fill=True)
 
 ipg.add_space(

@@ -84,7 +84,7 @@ ipg.add_column(
         window_id="main", 
         container_id="col", 
         parent_id="cont",
-        align_items=IpgAlignment.Center, spacing=2)
+        align_x=IpgAlignment.Center, spacing=2)
 
 ipg.add_space(
         parent_id="col", 
@@ -125,7 +125,7 @@ ipg.add_column(
         window_id="main", 
         container_id="col2", 
         parent_id="col",
-        align_items=IpgAlignment.Center)
+        align_x=IpgAlignment.Center)
 
 # Add a text widget for current value
 current_value_id = ipg.add_text(

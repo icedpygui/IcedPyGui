@@ -76,15 +76,20 @@ ipg.add_window(
         pos_y=25)
 
 # Add a main column to hold everything
-ipg.add_column("main", "col", width_fill=True, height_fill=True,
-               align_items=IpgAlignment.Center, spacing=5.0)
+ipg.add_column(
+        window_id="main", 
+        container_id="col", 
+        width_fill=True, 
+        height_fill=True,
+        align_x=IpgAlignment.Center, 
+        spacing=5.0)
 
 # Add a column at the top for the toggler and a text widget
 ipg.add_column(
         window_id="main", 
         container_id="col_top", 
         parent_id="col",
-        align_items=IpgAlignment.Center,
+        align_x=IpgAlignment.Center,
         height=110.0, 
         spacing=5.0, 
         padding=[5.0], 
@@ -103,7 +108,7 @@ ipg.add_column(
         window_id="main", 
         container_id="col_bot", 
         parent_id="col",
-        align_items=IpgAlignment.Center, 
+        align_x=IpgAlignment.Center, 
         spacing=10.0, 
         padding=[5.0])
 

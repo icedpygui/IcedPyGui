@@ -111,7 +111,7 @@ ipg.add_window(
 ipg.add_column(
         window_id="main", 
         container_id="col",
-        align_items=IpgAlignment.Center,
+        align_x=IpgAlignment.Center,
         height_fill=True, 
         width_fill=True, 
         spacing=10)
