@@ -25,7 +25,7 @@ from .icedpygui import IpgSliderParam, IpgSliderStyleParam
 from .icedpygui import IpgStackParam
 from .icedpygui import IpgStyleStandard
 from .icedpygui import IpgSvgParam
-from .icedpygui import IpgTableRowHighLight, IpgTableWidget, IpgTableParam
+from .icedpygui import IpgTableRowHighLight, IpgTableParam
 from .icedpygui import IpgTextInputParam, IpgTextInputStyleParam
 from .icedpygui import IpgTextParam
 from .icedpygui import IpgTimerParam, IpgTimerStyleParam

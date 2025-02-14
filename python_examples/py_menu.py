@@ -90,10 +90,10 @@ ipg.add_menu(
 # The user_data parameter is used to denote which
 # bar or item is pressed and/or any other info you need. 
 ipg.add_button(parent_id="menu",
-                        label="Bar Button1",
-                        on_press=bar_button_pressed,
-                        style_id=btn_style,
-                        user_data=1)
+                label="Bar Button1",
+                on_press=bar_button_pressed,
+                style_id=btn_style,
+                user_data=1)
 
 for i in range(0, 4):
     label = f"Text{i}"

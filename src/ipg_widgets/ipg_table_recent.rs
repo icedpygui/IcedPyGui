@@ -1,17 +1,22 @@
 //! ipg_table
 
-use crate::app::Message;
+use crate::app::{self, Message};
 use crate::{access_callbacks, IpgState, TABLE_INTERNAL_IDS_START};
-use crate::table::table::{self, header_container};
-use iced::{Element, Length, Renderer, Theme};
-use iced::widget::{container, responsive, row, scrollable, text, Responsive};
-
-use pyo3::{pyclass, PyObject, Python};
-use pyo3::types::IntoPyDict;
-
-use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use crate::style::styling::get_theme_color;
+use super::callbacks::{set_or_get_widget_callback_data, 
+    WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_height, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_vec_f32};
 
+use crate::style::styling::{lighten, darken};
+
+use iced::widget::scrollable::Viewport;
+use iced::{alignment, Alignment, Background, Element, Length, Theme};
+use iced::alignment::Horizontal;
+use iced::widget::{container, 
+    text, Column, Container, Row, Scrollable, horizontal_space, Text};
+
+use pyo3::types::IntoPyDict;
+use pyo3::{pyclass, PyObject, Python};
 
 #[derive(Debug, Clone)]
 pub struct IpgTable {
@@ -30,17 +35,11 @@ pub struct IpgTable {
         pub column_widths: Vec<f32>,
         pub column_spacing: f32,
         pub row_spacing: f32,
-        pub resize_columns_enabled: bool,
-        pub footer_enabled: bool,
-        pub min_width_enabled: bool,
         pub modal_show: bool,
         pub show: bool,
         pub scroller_user_data: Option<PyObject>,
         pub scroller_id: usize,
         _scroller_pos: Vec<(String, f32)>,
-        header_scrollable: scrollable::Id,
-        body_scrollable: scrollable::Id,
-        footer_scrollable: scrollable::Id,
 }
 
 impl IpgTable {
@@ -60,16 +59,10 @@ impl IpgTable {
         column_widths: Vec<f32>,
         column_spacing: f32,
         row_spacing: f32,
-        resize_columns_enabled: bool,
-        footer_enabled: bool,
-        min_width_enabled: bool,
         show: bool,
         modal_show: bool,
         scroller_user_data: Option<PyObject>,
         scroller_id: usize,
-        // header_scrollable: scrollable::Id,
-        // body_scrollable: scrollable::Id,
-        // footer_scrollable: scrollable::Id,
         ) -> Self {
         Self {
             id,
@@ -87,28 +80,19 @@ impl IpgTable {
             column_widths,
             column_spacing,
             row_spacing,
-            resize_columns_enabled,
-            footer_enabled,
-            min_width_enabled,
             modal_show,
             show,
             scroller_user_data,
             scroller_id,
             _scroller_pos: vec![],
-            header_scrollable: scrollable::Id::unique(),
-            body_scrollable: scrollable::Id::unique(),
-            footer_scrollable: scrollable::Id::unique(),
         }
     }
 }
 
-// #[derive(Debug, Clone)]
-// pub enum TableMessage {
-//     Scrolled(Viewport, usize),
-//     SyncHeader(scrollable::AbsoluteOffset),
-//     Resizing(usize, f32),
-//     Resized,
-// }
+#[derive(Debug, Clone)]
+pub enum TableMessage {
+    Scrolled(Viewport, usize)
+}
 
 #[derive(Debug, Clone, Copy)]
 #[pyclass]
@@ -117,92 +101,108 @@ pub enum IpgTableRowHighLight {
     Lighter,
 }
 
-#[derive(Debug, Clone)]
-struct IRow {
-    index: usize
-}
 
-impl IRow {
-    fn generate(index: usize) -> Self {
-        let index = index;
-
-        Self {
-            index,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct IColumn {
-    width: f32,
-    resize_offset: Option<f32>,
-}
-
-impl IColumn {
-    fn new(index: usize) -> Self {
-        let widths = [
-            60.0,
-            100.0,
-            155.0,
-            400.0,
-            100.0,
-        ];
-        let width = widths[index];
-        Self {
-            width,
-            resize_offset: None,
-        }
-    }
-}
-
-pub fn construct_table(tbl: IpgTable, 
-                        content: Vec<Element<Message>>, 
+pub fn construct_table(table: IpgTable, 
+                        mut content: Vec<Element<Message>>, 
                         ) 
-                        -> Element<Message, Theme, Renderer> {
-    
-    let mut columns:  = vec![];
-    for _ in 0..5 {
-        columns.push(content.remove(0));
-    }
-    let header = scrollable(style::wrapper::header(
-            row(columns
-                .iter()
-                .enumerate()
-                .map(|(index, column)| {
-                    header_container(
-                        index,
-                        column,
-                        on_column_drag,
-                        on_column_release.clone(),
-                        min_column_width,
-                        divider_width,
-                        cell_padding,
-                        style.clone(),
-                    )
-                })
-                .chain(dummy_container(columns, min_width, min_column_width))),
-            style.clone(),
-        ))
-        .id(header)
-        .direction(scrollable::Direction::Both {
-            vertical: scrollable::Scrollbar::new()
-                .width(0)
-                .margin(0)
-                .scroller_width(0),
-            horizontal: scrollable::Scrollbar::new()
-                .width(0)
-                .margin(0)
-                .scroller_width(0),
-        });
+                        -> Element<Message> {
+                             
+    let header = if table.header {
+        let mut head = vec![];
+        for _  in  0..table.columns {
+            head.push(content.remove(0));
+        }
+        container(Row::with_children(head)
+                            .spacing(table.column_spacing))
+                            .into()
+    } else {
+        container(horizontal_space()).into()
+    };
 
+    if table.add_data_row_wise {
+        let mut rows = vec![];
+        for _ in 0..table.columns {
+            let mut data_row: Vec<Element<Message>>= vec![];
+            for _ in 0..table.rows {
+                data_row.push(content.remove(0));
+            }
+            let row = Row::with_children(data_row)
+                                            .spacing(table.column_spacing);
+            let cont = container(row);
+            rows.push(cont.into());
+        } 
+
+        if table.header {
+            rows.insert(0, header);
+        }
+
+        let col = Column::with_children(rows)
+                                            .spacing(table.row_spacing);
+        container(col).into()
+    } else {
+        
+
+
+        iced::widget::Space::new(0.0, 0.0).into()
+    }
+      
 }
 
-pub fn table_callback(state: &mut IpgState, table_id: usize, message: Message) {
+
+fn add_scroll(body: Element<'static, Message>, 
+                height: f32,
+                scroller_id: usize,
+                ) -> Element<'static, Message>{
+    
+    Scrollable::new(body)
+                    .on_scroll(move|vp| app::Message::Scrolled(vp, scroller_id))
+                    .height(Length::Fixed(height))
+                    .into()
+    
+}
+
+fn add_header_text (header: String, width: f32) -> Element<'static, Message> {
+    let txt : Element<Message> = text(header)
+                                    .width(Length::Fixed(width))
+                                    .align_x(Horizontal::Center)
+                                    .into();
+    txt
+}
+
+fn add_text_widget(label: String, width: f32) -> Element<'static, Message> {
+
+    let txt: Element<Message> = Text::new(label)
+        .width(Length::Fixed(width))
+        .height(Length::Fixed(30.0))
+        .align_x(Horizontal::Center)
+        .into();
+
+    txt
+}
+
+fn add_row_container(content: Element<Message>, row_index: usize,
+                    highlight_amount: f32, row_highlight: Option<IpgTableRowHighLight>) 
+                    -> Element<Message> {
+    // Using container because text has no background 
+    Container::new(content)
+            .width(Length::Shrink)
+            .align_x(alignment::Horizontal::Center)
+            .align_y(alignment::Vertical::Center)
+            .style(move|theme| table_row_theme(theme, row_index, 
+                        highlight_amount,
+                        row_highlight))
+            .clip(true)
+            .into()
+}
+
+
+
+pub fn table_callback(state: &mut IpgState, table_id: usize, message: TableMessage) {
 
     let mut wci = WidgetCallbackIn{id: table_id, ..Default::default()};
 
     match message {
-        Message::Scrolled(vp, scroller_id ) => {
+        TableMessage::Scrolled(vp, scroller_id ) => {
             wci.id = scroller_id - TABLE_INTERNAL_IDS_START;
             wci.value_str = Some("scroller".to_string());
             let offsets: Vec<(String, f32)> = vec![
@@ -218,8 +218,7 @@ pub fn table_callback(state: &mut IpgState, table_id: usize, message: Message) {
             wco.event_name = "on_scroll".to_string();
             wco.scroll_pos = offsets;
             process_callback(wco);
-        },
-       _ => ()
+        }
     }
 }
 
@@ -309,6 +308,45 @@ pub fn process_callback(wco: WidgetCallbackOut)
     drop(app_cbs);
          
 }
+
+// widgets = (id, row idx, col idx, bool)
+fn check_for_widget(widgets: &[(usize, usize, usize, bool)], row_index: usize, col_index: usize) -> Option<usize> {
+    // if empty return
+    if widgets.is_empty() {return None}
+    // if not column return
+    if widgets[0].2 != col_index {return None}
+
+    // Because of possible mixed columns of widgets, need the index
+    for (index, widget) in widgets.iter().enumerate() {
+        if row_index == widget.1 {
+            return Some(index)
+        } 
+    }
+    None
+}
+
+fn table_row_theme(theme: &Theme, idx: usize, amount: f32, 
+                        highlighter: Option<IpgTableRowHighLight>) -> container::Style {
+
+    let mut background = get_theme_color(theme);
+
+    if idx % 2 == 0 {
+        background = match highlighter {
+                Some(hl) => 
+                    match hl {
+                        IpgTableRowHighLight::Darker => darken(background, amount),
+                        IpgTableRowHighLight::Lighter => lighten(background, amount),
+                        },
+                None => background,
+            }
+    }; 
+    
+    container::Style {
+        background: Some(Background::Color(background)),
+        ..Default::default()
+    }
+}
+
 
 #[derive(Debug, Clone)]
 #[pyclass]

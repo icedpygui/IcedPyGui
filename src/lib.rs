@@ -22,10 +22,10 @@ use iced::{Color, Font, Length, Point, Radians, Rectangle, Size, Theme, Vector};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
-use std::iter::Iterator;
 use std::collections::HashMap;
 
 mod app;
+pub mod table;
 use app::App;
 
 mod ipg_widgets;
@@ -76,7 +76,7 @@ use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, 
         IpgSvgParam, IpgSvgRotation};
 use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam, 
-        IpgTableRowHighLight, IpgTableWidget,};
+        IpgTableRowHighLight};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, text_input_style_update_item, 
     IpgTextInput, IpgTextInputParam, IpgTextInputStyle, IpgTextInputStyleParam};
@@ -1652,6 +1652,108 @@ impl IPG {
         drop(state);
 
         Ok(id)
+    }
+
+    #[pyo3(signature = (window_id, table_id, title,
+                        rows, columns, 
+                        width=None, width_fill=false, 
+                        height=None, height_fill=false,
+                        header=true, control_row=false,
+                        add_data_row_wise=true,
+                        add_date_column_wise=false,
+                        parent_id=None,
+                        row_highlight=None, 
+                        highlight_amount=0.15,
+                        column_widths=vec![100.0],
+                        column_spacing=5.0,
+                        row_spacing=5.0,
+                        resize_columns_enabled=true,
+                        footer_enabled=true,
+                        min_width_enabled=true,
+                        gen_id=None, 
+                        // on_scroll=None, 
+                        show=true,
+                        modal_show=false,
+                        scroller_user_data=None,
+                        ))]
+    fn add_table(&mut self,
+                    window_id: String,
+                    table_id: String,
+                    title: String,
+                    rows: usize,
+                    columns: usize,
+                    width: Option<f32>,
+                    width_fill: bool,
+                    height: Option<f32>,
+                    height_fill: bool,
+                    // **above required
+                    header: bool,
+                    control_row: bool,
+                    add_data_row_wise: bool,
+                    add_date_column_wise: bool,
+                    parent_id: Option<String>,
+                    row_highlight: Option<IpgTableRowHighLight>,
+                    highlight_amount: f32,
+                    column_widths: Vec<f32>,
+                    column_spacing: f32,
+                    row_spacing: f32,
+                    resize_columns_enabled: bool,
+                    footer_enabled: bool,
+                    min_width_enabled: bool,
+                    gen_id: Option<usize>,
+                    // on_scroll: Option<PyObject>,
+                    show: bool,
+                    modal_show: bool,
+                    scroller_user_data: Option<PyObject>,
+                ) -> PyResult<usize> 
+    {
+
+        let id = self.get_id(gen_id);
+
+        let scroller_id = self.get_id(None);
+
+        let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
+
+        let prt_id = match parent_id {
+            Some(id) => id,
+            None => window_id.clone(),
+        };
+
+        set_state_of_container(id, window_id.clone(), Some(table_id.clone()), prt_id);
+
+        let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, table_id, id, "add_table".to_string());
+
+        state.containers.insert(id, IpgContainers::IpgTable(IpgTable::new( 
+                                                    id,
+                                                    title,
+                                                    rows,
+                                                    columns,
+                                                    width,
+                                                    height,
+                                                    header,
+                                                    control_row,
+                                                    add_data_row_wise,
+                                                    add_date_column_wise,
+                                                    row_highlight,
+                                                    highlight_amount,
+                                                    column_widths,
+                                                    column_spacing,
+                                                    row_spacing,
+                                                    resize_columns_enabled,
+                                                    footer_enabled,
+                                                    min_width_enabled,
+                                                    show,
+                                                    modal_show,
+                                                    scroller_user_data,
+                                                    scroller_id,
+                                                    )));
+        state.last_id = self.id;
+        drop(state);
+        Ok(id)
+
     }
 
     #[pyo3(signature = (window_id, container_id, position, text_to_display, 
@@ -3311,182 +3413,6 @@ impl IPG {
         state.last_id = id;
         drop(state);
         Ok(id)
-    }
-
-    #[pyo3(signature = (window_id, table_id, title, data, 
-                        data_length, width, height, parent_id=None,
-                        row_highlight=None, highlight_amount=0.15,
-                        column_widths=vec![50.0],
-                        button_fill_columns=None,
-                        checkbox_fill_columns=None,
-                        toggler_fill_columns=None,
-                        mixed_widgets_columns=None,
-                        button_fill_style_id=None,
-                        button_fill_style_standard=None,
-                        checkbox_fill_style_id=None,
-                        checkbox_fill_style_standard=None,
-                        toggler_fill_style_id=None,
-                        mixed_widgets_column_style_ids=None,
-                        gen_id=None, 
-                        on_button=None, 
-                        on_checkbox=None,
-                        on_toggler=None,
-                        on_scroll=None, 
-                        show=true,
-                        modal_show=false,
-                        button_user_data=None,
-                        checkbox_user_data=None,
-                        toggler_user_data=None,
-                        scroller_user_data=None,
-                        ))]
-    fn add_table(&mut self,
-                    window_id: String,
-                    table_id: String,
-                    title: String,
-                    data: PyObject,
-                    data_length: usize,
-                    width: f32,
-                    height: f32,
-                    // **above required
-                    parent_id: Option<String>,
-                    row_highlight: Option<IpgTableRowHighLight>,
-                    highlight_amount: f32,
-                    column_widths: Vec<f32>,
-                    button_fill_columns: Option<Vec<usize>>,
-                    checkbox_fill_columns: Option<Vec<usize>>,
-                    toggler_fill_columns: Option<Vec<usize>>,
-                    mixed_widgets_columns: Option<HashMap<usize, Vec<IpgTableWidget>>>,
-                    button_fill_style_id: Option<String>,
-                    button_fill_style_standard: Option<IpgStyleStandard>,
-                    checkbox_fill_style_id: Option<String>,
-                    checkbox_fill_style_standard: Option<IpgStyleStandard>,
-                    toggler_fill_style_id: Option<String>,
-                    mixed_widgets_column_style_ids: Option<HashMap<usize, Vec<String>>>,
-                    gen_id: Option<usize>,
-                    on_button: Option<PyObject>,
-                    on_checkbox: Option<PyObject>,
-                    on_toggler: Option<PyObject>,
-                    on_scroll: Option<PyObject>,
-                    show: bool,
-                    modal_show: bool,
-                    button_user_data: Option<PyObject>,
-                    checkbox_user_data: Option<PyObject>,
-                    toggler_user_data: Option<PyObject>,
-                    scroller_user_data: Option<PyObject>,
-                ) -> PyResult<usize> 
-    {
-
-        let id = self.get_id(gen_id);
-
-        let prt_id = match parent_id {
-            Some(id) => id,
-            None => window_id.clone(),
-        };
-
-        set_state_of_container(id, window_id.clone(), Some(table_id.clone()), prt_id);
-
-        let mut state = access_state();
-
-        set_state_cont_wnd_ids(&mut state, &window_id, table_id, id, "add_table".to_string());
-
-        // Need to generate the ids for the widgets and the boolean values
-        // Keeping the ids organized in a hashmap for now, may need only a vec.
-        let mut button_ids: Vec<(usize, usize, usize, bool)> = vec![]; // (id, row, col, bool)
-        let mut checkbox_ids: Vec<(usize, usize, usize, bool)> = vec![];
-        let mut toggler_ids: Vec<(usize, usize, usize, bool)> = vec![];
-            
-        if mixed_widgets_columns.is_some() {
-            let table_widgets_hash = mixed_widgets_columns.unwrap();
-            for (col, table_widgets) in table_widgets_hash.iter() {
-                for (row, widget) in table_widgets.iter().enumerate() {
-                    match widget {
-                        IpgTableWidget::Button => {
-                            button_ids.push((self.get_id(None), row, *col, false));
-                        },
-                        IpgTableWidget::Checkbox => {
-                            checkbox_ids.push((self.get_id(None), row, *col, false));
-                        },
-                        IpgTableWidget::Toggler => {
-                            toggler_ids.push((self.get_id(None), row, *col, false));
-                        },
-                    }
-                }
-            }
-        }
-
-        if button_fill_columns.is_some() {
-            for col in button_fill_columns.unwrap() {
-                for row in 0..data_length {
-                    button_ids.push((self.get_id(None), row, col, false));
-                }
-            }
-        }
-
-        if checkbox_fill_columns.is_some() {
-            for col in checkbox_fill_columns.unwrap() {
-                for row in 0..data_length {
-                    checkbox_ids.push((self.get_id(None), row, col, false));
-                }
-            }
-        }
-
-        if toggler_fill_columns.is_some() {
-            for col in toggler_fill_columns.unwrap() {
-                for row in 0..data_length {
-                    toggler_ids.push((self.get_id(None), row, col, false));
-                }
-            }
-        }
-        
-        if on_button.is_some() {
-            add_callback_to_mutex(id, "on_button".to_string(), on_button);
-        }
-
-        if on_checkbox.is_some() {
-            add_callback_to_mutex(id, "on_checkbox".to_string(), on_checkbox);
-        }
-
-        if on_toggler.is_some() {
-            add_callback_to_mutex(id, "on_toggler".to_string(), on_toggler);
-        }
-
-        if on_scroll.is_some() {
-            add_callback_to_mutex(id, "on_scroll".to_string(), on_scroll);
-        }
-
-        let scroller_id = TABLE_INTERNAL_IDS_START + id;
-
-        state.containers.insert(id, IpgContainers::IpgTable(IpgTable::new( 
-                                                    id,
-                                                    title,
-                                                    data,
-                                                    data_length,
-                                                    width,
-                                                    height,
-                                                    row_highlight,
-                                                    highlight_amount,
-                                                    column_widths,
-                                                    button_ids,
-                                                    checkbox_ids,
-                                                    toggler_ids,
-                                                    button_fill_style_id,
-                                                    button_fill_style_standard,
-                                                    checkbox_fill_style_id,
-                                                    checkbox_fill_style_standard,
-                                                    toggler_fill_style_id,
-                                                    mixed_widgets_column_style_ids,
-                                                    show,
-                                                    modal_show,
-                                                    button_user_data,
-                                                    checkbox_user_data,
-                                                    toggler_user_data,
-                                                    scroller_user_data,
-                                                    scroller_id,
-                                                    )));
-        state.last_id = self.id;
-        drop(state);
-        Ok(id)
-
     }
 
     #[pyo3(signature = (parent_id, content, gen_id=None, 
@@ -5269,7 +5195,6 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgSvgParam>()?;
     m.add_class::<IpgTableRowHighLight>()?;
     m.add_class::<IpgTableParam>()?;
-    m.add_class::<IpgTableWidget>()?;
     m.add_class::<IpgTextInputParam>()?;
     m.add_class::<IpgTextInputStyleParam>()?;
     m.add_class::<IpgTextParam>()?;

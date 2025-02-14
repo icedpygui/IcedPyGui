@@ -13,7 +13,7 @@ use iced::widget::button::{self, Status, Style};
 use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{Button, Text};
-use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector };
+use iced::{alignment, Border, Color, Element, Length, Padding, Shadow, Theme, Vector };
 
 use crate::graphics::bootstrap::{self, icon_to_char, icon_to_string};
 
@@ -126,7 +126,9 @@ pub fn construct_button(btn: IpgButton,
 
     let style = get_btn_style(style_opt);
 
-    let mut label = Text::new(btn.label.clone());
+    let mut label = Text::new(btn.label.clone())
+                                                        .align_x(alignment::Horizontal::Center)
+                                                        .align_y(alignment::Vertical::Center);
 
     if btn.style_arrow.is_some() {
         let arrow = get_bootstrap_arrow(btn.style_arrow.unwrap());

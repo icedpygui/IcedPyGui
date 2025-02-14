@@ -9,7 +9,6 @@ use super::callbacks::WidgetCallbackOut;
 use super::helpers::{get_height, get_radius, get_width, 
     try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_vec_f32};
 use super::ipg_enums::IpgWidgets;
-use super::ipg_table::{TableMessage, table_callback};
 
 use iced::widget::container;
 use iced::widget::scrollable;
@@ -254,7 +253,7 @@ fn get_direction(direction: IpgScrollableDirection,
 pub fn scrollable_callback(state: &mut IpgState, id: usize, vp: Viewport) {
 
     if (TABLE_INTERNAL_IDS_START..=TABLE_INTERNAL_IDS_END).contains(&id) {
-        table_callback(state, id, TableMessage::TableScrolled(vp, id));
+        // table_callback(state, id, Message::Scrolled(vp, id));
         return
     }
 

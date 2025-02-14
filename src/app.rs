@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 
 use iced::widget::container::Id;
+use iced::widget::scrollable::Viewport;
 use iced::window::Position;
 use iced::{font, window, Size};
 use iced::event::{Event, Status};
@@ -23,6 +24,7 @@ use crate::ipg_widgets::ipg_color_picker::{color_picker_callback,
     construct_color_picker, ColPikMessage};
 use crate::ipg_widgets::ipg_menu::{IpgMenuBarStyle, IpgMenuStyle};
 use crate::ipg_widgets::ipg_separator::construct_separator;
+use crate::ipg_widgets::ipg_table::table_callback;
 use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, 
     canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
 use crate::{access_canvas_state, access_canvas_update_items, access_update_items, 
@@ -56,7 +58,7 @@ use ipg_widgets::ipg_slider::{SLMessage, construct_slider, slider_callback};
 use ipg_widgets::ipg_space::construct_space;
 use ipg_widgets::ipg_stack::construct_stack;
 use ipg_widgets::ipg_svg::{SvgMessage, construct_svg, svg_callback};
-use ipg_widgets::ipg_table::{construct_table, TableMessage, table_callback};
+use ipg_widgets::ipg_table::{construct_table};
 use ipg_widgets::ipg_text::construct_text;
 use ipg_widgets::ipg_text_input::{TIMessage, construct_text_input, text_input_callback};
 use ipg_widgets::ipg_timer::{construct_timer, timer_callback, TIMMessage, tick_callback};
@@ -88,7 +90,12 @@ pub enum Message {
     SelectableText(usize, SLTXTMessage),
     Slider(usize, SLMessage),
     Svg(usize, SvgMessage),
-    Table(usize, TableMessage),
+
+    TableScrolled(Viewport, usize),
+    TableSyncHeader(scrollable::AbsoluteOffset),
+    TableResizing(usize, f32),
+    TableResized,
+
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
     CanvasTextBlink,
@@ -304,11 +311,11 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
-            Message::Table(id, message) => {
-                table_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
-                Task::none()
-            },
+            // Message::Table(id, message) => {
+            //     table_callback(&mut self.state, id, message);
+            //     process_updates(&mut self.state, &mut self.canvas_state);
+            //     Task::none()
+            // },
             Message::TextInput(id, message) => {
                 text_input_callback(&mut self.state, id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
@@ -356,6 +363,18 @@ impl App {
             Message::WindowOpened(_id, _position, size) => {
                 self.state.windows_opened += 1;
                 process_updates(&mut self.state, &mut self.canvas_state);
+                Task::none()
+            },
+            Message::TableScrolled(viewport, _) => {
+                Task::none()
+            },
+            Message::TableSyncHeader(absolute_offset) => {
+                Task::none()
+            },
+            Message::TableResizing(_, _) => {
+                Task::none()
+            },
+            Message::TableResized => {
                 Task::none()
             },
         }
@@ -694,33 +713,7 @@ fn get_container<'a>(state: &IpgState,
                     construct_opaque(op.clone(), content, style)
                 },
                 IpgContainers::IpgTable(table) => {
-                    let button_fill_style = 
-                        match table.button_fill_style_id.clone() {
-                            Some(id) => {
-                                state.button_style.get(&id).map(|st| st.clone())
-                            },
-                            None => None,
-                        };
-                    let checkbox_fill_style = 
-                        match table.checkbox_fill_style_id.clone() {
-                            Some(id) => {
-                                state.checkbox_style.get(&id).map(|st| st.clone())
-                            },
-                            None => None,
-                        };
-                    let toggler_fill_style = 
-                        match table.toggler_fill_style_id.clone() {
-                            Some(id) => {
-                                state.toggler_style.get(&id).map(|st| st.clone())
-                            },
-                            None => None,
-                        };
-
-                    construct_table(table.clone(), 
-                                    content, 
-                                    button_fill_style,
-                                    checkbox_fill_style,
-                                    toggler_fill_style,)
+                    construct_table(table.clone(), content)
                 },
                 IpgContainers::IpgRow(row) => {
                     construct_row(row, content)
