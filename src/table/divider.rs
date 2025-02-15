@@ -1,5 +1,5 @@
 use iced::advanced::layout::{self, Layout};
-use iced::mouse::Cursor;
+use iced::advanced::mouse::Cursor;
 use iced::advanced::widget::{self, Widget};
 use iced::{
     event, mouse, overlay, padding, Color, Element, Length, Point, Rectangle, Size, Vector,
@@ -14,7 +14,7 @@ struct State {
     is_divider_hovered: bool,
 }
 
-pub struct Divider<'a, Message, Theme, Renderer>
+pub(crate) struct Divider<'a, Message, Theme, Renderer>
 where
     Renderer: renderer::Renderer,
     Theme: style::Catalog,

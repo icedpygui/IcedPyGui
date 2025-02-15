@@ -95,6 +95,8 @@ pub enum Message {
     TableSyncHeader(scrollable::AbsoluteOffset),
     TableResizing(usize, f32),
     TableResized,
+    TableOnDrag,
+    TableOnColumnRelease,
 
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
@@ -375,6 +377,12 @@ impl App {
                 Task::none()
             },
             Message::TableResized => {
+                Task::none()
+            },
+            Message::TableOnDrag => {
+                Task::none()
+            },
+            Message::TableOnColumnRelease => {
                 Task::none()
             },
         }

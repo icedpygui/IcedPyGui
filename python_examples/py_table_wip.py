@@ -30,7 +30,7 @@ ipg.add_window(
         height=800,
         pos_x=100, 
         pos_y=25,
-        debug=False)
+        debug=True)
 
 # Add the container, since the table requires a width and height,
 # the container can shrink(default) to fit.

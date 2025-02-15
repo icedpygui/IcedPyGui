@@ -1,10 +1,12 @@
 //! ipg_table
 
 use crate::app::Message;
+use crate::table::style;
 use crate::{access_callbacks, IpgState, TABLE_INTERNAL_IDS_START};
-use crate::table::table::{self, header_container};
-use iced::{Element, Length, Renderer, Theme};
-use iced::widget::{container, responsive, row, scrollable, text, Responsive};
+use crate::table::table::{body_container, dummy_container, header_container};
+use iced::advanced::graphics::core::Element;
+use iced::{Length, Padding, Renderer, Theme};
+use iced::widget::{column, row, scrollable};
 
 use pyo3::{pyclass, PyObject, Python};
 use pyo3::types::IntoPyDict;
@@ -38,9 +40,9 @@ pub struct IpgTable {
         pub scroller_user_data: Option<PyObject>,
         pub scroller_id: usize,
         _scroller_pos: Vec<(String, f32)>,
-        header_scrollable: scrollable::Id,
-        body_scrollable: scrollable::Id,
-        footer_scrollable: scrollable::Id,
+        // header_scrollable: scrollable::Id,
+        // body_scrollable: scrollable::Id,
+        // footer_scrollable: scrollable::Id,
 }
 
 impl IpgTable {
@@ -95,9 +97,9 @@ impl IpgTable {
             scroller_user_data,
             scroller_id,
             _scroller_pos: vec![],
-            header_scrollable: scrollable::Id::unique(),
-            body_scrollable: scrollable::Id::unique(),
-            footer_scrollable: scrollable::Id::unique(),
+            // header_scrollable: scrollable::Id::unique(),
+            // body_scrollable: scrollable::Id::unique(),
+            // footer_scrollable: scrollable::Id::unique(),
         }
     }
 }
@@ -117,83 +119,107 @@ pub enum IpgTableRowHighLight {
     Lighter,
 }
 
-#[derive(Debug, Clone)]
-struct IRow {
-    index: usize
-}
 
-impl IRow {
-    fn generate(index: usize) -> Self {
-        let index = index;
-
-        Self {
-            index,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct IColumn {
-    width: f32,
-    resize_offset: Option<f32>,
-}
-
-impl IColumn {
-    fn new(index: usize) -> Self {
-        let widths = [
-            60.0,
-            100.0,
-            155.0,
-            400.0,
-            100.0,
-        ];
-        let width = widths[index];
-        Self {
-            width,
-            resize_offset: None,
-        }
-    }
-}
-
-pub fn construct_table(tbl: IpgTable, 
-                        content: Vec<Element<Message>>, 
-                        ) 
-                        -> Element<Message, Theme, Renderer> {
+pub fn construct_table<'a>(_tbl: IpgTable, 
+                            mut content: Vec<Element<'a, Message, Theme, Renderer>>, 
+                            ) 
+                            -> Element<'a, Message, Theme, Renderer> {
     
-    let mut columns:  = vec![];
+    let mut columns  = vec![];
     for _ in 0..5 {
         columns.push(content.remove(0));
     }
-    let header = scrollable(style::wrapper::header(
-            row(columns
+
+    let column_widths = [100.0 as f32; 5];
+    let resize_offset: Option<f32> = None;
+    let min_column_width = 50.0;
+    let divider_width = 2.0;
+    let cell_padding = Padding::from(5.0);
+    let style = ();
+    let header_id = scrollable::Id::unique();
+    let body_id = scrollable::Id::unique();
+    let min_width = 50.0;
+    let scrollbar = scrollable::Scrollbar::default();
+    let on_column_drag: Option<fn(usize, f32) -> Message>;
+
+    let header: Element<'a, Message, Theme, Renderer> = 
+        scrollable(style::wrapper::header(
+            row(column_widths
                 .iter()
                 .enumerate()
-                .map(|(index, column)| {
+                .map(|(index, column_width)| {
                     header_container(
                         index,
-                        column,
-                        on_column_drag,
-                        on_column_release.clone(),
+                        columns.remove(0),
+                        *column_width,
+                        resize_offset,
+                        None,
+                        None,
                         min_column_width,
                         divider_width,
                         cell_padding,
-                        style.clone(),
+                        style,
                     )
                 })
-                .chain(dummy_container(columns, min_width, min_column_width))),
+                .chain(dummy_container(column_widths.to_vec(),
+                                        resize_offset,
+                                        min_width, 
+                                        min_column_width))),
             style.clone(),
         ))
-        .id(header)
+        .id(header_id)
         .direction(scrollable::Direction::Both {
             vertical: scrollable::Scrollbar::new()
-                .width(0)
-                .margin(0)
-                .scroller_width(0),
+                .width(10)
+                .margin(10)
+                .scroller_width(10),
             horizontal: scrollable::Scrollbar::new()
-                .width(0)
-                .margin(0)
-                .scroller_width(0),
-        });
+                .width(10)
+                .margin(10)
+                .scroller_width(10),
+        }).into();
+    
+
+    // let body = 
+    //     scrollable(column(column_widths.iter().enumerate()
+    //     .map(|(index, _width)| {
+    //         style::wrapper::row(
+    //             iced::widget::row(column_widths
+    //                 .iter()
+    //                 .enumerate()
+    //                 .map(|(_index, _width)| {
+    //                     body_container(
+    //                         content.remove(0),
+    //                         min_column_width,
+    //                         resize_offset,
+    //                         min_column_width,
+    //                         divider_width,
+    //                         cell_padding,
+    //                     )
+    //                 })
+    //                 .chain(dummy_container(
+    //                     column_widths.to_vec(),
+    //                     resize_offset, 
+    //                     min_width, 
+    //                     min_column_width))),
+    //             style.clone(),
+    //             index,
+    //         )
+    //         .into()
+    //     })))
+    //     .id(body_id)
+    //     .on_scroll(move |viewport| {
+    //         let offset = viewport.absolute_offset();
+
+    //         (Message::TableSyncHeader)(scrollable::AbsoluteOffset { y: 0.0, ..offset })
+    //     })
+    //     .direction(scrollable::Direction::Both {
+    //         horizontal: scrollbar,
+    //         vertical: scrollbar,
+    //     })
+    //     .height(Length::Fill);
+
+    column([header]).into()
 
 }
 
