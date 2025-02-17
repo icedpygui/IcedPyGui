@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 use crate::{access_state, IpgState};
 use super::ipg_enums::IpgContainers;
+use super::ipg_table::IpgTableMouse;
 use super::{helpers::{format_date, MONTH_NAMES}, ipg_enums::IpgWidgets, ipg_radio::Choice};
 
 use iced::{Color, Point};
@@ -31,6 +32,7 @@ pub struct WidgetCallbackIn {
     pub selected_year: Option<i32>,
     pub started: Option<bool>,
     pub ticking: Option<bool>,
+    pub table_mouse: IpgTableMouse,
     pub date_format: Option<String>,
     pub show: Option<bool>,
     pub submit_str: Option<String>,
@@ -77,7 +79,7 @@ impl WidgetCallbackOut{}
 pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> WidgetCallbackOut                                     
 {
     let widget_opt = state.widgets.get_mut(&wci.id);
-    
+
     if widget_opt.is_some() {
         match widget_opt.unwrap() {
             IpgWidgets::IpgButton(btn) => {
@@ -442,17 +444,39 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     }
                 },
                 IpgContainers::IpgTable(tbl) => {
-                    let mut wco = WidgetCallbackOut::default();
-                    if wci.value_str == Some("button".to_string()) {
-                         return wco;
+                    match tbl.table_mouse {
+                        IpgTableMouse::None => {
+                            if wci.table_mouse == IpgTableMouse::Pressed {
+                                tbl.table_mouse = IpgTableMouse::Pressed;
+                                tbl.resize_index = wci.index.unwrap();
+                                tbl.resize_position = Point::default();
+                            }
+                        },
+                        IpgTableMouse::Pressed => {
+                            if wci.table_mouse == IpgTableMouse::Moving {
+                                tbl.table_mouse = IpgTableMouse::Moving;
+                                tbl.resize_position = wci.point.unwrap();
+                            }
+                        },
+                        IpgTableMouse::Moving => {
+                            if wci.table_mouse == IpgTableMouse::Released {
+                                tbl.table_mouse = IpgTableMouse::Released;
+                            } else {
+                                if wci.point.is_some() {
+                                    tbl.resize_position = wci.point.unwrap();
+                                }
+                            }
+                        },
+                        IpgTableMouse::Released => {
+                            tbl.table_mouse = IpgTableMouse::None;
+                        },
+                        IpgTableMouse::Exit => {
+                            tbl.table_mouse = IpgTableMouse::None;
+                        },
                     }
-
-                    if wci.value_str == Some("scroller".to_string()) {
-                        wco.user_data = tbl.scroller_user_data.clone();
-                        return wco;
+                    return WidgetCallbackOut{
+                        ..Default::default()
                     }
-
-                    return wco
                 },
                 _ => panic!("container not found")
             }

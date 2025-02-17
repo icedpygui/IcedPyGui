@@ -1720,6 +1720,11 @@ impl IPG {
             None => window_id.clone(),
         };
 
+        add_callback_to_mutex(id, "on_press".to_string(), None);
+        add_callback_to_mutex(id, "on_release".to_string(), None);
+        add_callback_to_mutex(id, "on_exit".to_string(), None);
+        add_callback_to_mutex(id, "on_enter".to_string(), None);
+
         set_state_of_container(id, window_id.clone(), Some(table_id.clone()), prt_id);
 
         let mut state = access_state();

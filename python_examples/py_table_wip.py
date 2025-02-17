@@ -26,7 +26,7 @@ tog_style = ipg.add_toggler_style(
 ipg.add_window(
         window_id="main", 
         title="Table Demo",
-        width=800, 
+        width=1000, 
         height=800,
         pos_x=100, 
         pos_y=25,
@@ -42,8 +42,10 @@ ipg.add_container(
 
 
 # It's best to make them the same,
-column_widths = [100] * 5
+column_widths = [150] * 5
 table_width = sum(column_widths)
+rows = 8
+columns = 5
 
 # The table is added.
 ipg.add_table(
@@ -51,40 +53,41 @@ ipg.add_table(
         table_id="table",
         parent_id="cont",
         title="My Table",
-        rows=5,
-        columns=5,
+        rows=rows,
+        columns=columns,
         column_widths=column_widths,
+        height=300.0,
         header=True,
         control_row=False,
         row_highlight=IpgTableRowHighLight.Lighter)
 
 # create headers
 headers = ["one", "two", "three", "four", "five"]
-for head in headers:
+for i, head in enumerate(headers):
     ipg.add_text(
         parent_id="table",
         content=head,
-        width=100.0,
+        width=column_widths[i],
         align_x=IpgHorizontalAlignment.Center,
         align_y=IpgVerticalAlignment.Center)
 
-
-for i in range(0, 5):
-    for j in range(0, 5):
+# fill in the table rows
+for i in range(0, rows):
+    for j in range(0, columns):
         if j == 0:
             ipg.add_button(
                 parent_id="table",
                 label="Edit",
-                width=100.0,
+                width_fill=True,
                 padding=[0.0]
                 )
         else:
             ipg.add_text(
                 parent_id="table",
                 content=str(i),
-                width=100.0,
+                width_fill=True,
                 align_x=IpgHorizontalAlignment.Center,
-                align_y=IpgVerticalAlignment.Center
+                align_y=IpgVerticalAlignment.Center,
                 )
         
         

@@ -3,10 +3,8 @@
 
 
 use iced::advanced::graphics::core::Element;
-use iced::{Length, Padding, Renderer, Theme};
+use iced::{Length, Padding};
 use iced::widget::{container, row, Space};
-
-use crate::app::Message;
 
 use super::style;
 
@@ -168,7 +166,7 @@ use super::style;
 //     }
 // }
 /// Some docs
-pub fn header_container<'a, Message>(
+pub fn header_container<'a, Message, Theme, Renderer>(
         index: usize,
         column: Element<'a, Message, Theme, Renderer>,
         column_width: f32,
@@ -179,25 +177,28 @@ pub fn header_container<'a, Message>(
         divider_width: f32,
         cell_padding: Padding,
         style: <Theme as style::Catalog>::Style,
-    ) -> Element<Message, Theme, Renderer>
+    )  -> Element<'a, Message, Theme, Renderer>
+    where
+        Renderer: iced::advanced::Renderer + 'a,
+        Theme: style::Catalog + container::Catalog + 'a,
+        Message: 'a + Clone,
 {
     let content: Element<Message, Theme, Renderer> = container(column)
         .width(Length::Fill)
         .padding(cell_padding)
         .into();
 
-    let divider: Element<Message, Theme, Renderer> = with_divider(
+    with_divider(
         index,
         column_width,
         resize_offset,
         content,
-        None,
-        None,
+        on_drag,
+        on_release,
         min_column_width,
         divider_width,
         style,
-    );
-    divider
+    )
 }
 
 pub fn body_container<'a, Message, Theme, Renderer>(
@@ -263,18 +264,21 @@ where
 // }
 use super::divider::Divider;
 /// Some docs
-pub fn with_divider(
+pub fn with_divider<'a, Message, Theme, Renderer>(
     index: usize,
     column_width: f32,
     resize_offset: Option<f32>,
-    content: Element<Message, Theme, Renderer>,
+    content: Element<'a, Message, Theme, Renderer>,
     on_drag: Option<fn(usize, f32) -> Message>,
     on_release: Option<Message>,
     min_column_width: f32,
     divider_width: f32,
     style: <Theme as style::Catalog>::Style,
-) -> Element<Message, Theme, Renderer>
-
+) -> Element<'a, Message, Theme, Renderer>
+    where
+        Renderer: iced::advanced::Renderer + 'a,
+        Theme: style::Catalog + container::Catalog + 'a,
+        Message: 'a + Clone,
 {
     let width =
         (column_width + resize_offset.unwrap_or_default()).max(min_column_width);
