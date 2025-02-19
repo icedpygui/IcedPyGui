@@ -3,13 +3,12 @@
 use crate::app::Message;
 use crate::table::style;
 use crate::{access_callbacks, IpgState};
-use crate::table::table::{body_container, dummy_container};
+use crate::table::table::{body_container, dummy_container, header_container};
 
 use iced::advanced::graphics::core::Element;
-use iced::mouse::Interaction;
 use iced::widget::scrollable::{Anchor, Scrollbar};
 use iced::{Length, Padding, Point, Renderer, Theme};
-use iced::widget::{column, container, mouse_area, row, scrollable, Space};
+use iced::widget::{column, row, scrollable};
 
 use pyo3::{pyclass, PyObject, Python};
 use pyo3::types::IntoPyDict;
@@ -195,29 +194,29 @@ pub fn construct_table<'a>(tbl: IpgTable,
                 .enumerate()
                 .map(|(index, column_width)| {
                     
-                    container(row(vec![
-                        columns.remove(0).into(), 
-                        mouse_area(Space::new(10.0, 20.0))
-                        .on_press(Message::TableMouseOnPress(tbl.id, index))
-                        .on_move(move|point| Message::TableMouseOnMove(point, tbl.id, index))
-                        .on_release(Message::TableMouseOnRelease(tbl.id))
-                        .on_exit(Message::TableMouseOnExit(tbl.id))
-                        .interaction(Interaction::ResizingHorizontally)
-                        .into()]))
-                        .width(Length::Fixed(*column_width)).into()
+                    // container(row(vec![
+                    //     columns.remove(0).into(), 
+                    //     mouse_area(Space::new(10.0, 20.0))
+                    //     .on_press(Message::TableMouseOnPress(tbl.id, index))
+                    //     .on_move(move|point| Message::TableMouseOnMove(point, tbl.id, index))
+                    //     .on_release(Message::TableMouseOnRelease(tbl.id))
+                    //     .on_exit(Message::TableMouseOnExit(tbl.id))
+                    //     .interaction(Interaction::ResizingHorizontally)
+                    //     .into()]))
+                    //     .width(Length::Fixed(*column_width)).into()
                         
-                    // header_container(
-                    //     index,
-                    //     columns.remove(0),
-                    //     *column_width,
-                    //     resize_offset,
-                    //     Some(Message::TableResizing),
-                    //     None,
-                    //     min_column_width,
-                    //     divider_width,
-                    //     cell_padding,
-                    //     style,
-                    // )
+                    header_container(
+                        index,
+                        columns.remove(0),
+                        *column_width,
+                        resize_offset,
+                        Some(Message::TableResizing),
+                        None,
+                        min_column_width,
+                        divider_width,
+                        cell_padding,
+                        style,
+                    )
                 })
                 .chain(dummy_container(column_widths.clone(),
                                         resize_offset,

@@ -282,10 +282,10 @@ pub fn with_divider<'a, Message, Theme, Renderer>(
 {
     let width =
         (column_width + resize_offset.unwrap_or_default()).max(min_column_width);
-
+    dbg!("before the here");
     if let Some((on_drag, on_release)) = on_drag.zip(on_release) {
         let old_width = column_width;
-
+        dbg!("here");
         container(Divider::new(
             content,
             divider_width,
@@ -300,6 +300,7 @@ pub fn with_divider<'a, Message, Theme, Renderer>(
         .width(width)
         .into()
     } else {
+        dbg!("else after here");
         row![content, Space::new(divider_width, Length::Shrink)]
             .width(width)
             .into()

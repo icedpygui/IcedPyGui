@@ -27,7 +27,7 @@ ipg.add_window(
         window_id="main", 
         title="Table Demo",
         width=1000, 
-        height=800,
+        height=600,
         pos_x=100, 
         pos_y=25,
         debug=True)
