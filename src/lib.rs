@@ -1720,6 +1720,8 @@ impl IPG {
             None => window_id.clone(),
         };
 
+        let resize_offset =  (0..columns).map(|_| None).collect();
+
         add_callback_to_mutex(id, "on_press".to_string(), None);
         add_callback_to_mutex(id, "on_release".to_string(), None);
         add_callback_to_mutex(id, "on_exit".to_string(), None);
@@ -1751,6 +1753,7 @@ impl IPG {
                                                     footer_enabled,
                                                     min_width_enabled,
                                                     show,
+                                                    resize_offset,
                                                     modal_show,
                                                     scroller_user_data,
                                                     scroller_id,

@@ -36,7 +36,8 @@ pub struct WidgetCallbackIn {
     pub date_format: Option<String>,
     pub show: Option<bool>,
     pub submit_str: Option<String>,
-    pub value_float: Option<f64>,
+    pub value_float_64: Option<f64>,
+    pub value_float_32: Option<f32>,
     pub value_str: Option<String>,
     pub value_bool: Option<bool>,
     pub value_usize: Option<usize>,
@@ -303,8 +304,8 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             },
             IpgWidgets::IpgSlider(slider) => {
                 // Do on_change if something
-                if wci.value_float.is_some() {
-                    slider.value = match wci.value_float {
+                if wci.value_float_64.is_some() {
+                    slider.value = match wci.value_float_64 {
                         Some(v) => v as f32,
                         None => panic!("Slider submit value could not be found"),
                     };
@@ -444,36 +445,7 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     }
                 },
                 IpgContainers::IpgTable(tbl) => {
-                    match tbl.table_mouse {
-                        IpgTableMouse::None => {
-                            if wci.table_mouse == IpgTableMouse::Pressed {
-                                tbl.table_mouse = IpgTableMouse::Pressed;
-                                tbl.resize_index = wci.index.unwrap();
-                                tbl.resize_position = Point::default();
-                            }
-                        },
-                        IpgTableMouse::Pressed => {
-                            if wci.table_mouse == IpgTableMouse::Moving {
-                                tbl.table_mouse = IpgTableMouse::Moving;
-                                tbl.resize_position = wci.point.unwrap();
-                            }
-                        },
-                        IpgTableMouse::Moving => {
-                            if wci.table_mouse == IpgTableMouse::Released {
-                                tbl.table_mouse = IpgTableMouse::Released;
-                            } else {
-                                if wci.point.is_some() {
-                                    tbl.resize_position = wci.point.unwrap();
-                                }
-                            }
-                        },
-                        IpgTableMouse::Released => {
-                            tbl.table_mouse = IpgTableMouse::None;
-                        },
-                        IpgTableMouse::Exit => {
-                            tbl.table_mouse = IpgTableMouse::None;
-                        },
-                    }
+                    tbl.resize_offset[wci.index.unwrap()] = wci.value_float_32;
                     return WidgetCallbackOut{
                         ..Default::default()
                     }

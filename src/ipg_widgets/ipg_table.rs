@@ -39,6 +39,7 @@ pub struct IpgTable {
         pub min_width_enabled: bool,
         pub modal_show: bool,
         pub show: bool,
+        pub resize_offset: Vec<Option<f32>>,
         pub scroller_user_data: Option<PyObject>,
         pub scroller_id: usize,
         _scroller_pos: Vec<(String, f32)>,
@@ -74,14 +75,11 @@ impl IpgTable {
         footer_enabled: bool,
         min_width_enabled: bool,
         show: bool,
+        resize_offset: Vec<Option<f32>>,
         modal_show: bool,
         scroller_user_data: Option<PyObject>,
         scroller_id: usize,
-        // header_pressed: bool,
-        // header_released: bool,
-        // header_scrollable: scrollable::Id,
-        // body_scrollable: scrollable::Id,
-        // footer_scrollable: scrollable::Id,
+
         ) -> Self {
         Self {
             id,
@@ -104,6 +102,7 @@ impl IpgTable {
             min_width_enabled,
             modal_show,
             show,
+            resize_offset,
             scroller_user_data,
             scroller_id,
             _scroller_pos: vec![],
@@ -139,10 +138,7 @@ pub enum IpgTableRowHighLight {
 pub enum IpgTableMouse {
     #[default]
     None,
-    Pressed,
-    Moving,
-    Released,
-    Exit,
+    Resizing,
 }
 
 pub fn construct_table<'a>(tbl: IpgTable, 
@@ -163,55 +159,41 @@ pub fn construct_table<'a>(tbl: IpgTable,
     let min_column_width = 50.0;
 
     // add in the divider_widths
-    let mut column_widths: Vec<f32> = tbl.column_widths.iter().map(|width|width+divider_width).collect();
+    let column_widths: Vec<f32> = tbl.column_widths.iter().map(|width|width+divider_width).collect();
 
-    match tbl.table_mouse {
-        IpgTableMouse::Moving => {
-            let offset = tbl.resize_origin.x - tbl.resize_position.x;
-            column_widths[tbl.resize_index] = (column_widths[tbl.resize_index] + offset).max(min_column_width);
-            if tbl.resize_index < num_of_columns-1 {
-                column_widths[tbl.resize_index+1] = (column_widths[tbl.resize_index] - offset).max(min_column_width);
-            }
-        },
-        _ => (),
-    }
+    // match tbl.table_mouse {
+    //     IpgTableMouse::Moving => {
+    //         let offset = tbl.resize_origin.x - tbl.resize_position.x;
+    //         column_widths[tbl.resize_index] = (column_widths[tbl.resize_index] + offset).max(min_column_width);
+    //         if tbl.resize_index < num_of_columns-1 {
+    //             column_widths[tbl.resize_index+1] = (column_widths[tbl.resize_index] - offset).max(min_column_width);
+    //         }
+    //     },
+    //     _ => (),
+    // }
 
-    let resize_offset: Option<f32> = None;
     let cell_padding = Padding::from(5.0);
     let style: <Theme as style::Catalog>::Style = <iced::Theme as style::Catalog>::Style::default();
     let header_id = scrollable::Id::unique();
     let body_id = scrollable::Id::unique();
     let min_width = 25.0;
     let scrollbar = get_scrollbar(Anchor::Start, 20.0, 5.0, 20.0);
-    let _on_column_drag: Option<fn(usize, f32) -> Message>;
 
-
-
+    let mut dummy_index = 0;
     let header: Element<'a, Message, Theme, Renderer> = 
         scrollable(style::wrapper::header(
             row(column_widths
                 .iter()
                 .enumerate()
                 .map(|(index, column_width)| {
-                    
-                    // container(row(vec![
-                    //     columns.remove(0).into(), 
-                    //     mouse_area(Space::new(10.0, 20.0))
-                    //     .on_press(Message::TableMouseOnPress(tbl.id, index))
-                    //     .on_move(move|point| Message::TableMouseOnMove(point, tbl.id, index))
-                    //     .on_release(Message::TableMouseOnRelease(tbl.id))
-                    //     .on_exit(Message::TableMouseOnExit(tbl.id))
-                    //     .interaction(Interaction::ResizingHorizontally)
-                    //     .into()]))
-                    //     .width(Length::Fixed(*column_width)).into()
-                        
+                    dummy_index = index;
                     header_container(
                         index,
                         columns.remove(0),
                         *column_width,
-                        resize_offset,
+                        tbl.resize_offset[index],
                         Some(Message::TableResizing),
-                        None,
+                        Some(Message::TableResized),
                         min_column_width,
                         divider_width,
                         cell_padding,
@@ -219,7 +201,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                     )
                 })
                 .chain(dummy_container(column_widths.clone(),
-                                        resize_offset,
+                                        tbl.resize_offset[dummy_index].clone(),
                                         min_width, 
                                         min_column_width))),
             style.clone(),
@@ -244,11 +226,11 @@ pub fn construct_table<'a>(tbl: IpgTable,
                 iced::widget::row(column_widths
                     .iter()
                     .enumerate()
-                    .map(|(_index, width)| {
+                    .map(|(idx, width)| {
                         body_container(
                             content.remove(0),
                             *width,
-                            resize_offset,
+                            tbl.resize_offset[idx],
                             min_column_width,
                             divider_width,
                             cell_padding,
@@ -256,7 +238,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                     })
                     .chain(dummy_container(
                         column_widths.clone(),
-                        resize_offset, 
+                        tbl.resize_offset[index], 
                         min_width, 
                         min_column_width))),
                 style.clone(),
@@ -294,47 +276,11 @@ fn get_scrollbar(alignment: Anchor, width: f32, margin: f32, scroller_width: f32
 pub fn table_callback(state: &mut IpgState, message: Message) {
 
     match message {
-        // Message::TableScrolled(vp) => {
-        //     wci.id = scroller_id - TABLE_INTERNAL_IDS_START;
-        //     wci.value_str = Some("scroller".to_string());
-        //     let offsets: Vec<(String, f32)> = vec![
-        //         ("abs_offset_x".to_string(), vp.absolute_offset().x),
-        //         ("abs_offset_y".to_string(), vp.absolute_offset().y),
-        //         ("rel_offset_x".to_string(), vp.relative_offset().x),
-        //         ("rel_offset_y".to_string(), vp.relative_offset().y),
-        //         ("rev_offset_x".to_string(), vp.absolute_offset_reversed().x),
-        //         ("rev_offset_y".to_string(), vp.absolute_offset_reversed().y)];
-
-        //     let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
-        //     wco.id = table_id;
-        //     wco.event_name = "on_scroll".to_string();
-        //     wco.scroll_pos = offsets;
-        //     process_callback(wco);
-        // },
-        Message::TableMouseOnPress(id, index) => {
-            let wci = WidgetCallbackIn{id,
-                            table_mouse: IpgTableMouse::Pressed,
+        Message::TableResizing(index, offset) => {
+            dbg!(index, offset);
+            let wci = WidgetCallbackIn{id: 6,
                             index: Some(index),
-                            ..Default::default()};
-            let _ = set_or_get_widget_callback_data(state, wci);
-        },
-        Message::TableMouseOnMove(point, id, index) => {
-            let wci = WidgetCallbackIn{id,
-                            table_mouse: IpgTableMouse::Moving,
-                            point: Some(point),
-                            index: Some(index),
-                            ..Default::default()};
-            let _ = set_or_get_widget_callback_data(state, wci);
-        },
-        Message::TableMouseOnRelease(id) => {
-            let wci = WidgetCallbackIn{id,
-                            table_mouse: IpgTableMouse::Released,
-                            ..Default::default()};
-            let _ = set_or_get_widget_callback_data(state, wci);
-        },
-        Message::TableMouseOnExit(id) => {
-            let wci = WidgetCallbackIn{id,
-                            table_mouse: IpgTableMouse::Exit,
+                            value_float_64: Some(offset as f64),
                             ..Default::default()};
             let _ = set_or_get_widget_callback_data(state, wci);
         }

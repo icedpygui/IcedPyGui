@@ -146,7 +146,7 @@ pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
            
     match message {
         SLMessage::OnChange(value) => {
-            wci.value_float = Some(value as f64);
+            wci.value_float_64 = Some(value as f64);
             let mut wco = set_or_get_widget_callback_data(state, wci);
             wco.id = id;
             wco.event_name = "on_change".to_string();

@@ -379,10 +379,12 @@ impl App {
                 Task::none()
             },
             Message::TableResizing(index, width) => {
-                dbg!("resizing", index, width);
+                table_callback(&mut self.state, message);
                 Task::none()
             },
             Message::TableResized => {
+                table_callback(&mut self.state, message);
+                process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
             Message::TableOnDrag => {
