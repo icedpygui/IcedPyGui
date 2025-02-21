@@ -1655,72 +1655,65 @@ impl IPG {
     }
 
     #[pyo3(signature = (window_id, table_id, title,
-                        rows, columns, 
+                        column_widths,height,
                         width=None, width_fill=false, 
-                        height=None, height_fill=false,
-                        header=true, control_row=false,
-                        add_data_row_wise=true,
-                        add_date_column_wise=false,
+                        header_enabled=true,
+                        control_row_enabled=false,
+                        footer_enabled=false,
+                        data_row_wise=true,
+                        date_column_wise=false,
                         parent_id=None,
                         row_highlight=None, 
                         highlight_amount=0.15,
-                        column_widths=vec![100.0],
                         column_spacing=5.0,
                         row_spacing=5.0,
+                        divider_width=2.0,
                         resize_columns_enabled=true,
-                        footer_enabled=true,
-                        min_width_enabled=true,
-                        gen_id=None, 
-                        // on_scroll=None, 
+                        min_column_width=50.0,
+                        cell_padding=0.0,
+                        gen_id=None,  
                         show=true,
-                        modal_show=false,
-                        scroller_user_data=None,
+                        user_data=None,
                         ))]
     fn add_table(&mut self,
                     window_id: String,
                     table_id: String,
                     title: String,
-                    rows: usize,
-                    columns: usize,
+                    column_widths: Vec<f32>,
+                    height: f32,
+                    // **above required
                     width: Option<f32>,
                     width_fill: bool,
-                    height: Option<f32>,
-                    height_fill: bool,
-                    // **above required
-                    header: bool,
-                    control_row: bool,
-                    add_data_row_wise: bool,
-                    add_date_column_wise: bool,
+                    header_enabled: bool,
+                    control_row_enabled: bool,
+                    footer_enabled: bool,
+                    data_row_wise: bool,
+                    date_column_wise: bool,
                     parent_id: Option<String>,
                     row_highlight: Option<IpgTableRowHighLight>,
                     highlight_amount: f32,
-                    column_widths: Vec<f32>,
                     column_spacing: f32,
                     row_spacing: f32,
+                    divider_width: f32,
                     resize_columns_enabled: bool,
-                    footer_enabled: bool,
-                    min_width_enabled: bool,
+                    min_column_width: Option<f32>,
+                    cell_padding: f32,
                     gen_id: Option<usize>,
-                    // on_scroll: Option<PyObject>,
                     show: bool,
-                    modal_show: bool,
-                    scroller_user_data: Option<PyObject>,
+                    user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
     {
 
         let id = self.get_id(gen_id);
 
-        let scroller_id = self.get_id(None);
-
         let width = get_width(width, width_fill);
-        let height = get_height(height, height_fill);
 
         let prt_id = match parent_id {
             Some(id) => id,
             None => window_id.clone(),
         };
 
-        let resize_offset =  (0..columns).map(|_| None).collect();
+        let resize_offset =  (0..column_widths.len()).map(|_| None).collect();
 
         add_callback_to_mutex(id, "on_press".to_string(), None);
         add_callback_to_mutex(id, "on_release".to_string(), None);
@@ -1736,27 +1729,25 @@ impl IPG {
         state.containers.insert(id, IpgContainers::IpgTable(IpgTable::new( 
                                                     id,
                                                     title,
-                                                    rows,
-                                                    columns,
-                                                    width,
+                                                    column_widths,
                                                     height,
-                                                    header,
-                                                    control_row,
-                                                    add_data_row_wise,
-                                                    add_date_column_wise,
+                                                    width,
+                                                    header_enabled,
+                                                    control_row_enabled,
+                                                    footer_enabled,
+                                                    data_row_wise,
+                                                    date_column_wise,
                                                     row_highlight,
                                                     highlight_amount,
-                                                    column_widths,
                                                     column_spacing,
                                                     row_spacing,
+                                                    divider_width,
                                                     resize_columns_enabled,
-                                                    footer_enabled,
-                                                    min_width_enabled,
+                                                    min_column_width,
+                                                    cell_padding,
                                                     show,
                                                     resize_offset,
-                                                    modal_show,
-                                                    scroller_user_data,
-                                                    scroller_id,
+                                                    user_data,
                                                     )));
         state.last_id = self.id;
         drop(state);

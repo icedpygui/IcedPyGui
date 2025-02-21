@@ -30,7 +30,7 @@ ipg.add_window(
         height=600,
         pos_x=100, 
         pos_y=25,
-        debug=True)
+        debug=False)
 
 # Add the container, since the table requires a width and height,
 # the container can shrink(default) to fit.
@@ -41,25 +41,15 @@ ipg.add_container(
         height_fill=True)
 
 
-# It's best to make them the same,
-column_widths = [150] * 5
-table_width = sum(column_widths)
-rows = 8
-columns = 5
-
 # The table is added.
 ipg.add_table(
         window_id="main",
         table_id="table",
         parent_id="cont",
         title="My Table",
-        rows=rows,
-        columns=columns,
-        column_widths=column_widths,
-        height=300.0,
-        header=True,
-        control_row=False,
-        row_highlight=IpgTableRowHighLight.Lighter)
+        column_widths=[150] * 5,
+        height=400.0,
+        )
 
 # create headers
 headers = ["one", "two", "three", "four", "five"]
@@ -67,20 +57,20 @@ for i, head in enumerate(headers):
     ipg.add_text(
         parent_id="table",
         content=head,
-        width=column_widths[i],
         align_x=IpgHorizontalAlignment.Center,
         align_y=IpgVerticalAlignment.Center,
         width_fill=True)
 
 # fill in the table rows
-for i in range(0, rows):
-    for j in range(0, columns):
+for i in range(0, 30):
+    for j in range(0, len(headers)):
         if j == 0:
             ipg.add_button(
                 parent_id="table",
                 label="Edit",
                 width_fill=True,
-                padding=[0.0]
+                padding=[0.0],
+                style_id=btn_style
                 )
         else:
             ipg.add_text(
@@ -91,7 +81,7 @@ for i in range(0, rows):
                 align_y=IpgVerticalAlignment.Center,
                 )
         
-        
+
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.
 ipg.start_session()

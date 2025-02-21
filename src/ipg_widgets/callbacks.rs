@@ -498,7 +498,7 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
         },
         IpgContainers::IpgTable(table) => {
             WidgetCallbackOut{
-                scroller_user_data: table.scroller_user_data.clone(),
+                scroller_user_data: table.user_data.clone(),
                 ..Default::default()
             }
         }
@@ -529,7 +529,7 @@ pub fn container_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> W
         },
         IpgContainers::IpgTable(table) => {
             WidgetCallbackOut{
-                scroller_user_data: table.scroller_user_data.clone(),
+                scroller_user_data: table.user_data.clone(),
                 ..Default::default()
             }
         }

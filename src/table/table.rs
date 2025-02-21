@@ -71,41 +71,41 @@ where
         .into()
 }
 
-// pub fn footer_container<'a, Message, Theme, Renderer>(
-//     index: usize,
-//     on_drag: Option<fn(usize, f32) -> Message>,
-//     on_release: Option<Message>,
-//     min_column_width: f32,
-//     divider_width: f32,
-//     cell_padding: Padding,
-//     style: <Theme as style::Catalog>::Style,
-// ) -> Element<'a, Message, Theme, Renderer>
-// where
-//     Renderer: iced::advanced::Renderer + 'a,
-//     Theme: style::Catalog + container::Catalog + 'a,
-//     Message: 'a + Clone,
-// {
-//     let content = if let Some(footer) = column.footer(index, rows) {
-//         container(footer)
-//             .width(Length::Fill)
-//             .padding(cell_padding)
-//             .into()
-//     } else {
-//         Element::from(Space::with_width(Length::Fill))
-//     };
+pub fn footer_container<'a, Message, Theme, Renderer>(
+    index: usize,
+    footer: Element<'a, Message, Theme, Renderer>,
+    column_width: f32,
+    resize_offset: Option<f32>,
+    on_drag: Option<fn(usize, f32) -> Message>,
+    on_release: Option<Message>,
+    min_column_width: f32,
+    divider_width: f32,
+    cell_padding: Padding,
+    style: <Theme as style::Catalog>::Style,
+) -> Element<'a, Message, Theme, Renderer>
+where
+    Renderer: iced::advanced::Renderer + 'a,
+    Theme: style::Catalog + container::Catalog + 'a,
+    Message: 'a + Clone,
+{
+    let content = 
+        container(footer)
+            .width(Length::Fill)
+            .padding(cell_padding)
+            .into();
 
-//     with_divider(
-//         index,
-//         column_width,
-//         resize_offset,
-//         content,
-//         on_drag,
-//         on_release,
-//         min_column_width,
-//         divider_width,
-//         style,
-//     )
-// }
+    with_divider(
+        index,
+        column_width,
+        resize_offset,
+        content,
+        on_drag,
+        on_release,
+        min_column_width,
+        divider_width,
+        style,
+    )
+}
 
 use super::divider::Divider;
 /// Some docs
@@ -143,7 +143,6 @@ pub fn with_divider<'a, Message, Theme, Renderer>(
         .width(width)
         .into()
     } else {
-        dbg!("else after here");
         row![content, Space::new(divider_width, Length::Shrink)]
             .width(width)
             .into()

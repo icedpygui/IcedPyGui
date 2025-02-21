@@ -3,52 +3,45 @@
 use crate::app::Message;
 use crate::table;
 use crate::{access_callbacks, IpgState};
-use crate::table::table::{body_container, dummy_container, header_container};
+use crate::table::table::{body_container, dummy_container, footer_container, header_container};
 
 use iced::advanced::graphics::core::Element;
 use iced::widget::scrollable::{Anchor, Scrollbar};
-use iced::{Length, Padding, Point, Renderer, Theme};
+use iced::{Length, Padding, Renderer, Theme};
 use iced::widget::{column, row, scrollable};
 
 use pyo3::{pyclass, PyObject, Python};
 use pyo3::types::IntoPyDict;
 
-use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
-use super::helpers::{get_height, get_width, try_extract_boolean, try_extract_f64, try_extract_string, try_extract_vec_f32};
+use super::callbacks::{set_or_get_widget_callback_data, 
+    WidgetCallbackIn, WidgetCallbackOut};
+use super::helpers::{get_width, try_extract_boolean, 
+    try_extract_f64, try_extract_string, try_extract_vec_f32};
 
 
 #[derive(Debug, Clone)]
 pub struct IpgTable {
         pub id: usize,
         pub title: String,
-        pub rows: usize,
-        pub columns: usize,
+        pub column_widths: Vec<f32>,
+        pub height: f32,
         pub width: Length,
-        pub height: Length,
-        pub header: bool,
-        pub control_row: bool,
+        pub header_enabled: bool,
+        pub control_row_enabled: bool,
+        pub footer_enabled: bool,
         pub add_data_row_wise: bool,
         pub add_date_column_wise: bool,
         pub row_highlight: Option<IpgTableRowHighLight>,
         pub highlight_amount: f32,
-        pub column_widths: Vec<f32>,
         pub column_spacing: f32,
         pub row_spacing: f32,
+        pub divider_width: f32,
         pub resize_columns_enabled: bool,
-        pub footer_enabled: bool,
-        pub min_width_enabled: bool,
-        pub modal_show: bool,
+        pub min_column_width: Option<f32>,
+        pub cell_padding: f32,
         pub show: bool,
         pub resize_offset: Vec<Option<f32>>,
-        pub scroller_user_data: Option<PyObject>,
-        pub scroller_id: usize,
-        _scroller_pos: Vec<(String, f32)>,
-        pub header_pressed: bool,
-        pub header_released: bool,
-        pub resize_origin: Point,
-        pub resize_position: Point,
-        pub resize_index: usize,
-        pub table_mouse: IpgTableMouse,
+        pub user_data: Option<PyObject>,
         header_id: scrollable::Id,
         body_id: scrollable::Id,
         footer_id: Option<scrollable::Id>,
@@ -58,60 +51,48 @@ impl IpgTable {
     pub fn new( 
         id: usize,
         title: String,
-        rows: usize,
-        columns: usize,
+        column_widths: Vec<f32>,
+        height: f32,
         width: Length,
-        height: Length,
-        header: bool,
-        control_row: bool,
+        header_enabled: bool,
+        control_row_enabled: bool,
+        footer_enabled: bool,
         add_data_row_wise: bool,
         add_date_column_wise: bool,
         row_highlight: Option<IpgTableRowHighLight>,
         highlight_amount: f32,
-        column_widths: Vec<f32>,
         column_spacing: f32,
         row_spacing: f32,
+        divider_width: f32,
         resize_columns_enabled: bool,
-        footer_enabled: bool,
-        min_width_enabled: bool,
+        min_column_width: Option<f32>,
+        cell_padding: f32,
         show: bool,
         resize_offset: Vec<Option<f32>>,
-        modal_show: bool,
-        scroller_user_data: Option<PyObject>,
-        scroller_id: usize,
-
+        user_data: Option<PyObject>,
         ) -> Self {
         Self {
             id,
             title,
-            rows,
-            columns,
-            width,
+            column_widths,
             height,
-            header,
-            control_row,
+            width,
+            header_enabled,
+            control_row_enabled,
+            footer_enabled,
             add_data_row_wise,
             add_date_column_wise,
             row_highlight,
             highlight_amount,
-            column_widths,
             column_spacing,
             row_spacing,
+            divider_width,
             resize_columns_enabled,
-            footer_enabled,
-            min_width_enabled,
-            modal_show,
+            min_column_width,
+            cell_padding,
             show,
             resize_offset,
-            scroller_user_data,
-            scroller_id,
-            _scroller_pos: vec![],
-            header_pressed: false,
-            header_released: false,
-            resize_origin: Point::default(),
-            resize_position: Point::default(),
-            resize_index: 0,
-            table_mouse: IpgTableMouse::None,
+            user_data,
             header_id: scrollable::Id::unique(),
             body_id: scrollable::Id::unique(),
             footer_id: Some(scrollable::Id::unique()),
@@ -149,22 +130,28 @@ pub fn construct_table<'a>(tbl: IpgTable,
 
     let num_of_columns = tbl.column_widths.len();
 
-    // remove the deades fro the content
+    // remove the headers from the content
     let mut columns  = vec![];
 
     for _ in 0..num_of_columns {
         columns.push(content.remove(0));
     }
 
-    let divider_width = 10.0;
-    let min_column_width = 50.0;
+    // remove the footer from content, if enabled
+    let mut footers = vec![];
+    if tbl.footer_enabled {
+        for _ in 0..num_of_columns {
+            footers.push(content.remove(content.len()-1))
+        }
+    }
 
-    // add in the divider_widths
-    let column_widths: Vec<f32> = tbl.column_widths.iter().map(|width|width+divider_width).collect();
+    let column_widths: Vec<f32> = tbl.column_widths.iter().map(|width|width+tbl.divider_width).collect();
+    let min_column_width = tbl.min_column_width.unwrap_or(0.0);
+    let cell_padding = Padding::from(tbl.cell_padding);
+    let scrollbar = get_scrollbar(Anchor::Start, 5.0, 0.0, 10.0);
 
-    let cell_padding = Padding::from(5.0);
+    // TODO: need better understanding the effect of min_width
     let min_width = 0.0;
-    let scrollbar = get_scrollbar(Anchor::Start, 20.0, 5.0, 20.0);
 
     let header: Element<'a, Message, Theme, Renderer> = 
         scrollable(table::style::wrapper::header(
@@ -180,7 +167,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                         Some(Message::TableResizing),
                         Some(Message::TableResized),
                         min_column_width,
-                        divider_width,
+                        tbl.divider_width,
                         cell_padding,
                         Default::default(),
                     )
@@ -189,7 +176,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                                         tbl.resize_offset.clone(),
                                         min_width, 
                                         min_column_width))),
-                                        Default::default(),
+                Default::default(),
         ))
         .id(tbl.header_id)
         .direction(scrollable::Direction::Both {
@@ -204,7 +191,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
         }).into();
     
     let rows = vec![0; content.len()/tbl.column_widths.len()];
-    let body = 
+    let body: Element<'a, Message, Theme, Renderer> = 
         scrollable(column(rows.iter().enumerate()
         .map(|(index, _width)| {
             table::style::wrapper::row(
@@ -217,7 +204,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             *width,
                             tbl.resize_offset[idx],
                             min_column_width,
-                            divider_width,
+                            tbl.divider_width,
                             cell_padding,
                         )
                     })
@@ -240,12 +227,53 @@ pub fn construct_table<'a>(tbl: IpgTable,
             horizontal: scrollbar,
             vertical: scrollbar,
         })
-        .height(Length::Fill)
+        .height(Length::Fixed(300.0))
         .into();
-
-    column([header, body])
-    .height(tbl.height)
-    .into()
+    
+    if tbl.footer_enabled {
+        let footer: Element<'a, Message, Theme, Renderer> = 
+            tbl.footer_id.map(|footer| {
+            scrollable(table::style::wrapper::footer(
+                row(column_widths
+                    .iter()
+                    .enumerate()
+                    .map(|(index, width)| {
+                        footer_container(
+                            index,
+                            footers.remove(0),
+                            *width,
+                            tbl.resize_offset[index],
+                            Some(Message::TableResizing),
+                            Some(Message::TableResized),
+                            min_column_width,
+                            tbl.divider_width,
+                            cell_padding,
+                            Default::default(),
+                        )
+                    })
+                    .chain(dummy_container(
+                                    tbl.column_widths,
+                                    tbl.resize_offset.clone(), 
+                                    min_width, 
+                                    min_column_width))),
+                    Default::default(),
+            ))
+            .id(footer)
+            .direction(scrollable::Direction::Both {
+                vertical: scrollable::Scrollbar::new()
+                    .width(0)
+                    .margin(0)
+                    .scroller_width(0),
+                horizontal: scrollable::Scrollbar::new()
+                    .width(0)
+                    .margin(0)
+                    .scroller_width(0),
+            })
+        }).unwrap().into();
+        column![header, body, footer].into()
+    } else {
+        column![header, body].into()
+    }
 
 }
 
@@ -375,7 +403,6 @@ pub enum IpgTableParam {
     RowHighlight,
     HighlightAmount,
     ColumnWidths,
-    ModalShow,
     Show,
 }
 
@@ -397,8 +424,7 @@ pub fn table_item_update(
             table.width = get_width(width, false);
         },
         IpgTableParam::Height => {
-            let height = Some(try_extract_f64(value) as f32);
-            table.height = get_height(height, false);
+            table.height = try_extract_f64(value) as f32;
         },
         IpgTableParam::RowHighlight => {
             table.row_highlight = Some(try_extract_row_highlight(value));
@@ -408,9 +434,6 @@ pub fn table_item_update(
         },
         IpgTableParam::ColumnWidths => {
             table.column_widths = try_extract_vec_f32(value);
-        },
-        IpgTableParam::ModalShow => {
-            table.modal_show = try_extract_boolean(value);
         },
         IpgTableParam::Show => {
             table.show = try_extract_boolean(value);
