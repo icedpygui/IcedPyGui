@@ -69,7 +69,8 @@ for i, head in enumerate(headers):
         content=head,
         width=column_widths[i],
         align_x=IpgHorizontalAlignment.Center,
-        align_y=IpgVerticalAlignment.Center)
+        align_y=IpgVerticalAlignment.Center,
+        width_fill=True)
 
 # fill in the table rows
 for i in range(0, rows):

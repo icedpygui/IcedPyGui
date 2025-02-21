@@ -1,7 +1,7 @@
 //! ipg_table
 
 use crate::app::Message;
-use crate::table::style;
+use crate::table;
 use crate::{access_callbacks, IpgState};
 use crate::table::table::{body_container, dummy_container, header_container};
 
@@ -49,9 +49,9 @@ pub struct IpgTable {
         pub resize_position: Point,
         pub resize_index: usize,
         pub table_mouse: IpgTableMouse,
-        // header_scrollable: scrollable::Id,
-        // body_scrollable: scrollable::Id,
-        // footer_scrollable: scrollable::Id,
+        header_id: scrollable::Id,
+        body_id: scrollable::Id,
+        footer_id: Option<scrollable::Id>,
 }
 
 impl IpgTable {
@@ -112,9 +112,9 @@ impl IpgTable {
             resize_position: Point::default(),
             resize_index: 0,
             table_mouse: IpgTableMouse::None,
-            // header_scrollable: scrollable::Id::unique(),
-            // body_scrollable: scrollable::Id::unique(),
-            // footer_scrollable: scrollable::Id::unique(),
+            header_id: scrollable::Id::unique(),
+            body_id: scrollable::Id::unique(),
+            footer_id: Some(scrollable::Id::unique()),
         }
     }
 }
@@ -139,6 +139,7 @@ pub enum IpgTableMouse {
     #[default]
     None,
     Resizing,
+    Resized,
 }
 
 pub fn construct_table<'a>(tbl: IpgTable, 
@@ -161,32 +162,16 @@ pub fn construct_table<'a>(tbl: IpgTable,
     // add in the divider_widths
     let column_widths: Vec<f32> = tbl.column_widths.iter().map(|width|width+divider_width).collect();
 
-    // match tbl.table_mouse {
-    //     IpgTableMouse::Moving => {
-    //         let offset = tbl.resize_origin.x - tbl.resize_position.x;
-    //         column_widths[tbl.resize_index] = (column_widths[tbl.resize_index] + offset).max(min_column_width);
-    //         if tbl.resize_index < num_of_columns-1 {
-    //             column_widths[tbl.resize_index+1] = (column_widths[tbl.resize_index] - offset).max(min_column_width);
-    //         }
-    //     },
-    //     _ => (),
-    // }
-
     let cell_padding = Padding::from(5.0);
-    let style: <Theme as style::Catalog>::Style = <iced::Theme as style::Catalog>::Style::default();
-    let header_id = scrollable::Id::unique();
-    let body_id = scrollable::Id::unique();
-    let min_width = 25.0;
+    let min_width = 0.0;
     let scrollbar = get_scrollbar(Anchor::Start, 20.0, 5.0, 20.0);
 
-    let mut dummy_index = 0;
     let header: Element<'a, Message, Theme, Renderer> = 
-        scrollable(style::wrapper::header(
+        scrollable(table::style::wrapper::header(
             row(column_widths
                 .iter()
                 .enumerate()
                 .map(|(index, column_width)| {
-                    dummy_index = index;
                     header_container(
                         index,
                         columns.remove(0),
@@ -197,16 +182,16 @@ pub fn construct_table<'a>(tbl: IpgTable,
                         min_column_width,
                         divider_width,
                         cell_padding,
-                        style,
+                        Default::default(),
                     )
                 })
                 .chain(dummy_container(column_widths.clone(),
-                                        tbl.resize_offset[dummy_index].clone(),
+                                        tbl.resize_offset.clone(),
                                         min_width, 
                                         min_column_width))),
-            style.clone(),
+                                        Default::default(),
         ))
-        .id(header_id)
+        .id(tbl.header_id)
         .direction(scrollable::Direction::Both {
             vertical: scrollable::Scrollbar::new()
                 .width(0)
@@ -222,7 +207,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
     let body = 
         scrollable(column(rows.iter().enumerate()
         .map(|(index, _width)| {
-            style::wrapper::row(
+            table::style::wrapper::row(
                 iced::widget::row(column_widths
                     .iter()
                     .enumerate()
@@ -238,18 +223,17 @@ pub fn construct_table<'a>(tbl: IpgTable,
                     })
                     .chain(dummy_container(
                         column_widths.clone(),
-                        tbl.resize_offset[index], 
+                        tbl.resize_offset.clone(), 
                         min_width, 
                         min_column_width))),
-                style.clone(),
+                        Default::default(),
                 index,
             )
             .into()
         })))
-        .id(body_id)
+        .id(tbl.body_id)
         .on_scroll(move |viewport| {
             let offset = viewport.absolute_offset();
-
             (Message::TableSyncHeader)(scrollable::AbsoluteOffset { y: 0.0, ..offset })
         })
         .direction(scrollable::Direction::Both {
@@ -277,13 +261,20 @@ pub fn table_callback(state: &mut IpgState, message: Message) {
 
     match message {
         Message::TableResizing(index, offset) => {
-            dbg!(index, offset);
             let wci = WidgetCallbackIn{id: 6,
                             index: Some(index),
-                            value_float_64: Some(offset as f64),
+                            value_float_32: Some(offset),
+                            table_mouse: IpgTableMouse::Resizing,
                             ..Default::default()};
             let _ = set_or_get_widget_callback_data(state, wci);
-        }
+        },
+        Message::TableResized => {
+            let wci = WidgetCallbackIn{
+                id: 6,
+                table_mouse: IpgTableMouse::Resized,
+                ..Default::default()};
+            let _ = set_or_get_widget_callback_data(state, wci);
+        },
        _ => ()
     }
 }
