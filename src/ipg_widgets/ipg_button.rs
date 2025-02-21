@@ -3,7 +3,7 @@
 use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, app, IpgState};
-use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32, try_extract_vec_f64};
+use super::helpers::{get_height, get_horizontal_alignment, get_padding_f64, get_radius, get_vertical_alignment, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_ipg_horizontal_alignment, try_extract_ipg_vertical_alignment, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32, try_extract_vec_f64};
 use super::callbacks::{
     set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
 };
@@ -12,7 +12,7 @@ use super::ipg_enums::IpgWidgets;
 use iced::widget::button::{self, Status, Style};
 use pyo3::{pyclass, PyObject, Python};
 
-use iced::widget::{Button, Text};
+use iced::widget::{text, Button, Text};
 use iced::{alignment, Border, Color, Element, Length, Padding, Shadow, Theme, Vector };
 
 use crate::graphics::bootstrap::{self, icon_to_char, icon_to_string};
@@ -28,6 +28,8 @@ pub struct IpgButton {
     pub width: Length,
     pub height: Length,
     pub padding: Padding,
+    pub text_align_x: alignment::Horizontal,
+    pub text_align_y: alignment::Vertical,
     pub clip: bool,
     pub style_id: Option<usize>,
     pub style_standard: Option<IpgStyleStandard>,
@@ -44,6 +46,8 @@ impl IpgButton {
         width: Length,
         height: Length,
         padding: Padding,
+        text_align_x: alignment::Horizontal,
+        text_align_y: alignment::Vertical,
         clip: bool,
         style_id: Option<usize>,
         style_standard: Option<IpgStyleStandard>,
@@ -57,6 +61,8 @@ impl IpgButton {
             width,
             height,
             padding,
+            text_align_x,
+            text_align_y,
             clip,
             style_id,
             style_standard,
@@ -126,9 +132,9 @@ pub fn construct_button(btn: IpgButton,
 
     let style = get_btn_style(style_opt);
 
-    let mut label = Text::new(btn.label.clone())
-                                                        .align_x(alignment::Horizontal::Center)
-                                                        .align_y(alignment::Vertical::Center);
+    let mut label = text(btn.label.clone())
+                                                        .align_x(btn.text_align_x)
+                                                        .align_y(btn.text_align_y);
 
     if btn.style_arrow.is_some() {
         let arrow = get_bootstrap_arrow(btn.style_arrow.unwrap());
@@ -229,6 +235,8 @@ pub enum IpgButtonParam {
     Show,
     StyleId,
     StyleStandard,
+    TextAlignX,
+    TextAlignY,
     Width,
     WidthFill,
 }
@@ -270,6 +278,14 @@ pub fn button_item_update(btn: &mut IpgButton,
         },
         IpgButtonParam::StyleStandard => {
             btn.style_standard = Some(try_extract_style_standard(value));
+        },
+        IpgButtonParam::TextAlignX => {
+            let h_align = try_extract_ipg_horizontal_alignment(value).unwrap();
+            btn.text_align_x = get_horizontal_alignment(h_align);
+        },
+        IpgButtonParam::TextAlignY => {
+            let v_align = try_extract_ipg_vertical_alignment(value).unwrap();
+            btn.text_align_y= get_vertical_alignment(v_align);
         },
         IpgButtonParam::Width => {
             let val = try_extract_f64(value);

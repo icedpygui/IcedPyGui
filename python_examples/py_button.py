@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgColor, IpgWindowTheme, IpgAlignment, IpgStyleStandard, IpgButtonArrow
-
+from icedpygui import IpgHorizontalAlignment, IpgVerticalAlignment
 ipg = IPG()
 
 
@@ -85,6 +85,24 @@ def add_buttons(window: str):
     ipg.add_button(parent_id="row_btn3", label="Standard with Border and shadow",
                     style_id=std_border,
                     style_standard=IpgStyleStandard.Success)
+    
+    if window == "main1":
+        ipg.add_button(parent_id="col",
+                       label="Alignment = Center/Center",
+                       width=300.0,
+                       height=50.0)
+        ipg.add_button(parent_id="col",
+                       label="Alignment = Left/Bottom",
+                       width=300.0,
+                       height=50.0,
+                       text_align_x=IpgHorizontalAlignment.Left,
+                       text_align_y=IpgVerticalAlignment.Bottom)
+        ipg.add_button(parent_id="col",
+                       label="Alignment = Right/Top",
+                       width=300.0,
+                       height=50.0,
+                       text_align_x=IpgHorizontalAlignment.Right,
+                       text_align_y=IpgVerticalAlignment.Top)
 
 # Add the windows
 ipg.add_window("main1", "Button Styling", 500, 600,  

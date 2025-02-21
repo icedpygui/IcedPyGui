@@ -761,6 +761,8 @@ class IPG:
                     width_fill: bool=False,
                     height_fill: bool=False,
                     padding: list=[10.0],
+                    text_align_x: IpgHorizontalAlignment=IpgHorizontalAlignment.Center,
+                    text_align_y: IpgVerticalAlignment=IpgVerticalAlignment.Center,
                     clip: bool=False, 
                     style_id: Optional[int]=None,
                     style_standard: Optional[IpgStyleStandard]=None,
@@ -794,6 +796,10 @@ class IPG:
                 use [float] for all sides,
                 use [float, float] for [top&bottom, left&right]
                 use [float, float, float, float] for [top, right, bottom, left]
+            text_align_x: IpgHorizontalAlignment
+                Aligns the text in the horizontal direction
+            text_align_y: IpgVerticalAlignment
+                Aligns the text in the vertical direction
             clip: bool
                 Whether to clip the label if width exceeded.
             style: Optional[int]
@@ -3694,7 +3700,8 @@ class IpgAlignment:
 
 class IpgHorizontalAlignment:
     """
-    How items placed in a container or widget are aligned in the horizontal direction
+    How items placed in a container or widget are aligned in the horizontal direction\n
+    Left, Center, Right
     """
     Left=''
     Center=''
@@ -3703,7 +3710,8 @@ class IpgHorizontalAlignment:
 
 class IpgVerticalAlignment:
     """
-    How items placed in a container or widget are aligned in the vertical direction
+    How items placed in a container or widget are aligned in the vertical direction\n
+    Top, Center, Bottom
     """
     Top=''
     Center=''

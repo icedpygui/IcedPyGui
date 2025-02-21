@@ -91,7 +91,7 @@ use ipg_widgets::ipg_window::{get_iced_window_theme,
 use ipg_widgets::ipg_enums::{IpgAlignment, IpgContainers, IpgHorizontalAlignment, 
     IpgVerticalAlignment, IpgWidgets};
 
-use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_line_height, get_padding_f32, get_padding_f64, get_shaping, get_width};
+use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, get_horizontal_alignment, get_line_height, get_padding_f32, get_padding_f64, get_shaping, get_vertical_alignment, get_width};
 
 use graphics::colors::{get_color, IpgColor};
 use style::styling::{readable, IpgStyleStandard};
@@ -1804,8 +1804,10 @@ impl IPG {
     
     #[pyo3(signature = (parent_id, label, gen_id=None, on_press=None, 
                         width=None, height=None, width_fill=false, 
-                        height_fill=false, padding=vec![5.0], clip=false, 
-                        style_id=None, style_standard=None, 
+                        height_fill=false, padding=vec![5.0], 
+                        text_align_x=IpgHorizontalAlignment::Center, 
+                        text_align_y=IpgVerticalAlignment::Center, 
+                        clip=false, style_id=None, style_standard=None, 
                         style_arrow=None, user_data=None, show=true, 
                         ))]
     fn add_button(&mut self,
@@ -1819,6 +1821,8 @@ impl IPG {
                         width_fill: bool,
                         height_fill: bool,
                         padding: Vec<f64>,
+                        text_align_x: IpgHorizontalAlignment,
+                        text_align_y: IpgVerticalAlignment,
                         clip: bool,
                         style_id: Option<usize>,
                         style_standard: Option<IpgStyleStandard>,
@@ -1838,6 +1842,9 @@ impl IPG {
 
         let padding = get_padding_f64(padding);
 
+        let align_x = get_horizontal_alignment(text_align_x);
+        let align_y = get_vertical_alignment(text_align_y);
+
         set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
@@ -1851,6 +1858,8 @@ impl IPG {
                 width,
                 height,
                 padding,
+                align_x,
+                align_y,
                 clip,
                 style_id,
                 style_standard,
