@@ -2429,6 +2429,7 @@ class IPG:
                     column_spacing: float=5.0,
                     row_spacing: float=5.0,
                     cell_padding: float=0.0,
+                    table_width_fixed: bool=True,
                     gen_id: Optional[int]=None,
                     show: bool=True,
                     user_data: Optional[Any]=None,
@@ -5177,25 +5178,52 @@ class IpgTableParam:
         Width of the table.
     Height: float
         Height of the table.
+    ColumnWidths: list[float]
+        List of column widths.
+    ColumnSpacing: float
+        Spacing between columns
+    RowSpacing: float,
+        Spacing between rows
     RowHighlight: IpgTableRowHighLight
         Sets the color type for highlighting alternate rows.
     HighlightAmount: float
         The highlighting amount.
-    ColumnWidths: list[float]
-        A list of column widths.
-    ModalShow: bool
-        Whether to show or hide the modal.
+    ResizeColumnsEnabled: bool
+        Enables the ability to resize the columns
+    MinColumnWidth: float
+        If resizing, the min column width
+    CellPadding: list[float]
+        Padding around the cells
+    TableWidthFixed: bool
+        If the table width is fixed, doesn't change with resizing
+    TableWidth: float
+        Changes the table width which initially is the sum of column widths
+    ScrollerWidth: float
+        Scroller width
+    ScrollerBarWidth: float
+        Scroller bar width
+    ScrollerMargin: float
+        Scroller margin
     Show: bool
         Whether to show or hide the widget.
     """
     Title: str
-    Data: dict
     Width: float
     Height: float
+    ColumnWidths: list[float]
+    ColumnSpacing: float
+    RowSpacing: float
     RowHighlight: IpgTableRowHighLight
     HighlightAmount: float
-    ColumnWidths: list[float]
-    ModalShow: bool
+    DividerWidth: float
+    ResizeColumnsEnabled: bool
+    MinColumnWidth: float
+    CellPadding: list[float]
+    TableWidthFixed: bool
+    TableWidth: float
+    ScrollerWidth: float
+    ScrollerBarWidth: float
+    ScrollerMargin: float
     Show: bool
 
 

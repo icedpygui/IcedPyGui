@@ -1671,6 +1671,10 @@ impl IPG {
                         resize_columns_enabled=true,
                         min_column_width=50.0,
                         cell_padding=0.0,
+                        table_width_fixed=true,
+                        scroller_width=10.0,
+                        scroller_bar_width=10.0,
+                        scroller_margin=0.0,
                         gen_id=None,  
                         show=true,
                         user_data=None,
@@ -1698,6 +1702,10 @@ impl IPG {
                     resize_columns_enabled: bool,
                     min_column_width: Option<f32>,
                     cell_padding: f32,
+                    table_width_fixed: bool,
+                    scroller_width: f32,
+                    scroller_bar_width: f32,
+                    scroller_margin: f32,
                     gen_id: Option<usize>,
                     show: bool,
                     user_data: Option<PyObject>,
@@ -1714,6 +1722,8 @@ impl IPG {
         };
 
         let resize_offset =  (0..column_widths.len()).map(|_| None).collect();
+        let mut table_width = column_widths.iter().sum();
+        table_width += 20.0;
 
         add_callback_to_mutex(id, "on_press".to_string(), None);
         add_callback_to_mutex(id, "on_release".to_string(), None);
@@ -1747,6 +1757,11 @@ impl IPG {
                                                     cell_padding,
                                                     show,
                                                     resize_offset,
+                                                    table_width_fixed,
+                                                    table_width,
+                                                    scroller_width,
+                                                    scroller_bar_width,
+                                                    scroller_margin,
                                                     user_data,
                                                     )));
         state.last_id = self.id;

@@ -3,7 +3,7 @@
 use crate::app::Message;
 use crate::table;
 use crate::{access_callbacks, IpgState};
-use crate::table::table::{body_container, dummy_container, footer_container, header_container};
+use crate::table::table::{body_container, dummy_container,          single_row_container};
 
 use iced::advanced::graphics::core::Element;
 use iced::widget::scrollable::{Anchor, Scrollbar};
@@ -41,6 +41,11 @@ pub struct IpgTable {
         pub cell_padding: f32,
         pub show: bool,
         pub resize_offset: Vec<Option<f32>>,
+        pub table_width_fixed: bool,
+        pub table_width: f32,
+        pub scroller_width: f32,
+        pub scroller_bar_width: f32,
+        pub scroller_margin: f32,
         pub user_data: Option<PyObject>,
         header_id: scrollable::Id,
         body_id: scrollable::Id,
@@ -69,6 +74,11 @@ impl IpgTable {
         cell_padding: f32,
         show: bool,
         resize_offset: Vec<Option<f32>>,
+        table_width_fixed: bool,
+        table_width: f32,
+        scroller_width: f32,
+        scroller_bar_width: f32,
+        scroller_margin: f32,
         user_data: Option<PyObject>,
         ) -> Self {
         Self {
@@ -92,6 +102,11 @@ impl IpgTable {
             cell_padding,
             show,
             resize_offset,
+            table_width_fixed,
+            table_width,
+            scroller_width,
+            scroller_bar_width,
+            scroller_margin,
             user_data,
             header_id: scrollable::Id::unique(),
             body_id: scrollable::Id::unique(),
@@ -141,17 +156,24 @@ pub fn construct_table<'a>(tbl: IpgTable,
     let mut footers = vec![];
     if tbl.footer_enabled {
         for _ in 0..num_of_columns {
-            footers.push(content.remove(content.len()-1))
+            footers.insert(0, content.remove(content.len()-1))
         }
     }
 
     let column_widths: Vec<f32> = tbl.column_widths.iter().map(|width|width+tbl.divider_width).collect();
     let min_column_width = tbl.min_column_width.unwrap_or(0.0);
     let cell_padding = Padding::from(tbl.cell_padding);
-    let scrollbar = get_scrollbar(Anchor::Start, 5.0, 0.0, 10.0);
+    let scrollbar = get_scrollbar(
+                                    Anchor::Start, 
+                                    tbl.scroller_bar_width, 
+                                    tbl.scroller_margin, 
+                                    tbl.scroller_width);
 
-    // TODO: need better understanding the effect of min_width
-    let min_width = 0.0;
+    // if table_width_fixed then column resizing doesn't change the table width
+    let mut min_width = 0.0;
+    if tbl.table_width_fixed {
+        min_width = tbl.table_width;
+    }
 
     let header: Element<'a, Message, Theme, Renderer> = 
         scrollable(table::style::wrapper::header(
@@ -159,7 +181,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                 .iter()
                 .enumerate()
                 .map(|(index, column_width)| {
-                    header_container(
+                    single_row_container(
                         index,
                         columns.remove(0),
                         *column_width,
@@ -238,7 +260,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                     .iter()
                     .enumerate()
                     .map(|(index, width)| {
-                        footer_container(
+                        single_row_container(
                             index,
                             footers.remove(0),
                             *width,
@@ -270,9 +292,20 @@ pub fn construct_table<'a>(tbl: IpgTable,
                     .scroller_width(0),
             })
         }).unwrap().into();
-        column![header, body, footer].into()
+        let col =  column![header, body, footer];
+        if tbl.table_width_fixed {
+            col.width(tbl.table_width).into()
+        } else {
+            col.into()
+        }
+        
     } else {
-        column![header, body].into()
+        let col =  column![header, body];
+        if tbl.table_width_fixed {
+            col.width(tbl.table_width).into()
+        } else {
+            col.into()
+        }
     }
 
 }
@@ -398,12 +431,23 @@ pub fn process_callback(wco: WidgetCallbackOut)
 #[pyclass]
 pub enum IpgTableParam {
     Title,
-    Width,
+    ColumnWidths,
     Height,
+    Width,
     RowHighlight,
     HighlightAmount,
-    ColumnWidths,
+    ColumnSpacing,
+    RowSpacing,
+    DividerWidth,
+    ResizeColumnsEnabled,
+    MinColumnWidth,
+    CellPadding,
     Show,
+    TableWidthFixed,
+    TableWidth,
+    ScrollerWidth,
+    ScrollerBarWidth,
+    ScrollerMargin,
 }
 
 pub fn table_item_update( 
@@ -419,6 +463,9 @@ pub fn table_item_update(
         IpgTableParam::Title => {
             table.title = try_extract_string(value);
         },
+        IpgTableParam::ColumnWidths => {
+            table.column_widths = try_extract_vec_f32(value);
+        },
         IpgTableParam::Width => {
             let width = Some(try_extract_f64(value) as f32);
             table.width = get_width(width, false);
@@ -432,11 +479,41 @@ pub fn table_item_update(
         IpgTableParam::HighlightAmount => {
             table.highlight_amount = try_extract_f64(value) as f32;
         },
-        IpgTableParam::ColumnWidths => {
-            table.column_widths = try_extract_vec_f32(value);
+        IpgTableParam::ColumnSpacing => {
+            table.column_spacing = try_extract_f64(value) as f32;
+        },
+        IpgTableParam::RowSpacing => {
+            table.row_spacing = try_extract_f64(value) as f32;
+        },
+        IpgTableParam::DividerWidth => {
+            table.divider_width = try_extract_f64(value) as f32;
+        },
+        IpgTableParam::ResizeColumnsEnabled => {
+            table.resize_columns_enabled = try_extract_boolean(value);
+        },
+        IpgTableParam::MinColumnWidth => {
+            table.min_column_width = Some(try_extract_f64(value) as f32);
+        },
+        IpgTableParam::CellPadding => {
+            table.cell_padding = try_extract_f64(value) as f32;
         },
         IpgTableParam::Show => {
             table.show = try_extract_boolean(value);
+        },
+        IpgTableParam::TableWidthFixed => {
+            table.table_width_fixed = try_extract_boolean(value);
+        },
+        IpgTableParam::TableWidth => {
+            table.table_width = try_extract_f64(value) as f32;
+        },
+        IpgTableParam::ScrollerWidth => {
+            table.scroller_width = try_extract_f64(value) as f32;
+        },
+        IpgTableParam::ScrollerBarWidth => {
+            table.scroller_bar_width = try_extract_f64(value) as f32;
+        },
+        IpgTableParam::ScrollerMargin => {
+            table.scroller_margin = try_extract_f64(value) as f32;
         },
     }
 }

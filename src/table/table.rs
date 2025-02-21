@@ -1,5 +1,10 @@
-//! A table widget for iced
 //! Display rows of data into columns
+
+// Many thanks to "tarkah <admin@tarkah.dev>"
+// at https://github.com/tarkah/iced_table
+// for the code used use in the table.
+// Modifications were made to make it
+// fit in for IPG
 
 
 use iced::advanced::graphics::core::Element;
@@ -9,7 +14,7 @@ use iced::widget::{container, row, Space};
 use super::style;
 
 /// Some docs
-pub fn header_container<'a, Message, Theme, Renderer>(
+pub fn single_row_container<'a, Message, Theme, Renderer>(
         index: usize,
         column: Element<'a, Message, Theme, Renderer>,
         column_width: f32,
@@ -26,10 +31,11 @@ pub fn header_container<'a, Message, Theme, Renderer>(
         Theme: style::Catalog + container::Catalog + 'a,
         Message: 'a + Clone,
 {
-    let content: Element<Message, Theme, Renderer> = container(column)
-        .width(Length::Fill)
-        .padding(cell_padding)
-        .into();
+    let content: Element<Message, Theme, Renderer> = 
+        container(column)
+            .width(Length::Fill)
+            .padding(cell_padding)
+            .into();
 
     with_divider(
         index,
@@ -71,41 +77,41 @@ where
         .into()
 }
 
-pub fn footer_container<'a, Message, Theme, Renderer>(
-    index: usize,
-    footer: Element<'a, Message, Theme, Renderer>,
-    column_width: f32,
-    resize_offset: Option<f32>,
-    on_drag: Option<fn(usize, f32) -> Message>,
-    on_release: Option<Message>,
-    min_column_width: f32,
-    divider_width: f32,
-    cell_padding: Padding,
-    style: <Theme as style::Catalog>::Style,
-) -> Element<'a, Message, Theme, Renderer>
-where
-    Renderer: iced::advanced::Renderer + 'a,
-    Theme: style::Catalog + container::Catalog + 'a,
-    Message: 'a + Clone,
-{
-    let content = 
-        container(footer)
-            .width(Length::Fill)
-            .padding(cell_padding)
-            .into();
+// pub fn footer_container<'a, Message, Theme, Renderer>(
+//     index: usize,
+//     footer: Element<'a, Message, Theme, Renderer>,
+//     column_width: f32,
+//     resize_offset: Option<f32>,
+//     on_drag: Option<fn(usize, f32) -> Message>,
+//     on_release: Option<Message>,
+//     min_column_width: f32,
+//     divider_width: f32,
+//     cell_padding: Padding,
+//     style: <Theme as style::Catalog>::Style,
+// ) -> Element<'a, Message, Theme, Renderer>
+// where
+//     Renderer: iced::advanced::Renderer + 'a,
+//     Theme: style::Catalog + container::Catalog + 'a,
+//     Message: 'a + Clone,
+// {
+//     let content = 
+//         container(footer)
+//             .width(Length::Fill)
+//             .padding(cell_padding)
+//             .into();
 
-    with_divider(
-        index,
-        column_width,
-        resize_offset,
-        content,
-        on_drag,
-        on_release,
-        min_column_width,
-        divider_width,
-        style,
-    )
-}
+//     with_divider(
+//         index,
+//         column_width,
+//         resize_offset,
+//         content,
+//         on_drag,
+//         on_release,
+//         min_column_width,
+//         divider_width,
+//         style,
+//     )
+// }
 
 use super::divider::Divider;
 /// Some docs
@@ -164,12 +170,12 @@ where
     let total_width: f32 = column_widths
         .iter()
         .enumerate()
-        .map(|(idx, _)| {
-            (min_width + resize_offset[idx].unwrap_or_default()).max(min_column_width)
+        .map(|(idx, width)| {
+            (*width + resize_offset[idx].unwrap_or_default()).max(min_column_width)
         })
         .sum();
-
+    
     let remaining = min_width - total_width;
-
+  
     (remaining > 0.0).then(|| container(Space::with_width(remaining)).into())
 }

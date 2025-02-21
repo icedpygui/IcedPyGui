@@ -462,6 +462,7 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                                     }
                                 });
                             tbl.resize_offset[not_none_index] = None;
+                            
                         },
                     }
                     
