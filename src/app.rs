@@ -360,7 +360,6 @@ impl App {
                 Task::none()
             },
             Message::TableSyncHeader(absolute_offset) => {
-                dbg!(absolute_offset);
                 Task::none()
             },
             Message::TableResizing(index, width) => {

@@ -35,6 +35,7 @@ pub struct IpgTable {
         pub highlight_amount: f32,
         pub column_spacing: f32,
         pub row_spacing: f32,
+        pub row_max_height: Option<f32>,
         pub divider_width: f32,
         pub resize_columns_enabled: bool,
         pub min_column_width: Option<f32>,
@@ -68,6 +69,7 @@ impl IpgTable {
         highlight_amount: f32,
         column_spacing: f32,
         row_spacing: f32,
+        row_max_height: Option<f32>,
         divider_width: f32,
         resize_columns_enabled: bool,
         min_column_width: Option<f32>,
@@ -96,6 +98,7 @@ impl IpgTable {
             highlight_amount,
             column_spacing,
             row_spacing,
+            row_max_height,
             divider_width,
             resize_columns_enabled,
             min_column_width,
@@ -203,7 +206,8 @@ pub fn construct_table<'a>(tbl: IpgTable,
                 .width(0)
                 .margin(0)
                 .scroller_width(0),
-        }).into();
+        })
+        .into();
     
     let rows = vec![0; content.len()/tbl.column_widths.len()];
     let body: Element<'a, Message, Theme, Renderer> = 
@@ -221,6 +225,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             min_column_width,
                             tbl.divider_width,
                             cell_padding,
+                            tbl.row_max_height,
                         )
                     })
                     .chain(dummy_container(
@@ -242,7 +247,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
             horizontal: scrollbar,
             vertical: scrollbar,
         })
-        .height(Length::Fixed(300.0))
+        .height(Length::Fixed(tbl.height))
         .into();
     
     if tbl.footer_enabled {

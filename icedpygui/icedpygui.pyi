@@ -2428,6 +2428,7 @@ class IPG:
                     highlight_amount: float=0.15,
                     column_spacing: float=5.0,
                     row_spacing: float=5.0,
+                    row_max_height: Optional[float]=None,
                     cell_padding: float=0.0,
                     table_width_fixed: bool=True,
                     gen_id: Optional[int]=None,
@@ -2446,10 +2447,6 @@ class IPG:
                 The id of the container.
             title: str
                 Title used for table.
-            data: List[Dict]
-                A list of dictionaries, each dictionary contains only one type.
-            data_length: int
-                The length of the data.
             width: float
                 Width of the table.
             height: float
@@ -5183,8 +5180,10 @@ class IpgTableParam:
         List of column widths.
     ColumnSpacing: float
         Spacing between columns
-    RowSpacing: float,
+    RowSpacing: float
         Spacing between rows
+    RowMaxHeight: float
+        Max height of the rows
     RowHighlight: IpgTableRowHighLight
         Sets the color type for highlighting alternate rows.
     HighlightAmount: float
@@ -5214,6 +5213,7 @@ class IpgTableParam:
     ColumnWidths: list[float]
     ColumnSpacing: float
     RowSpacing: float
+    RowMaxHeight: float
     RowHighlight: IpgTableRowHighLight
     HighlightAmount: float
     DividerWidth: float

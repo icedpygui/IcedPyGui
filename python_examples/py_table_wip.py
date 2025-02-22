@@ -18,9 +18,11 @@ def checkbox(tbl_id: int, on_toggle: bool):
         
     ipg.update_item(total_id, IpgTextParam.Content, f"Total Checked = {total_checks}")
 
+
 def show_modal(btn_id: int, index: tuple[int, int]):
     ipg.update_item(modal_id, IpgContainerParam.Show, True)
     ipg.update_item(modal_title, IpgTextParam.Content, f"Modal for Row {index[0]}")
+
 
 def close_modal(btn_id: int):
     ipg.update_item(modal_id, IpgContainerParam.Show, False)
@@ -38,12 +40,10 @@ ipg.add_window(
         title="Table Demo",
         width=1000, 
         height=600,
-        pos_x=100, 
-        pos_y=25,
+        pos_centered=True,
         debug=False)
 
-# Add the container, since the table requires a width and height,
-# the container can shrink(default) to fit.
+# Add the container for centering the table
 ipg.add_container(
         window_id="main", 
         container_id="cont",
@@ -53,15 +53,11 @@ ipg.add_container(
 
 column_widths = [100.0, 200.0, 150.0, 150.0, 150.0]
 width = sum(column_widths)
-height = 400.0
 
 ipg.add_stack(
         window_id="main",
         container_id="stack",
-        parent_id="cont",
-        width = width,
-        height=height,
-        )
+        parent_id="cont")
 
 # The table is added.
 ipg.add_table(
@@ -70,7 +66,7 @@ ipg.add_table(
         parent_id="stack",
         title="My Table",
         column_widths=column_widths,
-        height=height,
+        height=400.0,
         footer_enabled=True,
         table_width_fixed=True, # defaults to True, change to False to see the effect
         )

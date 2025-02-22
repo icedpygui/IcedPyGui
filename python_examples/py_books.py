@@ -1,6 +1,6 @@
 import random
 import os
-from icedpygui import IPG, IpgTableRowHighLight, IpgTableWidget, IpgTableParam, IpgColor
+from icedpygui import IPG, IpgTableRowHighLight, IpgTableParam, IpgColor
 from icedpygui import IpgTextParam, IpgAlignment, IpgHorizontalAlignment, IpgVerticalAlignment, IpgTextInputParam
 from icedpygui import IpgButtonParam, IpgPickListParam, IpgDatePickerParam
 import polars as pl
@@ -21,11 +21,17 @@ class Books:
     def __init__(self):
         self.ipg = IPG()
         self.df = pl.DataFrame
+        
+        self.wnd_width = 1200.0
+        self.wnd_height = 600.0
+        
         self.book_list = []
         self.column_names = []
         self.table_list = pl.DataFrame()
         #          index,Title,Series,Num,Author,Status,Returned,Source,Url
-        self.widths = [75, 200, 200, 40, 150, 100, 100, 150, 100]
+        self.column_widths = [75, 200, 200, 40, 150, 100, 100, 150, 100]
+        self.tbl_width = sum(self.column_widths)
+        self.tbl_height = 600.0
 
         self.table_id=0
 
@@ -41,11 +47,14 @@ class Books:
         self.status_list = ["None", "Read", "To Be Read", "Maybe Continue Series", "Final", "Publish Date",
                             "Won't Finish", "Checked"]
         self.source_list = ["None", "Amazon Unlimited", "Amazon", "Library"]
+        
+        self.btn_style_id = 0
 
     def start(self):
         self.load()
+        self.create_styles()
         self.create_table()
-        self.create_modal()
+        # self.create_modal()
         self.ipg.start_session()
 
     def load(self):
@@ -72,27 +81,100 @@ class Books:
             else:
                 self.book_list.append({name: self.df.get_column(name).to_list()})
             
-        
+    def create_styles(self):
+        self.btn_style_id = self.ipg.add_button_style(border_radius=[10.0])
+    
+    # ******************************create table************************************
     def create_table(self):
-        self.ipg.add_window(window_id="main", title="Books",
-                            width=1200, height=600,
-                            pos_x=100, pos_y=50,
-                            )
+        self.ipg.add_window(
+                    window_id="main", 
+                    title="Books",
+                    width=self.wnd_width, 
+                    height=self.wnd_height,
+                    pos_centered=True)
+
+        # Add the container for centering the table
+        self.ipg.add_container(
+                    window_id="main", 
+                    container_id="cont",
+                    width_fill=True, 
+                    height_fill=True,
+                    padding=[10.0])
+        
+        # Since a modal is needed, add a stack
+        # the stack will be as big as the table
+        # becuase the default is Shrink
+        self.ipg.add_stack(
+                    window_id="main",
+                    container_id="stack",
+                    parent_id="cont")
 
         # add the table
-        self.table_id = self.ipg.add_table(window_id="main",
-                                            table_id="table",
-                                            title="Books",
-                                            data=self.book_list,
-                                            data_length=len(self.df),
-                                            width=sum(self.widths), height=600.0,
-                                            column_widths=self.widths,
-                                            row_highlight=IpgTableRowHighLight.Lighter,
-                                            highlight_amount=0.1,
-                                            button_fill_columns=[0],
-                                            on_button=self.open_modal,
-                                            )
-    # create the modal
+        # Once the table is created, the next additions to the
+        # table MUST follow in order, column names (if enabled), rows, footer(if enabled)
+        # The additions can occur at any time just as long as they are in order.
+        # The reason is that during the processing, a vector containing all of the widgets
+        # are sent to the table where the extraction of each group occurs.  Therefore, if the
+        # column names were not added first then the first row would be added in as column names
+        # unless the header is disabled.
+        # Since we are using a stack as the "modal", we add the table to the stack
+        # The container you want to appear will be add later and a show and hide
+        # operation will reveal it.  Since it will be sitting on top of the stack,
+        # it will be seen when shown.
+        self.table_id = self.ipg.add_table(
+                                    window_id="main",
+                                    table_id="table",
+                                    parent_id="stack",
+                                    title="Books",
+                                    column_widths=self.column_widths,
+                                    height=self.tbl_height)
+        
+        # create columns
+        # In ths case we have centered the names
+        # The parent id has to match that of the table
+        for name in self.column_names:
+            self.ipg.add_text(
+                        parent_id="table",
+                        content=name,
+                        align_x=IpgHorizontalAlignment.Center,
+                        align_y=IpgVerticalAlignment.Center,
+                        width_fill=True)
+            
+        # Add the rows
+        # The were pulls out of a polars df and put into a py list of columns
+        # Ideally, you would just pass along the df and all of this would happen
+        # in rust but that is a future enhancement.
+        for i in range(0, len(self.df)):
+            row = self.df.row(i)
+            for j in range(0, len(row)):
+                if j == 0:
+                    self.ipg.add_button(
+                                parent_id="table",
+                                label="Edit",
+                                width=self.column_widths[0],
+                                style_id=self.btn_style_id,
+                                text_align_x=IpgHorizontalAlignment.Center,
+                                on_press=self.open_modal,
+                                user_data=i)
+                elif self.column_names[j] == "Url" and row[j] != "":
+                    self.ipg.add_button(
+                                parent_id="table",
+                                label=self.column_names[j],
+                                width=self.column_widths[j],
+                                style_id=self.btn_style_id,
+                                text_align_x=IpgHorizontalAlignment.Center,
+                                on_press=self.show_url,
+                                user_data=row[j])
+                else:
+                    self.ipg.add_text(
+                                parent_id="table",
+                                content=row[j],
+                                width_fill=True,
+                                align_x=IpgHorizontalAlignment.Center,
+                                align_y=IpgVerticalAlignment.Center,
+                                )
+        
+    # ******************************create modal************************************
     def create_modal(self):
         # add some styling to the modal container
         self.ipg.add_container_style(style_id="modal_style", 
@@ -178,7 +260,7 @@ class Books:
                             label="Delete Book", 
                             on_press=self.delete_book)
 
-    # The modal button returns the table_id and the row, column tuple
+    # ******************************open modal************************************
     def open_modal(self, tbl_id: int, index: tuple[int, int]):
         # get the row by filtering it out and converting to a dictionary, for ease of use
         self.modal_row = self.df.filter(pl.col("index") == index[0]).to_dict()
@@ -296,5 +378,8 @@ class Books:
 
         self.ipg.update_item(self.table_id, IpgTableParam.Data, self.book_list)
 
+    def show_url(self, btn_id: int, url: str):
+        print(url)
+    
 books = Books()
 books.start()

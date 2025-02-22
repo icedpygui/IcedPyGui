@@ -57,6 +57,7 @@ pub fn body_container<'a, Message, Theme, Renderer>(
     min_column_width: f32,
     divider_width: f32,
     cell_padding: Padding,
+    row_max_height: Option<f32>,
 ) -> Element<'a, Message, Theme, Renderer>
 where
     Renderer: iced::advanced::Renderer + 'a,
@@ -68,12 +69,21 @@ where
     let content: Element<'a, Message, Theme, Renderer> = 
         container(column)
         .width(Length::Fill)
-        .padding(cell_padding).into();
+        .padding(cell_padding)
+        .into();
 
     let spacing = Space::new(divider_width, Length::Shrink);
 
+    let height = if row_max_height.is_some() {
+        Length::Fixed(row_max_height.unwrap())
+    } else {
+        Length::Shrink
+    };
+
     row![content, spacing]
         .width(width.max(min_column_width))
+        .clip(true)
+        .height(height)
         .into()
 }
 
