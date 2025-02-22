@@ -1,14 +1,12 @@
 from icedpygui import IPG, IpgHorizontalAlignment, IpgVerticalAlignment
 from icedpygui import IpgTableRowHighLight, IpgColor, IpgTextParam
+from icedpygui import IpgContainerParam, IpgAlignment
 
 ipg = IPG()
 
 global total_checks
 total_checks = 0
 total_id = 0
-
-def button(tbl_id: int, index: tuple[int, int]):
-    print(tbl_id, index)
 
 
 def checkbox(tbl_id: int, on_toggle: bool):
@@ -20,8 +18,12 @@ def checkbox(tbl_id: int, on_toggle: bool):
         
     ipg.update_item(total_id, IpgTextParam.Content, f"Total Checked = {total_checks}")
 
-def toggler(tbl_id: int, on_toggle: bool, index: tuple[int, int]):
-    print(tbl_id, index, on_toggle)
+def show_modal(btn_id: int, index: tuple[int, int]):
+    ipg.update_item(modal_id, IpgContainerParam.Show, True)
+    ipg.update_item(modal_title, IpgTextParam.Content, f"Modal for Row {index[0]}")
+
+def close_modal(btn_id: int):
+    ipg.update_item(modal_id, IpgContainerParam.Show, False)
 
 
 btn_style = ipg.add_button_style(border_radius=[10.0])
@@ -49,16 +51,26 @@ ipg.add_container(
         height_fill=True,
         padding=[20.0])
 
-column_widths = [150.0, 200.0, 150.0, 150.0, 150.0]
+column_widths = [100.0, 200.0, 150.0, 150.0, 150.0]
+width = sum(column_widths)
+height = 400.0
+
+ipg.add_stack(
+        window_id="main",
+        container_id="stack",
+        parent_id="cont",
+        width = width,
+        height=height,
+        )
 
 # The table is added.
 ipg.add_table(
         window_id="main",
         table_id="table",
-        parent_id="cont",
+        parent_id="stack",
         title="My Table",
         column_widths=column_widths,
-        height=400.0,
+        height=height,
         footer_enabled=True,
         table_width_fixed=True, # defaults to True, change to False to see the effect
         )
@@ -74,7 +86,7 @@ for i, head in enumerate(headers):
         width_fill=True)
 
 # fill in the table rows
-for i in range(0, 5):
+for i in range(0, 40):
     for j in range(0, len(headers)):
         if j == 0:
             ipg.add_button(
@@ -83,7 +95,7 @@ for i in range(0, 5):
                 width=column_widths[0],
                 style_id=btn_style,
                 text_align_x=IpgHorizontalAlignment.Center,
-                on_press=button,
+                on_press=show_modal,
                 user_data=(i, j)
                 )
         elif j == 1:
@@ -133,6 +145,49 @@ for i in range(0, len(headers)):
                 parent_id="table",
                 content="",
                 width_fill=True)       
+
+modal_style = ipg.add_container_style(
+                    background_color=IpgColor.DARK_SLATE_GRAY
+                    )
+
+modal_id = ipg.add_container(
+                    window_id="main",
+                    container_id="stack_base",
+                    parent_id="stack",
+                    width_fill=True,
+                    height_fill=True,
+                    centered=True,
+                    show=False,
+                    )
+
+ipg.add_container(
+        window_id="main",
+        container_id="modal",
+        parent_id="stack_base",
+        width=200.0,
+        height=300.0,
+        style_id=modal_style,
+        )
+
+ipg.add_column(
+        window_id="main",
+        container_id="modal_col",
+        parent_id="modal",
+        width_fill=True,
+        height_fill=True,
+        align_x=IpgAlignment.Center,
+        )
+
+modal_title = ipg.add_text(
+                    parent_id="modal_col",
+                    content="Modal",
+                    )
+
+ipg.add_button(
+        parent_id="modal_col",
+        label="Close Modal",
+        on_press=close_modal,
+        )
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

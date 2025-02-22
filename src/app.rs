@@ -91,16 +91,9 @@ pub enum Message {
     Slider(usize, SLMessage),
     Svg(usize, SvgMessage),
 
-    TableScrolled(Viewport, usize),
     TableSyncHeader(scrollable::AbsoluteOffset),
     TableResizing(usize, f32),
     TableResized,
-    TableOnDrag,
-    TableOnColumnRelease,
-    TableMouseOnPress(usize, usize),
-    TableMouseOnMove(Point, usize, usize),
-    TableMouseOnRelease(usize),
-    TableMouseOnExit(usize),
 
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
@@ -317,11 +310,6 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
-            // Message::Table(id, message) => {
-            //     table_callback(&mut self.state, id, message);
-            //     process_updates(&mut self.state, &mut self.canvas_state);
-            //     Task::none()
-            // },
             Message::TextInput(id, message) => {
                 text_input_callback(&mut self.state, id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
@@ -371,11 +359,8 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
-            Message::TableScrolled(viewport, line) => {
-                dbg!("table scroll", viewport, line);
-                Task::none()
-            },
             Message::TableSyncHeader(absolute_offset) => {
+                dbg!(absolute_offset);
                 Task::none()
             },
             Message::TableResizing(index, width) => {
@@ -383,32 +368,6 @@ impl App {
                 Task::none()
             },
             Message::TableResized => {
-                table_callback(&mut self.state, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
-                Task::none()
-            },
-            Message::TableOnDrag => {
-                Task::none()
-            },
-            Message::TableOnColumnRelease => {
-                Task::none()
-            },
-            Message::TableMouseOnPress(id, index) => {
-                table_callback(&mut self.state, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
-                Task::none()
-            },
-            Message::TableMouseOnMove(point, id, index) => {
-                table_callback(&mut self.state, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
-                Task::none()
-            },
-            Message::TableMouseOnRelease(id) => {
-                table_callback(&mut self.state, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
-                Task::none()
-            },
-            Message::TableMouseOnExit(id) => {
                 table_callback(&mut self.state, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()

@@ -4293,6 +4293,7 @@ class IpgContainerParam:
     WidthFill=bool
     Height=float
     HeightFill=bool
+    Show=bool
 
 
 class IpgContainerStyleParam:

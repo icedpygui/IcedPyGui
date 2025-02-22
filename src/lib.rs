@@ -1723,7 +1723,7 @@ impl IPG {
 
         let resize_offset =  (0..column_widths.len()).map(|_| None).collect();
         let mut table_width = column_widths.iter().sum();
-        table_width += 20.0;
+        table_width += scroller_bar_width + scroller_margin + 10.0;
 
         add_callback_to_mutex(id, "on_press".to_string(), None);
         add_callback_to_mutex(id, "on_release".to_string(), None);

@@ -101,6 +101,7 @@ pub fn construct_container(con: IpgContainer,
                             style_opt: Option<IpgWidgets> ) 
                             -> Element<Message> {
 
+    if !con.show {return horizontal_space().into()}
     let align_h = get_horizontal_alignment(con.align_x);
     let align_v = get_vertical_alignment(con.align_y);
     let style = get_cont_style(style_opt);
@@ -141,6 +142,7 @@ pub enum IpgContainerParam {
     Height,
     HeightFill,
     Clip,
+    Show,
 }
 
 pub fn container_item_update(cont: &mut IpgContainer,
@@ -188,6 +190,9 @@ pub fn container_item_update(cont: &mut IpgContainer,
         IpgContainerParam::Clip => {
             cont.clip = try_extract_boolean(value);
         },
+        IpgContainerParam::Show => {
+            cont.show = try_extract_boolean(value);
+        }
     }
 }
 

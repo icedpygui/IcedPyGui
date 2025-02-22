@@ -115,13 +115,6 @@ impl IpgTable {
     }
 }
 
-// #[derive(Debug, Clone)]
-// pub enum TableMessage {
-//     Scrolled(Viewport, usize),
-//     SyncHeader(scrollable::AbsoluteOffset),
-//     Resizing(usize, f32),
-//     Resized,
-// }
 
 #[derive(Debug, Clone, Copy)]
 #[pyclass]
@@ -243,7 +236,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
         .id(tbl.body_id)
         .on_scroll(move |viewport| {
             let offset = viewport.absolute_offset();
-            (Message::TableSyncHeader)(scrollable::AbsoluteOffset { y: 0.0, ..offset })
+            (Message::TableSyncHeader)(scrollable::AbsoluteOffset { x: offset.x, y: offset.y })
         })
         .direction(scrollable::Direction::Both {
             horizontal: scrollbar,
@@ -298,7 +291,6 @@ pub fn construct_table<'a>(tbl: IpgTable,
         } else {
             col.into()
         }
-        
     } else {
         let col =  column![header, body];
         if tbl.table_width_fixed {
