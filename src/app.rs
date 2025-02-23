@@ -92,8 +92,8 @@ pub enum Message {
     Svg(usize, SvgMessage),
 
     TableSyncHeader(scrollable::AbsoluteOffset),
-    TableResizing(usize, f32),
-    TableResized,
+    TableResizing((usize, usize), f32),
+    TableResized(usize),
 
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
@@ -362,11 +362,11 @@ impl App {
             Message::TableSyncHeader(absolute_offset) => {
                 Task::none()
             },
-            Message::TableResizing(index, width) => {
+            Message::TableResizing((id, index), width) => {
                 table_callback(&mut self.state, message);
                 Task::none()
             },
-            Message::TableResized => {
+            Message::TableResized(id) => {
                 table_callback(&mut self.state, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()

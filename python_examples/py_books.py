@@ -21,6 +21,7 @@ class Books:
     def __init__(self):
         self.ipg = IPG()
         self.df = pl.DataFrame
+        self.df_ids = pl.DataFrame
         
         self.wnd_width = 1200.0
         self.wnd_height = 600.0
@@ -47,6 +48,7 @@ class Books:
         self.status_list = ["None", "Read", "To Be Read", "Maybe Continue Series", "Final", "Publish Date",
                             "Won't Finish", "Checked"]
         self.source_list = ["None", "Amazon Unlimited", "Amazon", "Library"]
+        self.sort_selected = "None"
         
         self.btn_style_id = 0
 
@@ -64,22 +66,17 @@ class Books:
                               missing_utf8_is_empty_string=True)
         self.df = self.df.sort(["Author", "Series", "Num"])
         
-        self.book_list = []
         self.column_names = self.df.columns
 
-        for name in self.column_names:
-            if name == "Returned":
-                str_dates = []
-                # trying to ensure that the string that looks like a date is in fact kept a string
-                # Currently, dates are not extracted to strings in ipg.  Strings are needed to display
-                # the data.  This appears to be needed in this case or the column will be skipped
-                # over and not displayed.
-                for n in self.df.get_column(name).to_list():
-                    str_dates.append(f"{n}") 
-                
-                self.book_list.append({name: str_dates})
-            else:
-                self.book_list.append({name: self.df.get_column(name).to_list()})
+        # make a new dataframe for ids so that the rows can be edited/filtered/updated
+        ids = {}
+        scheme = {}
+        for i in range(0, 9):
+            ids[str(i)] = []
+            scheme[str(i)] = pl.Int64
+        
+        self.df_ids = pl.DataFrame(ids, scheme)
+
             
     def create_styles(self):
         self.btn_style_id = self.ipg.add_button_style(border_radius=[10.0])
@@ -129,16 +126,47 @@ class Books:
                                     column_widths=self.column_widths,
                                     height=self.tbl_height)
         
-        # create columns
+        # create columns/header row
         # In ths case we have centered the names
         # The parent id has to match that of the table
-        for name in self.column_names:
-            self.ipg.add_text(
+        for (i, name) in enumerate(self.column_names):
+            self.ipg.add_column(
+                        window_id="main",
+                        container_id=f"header{i}",
                         parent_id="table",
+                        width_fill=True)
+            self.ipg.add_text(
+                        parent_id=f"header{i}",
                         content=name,
                         align_x=IpgHorizontalAlignment.Center,
                         align_y=IpgVerticalAlignment.Center,
                         width_fill=True)
+            
+            if name == "Author":
+                self.ipg.add_pick_list(
+                            parent_id=f"header{i}",
+                            options=self.sort_list,
+                            on_select=self.filter_books_author,
+                            selected=self.sort_selected,
+                            width_fill=True)
+                
+            if name == "Status":
+                self.ipg.add_pick_list(
+                            parent_id=f"header{i}",
+                            options=self.status_list,
+                            on_select=self.filter_books_status,
+                            selected=self.sort_selected,
+                            width_fill=True)
+                
+            if name == "Source":
+                self.ipg.add_pick_list(
+                            parent_id=f"header{i}",
+                            options=self.source_list,
+                            on_select=self.filter_books_source,
+                            selected=self.sort_selected,
+                            width_fill=True)
+                
+                
             
         # Add the rows
         # The were pulls out of a polars df and put into a py list of columns
@@ -146,33 +174,42 @@ class Books:
         # in rust but that is a future enhancement.
         for i in range(0, len(self.df)):
             row = self.df.row(i)
+            ids = {}
+            for k in range(0, 8):
+                ids[str(k)] = []
             for j in range(0, len(row)):
                 if j == 0:
-                    self.ipg.add_button(
-                                parent_id="table",
-                                label="Edit",
-                                width=self.column_widths[0],
-                                style_id=self.btn_style_id,
-                                text_align_x=IpgHorizontalAlignment.Center,
-                                on_press=self.open_modal,
-                                user_data=i)
+                    ids[str(j)] = self.ipg.add_button(
+                                    parent_id="table",
+                                    label="Edit",
+                                    width=self.column_widths[0],
+                                    style_id=self.btn_style_id,
+                                    text_align_x=IpgHorizontalAlignment.Center,
+                                    on_press=self.open_modal,
+                                    padding=[0.0],
+                                    user_data=i)
+                    
                 elif self.column_names[j] == "Url" and row[j] != "":
-                    self.ipg.add_button(
-                                parent_id="table",
-                                label=self.column_names[j],
-                                width=self.column_widths[j],
-                                style_id=self.btn_style_id,
-                                text_align_x=IpgHorizontalAlignment.Center,
-                                on_press=self.show_url,
-                                user_data=row[j])
+                    ids[str(j)] = self.ipg.add_button(
+                                    parent_id="table",
+                                    label=self.column_names[j],
+                                    width=self.column_widths[j],
+                                    style_id=self.btn_style_id,
+                                    text_align_x=IpgHorizontalAlignment.Center,
+                                    on_press=self.show_url,
+                                    padding=[0.0],
+                                    user_data=row[j])
                 else:
-                    self.ipg.add_text(
-                                parent_id="table",
-                                content=row[j],
-                                width_fill=True,
-                                align_x=IpgHorizontalAlignment.Center,
-                                align_y=IpgVerticalAlignment.Center,
-                                )
+                    ids[str(j)] = self.ipg.add_text(
+                                    parent_id="table",
+                                    content=row[j],
+                                    width_fill=True,
+                                    align_x=IpgHorizontalAlignment.Center,
+                                    align_y=IpgVerticalAlignment.Center,
+                                    )
+
+            new_df = pl.DataFrame(ids)
+            self.df_ids = pl.concat([self.df_ids, new_df]) 
         
     # ******************************create modal************************************
     def create_modal(self):
@@ -380,6 +417,15 @@ class Books:
 
     def show_url(self, btn_id: int, url: str):
         print(url)
+
+    def filter_books_author(self, pick_id: int, selected: str):
+        print(selected)
+
+    def filter_books_status(self, pick_id: int, selected: str):
+        print(selected)
+
+    def filter_books_source(self, pick_id: int, selected: str):
+        print(selected)
     
 books = Books()
 books.start()

@@ -59,6 +59,11 @@ ipg.add_stack(
         container_id="stack",
         parent_id="cont")
 
+# ipg.add_opaque_container(
+#         window_id="main",
+#         container_id="opaque",
+#         parent_id="stack")
+
 # The table is added.
 ipg.add_table(
         window_id="main",

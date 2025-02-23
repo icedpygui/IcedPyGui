@@ -15,11 +15,12 @@ use super::style;
 
 /// Some docs
 pub fn single_row_container<'a, Message, Theme, Renderer>(
+        id: usize,
         index: usize,
         column: Element<'a, Message, Theme, Renderer>,
         column_width: f32,
         resize_offset: Option<f32>,
-        on_drag: Option<fn(usize, f32) -> Message>,
+        on_drag: Option<fn((usize, usize), f32) -> Message>,
         on_release: Option<Message>,
         min_column_width: f32,
         divider_width: f32,
@@ -38,6 +39,7 @@ pub fn single_row_container<'a, Message, Theme, Renderer>(
             .into();
 
     with_divider(
+        id,
         index,
         column_width,
         resize_offset,
@@ -126,11 +128,12 @@ where
 use super::divider::Divider;
 /// Some docs
 pub fn with_divider<'a, Message, Theme, Renderer>(
+    id: usize,
     index: usize,
     column_width: f32,
     resize_offset: Option<f32>,
     content: Element<'a, Message, Theme, Renderer>,
-    on_drag: Option<fn(usize, f32) -> Message>,
+    on_drag: Option<fn((usize, usize), f32) -> Message>,
     on_release: Option<Message>,
     min_column_width: f32,
     divider_width: f32,
@@ -151,7 +154,7 @@ pub fn with_divider<'a, Message, Theme, Renderer>(
             move |offset| {
                 let new_width = (old_width + offset).max(min_column_width);
 
-                (on_drag)(index, new_width - old_width)
+                (on_drag)((id, index), new_width - old_width)
             },
             on_release,
             style,

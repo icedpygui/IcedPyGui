@@ -178,12 +178,13 @@ pub fn construct_table<'a>(tbl: IpgTable,
                 .enumerate()
                 .map(|(index, column_width)| {
                     single_row_container(
+                        tbl.id,
                         index,
                         columns.remove(0),
                         *column_width,
                         tbl.resize_offset[index],
                         Some(Message::TableResizing),
-                        Some(Message::TableResized),
+                        Some(Message::TableResized(tbl.id)),
                         min_column_width,
                         tbl.divider_width,
                         cell_padding,
@@ -259,12 +260,13 @@ pub fn construct_table<'a>(tbl: IpgTable,
                     .enumerate()
                     .map(|(index, width)| {
                         single_row_container(
+                            tbl.id,
                             index,
                             footers.remove(0),
                             *width,
                             tbl.resize_offset[index],
                             Some(Message::TableResizing),
-                            Some(Message::TableResized),
+                            Some(Message::TableResized(tbl.id)),
                             min_column_width,
                             tbl.divider_width,
                             cell_padding,
@@ -318,17 +320,18 @@ fn get_scrollbar(alignment: Anchor, width: f32, margin: f32, scroller_width: f32
 pub fn table_callback(state: &mut IpgState, message: Message) {
 
     match message {
-        Message::TableResizing(index, offset) => {
-            let wci = WidgetCallbackIn{id: 6,
-                            index: Some(index),
-                            value_float_32: Some(offset),
-                            table_mouse: IpgTableMouse::Resizing,
-                            ..Default::default()};
+        Message::TableResizing((id, index), offset) => {
+            let wci = WidgetCallbackIn{
+                id,
+                index: Some(index),
+                value_float_32: Some(offset),
+                table_mouse: IpgTableMouse::Resizing,
+                ..Default::default()};
             let _ = set_or_get_widget_callback_data(state, wci);
         },
-        Message::TableResized => {
+        Message::TableResized(id) => {
             let wci = WidgetCallbackIn{
-                id: 6,
+                id,
                 table_mouse: IpgTableMouse::Resized,
                 ..Default::default()};
             let _ = set_or_get_widget_callback_data(state, wci);
