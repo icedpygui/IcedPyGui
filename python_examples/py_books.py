@@ -181,7 +181,7 @@ class Books:
                 if j == 0:
                     ids[str(j)] = self.ipg.add_button(
                                     parent_id="table",
-                                    label="Edit",
+                                    label=f"Edit{i}",
                                     width=self.column_widths[0],
                                     style_id=self.btn_style_id,
                                     text_align_x=IpgHorizontalAlignment.Center,
@@ -221,7 +221,7 @@ class Books:
         
         # finally, concat the ids with the data vertically so that they remain together
         self.df = pl.concat([self.df, df_ids], how="horizontal", rechunk=True)
-        # print(self.df.head(5))
+        print(self.df)
         
     # ******************************create modal************************************
     def create_modal(self):
@@ -435,15 +435,17 @@ class Books:
             for id in self.list_ids:
                 self.ipg.show_item("main", id, True)
             return
-       
+        print(self.df)
         # filter the df
         df = self.df.filter(pl.col('Author').str.to_lowercase().str.starts_with(selected.lower()))
+        print(df)
         # select only the columns with the ids
         keepers = df.select(self.column_id_names)
+        print(df)
         list_to_keep = []
         for column in keepers.iter_columns():
             list_to_keep.extend(column.to_list())
-
+        print(len(list_to_keep))
         for id in self.list_ids:
             if id not in list_to_keep:
                 self.ipg.show_item("main", id, False)

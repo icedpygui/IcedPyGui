@@ -7,7 +7,20 @@ ipg = IPG()
 global total_checks
 total_checks = 0
 total_id = 0
-
+selected = "None"
+ids = []
+filered_ids = []
+data = [
+    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5],
+]
 
 def checkbox(tbl_id: int, on_toggle: bool):
     global total_checks
@@ -27,6 +40,9 @@ def show_modal(btn_id: int, index: tuple[int, int]):
 def close_modal(btn_id: int):
     ipg.update_item(modal_id, IpgContainerParam.Show, False)
 
+
+def filter(pick_id: int, select: str):
+    print(select)
 
 btn_style = ipg.add_button_style(border_radius=[10.0])
 chk_style = ipg.add_checkbox_style(border_width=3.0)
@@ -59,11 +75,6 @@ ipg.add_stack(
         container_id="stack",
         parent_id="cont")
 
-# ipg.add_opaque_container(
-#         window_id="main",
-#         container_id="opaque",
-#         parent_id="stack")
-
 # The table is added.
 ipg.add_table(
         window_id="main",
@@ -79,57 +90,58 @@ ipg.add_table(
 # create headers
 headers = ["one", "two", "three", "four", "five"]
 for i, head in enumerate(headers):
+    ipg.add_column(
+            window_id="main",
+            container_id=f"header{i}",
+            parent_id="table",
+            width_fill=True)
     ipg.add_text(
-        parent_id="table",
+        parent_id=f"header{i}",
         content=head,
         align_x=IpgHorizontalAlignment.Center,
         align_y=IpgVerticalAlignment.Center,
         width_fill=True)
+    if i == 2:
+        ipg.add_pick_list(
+            parent_id=f"header{i}",
+            options=["None", "1", "2", "3", "4", "5"],
+            on_select=filter,
+            selected=selected,
+            width_fill=True)
 
 # fill in the table rows
-for i in range(0, 1):
+for i in range(0, len(data)):
     for j in range(0, len(headers)):
         if j == 0:
-            ipg.add_button(
-                parent_id="table",
-                label="Edit",
-                width=column_widths[0],
-                style_id=btn_style,
-                text_align_x=IpgHorizontalAlignment.Center,
-                on_press=show_modal,
-                user_data=(i, j)
-                )
+            id = ipg.add_button(
+                    parent_id="table",
+                    label="Edit",
+                    width=column_widths[0],
+                    style_id=btn_style,
+                    text_align_x=IpgHorizontalAlignment.Center,
+                    on_press=show_modal,
+                    user_data=(i, j)
+                    )
+            ids.append(id)
         elif j == 1:
             checked = True
             if i % 5 == 0:
                 checked = False
             else:
                 total_checks += 1
-            # container used for center the widget
-            # Since the checkbox does't have a label
-            # and that the table column widht is longer 
-            # due to the footer, a container was needed 
-            # to help the alignment in this case.
-            ipg.add_container(
-                    window_id="main",
-                    container_id=f"chk_cont{i}",
-                    parent_id="table",
-                    width_fill=True,
-                    centered=True
-                )
-            ipg.add_checkbox(
-                parent_id=f"chk_cont{i}",
-                on_toggle=checkbox,
-                is_checked=checked,
-                )
+            id = ipg.add_checkbox(
+                        parent_id="table",
+                        on_toggle=checkbox,
+                        is_checked=checked)
+            ids.append(id)
         else:
-            ipg.add_text(
-                parent_id="table",
-                content=str(i),
-                width_fill=True,
-                align_x=IpgHorizontalAlignment.Center,
-                align_y=IpgVerticalAlignment.Center,
-                )
+            id = ipg.add_text(
+                        parent_id="table",
+                        content=str(i),
+                        width_fill=True,
+                        align_x=IpgHorizontalAlignment.Center,
+                        align_y=IpgVerticalAlignment.Center)
+            ids.append(id)
 
 # add footer
 for i in range(0, len(headers)):
