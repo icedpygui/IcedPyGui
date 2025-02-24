@@ -32,6 +32,7 @@ pub struct IpgCard {
     pub body: String,
     pub foot: Option<String>,
     pub style: Option<PyObject>,
+    pub show: bool,
 }
 
 impl IpgCard {
@@ -52,6 +53,7 @@ impl IpgCard {
         body: String,
         foot: Option<String>,
         style: Option<PyObject>,
+        show: bool,
         ) -> Self {
         Self {
             id,
@@ -70,6 +72,7 @@ impl IpgCard {
             body,
             foot,
             style,
+            show,
         }
     }
 }
@@ -216,6 +219,7 @@ pub enum IpgCardParam {
     Foot,
     IsOpen,
     Style,
+    Show,
 }
 
 
@@ -241,6 +245,9 @@ pub fn card_item_update(crd: &mut IpgCard,
         },
         IpgCardParam::Style => {
             crd.style = Some(value);
+        },
+        IpgCardParam::Show => {
+            crd.show = try_extract_boolean(value);
         },
     }
 }

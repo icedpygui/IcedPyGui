@@ -21,7 +21,6 @@ class Books:
     def __init__(self):
         self.ipg = IPG()
         self.df = pl.DataFrame
-        self.df_ids = pl.DataFrame
         
         self.wnd_width = 1200.0
         self.wnd_height = 600.0
@@ -35,6 +34,9 @@ class Books:
         self.tbl_height = 600.0
 
         self.table_id=0
+        self.column_id_names = [ str(i) for i in range(0, len(self.column_widths)) ]
+        self.ids = pl.Series
+        self.list_ids = []
 
         self.modal_col_ids = []
         self.current_modal_row = -1
@@ -54,7 +56,7 @@ class Books:
 
     def start(self):
         self.load()
-        self.create_styles()
+        # self.create_styles()
         self.create_table()
         # self.create_modal()
         self.ipg.start_session()
@@ -68,16 +70,6 @@ class Books:
         
         self.column_names = self.df.columns
 
-        # make a new dataframe for ids so that the rows can be edited/filtered/updated
-        ids = {}
-        scheme = {}
-        for i in range(0, 9):
-            ids[str(i)] = []
-            scheme[str(i)] = pl.Int64
-        
-        self.df_ids = pl.DataFrame(ids, scheme)
-
-            
     def create_styles(self):
         self.btn_style_id = self.ipg.add_button_style(border_radius=[10.0])
     
@@ -169,9 +161,17 @@ class Books:
                 
             
         # Add the rows
-        # The were pulls out of a polars df and put into a py list of columns
-        # Ideally, you would just pass along the df and all of this would happen
-        # in rust but that is a future enhancement.
+        # make a new dataframe for ids so that the rows can be edited/filtered/updated
+        ids = {}
+        scheme = {}
+        for i in range(0, 9):
+            ids[str(i)] = []
+            scheme[str(i)] = pl.Int64
+        
+        df_ids = pl.DataFrame(ids, scheme)
+
+        # iter through the rows to create the needed widgets
+        # is are loaded into a df
         for i in range(0, len(self.df)):
             row = self.df.row(i)
             ids = {}
@@ -200,16 +200,28 @@ class Books:
                                     padding=[0.0],
                                     user_data=row[j])
                 else:
+                    content = row[j]
+                    if row[j] == "":
+                        content = "empty"
+                    
                     ids[str(j)] = self.ipg.add_text(
                                     parent_id="table",
-                                    content=row[j],
+                                    content=content,
                                     width_fill=True,
                                     align_x=IpgHorizontalAlignment.Center,
                                     align_y=IpgVerticalAlignment.Center,
                                     )
-
+            
+            # add this row id ids into the main df
             new_df = pl.DataFrame(ids)
-            self.df_ids = pl.concat([self.df_ids, new_df]) 
+            df_ids = pl.concat([df_ids, new_df])
+
+            # extend the list of ids for easier use in the update methods
+            self.list_ids.extend(list(ids.values()))
+        
+        # finally, concat the ids with the data vertically so that they remain together
+        self.df = pl.concat([self.df, df_ids], how="horizontal", rechunk=True)
+        # print(self.df.head(5))
         
     # ******************************create modal************************************
     def create_modal(self):
@@ -419,13 +431,38 @@ class Books:
         print(url)
 
     def filter_books_author(self, pick_id: int, selected: str):
-        print(selected)
+        if selected == "None":
+            for id in self.list_ids:
+                self.ipg.show_item("main", id, True)
+            return
+       
+        # filter the df
+        df = self.df.filter(pl.col('Author').str.to_lowercase().str.starts_with(selected.lower()))
+        # select only the columns with the ids
+        keepers = df.select(self.column_id_names)
+        list_to_keep = []
+        for column in keepers.iter_columns():
+            list_to_keep.extend(column.to_list())
+
+        for id in self.list_ids:
+            if id not in list_to_keep:
+                self.ipg.show_item("main", id, False)
+            else:
+                # else used because the table might have already been filtered
+                self.ipg.show_item("main", id, True)
+
 
     def filter_books_status(self, pick_id: int, selected: str):
         print(selected)
 
     def filter_books_source(self, pick_id: int, selected: str):
         print(selected)
+        
+    def find_id_in_dataframe(self, df: pl.DataFrame, id: int) -> bool:
+        for col in self.df.columns:
+            if (self.df[col] == id).any():
+                return True
+        return False
     
 books = Books()
 books.start()

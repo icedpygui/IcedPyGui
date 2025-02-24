@@ -9,21 +9,30 @@ pub struct IpgSpace {
     pub id: usize,
     pub width: Length,
     pub height: Length,
+    pub show: bool,
 }
 
 impl IpgSpace {
-    pub fn new(id: usize, width: Length, height: Length, ) -> Self {
+    pub fn new(
+        id: usize, 
+        width: Length, 
+        height: Length, 
+        show: bool) -> Self {
         Self {
             id,
             width,
             height,
+            show,
         }
     }
 }
 
 
-pub fn construct_space(sp: &IpgSpace) -> Element<'static, app::Message> {
+pub fn construct_space(sp: &IpgSpace) -> Option<Element<'static, app::Message>> {
 
-    Space::new(sp.width, sp.height).into()
-
+    if sp.show {
+        Some(Space::new(sp.width, sp.height).into())
+    } else {
+        None
+    }
 }

@@ -87,7 +87,7 @@ for i, head in enumerate(headers):
         width_fill=True)
 
 # fill in the table rows
-for i in range(0, 40):
+for i in range(0, 1):
     for j in range(0, len(headers)):
         if j == 0:
             ipg.add_button(

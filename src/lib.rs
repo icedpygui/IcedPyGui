@@ -130,12 +130,14 @@ pub struct UpdateItems {
     pub moves: Vec<(String, usize, String, Option<usize>, Option<usize>)>,
     // window_id, wid
     pub deletes: Vec<(String, usize)>,
+    pub shows: Vec<(String, usize, bool)>,
 }
 
 pub static UPDATE_ITEMS: Mutex<UpdateItems> = Mutex::new(UpdateItems {
     updates: vec![],
     moves: vec![],
     deletes: vec![],
+    shows: vec![],
 });
 
 pub fn access_update_items() -> MutexGuard<'static, UpdateItems> {
@@ -1955,7 +1957,7 @@ impl IPG {
                         width=None, height=None, width_fill=false, height_fill=false, 
                         max_width=f32::INFINITY, max_height=f32::INFINITY, 
                         padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
-                        style=None, user_data=None))]
+                        style=None, show=true, user_data=None))]
     fn add_card(&mut self,
                 parent_id: String, 
                 head: String,
@@ -1977,6 +1979,7 @@ impl IPG {
                 padding_body: Vec<f64>,
                 padding_foot: Vec<f64>,
                 style: Option<PyObject>,
+                show: bool,
                 user_data: Option<PyObject>, 
                 ) -> PyResult<usize> 
     {
@@ -2015,6 +2018,7 @@ impl IPG {
                 body,
                 foot,
                 style,
+                show,
                 )));
 
         state.last_id = id;
@@ -3308,7 +3312,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, gen_id=None, width=None, height=None, 
-                        width_fill=false, height_fill=false))]
+                        width_fill=false, height_fill=false, show=true))]
     fn add_space(&mut self,
                         parent_id: String,
                         gen_id: Option<usize>,
@@ -3316,6 +3320,7 @@ impl IPG {
                         height: Option<f32>,
                         width_fill: bool,
                         height_fill: bool,
+                        show: bool,
                     ) -> PyResult<usize>
     {
 
@@ -3332,6 +3337,7 @@ impl IPG {
                                                     id,
                                                     width,
                                                     height,
+                                                    show,
                                                     )));
         state.last_id = id;
         drop(state);
@@ -4888,6 +4894,28 @@ impl IPG {
         let mut all_updates = access_update_items();
 
         all_updates.deletes.push((window_id, wid));
+
+        drop(all_updates);
+
+    }
+
+    // #[pyo3(signature = (window_id, wid))]
+    // fn hide_item(&self, window_id: String, wid: usize) 
+    // {
+    //     let mut all_updates = access_update_items();
+
+    //     all_updates.shows.push((window_id, wid, false));
+
+    //     drop(all_updates);
+
+    // }
+
+    #[pyo3(signature = (window_id, wid, value))]
+    fn show_item(&self, window_id: String, wid: usize, value: bool) 
+    {
+        let mut all_updates = access_update_items();
+
+        all_updates.shows.push((window_id, wid, value));
 
         drop(all_updates);
 

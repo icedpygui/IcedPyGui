@@ -78,6 +78,11 @@ def update_button(btn_id: int):
     ipg.update_item(show_btn, 
                     IpgButtonParam.Show, 
                     False)
+    
+    # Show the button
+    ipg.update_item(hidden_btn, 
+                    IpgButtonParam.Show, 
+                    True)
 
 def on_tick(timer_id: int, counter: int):
     if counter >= 10:
@@ -92,7 +97,8 @@ style_id = ipg.add_button_style(border_radius=[20.0])
 ipg.add_window(window_id="main", 
                title="Button Update", 
                width=500, height=650,
-               pos_centered=True)
+               pos_centered=True,
+               debug=True)
 
 # Adding a container helps in aligning widgets since it has an x and y centering.
 # The IpgContainerAlignment.Center is used to center widgets.  The container defaults
@@ -110,7 +116,7 @@ ipg.add_container(window_id="main",
 # The containers width_fill defaults to shrink to keep it that way unless needed.
 # Sometime you'll need to give them specific amounts to get alignments correct for your layout
 ipg.add_column("main", container_id="col", parent_id="cont",
-               align_items=IpgAlignment.Center)
+               align_x=IpgAlignment.Center)
 
 # This is the only active button needed for this demo, so it's the only one with a callback
 # On some IDE setting, when you type in the callback name, it puts a () after the name.
@@ -158,6 +164,10 @@ arrow_btn = ipg.add_button(parent_id="col",
 
 show_btn = ipg.add_button(parent_id="col", 
                           label="This button will disappear")
+
+hidden_btn = ipg.add_button(parent_id="col", 
+                          label="This button was hidden",
+                          show=False)
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.
