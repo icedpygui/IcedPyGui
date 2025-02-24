@@ -13,7 +13,6 @@ use super::ipg_mousearea::get_interaction;
 use super::ipg_mousearea::IpgMousePointer;
     
 use iced::widget::image::FilterMethod;
-use iced::widget::Space;
 use iced::{Length, Element, Padding, Point, Radians, Rotation};
 use iced::widget::{Container, Image, MouseArea};
 use iced::mouse::Interaction;
@@ -112,10 +111,10 @@ pub enum IpgImageRotation {
     Solid,
 }
 
-pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
+pub fn construct_image(image: IpgImage) -> Option<Element<'static, app::Message>> {
 
     if !image.show {
-        return Space::new(0.0, 0.0).into()
+        return None
     }
 
     let img: Element<ImageMessage> = Image::<image::Handle>::new(image.image_path)
@@ -147,7 +146,7 @@ pub fn construct_image(image: IpgImage) -> Element<'static, app::Message> {
                     .interaction(pointer)
                     .into();
 
-    ma.map(move |message| app::Message::Image(image.id, message))
+    Some(ma.map(move |message| app::Message::Image(image.id, message)))
 
 }
 

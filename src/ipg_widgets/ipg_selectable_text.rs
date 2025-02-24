@@ -91,8 +91,12 @@ pub enum SLTXTMessage {
 }
 
 
-pub fn construct_selectable_text(sl_text: IpgSelectableText) -> Element<'static, app::Message> {
-
+pub fn construct_selectable_text(sl_text: IpgSelectableText) 
+                                -> Option<Element<'static, app::Message>> {
+    if !sl_text.show {
+        return None
+    }
+    
     let hor_align = get_horizontal_align(sl_text.horizontal_alignment);
     let vert_align = get_vertical_align(sl_text.vertical_alignment);
     
@@ -126,7 +130,7 @@ pub fn construct_selectable_text(sl_text: IpgSelectableText) -> Element<'static,
                     .interaction(Interaction::Pointer)
                     .into();
 
-    ma.map(move |message| app::Message::SelectableText(sl_text.id, message))
+    Some(ma.map(move |message| app::Message::SelectableText(sl_text.id, message)))
 
 }
 

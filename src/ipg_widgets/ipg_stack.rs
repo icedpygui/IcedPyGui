@@ -35,7 +35,8 @@ impl IpgStack {
 }
 
 
-pub fn construct_stack(stk: IpgStack, mut content: Vec<Element<Message>> ) -> Element<Message> {
+pub fn construct_stack(stk: IpgStack, mut content: Vec<Element<Message>> ) 
+                        -> Element<Message> {
     
     content = if stk.hide_index.is_some() {
         let index = stk.hide_index.unwrap();

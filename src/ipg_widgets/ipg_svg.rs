@@ -13,7 +13,6 @@ use super::helpers::{try_extract_boolean, try_extract_f64,
 use super::ipg_mousearea::get_interaction;
 use super::ipg_mousearea::IpgMousePointer;
 
-use iced::widget::Space;
 use iced::{Length, Element, Point, Radians, Rotation};
 use iced::widget::{Svg, MouseArea};
 use iced::mouse::Interaction;
@@ -99,10 +98,10 @@ pub enum IpgSvgRotation {
     Solid,
 }
 
-pub fn construct_svg(sg: IpgSvg) -> Element<'static, app::Message> {
+pub fn construct_svg(sg: IpgSvg) -> Option<Element<'static, app::Message>> {
 
     if !sg.show {
-        return Space::new(0.0, 0.0).into()
+        return None
     }
 
     let svg_handle = svg::Handle::from_path(sg.svg_path);
@@ -132,7 +131,7 @@ pub fn construct_svg(sg: IpgSvg) -> Element<'static, app::Message> {
                     .interaction(pointer)
                     .into();
 
-    widget.map(move |message| app::Message::Svg(sg.id, message))
+    Some(widget.map(move |message| app::Message::Svg(sg.id, message)))
 
 }
 

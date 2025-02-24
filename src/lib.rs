@@ -130,7 +130,7 @@ pub struct UpdateItems {
     pub moves: Vec<(String, usize, String, Option<usize>, Option<usize>)>,
     // window_id, wid
     pub deletes: Vec<(String, usize)>,
-    pub shows: Vec<(String, usize, bool)>,
+    pub shows: Vec<(String, Vec<(usize, bool)>)>,
 }
 
 pub static UPDATE_ITEMS: Mutex<UpdateItems> = Mutex::new(UpdateItems {
@@ -1117,77 +1117,6 @@ impl IPG {
         drop(state);
         Ok(id)
     }
-
-    // #[pyo3(signature = (window_id, container_id, label,
-    //                     parent_id=None, on_open=None,
-    //                     align_items=IpgAlignment::Start, 
-    //                     width=None, height=None,
-    //                     width_fill=false, height_fill=false,
-    //                     max_width=f32::INFINITY, padding=vec![0.0], 
-    //                     spacing=10.0, clip=false, show=false,
-    //                     user_data=None,
-    //                     ))]
-    // fn add_modal(&mut self,
-    //                     window_id: String,
-    //                     container_id: String,
-    //                     label: String,
-    //                     // **above required
-    //                     parent_id: Option<String>,
-    //                     on_open: Option<PyObject>,
-    //                     align_items: IpgAlignment,
-    //                     width: Option<f32>,
-    //                     height: Option<f32>,
-    //                     width_fill: bool,
-    //                     height_fill: bool,
-    //                     max_width: f32,
-    //                     padding: Vec<f64>,
-    //                     spacing: f32,
-    //                     clip: bool,
-    //                     show: bool,
-    //                     user_data: Option<PyObject>,
-    //                     ) -> PyResult<usize> 
-    // {
-
-    //     self.id += 1;
-
-    //     if on_open.is_some() {
-    //         add_callback_to_mutex(self.id, "on_open".to_string(), on_open);
-    //     }
-        
-    //     let width = get_width(width, width_fill);
-    //     let height = get_height(height, height_fill);
-
-    //     let padding = get_padding_f64(padding);
-
-    //     let prt_id = match parent_id {
-    //         Some(id) => id,
-    //         None => window_id.clone(),
-    //     };
-
-    //     set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
-
-    //     let mut state = access_state();
-
-    //     set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_column".to_string());
-
-    //     state.containers.insert(self.id, IpgContainers::IpgModal(IpgModal::new(
-    //                                                             self.id,
-    //                                                             label,  
-    //                                                             show, 
-    //                                                             spacing, 
-    //                                                             padding, 
-    //                                                             width, 
-    //                                                             height, 
-    //                                                             max_width, 
-    //                                                             align_items,
-    //                                                             clip,
-    //                                                             user_data,
-    //                                                         )));
-    //     state.last_id = self.id;
-    //     drop(state);
-    //     Ok(self.id)
-
-    // }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None, 
                         gen_id=None, mouse_pointer=None,
@@ -4910,12 +4839,12 @@ impl IPG {
 
     // }
 
-    #[pyo3(signature = (window_id, wid, value))]
-    fn show_item(&self, window_id: String, wid: usize, value: bool) 
+    #[pyo3(signature = (window_id, ids))]
+    fn show_item(&self, window_id: String, ids: Vec<(usize, bool)>) 
     {
         let mut all_updates = access_update_items();
 
-        all_updates.shows.push((window_id, wid, value));
+        all_updates.shows.push((window_id, ids));
 
         drop(all_updates);
 

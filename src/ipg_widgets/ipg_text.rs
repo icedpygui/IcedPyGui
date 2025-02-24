@@ -1,7 +1,7 @@
 //! ipg_text
 use iced::{Color, Element, Length};
 use iced::widget::text::{LineHeight, Shaping, Style};
-use iced::widget::{Space, Text};
+use iced::widget::Text;
 use crate::app::Message;
 use crate::graphics::colors::get_color;
 
@@ -61,16 +61,17 @@ impl IpgText {
     }
 }
 
-pub fn construct_text(text: IpgText) -> Element<'static, Message> {
+pub fn construct_text(text: IpgText) 
+                    -> Option<Element<'static, Message>> {
 
     if !text.show {
-        return Space::new(Length::Shrink, Length::Shrink).into()
+        return None
     }
 
     let hor_align = get_horizontal_alignment(text.align_x);
     let vert_align = get_vertical_alignment(text.align_y);
 
-    Text::new(text.content.clone()
+    Some(Text::new(text.content.clone()
                         )
                         .size(text.size)
                         .line_height(text.line_height)
@@ -86,7 +87,7 @@ pub fn construct_text(text: IpgText) -> Element<'static, Message> {
                             style
                             }
                         )
-                        .into() 
+                        .into() )
 }
 
 

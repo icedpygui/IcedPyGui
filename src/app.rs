@@ -779,7 +779,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                 }
                 IpgWidgets::IpgImage(img) => {
                     let image = img.clone();
-                    Some(construct_image(image))
+                    construct_image(image)
                 },
                 // IpgWidgets::IpgMenu(menu) => {
                 //     Some(construct_menu(menu.clone(), state))
@@ -830,7 +830,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                     construct_rule(rule.clone(), style_opt)
                 },
                 IpgWidgets::IpgSelectableText(sltxt) => {
-                    Some(construct_selectable_text(sltxt.clone()))
+                    construct_selectable_text(sltxt.clone())
                 },
                 IpgWidgets::IpgSeparator(sep) => {
                     let style_opt = match sep.style_id.clone() {
@@ -855,11 +855,11 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                 },
                 IpgWidgets::IpgSvg(i_svg) => {
                     let svg = i_svg.clone();
-                    Some(construct_svg(svg))
+                    construct_svg(svg)
                 },
                 IpgWidgets::IpgText(text) => {
                     let txt = text.clone();
-                    Some(construct_text(txt))
+                    construct_text(txt)
                 },
                 IpgWidgets::IpgTextInput(input) => {
                     let style_opt = match input.style_id.clone() {
@@ -1065,7 +1065,7 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
     }
     all_updates.updates = vec![];
 
-    for (window_id, wid, value) in all_updates.shows.iter() {
+    for (window_id, ids) in all_updates.shows.iter() {
         let iced_id = match state.windows_str_ids.get(window_id) {
             Some(id) => *id,
             None => panic!("Window_id {} not found in hide_item", window_id)
@@ -1076,22 +1076,10 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
             None => panic!("Ids not found for window_id {} in hide_item", window_id)
         };
 
-        let mut index: i32 = -1;
-
-        for (i, ipg_id) in ipg_ids.iter().enumerate() {
-            if ipg_id.id == *wid {
-                index = i as i32;
-                break;
-            }
-        }
-
-        if index == -1 {
-            panic!("item with id {wid} could not be found to delete")
-        }
-
-        show_widget(state, wid, *value);
+        show_widget(state, ids);
     }
-    all_updates.deletes = vec![];
+    
+    all_updates.shows = vec![];
     
 }
 
@@ -1114,31 +1102,34 @@ fn process_canvas_updates(cs: &mut IpgCanvasState) {
 
 }
 
-fn show_widget(state: &mut IpgState, id: &usize, value: bool) {
+fn show_widget(state: &mut IpgState, ids: &Vec<(usize, bool)>) {
     
-    let widget = state.widgets.get_mut(id).take().unwrap();
-    match widget {
-        IpgWidgets::IpgButton(ipg_button) => ipg_button.show=value,
-        IpgWidgets::IpgCard(ipg_card) => ipg_card.show=value,
-        IpgWidgets::IpgCheckBox(ipg_check_box) => ipg_check_box.show=value,
-        IpgWidgets::IpgColorPicker(ipg_color_picker) => ipg_color_picker.show=value,
-        IpgWidgets::IpgDatePicker(ipg_date_picker) => ipg_date_picker.show=value,
-        IpgWidgets::IpgImage(ipg_image) => ipg_image.show=value,
-        IpgWidgets::IpgPickList(ipg_pick_list) => ipg_pick_list.show=value,
-        IpgWidgets::IpgProgressBar(ipg_progress_bar) => ipg_progress_bar.show=value,
-        IpgWidgets::IpgRadio(ipg_radio) => ipg_radio.show=value,
-        IpgWidgets::IpgRule(ipg_rule) => ipg_rule.show=value,
-        IpgWidgets::IpgSelectableText(ipg_selectable_text) => ipg_selectable_text.show=value,
-        IpgWidgets::IpgSeparator(ipg_separator) => ipg_separator.show=value,
-        IpgWidgets::IpgSlider(ipg_slider) => ipg_slider.show=value,
-        IpgWidgets::IpgSpace(ipg_space) => ipg_space.show=value,
-        IpgWidgets::IpgSvg(ipg_svg) => ipg_svg.show=value,
-        IpgWidgets::IpgText(ipg_text) => ipg_text.show=value,
-        IpgWidgets::IpgTextInput(ipg_text_input) => ipg_text_input.show=value,
-        IpgWidgets::IpgTimer(ipg_timer) => ipg_timer.show=value,
-        IpgWidgets::IpgToggler(ipg_toggler) => ipg_toggler.show=value,
-        _ => ()
+    for (id, value) in ids.iter() {
+        let widget = state.widgets.get_mut(id).take().unwrap();
+        match widget {
+            IpgWidgets::IpgButton(ipg_button) => ipg_button.show=*value,
+            IpgWidgets::IpgCard(ipg_card) => ipg_card.show=*value,
+            IpgWidgets::IpgCheckBox(ipg_check_box) => ipg_check_box.show=*value,
+            IpgWidgets::IpgColorPicker(ipg_color_picker) => ipg_color_picker.show=*value,
+            IpgWidgets::IpgDatePicker(ipg_date_picker) => ipg_date_picker.show=*value,
+            IpgWidgets::IpgImage(ipg_image) => ipg_image.show=*value,
+            IpgWidgets::IpgPickList(ipg_pick_list) => ipg_pick_list.show=*value,
+            IpgWidgets::IpgProgressBar(ipg_progress_bar) => ipg_progress_bar.show=*value,
+            IpgWidgets::IpgRadio(ipg_radio) => ipg_radio.show=*value,
+            IpgWidgets::IpgRule(ipg_rule) => ipg_rule.show=*value,
+            IpgWidgets::IpgSelectableText(ipg_selectable_text) => ipg_selectable_text.show=*value,
+            IpgWidgets::IpgSeparator(ipg_separator) => ipg_separator.show=*value,
+            IpgWidgets::IpgSlider(ipg_slider) => ipg_slider.show=*value,
+            IpgWidgets::IpgSpace(ipg_space) => ipg_space.show=*value,
+            IpgWidgets::IpgSvg(ipg_svg) => ipg_svg.show=*value,
+            IpgWidgets::IpgText(ipg_text) => ipg_text.show=*value,
+            IpgWidgets::IpgTextInput(ipg_text_input) => ipg_text_input.show=*value,
+            IpgWidgets::IpgTimer(ipg_timer) => ipg_timer.show=*value,
+            IpgWidgets::IpgToggler(ipg_toggler) => ipg_toggler.show=*value,
+            _ => (),
+        }
     }
+    
 }
 
 

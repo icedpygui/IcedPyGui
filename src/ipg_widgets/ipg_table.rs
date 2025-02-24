@@ -138,7 +138,6 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             mut content: Vec<Element<'a, Message, Theme, Renderer>>, 
                             ) 
                             -> Element<'a, Message, Theme, Renderer> {
-    // dbg!(&content.len());
     let num_of_columns = tbl.column_widths.len();
 
     // remove the headers from the content

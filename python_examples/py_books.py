@@ -4,7 +4,6 @@ from icedpygui import IPG, IpgTableRowHighLight, IpgTableParam, IpgColor
 from icedpygui import IpgTextParam, IpgAlignment, IpgHorizontalAlignment, IpgVerticalAlignment, IpgTextInputParam
 from icedpygui import IpgButtonParam, IpgPickListParam, IpgDatePickerParam
 import polars as pl
-from datetime import datetime, date
 
 
 # Just to demo how one might use a large table, I have supplied my book list that
@@ -56,7 +55,7 @@ class Books:
 
     def start(self):
         self.load()
-        # self.create_styles()
+        self.create_styles()
         self.create_table()
         # self.create_modal()
         self.ipg.start_session()
@@ -164,7 +163,7 @@ class Books:
         # make a new dataframe for ids so that the rows can be edited/filtered/updated
         ids = {}
         scheme = {}
-        for i in range(0, 9):
+        for i in range(0, len(self.column_widths)):
             ids[str(i)] = []
             scheme[str(i)] = pl.Int64
         
@@ -175,20 +174,19 @@ class Books:
         for i in range(0, len(self.df)):
             row = self.df.row(i)
             ids = {}
-            for k in range(0, 8):
+            for k in range(0, len(row)):
                 ids[str(k)] = []
             for j in range(0, len(row)):
                 if j == 0:
                     ids[str(j)] = self.ipg.add_button(
                                     parent_id="table",
-                                    label=f"Edit{i}",
+                                    label=f"Edit",
                                     width=self.column_widths[0],
                                     style_id=self.btn_style_id,
                                     text_align_x=IpgHorizontalAlignment.Center,
                                     on_press=self.open_modal,
                                     padding=[0.0],
                                     user_data=i)
-                    
                 elif self.column_names[j] == "Url" and row[j] != "":
                     ids[str(j)] = self.ipg.add_button(
                                     parent_id="table",
@@ -200,13 +198,9 @@ class Books:
                                     padding=[0.0],
                                     user_data=row[j])
                 else:
-                    content = row[j]
-                    if row[j] == "":
-                        content = "empty"
-                    
                     ids[str(j)] = self.ipg.add_text(
                                     parent_id="table",
-                                    content=content,
+                                    content=row[j],
                                     width_fill=True,
                                     align_x=IpgHorizontalAlignment.Center,
                                     align_y=IpgVerticalAlignment.Center,
@@ -221,7 +215,7 @@ class Books:
         
         # finally, concat the ids with the data vertically so that they remain together
         self.df = pl.concat([self.df, df_ids], how="horizontal", rechunk=True)
-        print(self.df)
+        # print(self.df.row(0))
         
     # ******************************create modal************************************
     def create_modal(self):
@@ -432,26 +426,31 @@ class Books:
 
     def filter_books_author(self, pick_id: int, selected: str):
         if selected == "None":
+            ids = []
             for id in self.list_ids:
-                self.ipg.show_item("main", id, True)
+                ids.append((id, True))
+            self.ipg.show_item("main", ids)
             return
-        print(self.df)
+        
+        
         # filter the df
         df = self.df.filter(pl.col('Author').str.to_lowercase().str.starts_with(selected.lower()))
-        print(df)
         # select only the columns with the ids
         keepers = df.select(self.column_id_names)
-        print(df)
         list_to_keep = []
+        
         for column in keepers.iter_columns():
             list_to_keep.extend(column.to_list())
-        print(len(list_to_keep))
+        
+        ids = []    
         for id in self.list_ids:
             if id not in list_to_keep:
-                self.ipg.show_item("main", id, False)
+                ids.append((id, False))
             else:
                 # else used because the table might have already been filtered
-                self.ipg.show_item("main", id, True)
+                ids.append((id, True))
+            
+        self.ipg.show_item("main", ids)
 
 
     def filter_books_status(self, pick_id: int, selected: str):
