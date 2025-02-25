@@ -1,9 +1,13 @@
 //! ipg_row
 use iced::{Alignment, Padding, Length, Element};
 use iced::widget::Row;
+use pyo3::{pyclass, PyObject, Python};
 
 use crate::app::Message;
 
+use super::helpers::{get_height, get_padding_f64, get_width, 
+    try_extract_boolean, try_extract_f64, try_extract_ipg_alignment, 
+    try_extract_vec_f64};
 use super::ipg_enums::IpgAlignment;
 
 
@@ -16,7 +20,7 @@ pub struct IpgRow {
     pub padding: Padding,
     pub width: Length,
     pub height: Length,
-    pub align_items: IpgAlignment,
+    pub align: IpgAlignment,
     pub clip: bool,
 }
 
@@ -28,7 +32,7 @@ impl IpgRow {
         padding: Padding,
         width: Length,
         height: Length,
-        align_items: IpgAlignment,
+        align: IpgAlignment,
         clip: bool,
     ) -> Self {
         Self {
@@ -38,7 +42,7 @@ impl IpgRow {
             padding,
             width,
             height,
-            align_items,
+            align,
             clip
         }
     }
@@ -46,7 +50,7 @@ impl IpgRow {
 
 pub fn construct_row<'a>(row: &IpgRow, content: Vec<Element<'a, Message>>) -> Element<'a, Message> {
 
-    let align = get_alignment(row.align_items.clone());
+    let align = get_alignment(row.align.clone());
 
     Row::with_children(content)
                         .align_y(align)
@@ -66,4 +70,67 @@ fn get_alignment(align: IpgAlignment) -> Alignment {
         IpgAlignment::Center => Alignment::Center,
         IpgAlignment::End => Alignment::End,
     }
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum IpgRowParam {
+    Align,
+    Clip,
+    Padding,
+    Width,
+    WidthFill,
+    Height,
+    HeightFill,
+    Spacing,
+}
+
+pub fn row_item_update(col: &mut IpgRow,
+                            item: PyObject,
+                            value: PyObject,
+                            )
+{
+    let update = try_extract_row_update(item);
+
+    match update {
+        IpgRowParam::Align => {
+            col.align = try_extract_ipg_alignment(value).unwrap();
+        },
+        IpgRowParam::Clip => {
+            col.clip = try_extract_boolean(value);
+        },
+        IpgRowParam::Padding => {
+            col.padding =  get_padding_f64(try_extract_vec_f64(value));
+        },
+        IpgRowParam::Width => {
+            let val = try_extract_f64(value);
+            col.width = get_width(Some(val as f32), false);
+        },
+        IpgRowParam::WidthFill => {
+            let val = try_extract_boolean(value);
+            col.width = get_width(None, val);
+        },
+        IpgRowParam::Height => {
+            let val = try_extract_f64(value);
+            col.height = get_height(Some(val as f32), false);
+        },
+        IpgRowParam::HeightFill => {
+            let val = try_extract_boolean(value);
+            col.height = get_height(None, val);
+        },
+        IpgRowParam::Spacing => {
+            col.spacing = try_extract_f64(value) as f32;
+        },
+    }
+}
+
+pub fn try_extract_row_update(update_obj: PyObject) -> IpgRowParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgRowParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Row update extraction failed"),
+        }
+    })
 }

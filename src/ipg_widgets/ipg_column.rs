@@ -18,7 +18,7 @@ pub struct IpgColumn {
     pub width: Length,
     pub height: Length,
     pub max_width: f32,
-    pub align_x: IpgAlignment,
+    pub align: IpgAlignment,
     pub clip: bool,
 }
 
@@ -31,7 +31,7 @@ impl IpgColumn {
         width: Length,
         height: Length,
         max_width: f32,
-        align_x: IpgAlignment,
+        align: IpgAlignment,
         clip: bool,
     ) -> Self {
         Self {
@@ -42,7 +42,7 @@ impl IpgColumn {
             width,
             height,
             max_width,
-            align_x,
+            align,
             clip,
         }
     }
@@ -51,7 +51,7 @@ impl IpgColumn {
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum IpgColumnParam {
-    AlignX,
+    Align,
     Clip,
     Padding,
     Width,
@@ -63,7 +63,7 @@ pub enum IpgColumnParam {
 
 pub fn construct_column<'a>(col: &IpgColumn, content: Vec<Element<'a, Message>> ) -> Element<'a, Message> {
 
-    let align_x = get_alignment(col.align_x.clone());
+    let align_x = get_alignment(col.align.clone());
 
     Column::with_children(content)
                         .align_x(align_x)
@@ -84,8 +84,8 @@ pub fn column_item_update(col: &mut IpgColumn,
     let update = try_extract_column_update(item);
 
     match update {
-        IpgColumnParam::AlignX => {
-            col.align_x = try_extract_ipg_alignment(value).unwrap();
+        IpgColumnParam::Align => {
+            col.align = try_extract_ipg_alignment(value).unwrap();
         },
         IpgColumnParam::Clip => {
             col.clip = try_extract_boolean(value);

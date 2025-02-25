@@ -62,7 +62,7 @@ use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, progress_bar_style
     IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle, IpgProgressBarStyleParam};
 use ipg_widgets::ipg_radio::{radio_item_update, radio_style_update_item, IpgRadio, 
     IpgRadioDirection, IpgRadioParam, IpgRadioStyle, IpgRadioStyleParam};
-use ipg_widgets::ipg_row::IpgRow;
+use ipg_widgets::ipg_row::{row_item_update, IpgRow};
 use ipg_widgets::ipg_rule::{rule_style_update_item, IpgRule, IpgRuleStyle, IpgRuleStyleParam};
 use ipg_widgets::ipg_scrollable::{scroll_style_update_item, scrollable_item_update, 
     IpgScrollable, IpgScrollableAlignment, IpgScrollableDirection, IpgScrollableParam, 
@@ -834,7 +834,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
-                        align_x=IpgAlignment::Start, 
+                        align=IpgAlignment::Start, 
                         width=None, height=None,
                         width_fill=false, height_fill=false,
                         max_width=f32::INFINITY, padding=vec![0.0], 
@@ -845,7 +845,7 @@ impl IPG {
                         container_id: String,
                         // **above required
                         parent_id: Option<String>,
-                        align_x: IpgAlignment,
+                        align: IpgAlignment,
                         width: Option<f32>,
                         height: Option<f32>,
                         width_fill: bool,
@@ -885,7 +885,7 @@ impl IPG {
                                 width, 
                                 height, 
                                 max_width, 
-                                align_x,
+                                align,
                                 clip,
                             )));
 
@@ -1307,7 +1307,7 @@ impl IPG {
     }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None,
-                        align_items=IpgAlignment::Start, width=None, height=None, 
+                        align=IpgAlignment::Start, width=None, height=None, 
                         width_fill=false, height_fill=false,
                         padding=vec![0.0], spacing=10.0, clip=false,
                         show=true,
@@ -1317,7 +1317,7 @@ impl IPG {
                     container_id: String,
                     // required above
                     parent_id: Option<String>,
-                    align_items: IpgAlignment,
+                    align: IpgAlignment,
                     width: Option<f32>,
                     height: Option<f32>,
                     width_fill: bool,
@@ -1354,7 +1354,7 @@ impl IPG {
                                     padding, 
                                     width, 
                                     height, 
-                                    align_items,
+                                    align,
                                     clip,
                                 )));
         state.last_id = self.id;
@@ -4828,19 +4828,8 @@ impl IPG {
 
     }
 
-    // #[pyo3(signature = (window_id, wid))]
-    // fn hide_item(&self, window_id: String, wid: usize) 
-    // {
-    //     let mut all_updates = access_update_items();
-
-    //     all_updates.shows.push((window_id, wid, false));
-
-    //     drop(all_updates);
-
-    // }
-
     #[pyo3(signature = (window_id, ids))]
-    fn show_item(&self, window_id: String, ids: Vec<(usize, bool)>) 
+    fn show_items(&self, window_id: String, ids: Vec<(usize, bool)>) 
     {
         let mut all_updates = access_update_items();
 
@@ -5085,6 +5074,9 @@ fn match_container(container: &mut IpgContainers,
         },
         IpgContainers::IpgOpaque(op) => {
             opaque_item_update(op, item, value);
+        },
+        IpgContainers::IpgRow(row) => {
+            row_item_update(row, item, value);
         },
         IpgContainers::IpgStack(stack) => {
             stack_item_update(stack, item, value);

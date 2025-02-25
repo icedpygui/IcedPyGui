@@ -3607,7 +3607,21 @@ class IPG:
         -------
         None
         """
-
+        
+    def show_items(self,
+                  window_id: str,
+                  ids: List[tuple[int, bool]]
+                  ):
+        """
+        Shows or hides items
+        
+        Args:
+            window_id (str):
+                The window id that the widget is in.
+            ids (List[tuple[int, bool]]):
+                A list of the ids and they bool value to indicate either sgoe(True) or Hide(False).
+        """
+        
     def update_item(self,
                     wid: int, 
                     param: str, 

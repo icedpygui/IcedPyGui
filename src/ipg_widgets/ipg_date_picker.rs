@@ -11,7 +11,7 @@ use super::helpers::{get_padding_f64, try_extract_boolean,
 use super::ipg_button::{get_standard_style, get_styling, IpgButtonStyle};
 
 use iced::advanced::graphics::core::Element;
-use iced::widget::button;
+use iced::widget::{button, text};
 use iced::{Background, Border, Color, Length, Padding, Renderer, Theme};
 use iced::alignment::{self, Alignment};
 use iced::widget::{container, Button, Column, Container, PickList, Row, Space, Text};
@@ -222,7 +222,7 @@ fn get_days_of_month(year: i32, month: u32) -> i64 {
 fn calendar_show_button(dp: IpgDatePicker, btn_style: Option<IpgButtonStyle>) -> Element<'static, Message, Theme, Renderer> {
 
     let show_btn: Element<DPMessage, Theme, Renderer> = 
-                    Button::new(Text::new(dp.label.clone()))
+                    Button::new(text(dp.label.clone()))
                                     .on_press(DPMessage::ShowModal)
                                     .height(Length::Shrink)
                                     .width(Length::Shrink)

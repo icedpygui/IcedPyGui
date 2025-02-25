@@ -100,8 +100,9 @@ pub fn construct_container(con: IpgContainer,
                             mut content: Vec<Element<Message>>,
                             style_opt: Option<IpgWidgets> ) 
                             -> Element<Message> {
-
+    
     if !con.show {return horizontal_space().into()}
+
     let align_h = get_horizontal_alignment(con.align_x);
     let align_v = get_vertical_alignment(con.align_y);
     let style = get_cont_style(style_opt);
@@ -151,7 +152,7 @@ pub fn container_item_update(cont: &mut IpgContainer,
                             )
 {
     let update = try_extract_container_update(item);
-
+   
     match update {
         IpgContainerParam::AlignX => {
             cont.align_x = try_extract_ipg_horizontal_alignment(value).unwrap();

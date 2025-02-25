@@ -1105,7 +1105,13 @@ fn process_canvas_updates(cs: &mut IpgCanvasState) {
 fn show_widget(state: &mut IpgState, ids: &Vec<(usize, bool)>) {
     
     for (id, value) in ids.iter() {
-        let widget = state.widgets.get_mut(id).take().unwrap();
+        
+        let mut wid = state.widgets.get_mut(id);
+        let widget = if wid.is_some() {
+            wid.take().unwrap()
+        } else {
+            panic!("Show_items - unable to find id {}", id)
+        };
         match widget {
             IpgWidgets::IpgButton(ipg_button) => ipg_button.show=*value,
             IpgWidgets::IpgCard(ipg_card) => ipg_card.show=*value,

@@ -48,7 +48,7 @@ def open_modal(btn_id: int, index: tuple[int, int]):
 def filter(pick_id: int, select: str):
     if selected == "None":
         for id in list_ids:
-            ipg.show_item("main", id, True)
+            ipg.s("main", id, True)
         return
         
     # filter the df
@@ -63,10 +63,10 @@ def filter(pick_id: int, select: str):
     print(len(list_to_keep))
     for id in list_ids:
         if id not in list_to_keep:
-            ipg.show_item("main", id, False)
+            ipg.show_items("main", id, False)
         else:
             # else used because the table might have already been filtered
-            ipg.show_item("main", id, True)
+            ipg.show_items("main", id, True)
 
 
 btn_style = ipg.add_button_style(border_radius=[10.0])
