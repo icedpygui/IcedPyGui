@@ -309,25 +309,25 @@ pub fn selectable_text_item_update(st: &mut IpgSelectableText,
                                     )
 {
     let update = try_extract_selectable_update(item);
-
+    let name = "SelectableText".to_string();
     match update {
         IpgSelectableTextParam::Text => {
-            st.content = try_extract_string(value);
+            st.content = try_extract_string(value, name);
         },
         IpgSelectableTextParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             st.width = get_width(Some(val as f32), false);
         },
         IpgSelectableTextParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             st.width = get_width(None, val);
         },
         IpgSelectableTextParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             st.height = get_height(Some(val as f32), false);
         },
         IpgSelectableTextParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             st.height = get_height(None, val);
         }
         IpgSelectableTextParam::HorizontalAlign => {
@@ -337,23 +337,23 @@ pub fn selectable_text_item_update(st: &mut IpgSelectableText,
             st.vertical_alignment = try_extract_vert_align(value);
         },
         IpgSelectableTextParam::LineHeight => {
-            let val = try_extract_f64(value) as f32;
+            let val = try_extract_f64(value, name) as f32;
             st.line_height = LineHeight::Relative(val);
         },
         IpgSelectableTextParam::Size => {
-            st.size = try_extract_f64(value) as f32;
+            st.size = try_extract_f64(value, name) as f32;
         },
         IpgSelectableTextParam::TextColor => {
-            let ipg_color = Some(try_extract_ipg_color(value));
+            let ipg_color = Some(try_extract_ipg_color(value, name));
             st.text_color = get_color(None, ipg_color, 1.0, false);
         },
         IpgSelectableTextParam::TextRgba => {
-            let v = try_extract_vec_f32(value);
+            let v = try_extract_vec_f32(value, name);
             let color_rgba = Some([v[0], v[1], v[2], v[3]]);
             st.text_color = get_color(color_rgba, None, 1.0, false);
         },
         IpgSelectableTextParam::Show => {
-            st.show = try_extract_boolean(value);
+            st.show = try_extract_boolean(value, name);
         },
     }
 }

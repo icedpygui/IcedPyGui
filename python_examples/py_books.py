@@ -383,10 +383,9 @@ class Books:
         #  index,Title,Series,Num,Author,Status,Returned,Source,Url
         for i, name in enumerate(self.column_names):
             item = self.modal_row[i]
-            print(name)
             match name:
                 case "index":
-                    self.ipg.update_item(self.modal_col_ids[i], IpgTextParam.Content, item)
+                    self.ipg.update_item(self.modal_col_ids[i], IpgTextParam.Content, str(item))
                 case "Status":
                     self.ipg.update_item(self.modal_col_ids[i], IpgPickListParam.Selected, item)
                 case "Source":
@@ -394,7 +393,6 @@ class Books:
                 case "Returned":
                     self.ipg.update_item(self.modal_col_ids[i], IpgTextParam.Content, item)  
                 case _:
-                    print(name, type(item))
                     self.ipg.update_item(self.modal_col_ids[i], IpgTextInputParam.Value, item)
 
         self.ipg.update_item(self.modal_id, IpgContainerParam.Show, True)

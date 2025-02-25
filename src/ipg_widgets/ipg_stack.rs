@@ -70,10 +70,10 @@ pub fn stack_item_update(stk: &mut IpgStack,
                             value: PyObject,) {
 
     let update = try_extract_stack_update(item);
-
+    let name = "Stack".to_string();
     match update {
         IpgStackParam::Show => {
-            stk.show = try_extract_boolean(value);
+            stk.show = try_extract_boolean(value, name);
         },
     }
 }

@@ -253,49 +253,49 @@ pub fn canvas_timer_item_update(ctim: &mut IpgCanvasTimer,
                             )
 {
     let update = try_extract_timer_update(item);
-
+    let name = "CanvasTimer".to_string();
     match update {
         IpgCanvasTimerParam::DurationMs => {
-            ctim.duration_ms = try_extract_i64(value) as u64;
+            ctim.duration_ms = try_extract_i64(value, name) as u64;
         },
        IpgCanvasTimerParam::ArrowStyle => {
             ctim.style_arrow = Some(try_extract_button_arrow(value));
         },
         IpgCanvasTimerParam::Counter => {
-            ctim.counter = try_extract_u64(value);
+            ctim.counter = try_extract_u64(value, name);
         }
         IpgCanvasTimerParam::Label => {
-            ctim.label = try_extract_string(value);
+            ctim.label = try_extract_string(value, name);
         },
         IpgCanvasTimerParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             ctim.height = get_height(Some(val as f32), false);
         },
         IpgCanvasTimerParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             ctim.height = get_height(None, val);
         },
         IpgCanvasTimerParam::Padding => {
-            ctim.padding =  get_padding_f64(try_extract_vec_f64(value));
+            ctim.padding =  get_padding_f64(try_extract_vec_f64(value, name));
         },
         IpgCanvasTimerParam::Clip => {
-            ctim.clip = try_extract_boolean(value);
+            ctim.clip = try_extract_boolean(value, name);
         }
         IpgCanvasTimerParam::Show => {
-            ctim.show = try_extract_boolean(value);
+            ctim.show = try_extract_boolean(value, name);
         },
         IpgCanvasTimerParam::StyleId => {
-            ctim.style_id = Some(try_extract_f64(value) as usize);
+            ctim.style_id = Some(try_extract_f64(value, name) as usize);
         },
         IpgCanvasTimerParam::StyleStandard => {
-            ctim.style_standard = Some(try_extract_style_standard(value));
+            ctim.style_standard = Some(try_extract_style_standard(value, name));
         },
         IpgCanvasTimerParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             ctim.width = get_width(Some(val as f32), false);
         },
         IpgCanvasTimerParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             ctim.width = get_width(None, val);
         }, 
     }
@@ -414,56 +414,57 @@ pub fn canvas_timer_style_update_item(style: &mut IpgCanvasTimerStyle,
                             value: PyObject,) 
 {
     let update = try_extract_canvas_timer_style_update(item);
+    let name = "CanvasTimerStyle".to_string();
     match update {
         IpgCanvasTimerStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgCanvasTimerStyleParam::BackgroundRbgaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgCanvasTimerStyleParam::BackgroundIpgColorHovered => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgCanvasTimerStyleParam::BackgroundIpgRgbaHovered => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgCanvasTimerStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgCanvasTimerStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgCanvasTimerStyleParam::BorderRadius => {
-            style.border_radius = try_extract_vec_f32(value);
+            style.border_radius = try_extract_vec_f32(value, name);
         },
         IpgCanvasTimerStyleParam::BorderWidth => {
-            style.border_width = try_extract_f64(value) as f32;
+            style.border_width = try_extract_f64(value, name) as f32;
         },
         IpgCanvasTimerStyleParam::ShadowIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.shadow_color = get_color(None, Some(color), 1.0, false);
         },
         IpgCanvasTimerStyleParam::ShadowRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgCanvasTimerStyleParam::ShadowOffsetX => {
-            style.shadow_offset_x = try_extract_f64(value) as f32;
+            style.shadow_offset_x = try_extract_f64(value, name) as f32;
         },
         IpgCanvasTimerStyleParam::ShadowOffsetY => {
-            style.shadow_offset_y = try_extract_f64(value) as f32;
+            style.shadow_offset_y = try_extract_f64(value, name) as f32;
         },
         IpgCanvasTimerStyleParam::ShadowBlurRadius => {
-            style.shadow_blur_radius = try_extract_f64(value) as f32;
+            style.shadow_blur_radius = try_extract_f64(value, name) as f32;
         },
         IpgCanvasTimerStyleParam::TextIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.text_color = get_color(None, Some(color), 1.0, false);
         },
         IpgCanvasTimerStyleParam::TextRgbaColor => {
-            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.text_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
     }
 }

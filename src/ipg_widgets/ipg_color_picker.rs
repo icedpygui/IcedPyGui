@@ -274,50 +274,50 @@ pub fn color_picker_update(cp: &mut IpgColorPicker,
                             ) 
 {
     let update = try_extract_cp_update(item);
-
+    let name = "ColorPicker".to_string();
     match update {
        IpgColorPickerParam::ArrowStyle => {
             cp.style_arrow = Some(try_extract_button_arrow(value));
         },
         IpgColorPickerParam::Color => {
-            let rgba = try_extract_rgba_color(value);
+            let rgba = try_extract_rgba_color(value, name);
             cp.color = Color::from(rgba);
         },
         IpgColorPickerParam::Label => {
-            cp.label = try_extract_string(value);
+            cp.label = try_extract_string(value, name);
         },
         IpgColorPickerParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             cp.height = get_height(Some(val as f32), false);
         },
         IpgColorPickerParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             cp.height = get_height(None, val);
         },
         IpgColorPickerParam::Padding => {
-            let val = try_extract_vec_f64(value);
+            let val = try_extract_vec_f64(value, name);
             cp.padding =  get_padding_f64(val);
         },
         IpgColorPickerParam::Clip => {
-            cp.clip = try_extract_boolean(value);
+            cp.clip = try_extract_boolean(value, name);
         }
         IpgColorPickerParam::Show => {
-            cp.show = try_extract_boolean(value);
+            cp.show = try_extract_boolean(value, name);
         },
         IpgColorPickerParam::StyleId => {
-            let val = try_extract_f64(value) as usize;
+            let val = try_extract_f64(value, name) as usize;
             cp.style_id = Some(val);
         },
         IpgColorPickerParam::StyleStandard => {
-            let val = try_extract_style_standard(value);
+            let val = try_extract_style_standard(value, name);
             cp.style_standard = Some(val);
         },
         IpgColorPickerParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             cp.width = get_width(Some(val as f32), false);
         },
         IpgColorPickerParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             cp.width = get_width(None, val);
         },
     }
@@ -360,56 +360,57 @@ pub fn color_picker_style_update_item(style: &mut IpgColorPickerStyle,
 {
 
     let update = try_extract_color_picker_style_update(item);
+    let name = "ColorPickerStyle".to_string();
     match update {
         IpgColorPickerStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgColorPickerStyleParam::BackgroundRbgaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgColorPickerStyleParam::BackgroundIpgColorHovered => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgColorPickerStyleParam::BackgroundIpgRgbaHovered => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgColorPickerStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgColorPickerStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgColorPickerStyleParam::BorderRadius => {
-            style.border_radius = try_extract_vec_f32(value);
+            style.border_radius = try_extract_vec_f32(value, name);
         },
         IpgColorPickerStyleParam::BorderWidth => {
-            style.border_width = try_extract_f64(value) as f32;
+            style.border_width = try_extract_f64(value, name) as f32;
         },
         IpgColorPickerStyleParam::ShadowIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.shadow_color = get_color(None, Some(color), 1.0, false);
         },
         IpgColorPickerStyleParam::ShadowRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgColorPickerStyleParam::ShadowOffsetX => {
-            style.shadow_offset_x = try_extract_f64(value) as f32;
+            style.shadow_offset_x = try_extract_f64(value, name) as f32;
         },
         IpgColorPickerStyleParam::ShadowOffsetY => {
-            style.shadow_offset_y = try_extract_f64(value) as f32;
+            style.shadow_offset_y = try_extract_f64(value, name) as f32;
         },
         IpgColorPickerStyleParam::ShadowBlurRadius => {
-            style.shadow_blur_radius = try_extract_f64(value) as f32;
+            style.shadow_blur_radius = try_extract_f64(value, name) as f32;
         },
         IpgColorPickerStyleParam::TextIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.text_color = get_color(None, Some(color), 1.0, false);
         },
         IpgColorPickerStyleParam::TextRgbaColor => {
-            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.text_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
     }
 }

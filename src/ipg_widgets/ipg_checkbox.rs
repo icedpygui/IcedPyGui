@@ -264,53 +264,53 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
                             )
 {
     let update = try_extract_checkbox_update(item);
-
+    let name = "Checkbox".to_string();
     match update {
         IpgCheckboxParam::IconSize => {
-            chk.icon_size = try_extract_f64(value) as f32;
+            chk.icon_size = try_extract_f64(value, name) as f32;
         },
         IpgCheckboxParam::IconX => {
-            chk.icon_x = try_extract_boolean(value);
+            chk.icon_x = try_extract_boolean(value, name);
         },
         IpgCheckboxParam::IsChecked => {
-            chk.is_checked = try_extract_boolean(value);
+            chk.is_checked = try_extract_boolean(value, name);
         },
         IpgCheckboxParam::Label => {
-            chk.label = try_extract_string(value);
+            chk.label = try_extract_string(value, name);
         },
         IpgCheckboxParam::Show => {
-            chk.show = try_extract_boolean(value);
+            chk.show = try_extract_boolean(value, name);
         },
         IpgCheckboxParam::Size => {
-            chk.size = try_extract_f64(value) as f32;
+            chk.size = try_extract_f64(value, name) as f32;
         },
         IpgCheckboxParam::Spacing => {
-            chk.spacing = try_extract_f64(value) as f32;
+            chk.spacing = try_extract_f64(value, name) as f32;
         },
         IpgCheckboxParam::TextLineHeight => {
-            let tlh = try_extract_f64(value);
+            let tlh = try_extract_f64(value, name);
             chk.text_line_height =  LineHeight::Relative(tlh as f32);
         },
         IpgCheckboxParam::TextShaping => {
-            let ts =try_extract_string(value);
+            let ts =try_extract_string(value, name);
             chk.text_shaping = get_shaping(ts); 
         },
         IpgCheckboxParam::TextSize => {
-            chk.text_size = try_extract_f64(value) as f32;
+            chk.text_size = try_extract_f64(value, name) as f32;
         },
         IpgCheckboxParam::Style => {
-            chk.style_id = Some(try_extract_f64(value) as usize)
+            chk.style_id = Some(try_extract_f64(value, name) as usize)
         },
         IpgCheckboxParam::StyleStandard => {
-            let val = try_extract_style_standard(value);
+            let val = try_extract_style_standard(value, name);
             chk.style_standard = Some(val)
         },
         IpgCheckboxParam::Width => {
-            let wd = try_extract_f64(value);
+            let wd = try_extract_f64(value, name);
             chk.width =  get_width(Some(wd as f32), false);
         },
         IpgCheckboxParam::WidthFill => {
-            let wd = try_extract_boolean(value);
+            let wd = try_extract_boolean(value, name);
             chk.width =  get_width(None, wd);
         },
     }
@@ -343,61 +343,62 @@ pub fn checkbox_style_update_item(style: &mut IpgCheckboxStyle,
                             value: PyObject,) 
 {
     let update = try_extract_checkbox_style_update(item);
+    let name = "CheckboxStyle".to_string();
     match update {
         IpgCheckboxStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgCheckboxStyleParam::BackgroundRgbaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgCheckboxStyleParam::BackgroundIpgColorHovered => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgCheckboxStyleParam::BackgroundRgbaColorHovered => {
-            style.background_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color_hovered = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgCheckboxStyleParam::AccentIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.accent_color = get_color(None, Some(color), 1.0, false);
         },
         IpgCheckboxStyleParam::AccentRgbaColor => {
-            style.accent_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.accent_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgCheckboxStyleParam::AccentIpgColorHovered => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.accent_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgCheckboxStyleParam::AccentRgbaColorHovered => {
-            style.accent_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+            style.accent_color_hovered = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgCheckboxStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgCheckboxStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgCheckboxStyleParam::BorderRadius => {
-            style.border_radius = try_extract_vec_f32(value);
+            style.border_radius = try_extract_vec_f32(value, name);
         },
         IpgCheckboxStyleParam::BorderWidth => {
-            style.border_width = try_extract_f64(value) as f32;
+            style.border_width = try_extract_f64(value, name) as f32;
         },
         IpgCheckboxStyleParam::IconIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.icon_color = get_color(None, Some(color), 1.0, false);
         },
         IpgCheckboxStyleParam::IconRgbaColor => {
-            style.icon_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.icon_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgCheckboxStyleParam::TextIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.text_color = get_color(None, Some(color), 1.0, false);
         },
         IpgCheckboxStyleParam::TextRgbaColor => {
-            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.text_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
     }
 }

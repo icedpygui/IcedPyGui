@@ -321,38 +321,37 @@ pub fn svg_item_update(img: &mut IpgSvg,
                             value: PyObject,
                             )
 {
-
     let update = try_extract_svg_update(item);
-
+    let name = "Svg".to_string();
     match update {
         IpgSvgParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             img.height = get_height(Some(val as f32), false);
         },
         IpgSvgParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             img.height = get_height(None, val);
         },
         IpgSvgParam::ImagePath => {
-            img.svg_path = try_extract_string(value);
+            img.svg_path = try_extract_string(value, name);
         },
         IpgSvgParam::Show => {
-            img.show = try_extract_boolean(value);
+            img.show = try_extract_boolean(value, name);
         },
         IpgSvgParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             img.width = get_width(Some(val as f32), false);
         },
         IpgSvgParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             img.width = get_width(None, val);
         },
         IpgSvgParam::RotationRadians => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             img.rotation_radians = val as f32;
         },
         IpgSvgParam::Opacity => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             img.opacity = val as f32;
         },
     }

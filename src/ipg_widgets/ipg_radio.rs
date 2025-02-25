@@ -407,16 +407,16 @@ pub fn radio_item_update(rd: &mut IpgRadio,
                             )
 {
     let update = try_extract_radio_update(item);
-
+    let name = "Radio".to_string();
     match update {
         IpgRadioParam::Direction => {
             rd.direction = try_extract_radio_direction(value);
         },
         IpgRadioParam::Labels => {
-            rd.labels = try_extract_vec_str(value);
+            rd.labels = try_extract_vec_str(value, name);
         },
         IpgRadioParam::Padding => {
-            let val = try_extract_vec_f64(value);
+            let val = try_extract_vec_f64(value, name);
             rd.padding =  get_padding_f64(val);
         },
         IpgRadioParam::SelectedIndex => {
@@ -437,29 +437,29 @@ pub fn radio_item_update(rd: &mut IpgRadio,
             }
         },
         IpgRadioParam::Show => {
-            rd.show = try_extract_boolean(value);
+            rd.show = try_extract_boolean(value, name);
         },
         IpgRadioParam::Size => {
-            rd.size = try_extract_f64(value) as f32;
+            rd.size = try_extract_f64(value, name) as f32;
         },
         IpgRadioParam::Spacing => {
-            rd.spacing = try_extract_f64(value) as f32;
+            rd.spacing = try_extract_f64(value, name) as f32;
         },
         IpgRadioParam::StyleId => {
-            rd.style_id = Some(try_extract_f64(value) as usize);
+            rd.style_id = Some(try_extract_f64(value, name) as usize);
         },
         IpgRadioParam::TextSpacing => {
-            rd.text_spacing = try_extract_f64(value) as f32;
+            rd.text_spacing = try_extract_f64(value, name) as f32;
         },
         IpgRadioParam::TextSize => {
-            rd.text_size = try_extract_f64(value) as f32;
+            rd.text_size = try_extract_f64(value, name) as f32;
         },
         IpgRadioParam::LineHeightPixels => {
-            let val = try_extract_u16(value);
+            let val = try_extract_u16(value, name);
             rd.text_line_height = LineHeight::Absolute(Pixels(val.into()));
         },
         IpgRadioParam::LineHeightRelative => {
-            let val = try_extract_f64(value) as f32;
+            let val = try_extract_f64(value, name) as f32;
             rd.text_line_height = LineHeight::Relative(val);
         },
         IpgRadioParam::UserData => {
@@ -472,7 +472,7 @@ pub fn radio_item_update(rd: &mut IpgRadio,
             }
         },
         IpgRadioParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             if val {
                 rd.width = get_width(None, val);
             } else {
@@ -486,7 +486,7 @@ pub fn radio_item_update(rd: &mut IpgRadio,
             }
         },
         IpgRadioParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             if val {
                 rd.height = get_height(None, val);
             } else {
@@ -588,46 +588,46 @@ pub fn radio_style_update_item(style: &mut IpgRadioStyle,
                                 item: PyObject,
                                 value: PyObject,) 
 {
-
     let update = try_extract_radio_style_update(item);
+    let name = "RadioStyle".to_string();
     match update {
         IpgRadioStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgRadioStyleParam::BackgroundRbgaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgRadioStyleParam::DotIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.dot_color = get_color(None, Some(color), 1.0, false);
         },
         IpgRadioStyleParam::DotRgbaColor => {
-            style.dot_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.dot_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgRadioStyleParam::DotIpgColorHovered => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.dot_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgRadioStyleParam::DotRgbaColorHovered => {
-            style.dot_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+            style.dot_color_hovered = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgRadioStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgRadioStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgRadioStyleParam::BorderWidth => {
-            style.border_width = Some(try_extract_f64(value) as f32);
+            style.border_width = Some(try_extract_f64(value, name) as f32);
         },
         IpgRadioStyleParam::TextIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.text_color = get_color(None, Some(color), 1.0, false);
         },
         IpgRadioStyleParam::TextRgbaColor => {
-            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.text_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
     }
 }

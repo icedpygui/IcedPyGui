@@ -113,17 +113,17 @@ pub enum IpgTextParam {
 pub fn text_item_update(txt: &mut IpgText, item: PyObject, value: PyObject) {
 
     let update = try_extract_text_update(item);
-
+    let name = "Text".to_string();
     match update {
         IpgTextParam::Content => {
-            txt.content = try_extract_string(value);
+            txt.content = try_extract_string(value, name);
         },
         IpgTextParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             txt.height = get_height(Some(val as f32), false); 
         },
         IpgTextParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             txt.height = get_height(None, val);
         },
         IpgTextParam::AlignX => {
@@ -133,30 +133,30 @@ pub fn text_item_update(txt: &mut IpgText, item: PyObject, value: PyObject) {
             txt.align_y = try_extract_vert_alignment(value);
         },
         IpgTextParam::LineHeight => {
-            let val = try_extract_f64(value) as f32;
+            let val = try_extract_f64(value, name) as f32;
             txt.line_height = LineHeight::Relative(val);
         },
         IpgTextParam::Show => {
-            txt.show = try_extract_boolean(value);
+            txt.show = try_extract_boolean(value, name);
         },
         IpgTextParam::Size => {
-            txt.size = try_extract_f64(value) as f32;
+            txt.size = try_extract_f64(value, name) as f32;
         },
         IpgTextParam::TextColor => {
-            let ipg_color = Some(try_extract_ipg_color(value));
+            let ipg_color = Some(try_extract_ipg_color(value, name));
             txt.style = get_color(None, ipg_color, 1.0, false);
         },
         IpgTextParam::TextRgba => {
-            let v = try_extract_vec_f32(value);
+            let v = try_extract_vec_f32(value, name);
             let color_rgba = Some([v[0], v[1], v[2], v[3]]);
             txt.style = get_color(color_rgba, None, 1.0, false);
         },
         IpgTextParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             txt.width = get_width(Some(val as f32), false);
         },
         IpgTextParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             txt.width = get_width(None, val);
         },
     }

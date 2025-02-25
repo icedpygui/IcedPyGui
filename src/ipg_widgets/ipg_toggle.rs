@@ -240,20 +240,20 @@ pub fn toggler_item_update(tog: &mut IpgToggler,
                             )
 {
     let update = try_extract_toggler_update(item);
-  
+    let name = "Toggler".to_string();
     match update {
         IpgTogglerParam::Label => {
-            tog.label = Some(try_extract_string(value));
+            tog.label = Some(try_extract_string(value, name));
         },
         IpgTogglerParam::Show => {
-            tog.show = try_extract_boolean(value);
+            tog.show = try_extract_boolean(value, name);
         },
         IpgTogglerParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             tog.width = get_width(Some(val as f32), false);
         },
         IpgTogglerParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             tog.width = get_width(None, val);
         },
         IpgTogglerParam::HorizontalAlignment => {
@@ -264,15 +264,15 @@ pub fn toggler_item_update(tog: &mut IpgToggler,
             tog.text_alignment = val.unwrap();
         },
         IpgTogglerParam::LineHeight => {
-            let val = try_extract_f64(value) as f32; 
+            let val = try_extract_f64(value, name) as f32; 
             tog.text_line_height = LineHeight::Relative(val);
         },
         IpgTogglerParam::Size => {
-            let val = try_extract_f64(value) as f32;
+            let val = try_extract_f64(value, name) as f32;
             tog.size = val;
         },
         IpgTogglerParam::TextSize => {
-            let val = try_extract_f64(value) as f32;
+            let val = try_extract_f64(value, name) as f32;
             tog.text_size = val;
         },
     }
@@ -402,68 +402,69 @@ pub fn toggler_style_update_item(style: &mut IpgTogglerStyle,
                             value: PyObject,) 
 {
     let update = try_extract_toggler_style_update(item);
+    let name = "ogglerStyle".to_string();
     match update {
         IpgTogglerStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTogglerStyleParam::BackgroundRbgaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTogglerStyleParam::BackgroundIpgColorToggled => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color_toggled = get_color(None, Some(color), 1.0, false);
         },
         IpgTogglerStyleParam::BackgroundRgbaToggled => {
-            style.background_color_toggled = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color_toggled = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTogglerStyleParam::BackgroundIpgColorDisabled => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color_toggled = get_color(None, Some(color), 1.0, false);
         },
         IpgTogglerStyleParam::BackgroundRbgaColorDisabled => {
-            style.background_color_toggled = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color_toggled = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTogglerStyleParam::BackgroundBorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTogglerStyleParam::BackgroundBorderRgbaColor => {
-            style.background_border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTogglerStyleParam::BackgroundBorderWidth => {
-            style.background_border_width = Some(try_extract_f64(value) as f32);
+            style.background_border_width = Some(try_extract_f64(value, name) as f32);
         },
         IpgTogglerStyleParam::ForegroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.foreground_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTogglerStyleParam::ForegroundRbgaColor => {
-            style.foreground_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.foreground_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTogglerStyleParam::ForegroundIpgColorToggled => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.foreground_color_toggled = get_color(None, Some(color), 1.0, false);
         },
         IpgTogglerStyleParam::ForegroundRgbaToggled => {
-            style.foreground_color_toggled = Some(Color::from(try_extract_rgba_color(value)));
+            style.foreground_color_toggled = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTogglerStyleParam::ForegroundIpgColorDisabled => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.foreground_color_toggled = get_color(None, Some(color), 1.0, false);
         },
         IpgTogglerStyleParam::ForegroundRbgaColorDisabled => {
-            style.foreground_color_toggled = Some(Color::from(try_extract_rgba_color(value)));
+            style.foreground_color_toggled = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTogglerStyleParam::ForegroundBorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.foreground_border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTogglerStyleParam::ForegroundBorderRgbaColor => {
-            style.foreground_border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.foreground_border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTogglerStyleParam::ForegroundBorderWidth => {
-            style.foreground_border_width = Some(try_extract_f64(value) as f32);
+            style.foreground_border_width = Some(try_extract_f64(value, name) as f32);
         },
     }
 }

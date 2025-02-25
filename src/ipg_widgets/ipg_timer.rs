@@ -253,49 +253,49 @@ pub fn timer_item_update(tim: &mut IpgTimer,
                         )
 {
     let update = try_extract_timer_update(item);
-
+    let name = "Timer".to_string();
     match update {
         IpgTimerParam::DurationMs => {
-            tim.duration_ms = try_extract_i64(value) as u64;
+            tim.duration_ms = try_extract_i64(value, name) as u64;
         },
        IpgTimerParam::ArrowStyle => {
             tim.style_arrow = Some(try_extract_button_arrow(value));
         },
         IpgTimerParam::Counter => {
-            tim.counter = try_extract_u64(value);
+            tim.counter = try_extract_u64(value, name);
         }
         IpgTimerParam::Label => {
-            tim.label = try_extract_string(value);
+            tim.label = try_extract_string(value, name);
         },
         IpgTimerParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             tim.height = get_height(Some(val as f32), false);
         },
         IpgTimerParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             tim.height = get_height(None, val);
         },
         IpgTimerParam::Padding => {
-            tim.padding =  get_padding_f64(try_extract_vec_f64(value));
+            tim.padding =  get_padding_f64(try_extract_vec_f64(value, name));
         },
         IpgTimerParam::Clip => {
-            tim.clip = try_extract_boolean(value);
+            tim.clip = try_extract_boolean(value, name);
         }
         IpgTimerParam::Show => {
-            tim.show = try_extract_boolean(value);
+            tim.show = try_extract_boolean(value, name);
         },
         IpgTimerParam::StyleId => {
-            tim.style_id = Some(try_extract_f64(value) as usize);
+            tim.style_id = Some(try_extract_f64(value, name) as usize);
         },
         IpgTimerParam::StyleStandard => {
-            tim.style_standard = Some(try_extract_style_standard(value));
+            tim.style_standard = Some(try_extract_style_standard(value, name));
         },
         IpgTimerParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             tim.width = get_width(Some(val as f32), false);
         },
         IpgTimerParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             tim.width = get_width(None, val);
         }, 
     }
@@ -414,56 +414,57 @@ pub fn timer_style_update_item(style: &mut IpgTimerStyle,
                             value: PyObject,) 
 {
     let update = try_extract_timer_style_update(item);
+    let name = "TimerStyle".to_string();
     match update {
         IpgTimerStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTimerStyleParam::BackgroundRbgaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTimerStyleParam::BackgroundIpgColorHovered => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgTimerStyleParam::BackgroundIpgRgbaHovered => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTimerStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTimerStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTimerStyleParam::BorderRadius => {
-            style.border_radius = try_extract_vec_f32(value);
+            style.border_radius = try_extract_vec_f32(value, name);
         },
         IpgTimerStyleParam::BorderWidth => {
-            style.border_width = try_extract_f64(value) as f32;
+            style.border_width = try_extract_f64(value, name) as f32;
         },
         IpgTimerStyleParam::ShadowIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.shadow_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTimerStyleParam::ShadowRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTimerStyleParam::ShadowOffsetX => {
-            style.shadow_offset_x = try_extract_f64(value) as f32;
+            style.shadow_offset_x = try_extract_f64(value, name) as f32;
         },
         IpgTimerStyleParam::ShadowOffsetY => {
-            style.shadow_offset_y = try_extract_f64(value) as f32;
+            style.shadow_offset_y = try_extract_f64(value, name) as f32;
         },
         IpgTimerStyleParam::ShadowBlurRadius => {
-            style.shadow_blur_radius = try_extract_f64(value) as f32;
+            style.shadow_blur_radius = try_extract_f64(value, name) as f32;
         },
         IpgTimerStyleParam::TextIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.text_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTimerStyleParam::TextRgbaColor => {
-            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.text_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
     }
 }

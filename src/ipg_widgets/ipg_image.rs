@@ -344,42 +344,41 @@ pub fn image_item_update(img: &mut IpgImage,
                             value: PyObject,
                             )
 {
-
     let update = try_extract_button_update(item);
-
+    let name = "Image".to_string();
     match update {
         IpgImageParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             img.height = get_height(Some(val as f32), false);
         },
         IpgImageParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             img.height = get_height(None, val);
         },
         IpgImageParam::ImagePath => {
-            img.image_path = try_extract_string(value);
+            img.image_path = try_extract_string(value, name);
         },
         IpgImageParam::Padding => {
-            let val = try_extract_vec_f64(value);
+            let val = try_extract_vec_f64(value, name);
             img.padding =  get_padding_f64(val);
         },
         IpgImageParam::Show => {
-            img.show = try_extract_boolean(value);
+            img.show = try_extract_boolean(value, name);
         },
         IpgImageParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             img.width = get_width(Some(val as f32), false);
         },
         IpgImageParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             img.width = get_width(None, val);
         },
         IpgImageParam::RotationRadians => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             img.rotation_radians = val as f32;
         },
         IpgImageParam::Opacity => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             img.opacity = val as f32;
         },
     }

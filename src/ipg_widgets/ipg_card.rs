@@ -229,25 +229,25 @@ pub fn card_item_update(crd: &mut IpgCard,
                             )
 {
     let update = try_extract_card_update(item);
-
+    let name = "Card".to_string();
     match update {
         IpgCardParam::Body => {
-            crd.body = try_extract_string(value);
+            crd.body = try_extract_string(value, name);
         },
         IpgCardParam::Foot => {
-            crd.foot = Some(try_extract_string(value));
+            crd.foot = Some(try_extract_string(value, name));
         },
         IpgCardParam::Head => {
-            crd.head = try_extract_string(value);
+            crd.head = try_extract_string(value, name);
         },
         IpgCardParam::IsOpen => {
-            crd.is_open = try_extract_boolean(value);
+            crd.is_open = try_extract_boolean(value, name);
         },
         IpgCardParam::Style => {
             crd.style = Some(value);
         },
         IpgCardParam::Show => {
-            crd.show = try_extract_boolean(value);
+            crd.show = try_extract_boolean(value, name);
         },
     }
 }

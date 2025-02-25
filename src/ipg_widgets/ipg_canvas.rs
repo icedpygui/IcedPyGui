@@ -156,37 +156,37 @@ pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
                             )
 {
     let update = try_extract_canvas_update(item);
-
+    let name = "Canvas".to_string();
     match update {
         IpgCanvasParam::Clear => {
             canvas_state.clear_curves();
         },
         IpgCanvasParam::CanvasColor => {
-            let rgba = try_extract_rgba_color(value);
+            let rgba = try_extract_rgba_color(value, name);
             canvas_state.selected_canvas_color = Some(Color::from(rgba));
             canvas_state.request_redraw();
             canvas_state.request_text_redraw();
         },
         IpgCanvasParam::DrawColor => {
-            let rgba = try_extract_rgba_color(value);
+            let rgba = try_extract_rgba_color(value, name);
             canvas_state.selected_draw_color = Color::from(rgba);
         },
         IpgCanvasParam::FilePath => {
-            canvas_state.file_path = try_extract_string(value);
+            canvas_state.file_path = try_extract_string(value, name);
         },
         IpgCanvasParam::FillColor => {
-            let rgba = try_extract_rgba_color(value);
+            let rgba = try_extract_rgba_color(value, name);
             canvas_state.selected_fill_color = Some(Color::from(rgba));
         },
         IpgCanvasParam::DrawWidth => {
-            let width = try_extract_f64(value) as f32;
+            let width = try_extract_f64(value, name) as f32;
             canvas_state.selected_width = width;
         },
         IpgCanvasParam::Mode => {
             canvas_state.draw_mode = try_extract_mode(value);
         },
         IpgCanvasParam::PolyPoints => {
-            let input = try_extract_string(value);
+            let input = try_extract_string(value, name);
             canvas_state.selected_poly_points = match input.parse::<usize>() {
                 Ok(int) => int,
                 Err(e) => panic!("PolyPoint input must be an integer, {}", e),
@@ -269,13 +269,13 @@ pub enum IpgCanvasGeometryParam {
 pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObject) {
 
     let update_item = try_extract_geometry_update(item);
-
+    let name = "CanvasGeometry".to_string();
     match widget {
         IpgWidget::None => (),
         IpgWidget::Arc(arc) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     arc.mid_point = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
@@ -286,11 +286,11 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::Bezier(bz) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     bz.mid_point = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
-                    let val = try_extract_f64(value) as f32;
+                    let val = try_extract_f64(value, name) as f32;
                     bz.rotation = val;
                 },
             }
@@ -298,7 +298,7 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::Circle(cir) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     cir.center = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
@@ -309,11 +309,11 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::Ellipse(ell) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     ell.center = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
-                    let val = try_extract_f64(value) as f32;
+                    let val = try_extract_f64(value, name) as f32;
                     ell.rotation = Radians(val);
                 },
             }
@@ -321,11 +321,11 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::Image(img) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     img.position = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
-                    let val = try_extract_f64(value) as f32;
+                    let val = try_extract_f64(value, name) as f32;
                     img.rotation = val;
                 },
             }
@@ -333,11 +333,11 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::Line(line) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     line.mid_point = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
-                    let val = try_extract_f64(value) as f32;
+                    let val = try_extract_f64(value, name) as f32;
                     line.rotation = val;
                 },
             }
@@ -345,11 +345,11 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::PolyLine(pl) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     pl.mid_point = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
-                    let val = try_extract_f64(value) as f32;
+                    let val = try_extract_f64(value, name) as f32;
                     pl.rotation = val;
                 },
             }
@@ -357,11 +357,11 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::Polygon(pg) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     pg.mid_point = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
-                    let val = try_extract_f64(value) as f32;
+                    let val = try_extract_f64(value, name) as f32;
                     pg.rotation = val;
                 },
             }
@@ -369,7 +369,7 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::Rectangle(rect) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     rect.mid_point = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
@@ -380,11 +380,11 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::RightTriangle(tr) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     tr.mid_point = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
-                    let val = try_extract_f64(value) as f32;
+                    let val = try_extract_f64(value, name) as f32;
                     tr.rotation = val;
                 },
             }
@@ -392,11 +392,11 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::Text(txt) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     txt.position = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {
-                    let val = try_extract_f64(value) as f32;
+                    let val = try_extract_f64(value, name) as f32;
                     txt.rotation = val;
                 },
             }
@@ -404,7 +404,7 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
         IpgWidget::FreeHand(fh) => {
             match update_item {
                 IpgCanvasGeometryParam::Position => {
-                    let val = try_extract_point(value);
+                    let val = try_extract_point(value, name);
                     fh.points[0] = Point::from(val);
                 },
                 IpgCanvasGeometryParam::Rotation => {

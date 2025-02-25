@@ -248,36 +248,36 @@ pub fn button_item_update(btn: &mut IpgButton,
                             )
 {
     let update = try_extract_button_update(item);
-
+    let name = "Button".to_string();
     match update {
        IpgButtonParam::ArrowStyle => {
             btn.style_arrow = Some(try_extract_button_arrow(value));
         },
         IpgButtonParam::Label => {
-            btn.label = try_extract_string(value);
+            btn.label = try_extract_string(value, name);
         },
         IpgButtonParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             btn.height = get_height(Some(val as f32), false);
         },
         IpgButtonParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             btn.height = get_height(None, val);
         },
         IpgButtonParam::Padding => {
-            btn.padding =  get_padding_f64(try_extract_vec_f64(value));
+            btn.padding =  get_padding_f64(try_extract_vec_f64(value, name));
         },
         IpgButtonParam::Clip => {
-            btn.clip = try_extract_boolean(value);
+            btn.clip = try_extract_boolean(value, name);
         }
         IpgButtonParam::Show => {
-            btn.show = try_extract_boolean(value);
+            btn.show = try_extract_boolean(value, name);
         },
         IpgButtonParam::StyleId => {
-            btn.style_id = Some(try_extract_f64(value) as usize);
+            btn.style_id = Some(try_extract_f64(value, name) as usize);
         },
         IpgButtonParam::StyleStandard => {
-            btn.style_standard = Some(try_extract_style_standard(value));
+            btn.style_standard = Some(try_extract_style_standard(value, name));
         },
         IpgButtonParam::TextAlignX => {
             let h_align = try_extract_ipg_horizontal_alignment(value).unwrap();
@@ -288,11 +288,11 @@ pub fn button_item_update(btn: &mut IpgButton,
             btn.text_align_y= get_vertical_alignment(v_align);
         },
         IpgButtonParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             btn.width = get_width(Some(val as f32), false);
         },
         IpgButtonParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             btn.width = get_width(None, val);
         },
     }
@@ -323,58 +323,58 @@ pub fn button_style_update_item(style: &mut IpgButtonStyle,
                             item: PyObject,
                             value: PyObject,) 
 {
-
     let update = try_extract_button_style_update(item);
+    let name = "ButtonStyle".to_string();
     match update {
         IpgButtonStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgButtonStyleParam::BackgroundRbgaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgButtonStyleParam::BackgroundIpgColorHovered => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgButtonStyleParam::BackgroundIpgRgbaHovered => {
-            style.background_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color_hovered = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgButtonStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgButtonStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgButtonStyleParam::BorderRadius => {
-            style.border_radius = try_extract_vec_f32(value);
+            style.border_radius = try_extract_vec_f32(value, name);
         },
         IpgButtonStyleParam::BorderWidth => {
-            style.border_width = try_extract_f64(value) as f32;
+            style.border_width = try_extract_f64(value, name) as f32;
         },
         IpgButtonStyleParam::ShadowIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.shadow_color = get_color(None, Some(color), 1.0, false);
         },
         IpgButtonStyleParam::ShadowRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgButtonStyleParam::ShadowOffsetX => {
-            style.shadow_offset_x = try_extract_f64(value) as f32;
+            style.shadow_offset_x = try_extract_f64(value, name) as f32;
         },
         IpgButtonStyleParam::ShadowOffsetY => {
-            style.shadow_offset_y = try_extract_f64(value) as f32;
+            style.shadow_offset_y = try_extract_f64(value, name) as f32;
         },
         IpgButtonStyleParam::ShadowBlurRadius => {
-            style.shadow_blur_radius = try_extract_f64(value) as f32;
+            style.shadow_blur_radius = try_extract_f64(value, name) as f32;
         },
         IpgButtonStyleParam::TextIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.text_color = get_color(None, Some(color), 1.0, false);
         },
         IpgButtonStyleParam::TextRgbaColor => {
-            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.text_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
     }
 }

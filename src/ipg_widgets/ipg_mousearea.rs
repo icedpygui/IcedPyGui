@@ -230,10 +230,10 @@ pub fn mousearea_item_update(img: &mut IpgMouseArea,
 {
 
     let update = try_extract_mousearea_update(item);
-
+    let name = "MouseArea".to_string();
     match update {
         IpgMouseAreaParam::Show => {
-            img.show = try_extract_boolean(value);
+            img.show = try_extract_boolean(value, name);
         },
     }
 }

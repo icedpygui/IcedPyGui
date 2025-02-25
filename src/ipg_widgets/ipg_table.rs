@@ -511,62 +511,62 @@ pub fn table_item_update(
 {
     
     let update = try_extract_table_update(item);
-    
+    let name = "Table".to_string();
     match update {
         IpgTableParam::Title => {
-            table.title = try_extract_string(value);
+            table.title = try_extract_string(value, name);
         },
         IpgTableParam::ColumnWidths => {
-            table.column_widths = try_extract_vec_f32(value);
+            table.column_widths = try_extract_vec_f32(value, name);
         },
         IpgTableParam::Width => {
-            let width = Some(try_extract_f64(value) as f32);
+            let width = Some(try_extract_f64(value, name) as f32);
             table.width = get_width(width, false);
         },
         IpgTableParam::Height => {
-            table.height = try_extract_f64(value) as f32;
+            table.height = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::RowHighlight => {
             table.row_highlight = Some(try_extract_row_highlight(value));
         },
         IpgTableParam::HighlightAmount => {
-            table.highlight_amount = try_extract_f64(value) as f32;
+            table.highlight_amount = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::ColumnSpacing => {
-            table.column_spacing = try_extract_f64(value) as f32;
+            table.column_spacing = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::RowSpacing => {
-            table.row_spacing = try_extract_f64(value) as f32;
+            table.row_spacing = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::DividerWidth => {
-            table.divider_width = try_extract_f64(value) as f32;
+            table.divider_width = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::ResizeColumnsEnabled => {
-            table.resize_columns_enabled = try_extract_boolean(value);
+            table.resize_columns_enabled = try_extract_boolean(value, name);
         },
         IpgTableParam::MinColumnWidth => {
-            table.min_column_width = Some(try_extract_f64(value) as f32);
+            table.min_column_width = Some(try_extract_f64(value, name) as f32);
         },
         IpgTableParam::CellPadding => {
-            table.cell_padding = try_extract_f64(value) as f32;
+            table.cell_padding = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::Show => {
-            table.show = try_extract_boolean(value);
+            table.show = try_extract_boolean(value, name);
         },
         IpgTableParam::TableWidthFixed => {
-            table.table_width_fixed = try_extract_boolean(value);
+            table.table_width_fixed = try_extract_boolean(value, name);
         },
         IpgTableParam::TableWidth => {
-            table.table_width = try_extract_f64(value) as f32;
+            table.table_width = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::ScrollerWidth => {
-            table.scroller_width = try_extract_f64(value) as f32;
+            table.scroller_width = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::ScrollerBarWidth => {
-            table.scroller_bar_width = try_extract_f64(value) as f32;
+            table.scroller_bar_width = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::ScrollerMargin => {
-            table.scroller_margin = try_extract_f64(value) as f32;
+            table.scroller_margin = try_extract_f64(value, name) as f32;
         },
     }
 }

@@ -205,25 +205,26 @@ pub fn rule_style_update_item(style: &mut IpgRuleStyle,
                             value: PyObject,) {
 
     let update = try_extract_rule_style_update(item);
+    let name = "RulerStyle".to_string();
     match update {
         IpgRuleStyleParam::IpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.color = get_color(None, Some(color), 1.0, false);
         },
         IpgRuleStyleParam::RbgaColor => {
-            style.color = Some(Color::from(try_extract_rgba_color(value)));
+            style.color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgRuleStyleParam::BorderRadius => {
-            style.border_radius = Some(try_extract_vec_f32(value));
+            style.border_radius = Some(try_extract_vec_f32(value, name));
         },
         IpgRuleStyleParam::FillModePercent => {
-            style.fillmode_percent = Some(try_extract_f64(value) as f32);
+            style.fillmode_percent = Some(try_extract_f64(value, name) as f32);
         },
         IpgRuleStyleParam::FillModePadded => {
-            style.fillmode_padded = Some(try_extract_u16(value))
+            style.fillmode_padded = Some(try_extract_u16(value, name))
         },
         IpgRuleStyleParam::FillModeAsymmetricPadding => {
-            style.fillmode_asymmetric_padding = Some(try_extract_vec_u16(value))
+            style.fillmode_asymmetric_padding = Some(try_extract_vec_u16(value, name))
         },
     }
 }

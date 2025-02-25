@@ -267,38 +267,38 @@ pub fn text_input_item_update(ti: &mut IpgTextInput,
                                 )
 {
     let update = try_extract_text_input_update(item);
-
+    let name = "TextInput".to_string();
     match update {
         IpgTextInputParam::Placeholder => {
-            ti.placeholder = try_extract_string(value);
+            ti.placeholder = try_extract_string(value, name);
         },
         IpgTextInputParam::Value => {
-            ti.value = try_extract_string(value);
+            ti.value = try_extract_string(value, name);
         },
         IpgTextInputParam::IsSecure => {
-            ti.is_secure = try_extract_boolean(value);
+            ti.is_secure = try_extract_boolean(value, name);
         },
         IpgTextInputParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             ti.width = get_width(Some(val as f32), false);
         },
         IpgTextInputParam::Padding => {
-            let val = try_extract_vec_f64(value);
+            let val = try_extract_vec_f64(value, name);
             ti.padding =  get_padding_f64(val);
         },
         IpgTextInputParam::Size => {
-            ti.size = try_extract_f64(value) as f32;
+            ti.size = try_extract_f64(value, name) as f32;
         },
         IpgTextInputParam::LineHeightPixels => {
-            let val = try_extract_u16(value);
+            let val = try_extract_u16(value, name);
             ti.line_height = LineHeight::Absolute(Pixels(val.into()));
         },
         IpgTextInputParam::LineHeightRelative => {
-            let val = try_extract_f64(value) as f32;
+            let val = try_extract_f64(value, name) as f32;
             ti.line_height = LineHeight::Relative(val);
         },
         IpgTextInputParam::StyleId => {
-            ti.style_id = Some(try_extract_f64(value) as usize);
+            ti.style_id = Some(try_extract_f64(value, name) as usize);
         },
     }
 }
@@ -427,65 +427,66 @@ pub enum IpgTextInputStyleParam {
 }
 
 pub fn text_input_style_update_item(style: &mut IpgTextInputStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                                    item: PyObject,
+                                    value: PyObject,) 
 {
     let update = try_extract_text_input_style_update(item);
+    let name = "TextInputStyle".to_string();
     match update {
         IpgTextInputStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTextInputStyleParam::BackgroundRgbaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTextInputStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTextInputStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTextInputStyleParam::BorderIpgColorHovered => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgTextInputStyleParam::BorderRgbaColorHovered => {
-            style.border_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color_hovered = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTextInputStyleParam::BorderIpgColorFocused => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color_focused = get_color(None, Some(color), 1.0, false);
         },
         IpgTextInputStyleParam::BorderRgbaColorFocused => {
-            style.border_color_focused = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color_focused = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTextInputStyleParam::BorderWidth => {
-            style.border_width = Some(try_extract_f64(value) as f32);
+            style.border_width = Some(try_extract_f64(value, name) as f32);
         },
         IpgTextInputStyleParam::BorderRadius => {
-            style.border_radius = Some(try_extract_vec_f32(value))
+            style.border_radius = Some(try_extract_vec_f32(value, name))
         },
         IpgTextInputStyleParam::PlaceholderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.placeholder_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTextInputStyleParam::PlaceholderRgbaColor => {
-            style.placeholder_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.placeholder_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTextInputStyleParam::ValueIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.value_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTextInputStyleParam::ValueRgbaColor => {
-            style.value_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.value_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgTextInputStyleParam::SelectionIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.selection_color = get_color(None, Some(color), 1.0, false);
         },
         IpgTextInputStyleParam::SelectionRgbaColor => {
-            style.selection_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.selection_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
     }
 

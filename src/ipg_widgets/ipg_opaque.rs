@@ -137,10 +137,10 @@ pub fn opaque_item_update(op: &mut IpgOpaque,
                             value: PyObject,) {
 
     let update = try_extract_stack_update(item);
-
+    let name = "OpaqueContainer".to_string();
     match update {
         IpgOpaqueParam::Show => {
-            op.show = try_extract_boolean(value);
+            op.show = try_extract_boolean(value, name);
         },
     }
 }

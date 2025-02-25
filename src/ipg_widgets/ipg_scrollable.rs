@@ -346,36 +346,36 @@ pub fn scrollable_item_update(scroll: &mut IpgScrollable,
                             ) 
 {
     let update = try_extract_scrollable_update(item);
-
+    let name = "Scrollable".to_string();
     match update {
         IpgScrollableParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             scroll.width = get_width(Some(val as f32), false);
         },
         IpgScrollableParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             scroll.height = get_height(Some(val as f32), false);
         },
         IpgScrollableParam::HBarWidth => {
-            scroll.h_bar_width = try_extract_f64(value) as f32;
+            scroll.h_bar_width = try_extract_f64(value, name) as f32;
         },
         IpgScrollableParam::HBarMargin => {
-            scroll.h_bar_margin = try_extract_f64(value) as f32;
+            scroll.h_bar_margin = try_extract_f64(value, name) as f32;
         },
         IpgScrollableParam::HScrollerWidth => {
-            scroll.h_scroller_width = try_extract_f64(value) as f32;
+            scroll.h_scroller_width = try_extract_f64(value, name) as f32;
         },
         IpgScrollableParam::HBarAlignment => {
             scroll.h_bar_alignment = try_extract_alignment(value);
         },
         IpgScrollableParam::VBarWidth => {
-            scroll.v_bar_width = try_extract_f64(value) as f32;
+            scroll.v_bar_width = try_extract_f64(value, name) as f32;
         },
         IpgScrollableParam::VBarMargin => {
-            scroll.v_bar_margin = try_extract_f64(value) as f32;
+            scroll.v_bar_margin = try_extract_f64(value, name) as f32;
         },
         IpgScrollableParam::VScrollerWidth => {
-            scroll.v_scroller_width = try_extract_f64(value) as f32;
+            scroll.v_scroller_width = try_extract_f64(value, name) as f32;
         },
         IpgScrollableParam::VBarAlignment => {
             scroll.v_bar_alignment = try_extract_alignment(value);
@@ -593,92 +593,92 @@ pub fn scroll_style_update_item(style: &mut IpgScrollableStyle,
                             item: PyObject,
                             value: PyObject,) 
 {
-
     let update = try_extract_scroll_style_update(item);
+    let name = "ScrollableStyle".to_string();
     match update {
         IpgScrollableStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgScrollableStyleParam::BackgroundRbgaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgScrollableStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgScrollableStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgScrollableStyleParam::BorderRadius => {
-            style.border_radius = try_extract_vec_f32(value);
+            style.border_radius = try_extract_vec_f32(value, name);
         },
         IpgScrollableStyleParam::BorderWidth => {
-            style.border_width = try_extract_f64(value) as f32;
+            style.border_width = try_extract_f64(value, name) as f32;
         },
         IpgScrollableStyleParam::ShadowIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.shadow_color = get_color(None, Some(color), 1.0, false);
         },
         IpgScrollableStyleParam::ShadowRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgScrollableStyleParam::ShadowOffsetX => {
-            style.shadow_offset_x = try_extract_f64(value) as f32;
+            style.shadow_offset_x = try_extract_f64(value, name) as f32;
         },
         IpgScrollableStyleParam::ShadowOffsetY => {
-            style.shadow_offset_y = try_extract_f64(value) as f32;
+            style.shadow_offset_y = try_extract_f64(value, name) as f32;
         },
         IpgScrollableStyleParam::ShadowBlurRadius => {
-            style.shadow_blur_radius = try_extract_f64(value) as f32;
+            style.shadow_blur_radius = try_extract_f64(value, name) as f32;
         },
         IpgScrollableStyleParam::TextIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.text_color = get_color(None, Some(color), 1.0, false);
         },
         IpgScrollableStyleParam::TextRgbaColor => {
-            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.text_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgScrollableStyleParam::ScrollbarIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.scrollbar_color = get_color(None, Some(color), 1.0, false);
         },
         IpgScrollableStyleParam::ScrollbarRgbaColor => {
-            style.scrollbar_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.scrollbar_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgScrollableStyleParam::ScrollbarBorderRadius => {
-            style.scrollbar_border_radius = try_extract_vec_f32(value);
+            style.scrollbar_border_radius = try_extract_vec_f32(value, name);
         },
         IpgScrollableStyleParam::ScrollbarBorderWidth => {
-            style.scrollbar_border_width = try_extract_f64(value) as f32;
+            style.scrollbar_border_width = try_extract_f64(value, name) as f32;
         },
         IpgScrollableStyleParam::ScrollbarBorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.scrollbar_border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgScrollableStyleParam::ScrollbarBorderRgbaColor => {
-            style.scrollbar_border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.scrollbar_border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgScrollableStyleParam::ScrollerIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.scroller_color = get_color(None, Some(color), 1.0, false);
         },
         IpgScrollableStyleParam::ScrollerRgbaColor => {
-            style.scroller_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.scroller_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgScrollableStyleParam::ScrollerIpgColorHovered => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.scroller_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgScrollableStyleParam::ScrollerRgbaColorHovered => {
-            style.scroller_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+            style.scroller_color_hovered = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgScrollableStyleParam::ScrollerIpgColorDragged => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.scroller_color_dragged = get_color(None, Some(color), 1.0, false);
         },
         IpgScrollableStyleParam::ScrollerRgbaColorDragged => {
-            style.scroller_color_dragged = Some(Color::from(try_extract_rgba_color(value)));
+            style.scroller_color_dragged = Some(Color::from(try_extract_rgba_color(value, name)));
         },
     }
 }

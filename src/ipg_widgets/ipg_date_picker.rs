@@ -611,20 +611,20 @@ pub fn date_picker_item_update(dp: &mut IpgDatePicker,
                                 )
 {
     let update = try_extract_date_picker_update(item);
-
+    let name = "DatePicker".to_string();
     match update {
         IpgDatePickerParam::Label => {
-            dp.label = try_extract_string(value);
+            dp.label = try_extract_string(value, name);
         },
         IpgDatePickerParam::Padding => {
-            let pd = try_extract_vec_f64(value);
+            let pd = try_extract_vec_f64(value, name);
             dp.padding = get_padding_f64(pd);
         },
         IpgDatePickerParam::SizeFactor => {
-                dp.size_factor = try_extract_f64(value) as f32;
+                dp.size_factor = try_extract_f64(value, name) as f32;
         },
         IpgDatePickerParam::Show => {
-            dp.show = try_extract_boolean(value);
+            dp.show = try_extract_boolean(value, name);
         },
     }
 }

@@ -82,35 +82,35 @@ pub fn column_item_update(col: &mut IpgColumn,
                             )
 {
     let update = try_extract_column_update(item);
-
+    let name = "Column".to_string();
     match update {
         IpgColumnParam::Align => {
             col.align = try_extract_ipg_alignment(value).unwrap();
         },
         IpgColumnParam::Clip => {
-            col.clip = try_extract_boolean(value);
+            col.clip = try_extract_boolean(value, name);
         },
         IpgColumnParam::Padding => {
-            col.padding =  get_padding_f64(try_extract_vec_f64(value));
+            col.padding =  get_padding_f64(try_extract_vec_f64(value, name));
         },
         IpgColumnParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             col.width = get_width(Some(val as f32), false);
         },
         IpgColumnParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             col.width = get_width(None, val);
         },
         IpgColumnParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             col.height = get_height(Some(val as f32), false);
         },
         IpgColumnParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             col.height = get_height(None, val);
         },
         IpgColumnParam::Spacing => {
-            col.spacing = try_extract_f64(value) as f32;
+            col.spacing = try_extract_f64(value, name) as f32;
         },
     }
 }

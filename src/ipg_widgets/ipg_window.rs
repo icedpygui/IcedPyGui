@@ -288,17 +288,17 @@ pub fn window_item_update(wnd: &mut IpgWindow,
                             )
 {
     let update = try_extract_window_update(item);
-
+    let name = "Window".to_string();
     match update {
         IpgWindowParam::Debug => {
-            wnd.debug = try_extract_boolean(value);
+            wnd.debug = try_extract_boolean(value, name);
         },
         IpgWindowParam::Theme => {
             let val = try_extract_ipg_theme(value);
             wnd.theme = get_iced_window_theme(val);
         },
         IpgWindowParam::ScaleFactor => {
-            wnd.scale_factor = try_extract_f64(value);
+            wnd.scale_factor = try_extract_f64(value, name);
         },
         IpgWindowParam::Mode => {
             let ipg_mode = try_extract_mode(value);
@@ -309,7 +309,7 @@ pub fn window_item_update(wnd: &mut IpgWindow,
             drop(state)
         },
         IpgWindowParam::Decorations => {
-            let val = try_extract_u64(value) as usize;
+            let val = try_extract_u64(value, name) as usize;
             let mut state = access_window_actions();
             state.decorations.push(val);
             drop(state)
@@ -323,13 +323,13 @@ pub fn window_item_update(wnd: &mut IpgWindow,
             drop(state)
         },
         IpgWindowParam::Position => {
-            let val = try_extract_vec_f32(value);
+            let val = try_extract_vec_f32(value, name);
             let mut state = access_window_actions();
             state.position.push((wnd.id, val[0], val[1]));
             drop(state)
         },
         IpgWindowParam::Size => {
-            let val = try_extract_vec_f32(value);
+            let val = try_extract_vec_f32(value, name);
             let mut state = access_window_actions();
             state.resize.push((wnd.id, val[0], val[1]));
             drop(state)

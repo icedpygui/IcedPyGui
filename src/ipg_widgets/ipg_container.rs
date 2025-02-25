@@ -152,7 +152,7 @@ pub fn container_item_update(cont: &mut IpgContainer,
                             )
 {
     let update = try_extract_container_update(item);
-   
+    let name = "Container".to_string();
     match update {
         IpgContainerParam::AlignX => {
             cont.align_x = try_extract_ipg_horizontal_alignment(value).unwrap();
@@ -161,7 +161,7 @@ pub fn container_item_update(cont: &mut IpgContainer,
             cont.align_y = try_extract_ipg_vertical_alignment(value).unwrap();
         },
         IpgContainerParam::Centered => {
-            let centered = try_extract_boolean(value);
+            let centered = try_extract_boolean(value, name);
             if centered {
                 cont.align_x = IpgHorizontalAlignment::Center;
                 cont.align_y = IpgVerticalAlignment::Center;
@@ -171,28 +171,28 @@ pub fn container_item_update(cont: &mut IpgContainer,
             }
         },
         IpgContainerParam::Padding => {
-            let pad = try_extract_vec_f64(value);
+            let pad = try_extract_vec_f64(value, name);
             cont.padding = get_padding_f64(pad);
         },
         IpgContainerParam::Width => {
-            let w = Some(try_extract_f64(value) as f32);
+            let w = Some(try_extract_f64(value, name) as f32);
             cont.width = get_width(w, false)
         },
         IpgContainerParam::WidthFill => {
-            cont.width = get_width(None, try_extract_boolean(value));
+            cont.width = get_width(None, try_extract_boolean(value, name));
         },
         IpgContainerParam::Height => {
-            let h = Some(try_extract_f64(value) as f32);
+            let h = Some(try_extract_f64(value, name) as f32);
             cont.height = get_height(h, false)
         },
         IpgContainerParam::HeightFill => {
-            cont.height = get_height(None, try_extract_boolean(value));
+            cont.height = get_height(None, try_extract_boolean(value, name));
         },
         IpgContainerParam::Clip => {
-            cont.clip = try_extract_boolean(value);
+            cont.clip = try_extract_boolean(value, name);
         },
         IpgContainerParam::Show => {
-            cont.show = try_extract_boolean(value);
+            cont.show = try_extract_boolean(value, name);
         }
     }
 }
@@ -286,46 +286,47 @@ pub fn container_style_update_item(style: &mut IpgContainerStyle,
                             value: PyObject,) 
 {
     let update = try_extract_container_style_update(item);
+    let name = "ContainerStyle".to_string();
     match update {
         IpgContainerStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgContainerStyleParam::BackgroundRgbaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgContainerStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgContainerStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgContainerStyleParam::BorderRadius => {
-            style.border_radius = try_extract_vec_f32(value);
+            style.border_radius = try_extract_vec_f32(value, name);
         },
         IpgContainerStyleParam::BorderWidth => {
-            style.border_width = try_extract_f64(value) as f32;
+            style.border_width = try_extract_f64(value, name) as f32;
         },
         IpgContainerStyleParam::ShadowIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.shadow_color = get_color(None, Some(color), 1.0, false);
         },
         IpgContainerStyleParam::ShadowRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgContainerStyleParam::ShadowOffsetXY => {
-            style.shadow_offset_xy = try_extract_array_2(value);
+            style.shadow_offset_xy = try_extract_array_2(value, name);
         },
         IpgContainerStyleParam::ShadowBlurRadius => {
-            style.shadow_blur_radius = try_extract_f64(value) as f32;
+            style.shadow_blur_radius = try_extract_f64(value, name) as f32;
         },
         IpgContainerStyleParam::TextIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.text_color = get_color(None, Some(color), 1.0, false);
         },
         IpgContainerStyleParam::TextRgbaColor => {
-            style.text_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.text_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
     }
 

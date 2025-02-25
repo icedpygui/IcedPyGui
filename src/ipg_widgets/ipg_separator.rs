@@ -273,46 +273,46 @@ pub fn separator_item_update(sep: &mut IpgSeparator,
                             )
 {
     let update = try_extract_separator_update(item);
-
+    let name = "Separator".to_string();
     match update {
         IpgSeparatorParam::DotBorderWidth => {
-            sep.dot_border_width = try_extract_f64(value) as f32;
+            sep.dot_border_width = try_extract_f64(value, name) as f32;
         },
         IpgSeparatorParam::DotCount => {
-            sep.dot_count = try_extract_i64(value) as usize;
+            sep.dot_count = try_extract_i64(value, name) as usize;
         },
         IpgSeparatorParam::DotFill => {
-            sep.dot_fill = try_extract_boolean(value);
+            sep.dot_fill = try_extract_boolean(value, name);
         },
         IpgSeparatorParam::DotRadius => {
-            sep.dot_radius = try_extract_f64(value) as f32;
+            sep.dot_radius = try_extract_f64(value, name) as f32;
         },
         IpgSeparatorParam::Label => {
-            sep.label = Some(try_extract_string(value));
+            sep.label = Some(try_extract_string(value, name));
         },
         IpgSeparatorParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             sep.height = get_height(Some(val as f32), false);
         },
         IpgSeparatorParam::HeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             sep.height = get_height(None, val);
         },
         IpgSeparatorParam::Spacing => {
-            sep.spacing = try_extract_f64(value) as f32;
+            sep.spacing = try_extract_f64(value, name) as f32;
         },
         IpgSeparatorParam::Show => {
-            sep.show = try_extract_boolean(value);
+            sep.show = try_extract_boolean(value, name);
         },
         IpgSeparatorParam::StyleId => {
-            sep.style_id = Some(try_extract_f64(value) as usize);
+            sep.style_id = Some(try_extract_f64(value, name) as usize);
         },
         IpgSeparatorParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             sep.width = get_width(Some(val as f32), false);
         },
         IpgSeparatorParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             sep.width = get_width(None, val);
         },
     }
@@ -345,20 +345,21 @@ pub fn separator_style_update_item(style: &mut IpgSeparatorStyle,
                             value: PyObject,) 
 {
     let update = try_extract_separator_style_update(item);
+    let name = "SeparatorStyle".to_string();
     match update {
         IpgSeparatorStyleParam::IpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.color = get_color(None, Some(color), 1.0, false);
         },
         IpgSeparatorStyleParam::RbgaColor => {
-            style.color = Some(Color::from(try_extract_rgba_color(value)));
+            style.color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgSeparatorStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgSeparatorStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
     }
 }

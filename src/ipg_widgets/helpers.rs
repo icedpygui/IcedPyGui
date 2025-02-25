@@ -229,22 +229,22 @@ fn convert_to_len_two(value: usize) -> String {
     }
 }
 
-pub fn try_extract_i64(value: PyObject) -> i64 {
+pub fn try_extract_i64(value: PyObject, name: String) -> i64 {
     Python::with_gil(|py| {
         let res = value.extract::<i64>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python integer"),
+            Err(_) => panic!("{}-Unable to extract python integer", name),
         }
     })  
 }
 
-pub fn try_extract_f64(value: PyObject) -> f64 {
+pub fn try_extract_f64(value: PyObject, name: String) -> f64 {
     Python::with_gil(|py| {
         let res = value.extract::<f64>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python float"),
+            Err(_) => panic!("{}-Unable to extract python float", name),
         }
     })  
 }
@@ -260,22 +260,22 @@ pub fn try_extract_i64_option(value: PyObject) -> Option<i64> {
     })  
 }
 
-pub fn try_extract_u16(value: PyObject) -> u16 {
+pub fn try_extract_u16(value: PyObject, name: String) -> u16 {
     Python::with_gil(|py| {
         let res = value.extract::<u16>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract u16"),
+            Err(_) => panic!("{}-Unable to extract u16", name),
         }
     })  
 }
 
-pub fn try_extract_u64(value: PyObject) -> u64 {
+pub fn try_extract_u64(value: PyObject, name: String) -> u64 {
     Python::with_gil(|py| {
         let res = value.extract::<u64>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract u64"),
+            Err(_) => panic!("{}-Unable to extract u64", name),
         }
     })  
 }
@@ -290,73 +290,73 @@ pub fn try_extract_f64_option(value: PyObject) -> Option<f64> {
     })  
 }
 
-pub fn try_extract_vec_f64(value: PyObject) -> Vec<f64> {
+pub fn try_extract_vec_f64(value: PyObject, name: String) -> Vec<f64> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<f64>>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python list[float]"),
+            Err(_) => panic!("{}-Unable to extract python list[float]", name),
         }
     })  
 }
 
-pub fn try_extract_vec_f32(value: PyObject) -> Vec<f32> {
+pub fn try_extract_vec_f32(value: PyObject, name: String) -> Vec<f32> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<f32>>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python list[float]"),
+            Err(_) => panic!("{}-Unable to extract python list[float]", name),
         }
     })  
 }
 
-pub fn try_extract_vec_u16(value: PyObject) -> Vec<u16> {
+pub fn try_extract_vec_u16(value: PyObject, name: String) -> Vec<u16> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<u16>>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python list[uint]"),
+            Err(_) => panic!("{}-Unable to extract python list[uint]", name),
         }
     })  
 }
 
-pub fn try_extract_array_2(value: PyObject) -> [f32; 2] {
+pub fn try_extract_array_2(value: PyObject, name: String) -> [f32; 2] {
     Python::with_gil(|py| {
 
         let res = value.extract::<[f32; 2]>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python object for 2 item list"),
+            Err(_) => panic!("{}-Unable to extract python object for 2 item list", name),
         }
     })
 }
 
-pub fn try_extract_string(value: PyObject) -> String {
+pub fn try_extract_string(value: PyObject, name: String) -> String {
     Python::with_gil(|py| {
         let res = value.extract::<String>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python str"),
+            Err(_) => panic!("{}-Unable to extract python str", name),
         }
     })  
 }
 
-pub fn try_extract_vec_str(value: PyObject) -> Vec<String> {
+pub fn try_extract_vec_str(value: PyObject, name: String) -> Vec<String> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<String>>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python list[str]"),
+            Err(_) => panic!("{}-Unable to extract python list[str]", name),
         }
     })  
 }
 
-pub fn try_extract_boolean(value: PyObject) -> bool {
+pub fn try_extract_boolean(value: PyObject, name: String) -> bool {
     Python::with_gil(|py| {
         let res = value.extract::<bool>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python bool"),
+            Err(_) => panic!("{}-Unable to extract python bool", name),
         }
     })  
 }
@@ -395,46 +395,46 @@ pub fn try_extract_ipg_alignment(value: PyObject) -> Option<IpgAlignment> {
     })
 }
 
-pub fn try_extract_style_standard(value: PyObject) -> IpgStyleStandard {
+pub fn try_extract_style_standard(value: PyObject, name: String) -> IpgStyleStandard {
     Python::with_gil(|py| {
 
         let res = value.extract::<IpgStyleStandard>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python object for StyleStandard"),
+            Err(_) => panic!("{}-Unable to extract python object for StyleStandard", name),
         }
     })
 }
 
-pub fn try_extract_ipg_color(value: PyObject) -> IpgColor {
+pub fn try_extract_ipg_color(value: PyObject, name: String) -> IpgColor {
     Python::with_gil(|py| {
 
         let res = value.extract::<IpgColor>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python object for IpgColor"),
+            Err(_) => panic!("{}-Unable to extract python object for IpgColor", name),
         }
     })
 }
 
-pub fn try_extract_rgba_color(value: PyObject) -> [f32; 4] {
+pub fn try_extract_rgba_color(value: PyObject, name: String) -> [f32; 4] {
     Python::with_gil(|py| {
 
         let res = value.extract::<[f32; 4]>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python object for RGBA color"),
+            Err(_) => panic!("{}-Unable to extract python object for RGBA color", name),
         }
     })
 }
 
-pub fn try_extract_point(value: PyObject) -> [f32; 2] {
+pub fn try_extract_point(value: PyObject, name: String) -> [f32; 2] {
     Python::with_gil(|py| {
 
         let res = value.extract::<[f32; 2]>(py);
         match res {
             Ok(val) => val,
-            Err(_) => panic!("Unable to extract python object for point"),
+            Err(_) => panic!("{}-Unable to extract python object for Point", name),
         }
     })
 }

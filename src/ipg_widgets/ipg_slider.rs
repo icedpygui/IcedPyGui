@@ -227,39 +227,41 @@ pub enum IpgSliderParam {
     Show,
 }
 
-pub fn slider_item_update(sldr: &mut IpgSlider, item: PyObject, value: PyObject) {
+pub fn slider_item_update(sldr: &mut IpgSlider, 
+                            item: PyObject, 
+                            value: PyObject) {
 
     let update = try_extract_slider_update(item);
-
+    let name = "Slider".to_string();
     match update {
         IpgSliderParam::Min => {
-            sldr.min = try_extract_f64(value) as f32;
+            sldr.min = try_extract_f64(value, name) as f32;
         },
         IpgSliderParam::Max => {
-            sldr.max = try_extract_f64(value) as f32;
+            sldr.max = try_extract_f64(value, name) as f32;
         },
         IpgSliderParam::Step => {
-            sldr.step = try_extract_f64(value) as f32;
+            sldr.step = try_extract_f64(value, name) as f32;
         },
         IpgSliderParam::Value => {
-            sldr.value = try_extract_f64(value) as f32;
+            sldr.value = try_extract_f64(value, name) as f32;
         },
         IpgSliderParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             sldr.width = get_width(Some(val as f32), false);
         },
         IpgSliderParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             sldr.width = get_width(None, val);
         },
         IpgSliderParam::Height => {
-            sldr.height = try_extract_f64(value) as f32;
+            sldr.height = try_extract_f64(value, name) as f32;
         },
         IpgSliderParam::Style => {
-            sldr.style_id = Some(try_extract_f64(value) as usize);
+            sldr.style_id = Some(try_extract_f64(value, name) as usize);
         }
         IpgSliderParam::Show => {
-            sldr.show = try_extract_boolean(value);
+            sldr.show = try_extract_boolean(value, name);
         },
     }
 }
@@ -376,54 +378,54 @@ pub fn slider_style_update_item(style: &mut IpgSliderStyle,
                             item: PyObject,
                             value: PyObject,) 
 {
-
     let update = try_extract_slider_style_update(item);
+    let name = "SliderStyle".to_string();
     match update {
         IpgSliderStyleParam::RailIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.rail_color = get_color(None, Some(color), 1.0, false);
         },
         IpgSliderStyleParam::RailRbgaColor => {
-            style.rail_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.rail_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgSliderStyleParam::RailIpgColorHovered => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.rail_color_hovered = get_color(None, Some(color), 1.0, false);
         },
         IpgSliderStyleParam::RailIpgRgbaHovered => {
-            style.rail_color_hovered = Some(Color::from(try_extract_rgba_color(value)));
+            style.rail_color_hovered = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgSliderStyleParam::RailBorderRadius => {
-            style.rail_border_radius = Some(try_extract_vec_f32(value));
+            style.rail_border_radius = Some(try_extract_vec_f32(value, name));
         },
         IpgSliderStyleParam::RailWidth => {
-            style.rail_width = Some(try_extract_f64(value) as f32);
+            style.rail_width = Some(try_extract_f64(value, name) as f32);
         },
         IpgSliderStyleParam::HandleIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.handle_color = get_color(None, Some(color), 1.0, false);
         },
         IpgSliderStyleParam::HandleRgbaColor => {
-            style.handle_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.handle_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgSliderStyleParam::HandleBorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.handle_border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgSliderStyleParam::HandleBorderRgbaColor => {
-            style.handle_border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.handle_border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgSliderStyleParam::HandleBorderWidth => {
-            style.handle_border_width = Some(try_extract_f64(value) as f32);
+            style.handle_border_width = Some(try_extract_f64(value, name) as f32);
         },
         IpgSliderStyleParam::HandleCircleRadius => {
-            style.handle_circle_radius = Some(try_extract_f64(value) as f32);
+            style.handle_circle_radius = Some(try_extract_f64(value, name) as f32);
         },
         IpgSliderStyleParam::HandleRectangleWidth => {
-            style.handle_rectangle_width = Some(try_extract_u16(value));
+            style.handle_rectangle_width = Some(try_extract_u16(value, name));
         },
         IpgSliderStyleParam::HandleRectangleBorderRadius => {
-            style.handle_rectangle_border_radius = Some(try_extract_vec_f32(value));
+            style.handle_rectangle_border_radius = Some(try_extract_vec_f32(value, name));
         },
     }
 }

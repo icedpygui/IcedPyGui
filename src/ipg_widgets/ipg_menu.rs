@@ -397,10 +397,10 @@ pub fn menu_item_update(mn: &mut IpgMenu,
                             )
 {
     let update = try_extract_menu_update(item);
-
+    let name = "Menu".to_string();
     match update {
         IpgMenuParam::BarHeight => {
-            let val = try_extract_f64(value) as f32;
+            let val = try_extract_f64(value, name) as f32;
             if val < 32.0 {
                 mn.bar_height = get_height(None, false);
             } else {
@@ -408,25 +408,25 @@ pub fn menu_item_update(mn: &mut IpgMenu,
             }
         },
         IpgMenuParam::BarHeightFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             mn.bar_height = get_height(None, val);
         },
         IpgMenuParam::BarPadding => {
-            let val = try_extract_vec_f64(value);
+            let val = try_extract_vec_f64(value, name);
             mn.bar_padding = get_padding_f64(val);
         },
         IpgMenuParam::BarSpacing => {
-            mn.bar_spacing = try_extract_f64(value) as f32;
+            mn.bar_spacing = try_extract_f64(value, name) as f32;
         },
         IpgMenuParam::BarWidth => {
-            let width = get_width(Some(try_extract_f64(value) as f32), false);
+            let width = get_width(Some(try_extract_f64(value, name) as f32), false);
             mn.bar_width = width;
         },
         IpgMenuParam::CheckBoundsWidth => {
-            mn.check_bounds_width = try_extract_f64(value) as f32;
+            mn.check_bounds_width = try_extract_f64(value, name) as f32;
         },
         IpgMenuParam::Show => {
-            mn.show = try_extract_boolean(value);
+            mn.show = try_extract_boolean(value, name);
         },
     }
 
@@ -462,41 +462,41 @@ pub fn menu_bar_style_update_item(style: &mut IpgMenuBarStyle,
                             item: PyObject,
                             value: PyObject,) 
 {
-
     let update = try_extract_menu_bar_style_update(item);
+    let name = "BarStyle".to_string();
     match update {
         IpgMenuBarStyleParam::BaseIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.base_color = get_color(None, Some(color), 1.0, false);
         },
         IpgMenuBarStyleParam::BaseRgbaColor => {
-            style.base_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.base_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgMenuBarStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgMenuBarStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgMenuBarStyleParam::BorderRadius => {
-            style.border_radius = Some(try_extract_vec_f32(value));
+            style.border_radius = Some(try_extract_vec_f32(value, name));
         },
         IpgMenuBarStyleParam::BorderWidth => {
-            style.border_width = Some(try_extract_f64(value) as f32);
+            style.border_width = Some(try_extract_f64(value, name) as f32);
         },
         IpgMenuBarStyleParam::ShadowIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.shadow_color = get_color(None, Some(color), 1.0, false);
         },
         IpgMenuBarStyleParam::ShadowRgbaColor => {
-            style.shadow_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.shadow_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgMenuBarStyleParam::ShadowOffsetXY => {
-            style.shadow_offset_xy = Some(try_extract_array_2(value));
+            style.shadow_offset_xy = Some(try_extract_array_2(value, name));
         },
         IpgMenuBarStyleParam::ShadowBlurRadius => {
-            style.shadow_blur_radius = Some(try_extract_f64(value) as f32);
+            style.shadow_blur_radius = Some(try_extract_f64(value, name) as f32);
         },
     }
 }
@@ -552,59 +552,60 @@ pub fn menu_style_update_item(style: &mut IpgMenuStyle,
                             value: PyObject,) 
 {
     let update = try_extract_menu_style_update(item);
+    let name = "MenuStyle".to_string();
     match update {
         IpgMenuStyleParam::BaseIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.base_color = get_color(None, Some(color), 1.0, false);
         },
         IpgMenuStyleParam::BaseRgbaColor => {
-            style.base_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.base_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgMenuStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgMenuStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgMenuStyleParam::BorderRadius => {
-            style.border_radius = Some(try_extract_vec_f32(value));
+            style.border_radius = Some(try_extract_vec_f32(value, name));
         },
         IpgMenuStyleParam::BorderWidth => {
-            style.border_width = Some(try_extract_f64(value) as f32);
+            style.border_width = Some(try_extract_f64(value, name) as f32);
         },
         IpgMenuStyleParam::ShadowIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.shadow_color = get_color(None, Some(color), 1.0, false);
         },
         IpgMenuStyleParam::ShadowRgbaColor => {
-            style.shadow_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.shadow_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgMenuStyleParam::ShadowOffsetXY => {
-            style.shadow_offset_xy = Some(try_extract_array_2(value));
+            style.shadow_offset_xy = Some(try_extract_array_2(value, name));
         },
         IpgMenuStyleParam::ShadowBlurRadius => {
-            style.shadow_blur_radius = Some(try_extract_f64(value) as f32);
+            style.shadow_blur_radius = Some(try_extract_f64(value, name) as f32);
         },
         IpgMenuStyleParam::PathBaseIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.path_base_color = get_color(None, Some(color), 1.0, false);
         },
         IpgMenuStyleParam::PathBaseRgbaColor => {
-            style.path_base_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.path_base_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgMenuStyleParam::PathBorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.path_border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgMenuStyleParam::PathBorderRgbaColor => {
-            style.path_border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.path_border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgMenuStyleParam::PathBorderRadius => {
-            style.path_border_radius = Some(try_extract_vec_f32(value));
+            style.path_border_radius = Some(try_extract_vec_f32(value, name));
         },
         IpgMenuStyleParam::PathBorderWidth => {
-            style.path_border_width = Some(try_extract_f64(value) as f32);
+            style.path_border_width = Some(try_extract_f64(value, name) as f32);
         },
     }
 }

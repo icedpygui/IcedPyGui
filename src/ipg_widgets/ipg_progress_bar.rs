@@ -127,36 +127,36 @@ pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
                                 )
 {
     let update = try_extract_progress_bar_update(item);
-
+    let name = "ProgressBar".to_string();
     match update {
         IpgProgressBarParam::Height => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             pb.height = get_height(Some(val as f32), false);
         },
         IpgProgressBarParam::Min => {
-            pb.min = try_extract_f64(value) as f32;
+            pb.min = try_extract_f64(value, name) as f32;
         },
         IpgProgressBarParam::Max => {
-            pb.max = try_extract_f64(value) as f32;
+            pb.max = try_extract_f64(value, name) as f32;
         },
         IpgProgressBarParam::Show => {
-            pb.show = try_extract_boolean(value);
+            pb.show = try_extract_boolean(value, name);
         },
         IpgProgressBarParam::StyleStandard => {
-            pb.style_standard = Some(try_extract_style_standard(value))
+            pb.style_standard = Some(try_extract_style_standard(value, name))
         },
         IpgProgressBarParam::Style => {
-            pb.style_id = Some(try_extract_f64(value) as usize)
+            pb.style_id = Some(try_extract_f64(value, name) as usize)
         },
         IpgProgressBarParam::Value => {
-            pb.value = try_extract_f64(value) as f32;
+            pb.value = try_extract_f64(value, name) as f32;
         },
         IpgProgressBarParam::Width => {
-            let val = try_extract_f64(value);
+            let val = try_extract_f64(value, name);
             pb.width = get_width(Some(val as f32), false);
         },
         IpgProgressBarParam::WidthFill => {
-            let val = try_extract_boolean(value);
+            let val = try_extract_boolean(value, name);
             pb.width = get_width(None, val);
         },
     }
@@ -261,35 +261,35 @@ pub fn progress_bar_style_update_item(style: &mut IpgProgressBarStyle,
                             item: PyObject,
                             value: PyObject,) 
 {
-
     let update = try_extract_progress_bar_style_update(item);
+    let name = "ProgressBarStyle".to_string();
     match update {
         IpgProgressBarStyleParam::BackgroundIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
         IpgProgressBarStyleParam::BackgroundRgbaColor => {
-            style.background_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgProgressBarStyleParam::BarIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.bar_color = get_color(None, Some(color), 1.0, false);
         },
         IpgProgressBarStyleParam::BarRgbaColor => {
-            style.bar_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.bar_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgProgressBarStyleParam::BorderIpgColor => {
-            let color = try_extract_ipg_color(value);
+            let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
         IpgProgressBarStyleParam::BorderRgbaColor => {
-            style.border_color = Some(Color::from(try_extract_rgba_color(value)));
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgProgressBarStyleParam::BorderRadius => {
-            style.border_radius = Some(try_extract_vec_f32(value));
+            style.border_radius = Some(try_extract_vec_f32(value, name));
         },
         IpgProgressBarStyleParam::BorderWidth => {
-            style.border_width = Some(try_extract_f64(value) as f32);
+            style.border_width = Some(try_extract_f64(value, name) as f32);
         },
     }
 }
