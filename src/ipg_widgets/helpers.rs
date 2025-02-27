@@ -57,7 +57,7 @@ pub fn get_alignment(align: IpgAlignment) -> Alignment {
     }
 }
 
-pub fn get_horizontal_alignment(h_align: IpgHorizontalAlignment) -> Horizontal {
+pub fn get_horizontal_alignment(h_align: &IpgHorizontalAlignment) -> Horizontal {
 
     match h_align {
         IpgHorizontalAlignment::Left => Horizontal::Left,
@@ -66,7 +66,7 @@ pub fn get_horizontal_alignment(h_align: IpgHorizontalAlignment) -> Horizontal {
     }
 }
 
-pub fn get_vertical_alignment(v_align: IpgVerticalAlignment) -> Vertical {
+pub fn get_vertical_alignment(v_align: &IpgVerticalAlignment) -> Vertical {
     
     match v_align {
         IpgVerticalAlignment::Top => Vertical::Top,
@@ -229,7 +229,7 @@ fn convert_to_len_two(value: usize) -> String {
     }
 }
 
-pub fn try_extract_i64(value: PyObject, name: String) -> i64 {
+pub fn try_extract_i64(value: &PyObject, name: String) -> i64 {
     Python::with_gil(|py| {
         let res = value.extract::<i64>(py);
         match res {
@@ -239,7 +239,7 @@ pub fn try_extract_i64(value: PyObject, name: String) -> i64 {
     })  
 }
 
-pub fn try_extract_f64(value: PyObject, name: String) -> f64 {
+pub fn try_extract_f64(value: &PyObject, name: String) -> f64 {
     Python::with_gil(|py| {
         let res = value.extract::<f64>(py);
         match res {
@@ -250,7 +250,7 @@ pub fn try_extract_f64(value: PyObject, name: String) -> f64 {
 }
 
 
-pub fn try_extract_i64_option(value: PyObject) -> Option<i64> {
+pub fn try_extract_i64_option(value: &PyObject) -> Option<i64> {
     Python::with_gil(|py| {
         let res = value.extract::<i64>(py);
         match res {
@@ -260,7 +260,7 @@ pub fn try_extract_i64_option(value: PyObject) -> Option<i64> {
     })  
 }
 
-pub fn try_extract_u16(value: PyObject, name: String) -> u16 {
+pub fn try_extract_u16(value: &PyObject, name: String) -> u16 {
     Python::with_gil(|py| {
         let res = value.extract::<u16>(py);
         match res {
@@ -270,7 +270,7 @@ pub fn try_extract_u16(value: PyObject, name: String) -> u16 {
     })  
 }
 
-pub fn try_extract_u64(value: PyObject, name: String) -> u64 {
+pub fn try_extract_u64(value: &PyObject, name: String) -> u64 {
     Python::with_gil(|py| {
         let res = value.extract::<u64>(py);
         match res {
@@ -280,7 +280,7 @@ pub fn try_extract_u64(value: PyObject, name: String) -> u64 {
     })  
 }
 
-pub fn try_extract_f64_option(value: PyObject) -> Option<f64> {
+pub fn try_extract_f64_option(value: &PyObject) -> Option<f64> {
     Python::with_gil(|py| {
         let res = value.extract::<f64>(py);
         match res {
@@ -290,7 +290,7 @@ pub fn try_extract_f64_option(value: PyObject) -> Option<f64> {
     })  
 }
 
-pub fn try_extract_vec_f64(value: PyObject, name: String) -> Vec<f64> {
+pub fn try_extract_vec_f64(value: &PyObject, name: String) -> Vec<f64> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<f64>>(py);
         match res {
@@ -300,7 +300,7 @@ pub fn try_extract_vec_f64(value: PyObject, name: String) -> Vec<f64> {
     })  
 }
 
-pub fn try_extract_vec_f32(value: PyObject, name: String) -> Vec<f32> {
+pub fn try_extract_vec_f32(value: &PyObject, name: String) -> Vec<f32> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<f32>>(py);
         match res {
@@ -310,7 +310,7 @@ pub fn try_extract_vec_f32(value: PyObject, name: String) -> Vec<f32> {
     })  
 }
 
-pub fn try_extract_vec_u16(value: PyObject, name: String) -> Vec<u16> {
+pub fn try_extract_vec_u16(value: &PyObject, name: String) -> Vec<u16> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<u16>>(py);
         match res {
@@ -320,7 +320,7 @@ pub fn try_extract_vec_u16(value: PyObject, name: String) -> Vec<u16> {
     })  
 }
 
-pub fn try_extract_array_2(value: PyObject, name: String) -> [f32; 2] {
+pub fn try_extract_array_2(value: &PyObject, name: String) -> [f32; 2] {
     Python::with_gil(|py| {
 
         let res = value.extract::<[f32; 2]>(py);
@@ -331,7 +331,7 @@ pub fn try_extract_array_2(value: PyObject, name: String) -> [f32; 2] {
     })
 }
 
-pub fn try_extract_string(value: PyObject, name: String) -> String {
+pub fn try_extract_string(value: &PyObject, name: String) -> String {
     Python::with_gil(|py| {
         let res = value.extract::<String>(py);
         match res {
@@ -341,7 +341,7 @@ pub fn try_extract_string(value: PyObject, name: String) -> String {
     })  
 }
 
-pub fn try_extract_vec_str(value: PyObject, name: String) -> Vec<String> {
+pub fn try_extract_vec_str(value: &PyObject, name: String) -> Vec<String> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<String>>(py);
         match res {
@@ -351,7 +351,7 @@ pub fn try_extract_vec_str(value: PyObject, name: String) -> Vec<String> {
     })  
 }
 
-pub fn try_extract_boolean(value: PyObject, name: String) -> bool {
+pub fn try_extract_boolean(value: &PyObject, name: String) -> bool {
     Python::with_gil(|py| {
         let res = value.extract::<bool>(py);
         match res {
@@ -362,7 +362,7 @@ pub fn try_extract_boolean(value: PyObject, name: String) -> bool {
 }
 
 // These alignments return options so that only the canvas text alignment needs one py value type
-pub fn try_extract_ipg_horizontal_alignment(value: PyObject) -> Option<IpgHorizontalAlignment> {
+pub fn try_extract_ipg_horizontal_alignment(value: &PyObject) -> Option<IpgHorizontalAlignment> {
     Python::with_gil(|py| {
 
         let res = value.extract::<IpgHorizontalAlignment>(py);
@@ -373,7 +373,7 @@ pub fn try_extract_ipg_horizontal_alignment(value: PyObject) -> Option<IpgHorizo
     })
 }
 
-pub fn try_extract_ipg_vertical_alignment(value: PyObject) -> Option<IpgVerticalAlignment> {
+pub fn try_extract_ipg_vertical_alignment(value: &PyObject) -> Option<IpgVerticalAlignment> {
     Python::with_gil(|py| {
 
         let res = value.extract::<IpgVerticalAlignment>(py);
@@ -384,7 +384,7 @@ pub fn try_extract_ipg_vertical_alignment(value: PyObject) -> Option<IpgVertical
     })
 }
 
-pub fn try_extract_ipg_alignment(value: PyObject) -> Option<IpgAlignment> {
+pub fn try_extract_ipg_alignment(value: &PyObject) -> Option<IpgAlignment> {
     Python::with_gil(|py| {
 
         let res = value.extract::<IpgAlignment>(py);
@@ -395,7 +395,7 @@ pub fn try_extract_ipg_alignment(value: PyObject) -> Option<IpgAlignment> {
     })
 }
 
-pub fn try_extract_style_standard(value: PyObject, name: String) -> IpgStyleStandard {
+pub fn try_extract_style_standard(value: &PyObject, name: String) -> IpgStyleStandard {
     Python::with_gil(|py| {
 
         let res = value.extract::<IpgStyleStandard>(py);
@@ -406,7 +406,7 @@ pub fn try_extract_style_standard(value: PyObject, name: String) -> IpgStyleStan
     })
 }
 
-pub fn try_extract_ipg_color(value: PyObject, name: String) -> IpgColor {
+pub fn try_extract_ipg_color(value: &PyObject, name: String) -> IpgColor {
     Python::with_gil(|py| {
 
         let res = value.extract::<IpgColor>(py);
@@ -417,7 +417,7 @@ pub fn try_extract_ipg_color(value: PyObject, name: String) -> IpgColor {
     })
 }
 
-pub fn try_extract_rgba_color(value: PyObject, name: String) -> [f32; 4] {
+pub fn try_extract_rgba_color(value: &PyObject, name: String) -> [f32; 4] {
     Python::with_gil(|py| {
 
         let res = value.extract::<[f32; 4]>(py);
@@ -428,7 +428,7 @@ pub fn try_extract_rgba_color(value: PyObject, name: String) -> [f32; 4] {
     })
 }
 
-pub fn try_extract_point(value: PyObject, name: String) -> [f32; 2] {
+pub fn try_extract_point(value: &PyObject, name: String) -> [f32; 2] {
     Python::with_gil(|py| {
 
         let res = value.extract::<[f32; 2]>(py);

@@ -21,7 +21,7 @@ pub struct IpgOpaque {
     pub align_y: IpgVerticalAlignment,
     pub include_mouse_area: bool,
     pub show: bool,
-    pub style_id: Option<String>, 
+    pub style_id: Option<usize>, 
 }
 
 impl IpgOpaque {
@@ -33,7 +33,7 @@ impl IpgOpaque {
         align_y: IpgVerticalAlignment,
         include_mouse_area: bool,
         show: bool,
-        style_id: Option<String>,
+        style_id: Option<usize>,
     ) -> Self {
         Self {
             id,
@@ -66,10 +66,10 @@ impl IpgOpaqueStyle {
     }
 }
 
-pub fn construct_opaque(op: IpgOpaque, 
-                        mut content: Vec<Element<Message>>, 
-                        style: Option<IpgOpaqueStyle> ) 
-                        -> Element<Message> {
+pub fn construct_opaque<'a>(op: &'a IpgOpaque, 
+                        mut content: Vec<Element<'a, Message>>, 
+                        style: Option<&'a &IpgOpaqueStyle> ) 
+                        -> Element<'a, Message> {
 
     let new_content = if content.is_empty() {
         content.remove(0)
@@ -77,17 +77,17 @@ pub fn construct_opaque(op: IpgOpaque,
         horizontal_space().into()
     };
 
-    let align_h = get_horizontal_alignment(op.align_x);
-    let align_v = get_vertical_alignment(op.align_y);
+    let align_h = get_horizontal_alignment(&op.align_x);
+    let align_v = get_vertical_alignment(&op.align_y);
 
-    let cont: Element<Message> = Container::new(new_content)
+    let cont: Element<'a, Message> = Container::new(new_content)
                 .width(op.width)
                 .height(op.height)
                 .align_x(align_h)
                 .align_y(align_v)
                 .style(move|theme|
                     get_styling(theme, 
-                        style.clone(),
+                        style,
                         ))
                 .into();
     
@@ -104,8 +104,8 @@ pub fn construct_opaque(op: IpgOpaque,
 
 
 pub fn get_styling(theme: &Theme,
-                style_opt: Option<IpgOpaqueStyle>,  
-                ) -> container::Style {
+                    style_opt: Option<&IpgOpaqueStyle>,  
+                    ) -> container::Style {
     
     if style_opt.is_none() {
         return container::transparent(theme);
@@ -126,15 +126,15 @@ pub fn get_styling(theme: &Theme,
     
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgOpaqueParam {
     Show,
 }
 
 pub fn opaque_item_update(op: &mut IpgOpaque,
-                            item: PyObject,
-                            value: PyObject,) {
+                            item: &PyObject,
+                            value: &PyObject,) {
 
     let update = try_extract_stack_update(item);
     let name = "OpaqueContainer".to_string();
@@ -145,7 +145,7 @@ pub fn opaque_item_update(op: &mut IpgOpaque,
     }
 }
 
-pub fn try_extract_stack_update(update_obj: PyObject) -> IpgOpaqueParam {
+pub fn try_extract_stack_update(update_obj: &PyObject) -> IpgOpaqueParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgOpaqueParam>(py);
@@ -156,23 +156,17 @@ pub fn try_extract_stack_update(update_obj: PyObject) -> IpgOpaqueParam {
     })
 }
 
-pub fn opaque_callback(state: &mut IpgState, id: usize, event_name: String) {
+pub fn opaque_callback(_state: &mut IpgState, id: usize, event_name: String) {
     
-    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
-
-    let mut wco = container_callback_data(state, wci);
-    wco.id = id;
-    wco.event_name = event_name;
-    process_callback(wco);
-
+    process_callback(id, event_name);
 }
 
 
-fn process_callback(wco: WidgetCallbackOut) 
+fn process_callback(id: usize, event_name: String) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -181,17 +175,31 @@ fn process_callback(wco: WidgetCallbackOut)
        
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Opaque Callback could not be found with id {}", wco.id),
+        None => panic!("Opaque Callback could not be found with id {}", id),
     };
+
+    let user_data_opt = app_cbs.user_data.get(&id);
               
     Python::with_gil(|py| {
-        let res = callback.call1(py, (
-                                                            wco.id,  
+        if user_data_opt.is_some() {
+            let res = callback.call1(py, (
+                                                            id,
+                                                            user_data_opt.unwrap()  
                                                             ));
-        match res {
-            Ok(_) => (),
-            Err(er) => panic!("Opaque: Only 1 parameter (id) is required or a python error in this function. {er}"),
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Opaque: Only 2 parameter (id, user_data) is required or a python error in this function. {er}"),
+            }
+        } else {
+            let res = callback.call1(py, (
+                                                            id,  
+                                                            ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Opaque: Only 1 parameter (id) is required or a python error in this function. {er}"),
+            }
         }
+        
         
     });
     

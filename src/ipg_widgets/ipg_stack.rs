@@ -66,8 +66,8 @@ pub enum IpgStackParam {
 }
 
 pub fn stack_item_update(stk: &mut IpgStack,
-                            item: PyObject,
-                            value: PyObject,) {
+                            item: &PyObject,
+                            value: &PyObject,) {
 
     let update = try_extract_stack_update(item);
     let name = "Stack".to_string();
@@ -78,7 +78,7 @@ pub fn stack_item_update(stk: &mut IpgStack,
     }
 }
 
-pub fn try_extract_stack_update(update_obj: PyObject) -> IpgStackParam {
+pub fn try_extract_stack_update(update_obj: &PyObject) -> IpgStackParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgStackParam>(py);

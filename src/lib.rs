@@ -13,9 +13,12 @@ use ipg_widgets::ipg_separator::{separator_item_update, separator_style_update_i
     IpgSeparator, IpgSeparatorParam, IpgSeparatorStyle, IpgSeparatorStyleParam, IpgSeparatorType};
 use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, canvas_timer_style_update_item, 
     IpgCanvasTimer, IpgCanvasTimerParam, IpgCanvasTimerStyle, IpgCanvasTimerStyleParam};
+
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
+
+use polars::frame::DataFrame;
 
 use iced::window::{self, Position};
 use iced::{Color, Font, Length, Point, Radians, Rectangle, Size, Theme, Vector};
@@ -56,8 +59,7 @@ use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea,
         IpgMouseAreaParam, IpgMousePointer};
 use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, 
     IpgOpaqueParam, IpgOpaqueStyle};
-use ipg_widgets::ipg_pick_list::{pick_list_item_update, pick_list_style_update_item, 
-    IpgPickList, IpgPickListHandle, IpgPickListParam, IpgPickListStyle, IpgPickListStyleParam};
+use ipg_widgets::ipg_pick_list::{convert_pyobject_vec_string, pick_list_item_update, pick_list_style_update_item, IpgPickList, IpgPickListHandle, IpgPickListParam, IpgPickListStyle, IpgPickListStyleParam};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, progress_bar_style_update_item, 
     IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle, IpgProgressBarStyleParam};
 use ipg_widgets::ipg_radio::{radio_item_update, radio_style_update_item, IpgRadio, 
@@ -109,13 +111,13 @@ pub const TABLE_INTERNAL_IDS_END: usize = 4_000_000_999;
 pub struct Callbacks {
     callbacks: Lazy<HashMap<(usize, String), Option<PyObject>>>,
     callback_events: Lazy<HashMap<(usize, String), PyObject>>,
-    user_data: Vec<(usize, Option<PyObject>)>,
+    user_data: Lazy<HashMap<usize, PyObject>>,
 }
 
 pub static CALLBACKS: Mutex<Callbacks> = Mutex::new(Callbacks {
     callbacks: Lazy::new(||HashMap::new()),
     callback_events:  Lazy::new(||HashMap::new()),
-    user_data: vec![],
+    user_data: Lazy::new(||HashMap::new()),
 });
 
 pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
@@ -1119,18 +1121,28 @@ impl IPG {
     }
 
     #[pyo3(signature = (window_id, container_id, parent_id=None, 
-                        gen_id=None, mouse_pointer=None,
+                        gen_id=None, show=true, mouse_pointer=None,
                         on_press=None, on_release=None,
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
                         on_enter=None, on_move=None, on_exit=None,
-                        show=true, user_data=None))]
+                        user_data_on_press=None,
+                        user_data_on_release=None,
+                        user_data_on_right_press=None,
+                        user_data_on_right_release=None,
+                        user_data_on_middle_press=None,
+                        user_data_on_middle_release=None,
+                        user_data_on_enter=None,
+                        user_data_on_move=None,
+                        user_data_on_exit=None,
+                        ))]
     fn add_mousearea(&mut self,
                         window_id: String,
                         container_id: String,
                         // required above
                         parent_id: Option<String>,
                         gen_id: Option<usize>,
+                        show: bool,
                         mouse_pointer: Option<IpgMousePointer>,
                         on_press: Option<PyObject>,
                         on_release: Option<PyObject>,
@@ -1141,8 +1153,15 @@ impl IPG {
                         on_enter: Option<PyObject>,
                         on_move: Option<PyObject>,
                         on_exit: Option<PyObject>,
-                        show: bool,
-                        user_data: Option<PyObject>,
+                        user_data_on_press: Option<PyObject>,
+                        user_data_on_release: Option<PyObject>,
+                        user_data_on_right_press: Option<PyObject>,
+                        user_data_on_right_release: Option<PyObject>,
+                        user_data_on_middle_press: Option<PyObject>,
+                        user_data_on_middle_release: Option<PyObject>,
+                        user_data_on_enter: Option<PyObject>,
+                        user_data_on_move: Option<PyObject>,
+                        user_data_on_exit: Option<PyObject>,
                         ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
@@ -1153,39 +1172,39 @@ impl IPG {
         };
 
         if on_press.is_some() {
-            add_callback_to_mutex(id, "on_press".to_string(), on_press);
+        add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data_on_press);
         }
         
         if on_release.is_some() {
-            add_callback_to_mutex(id, "on_release".to_string(), on_release);
+            add_callback_to_mutex(id, "event_name".to_string(), on_release, user_data_on_release);
         }
         
         if on_right_press.is_some() {
-            add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press);
+            add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press, user_data_on_right_press);
         }
         
         if on_right_release.is_some() {
-            add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release);
+            add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release, user_data_on_right_release);
         }
         
         if on_middle_press.is_some() {
-            add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press);
+            add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press, user_data_on_middle_press);
         }
         
         if on_middle_release.is_some() {
-            add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release);
+            add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release, user_data_on_middle_release);
         }
         
         if on_enter.is_some() {
-            add_callback_to_mutex(id, "on_enter".to_string(), on_enter);
+            add_callback_to_mutex(id, "on_enter".to_string(), on_enter, user_data_on_enter);
         }
         
         if on_move.is_some() {
-            add_callback_to_mutex(id, "on_move".to_string(), on_move);
+            add_callback_to_mutex(id, "on_move".to_string(), on_move, user_data_on_move);
         }
         
         if on_exit.is_some() {
-            add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
+            add_callback_to_mutex(id, "on_exit".to_string(), on_exit, user_data_on_exit);
         }
 
         set_state_of_container(self.id, window_id.clone(), Some(container_id.clone()), prt_id);
@@ -1194,12 +1213,13 @@ impl IPG {
 
         set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_mousearea".to_string());
 
-        state.containers.insert(self.id, IpgContainers::IpgMouseArea(IpgMouseArea::new(
-                                    self.id,
-                                    mouse_pointer,  
-                                    show, 
-                                    user_data
-                                )));
+        state.containers.insert(self.id, IpgContainers::IpgMouseArea(
+            IpgMouseArea::new(
+                self.id,
+                mouse_pointer,  
+                show, 
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -1213,6 +1233,7 @@ impl IPG {
                         align_x=IpgHorizontalAlignment::Left, 
                         align_y=IpgVerticalAlignment::Top,
                         mouse_on_press=None,
+                        user_data=None,
                         show=true, style_id=None,
                         gen_id=None,
                         ))]
@@ -1229,8 +1250,9 @@ impl IPG {
                             mut align_x: IpgHorizontalAlignment,
                             mut align_y: IpgVerticalAlignment,
                             mouse_on_press: Option<PyObject>,
+                            user_data: Option<PyObject>,
                             show: bool,
-                            style_id: Option<String>,
+                            style_id: Option<usize>,
                             gen_id: Option<usize>,
                             ) -> PyResult<usize> 
     {
@@ -1245,7 +1267,7 @@ impl IPG {
         };
 
         let include_mouse_area = if mouse_on_press.is_some() {
-            add_callback_to_mutex(id, "on_press".to_string(), mouse_on_press);
+            add_callback_to_mutex(id, "on_press".to_string(), mouse_on_press, user_data);
             true
         } else {
             false
@@ -1584,7 +1606,7 @@ impl IPG {
 
         Ok(id)
     }
-
+    
     #[pyo3(signature = (window_id, table_id, title,
                         column_widths,height,
                         width=None, width_fill=false, 
@@ -1607,6 +1629,7 @@ impl IPG {
                         scroller_width=10.0,
                         scroller_bar_width=10.0,
                         scroller_margin=0.0,
+                        data=DataFrame::default(),
                         gen_id=None,  
                         show=true,
                         user_data=None,
@@ -1639,6 +1662,7 @@ impl IPG {
                     scroller_width: f32,
                     scroller_bar_width: f32,
                     scroller_margin: f32,
+                    data: PyDataFrame,
                     gen_id: Option<usize>,
                     show: bool,
                     user_data: Option<PyObject>,
@@ -1696,6 +1720,7 @@ impl IPG {
                                                     scroller_width,
                                                     scroller_bar_width,
                                                     scroller_margin,
+                                                    data,
                                                     user_data,
                                                     )));
         state.last_id = self.id;
@@ -1783,7 +1808,7 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_press.is_some() {
-            add_callback_to_mutex(id, "on_press".to_string(), on_press);
+            add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data);
         }
 
         let width = get_width(width, width_fill);
@@ -1791,8 +1816,8 @@ impl IPG {
 
         let padding = get_padding_f64(padding);
 
-        let align_x = get_horizontal_alignment(text_align_x);
-        let align_y = get_vertical_alignment(text_align_y);
+        let align_x = get_horizontal_alignment(&text_align_x);
+        let align_y = get_vertical_alignment(&text_align_y);
 
         set_state_of_widget(id, parent_id);
 
@@ -1802,7 +1827,6 @@ impl IPG {
             IpgButton::new(
                 id,
                 show,
-                user_data,
                 label,
                 width,
                 height,
@@ -1915,7 +1939,7 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_close.is_some() {
-            add_callback_to_mutex(id, "on_close".to_string(), on_close);
+            add_callback_to_mutex(id, "on_close".to_string(), on_close, user_data);
         }
 
         let width = get_width(width, width_fill);
@@ -1933,7 +1957,6 @@ impl IPG {
             IpgCard::new(
                 id,
                 is_open,
-                user_data,
                 min_max_id,
                 width,
                 height,
@@ -1954,6 +1977,33 @@ impl IPG {
         drop(state);
         Ok(id)
 
+    }
+
+    #[pyo3(signature = ( 
+                        background_color=None, 
+                        background_rgba=None,
+                        gen_id=None))]
+    fn add_card_style(&mut self,
+                        background_color: Option<IpgColor>,
+                        background_rgba: Option<[f32; 4]>,
+                        gen_id: Option<usize>,
+                        ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgCardStyle(
+            IpgCardStyle::new( 
+                id,
+                background_color,
+                )));
+
+        state.last_id = id;
+        drop(state);
+        Ok(id)
     }
 
     #[pyo3(signature = (parent_id, gen_id=None, on_toggle=None, is_checked=false, 
@@ -1988,7 +2038,7 @@ impl IPG {
         let id = self.get_id(gen_id);
         
         if on_toggle.is_some() {
-            add_callback_to_mutex(id, "on_toggle".to_string(), on_toggle);
+            add_callback_to_mutex(id, "on_toggle".to_string(), on_toggle, user_data);
         }
        
         let text_shaping = get_shaping(text_shaping);
@@ -2005,7 +2055,6 @@ impl IPG {
             IpgCheckBox::new(
                 id,
                 show,
-                user_data,
                 is_checked,
                 label,
                 width,
@@ -2129,15 +2178,15 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_press.is_some() {
-            add_callback_to_mutex(id, "on_press".to_string(), on_press);
+            add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data);
         }
 
         if on_submit.is_some() {
-            add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
+            add_callback_to_mutex(id, "on_submit".to_string(), on_submit, user_data);
         }
 
         if on_cancel.is_some() {
-            add_callback_to_mutex(id, "on_cancel".to_string(), on_cancel);
+            add_callback_to_mutex(id, "on_cancel".to_string(), on_cancel, user_data);
         }
 
         let color = Color::from(color_rgba);
@@ -2156,7 +2205,6 @@ impl IPG {
                 id,
                 show,
                 color,
-                user_data,
                 // button related
                 label,
                 width,
@@ -2250,7 +2298,7 @@ impl IPG {
                         user_data: Option<PyObject>,
                         show: bool,
                         button_style_standard: Option<IpgStyleStandard>,
-                        button_style_id: Option<String>,
+                        button_style_id: Option<usize>,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
@@ -2260,7 +2308,7 @@ impl IPG {
         }
 
         if on_submit.is_some() {
-            add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
+            add_callback_to_mutex(id, "on_submit".to_string(), on_submit, user_data);
         }
 
         let padding = get_padding_f64(padding);
@@ -2276,7 +2324,6 @@ impl IPG {
                 size_factor,
                 padding,
                 show,
-                user_data,
                 button_style_standard,
                 button_style_id,
                 )));
@@ -2297,7 +2344,16 @@ impl IPG {
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
                         on_enter=None, on_move=None, on_exit=None,
-                        user_data=None, show=true,
+                        user_data_on_press=None,
+                        user_data_on_release=None,
+                        user_data_on_right_press=None,
+                        user_data_on_right_release=None,
+                        user_data_on_middle_press=None,
+                        user_data_on_middle_release=None,
+                        user_data_on_enter=None,
+                        user_data_on_move=None,
+                        user_data_on_exit=None,
+                        show=true,
                         ))]
     fn add_image(&mut self,
                     parent_id: String,
@@ -2324,46 +2380,54 @@ impl IPG {
                     on_enter: Option<PyObject>,
                     on_move: Option<PyObject>,
                     on_exit: Option<PyObject>,
-                    user_data: Option<PyObject>,
+                    user_data_on_press: Option<PyObject>,
+                    user_data_on_release: Option<PyObject>,
+                    user_data_on_right_press: Option<PyObject>,
+                    user_data_on_right_release: Option<PyObject>,
+                    user_data_on_middle_press: Option<PyObject>,
+                    user_data_on_middle_release: Option<PyObject>,
+                    user_data_on_enter: Option<PyObject>,
+                    user_data_on_move: Option<PyObject>,
+                    user_data_on_exit: Option<PyObject>,
                     show: bool,
                     ) -> PyResult<usize>
 {
     let id = self.get_id(gen_id);
 
     if on_press.is_some() {
-        add_callback_to_mutex(id, "on_press".to_string(), on_press);
+        add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data_on_press);
     }
     
     if on_release.is_some() {
-        add_callback_to_mutex(id, "event_name".to_string(), on_release);
+        add_callback_to_mutex(id, "event_name".to_string(), on_release, user_data_on_release);
     }
     
     if on_right_press.is_some() {
-        add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press);
+        add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press, user_data_on_right_press);
     }
     
     if on_right_release.is_some() {
-        add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release);
+        add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release, user_data_on_right_release);
     }
     
     if on_middle_press.is_some() {
-        add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press);
+        add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press, user_data_on_middle_press);
     }
     
     if on_middle_release.is_some() {
-        add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release);
+        add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release, user_data_on_middle_release);
     }
     
     if on_enter.is_some() {
-        add_callback_to_mutex(id, "on_enter".to_string(), on_enter);
+        add_callback_to_mutex(id, "on_enter".to_string(), on_enter, user_data_on_enter);
     }
     
     if on_move.is_some() {
-        add_callback_to_mutex(id, "on_move".to_string(), on_move);
+        add_callback_to_mutex(id, "on_move".to_string(), on_move, user_data_on_move);
     }
     
     if on_exit.is_some() {
-        add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
+        add_callback_to_mutex(id, "on_exit".to_string(), on_exit, user_data_on_exit);
     }
     
     let width = get_width(width, width_fill);
@@ -2389,8 +2453,8 @@ impl IPG {
             opacity,
             mouse_pointer,
             show,
-            user_data,
         )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -2432,7 +2496,7 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_select.is_some() {
-            add_callback_to_mutex(id, "on_select".to_string(), on_select);
+            add_callback_to_mutex(id, "on_select".to_string(), on_select, user_data);
         }
 
         let padding = get_padding_f64(padding);
@@ -2443,6 +2507,8 @@ impl IPG {
 
         let width = get_width(width, width_fill);
 
+         let options =  convert_pyobject_vec_string(options);
+
         set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
@@ -2451,7 +2517,6 @@ impl IPG {
             IpgPickList::new(  
                 id,
                 show,
-                user_data,
                 options,
                 placeholder,
                 selected,
@@ -2467,6 +2532,7 @@ impl IPG {
                 custom_static,
                 style_id,
             )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -2529,6 +2595,7 @@ impl IPG {
                 border_radius,
                 border_width,
                 )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -2578,6 +2645,7 @@ impl IPG {
                 style_standard,
                 style_id,
                 )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -2619,6 +2687,7 @@ impl IPG {
                 border_radius,
                 border_width,
                 )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -2679,7 +2748,7 @@ impl IPG {
         let padding = get_padding_f64(padding);
 
         if on_select.is_some() {
-            add_callback_to_mutex(id, "on_select".to_string(), on_select);
+            add_callback_to_mutex(id, "on_select".to_string(), on_select, user_data);
         }
 
         let text_line_height = get_line_height(text_line_height_pixels, text_line_height_relative);
@@ -2701,7 +2770,6 @@ impl IPG {
                 spacing,
                 padding,
                 show,
-                user_data,
                 is_selected,
                 width,
                 height,
@@ -2713,6 +2781,7 @@ impl IPG {
                 self.group_index,
                 style_id,
                 )));
+
         self.group_index += 1;
         state.last_id = id;
         drop(state);                                      
@@ -2913,7 +2982,15 @@ impl IPG {
                         line_height=1.3, size=16.0,
                         text_color=None, text_rgba=None, 
                         show=true, shaping="basic".to_string(), 
-                        user_data=None
+                        user_data_on_press=None,
+                        user_data_on_release=None,
+                        user_data_on_right_press=None,
+                        user_data_on_right_release=None,
+                        user_data_on_middle_press=None,
+                        user_data_on_middle_release=None,
+                        user_data_on_enter=None,
+                        user_data_on_move=None,
+                        user_data_on_exit=None,
                         ))]
     fn add_selectable_text(&mut self,
                             parent_id: String,
@@ -2941,7 +3018,15 @@ impl IPG {
                             text_rgba: Option<[f32; 4]>,
                             show: bool,
                             shaping: String,
-                            user_data: Option<PyObject>,
+                            user_data_on_press: Option<PyObject>,
+                            user_data_on_release: Option<PyObject>,
+                            user_data_on_right_press: Option<PyObject>,
+                            user_data_on_right_release: Option<PyObject>,
+                            user_data_on_middle_press: Option<PyObject>,
+                            user_data_on_middle_release: Option<PyObject>,
+                            user_data_on_enter: Option<PyObject>,
+                            user_data_on_move: Option<PyObject>,
+                            user_data_on_exit: Option<PyObject>,
                             ) -> PyResult<usize> 
     {
     
@@ -2950,39 +3035,39 @@ impl IPG {
         let content = text.clone();
 
         if on_press.is_some() {
-            add_callback_to_mutex(id, "on_press".to_string(), on_press);
+        add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data_on_press);
         }
         
         if on_release.is_some() {
-            add_callback_to_mutex(id, "on_release".to_string(), on_release);
+            add_callback_to_mutex(id, "event_name".to_string(), on_release, user_data_on_release);
         }
         
         if on_right_press.is_some() {
-            add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press);
+            add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press, user_data_on_right_press);
         }
         
         if on_right_release.is_some() {
-            add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release);
+            add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release, user_data_on_right_release);
         }
         
         if on_middle_press.is_some() {
-            add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press);
+            add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press, user_data_on_middle_press);
         }
         
         if on_middle_release.is_some() {
-            add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release);
+            add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release, user_data_on_middle_release);
         }
         
         if on_enter.is_some() {
-            add_callback_to_mutex(id, "on_enter".to_string(), on_enter);
+            add_callback_to_mutex(id, "on_enter".to_string(), on_enter, user_data_on_enter);
         }
         
         if on_move.is_some() {
-            add_callback_to_mutex(id, "on_move".to_string(), on_move);
+            add_callback_to_mutex(id, "on_move".to_string(), on_move, user_data_on_move);
         }
         
         if on_exit.is_some() {
-            add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
+            add_callback_to_mutex(id, "on_exit".to_string(), on_exit, user_data_on_exit);
         }
         
         let width = get_width(width, width_fill);
@@ -2998,20 +3083,21 @@ impl IPG {
 
         let mut state = access_state();
         
-        state.widgets.insert(id, IpgWidgets::IpgSelectableText(IpgSelectableText::new(
-                                                    id,
-                                                    content,
-                                                    width,
-                                                    height,
-                                                    h_align,
-                                                    v_align,
-                                                    line_height,
-                                                    size,
-                                                    show,
-                                                    shaping,
-                                                    text_color,
-                                                    user_data,
-                                                    )));
+        state.widgets.insert(id, IpgWidgets::IpgSelectableText(
+            IpgSelectableText::new(
+                id,
+                content,
+                width,
+                height,
+                h_align,
+                v_align,
+                line_height,
+                size,
+                show,
+                shaping,
+                text_color,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -3121,7 +3207,9 @@ impl IPG {
                         gen_id=None, width=None, height=None, 
                         width_fill=false, on_change=None, 
                         on_release=None, style_id=None,
-                        user_data=None, show=true, 
+                        user_data_on_change=None,
+                        user_data_on_release=None,
+                        show=true, 
                         ))]
     fn add_slider(&mut self,
                         parent_id: String,
@@ -3136,7 +3224,8 @@ impl IPG {
                         on_change: Option<PyObject>,
                         on_release: Option<PyObject>,
                         style_id: Option<usize>,
-                        user_data: Option<PyObject>,
+                        user_data_on_change: Option<PyObject>,
+                        user_data_on_release: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
         {
@@ -3144,10 +3233,10 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_change.is_some() {
-            add_callback_to_mutex(id, "on_change".to_string(), on_change);
+            add_callback_to_mutex(id, "on_change".to_string(), on_change, user_data_on_change);
         }
         if on_release.is_some() {
-            add_callback_to_mutex(id, "on_release".to_string(), on_release);
+            add_callback_to_mutex(id, "on_release".to_string(), on_release, user_data_on_release);
         }
         
         let width = get_width(width, width_fill);
@@ -3161,7 +3250,6 @@ impl IPG {
             IpgSlider::new( 
                 id,
                 show,
-                user_data,
                 min,
                 max,
                 step,
@@ -3279,12 +3367,20 @@ impl IPG {
                         content_fit=IpgSvgContentFit::Contain,
                         rotation=IpgSvgRotation::Floating,
                         rotation_radians=0.0, opacity=1.0,
-                        mouse_pointer=None,
+                        mouse_pointer=None, show=true,
                         on_press=None, on_release=None,
                         on_right_press=None, on_right_release=None,
                         on_middle_press=None, on_middle_release=None,
                         on_enter=None, on_move=None, on_exit=None, 
-                        user_data=None, show=true,
+                        user_data_on_press=None,
+                        user_data_on_release=None,
+                        user_data_on_right_press=None,
+                        user_data_on_right_release=None,
+                        user_data_on_middle_press=None,
+                        user_data_on_middle_release=None,
+                        user_data_on_enter=None,
+                        user_data_on_move=None,
+                        user_data_on_exit=None,
                         ))]
     fn add_svg(&mut self,
                     parent_id: String,
@@ -3300,6 +3396,7 @@ impl IPG {
                     rotation_radians: f32,
                     opacity: f32,
                     mouse_pointer: Option<IpgMousePointer>,
+                    show: bool,
                     on_press: Option<PyObject>,
                     on_release: Option<PyObject>,
                     on_right_press: Option<PyObject>,
@@ -3309,46 +3406,53 @@ impl IPG {
                     on_enter: Option<PyObject>,
                     on_move: Option<PyObject>,
                     on_exit: Option<PyObject>,
-                    user_data: Option<PyObject>,
-                    show: bool,
+                    user_data_on_press: Option<PyObject>,
+                    user_data_on_release: Option<PyObject>,
+                    user_data_on_right_press: Option<PyObject>,
+                    user_data_on_right_release: Option<PyObject>,
+                    user_data_on_middle_press: Option<PyObject>,
+                    user_data_on_middle_release: Option<PyObject>,
+                    user_data_on_enter: Option<PyObject>,
+                    user_data_on_move: Option<PyObject>,
+                    user_data_on_exit: Option<PyObject>,
                     ) -> PyResult<usize>
 {
     let id = self.get_id(gen_id);
 
     if on_press.is_some() {
-        add_callback_to_mutex(id, "on_press".to_string(), on_press);
+        add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data_on_press);
     }
     
     if on_release.is_some() {
-        add_callback_to_mutex(id, "on_release".to_string(), on_release);
+        add_callback_to_mutex(id, "event_name".to_string(), on_release, user_data_on_release);
     }
     
     if on_right_press.is_some() {
-        add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press);
+        add_callback_to_mutex(id, "on_right_press".to_string(), on_right_press, user_data_on_right_press);
     }
     
     if on_right_release.is_some() {
-        add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release);
+        add_callback_to_mutex(id, "on_right_release".to_string(), on_right_release, user_data_on_right_release);
     }
     
     if on_middle_press.is_some() {
-        add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press);
+        add_callback_to_mutex(id, "on_middle_press".to_string(), on_middle_press, user_data_on_middle_press);
     }
     
     if on_middle_release.is_some() {
-        add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release);
+        add_callback_to_mutex(id, "on_middle_release".to_string(), on_middle_release, user_data_on_middle_release);
     }
     
     if on_enter.is_some() {
-        add_callback_to_mutex(id, "on_enter".to_string(), on_enter);
+        add_callback_to_mutex(id, "on_enter".to_string(), on_enter, user_data_on_enter);
     }
     
     if on_move.is_some() {
-        add_callback_to_mutex(id, "on_move".to_string(), on_move);
+        add_callback_to_mutex(id, "on_move".to_string(), on_move, user_data_on_move);
     }
     
     if on_exit.is_some() {
-        add_callback_to_mutex(id, "on_exit".to_string(), on_exit);
+        add_callback_to_mutex(id, "on_exit".to_string(), on_exit, user_data_on_exit);
     }
     
     let width = get_width(width, width_fill);
@@ -3369,7 +3473,6 @@ impl IPG {
                                                 opacity,
                                                 mouse_pointer,
                                                 show,
-                                                user_data,
                                             )));
         state.last_id = id;
         drop(state);
@@ -3457,7 +3560,10 @@ impl IPG {
                         size=16.0, 
                         line_height_pixels=None,
                         line_height_relative=None, 
-                        user_data=None, is_secure=false, 
+                        user_data_on_input=None,
+                        user_data_on_submit=None,
+                        user_data_on_paste=None,
+                        is_secure=false, 
                         style_id=None, show=true,
                         ))]
     fn add_text_input(&mut self,
@@ -3474,7 +3580,9 @@ impl IPG {
                             size: f32,
                             line_height_pixels: Option<u16>,
                             line_height_relative: Option<f32>,
-                            user_data: Option<PyObject>,
+                            user_data_on_input: Option<PyObject>,
+                            user_data_on_submit: Option<PyObject>,
+                            user_data_on_paste: Option<PyObject>,
                             is_secure: bool,
                             style_id: Option<usize>,
                             show: bool,
@@ -3484,14 +3592,14 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_input.is_some() {
-            add_callback_to_mutex(id, "on_input".to_string(), on_input);
+            add_callback_to_mutex(id, "on_input".to_string(), on_input, user_data_on_input);
         }
         if on_submit.is_some() {
-            add_callback_to_mutex(id, "on_submit".to_string(), on_submit);
+            add_callback_to_mutex(id, "on_submit".to_string(), on_submit, user_data_on_submit);
         }
 
         if on_paste.is_some() {
-            add_callback_to_mutex(id, "on_paste".to_string(), on_paste);
+            add_callback_to_mutex(id, "on_paste".to_string(), on_paste, user_data_on_paste);
         }
         
         let padding = get_padding_f64(padding);
@@ -3514,7 +3622,6 @@ impl IPG {
                 padding,
                 size,
                 line_height,
-                user_data,
                 style_id,
                 show,
                 )));
@@ -3606,7 +3713,10 @@ impl IPG {
                         width_fill=false, height_fill=false,
                         padding=vec![10.0], clip=false, 
                         style_id=None, style_standard=None, style_arrow=None, 
-                        user_data=None, gen_id=None, show=true
+                        user_data_on_start=None,
+                        user_data_on_tick=None,
+                        user_data_on_stop=None, 
+                        gen_id=None, show=true
                         ))]
     fn add_timer(&mut self,
                         parent_id: String,
@@ -3624,7 +3734,9 @@ impl IPG {
                         style_id: Option<usize>,
                         style_standard: Option<IpgStyleStandard>,
                         style_arrow: Option<IpgButtonArrow>,
-                        user_data: Option<PyObject>,
+                        user_data_on_start: Option<PyObject>,
+                        user_data_on_tick: Option<PyObject>,
+                        user_data_on_stop: Option<PyObject>,
                         gen_id: Option<usize>,
                         show: bool,
                     ) -> PyResult<usize>
@@ -3632,13 +3744,13 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_start.is_some() {
-            add_callback_to_mutex(self.id, "on_start".to_string(), on_start);
+            add_callback_to_mutex(self.id, "on_start".to_string(), on_start, user_data_on_start);
         }
         if on_tick.is_some() {
-            add_callback_to_mutex(self.id, "on_tick".to_string(), on_tick);
+            add_callback_to_mutex(self.id, "on_tick".to_string(), on_tick, user_data_on_tick);
         }
         if on_stop.is_some() {
-            add_callback_to_mutex(self.id, "on_stop".to_string(), on_stop);
+            add_callback_to_mutex(self.id, "on_stop".to_string(), on_stop, user_data_on_stop);
         }
 
         let width = get_width(width, width_fill);
@@ -3650,20 +3762,21 @@ impl IPG {
         
         let mut state = access_state();
 
-        state.widgets.insert(self.id, IpgWidgets::IpgTimer(IpgTimer::new(
-                                                            id,
-                                                            duration_ms,
-                                                            label,
-                                                            width,
-                                                            height,
-                                                            padding,
-                                                            clip,
-                                                            style_id,
-                                                            style_standard,
-                                                            style_arrow,
-                                                            user_data,
-                                                            show,
-                                                            )));
+        state.widgets.insert(self.id, IpgWidgets::IpgTimer(
+            IpgTimer::new(
+                id,
+                duration_ms,
+                label,
+                width,
+                height,
+                padding,
+                clip,
+                style_id,
+                style_standard,
+                style_arrow,
+                show,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -3734,8 +3847,12 @@ impl IPG {
                         width=None, height=None, 
                         width_fill=false, height_fill=false,
                         padding=vec![10.0], clip=false, 
-                        style_id=None, style_standard=None, style_arrow=None, 
-                        user_data=None, gen_id=None, show=true
+                        style_id=None, style_standard=None, 
+                        style_arrow=None, 
+                        user_data_on_start=None,
+                        user_data_on_tick=None,
+                        user_data_on_stop=None, 
+                        gen_id=None, show=true
                         ))]
     fn add_canvas_timer(&mut self,
                         parent_id: String,
@@ -3753,7 +3870,9 @@ impl IPG {
                         style_id: Option<usize>,
                         style_standard: Option<IpgStyleStandard>,
                         style_arrow: Option<IpgButtonArrow>,
-                        user_data: Option<PyObject>,
+                        user_data_on_start: Option<PyObject>,
+                        user_data_on_tick: Option<PyObject>,
+                        user_data_on_stop: Option<PyObject>,
                         gen_id: Option<usize>,
                         show: bool,
                     ) -> PyResult<usize>
@@ -3761,13 +3880,13 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_start.is_some() {
-            add_callback_to_mutex(self.id, "on_start".to_string(), on_start);
+            add_callback_to_mutex(self.id, "on_start".to_string(), on_start, user_data_on_start);
         }
         if on_tick.is_some() {
-            add_callback_to_mutex(self.id, "on_tick".to_string(), on_tick);
+            add_callback_to_mutex(self.id, "on_tick".to_string(), on_tick, user_data_on_tick);
         }
         if on_stop.is_some() {
-            add_callback_to_mutex(self.id, "on_stop".to_string(), on_stop);
+            add_callback_to_mutex(self.id, "on_stop".to_string(), on_stop, user_data_on_stop);
         }
 
         let width = get_width(width, width_fill);
@@ -3779,20 +3898,21 @@ impl IPG {
         
         let mut state = access_state();
 
-        state.widgets.insert(self.id, IpgWidgets::IpgCanvasTimer(IpgCanvasTimer::new(
-                                                            id,
-                                                            duration_ms,
-                                                            label,
-                                                            width,
-                                                            height,
-                                                            padding,
-                                                            clip,
-                                                            style_id,
-                                                            style_standard,
-                                                            style_arrow,
-                                                            user_data,
-                                                            show,
-                                                            )));
+        state.widgets.insert(self.id, IpgWidgets::IpgCanvasTimer(
+            IpgCanvasTimer::new(
+                id,
+                duration_ms,
+                label,
+                width,
+                height,
+                padding,
+                clip,
+                style_id,
+                style_standard,
+                style_arrow,
+                show,
+                )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -3883,7 +4003,7 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if toggled.is_some() {
-            add_callback_to_mutex(id, "toggled".to_string(), toggled);
+            add_callback_to_mutex(id, "toggled".to_string(), toggled, user_data);
         }
 
         let text_line_height = LineHeight::Relative(text_line_height);
@@ -3898,7 +4018,6 @@ impl IPG {
             IpgToggler::new(
                 id,
                 show,
-                user_data,
                 label,
                 width,
                 size,
@@ -4661,9 +4780,10 @@ impl IPG {
         if let Some(py) = on_key_release {
             callbacks.callback_events.insert((self.id, "key released".to_string()), py);
         }
-
-        callbacks.user_data.push((self.id, user_data));
-
+        if user_data.is_some() {
+            callbacks.user_data.push((self.id, user_data.unwrap()));
+        }
+       
         drop(callbacks);
         
         let mut state = access_state();
@@ -4731,8 +4851,10 @@ impl IPG {
             callbacks.callback_events.insert((self.id, "middle scroll line".to_string()), py);
         }
 
-        callbacks.user_data.push((self.id, user_data));
-
+        if user_data.is_some() {
+            callbacks.user_data.push((self.id, user_data.unwrap()));
+        }
+        
         drop(callbacks);
         
         let mut state = access_state();
@@ -4804,8 +4926,10 @@ impl IPG {
             callbacks.callback_events.insert((self.id, "files hovered left".to_string()), py);
         }
        
-        callbacks.user_data.push((self.id, user_data));
-
+        if user_data.is_some() {
+            callbacks.user_data.push((self.id, user_data.unwrap()));
+        }
+        
         drop(callbacks);
         
         let mut state = access_state();
@@ -4937,7 +5061,9 @@ impl IPG {
     }
 }
 
-fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
+fn match_widget(widget: &mut IpgWidgets, 
+                item: &PyObject, 
+                value: &PyObject) {
 
     match widget {
         IpgWidgets::IpgButton(btn) => {
@@ -5051,8 +5177,8 @@ fn match_widget(widget: &mut IpgWidgets, item: PyObject, value: PyObject) {
 }
 
 fn match_container(container: &mut IpgContainers, 
-                    item: PyObject, 
-                    value: PyObject, 
+                    item: &PyObject, 
+                    value: &PyObject, 
                     canvas_state: &mut IpgCanvasState,
                     ) 
 {
@@ -5251,10 +5377,14 @@ fn set_state_of_widget(
     drop(state);
 }
 
-fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>) {
+fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>, user_data: Option<PyObject>) {
     let mut app_cbs = access_callbacks();
 
         app_cbs.callbacks.insert((id, event_name), py_obj);
+
+        if user_data.is_some() {
+            app_cbs.user_data.push((id, user_data.unwrap()))
+        }
 
         drop(app_cbs);
 }

@@ -3,10 +3,6 @@
 use crate::app;
 use crate::access_callbacks;
 use crate::IpgState;
-use super::callbacks::set_or_get_widget_callback_data;
-use super::callbacks::{WidgetCallbackIn, 
-                        WidgetCallbackOut, 
-                        };
 use super::helpers::{get_height, get_width};
 use super::helpers::{try_extract_boolean, try_extract_f64, 
     try_extract_string};
@@ -19,7 +15,6 @@ use iced::mouse::Interaction;
 use iced::advanced::svg;
 
 use pyo3::pyclass;
-use pyo3::types::IntoPyDict;
 use pyo3::{PyObject, Python};
 
 
@@ -35,7 +30,6 @@ pub struct IpgSvg {
         pub opacity: f32,
         pub mouse_pointer: Option<IpgMousePointer>,
         pub show: bool,
-        pub user_data: Option<PyObject>,
 }
 
 impl IpgSvg {
@@ -50,7 +44,6 @@ impl IpgSvg {
         opacity: f32,
         mouse_pointer: Option<IpgMousePointer>,
         show: bool,
-        user_data: Option<PyObject>,
         ) -> Self {
         Self {
             id,
@@ -63,7 +56,6 @@ impl IpgSvg {
             opacity,
             mouse_pointer,
             show,
-            user_data,
         }
     }
 }
@@ -81,8 +73,8 @@ pub enum SvgMessage {
     OnExit,
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgSvgContentFit {
     Contain,
     Cover,
@@ -91,30 +83,31 @@ pub enum IpgSvgContentFit {
     ScaleDown,
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgSvgRotation {
     Floating,
     Solid,
 }
 
-pub fn construct_svg(sg: IpgSvg) -> Option<Element<'static, app::Message>> {
+pub fn construct_svg<'a>(sg: &'a IpgSvg) 
+                    -> Option<Element<'a, app::Message>> {
 
     if !sg.show {
         return None
     }
 
-    let svg_handle = svg::Handle::from_path(sg.svg_path);
+    let svg_handle = svg::Handle::from_path(sg.svg_path.clone());
 
     let svg_widget: Element<SvgMessage> = Svg::new(svg_handle)
                                                 .width(sg.width)
                                                 .height(sg.height)
-                                                .content_fit(match_content_fit(sg.content_fit))
-                                                .rotation(match_rotation(sg.rotation, Radians::from(sg.rotation_radians)))
+                                                .content_fit(match_content_fit(sg.content_fit.clone()))
+                                                .rotation(match_rotation(sg.rotation.clone(), Radians::from(sg.rotation_radians)))
                                                 .opacity(sg.opacity)
                                                 .into();
 
-    let pointer: Interaction = get_interaction(sg.mouse_pointer);
+    let pointer: Interaction = get_interaction(&sg.mouse_pointer.clone());
 
     let widget: Element<SvgMessage> = 
                 MouseArea::new(svg_widget)
@@ -152,79 +145,49 @@ fn match_rotation(rot: IpgSvgRotation, radians: Radians) -> Rotation {
     }
 }
 
-pub fn svg_callback(state: &mut IpgState, id: usize, message: SvgMessage) {
-
-    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
+pub fn svg_callback(_state: &mut IpgState, id: usize, message: SvgMessage) {
 
     match message {
         SvgMessage::OnPress => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_press".to_string();
-            process_callback(wco);
+            process_callback(id, "on_press".to_string(), None);
         },
         SvgMessage::OnRelease => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_release".to_string();
-            process_callback(wco);
+            process_callback(id, "on_release".to_string(), None);
         },
         SvgMessage::OnRightPress => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_right_press".to_string();
-            process_callback(wco);
+            process_callback(id, "on_right_press".to_string(), None);
         },
         SvgMessage::OnRightRelease => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_right_release".to_string();
-            process_callback(wco);
+            process_callback(id, "on_right_release".to_string(), None);
         },
         SvgMessage::OnMiddlePress => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_middle_press".to_string();
-            process_callback(wco);
+            process_callback(id, "on_middle_press".to_string(), None);
         },
         SvgMessage::OnMiddleRelease => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_middle_release".to_string();
-            process_callback(wco);
+            process_callback(id, "on_middle_release".to_string(), None);
         },
         SvgMessage::OnEnter => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_enter".to_string();
-            process_callback(wco);
+            process_callback(id, "on_enter".to_string(), None);
         },
         SvgMessage::OnMove(point) => {
-            let points: Vec<(String, f32)> = vec![
-                ("x".to_string(), point.x),
-                ("y".to_string(), point.y)];
+            let points: Option<(String, f32, String, f32)> = Some(
+                ("x".to_string(), point.x,
+                "y".to_string(), point.y));
             
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_move".to_string();
-            wco.points = Some(points);
-            process_callback(wco);
+            process_callback(id, "on_move".to_string(), points);
         },
         SvgMessage::OnExit => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_exit".to_string();
-            process_callback(wco);
+            process_callback(id, "on_exit".to_string(), None);
         },
     }
 }
 
 
-fn process_callback(wco: WidgetCallbackOut) 
+fn process_callback(id: usize, event_name: String, points_opt: Option<(String, f32, String, f32)>) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -233,77 +196,60 @@ fn process_callback(wco: WidgetCallbackOut)
        
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Image Callback could not be found with id {}", wco.id),
+        None => panic!("Image Callback could not be found with id {}", id),
     };
-              
-    if wco.event_name == *"on_move" {
+               
+    let user_data_opt = app_cbs.user_data.get(&id);
 
-        let points = match wco.points {
-            Some(pts) => pts,
-            None => panic!("Image Points not found"),
-        };
-
-        Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(ud) => ud,
-                    None => panic!("Image callback user_data not found."),
-                };
+    Python::with_gil(|py| {
+        if user_data_opt.is_some() && points_opt.is_some() {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    points.into_py_dict_bound(py), 
-                                                                    user_data
+                                                                    id, 
+                                                                    points_opt.unwrap(), 
+                                                                    user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Image: 3 parameter (id, points, user_data) are required or a python error in this function. {er}"),
                 }
-            } else {
+            } else if points_opt.is_some() && user_data_opt.is_none() {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    points.into_py_dict_bound(py), 
+                                                                    id, 
+                                                                    points_opt.unwrap(), 
                                                                     ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Image: 2 parameter (id, points) are required or a python error in this function. {er}"),
                 }
-            } 
-        });
-
-    } else {
-        Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(ud) => ud,
-                    None => panic!("Image callback user_data not found."),
-                };
+            } else if user_data_opt.is_some() {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    user_data
+                                                                    id, 
+                                                                    user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Image: 2 parameter (id, user_data) are required or a python error in this function. {er}"),
                 }
+            
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id,  
+                                                                    id, 
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Image: Only 1 parameter (id) is required or a python error in this function. {er}"),
+                    Err(er) => panic!("Image: 1 parameter (id) are required or a python error in this function. {er}"),
                 }
-            } 
-        });
-    }
+            }
     
-    drop(app_cbs);   
+    });
+    
+    drop(app_cbs);
 
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgSvgParam {
     Height,
     HeightFill,
@@ -317,8 +263,8 @@ pub enum IpgSvgParam {
 
 
 pub fn svg_item_update(img: &mut IpgSvg,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_svg_update(item);
@@ -357,7 +303,7 @@ pub fn svg_item_update(img: &mut IpgSvg,
     }
 }
 
-pub fn try_extract_svg_update(update_obj: PyObject) -> IpgSvgParam {
+pub fn try_extract_svg_update(update_obj: &PyObject) -> IpgSvgParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgSvgParam>(py);

@@ -4,7 +4,7 @@ use pyo3::pyclass;
 
 use super::ipg_button::{IpgButton, IpgButtonStyle};
 use super::ipg_canvas::IpgCanvas;
-use super::ipg_card::IpgCard;
+use super::ipg_card::{IpgCard, IpgCardStyle};
 use super::ipg_checkbox::{IpgCheckBox, IpgCheckboxStyle};
 use super::ipg_color_picker::{IpgColorPicker, IpgColorPickerStyle};
 // use super::ipg_color_picker::IpgColorPicker;
@@ -13,7 +13,7 @@ use super::ipg_column::IpgColumn;
 use super::ipg_date_picker::IpgDatePicker;
 use super::ipg_image::IpgImage;
 use super::ipg_menu::{IpgMenu, IpgMenuBarStyle, IpgMenuStyle};
-use super::ipg_modal::IpgModal;
+// use super::ipg_modal::IpgModal;
 use super::ipg_mousearea::IpgMouseArea;
 use super::ipg_opaque::IpgOpaque;
 // use super::ipg_pane_grid::{IpgPaneGrid, IpgPane};
@@ -46,7 +46,7 @@ pub enum IpgContainers {
     IpgColumn(IpgColumn),
     IpgContainer(IpgContainer),
     IpgMenu(IpgMenu),
-    IpgModal(IpgModal),
+    // IpgModal(IpgModal),
     IpgMouseArea(IpgMouseArea),
     IpgOpaque(IpgOpaque),
     IpgStack(IpgStack),
@@ -64,6 +64,7 @@ pub enum IpgWidgets {
     IpgButton(IpgButton),
     IpgButtonStyle(IpgButtonStyle),
     IpgCard(IpgCard),
+    IpgCardStyle(IpgCardStyle),
     IpgCheckBox(IpgCheckBox),
     IpgCheckboxStyle(IpgCheckboxStyle),
     IpgColorPicker(IpgColorPicker),
@@ -102,24 +103,24 @@ pub enum IpgWidgets {
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgAlignment {
     Start,
     Center,
     End,
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgHorizontalAlignment {
     Left,
     Center,
     Right,
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgVerticalAlignment {
     Top,
     Center,

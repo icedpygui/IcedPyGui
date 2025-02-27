@@ -8,8 +8,6 @@ use super::helpers::{get_height, get_padding_f64, get_width,
     try_extract_ipg_color, try_extract_rgba_color, try_extract_u16, 
     try_extract_vec_f64, try_extract_vec_str};
 use super::ipg_enums::IpgWidgets;
-use super::callbacks::WidgetCallbackOut;
-
 
 use iced::widget::radio::{self, Status};
 use iced::{Color, Element, Length, Padding, Pixels, Theme};
@@ -27,7 +25,6 @@ pub struct IpgRadio {
     pub spacing: f32,
     pub padding: Padding,
     pub show: bool,
-    pub user_data: Option<PyObject>,
     pub is_selected: Option<usize>,
     pub width: Length,
     pub height: Length,
@@ -49,7 +46,6 @@ impl IpgRadio {
         spacing: f32,
         padding: Padding,
         show: bool,
-        user_data: Option<PyObject>,
         is_selected: Option<usize>,
         width: Length,
         height: Length,
@@ -69,7 +65,6 @@ impl IpgRadio {
             spacing,
             padding,
             show,
-            user_data,
             is_selected,
             width,
             height,
@@ -121,8 +116,8 @@ impl IpgRadioStyle {
     }
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgRadioDirection {
     Horizontal,
     Vertical,
@@ -135,9 +130,9 @@ pub enum RDMessage {
 }
 
 
-pub fn construct_radio(radio: IpgRadio, 
-                        style_opt: Option<IpgWidgets>) 
-                        -> Option<Element<'static, app::Message>> {
+pub fn construct_radio<'a>(radio: &'a IpgRadio, 
+                        style_opt: Option<&IpgWidgets>) 
+                        -> Option<Element<'a, app::Message>> {
     
     if !radio.show {
         return None
@@ -202,8 +197,6 @@ pub fn construct_radio(radio: IpgRadio,
 
 
 pub fn radio_callback(state: &mut IpgState, id: usize, message: RDMessage) {
-
-    let mut wco = WidgetCallbackOut::default();
 
     let widget_opt = state.widgets.get_mut(&id);
 
@@ -301,22 +294,17 @@ pub fn radio_callback(state: &mut IpgState, id: usize, message: RDMessage) {
     };
 
     radio.is_selected = Some(ch_usize);
-    wco.user_data = radio.user_data.clone();
-    wco.selected_label = Some(radio.labels[ch_usize].clone());
-    wco.selected_index = Some(ch_usize);
 
-    wco.id = id;
-    wco.event_name = "on_select".to_string();
-    process_callback(wco);
+    process_callback(id, "on_select".to_string(), ch_usize, radio.labels[ch_usize].clone());
     
 }
 
 
-fn process_callback(wco: WidgetCallbackOut) 
+fn process_callback(id: usize, event_name: String, selected_index: usize, selected_label: String) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -325,29 +313,17 @@ fn process_callback(wco: WidgetCallbackOut)
 
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Radio Callback could not be found with id {}", wco.id),
+        None => panic!("Radio Callback could not be found with id {}", id),
     };
 
-    let index = match wco.selected_index {
-        Some(idx) => idx,
-        None => panic!("Radio callback selected_index could not be found"),
-    };
-
-    let label = match wco.selected_label {
-        Some(lb) => lb,
-        None => panic!("Radio callback selected_label could not be found"),
-    };
+    let user_data_opt = app_cbs.user_data.get(&id);
 
     Python::with_gil(|py| {
-        if wco.user_data.is_some() {
-            let user_data = match wco.user_data {
-                Some(ud) => ud,
-                None => panic!("Radio callback user_data not found."),
-            };
+        if user_data_opt.is_some() {
             let res = callback.call1(py, (
-                                                                wco.id, 
-                                                                (index, label),
-                                                                user_data
+                                                                id, 
+                                                                (selected_index, selected_label),
+                                                                user_data_opt.unwrap()
                                                                 ));
             match res {
                 Ok(_) => (),
@@ -355,8 +331,8 @@ fn process_callback(wco: WidgetCallbackOut)
             }
         } else {
             let res = callback.call1(py, (
-                                    wco.id,
-                                    (index, label), 
+                                    id,
+                                    (selected_index, selected_label), 
                                     )
                             );
             match res {
@@ -379,8 +355,8 @@ fn match_widgets (widget: &mut IpgWidgets) -> &mut IpgRadio {
     }
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgRadioParam {
     Direction,
     Labels,
@@ -394,7 +370,6 @@ pub enum IpgRadioParam {
     TextSize,
     LineHeightPixels,
     LineHeightRelative,
-    UserData,
     Width,
     WidthFill,
     Height,
@@ -402,8 +377,8 @@ pub enum IpgRadioParam {
 }
 
 pub fn radio_item_update(rd: &mut IpgRadio,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_radio_update(item);
@@ -462,9 +437,6 @@ pub fn radio_item_update(rd: &mut IpgRadio,
             let val = try_extract_f64(value, name) as f32;
             rd.text_line_height = LineHeight::Relative(val);
         },
-        IpgRadioParam::UserData => {
-            rd.user_data = Some(value);
-        },
         IpgRadioParam::Width => {
             match try_extract_f64_option(value) {
                 Some(val) => rd.width = get_width(Some(val as f32), false),
@@ -498,7 +470,7 @@ pub fn radio_item_update(rd: &mut IpgRadio,
 }
 
 
-pub fn try_extract_radio_update(update_obj: PyObject) -> IpgRadioParam {
+pub fn try_extract_radio_update(update_obj: &PyObject) -> IpgRadioParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgRadioParam>(py);
@@ -510,7 +482,7 @@ pub fn try_extract_radio_update(update_obj: PyObject) -> IpgRadioParam {
 }
 
 
-pub fn try_extract_radio_direction(direct_obj: PyObject) -> IpgRadioDirection {
+pub fn try_extract_radio_direction(direct_obj: &PyObject) -> IpgRadioDirection {
     Python::with_gil(|py| {
         let res = direct_obj.extract::<IpgRadioDirection>(py);
             
@@ -568,8 +540,8 @@ pub fn get_styling(theme: &Theme, status: Status,
 
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgRadioStyleParam {
     BackgroundIpgColor,
     BackgroundRbgaColor,
@@ -585,8 +557,8 @@ pub enum IpgRadioStyleParam {
 }
 
 pub fn radio_style_update_item(style: &mut IpgRadioStyle,
-                                item: PyObject,
-                                value: PyObject,) 
+                                item: &PyObject,
+                                value: &PyObject,) 
 {
     let update = try_extract_radio_style_update(item);
     let name = "RadioStyle".to_string();
@@ -632,12 +604,12 @@ pub fn radio_style_update_item(style: &mut IpgRadioStyle,
     }
 }
 
-fn get_radio_style(style: Option<IpgWidgets>) -> Option<IpgRadioStyle>{
+fn get_radio_style(style: Option<&IpgWidgets>) -> Option<IpgRadioStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgRadioStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }
@@ -646,7 +618,7 @@ fn get_radio_style(style: Option<IpgWidgets>) -> Option<IpgRadioStyle>{
     }
 }
 
-pub fn try_extract_radio_style_update(update_obj: PyObject) -> IpgRadioStyleParam {
+pub fn try_extract_radio_style_update(update_obj: &PyObject) -> IpgRadioStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgRadioStyleParam>(py);

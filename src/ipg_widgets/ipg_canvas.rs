@@ -131,8 +131,8 @@ pub fn canvas_callback(canvas_message: CanvasMessage,
     }
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgCanvasParam {
     Clear,
     CanvasColor,
@@ -151,8 +151,8 @@ pub enum IpgCanvasParam {
 // update only the canvas, not the propterties of the canvas widgets.
 // see canvas_geometry_update
 pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_canvas_update(item);
@@ -213,11 +213,11 @@ pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
         IpgCanvasParam::TextAlignment => {
             let align = try_extract_ipg_horizontal_alignment(value.clone());
             if align.is_some() {
-                canvas_state.selected_h_text_alignment = get_horizontal_alignment(align.unwrap())
+                canvas_state.selected_h_text_alignment = get_horizontal_alignment(&align.unwrap())
             }
             let align = try_extract_ipg_vertical_alignment(value.clone());
             if align.is_some() {
-                canvas_state.selected_v_text_alignment = get_vertical_alignment(align.unwrap());
+                canvas_state.selected_v_text_alignment = get_vertical_alignment(&align.unwrap());
             }
         },
         IpgCanvasParam::Widget => {
@@ -228,7 +228,7 @@ pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
     }
 }
 
-pub fn try_extract_canvas_update(update_obj: PyObject) -> IpgCanvasParam {
+pub fn try_extract_canvas_update(update_obj: &PyObject) -> IpgCanvasParam {
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgCanvasParam>(py);
         match res {
@@ -238,7 +238,7 @@ pub fn try_extract_canvas_update(update_obj: PyObject) -> IpgCanvasParam {
     })
 }
 
-fn try_extract_mode(update_obj: PyObject) -> IpgDrawMode {
+fn try_extract_mode(update_obj: &PyObject) -> IpgDrawMode {
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgDrawMode>(py);
         match res {
@@ -248,7 +248,7 @@ fn try_extract_mode(update_obj: PyObject) -> IpgDrawMode {
     })
 }
 
-fn try_extract_widget(update_obj: PyObject) -> IpgCanvasWidget {
+fn try_extract_widget(update_obj: &PyObject) -> IpgCanvasWidget {
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgCanvasWidget>(py);
         match res {
@@ -259,14 +259,16 @@ fn try_extract_widget(update_obj: PyObject) -> IpgCanvasWidget {
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgCanvasGeometryParam {
     Position,
     Rotation,
 }
 
-pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObject) {
+pub fn match_canvas_widget(widget: &mut IpgWidget, 
+                            item: &PyObject, 
+                            value: &PyObject) {
 
     let update_item = try_extract_geometry_update(item);
     let name = "CanvasGeometry".to_string();
@@ -415,10 +417,7 @@ pub fn match_canvas_widget(widget: &mut IpgWidget, item: PyObject, value: PyObje
     }
 }
 
-
-
-
-pub fn try_extract_geometry_update(update_obj: PyObject) -> IpgCanvasGeometryParam {
+pub fn try_extract_geometry_update(update_obj: &PyObject) -> IpgCanvasGeometryParam {
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgCanvasGeometryParam>(py);
         match res {

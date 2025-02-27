@@ -83,9 +83,9 @@ impl IpgProgressBarStyle {
 }
 
 
-pub fn construct_progress_bar(bar: IpgProgressBar, 
-                            style_opt: Option<IpgWidgets>) 
-                            -> Option<Element<'static, app::Message>> {
+pub fn construct_progress_bar<'a>(bar: &'a IpgProgressBar, 
+                            style_opt: Option<&IpgWidgets>) 
+                            -> Option<Element<'a, app::Message>> {
     
     if !bar.show {
         return None
@@ -107,8 +107,8 @@ pub fn construct_progress_bar(bar: IpgProgressBar,
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgProgressBarParam {
     Height,
     Min,
@@ -122,8 +122,8 @@ pub enum IpgProgressBarParam {
 }
 
 pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
-                                item: PyObject,
-                                value: PyObject,
+                                item: &PyObject,
+                                value: &PyObject,
                                 )
 {
     let update = try_extract_progress_bar_update(item);
@@ -163,7 +163,7 @@ pub fn progress_bar_item_update(pb: &mut IpgProgressBar,
 }
 
 
-pub fn try_extract_progress_bar_update(update_obj: PyObject) -> IpgProgressBarParam {
+pub fn try_extract_progress_bar_update(update_obj: &PyObject) -> IpgProgressBarParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgProgressBarParam>(py);
@@ -244,8 +244,8 @@ pub fn get_styling(theme: &Theme,
  
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgProgressBarStyleParam {
     BackgroundIpgColor,
     BackgroundRgbaColor,
@@ -258,8 +258,8 @@ pub enum IpgProgressBarStyleParam {
 }
 
 pub fn progress_bar_style_update_item(style: &mut IpgProgressBarStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_progress_bar_style_update(item);
     let name = "ProgressBarStyle".to_string();
@@ -294,12 +294,12 @@ pub fn progress_bar_style_update_item(style: &mut IpgProgressBarStyle,
     }
 }
 
-fn get_progress_bar_style(style: Option<IpgWidgets>) -> Option<IpgProgressBarStyle>{
+fn get_progress_bar_style(style: Option<&IpgWidgets>) -> Option<IpgProgressBarStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgProgressBarStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }
@@ -308,7 +308,7 @@ fn get_progress_bar_style(style: Option<IpgWidgets>) -> Option<IpgProgressBarSty
     }
 }
 
-pub fn try_extract_progress_bar_style_update(update_obj: PyObject) -> IpgProgressBarStyleParam {
+pub fn try_extract_progress_bar_style_update(update_obj: &PyObject) -> IpgProgressBarStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgProgressBarStyleParam>(py);

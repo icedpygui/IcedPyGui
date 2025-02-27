@@ -25,7 +25,6 @@ pub struct IpgTimer {
     pub style_id: Option<usize>,
     pub style_standard: Option<IpgStyleStandard>,
     pub style_arrow: Option<IpgButtonArrow>,
-    pub user_data: Option<PyObject>,
     pub counter: u64,
     pub started: bool,
     pub ticking: bool,
@@ -44,7 +43,6 @@ impl IpgTimer {
         style_id: Option<usize>,
         style_standard: Option<IpgStyleStandard>,
         style_arrow: Option<IpgButtonArrow>,
-        user_data: Option<PyObject>,
         show: bool,
         ) -> Self {
         Self {
@@ -58,7 +56,6 @@ impl IpgTimer {
             style_id,
             style_standard,
             style_arrow,
-            user_data,
             counter: 0,
             started: false,
             ticking: false,
@@ -119,7 +116,7 @@ pub enum TIMMessage {
 
 
 #[derive(Debug, Clone)]
-#[pyclass]
+#[pyclass(eq, eq_int)]
 pub enum IpgTimerParam {
     DurationMs,
     ArrowStyle,
@@ -136,7 +133,9 @@ pub enum IpgTimerParam {
     WidthFill,
 }
 
-pub fn construct_timer(tim: IpgTimer, style_opt: Option<IpgWidgets>) -> Option<Element<'static, app::Message>> {
+pub fn construct_timer<'a>(tim: &'a IpgTimer, 
+                        style_opt: Option<&IpgWidgets>) 
+                        -> Option<Element<'a, app::Message>> {
 
     if !tim.show {
         return None
@@ -147,7 +146,7 @@ pub fn construct_timer(tim: IpgTimer, style_opt: Option<IpgWidgets>) -> Option<E
     let mut label = Text::new(tim.label.clone());
     
     if tim.style_arrow.is_some() {
-        let arrow = get_bootstrap_arrow(tim.style_arrow.unwrap());
+        let arrow = get_bootstrap_arrow(&tim.style_arrow);
         label = Text::new(arrow).font(iced::Font::with_name("bootstrap-icons"));
     }
     
@@ -177,14 +176,14 @@ pub fn timer_callback(state: &mut IpgState, id: usize, started: bool) -> u64 {
     let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
     wco.id = id;
     let duration = wco.duration.unwrap_or(1);
-    if wco.value_bool.unwrap() {
-        wco.event_name = "on_start".to_string();
+    let event_name = if started {
+        "on_start".to_string()
     } else {
-        wco.event_name = "on_stop".to_string();
-    }
+        "on_stop".to_string()
+    };
     
-    process_callback(wco);
-    duration       
+    process_callback(id, event_name, None);
+    duration
 }
 
 pub fn tick_callback(state: &mut IpgState) 
@@ -192,17 +191,15 @@ pub fn tick_callback(state: &mut IpgState)
     let id= state.timer_event_id_enabled.0;
     let mut wci = WidgetCallbackIn{id, ..Default::default()};
     wci.value_str = Some("on_tick".to_string());
-    let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
-    wco.id = id;
-    wco.event_name = "on_tick".to_string();
-    process_callback(wco);
+    let wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
+    process_callback(id, "on_tick".to_string(), wco.counter);
 }
 
-fn process_callback(wco: WidgetCallbackOut)
+fn process_callback(id: usize, event_name: String, counter: Option<u64>)
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -211,36 +208,40 @@ fn process_callback(wco: WidgetCallbackOut)
 
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Timer callback could not be found with id {}", wco.id),
+        None => panic!("Timer callback could not be found with id {}", id),
     };
   
-    let counter = wco.counter.unwrap_or(0);
+    let user_data_opt = app_cbs.user_data.get(&id);
 
     Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(ud) => ud,
-                    None => panic!("User Data could not be found in Timer callback"),
-                };
+            if user_data_opt.is_some() && counter.is_some(){
                 let res = callback.call1(py, (
-                                                                    wco.id,
-                                                                    counter,  
-                                                                    user_data
+                                                                    id,
+                                                                    counter.unwrap(),  
+                                                                    user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Timer: 3 parameters (id, counter, user_data) are required or a python error in this function. {er}"),
                 }
-            } else {
+            } else if counter.is_some() {
                 let res = callback.call1(py, (
-                                                                    wco.id,
-                                                                    counter,  
+                                                                    id,
+                                                                    counter.unwrap(),  
                                                                     ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Timer: 2 parameters (id, counter) are required or a python error in this function. {er}"),
                 }
-            } 
+            } else {
+                let res = callback.call1(py, (
+                                                                    id,  
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Timer: 1 parameters (id) are required or a python error in this function. {er}"),
+                }
+            }
     });
     
     drop(app_cbs);
@@ -248,8 +249,8 @@ fn process_callback(wco: WidgetCallbackOut)
 
 
 pub fn timer_item_update(tim: &mut IpgTimer,
-                        item: PyObject,
-                        value: PyObject,
+                        item: &PyObject,
+                        value: &PyObject,
                         )
 {
     let update = try_extract_timer_update(item);
@@ -302,7 +303,7 @@ pub fn timer_item_update(tim: &mut IpgTimer,
 
 }
 
-pub fn try_extract_timer_update(update_obj: PyObject) -> IpgTimerParam {
+pub fn try_extract_timer_update(update_obj: &PyObject) -> IpgTimerParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgTimerParam>(py);
@@ -390,7 +391,7 @@ fn disabled(style: button::Style) -> button::Style {
 }
 
 #[derive(Debug, Clone)]
-#[pyclass]
+#[pyclass(eq, eq_int)]
 pub enum IpgTimerStyleParam {
     BackgroundIpgColor,
     BackgroundRbgaColor,
@@ -410,8 +411,8 @@ pub enum IpgTimerStyleParam {
 }
 
 pub fn timer_style_update_item(style: &mut IpgTimerStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_timer_style_update(item);
     let name = "TimerStyle".to_string();
@@ -469,12 +470,12 @@ pub fn timer_style_update_item(style: &mut IpgTimerStyle,
     }
 }
 
-fn get_timer_style(style: Option<IpgWidgets>) -> Option<IpgTimerStyle>{
+fn get_timer_style(style: Option<&IpgWidgets>) -> Option<IpgTimerStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgTimerStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }
@@ -483,7 +484,7 @@ fn get_timer_style(style: Option<IpgWidgets>) -> Option<IpgTimerStyle>{
     }
 }
 
-fn try_extract_timer_style_update(update_obj: PyObject) -> IpgTimerStyleParam {
+fn try_extract_timer_style_update(update_obj: &PyObject) -> IpgTimerStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgTimerStyleParam>(py);

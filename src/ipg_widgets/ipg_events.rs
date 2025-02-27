@@ -507,9 +507,13 @@ fn get_callback(id: usize, event_name: String) -> Option<Py<PyAny>> {
     let cbs = access_callbacks();
 
     let cb_opt= cbs.callback_events
-                                    .get(&(id, event_name)).cloned();
+                                    .get(&(id, event_name));
+    let cb: Option<Py<PyAny>> = match cb_opt {
+        Some(cb) => Some(*cb),
+        None => None,
+    };
     drop(cbs);
-    cb_opt
+    cb
 }
 
 pub fn get_event_user_data(id: usize) -> Option<PyObject> {
@@ -517,8 +521,8 @@ pub fn get_event_user_data(id: usize) -> Option<PyObject> {
     let cb = access_callbacks();
 
     for data in cb.user_data.iter() {
-                    if data.0 == id {
-                        let opt_py = data.1.clone();
+                    if data.0 == &id {
+                        let opt_py = data.1;
                         drop(cb);
                         return opt_py
                     }

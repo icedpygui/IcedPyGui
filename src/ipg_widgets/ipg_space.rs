@@ -28,7 +28,7 @@ impl IpgSpace {
 }
 
 
-pub fn construct_space(sp: &IpgSpace) -> Option<Element<'static, app::Message>> {
+pub fn construct_space<'a>(sp: &'a IpgSpace) -> Option<Element<'a, app::Message>> {
 
     if sp.show {
         Some(Space::new(sp.width, sp.height).into())

@@ -2,8 +2,7 @@
 use crate::app::{Message, self};
 use crate::{access_callbacks, IpgState};
 use crate::style::styling::IpgStyleStandard;
-use super::ipg_modal::Modal;
-use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
 use crate::ICON_FONT_BOOT;
 use super::helpers::{get_padding_f64, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f64, 
@@ -20,7 +19,6 @@ use chrono::prelude::*;
 use pyo3::{pyclass, PyObject, Python};
 
 
-
 #[derive(Debug, Clone)]
 pub struct IpgDatePicker {
     pub id: usize,
@@ -28,7 +26,6 @@ pub struct IpgDatePicker {
     pub size_factor: f32,
     pub padding: Padding,
     pub show: bool,
-    pub user_data: Option<PyObject>,
     
     pub selected_format: String,
     pub selected_year: i32,
@@ -43,7 +40,7 @@ pub struct IpgDatePicker {
     hide_height: Length,
     pub is_submitted: bool,
     pub button_style_standard: Option<IpgStyleStandard>,
-    pub button_style_id: Option<String>,
+    pub button_style_id: Option<usize>,
 }
 
 impl IpgDatePicker {
@@ -53,9 +50,8 @@ impl IpgDatePicker {
         size_factor: f32,
         padding: Padding,
         show: bool,
-        user_data: Option<PyObject>,
         button_style_standard: Option<IpgStyleStandard>,
-        button_style_id: Option<String>,
+        button_style_id: Option<usize>,
         ) -> Self {
         Self {
             id,
@@ -63,7 +59,6 @@ impl IpgDatePicker {
             size_factor,
             padding,
             show,
-            user_data,
 
             selected_format: "YYYY-mm-dd".to_string(),
             selected_year: Utc::now().year(),
@@ -97,12 +92,14 @@ pub enum DPMessage {
     OnSubmit,
 }   
 
-pub fn construct_date_picker(dp: IpgDatePicker, 
-                            btn_style_opt: Option<IpgButtonStyle>) 
-                            -> Element<'static, Message, Theme, Renderer> {
+pub fn construct_date_picker<'a>(dp: &'a IpgDatePicker, 
+                                btn_style_opt: Option<&'a &IpgButtonStyle>) 
+                                -> Element<'a, Message, Theme, Renderer> {
     
     if !dp.show {
-        return calendar_show_button(dp.clone(), btn_style_opt);
+        let cal_show_btn: Element<'a, Message, Theme, Renderer> = 
+            calendar_show_button(dp, btn_style_opt);
+        return cal_show_btn
     }
     
     let width = Length::Fixed(dp.show_width * dp.size_factor);
@@ -123,7 +120,7 @@ pub fn construct_date_picker(dp: IpgDatePicker,
         let col_content: Element<Message, Theme, Renderer> =
             Column::with_children(vec![
                 create_first_row_arrows(dp.id, 
-                                        dp.selected_month, 
+                                        &dp.selected_month, 
                                         dp.selected_month_index, 
                                         dp.selected_year,
                                         dp.size_factor),
@@ -219,7 +216,9 @@ fn get_days_of_month(year: i32, month: u32) -> i64 {
     
 }
 
-fn calendar_show_button(dp: IpgDatePicker, btn_style: Option<IpgButtonStyle>) -> Element<'static, Message, Theme, Renderer> {
+fn calendar_show_button<'a>(dp: &'a IpgDatePicker, 
+                            btn_style: Option<&'a &IpgButtonStyle>) 
+                            -> Element<'a, Message, Theme, Renderer> {
 
     let show_btn: Element<DPMessage, Theme, Renderer> = 
                     Button::new(text(dp.label.clone()))
@@ -228,30 +227,32 @@ fn calendar_show_button(dp: IpgDatePicker, btn_style: Option<IpgButtonStyle>) ->
                                     .width(Length::Shrink)
                                     .style(move|theme, status|
                                         get_styling(theme, status,
-                                            btn_style.clone(), 
+                                            btn_style, 
                                             dp.button_style_standard.clone()
                                         ))
                                     .into();
 
-    let s_btn: Element<Message, Theme, Renderer> = 
+    let s_btn: Element<'a, Message, Theme, Renderer> = 
                             show_btn.map(move |message| Message::DatePicker(dp.id, message));
 
-    Container::new(s_btn)
+    let cont: Element<'a, Message, Theme, Renderer> = 
+        Container::new(s_btn)
                     .padding(dp.padding)
                     .align_x(alignment::Horizontal::Center)
                     .align_y(alignment::Vertical::Center)
                     .width(dp.hide_width)
                     .height(dp.hide_height)
-                    .into()
-
+                    .into();
+    cont
 }
 
 
-fn create_first_row_arrows(id: usize, selected_month: String, 
+fn create_first_row_arrows<'a>(id: usize, 
+                            selected_month: &'a String, 
                             selected_month_index: usize, 
                             selected_year: i32,
                             size_factor: f32) 
-                            -> Element<'static, Message, Theme, Renderer> 
+                            -> Element<'a, Message, Theme, Renderer> 
 {
     let btn_arrow_width = 18.0 * size_factor;
     let btn_arrow_height = 15.0 * size_factor;
@@ -539,20 +540,19 @@ pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
         }
         DPMessage::OnSubmit => {
             wci.is_submitted = Some(true);
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_submit".to_string();
-            process_callback(wco);
+            let wco = set_or_get_widget_callback_data(state, wci);
+
+            process_callback(id, "on_submit".to_string(), wco.selected_date);
         }
     }
 }
 
 
-fn process_callback(wco: WidgetCallbackOut) 
+fn process_callback(id: usize, event_name: String, selected_date: Option<String>) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -561,28 +561,26 @@ fn process_callback(wco: WidgetCallbackOut)
 
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("DatePicker callback could not be found with id {}", wco.id),
+        None => panic!("DatePicker callback could not be found with id {}", id),
     };
+
+    let user_data_opt = app_cbs.user_data.get(&id);
                   
     Python::with_gil(|py| {
-        if wco.user_data.is_some() {
-            let user_data = match wco.user_data {
-                Some(ud) => ud,
-                None => panic!("DatePicker user_data in callback not found"),
-            };
+        if user_data_opt.is_some() && selected_date.is_some() {
             let res = callback.call1(py, (
-                                                                wco.id, 
-                                                                wco.selected_date, 
-                                                                user_data
+                                                                id, 
+                                                                selected_date.unwrap(), 
+                                                                user_data_opt.unwrap()
                                                                 ));
             match res {
                 Ok(_) => (),
                 Err(er) => panic!("DatePicker: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
             }
-        } else {
+        } else if selected_date.is_some() {
             let res = callback.call1(py, (
-                                                                wco.id,
-                                                                wco.selected_date, 
+                                                                id,
+                                                                selected_date.unwrap(), 
                                                                 ));
             match res {
                 Ok(_) => (),
@@ -596,8 +594,8 @@ fn process_callback(wco: WidgetCallbackOut)
 }      
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq)]
 pub enum IpgDatePickerParam {
     Label,
     Padding,
@@ -606,8 +604,8 @@ pub enum IpgDatePickerParam {
 }
 
 pub fn date_picker_item_update(dp: &mut IpgDatePicker,
-                                item: PyObject,
-                                value: PyObject,
+                                item: &PyObject,
+                                value: &PyObject,
                                 )
 {
     let update = try_extract_date_picker_update(item);
@@ -629,7 +627,7 @@ pub fn date_picker_item_update(dp: &mut IpgDatePicker,
     }
 }
 
-pub fn try_extract_date_picker_update(update_obj: PyObject) -> IpgDatePickerParam {
+pub fn try_extract_date_picker_update(update_obj: &PyObject) -> IpgDatePickerParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgDatePickerParam>(py);

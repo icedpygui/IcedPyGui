@@ -77,8 +77,8 @@ pub fn construct_column<'a>(col: &IpgColumn, content: Vec<Element<'a, Message>> 
 
 
 pub fn column_item_update(col: &mut IpgColumn,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_column_update(item);
@@ -115,7 +115,7 @@ pub fn column_item_update(col: &mut IpgColumn,
     }
 }
 
-pub fn try_extract_column_update(update_obj: PyObject) -> IpgColumnParam {
+pub fn try_extract_column_update(update_obj: &PyObject) -> IpgColumnParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgColumnParam>(py);

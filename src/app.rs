@@ -3,7 +3,6 @@
 #![allow(clippy::map_clone)]
 use std::collections::HashMap;
 
-
 use iced::widget::container::Id;
 use iced::widget::scrollable::Viewport;
 use iced::window::Position;
@@ -42,7 +41,7 @@ use ipg_widgets::ipg_events::{IpgKeyBoardEvent, handle_window_closing, process_k
 use ipg_widgets::helpers::find_key_for_value;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
 use ipg_widgets::ipg_menu::construct_menu;
-use ipg_widgets::ipg_modal::{construct_modal, modal_callback, ModalMessage};
+// use ipg_widgets::ipg_modal::{construct_modal, modal_callback, ModalMessage};
 use ipg_widgets::ipg_mousearea::{mousearea_callback, mousearea_callback_point, 
     construct_mousearea};
 use ipg_widgets::ipg_opaque::{construct_opaque, opaque_callback};
@@ -83,7 +82,7 @@ pub enum Message {
     EventWindow((window::Id, Event)),
     EventTouch(Event),
     Image(usize, ImageMessage),
-    Modal(usize, ModalMessage),
+    // Modal(usize, ModalMessage),
     PickList(usize, PLMessage),
     Radio(usize, RDMessage),
     Scrolled(scrollable::Viewport, usize),
@@ -114,6 +113,7 @@ pub enum Message {
     MouseAreaOnEnter(usize),
     MouseAreaOnMove(Point, usize),
     MouseAreaOnExit(usize),
+
     OpaqueOnPress(usize),
 }
 
@@ -164,7 +164,7 @@ impl App {
                 Task::none()
             },
             Message::Button(id, message) => {
-                button_callback(&mut self.state, id, message);
+                button_callback(id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
                 get_tasks(&mut self.state)
             },
@@ -221,15 +221,15 @@ impl App {
                 Task::none()
             },
             Message::Image(id, message) => {
-                image_callback(&mut self.state, id, message);
+                image_callback(id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
-            Message::Modal(id, message) => {
-                modal_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
-                focus_next()
-            },
+            // Message::Modal(id, message) => {
+            //     modal_callback(&mut self.state, id, message);
+            //     process_updates(&mut self.state, &mut self.canvas_state);
+            //     focus_next()
+            // },
             Message::MouseAreaOnPress(id) => {
                 mousearea_callback(&mut self.state, id, "on_press".to_string());
                 process_updates(&mut self.state, &mut self.canvas_state);
@@ -296,7 +296,7 @@ impl App {
                 Task::none()
             },
             Message::SelectableText(id, message) => {
-                selectable_text_callback(&mut self.state, id, message);
+                selectable_text_callback(id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
@@ -612,7 +612,7 @@ fn get_combine_parents_and_children(parent_ids: &Vec<usize>, ids_opt: Option<&Ve
 fn get_children<'a>(parents: &Vec<ParentChildIds>, 
                 index: &usize, 
                 parent_ids: &Vec<usize>, 
-                state: &IpgState,
+                state: &'a IpgState,
                 canvas_state: &'a IpgCanvasState,
                 ) -> Element<'a, Message> 
 {
@@ -662,49 +662,49 @@ fn get_container<'a>(state: &IpgState,
                         panic!("A container can have only one widget, place your multiple widgets into a column or row")
                     }
                     let style_opt = 
-                        match con.style_id.clone() {
+                        match con.style_id {
                             Some(id) => {
-                                state.widgets.get(&id).map(|st| st.clone())
+                                state.widgets.get(&id).map(|st| st)
                             },
                             None => None,
                         };
 
-                    construct_container(con.clone(), content, style_opt)
+                    construct_container(con, content, style_opt)
                 },
                 IpgContainers::IpgMenu(menu) => {
-                    let bar_style: Option<IpgWidgets> = 
-                        match menu.menu_bar_style_id.clone() {
+                    let bar_style: Option<&IpgWidgets> = 
+                        match menu.menu_bar_style_id {
                             Some(id) => {
-                                state.widgets.get(&id).map(|st| st.clone())
+                                state.widgets.get(&id).map(|st| st)
                             },
                             None => None,
-                        };;
-                    let menu_style: Option<IpgWidgets> = 
-                        match menu.menu_style_id.clone() {
+                        };
+                    let menu_style: Option<&IpgWidgets> = 
+                        match menu.menu_style_id {
                             Some(id) => {
-                                state.widgets.get(&id).map(|st| st.clone())
+                                state.widgets.get(&id).map(|st| st)
                             },
                             None => None,
                         };
 
-                    construct_menu(menu.clone(), content, bar_style, menu_style)
+                    construct_menu(menu, content, bar_style, menu_style)
                 },
-                IpgContainers::IpgModal(modal) => {
-                    construct_modal(modal.clone(), content)
-                },
+                // IpgContainers::IpgModal(modal) => {
+                //     construct_modal(modal, content)
+                // },
                 IpgContainers::IpgMouseArea(m_area) => {
-                    construct_mousearea(m_area.clone(), content)
+                    construct_mousearea(m_area, content)
                 },
                 IpgContainers::IpgOpaque(op) => {
-                    let style = 
-                        match op.style_id.clone() {
+                    let style_opt = 
+                        match op.style_id {
                             Some(id) => {
-                                state.opaque_style.get(&id).map(|st| st.clone())
+                                state.widgets.get(&id).map(|st| st)
                             },
                             None => None,
                         };
 
-                    construct_opaque(op.clone(), content, style)
+                    construct_opaque(op, content, style_opt)
                 },
                 IpgContainers::IpgTable(table) => {
                     construct_table(table.clone(), content)
@@ -713,14 +713,14 @@ fn get_container<'a>(state: &IpgState,
                     construct_row(row, content)
                 },
                 IpgContainers::IpgScrollable(scroll) => {
-                    let style_opt = match scroll.style_id.clone() {
+                    let style_opt = match scroll.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st| st.clone())
+                            state.widgets.get(&id).map(|st| st)
                         },
                         None => None,
                     };
                     
-                    construct_scrollable(scroll.clone(), content, style_opt)
+                    construct_scrollable(scroll, content, style_opt)
                 },
                 IpgContainers::IpgStack(stk) => {
                     construct_stack(stk.clone(), content)
@@ -738,69 +738,68 @@ fn get_container<'a>(state: &IpgState,
     
 }
 
-fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>> {
+fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message>> {
 
-    let widget_opt: Option<&IpgWidgets> = state.widgets.get(id);
+    let widget_opt = state.widgets.get(id);
 
     match widget_opt 
     {
         Some(widget) => 
             match widget {      
                 IpgWidgets::IpgButton(btn) => {
-                    let style_opt = match btn.style_id.clone() {
+                    let style_opt = match btn.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st)
                         },
                         None => None,
                     };
                     
-                    construct_button(btn.clone(), style_opt)
+                    construct_button(btn, style_opt)
                 },
                 IpgWidgets::IpgCard(crd) => {
-                    Some(construct_card(crd.clone()))
+                    Some(construct_card(crd))
                 },
                 IpgWidgets::IpgCheckBox(chk) => {
-                    let style_opt = match chk.style_id.clone() {
+                    let style_opt = match chk.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st)
                         },
                         None => None,
                     };
-                    construct_checkbox(chk.clone(), style_opt)
+                    construct_checkbox(chk, style_opt)
                 },
                 IpgWidgets::IpgColorPicker(cp) => {
-                    let style_opt = match cp.style_id.clone() {
+                    let style_opt = match cp.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st)
                         },
                         None => None,
                     };
-                    construct_color_picker(cp.clone(), style_opt)
+                    construct_color_picker(cp, style_opt)
                 }
-                IpgWidgets::IpgImage(img) => {
-                    let image = img.clone();
+                IpgWidgets::IpgImage(image) => {
                     construct_image(image)
                 },
                 // IpgWidgets::IpgMenu(menu) => {
                 //     Some(construct_menu(menu.clone(), state))
                 // },
                 IpgWidgets::IpgDatePicker(dp) => {
-                    let style_opt = match dp.button_style_id.clone() {
+                    let style_opt = match dp.button_style_id {
                         Some(id) => {
-                            state.button_style.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st)
                         },
                         None => None,
                     };
-                    Some(construct_date_picker(dp.clone(), style_opt))
+                    Some(construct_date_picker(dp, style_opt))
                 },
                 IpgWidgets::IpgPickList(pick) => {
-                    let style_opt = match pick.style_id.clone() {
+                    let style_opt = match pick.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st)
                         },
                         None => None,
                     };
-                    construct_picklist(pick.clone(), style_opt)
+                    construct_picklist(pick, style_opt)
                 },
                 IpgWidgets::IpgProgressBar(bar) => {
                     let style_opt = match bar.style_id.clone() {
@@ -809,7 +808,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                         },
                         None => None,
                     };
-                    construct_progress_bar(bar.clone(), style_opt)
+                    construct_progress_bar(bar, style_opt)
                 },
                 IpgWidgets::IpgRadio(radio) => {
                     let style_opt = match radio.style_id.clone() {
@@ -818,7 +817,7 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                         },
                         None => None,
                     };
-                    construct_radio(radio.clone(), style_opt)
+                    construct_radio(radio, style_opt)
                 },
                 IpgWidgets::IpgRule(rule) => {
                     let style_opt = match rule.style_id.clone() {
@@ -827,10 +826,10 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                         },
                         None => None,
                     };
-                    construct_rule(rule.clone(), style_opt)
+                    construct_rule(rule, style_opt)
                 },
                 IpgWidgets::IpgSelectableText(sltxt) => {
-                    construct_selectable_text(sltxt.clone())
+                    construct_selectable_text(sltxt)
                 },
                 IpgWidgets::IpgSeparator(sep) => {
                     let style_opt = match sep.style_id.clone() {
@@ -839,63 +838,61 @@ fn get_widget(state: &IpgState, id: &usize) -> Option<Element<'static, Message>>
                         },
                         None => None,
                     };
-                    construct_separator(sep.clone(), style_opt)
+                    construct_separator(sep, style_opt)
                 }
                 IpgWidgets::IpgSlider(slider) => {
                     let style_opt = match slider.style_id.clone() {
                         Some(id) => {
-                            state.widgets.get(&id).cloned()
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
-                    construct_slider(slider.clone(), style_opt)
+                    construct_slider(slider, style_opt)
                 },
                 IpgWidgets::IpgSpace(sp) => {
                     construct_space(sp)
                 },
-                IpgWidgets::IpgSvg(i_svg) => {
-                    let svg = i_svg.clone();
+                IpgWidgets::IpgSvg(svg) => {
                     construct_svg(svg)
                 },
                 IpgWidgets::IpgText(text) => {
-                    let txt = text.clone();
-                    construct_text(txt)
+                    construct_text(text)
                 },
                 IpgWidgets::IpgTextInput(input) => {
                     let style_opt = match input.style_id.clone() {
                         Some(id) => {
-                            state.widgets.get(&id).cloned()
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
-                    construct_text_input(input.clone(), style_opt)       
+                    construct_text_input(input, style_opt)       
                 },
                 IpgWidgets::IpgTimer(timer) => {
                     let style_opt = match timer.style_id.clone() {
                         Some(id) => {
-                            state.widgets.get(&id).cloned()
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
-                    construct_timer(timer.clone(), style_opt)
+                    construct_timer(timer, style_opt)
                 },
                 IpgWidgets::IpgCanvasTimer(ctimer) => {
                     let style_opt = match ctimer.style_id.clone() {
                         Some(id) => {
-                            state.widgets.get(&id).cloned()
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
-                    construct_canvas_timer(ctimer.clone(), style_opt)
+                    construct_canvas_timer(ctimer, style_opt)
                 },
                 IpgWidgets::IpgToggler(tog) => {
                     let style_opt = match tog.style_id.clone() {
                         Some(id) => {
-                            state.widgets.get(&id).cloned()
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
-                    construct_toggler(tog.clone(), style_opt)   
+                    construct_toggler(tog, style_opt)   
                 },
                 _ => None,
 
@@ -1049,15 +1046,14 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
     }  
     all_updates.moves = vec![];
 
-    let mut updates = all_updates.updates.clone();
-    for ((wid, item, value)) in updates.iter() {
+    for ((wid, item, value)) in all_updates.updates.iter() {
         let widget = state.widgets.get_mut(wid);
         if let Some(w) = widget {
-            match_widget(w, item.clone(), value.clone());
+            match_widget(w, item, value);
         } else {
             match state.containers.get_mut(wid) {
                 Some(cnt) => {
-                    match_container(cnt, item.clone(), value.clone(), canvas_state);
+                    match_container(cnt, item, value, canvas_state);
                 },
                 None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
             }

@@ -2,10 +2,6 @@
 #![allow(clippy::enum_variant_names)]
 use crate::app;
 use crate::access_callbacks;
-use crate::IpgState;
-use super::callbacks::set_or_get_widget_callback_data;
-use super::callbacks::{WidgetCallbackIn, 
-                        WidgetCallbackOut};
 use super::helpers::{get_height, get_padding_f64, get_width, 
     try_extract_boolean, try_extract_f64, try_extract_string, 
     try_extract_vec_f64};
@@ -19,7 +15,6 @@ use iced::mouse::Interaction;
 use iced::advanced::image;
 
 use pyo3::pyclass;
-use pyo3::types::IntoPyDict;
 use pyo3::{PyObject, Python};
 
 
@@ -37,7 +32,6 @@ pub struct IpgImage {
         pub opacity: f32,
         pub mouse_pointer: Option<IpgMousePointer>,
         pub show: bool,
-        pub user_data: Option<PyObject>,
 }
 
 impl IpgImage {
@@ -54,7 +48,6 @@ impl IpgImage {
         opacity: f32,
         mouse_pointer: Option<IpgMousePointer>,
         show: bool,
-        user_data: Option<PyObject>,
         ) -> Self {
         Self {
             id,
@@ -69,7 +62,6 @@ impl IpgImage {
             opacity,
             mouse_pointer,
             show,
-            user_data,
         }
     }
 }
@@ -87,8 +79,8 @@ pub enum ImageMessage {
     OnExit,
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgImageContentFit {
     Contain,
     Cover,
@@ -97,30 +89,32 @@ pub enum IpgImageContentFit {
     ScaleDown,
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgImageFilterMethod {
     Linear,
     Nearest,
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgImageRotation {
     Floating,
     Solid,
 }
 
-pub fn construct_image(image: IpgImage) -> Option<Element<'static, app::Message>> {
+pub fn construct_image<'a>(image: &'a IpgImage) 
+                        -> Option<Element<'a, app::Message>> {
 
     if !image.show {
         return None
     }
 
-    let img: Element<ImageMessage> = Image::<image::Handle>::new(image.image_path)
-                                        .content_fit(match_content_fit(image.content_fit))
-                                        .filter_method(match_filter_method(image.filter_method))
-                                        .rotation(match_rotation(image.rotation, Radians::from(image.rotation_radians)))
+    let img: Element<ImageMessage> = Image::<image::Handle>::new(image.image_path.clone())
+                                        .content_fit(match_content_fit(image.content_fit.clone()))
+                                        .filter_method(match_filter_method(image.filter_method.clone()))
+                                        .rotation(match_rotation(image.rotation.clone(), 
+                                                Radians::from(image.rotation_radians)))
                                         .opacity(image.opacity)
                                         .into();
 
@@ -130,7 +124,7 @@ pub fn construct_image(image: IpgImage) -> Option<Element<'static, app::Message>
                                                 .padding(image.padding)
                                                 .into();
 
-    let pointer: Interaction = get_interaction(image.mouse_pointer);
+    let pointer: Interaction = get_interaction(&image.mouse_pointer);
 
     let ma: Element<ImageMessage> = 
                 MouseArea::new(cont)
@@ -174,79 +168,49 @@ fn match_rotation(rot: IpgImageRotation, radians: Radians) -> Rotation {
     }
 }
 
-pub fn image_callback(state: &mut IpgState, id: usize, message: ImageMessage) {
-
-    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
+pub fn image_callback(id: usize, message: ImageMessage) {
 
     match message {
         ImageMessage::OnPress => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_press".to_string();
-            process_callback(wco);
+            process_callback(id, "on_press".to_string(), None);
         },
         ImageMessage::OnRelease => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_release".to_string();
-            process_callback(wco);
+            process_callback(id, "on_release".to_string(), None);
         },
         ImageMessage::OnRightPress => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_right_press".to_string();
-            process_callback(wco);
+            process_callback(id, "on_right_press".to_string(), None);
         },
         ImageMessage::OnRightRelease => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_right_release".to_string();
-            process_callback(wco);
+            process_callback(id, "on_right_release".to_string(), None);
         },
         ImageMessage::OnMiddlePress => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_middle_press".to_string();
-            process_callback(wco);
+            process_callback(id, "on_middle_press".to_string(), None);
         },
         ImageMessage::OnMiddleRelease => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_middle_release".to_string();
-            process_callback(wco);
+            process_callback(id, "on_middle_release".to_string(), None);
         },
         ImageMessage::OnEnter => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_enter".to_string();
-            process_callback(wco);
+            process_callback(id, "on_enter".to_string(), None);
         },
         ImageMessage::OnMove(point) => {
-            let points: Vec<(String, f32)> = vec![
-                ("x".to_string(), point.x),
-                ("y".to_string(), point.y)];
+            let points: Option<(String, f32, String, f32)> = Some(
+                ("x".to_string(), point.x,
+                "y".to_string(), point.y));
             
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_move".to_string();
-            wco.points = Some(points);
-            process_callback(wco);
+            process_callback(id, "on_move".to_string(), points);
         },
         ImageMessage::OnExit => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_exit".to_string();
-            process_callback(wco);
+            process_callback(id, "on_exit".to_string(), None);
         },
     }
 }
 
 
-fn process_callback(wco: WidgetCallbackOut) 
+fn process_callback(id: usize, event_name: String, points_opt: Option<(String, f32, String, f32)>) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -255,77 +219,60 @@ fn process_callback(wco: WidgetCallbackOut)
        
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Image Callback could not be found with id {}", wco.id),
+        None => panic!("Image Callback could not be found with id {}", id),
     };
-              
-    if wco.event_name == *"on_move" {
+               
+    let user_data_opt = app_cbs.user_data.get(&id);
 
-        let points = match wco.points {
-            Some(pts) => pts,
-            None => panic!("Image Points not found"),
-        };
-
-        Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(ud) => ud,
-                    None => panic!("Image callback user_data not found."),
-                };
+    Python::with_gil(|py| {
+        if user_data_opt.is_some() && points_opt.is_some() {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    points.into_py_dict_bound(py), 
-                                                                    user_data
+                                                                    id, 
+                                                                    points_opt.unwrap(), 
+                                                                    user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Image: 3 parameter (id, points, user_data) are required or a python error in this function. {er}"),
                 }
-            } else {
+            } else if points_opt.is_some() && user_data_opt.is_none() {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    points.into_py_dict_bound(py), 
+                                                                    id, 
+                                                                    points_opt.unwrap(), 
                                                                     ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Image: 2 parameter (id, points) are required or a python error in this function. {er}"),
                 }
-            } 
-        });
-
-    } else {
-        Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(ud) => ud,
-                    None => panic!("Image callback user_data not found."),
-                };
+            } else if user_data_opt.is_some() {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    user_data
+                                                                    id, 
+                                                                    user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Image: 2 parameter (id, user_data) are required or a python error in this function. {er}"),
                 }
+            
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id,  
+                                                                    id, 
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Image: Only 1 parameter (id) is required or a python error in this function. {er}"),
+                    Err(er) => panic!("Image: 1 parameter (id) are required or a python error in this function. {er}"),
                 }
-            } 
-        });
-    }
+            }
     
+    });
+
     drop(app_cbs);   
 
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgImageParam {
     Height,
     HeightFill,
@@ -340,8 +287,8 @@ pub enum IpgImageParam {
 
 
 pub fn image_item_update(img: &mut IpgImage,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_button_update(item);
@@ -384,7 +331,7 @@ pub fn image_item_update(img: &mut IpgImage,
     }
 }
 
-pub fn try_extract_button_update(update_obj: PyObject) -> IpgImageParam {
+pub fn try_extract_button_update(update_obj: &PyObject) -> IpgImageParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgImageParam>(py);

@@ -77,9 +77,9 @@ impl IpgRuleStyle {
 // Looks reversed but not.  The only controllable parameter for horizontal
 // is the thickness of the line which is height.  The opposite for vertical.
 // To control the other dimension, need to put into a container.
-pub fn construct_rule(rule: IpgRule, 
-                        style_opt: Option<IpgWidgets>) 
-                        -> Option<Element<'static, app::Message>> {
+pub fn construct_rule<'a>(rule: &'a IpgRule, 
+                        style_opt: Option<&IpgWidgets>) 
+                        -> Option<Element<'a, app::Message>> {
 
     if !rule.show {
         return None
@@ -93,9 +93,9 @@ pub fn construct_rule(rule: IpgRule,
 }
 
 // The width or height parameters seems to have no effect so set to 0.
-pub fn construct_horizontal(rule: IpgRule, 
-                            style_opt: Option<IpgWidgets>) 
-                            -> Element<'static, app::Message>{
+pub fn construct_horizontal<'a>(rule: &'a IpgRule, 
+                            style_opt: Option<&IpgWidgets>) 
+                            -> Element<'a, app::Message>{
 
     let style = get_rule_style(style_opt);
 
@@ -112,9 +112,9 @@ pub fn construct_horizontal(rule: IpgRule,
 
 }
 
-fn construct_rule_vertical(rule: IpgRule, 
-                            style_opt: Option<IpgWidgets>) 
-                            -> Element<'static, app::Message> {
+fn construct_rule_vertical<'a>(rule: &'a IpgRule, 
+                            style_opt: Option<&IpgWidgets>) 
+                            -> Element<'a, app::Message> {
 
     let style = get_rule_style(style_opt);
 
@@ -131,12 +131,12 @@ fn construct_rule_vertical(rule: IpgRule,
 
 }
 
-fn get_rule_style(style: Option<IpgWidgets>) -> Option<IpgRuleStyle>{
+fn get_rule_style(style: Option<&IpgWidgets>) -> Option<IpgRuleStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgRuleStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }
@@ -189,8 +189,8 @@ fn get_styling(theme: &Theme,
 
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgRuleStyleParam {
     IpgColor,
     RbgaColor,
@@ -201,8 +201,8 @@ pub enum IpgRuleStyleParam {
 }
 
 pub fn rule_style_update_item(style: &mut IpgRuleStyle,
-                            item: PyObject,
-                            value: PyObject,) {
+                            item: &PyObject,
+                            value: &PyObject,) {
 
     let update = try_extract_rule_style_update(item);
     let name = "RulerStyle".to_string();
@@ -229,7 +229,7 @@ pub fn rule_style_update_item(style: &mut IpgRuleStyle,
     }
 }
 
-pub fn try_extract_rule_style_update(update_obj: PyObject) -> IpgRuleStyleParam {
+pub fn try_extract_rule_style_update(update_obj: &PyObject) -> IpgRuleStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgRuleStyleParam>(py);

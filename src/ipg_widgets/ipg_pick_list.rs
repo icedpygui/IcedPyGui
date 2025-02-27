@@ -4,11 +4,11 @@ use crate::app;
 use crate::graphics::colors::get_color;
 use crate::IpgState;
 use super::callbacks::set_or_get_widget_callback_data;
-use super::callbacks::{WidgetCallbackIn, 
-    WidgetCallbackOut};
+use super::callbacks::WidgetCallbackIn;
 use super::helpers::try_extract_ipg_color;
 use super::helpers::try_extract_rgba_color;
 use super::helpers::try_extract_vec_f32;
+use super::helpers::try_extract_vec_str;
 use super::helpers::{get_padding_f64, get_radius, get_width};
 use super::helpers::{try_extract_boolean, try_extract_f64,
     try_extract_string, try_extract_vec_f64};
@@ -30,9 +30,7 @@ use pyo3::{PyObject, Python};
 pub struct IpgPickList {
     pub id: usize,
     pub show: bool,
-    pub user_data: Option<PyObject>,
-
-    pub options: PyObject,
+    pub options: Vec<String>,
     pub placeholder: Option<String>,
     pub selected: Option<String>,
     pub width: Length,
@@ -52,9 +50,7 @@ impl IpgPickList {
     pub fn new( 
         id: usize,
         show: bool,
-        user_data: Option<PyObject>,
-
-        options: PyObject,
+        options: Vec<String>,
         placeholder: Option<String>,
         selected: Option<String>,
         width: Length,
@@ -72,7 +68,6 @@ impl IpgPickList {
         Self {
             id,
             show,
-            user_data,
             options,
             placeholder,
             selected,
@@ -136,28 +131,28 @@ pub enum PLMessage {
 }
 
 
-pub fn construct_picklist(pick: IpgPickList, 
-                        style_opt: Option<IpgWidgets>) 
-                        -> Option<Element<'static, app::Message>> {
+pub fn construct_picklist<'a>(pick: &'a IpgPickList, 
+                                style_opt: Option<&IpgWidgets>) 
+                                -> Option<Element<'a, app::Message>> {
     
     if!pick.show {
         return None
     }
     let style = get_pick_list_style(style_opt);
-    let placeholder = pick.placeholder.unwrap_or("".to_string());
+    let placeholder = pick.placeholder.clone().unwrap_or("".to_string());
 
     let text_size: f32 = pick.text_size.unwrap_or(16.0);
 
-    let handle = get_handle(pick.handle, 
+    let handle = get_handle(&pick.handle, 
                                     pick.arrow_size, 
-                                    pick.dynamic_closed,
-                                    pick.dynamic_open,
-                                    pick.custom_static);
+                                    &pick.dynamic_closed,
+                                    &pick.dynamic_open,
+                                    &pick.custom_static);
 
-    let options =  convert_pyobject_vec_string(pick.options);
+   
 
     let pl: Element<'_, PLMessage> = 
-        PickList::new(options.clone(), 
+        PickList::new(pick.options.clone(), 
             pick.selected.clone(), 
             PLMessage::OnSelect,
         )
@@ -185,23 +180,21 @@ pub fn construct_picklist(pick: IpgPickList,
     let mut wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
 
     match message {
-        PLMessage::OnSelect(value) => {
-            wci.value_str = Some(value.clone());
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_select".to_string();
-            wco.value_str = Some(value);
-            process_callback(wco);
+        PLMessage::OnSelect(selected) => {
+            wci.value_str = Some(selected.clone());
+            let _ = set_or_get_widget_callback_data(state, wci);
+            
+            process_callback(id, "on_select".to_string(), Some(selected));
         },
     }
  }
 
 
- fn process_callback(wco: WidgetCallbackOut) 
+ fn process_callback(id: usize, event_name: String, selected: Option<String>) 
  {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -210,24 +203,17 @@ pub fn construct_picklist(pick: IpgPickList,
 
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("PickList Callback could not be found with id {}", wco.id),
+        None => panic!("PickList Callback could not be found with id {}", id),
     };
 
-    let value = match wco.value_str {
-        Some(vl) => vl,
-        None => panic!("Picklist selected value could not be found."),
-    };
+    let user_data_opt = app_cbs.user_data.get(&id);
                    
     Python::with_gil(|py| {
-        if wco.user_data.is_some() {
-        let user_data = match wco.user_data {
-            Some(ud) => ud,
-            None => panic!("PickList callback user_data not found."),
-        };
+        if user_data_opt.is_some() && selected.is_some() {
             let res = callback.call1(py, (
-                                                                wco.id, 
-                                                                value, 
-                                                                user_data
+                                                                id, 
+                                                                selected.unwrap(), 
+                                                                user_data_opt.unwrap()
                                                                 ));
             match res {
                 Ok(_) => (),
@@ -235,8 +221,8 @@ pub fn construct_picklist(pick: IpgPickList,
             }
         } else {
             let res = callback.call1(py, (
-                                                                wco.id, 
-                                                                value, 
+                                                                id, 
+                                                                selected.unwrap(), 
                                                                 ));
             match res {
                 Ok(_) => (),
@@ -250,7 +236,7 @@ pub fn construct_picklist(pick: IpgPickList,
  }
 
 
- fn convert_pyobject_vec_string(options: PyObject) -> Vec<String> {
+ pub fn convert_pyobject_vec_string(options: PyObject) -> Vec<String> {
 
     let items: Vec<String> = vec![];
 
@@ -302,8 +288,8 @@ pub fn construct_picklist(pick: IpgPickList,
  }
 
 
- #[derive(Debug, Clone)]
-#[pyclass]
+ #[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgPickListParam {
     Options,
     Placeholder,
@@ -319,15 +305,15 @@ pub enum IpgPickListParam {
 
 
 pub fn pick_list_item_update(pl: &mut IpgPickList,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_pick_list_update(item);
     let name = "PickList".to_string();
     match update {
         IpgPickListParam::Options => {
-            pl.options = value;
+            pl.options = try_extract_vec_str(value, name);
             pl.selected = None;
         },
         IpgPickListParam::Placeholder => {
@@ -365,7 +351,7 @@ pub fn pick_list_item_update(pl: &mut IpgPickList,
 
 }
 
-pub fn try_extract_pick_list_update(update_obj: PyObject) -> IpgPickListParam {
+pub fn try_extract_pick_list_update(update_obj: &PyObject) -> IpgPickListParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgPickListParam>(py);
@@ -376,8 +362,8 @@ pub fn try_extract_pick_list_update(update_obj: PyObject) -> IpgPickListParam {
     })
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgPickListHandle {
     Default,
     Arrow,
@@ -386,11 +372,11 @@ pub enum IpgPickListHandle {
     Static,
 }
 
-fn get_handle(ipg_handle: IpgPickListHandle, 
+fn get_handle(ipg_handle: &IpgPickListHandle, 
                 arrow_size: Option<f32>,
-                closed: Option<IpgButtonArrow>,
-                opened: Option<IpgButtonArrow>,
-                custom: Option<IpgButtonArrow>,
+                closed: &Option<IpgButtonArrow>,
+                opened: &Option<IpgButtonArrow>,
+                custom: &Option<IpgButtonArrow>,
             ) -> Handle<Font> 
 {
     match ipg_handle {
@@ -404,12 +390,12 @@ fn get_handle(ipg_handle: IpgPickListHandle,
         IpgPickListHandle::Dynamic => {
             let arrow_closed = match closed {
                 Some(cls) => get_bootstrap_arrow_char(cls),
-                None => get_bootstrap_arrow_char(IpgButtonArrow::ArrowBarRight),
+                None => get_bootstrap_arrow_char(&IpgButtonArrow::ArrowBarRight),
             };
 
             let arrow_opened = match opened {
-                Some(op) => get_bootstrap_arrow_char(op),
-                None => get_bootstrap_arrow_char(IpgButtonArrow::ArrowBarRight),
+                Some(op) => get_bootstrap_arrow_char(&op),
+                None => get_bootstrap_arrow_char(&IpgButtonArrow::ArrowBarRight),
             };
 
             let size = arrow_size.map(Pixels);
@@ -430,7 +416,7 @@ fn get_handle(ipg_handle: IpgPickListHandle,
         IpgPickListHandle::Static => {
                 let custom_type = match custom {
                     Some(cust) => get_bootstrap_arrow_char(cust),
-                    None => get_bootstrap_arrow_char(IpgButtonArrow::ArrowBarRight),
+                    None => get_bootstrap_arrow_char(&IpgButtonArrow::ArrowBarRight),
                 };
 
                 let size = arrow_size.map(Pixels);
@@ -446,8 +432,8 @@ fn get_handle(ipg_handle: IpgPickListHandle,
     }
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgPickListStyleParam {
     BackgroundIpgColor,
     BackgroundRbgaColor,
@@ -464,8 +450,8 @@ pub enum IpgPickListStyleParam {
 }
 
 pub fn pick_list_style_update_item(style: &mut IpgPickListStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_pick_list_style_update(item);
     let name = "PickListStyle".to_string();
@@ -567,7 +553,7 @@ pub fn get_styling(theme: &Theme, status: Status,
 
 }
 
-pub fn try_extract_pick_list_style_update(update_obj: PyObject) -> IpgPickListStyleParam {
+pub fn try_extract_pick_list_style_update(update_obj: &PyObject) -> IpgPickListStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgPickListStyleParam>(py);
@@ -578,12 +564,12 @@ pub fn try_extract_pick_list_style_update(update_obj: PyObject) -> IpgPickListSt
     })
 }
 
-fn get_pick_list_style(style: Option<IpgWidgets>) -> Option<IpgPickListStyle>{
+fn get_pick_list_style(style: Option<&IpgWidgets>) -> Option<IpgPickListStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgPickListStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }

@@ -10,6 +10,7 @@ use iced::widget::scrollable::{Anchor, Scrollbar};
 use iced::{Length, Padding, Renderer, Theme};
 use iced::widget::{column, row, scrollable};
 
+use polars::frame::DataFrame;
 use pyo3::{pyclass, PyObject, Python};
 use pyo3::types::IntoPyDict;
 
@@ -47,6 +48,7 @@ pub struct IpgTable {
         pub scroller_width: f32,
         pub scroller_bar_width: f32,
         pub scroller_margin: f32,
+        pub data: DataFrame,
         pub user_data: Option<PyObject>,
         header_id: scrollable::Id,
         body_id: scrollable::Id,
@@ -81,6 +83,7 @@ impl IpgTable {
         scroller_width: f32,
         scroller_bar_width: f32,
         scroller_margin: f32,
+        data: DataFrame,
         user_data: Option<PyObject>,
         ) -> Self {
         Self {
@@ -110,6 +113,7 @@ impl IpgTable {
             scroller_width,
             scroller_bar_width,
             scroller_margin,
+            data,
             user_data,
             header_id: scrollable::Id::unique(),
             body_id: scrollable::Id::unique(),
@@ -505,8 +509,8 @@ pub enum IpgTableParam {
 
 pub fn table_item_update( 
                     table: &mut IpgTable,
-                    item: PyObject,
-                    value: PyObject,
+                    item: &PyObject,
+                    value: &PyObject,
                     ) 
 {
     
@@ -571,7 +575,7 @@ pub fn table_item_update(
     }
 }
 
-pub fn try_extract_table_update(update_obj: PyObject) -> IpgTableParam {
+pub fn try_extract_table_update(update_obj: &PyObject) -> IpgTableParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgTableParam>(py);
@@ -582,7 +586,7 @@ pub fn try_extract_table_update(update_obj: PyObject) -> IpgTableParam {
     })
 }
 
-fn try_extract_row_highlight(value: PyObject) -> IpgTableRowHighLight {
+fn try_extract_row_highlight(value: &PyObject) -> IpgTableRowHighLight {
     Python::with_gil(|py| {
         let res = value.extract::<IpgTableRowHighLight>(py);
         match res {

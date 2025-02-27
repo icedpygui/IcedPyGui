@@ -3,10 +3,6 @@
 use crate::app;
 use crate::access_callbacks;
 use crate::graphics::colors::get_color;
-use crate::IpgState;
-use super::callbacks::set_or_get_widget_callback_data;
-use super::callbacks::{WidgetCallbackIn, 
-                        WidgetCallbackOut};
 use super::helpers::try_extract_ipg_color;
 use super::helpers::try_extract_vec_f32;
 use super::helpers::{get_height, get_width, try_extract_boolean,
@@ -22,7 +18,6 @@ use iced::widget::{MouseArea, Text};
 use iced::mouse::Interaction;
 
 use pyo3::pyclass;
-use pyo3::types::IntoPyDict;
 use pyo3::{PyObject, Python};
 
 
@@ -40,7 +35,6 @@ pub struct IpgSelectableText {
         // pub font: Font,
         pub shaping: Shaping,
         pub text_color: Option<Color>,
-        pub user_data: Option<PyObject>,
 }
 
 impl IpgSelectableText {
@@ -57,7 +51,6 @@ impl IpgSelectableText {
         // font: Font,
         shaping: Shaping,
         text_color: Option<Color>,
-        user_data: Option<PyObject>,
         ) -> Self {
         Self {
             id,
@@ -72,7 +65,6 @@ impl IpgSelectableText {
             // font: Font,
             shaping,
             text_color,
-            user_data,
         }
     }
 }
@@ -91,14 +83,14 @@ pub enum SLTXTMessage {
 }
 
 
-pub fn construct_selectable_text(sl_text: IpgSelectableText) 
-                                -> Option<Element<'static, app::Message>> {
+pub fn construct_selectable_text<'a>(sl_text: &'a IpgSelectableText) 
+                                -> Option<Element<'a, app::Message>> {
     if !sl_text.show {
         return None
     }
     
-    let hor_align = get_horizontal_align(sl_text.horizontal_alignment);
-    let vert_align = get_vertical_align(sl_text.vertical_alignment);
+    let hor_align = get_horizontal_align(&sl_text.horizontal_alignment);
+    let vert_align = get_vertical_align(&sl_text.vertical_alignment);
     
     let content: Element<'_, SLTXTMessage> = 
                         Text::new(sl_text.content.clone())
@@ -134,160 +126,111 @@ pub fn construct_selectable_text(sl_text: IpgSelectableText)
 
 }
 
-pub fn selectable_text_callback(state: &mut IpgState, id: usize, message: SLTXTMessage) {
-
-    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
+pub fn selectable_text_callback(id: usize, message: SLTXTMessage) {
 
     match message {
         SLTXTMessage::OnPress => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_press".to_string();
-            process_callback(wco);
+            process_callback(id, "on_press".to_string(), None);
         },
         SLTXTMessage::OnRelease => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_release".to_string();
-            process_callback(wco);
+            process_callback(id, "on_release".to_string(), None);
         },
         SLTXTMessage::OnRightPress => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_right_press".to_string();
-            process_callback(wco);
+            process_callback(id, "on_right_press".to_string(), None);
         },
         SLTXTMessage::OnRightRelease => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_right_release".to_string();
-            process_callback(wco);
+            process_callback(id, "on_right_release".to_string(), None);
         },
         SLTXTMessage::OnMiddlePress => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_middle_press".to_string();
-            process_callback(wco);
+            process_callback(id, "on_middle_press".to_string(), None);
         },
         SLTXTMessage::OnMiddleRelease => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_middle_release".to_string();
-            process_callback(wco);
+            process_callback(id, "on_middle_release".to_string(), None);
         },
         SLTXTMessage::OnEnter => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_enter".to_string();
-            process_callback(wco);
+            process_callback(id, "on_enter".to_string(), None);
         },
         SLTXTMessage::OnMove(point) => {
-            let points: Vec<(String, f32)> = vec![
-                ("x".to_string(), point.x),
-                ("y".to_string(), point.y)];
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_move".to_string();
-            wco.points = Some(points);
-            process_callback(wco);
+            let points: Option<(String, f32, String, f32)> = Some(
+                ("x".to_string(), point.x,
+                "y".to_string(), point.y));
+            
+            process_callback(id, "on_move".to_string(), points);
         },
         SLTXTMessage::OnExit => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_exit".to_string();
-            process_callback(wco);
+            process_callback(id, "on_exit".to_string(), None);
         },
-    }    
+    }
 }
 
 
-fn process_callback(wco: WidgetCallbackOut) 
+fn process_callback(id: usize, event_name: String, points_opt: Option<(String, f32, String, f32)>) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = 
-                                app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
         None => return,
     };
-
+       
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("SelectableText Callback could not be found with id {}", wco.id),
+        None => panic!("Image Callback could not be found with id {}", id),
     };
-                  
-    if wco.event_name == *"on_move" {
+               
+    let user_data_opt = app_cbs.user_data.get(&id);
 
-        let points = match wco.points {
-            Some(pts) => pts,
-            None => panic!("Points not found"),
-        };
-        Python::with_gil(|py| {
-
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(dt) => dt,
-                    None => panic!("SelectableText: user_data not found"),
-                };
+    Python::with_gil(|py| {
+        if user_data_opt.is_some() && points_opt.is_some() {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    points.into_py_dict_bound(py), 
-                                                                    user_data
+                                                                    id, 
+                                                                    points_opt.unwrap(), 
+                                                                    user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("SelectableText: 3 parameters (id, points, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Image: 3 parameter (id, points, user_data) are required or a python error in this function. {er}"),
                 }
+            } else if points_opt.is_some() && user_data_opt.is_none() {
+                let res = callback.call1(py, (
+                                                                    id, 
+                                                                    points_opt.unwrap(), 
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Image: 2 parameter (id, points) are required or a python error in this function. {er}"),
+                }
+            } else if user_data_opt.is_some() {
+                let res = callback.call1(py, (
+                                                                    id, 
+                                                                    user_data_opt.unwrap()
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Image: 2 parameter (id, user_data) are required or a python error in this function. {er}"),
+                }
+            
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    points.into_py_dict_bound(py), 
-                                                                    )
-                                                                    );
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("SelectableText 2 parameters (id, points) are required or a python error in this function. {er}"),
-                }
-            } 
-        });
-
-    } else {
-        Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(dt) => dt,
-                    None => panic!("SelectableText user_data not found"),
-                };
-                let res = callback.call1(py, (
-                                                                    wco.id,
-                                                                    user_data
+                                                                    id, 
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(_) => panic!("SelectableText: 2 parameters (id, user_data) are required or possibly a non-fatal python error in this function."),
-                }                                                
-            } else {
-                let res = callback.call1(py, (
-                                                                    wco.id,  
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(_) => panic!("SelectableText: Only 1 parameter (id) is required or possibly a non-fatal python error in this function."),
+                    Err(er) => panic!("Image: 1 parameter (id) are required or a python error in this function. {er}"),
                 }
             }
-            
-        });
-    }
+    
+    });
     
     drop(app_cbs);
 
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgSelectableTextParam {
     Text,
     Width,
@@ -304,8 +247,8 @@ pub enum IpgSelectableTextParam {
 }
 
 pub fn selectable_text_item_update(st: &mut IpgSelectableText,
-                                        item: PyObject,
-                                        value: PyObject
+                                        item: &PyObject,
+                                        value: &PyObject
                                     )
 {
     let update = try_extract_selectable_update(item);
@@ -358,7 +301,7 @@ pub fn selectable_text_item_update(st: &mut IpgSelectableText,
     }
 }
 
-fn try_extract_selectable_update(update_obj: PyObject) -> IpgSelectableTextParam {
+fn try_extract_selectable_update(update_obj: &PyObject) -> IpgSelectableTextParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgSelectableTextParam>(py);
@@ -369,7 +312,7 @@ fn try_extract_selectable_update(update_obj: PyObject) -> IpgSelectableTextParam
     })
 }
 
-fn try_extract_hor_align(value: PyObject) -> IpgHorizontalAlignment {
+fn try_extract_hor_align(value: &PyObject) -> IpgHorizontalAlignment {
     
     Python::with_gil(|py| {
         let res = value.extract::<IpgHorizontalAlignment>(py);
@@ -380,7 +323,7 @@ fn try_extract_hor_align(value: PyObject) -> IpgHorizontalAlignment {
     })
 }
 
-fn try_extract_vert_align(value: PyObject) -> IpgVerticalAlignment {
+fn try_extract_vert_align(value: &PyObject) -> IpgVerticalAlignment {
     
     Python::with_gil(|py| {
         let res = value.extract::<IpgVerticalAlignment>(py);
@@ -391,7 +334,7 @@ fn try_extract_vert_align(value: PyObject) -> IpgVerticalAlignment {
     })
 }
 
-fn get_horizontal_align(ha: IpgHorizontalAlignment) -> Horizontal {
+fn get_horizontal_align(ha: &IpgHorizontalAlignment) -> Horizontal {
     match ha {
         IpgHorizontalAlignment::Left => Horizontal::Left,
         IpgHorizontalAlignment::Center => Horizontal::Center,
@@ -399,7 +342,7 @@ fn get_horizontal_align(ha: IpgHorizontalAlignment) -> Horizontal {
     }
 }
 
-fn get_vertical_align(va: IpgVerticalAlignment) -> Vertical {
+fn get_vertical_align(va: &IpgVerticalAlignment) -> Vertical {
     match va {
         IpgVerticalAlignment::Top => Vertical::Top,
         IpgVerticalAlignment::Center => Vertical::Center,

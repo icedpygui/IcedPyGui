@@ -19,7 +19,6 @@ pub struct IpgMouseArea {
         pub id: usize,
         pub mouse_pointer: Option<IpgMousePointer>,
         pub show: bool,
-        pub user_data: Option<PyObject>,
 }
 
 impl IpgMouseArea {
@@ -27,20 +26,18 @@ impl IpgMouseArea {
         id: usize,
         mouse_pointer: Option<IpgMousePointer>,
         show: bool,
-        user_data: Option<PyObject>,
         ) -> Self {
         Self {
             id,
             mouse_pointer,
             show,
-            user_data,
         }
     }
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgMousePointer {
     None,
     Idle,
@@ -56,29 +53,29 @@ pub enum IpgMousePointer {
     ZoomIn,
 }
 
-pub fn construct_mousearea(m_area: IpgMouseArea, content: Vec<Element<Message>>) -> Element<Message> {
+pub fn construct_mousearea<'a>(m_area: &'a IpgMouseArea, 
+                            content: Vec<Element<'a, Message>>) 
+                            -> Element<'a, Message> {
 
-    let pointer: Interaction = get_interaction(m_area.mouse_pointer);
+    let pointer: Interaction = get_interaction(m_area.mouse_pointer.clone());
 
     let cont: Element<Message> = Column::with_children(content).into();
+
     // Had to use the Message because the content already has Message.  Typical problem
     // with containers that are also like widgets with Message.
-    let ma: Element<Message> = 
-                    MouseArea::new(cont)
-                    .on_press(Message::MouseAreaOnPress(m_area.id))
-                    .on_release(Message::MouseAreaOnRelease(m_area.id))
-                    .on_right_press(Message::MouseAreaOnRightPress(m_area.id))
-                    .on_right_release(Message::MouseAreaOnRightRelease(m_area.id))
-                    .on_middle_press(Message::MouseAreaOnMiddlePress(m_area.id))
-                    .on_middle_release(Message::MouseAreaOnMiddleRelease(m_area.id))
-                    .on_enter(Message::MouseAreaOnEnter(m_area.id))
-                    .on_move(move|p| Message::MouseAreaOnMove(p, m_area.id))
-                    .on_exit(Message::MouseAreaOnExit(m_area.id))
-                    .interaction(pointer)
-                    .into();
-
-    ma
-
+    
+    MouseArea::new(cont)
+        .on_press(Message::MouseAreaOnPress(m_area.id))
+        .on_release(Message::MouseAreaOnRelease(m_area.id))
+        .on_right_press(Message::MouseAreaOnRightPress(m_area.id))
+        .on_right_release(Message::MouseAreaOnRightRelease(m_area.id))
+        .on_middle_press(Message::MouseAreaOnMiddlePress(m_area.id))
+        .on_middle_release(Message::MouseAreaOnMiddleRelease(m_area.id))
+        .on_enter(Message::MouseAreaOnEnter(m_area.id))
+        .on_move(move|p| Message::MouseAreaOnMove(p, m_area.id))
+        .on_exit(Message::MouseAreaOnExit(m_area.id))
+        .interaction(pointer)
+        .into()
 }
 
 pub fn get_interaction(pointer: Option<IpgMousePointer>) -> Interaction {
@@ -102,43 +99,31 @@ pub fn get_interaction(pointer: Option<IpgMousePointer>) -> Interaction {
     }
 }
 
-pub fn mousearea_callback(state: &mut IpgState, id: usize, event_name: String) {
+pub fn mousearea_callback(_state: &mut IpgState, id: usize, event_name: String) {
     
-    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
-
-    let mut wco = container_callback_data(state, wci);
-    wco.id = id;
-    wco.event_name = event_name;
-    process_callback(wco);
+    process_callback(id, event_name, None);
 
 }
 
-pub fn mousearea_callback_point(state: &mut IpgState, 
+pub fn mousearea_callback_point(_state: &mut IpgState, 
                                 id: usize, 
                                 point: Point, 
                                 event_name: String,
                                 ) {
 
-    let points: Vec<(String, f32)> = vec![
-        ("x".to_string(), point.x),
-        ("y".to_string(), point.y)];
-    
-    let wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
+    let points: Option<(String, f32, String, f32)> = Some(
+                ("x".to_string(), point.x,
+                "y".to_string(), point.y));
 
-    let mut wco = container_callback_data(state, wci);
-    wco.id = id;
-    wco.event_name = event_name;
-    wco.points = Some(points);
-    process_callback(wco);
-    
+    process_callback(id, event_name, points);
 }
 
 
-fn process_callback(wco: WidgetCallbackOut) 
+fn process_callback(id: usize, event_name: String, points_opt: Option<(String, f32, String, f32)>) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -147,98 +132,81 @@ fn process_callback(wco: WidgetCallbackOut)
        
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("MouseArea Callback could not be found with id {}", wco.id),
+        None => panic!("Image Callback could not be found with id {}", id),
     };
-              
-    if wco.event_name == *"on_move" {
+               
+    let user_data_opt = app_cbs.user_data.get(&id);
 
-        let points = match wco.points {
-            Some(pts) => pts,
-            None => panic!("MouseArea Points not found"),
-        };
-
-        Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(ud) => ud,
-                    None => panic!("MouseArea callback user_data not found."),
-                };
+    Python::with_gil(|py| {
+        if user_data_opt.is_some() && points_opt.is_some() {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    points.into_py_dict_bound(py), 
-                                                                    user_data
+                                                                    id, 
+                                                                    points_opt.unwrap(), 
+                                                                    user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("MouseArea: 3 parameter (id, points, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Image: 3 parameter (id, points, user_data) are required or a python error in this function. {er}"),
                 }
+            } else if points_opt.is_some() && user_data_opt.is_none() {
+                let res = callback.call1(py, (
+                                                                    id, 
+                                                                    points_opt.unwrap(), 
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Image: 2 parameter (id, points) are required or a python error in this function. {er}"),
+                }
+            } else if user_data_opt.is_some() {
+                let res = callback.call1(py, (
+                                                                    id, 
+                                                                    user_data_opt.unwrap()
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Image: 2 parameter (id, user_data) are required or a python error in this function. {er}"),
+                }
+            
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    points.into_py_dict_bound(py), 
+                                                                    id, 
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("MouseArea: 2 parameter (id, points) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Image: 1 parameter (id) are required or a python error in this function. {er}"),
                 }
-            } 
-        });
-
-    } else {
-        Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(ud) => ud,
-                    None => panic!("MouseArea callback user_data not found."),
-                };
-                let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    user_data
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("MouseArea: 2 parameter (id, user_data) are required or a python error in this function. {er}"),
-                }
-            } else {
-                let res = callback.call1(py, (
-                                                                    wco.id,  
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("MouseArea: Only 1 parameter (id) is required or a python error in this function. {er}"),
-                }
-            } 
-        });
-    }
+            }
     
+    });
+
     drop(app_cbs);   
 
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgMouseAreaParam {
     Show,
 }
 
 
 pub fn mousearea_item_update(img: &mut IpgMouseArea,
-                                item: PyObject,
-                                value: PyObject,
+                                item: &PyObject,
+                                value: &PyObject,
                                 )
 {
 
     let update = try_extract_mousearea_update(item);
-    let name = "MouseArea".to_string();
+
     match update {
         IpgMouseAreaParam::Show => {
-            img.show = try_extract_boolean(value, name);
+            img.show = try_extract_boolean(value, "MouseArea".to_string());
         },
     }
 }
 
-pub fn try_extract_mousearea_update(update_obj: PyObject) -> IpgMouseAreaParam {
+pub fn try_extract_mousearea_update(update_obj: &PyObject) -> IpgMouseAreaParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgMouseAreaParam>(py);

@@ -21,7 +21,6 @@ use pyo3::{PyObject, pyclass, Python};
 pub struct IpgSlider {
     pub id: usize,
     pub show: bool,
-    pub user_data: Option<PyObject>,
     
     pub min: f32,
     pub max: f32,
@@ -36,7 +35,6 @@ impl IpgSlider {
     pub fn new( 
         id: usize,
         show: bool,
-        user_data: Option<PyObject>,
         min: f32,
         max: f32,
         step: f32,
@@ -48,7 +46,6 @@ impl IpgSlider {
         Self {
             id,
             show,
-            user_data,
             min,
             max,
             step,
@@ -112,9 +109,9 @@ pub enum SLMessage {
     OnRelease,
 }
 
-pub fn construct_slider(slider: IpgSlider, 
-                        style_opt: Option<IpgWidgets>) 
-                        -> Option<Element<'static, app::Message>> {
+pub fn construct_slider<'a>(slider: &'a IpgSlider, 
+                        style_opt: Option<&IpgWidgets>) 
+                        -> Option<Element<'a, app::Message>> {
 
     if !slider.show {
         return None
@@ -147,25 +144,20 @@ pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
     match message {
         SLMessage::OnChange(value) => {
             wci.value_float_64 = Some(value as f64);
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_change".to_string();
-            process_callback(wco);
+            let _ = set_or_get_widget_callback_data(state, wci);
+            process_callback(is, "on_change".to_string(), Some(value));
         },
         SLMessage::OnRelease => {
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_release".to_string();
-            process_callback(wco);
+            process_callback(id, "on_release".to_string(), None);
         },
     }
 }
 
-pub fn process_callback(wco: WidgetCallbackOut) 
+pub fn process_callback(id: usize, event_name: String, on_change_value: Option<f32>) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
        
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -174,47 +166,49 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Slider Callback could not be found with id {}", wco.id),
+        None => panic!("Slider Callback could not be found with id {}", id),
     };
 
-    let value = match wco.value_float {
-        Some(vl) => vl,
-        None => panic!("Slider value in callback could not be found"),
-    };
+    let user_data_opt = app_cbs.user_data.get(&id);
                  
     Python::with_gil(|py| {
-        if wco.user_data.is_some() {
-            let user_data = match wco.user_data {
-                Some(ud) => ud,
-                None => panic!("Slider callback user_data not found."),
-            };
+        if user_data_opt.is_some() && on_change_value.is_some() {
+            
             let res = callback.call1(py, (
-                                                                wco.id, 
-                                                                value, 
-                                                                user_data
+                                                                id, 
+                                                                on_change_value.unwrap(), 
+                                                                user_data_opt,
                                                                 ));
             match res {
                 Ok(_) => (),
                 Err(er) => panic!("Slider: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
             }
-        } else {
+        } else if on_change_value.is_some() {
             let res = callback.call1(py, (
-                                                                wco.id, 
-                                                                value, 
+                                                                id, 
+                                                                on_change_value.unwrap(), 
                                                                 ));
             match res {
                 Ok(_) => (),
                 Err(er) => panic!("Slider: 2 parameters (id, value) are required or a python error in this function. {er}"),
             }
-        } 
+        } else {
+            let res = callback.call1(py, (
+                                                                id,  
+                                                                ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Slider: 1 parameters (id) are required or a python error in this function. {er}"),
+            }
+        }
     });
 
     drop(app_cbs); 
 
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgSliderParam {
     Min,
     Max,
@@ -228,8 +222,8 @@ pub enum IpgSliderParam {
 }
 
 pub fn slider_item_update(sldr: &mut IpgSlider, 
-                            item: PyObject, 
-                            value: PyObject) {
+                            item: &PyObject, 
+                            value: &PyObject) {
 
     let update = try_extract_slider_update(item);
     let name = "Slider".to_string();
@@ -267,7 +261,7 @@ pub fn slider_item_update(sldr: &mut IpgSlider,
 }
 
 
-fn try_extract_slider_update(update_obj: PyObject) -> IpgSliderParam {
+fn try_extract_slider_update(update_obj: &PyObject) -> IpgSliderParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgSliderParam>(py);
@@ -354,8 +348,8 @@ fn get_styling(theme: &Theme,
 
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgSliderStyleParam {
     RailIpgColor,
     RailRbgaColor,
@@ -375,8 +369,8 @@ pub enum IpgSliderStyleParam {
 }
 
 pub fn slider_style_update_item(style: &mut IpgSliderStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_slider_style_update(item);
     let name = "SliderStyle".to_string();
@@ -430,7 +424,7 @@ pub fn slider_style_update_item(style: &mut IpgSliderStyle,
     }
 }
 
-pub fn try_extract_slider_style_update(update_obj: PyObject) -> IpgSliderStyleParam {
+pub fn try_extract_slider_style_update(update_obj: &PyObject) -> IpgSliderStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgSliderStyleParam>(py);
@@ -441,12 +435,12 @@ pub fn try_extract_slider_style_update(update_obj: PyObject) -> IpgSliderStylePa
     })
 }
 
-fn get_slider_style(style: Option<IpgWidgets>) -> Option<IpgSliderStyle>{
+fn get_slider_style(style: Option<&IpgWidgets>) -> Option<IpgSliderStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgSliderStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }

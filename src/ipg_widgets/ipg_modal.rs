@@ -20,7 +20,7 @@ use super::helpers::get_alignment;
 use super::ipg_enums::IpgAlignment;
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct IpgModal {
     pub id: usize,
     pub label: String,
@@ -32,7 +32,6 @@ pub struct IpgModal {
     pub max_width: f32,
     pub align_items: IpgAlignment,
     pub clip: bool,
-    pub user_data: Option<PyObject>,
 }
 
 impl IpgModal {
@@ -47,7 +46,6 @@ impl IpgModal {
         max_width: f32,
         align_items: IpgAlignment,
         clip: bool,
-        user_data: Option<PyObject>,
     ) -> Self {
         Self {
             id,
@@ -60,7 +58,6 @@ impl IpgModal {
             max_width,
             align_items,
             clip,
-            user_data,
         }
     }
 }
@@ -72,8 +69,9 @@ pub enum ModalMessage {
 }
 
 
-pub fn construct_modal<'a>(mdl: IpgModal, content: Vec<Element<'a, Message>> ) 
-            -> Element<'a, Message, Theme, Renderer> {
+pub fn construct_modal<'a>(mdl: &'a IpgModal, 
+                            content: Vec<Element<'a, Message>> ) 
+                            -> Element<'a, Message, Theme, Renderer> {
 
     let label = Text::new(mdl.label.clone());            
     let button: Element<ModalMessage> = Button::new(label)
@@ -126,7 +124,9 @@ pub fn construct_modal<'a>(mdl: IpgModal, content: Vec<Element<'a, Message>> )
 }
 
 
-pub fn modal_callback(state: &mut IpgState, id: usize, message: ModalMessage) {
+pub fn modal_callback(state: &mut IpgState, 
+                        id: usize, 
+                        message: ModalMessage) {
 
     let wci = WidgetCallbackIn{id, ..Default::default()};
 

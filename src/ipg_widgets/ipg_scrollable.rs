@@ -1,11 +1,6 @@
 //! ipg_scrollable
 use crate::graphics::colors::get_color;
 use crate::{access_callbacks, app, IpgState};
-use crate::TABLE_INTERNAL_IDS_END;
-use crate::TABLE_INTERNAL_IDS_START;
-use super::callbacks::container_callback_data;
-use super::callbacks::WidgetCallbackIn;
-use super::callbacks::WidgetCallbackOut;
 use super::helpers::{get_height, get_radius, get_width, 
     try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_vec_f32};
 use super::ipg_enums::IpgWidgets;
@@ -22,7 +17,6 @@ use iced::{Border, Color, Element, Length, Shadow, Vector, Theme};
 use iced::widget::Column;
 
 use pyo3::pyclass;
-use pyo3::types::IntoPyDict;
 use pyo3::{Python, PyObject};
 
 
@@ -40,7 +34,6 @@ pub struct IpgScrollable {
     pub v_bar_margin: f32,
     pub v_scroller_width: f32,
     pub v_bar_alignment: IpgScrollableAlignment,
-    pub user_data: Option<PyObject>,
     pub style_id: Option<usize>,
     pub scroll_y_pos: f32,
     pub scroll_x_pos: f32,
@@ -62,7 +55,6 @@ impl IpgScrollable {
         v_bar_margin: f32,
         v_scroller_width: f32,
         v_bar_alignment: IpgScrollableAlignment,
-        user_data: Option<PyObject>,
         style_id: Option<usize>,
     ) -> Self {
         Self {
@@ -78,7 +70,6 @@ impl IpgScrollable {
             v_bar_margin,
             v_scroller_width,
             v_bar_alignment,
-            user_data,
             style_id,
             scroll_y_pos: 0.0,
             scroll_x_pos: 0.0,
@@ -155,8 +146,8 @@ impl IpgScrollableStyle {
     }
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgScrollableDirection {
     Vertical,
     Horizontal,
@@ -164,17 +155,17 @@ pub enum IpgScrollableDirection {
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgScrollableAlignment {
     Start,
     End,
 }
 
 
-pub fn construct_scrollable<'a>(scroll: IpgScrollable, 
+pub fn construct_scrollable<'a>(scroll: &'a IpgScrollable, 
                             content: Vec<Element<'a, app::Message>>,
-                            style_opt: Option<IpgWidgets> ) 
+                            style_opt: Option<&IpgWidgets> ) 
                             -> Element<'a, app::Message> {
     
     let style = get_scroll_style(style_opt);
@@ -250,31 +241,23 @@ fn get_direction(direction: IpgScrollableDirection,
 
 }
 
-pub fn scrollable_callback(state: &mut IpgState, id: usize, vp: Viewport) {
+pub fn scrollable_callback(_state: &mut IpgState, id: usize, vp: Viewport) {
 
-    if (TABLE_INTERNAL_IDS_START..=TABLE_INTERNAL_IDS_END).contains(&id) {
-        // table_callback(state, id, Message::Scrolled(vp, id));
-        return
-    }
-
-    let wci = WidgetCallbackIn{id, ..Default::default()};
-
-    let offsets: Vec<(String, f32)> = vec![
-        ("abs_offset_x".to_string(), vp.absolute_offset().x),
-        ("abs_offset_y".to_string(), vp.absolute_offset().y),
-        ("rel_offset_x".to_string(), vp.relative_offset().x),
-        ("rel_offset_y".to_string(), vp.relative_offset().y),
-        ("rev_offset_x".to_string(), vp.absolute_offset_reversed().x),
-        ("rev_offset_y".to_string(), vp.absolute_offset_reversed().y)];
+    let abs: (String, f32, String, f32) = ("abs_x".to_string(), vp.absolute_offset().x,
+                                            "abs_y".to_string(), vp.absolute_offset().y);
+    let rel: (String, f32, String, f32) = ("rel_x".to_string(), vp.relative_offset().x,
+                                            "rel_y".to_string(), vp.relative_offset().y);
+    let rev = ("rev_x".to_string(), vp.absolute_offset_reversed().x,
+                                            "rev_y".to_string(), vp.absolute_offset_reversed().y);
     
-    let mut wco = container_callback_data(state, wci);
-    wco.scroll_pos = offsets;
-    wco.event_name = "on_scroll".to_string();
-    process_callback(wco);
+    process_callback(id, "on_scroll".to_string(), abs, rel, rev);
 }
 
 
-pub fn process_callback(wco: WidgetCallbackOut) 
+pub fn process_callback(id: usize, event_name: String, 
+                        abs: (String, f32, String, f32),
+                        rel: (String, f32, String, f32),
+                        rev: (String, f32, String, f32)) 
 {
     let app_cbs = access_callbacks();
 
@@ -287,19 +270,19 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Scrollable Callback could not be found with id {}", wco.id),
+        None => panic!("Scrollable Callback could not be found with id {}", id),
     };
+
+    let user_data_opt = app_cbs.user_data.get(&id);
                   
     Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(ud) => ud,
-                    None => panic!("Scrollable callback user_data not found."),
-                };
+            if user_data_opt.is_some() {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    wco.scroll_pos.into_py_dict_bound(py), 
-                                                                    user_data
+                                                                    id, 
+                                                                    abs,
+                                                                    rel,
+                                                                    rev, 
+                                                                    user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
@@ -307,8 +290,10 @@ pub fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    wco.scroll_pos.into_py_dict_bound(py), 
+                                                                    id, 
+                                                                    abs,
+                                                                    rel,
+                                                                    rev, 
                                                                     ));
                 match res {
                     Ok(_) => (),
@@ -322,8 +307,8 @@ pub fn process_callback(wco: WidgetCallbackOut)
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgScrollableParam {
     Width,
     Height,
@@ -341,8 +326,8 @@ pub enum IpgScrollableParam {
 
 
 pub fn scrollable_item_update(scroll: &mut IpgScrollable,
-                                item: PyObject,
-                                value: PyObject,
+                                item: &PyObject,
+                                value: &PyObject,
                             ) 
 {
     let update = try_extract_scrollable_update(item);
@@ -386,7 +371,7 @@ pub fn scrollable_item_update(scroll: &mut IpgScrollable,
 }
 
 
-pub fn try_extract_scrollable_update(update_obj: PyObject) -> IpgScrollableParam {
+pub fn try_extract_scrollable_update(update_obj: &PyObject) -> IpgScrollableParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgScrollableParam>(py);
@@ -398,7 +383,7 @@ pub fn try_extract_scrollable_update(update_obj: PyObject) -> IpgScrollableParam
 }
 
 
-pub fn try_extract_alignment(direct_obj: PyObject) -> IpgScrollableAlignment {
+pub fn try_extract_alignment(direct_obj: &PyObject) -> IpgScrollableAlignment {
     Python::with_gil(|py| {
         let res = direct_obj.extract::<IpgScrollableAlignment>(py);
             
@@ -558,8 +543,8 @@ fn get_styling(theme: &Theme, status: Status,
     
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgScrollableStyleParam {
     BackgroundIpgColor,
     BackgroundRbgaColor,
@@ -590,8 +575,8 @@ pub enum IpgScrollableStyleParam {
 }
 
 pub fn scroll_style_update_item(style: &mut IpgScrollableStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_scroll_style_update(item);
     let name = "ScrollableStyle".to_string();
@@ -683,12 +668,12 @@ pub fn scroll_style_update_item(style: &mut IpgScrollableStyle,
     }
 }
 
-fn get_scroll_style(style: Option<IpgWidgets>) -> Option<IpgScrollableStyle>{
+fn get_scroll_style(style: Option<&IpgWidgets>) -> Option<IpgScrollableStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgScrollableStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }
@@ -697,7 +682,7 @@ fn get_scroll_style(style: Option<IpgWidgets>) -> Option<IpgScrollableStyle>{
     }
 }
 
-pub fn try_extract_scroll_style_update(update_obj: PyObject) -> IpgScrollableStyleParam {
+pub fn try_extract_scroll_style_update(update_obj: &PyObject) -> IpgScrollableStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgScrollableStyleParam>(py);

@@ -61,15 +61,15 @@ impl IpgText {
     }
 }
 
-pub fn construct_text(text: IpgText) 
-                    -> Option<Element<'static, Message>> {
+pub fn construct_text<'a>(text: &'a IpgText) 
+                    -> Option<Element<'a, Message>> {
 
     if !text.show {
         return None
     }
 
-    let hor_align = get_horizontal_alignment(text.align_x);
-    let vert_align = get_vertical_alignment(text.align_y);
+    let hor_align = get_horizontal_alignment(&text.align_x);
+    let vert_align = get_vertical_alignment(&text.align_y);
 
     Some(Text::new(text.content.clone()
                         )
@@ -110,7 +110,9 @@ pub enum IpgTextParam {
     WidthFill,
 }
 
-pub fn text_item_update(txt: &mut IpgText, item: PyObject, value: PyObject) {
+pub fn text_item_update(txt: &mut IpgText, 
+                        item: &PyObject, 
+                        value: &PyObject) {
 
     let update = try_extract_text_update(item);
     let name = "Text".to_string();
@@ -163,7 +165,7 @@ pub fn text_item_update(txt: &mut IpgText, item: PyObject, value: PyObject) {
 }
 
 
-fn try_extract_text_update(update_obj: PyObject) -> IpgTextParam {
+fn try_extract_text_update(update_obj: &PyObject) -> IpgTextParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgTextParam>(py);
@@ -174,7 +176,7 @@ fn try_extract_text_update(update_obj: PyObject) -> IpgTextParam {
     })
 }
 
-fn try_extract_hor_alignment(update_obj: PyObject) -> IpgHorizontalAlignment {
+fn try_extract_hor_alignment(update_obj: &PyObject) -> IpgHorizontalAlignment {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgHorizontalAlignment>(py);
@@ -185,7 +187,7 @@ fn try_extract_hor_alignment(update_obj: PyObject) -> IpgHorizontalAlignment {
     })
 }
 
-fn try_extract_vert_alignment(update_obj: PyObject) -> IpgVerticalAlignment {
+fn try_extract_vert_alignment(update_obj: &PyObject) -> IpgVerticalAlignment {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgVerticalAlignment>(py);

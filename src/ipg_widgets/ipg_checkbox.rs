@@ -3,8 +3,10 @@ use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, IpgState};
 use crate::app;
-use super::helpers::{get_radius, get_shaping, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32};
-use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::helpers::{get_radius, get_shaping, get_width, try_extract_boolean, 
+    try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, 
+    try_extract_string, try_extract_style_standard, try_extract_vec_f32};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
 use super::ipg_enums::IpgWidgets;
 
 use crate::graphics::BOOTSTRAP_FONT;
@@ -23,8 +25,6 @@ use pyo3::{pyclass, PyObject, Python};
 pub struct IpgCheckBox {
     pub id: usize,
     pub show: bool,
-    pub user_data: Option<PyObject>,
-
     pub is_checked: bool,
     pub label: String,
     pub width: Length,
@@ -44,8 +44,6 @@ impl IpgCheckBox {
     pub fn new(
         id: usize,
         show: bool,
-        user_data: Option<PyObject>,
-
         is_checked: bool,
         label: String,
         width: Length,
@@ -62,7 +60,6 @@ impl IpgCheckBox {
             Self {
                 id,
                 show,
-                user_data,
                 is_checked,
                 label,
                 width,
@@ -127,9 +124,9 @@ pub enum CHKMessage {
     OnToggle(bool),
 }
 
-pub fn construct_checkbox(chk: IpgCheckBox, 
-                        style_opt: Option<IpgWidgets>) 
-                        -> Option<Element<'static, app::Message>> {
+pub fn construct_checkbox<'a>(chk: &'a IpgCheckBox, 
+                        style_opt: Option<&IpgWidgets>) 
+                        -> Option<Element<'a, app::Message>> {
 
     if !chk.show {
         return None
@@ -182,20 +179,19 @@ pub fn checkbox_callback(state: &mut IpgState, id: usize, message: CHKMessage) {
         CHKMessage::OnToggle(on_toggle) => {
             let mut wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
             wci.on_toggle = Some(on_toggle);
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_toggle".to_string();
-            process_callback(wco);
+            let _ = set_or_get_widget_callback_data(state, wci);
+
+            process_callback(id, on_toggle, "on_toggle".to_string());
         }
     }
 }
 
 
-fn process_callback(wco: WidgetCallbackOut) 
+fn process_callback(id: usize, is_checked: bool, event_name: String) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -204,19 +200,17 @@ fn process_callback(wco: WidgetCallbackOut)
 
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Callback could not be found with id {}", wco.id),
+        None => panic!("Callback could not be found with id {}", id),
     };
+
+    let user_data_opt = app_cbs.user_data.get(&id);
              
     Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(ud) => ud,
-                    None => panic!("Checkbox callback user_Data could not be found"),
-                };
+            if user_data_opt.is_some() {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    wco.is_checked, 
-                                                                    user_data
+                                                                    id, 
+                                                                    is_checked, 
+                                                                    user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
@@ -224,8 +218,8 @@ fn process_callback(wco: WidgetCallbackOut)
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id, 
-                                                                    wco.is_checked 
+                                                                    id, 
+                                                                    is_checked 
                                                                     ));
                 match res {
                     Ok(_) => (),
@@ -239,8 +233,8 @@ fn process_callback(wco: WidgetCallbackOut)
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgCheckboxParam {
     IconSize,
     IconX,
@@ -259,8 +253,8 @@ pub enum IpgCheckboxParam {
 }
 
 pub fn checkbox_item_update(chk: &mut IpgCheckBox,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_checkbox_update(item);
@@ -317,8 +311,8 @@ pub fn checkbox_item_update(chk: &mut IpgCheckBox,
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgCheckboxStyleParam {
     BackgroundIpgColor,
     BackgroundRgbaColor,
@@ -339,8 +333,8 @@ pub enum IpgCheckboxStyleParam {
 }
 
 pub fn checkbox_style_update_item(style: &mut IpgCheckboxStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_checkbox_style_update(item);
     let name = "CheckboxStyle".to_string();
@@ -403,7 +397,7 @@ pub fn checkbox_style_update_item(style: &mut IpgCheckboxStyle,
     }
 }
 
-pub fn try_extract_checkbox_update(update_obj: PyObject) -> IpgCheckboxParam {
+pub fn try_extract_checkbox_update(update_obj: &PyObject) -> IpgCheckboxParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgCheckboxParam>(py);
@@ -511,7 +505,7 @@ pub fn get_styling(theme: &Theme, status: Status,
     
 }
 
-pub fn try_extract_checkbox_style_update(update_obj: PyObject) -> IpgCheckboxStyleParam {
+pub fn try_extract_checkbox_style_update(update_obj: &PyObject) -> IpgCheckboxStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgCheckboxStyleParam>(py);
@@ -522,12 +516,12 @@ pub fn try_extract_checkbox_style_update(update_obj: PyObject) -> IpgCheckboxSty
     })
 }
 
-pub fn get_chk_style(style: Option<IpgWidgets>) -> Option<IpgCheckboxStyle>{
+pub fn get_chk_style(style: Option<&IpgWidgets>) -> Option<IpgCheckboxStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgCheckboxStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }

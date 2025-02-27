@@ -2,7 +2,7 @@
 #![allow(clippy::enum_variant_names)]
 use crate::graphics::colors::get_color;
 use crate::{access_callbacks, app, IpgState};
-use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
 use super::helpers::{get_padding_f64, get_radius, get_width, try_extract_ipg_color, try_extract_rgba_color, try_extract_vec_f32};
 use super::helpers::{try_extract_boolean, try_extract_f64, 
     try_extract_string, try_extract_u16, try_extract_vec_f64};
@@ -29,7 +29,6 @@ pub struct IpgTextInput {
     pub padding: Padding,
     pub size: f32,
     pub line_height: LineHeight,
-    pub user_data: Option<PyObject>,
     // icon: Option<Message>,
     pub style_id: Option<usize>,
     pub show: bool,
@@ -45,7 +44,6 @@ impl IpgTextInput {
         padding: Padding,
         size: f32,
         line_height: LineHeight,
-        user_data: Option<PyObject>,
         // icon: Option<Message>,
         style_id: Option<usize>,
         show: bool,
@@ -60,7 +58,6 @@ impl IpgTextInput {
             padding,
             size,
             line_height,
-            user_data,
             // icon,
             style_id,
             show,
@@ -121,9 +118,9 @@ pub enum TIMessage {
     OnPaste(String),
 }
 
-pub fn construct_text_input(input: IpgTextInput, 
-                            style_opt: Option<IpgWidgets>) 
-                            -> Option<Element<'static, app::Message>> {
+pub fn construct_text_input<'a>(input: &'a IpgTextInput, 
+                            style_opt: Option<&IpgWidgets>) 
+                            -> Option<Element<'a, app::Message>> {
     
     if !input.show {
         return None
@@ -135,7 +132,7 @@ pub fn construct_text_input(input: IpgTextInput,
                                                 input.value.as_str()
                                             )
                                             .on_input(TIMessage::OnInput)
-                                            .on_submit(TIMessage::OnSubmit(input.value))
+                                            .on_submit(TIMessage::OnSubmit(input.value.clone()))
                                             .on_paste(TIMessage::OnPaste)
                                             .secure(input.is_secure)
                                             .width(input.width)
@@ -168,37 +165,28 @@ pub fn text_input_callback(state: &mut IpgState, id: usize, message: TIMessage) 
     match message {
         TIMessage::OnInput(value) => {
             wci.value_str = Some(value.clone());
-            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_input".to_string();
-            wco.value_str = Some(value);
-            process_callback(wco);
+            let _ = set_or_get_widget_callback_data(state, wci);
+            process_callback(id, "on_input".to_string(), value);
         },
         TIMessage::OnSubmit(value) => {
-            // wci.value_str = Some(value.clone());
-            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_submit".to_string();
-            wco.value_str = Some(value);
-            process_callback(wco);
+            let _ = set_or_get_widget_callback_data(state, wci);
+            process_callback(id, "on_submit".to_string(), value);
         }
         TIMessage::OnPaste(value) => {
             wci.value_str = Some(value.clone());
-            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_paste".to_string();
-            wco.value_str = Some(value);
-            process_callback(wco);
+            let _ = set_or_get_widget_callback_data(state, wci);
+
+            process_callback(id, "on_paste".to_string(), value);
         }
             
     }
 }
 
-pub fn process_callback(wco: WidgetCallbackOut) 
+pub fn process_callback(id: usize, event_name: String, value: String) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -207,24 +195,17 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("TextInput Callback could not be found with id {}", wco.id),
+        None => panic!("TextInput Callback could not be found with id {}", id),
     };
 
-    let value = match wco.value_str {
-        Some(vl) => vl,
-        None => panic!("TextInput value in callback could not be found"),
-    };
+    let user_data_opt = app_cbs.user_data.get(&id);
                   
     Python::with_gil(|py| {
-        if wco.user_data.is_some() {
-            let user_data = match wco.user_data {
-                Some(ud) => ud,
-                None => panic!("TextInput callback user_data not found."),
-            };
+        if user_data_opt.is_some() {
             let res = callback.call1(py, (
-                                                            wco.id, 
+                                                            id, 
                                                             value, 
-                                                            user_data
+                                                            user_data_opt.unwrap()
                                                             ));
             match res {
                 Ok(_) => (),
@@ -232,7 +213,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
             }
         } else {
             let res = callback.call1(py, (
-                                                                wco.id, 
+                                                                id, 
                                                                 value, 
                                                                 ));
             match res {
@@ -247,8 +228,8 @@ pub fn process_callback(wco: WidgetCallbackOut)
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgTextInputParam {
     Placeholder,
     Value,
@@ -262,8 +243,8 @@ pub enum IpgTextInputParam {
 }
 
 pub fn text_input_item_update(ti: &mut IpgTextInput,
-                                item: PyObject,
-                                value: PyObject,
+                                item: &PyObject,
+                                value: &PyObject,
                                 )
 {
     let update = try_extract_text_input_update(item);
@@ -304,7 +285,7 @@ pub fn text_input_item_update(ti: &mut IpgTextInput,
 }
 
 
-fn try_extract_text_input_update(update_obj: PyObject) -> IpgTextInputParam {
+fn try_extract_text_input_update(update_obj: &PyObject) -> IpgTextInputParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgTextInputParam>(py);
@@ -390,12 +371,12 @@ fn get_styling(theme: &Theme,
     }
 }
 
-fn get_text_input_style(style: Option<IpgWidgets>) -> Option<IpgTextInputStyle>{
+fn get_text_input_style(style: Option<&IpgWidgets>) -> Option<IpgTextInputStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgTextInputStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }
@@ -404,8 +385,8 @@ fn get_text_input_style(style: Option<IpgWidgets>) -> Option<IpgTextInputStyle>{
     }
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgTextInputStyleParam {
     BackgroundIpgColor,
     BackgroundRgbaColor,
@@ -427,8 +408,8 @@ pub enum IpgTextInputStyleParam {
 }
 
 pub fn text_input_style_update_item(style: &mut IpgTextInputStyle,
-                                    item: PyObject,
-                                    value: PyObject,) 
+                                    item: &PyObject,
+                                    value: &PyObject,) 
 {
     let update = try_extract_text_input_style_update(item);
     let name = "TextInputStyle".to_string();
@@ -492,7 +473,7 @@ pub fn text_input_style_update_item(style: &mut IpgTextInputStyle,
 
 }
 
-fn try_extract_text_input_style_update(update_obj: PyObject) -> IpgTextInputStyleParam {
+fn try_extract_text_input_style_update(update_obj: &PyObject) -> IpgTextInputStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgTextInputStyleParam>(py);

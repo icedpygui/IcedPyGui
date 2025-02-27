@@ -30,7 +30,6 @@ pub struct IpgWindow {
     pub level: IpgWindowLevel,
     pub scale_factor: f64,
     pub debug: bool,
-    pub user_data: Option<PyObject>,
 }
 
 impl IpgWindow {
@@ -50,7 +49,6 @@ impl IpgWindow {
         level: IpgWindowLevel,
         scale_factor: f64,
         debug: bool,
-        user_data: Option<PyObject>,
         ) -> Self {
         Self {
             id,
@@ -68,7 +66,6 @@ impl IpgWindow {
             level,
             scale_factor,
             debug,
-            user_data,
         }
     }
 }
@@ -195,8 +192,8 @@ fn process_callback(wco: WidgetCallbackOut)
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgWindowTheme {
     Dark,
     Light,
@@ -269,8 +266,8 @@ pub fn get_iced_window_theme(theme: IpgWindowTheme) -> Theme {
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgWindowParam {
     Decorations,
     Debug,
@@ -283,8 +280,8 @@ pub enum IpgWindowParam {
 }
 
 pub fn window_item_update(wnd: &mut IpgWindow,
-                            item: PyObject,
-                            value: PyObject
+                            item: &PyObject,
+                            value: &PyObject
                             )
 {
     let update = try_extract_window_update(item);
@@ -339,7 +336,7 @@ pub fn window_item_update(wnd: &mut IpgWindow,
 }
 
 
-fn try_extract_window_update(update_obj: PyObject) -> IpgWindowParam {
+fn try_extract_window_update(update_obj: &PyObject) -> IpgWindowParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgWindowParam>(py);
@@ -350,7 +347,7 @@ fn try_extract_window_update(update_obj: PyObject) -> IpgWindowParam {
     })
 }
 
-fn try_extract_ipg_theme(theme: PyObject) -> IpgWindowTheme {
+fn try_extract_ipg_theme(theme: &PyObject) -> IpgWindowTheme {
 
     Python::with_gil(|py| {
         let res = theme.extract::<IpgWindowTheme>(py);
@@ -361,7 +358,7 @@ fn try_extract_ipg_theme(theme: PyObject) -> IpgWindowTheme {
     })
 }
 
-fn try_extract_mode(mode: PyObject) -> IpgWindowMode {
+fn try_extract_mode(mode: &PyObject) -> IpgWindowMode {
     Python::with_gil(|py| {
         let res = mode.extract::<IpgWindowMode>(py);
         match res {
@@ -371,7 +368,7 @@ fn try_extract_mode(mode: PyObject) -> IpgWindowMode {
     })
 }
 
-fn try_extract_level(level: PyObject) -> IpgWindowLevel {
+fn try_extract_level(level: &PyObject) -> IpgWindowLevel {
     Python::with_gil(|py| {
         let res = level.extract::<IpgWindowLevel>(py);
         match res {
@@ -381,8 +378,8 @@ fn try_extract_level(level: PyObject) -> IpgWindowLevel {
     })
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgWindowLevel {
     Normal,
     AlwaysOnBottom,
@@ -398,7 +395,7 @@ fn get_level(level: &IpgWindowLevel) -> iced::window::Level {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[pyclass]
+#[pyclass(eq, eq_int)]
 pub enum IpgWindowMode {
     Windowed,
     FullScreen,

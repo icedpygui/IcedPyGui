@@ -13,10 +13,13 @@ crate-type = ["cdylib"]
 
 
 [dependencies]
-pyo3 = { version = "0.21.2", features = ["extension-module"] }
+pyo3 = { version = "0.23.3", features = ["extension-module"] }
 iced = { version = "0.13.1", features = ["advanced", "canvas", "debug", "highlighter", "image", 
                                         "lazy", "smol", "svg", "tokio", "multi-window", "auto-detect-theme"] }
 iced_aw = {git = "https://github.com/iced-rs/iced_aw", rev = "3485f3a"}
+
+polars = "0.46.0"
+pyo3-polars = "0.20.0"
 
 tokio = { version = "1.0", features = ["fs"]}
 rfd = "0.13"
@@ -24,7 +27,7 @@ once_cell = "1.19.0"
 chrono = "0.4.31"
 unicode-segmentation = "1.9.0"
 palette = "0.7.4"
-seahash = "4.1.0"
+
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "*"
 phf = { version = "0.11", default-features = false }

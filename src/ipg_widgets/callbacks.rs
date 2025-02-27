@@ -83,9 +83,8 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
 
     if widget_opt.is_some() {
         match widget_opt.unwrap() {
-            IpgWidgets::IpgButton(btn) => {
+            IpgWidgets::IpgButton(_) => {
                 return WidgetCallbackOut{
-                    user_data: btn.user_data.clone(), 
                     ..Default::default()
                 }
             },
@@ -101,9 +100,13 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 };
                 crd.is_open = is_open;
                 return WidgetCallbackOut{
-                    user_data: crd.user_data.clone(),
                      ..Default::default()
                     }
+            },
+            IpgWidgets::IpgCardStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgCheckBox(cbox) => {
                 cbox.is_checked = match wci.on_toggle {
@@ -111,8 +114,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     None => panic!("Checkbox is_checked not found")
                 };
                 return WidgetCallbackOut{
-                    is_checked: Some(cbox.is_checked),
-                    user_data: cbox.user_data.clone(),
                     ..Default::default()
                 } 
             },
@@ -127,18 +128,17 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     None => panic!("The open value for color_picker could not be found"),
                 };
 
-                let mut wco = WidgetCallbackOut::default();
                 if wci.color.is_some() {
                     let color = match wci.color {
                         Some(c) => c,
                         None => panic!("The color value for color_picker could not be found"),
                     };
-                    wco.color = Some(color.clone());
                     cp.color = Color::from_rgba(color[0] as f32, color[1] as f32, 
                                             color[2] as f32, color[3] as f32);
                 }
-                wco.user_data = cp.user_data.clone();
-                return wco
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
             },
             IpgWidgets::IpgColorPickerStyle(_) => {
                 return WidgetCallbackOut{
@@ -196,24 +196,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 };
                 return WidgetCallbackOut{
                     selected_date: Some(dp.selected_date.clone()),
-                    user_data: dp.user_data.clone(),
                     ..Default::default()
                 }
             },
-            IpgWidgets::IpgImage(img) => {
-                let mut points: Vec<(String, f32)> = vec![];
-                if wci.point.is_some() {
-                    match wci.point {
-                        Some(pt) => {
-                        points.push(("x".to_string(), pt.x));
-                        points.push(("y".to_string(), pt.y));
-                    },
-                        None => panic!("Image Point could not be found")
-                    }
-                }
+            IpgWidgets::IpgImage(_) => {
                 return WidgetCallbackOut{
-                    points: Some(points),
-                    user_data: img.user_data.clone(),
                     ..Default::default()
                 }
             },
@@ -248,7 +235,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             IpgWidgets::IpgPickList(pl) => {
                 pl.selected = wci.value_str;
                 return WidgetCallbackOut{
-                    user_data: pl.user_data.clone(),
                     ..Default::default()
                 }
             },
@@ -286,9 +272,8 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 }
             },
-            IpgWidgets::IpgSelectableText(st) => {
+            IpgWidgets::IpgSelectableText(_) => {
                 return WidgetCallbackOut{
-                    user_data: st.user_data.clone(),
                     ..Default::default()
                 }
             },
@@ -311,8 +296,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     };
                 }
                 return WidgetCallbackOut{
-                    value_float: Some(slider.value as f64),
-                    user_data: slider.user_data.clone(),
                     ..Default::default()
                 }
             },
@@ -324,21 +307,8 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             IpgWidgets::IpgSpace(_) => {
                 return WidgetCallbackOut::default();
             },
-            IpgWidgets::IpgSvg(isvg) => {
-                let mut points: Vec<(String, f32)> = vec![];
-                if wci.point.is_some() {
-                    match wci.point {
-                        Some(pt) => {
-                        points.push(("x".to_string(), pt.x));
-                        points.push(("y".to_string(), pt.y));
-                    },
-                        None => panic!("Svg Point could not be found")
-                    }
-                }
-                
+            IpgWidgets::IpgSvg(_) => {
                 return WidgetCallbackOut{
-                    points: Some(points),
-                    user_data: isvg.user_data.clone(),
                     ..Default::default()
                 }
             },
@@ -349,20 +319,10 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             //     let wco = WidgetCallbackOut::default();
             //     wco
             // },
-            IpgWidgets::IpgTextInput(input) => {
-                // During the input, the widget is assigned the value so that it shows
-                // during typing.  On submit, the text box is cleared, so no value.
-                // However, in both cases the value is passed to the callback.
-                match wci.value_str {
-                    Some(v) => input.value = v,
-                    None => input.value = "".to_string()
-                };
-                let mut wco = WidgetCallbackOut::default();
-                if wci.submit_str.is_some() {
-                    wco.value_str = wci.submit_str;
+            IpgWidgets::IpgTextInput(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
                 }
-                wco.user_data = input.user_data.clone();
-                return wco
             },
             IpgWidgets::IpgTextInputStyle(_) => {
                 return WidgetCallbackOut{
@@ -377,7 +337,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     tim.started = wci.value_bool.unwrap();
                 }
                 return WidgetCallbackOut{
-                    user_data: tim.user_data.clone(),
                     counter: Some(tim.counter),
                     duration: Some(tim.duration_ms),
                     value_bool: Some(tim.started),
@@ -397,7 +356,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ctim.started = wci.value_bool.unwrap();
                 }
                 return WidgetCallbackOut{
-                    user_data: ctim.user_data.clone(),
                     counter: Some(ctim.counter),
                     duration: Some(ctim.duration_ms),
                     value_bool: Some(ctim.started),
@@ -412,7 +370,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             IpgWidgets::IpgToggler(tog) => {
                 if let Some(tg) = wci.on_toggle { tog.is_toggled = tg }
                 return WidgetCallbackOut{
-                    user_data: tog.user_data.clone(),
                     ..Default::default()
                 }
             },
@@ -437,13 +394,13 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
         let container_opt = state.containers.get_mut(&wci.id);
         if container_opt.is_some() {
             match container_opt.unwrap() {
-                IpgContainers::IpgModal(modal) => {
-                    modal.show = true;
-                    return WidgetCallbackOut{
-                        user_data: modal.user_data.clone(),
-                        ..Default::default()
-                    }
-                },
+                // IpgContainers::IpgModal(modal) => {
+                //     modal.show = true;
+                //     return WidgetCallbackOut{
+                //         user_data: modal.user_data.clone(),
+                //         ..Default::default()
+                //     }
+                // },
                 IpgContainers::IpgTable(tbl) => {
                     match wci.table_mouse {
                         IpgTableMouse::None => (),
@@ -495,16 +452,15 @@ pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackO
             WidgetCallbackOut::default()
         },
         IpgContainers::IpgMouseArea(m_area) => {
-            WidgetCallbackOut{user_data: m_area.user_data.clone(), ..Default::default()}
+            WidgetCallbackOut{..Default::default()}
         },
         IpgContainers::IpgTable(table) => {
             WidgetCallbackOut{
-                scroller_user_data: table.user_data.clone(),
                 ..Default::default()
             }
         }
         IpgContainers::IpgScrollable(scroll) => {
-            WidgetCallbackOut{user_data: scroll.user_data.clone(), ..Default::default()}
+            WidgetCallbackOut{..Default::default()}
         }
         _ => {WidgetCallbackOut::default()},
     };
@@ -525,17 +481,16 @@ pub fn container_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> W
         IpgContainers::IpgCanvas(_) => {
             WidgetCallbackOut::default()
         },
-        IpgContainers::IpgMouseArea(m_area) => {
-            WidgetCallbackOut{user_data: m_area.user_data.clone(), ..Default::default()}
+        IpgContainers::IpgMouseArea(_) => {
+            WidgetCallbackOut{..Default::default()}
         },
-        IpgContainers::IpgTable(table) => {
+        IpgContainers::IpgTable(_) => {
             WidgetCallbackOut{
-                scroller_user_data: table.user_data.clone(),
                 ..Default::default()
             }
         }
-        IpgContainers::IpgScrollable(scroll) => {
-            WidgetCallbackOut{user_data: scroll.user_data.clone(), ..Default::default()}
+        IpgContainers::IpgScrollable(_) => {
+            WidgetCallbackOut{..Default::default()}
         }
         _ => {
             WidgetCallbackOut::default()

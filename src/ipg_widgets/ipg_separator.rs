@@ -97,16 +97,16 @@ impl IpgSeparatorStyle {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[pyclass]
+#[pyclass(eq, eq_int)]
 pub enum IpgSeparatorType {
     Dot,
     Label,
     Line,
 }
 
-pub fn construct_separator(sep: IpgSeparator, 
-                            style_opt: Option<IpgWidgets>) 
-                            -> Option<Element<'static, app::Message>> {
+pub fn construct_separator<'a>(sep: &'a IpgSeparator, 
+                            style_opt: Option<&IpgWidgets>) 
+                            -> Option<Element<'a, app::Message>> {
 
     if !sep.show {
         return None
@@ -121,7 +121,7 @@ pub fn construct_separator(sep: IpgSeparator,
                                     false).unwrap();
     let mut border = Border::default();
     
-    let separator: Element<'static, app::Message>  = if style_opt.is_some() {
+    let separator: Element<'a, app::Message>  = if style_opt.is_some() {
         let style = style_opt.unwrap();
 
         sep_color = if style.color.is_some() {
@@ -165,10 +165,10 @@ pub fn construct_separator(sep: IpgSeparator,
     
 }
 
-fn get_dot(sep: IpgSeparator, 
+fn get_dot<'a>(sep: &'a IpgSeparator, 
             sep_color: Color,
             border: Border) 
-            -> Element<'static, app::Message>{
+            -> Element<'a, app::Message>{
     
     let color = if sep.dot_fill {
         sep_color
@@ -209,9 +209,9 @@ fn get_dot(sep: IpgSeparator,
     .into()
 }
 
-fn get_label(sep: IpgSeparator,
+fn get_label<'a>(sep: &'a IpgSeparator,
             sep_color: Color) 
-            -> Element<'static, app::Message> {
+            -> Element<'a, app::Message> {
 
     let q_1: Element<Message, Theme, Renderer> = Quad {
         width: Length::Fixed(sep.label_left_width),
@@ -224,7 +224,7 @@ fn get_label(sep: IpgSeparator,
         ..separator(sep_color.into())
     }.into();
 
-    let lbl = match sep.label {
+    let lbl = match &sep.label {
         Some(lbl) => lbl,
         None => panic!("Separator: A label is required for IpgSeparatorType::Label.")
     };
@@ -238,9 +238,9 @@ fn get_label(sep: IpgSeparator,
                         .into()
 }
 
-fn get_line(sep: IpgSeparator,
+fn get_line<'a>(sep: &'a IpgSeparator,
             sep_color: Color) 
-            -> Element<'static, app::Message> {
+            -> Element<'a, app::Message> {
     Quad {
         width: sep.width,
         height: sep.height,
@@ -249,8 +249,8 @@ fn get_line(sep: IpgSeparator,
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgSeparatorParam {
     DotCount,
     DotFill,
@@ -268,8 +268,8 @@ pub enum IpgSeparatorParam {
 
 
 pub fn separator_item_update(sep: &mut IpgSeparator,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_separator_update(item);
@@ -319,7 +319,7 @@ pub fn separator_item_update(sep: &mut IpgSeparator,
 
 }
 
-fn try_extract_separator_update(update_obj: PyObject) -> IpgSeparatorParam {
+fn try_extract_separator_update(update_obj: &PyObject) -> IpgSeparatorParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgSeparatorParam>(py);
@@ -331,8 +331,8 @@ fn try_extract_separator_update(update_obj: PyObject) -> IpgSeparatorParam {
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgSeparatorStyleParam {
     IpgColor,
     RbgaColor,
@@ -341,8 +341,8 @@ pub enum IpgSeparatorStyleParam {
 }
 
 pub fn separator_style_update_item(style: &mut IpgSeparatorStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_separator_style_update(item);
     let name = "SeparatorStyle".to_string();
@@ -364,7 +364,7 @@ pub fn separator_style_update_item(style: &mut IpgSeparatorStyle,
     }
 }
 
-fn try_extract_separator_style_update(update_obj: PyObject) -> IpgSeparatorStyleParam {
+fn try_extract_separator_style_update(update_obj: &PyObject) -> IpgSeparatorStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgSeparatorStyleParam>(py);
@@ -375,12 +375,12 @@ fn try_extract_separator_style_update(update_obj: PyObject) -> IpgSeparatorStyle
     })
 }
 
-pub fn get_sep_style(style: Option<IpgWidgets>) -> Option<IpgSeparatorStyle>{
+pub fn get_sep_style(style: Option<&IpgWidgets>) -> Option<IpgSeparatorStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgSeparatorStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }

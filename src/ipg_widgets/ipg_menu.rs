@@ -36,7 +36,6 @@ pub struct IpgMenu {
     pub menu_style_id: Option<usize>, // style_id of add_menu_style()
     pub theme: Theme,
     pub show: bool,
-    pub user_data: Option<PyObject>,
     pub is_checked: bool,
     pub is_toggled: bool,
 }
@@ -58,7 +57,6 @@ impl IpgMenu {
         menu_style_id: Option<usize>,
         theme: Theme,
         show: bool,
-        user_data: Option<PyObject>,
     ) -> Self {
         Self {
             id,
@@ -76,7 +74,6 @@ impl IpgMenu {
             menu_style_id,
             theme,
             show,
-            user_data,
             is_checked: false,
             is_toggled: false,
         }
@@ -168,15 +165,15 @@ impl IpgMenuStyle {
 }
 
 
-pub fn construct_menu<'a>(mn: IpgMenu, 
+pub fn construct_menu<'a>(mn: &'a IpgMenu, 
                         mut content: Vec<Element<'a, app::Message>>,
-                        bar_style_opt: Option<IpgWidgets>,
-                        menu_style_opt: Option<IpgWidgets>)
+                        bar_style_opt: Option<&IpgWidgets>,
+                        menu_style_opt: Option<&IpgWidgets>)
                         -> Element<'a, app::Message, Theme, Renderer> {
     
     let mut item_spacings = vec![0.0; mn.bar_items];
     if mn.item_spacing.is_some() {
-        let spacings = mn.item_spacing.unwrap();
+        let spacings = mn.item_spacing.clone().unwrap();
         if spacings.len() == 1 {
             item_spacings = vec![spacings[0]; mn.bar_items]
         } else if spacings.len() != mn.bar_items {
@@ -191,12 +188,12 @@ pub fn construct_menu<'a>(mn: IpgMenu,
     } else if mn.item_widths.len() != mn.bar_items {
         panic!("Menu item widths: The number of widths {} must be 1 or match the number of bar items {}.", mn.item_widths.len(), mn.bar_items)
     } else {
-        mn.item_widths
+        mn.item_widths.clone()
     };
     
     let mut item_offsets = vec![0.0; mn.bar_items];
     if mn.item_offset.is_some() {
-        let offsets = mn.item_offset.unwrap();
+        let offsets = mn.item_offset.clone().unwrap();
         if offsets.len() == 1 {
             item_offsets = vec![offsets[0]; mn.bar_items]
         } else if offsets.len() != mn.bar_items {
@@ -379,8 +376,8 @@ fn get_mb_styling(theme: &Theme,
 
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgMenuParam {
     BarHeight,
     BarHeightFill,
@@ -392,8 +389,8 @@ pub enum IpgMenuParam {
 }
 
 pub fn menu_item_update(mn: &mut IpgMenu,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_menu_update(item);
@@ -432,7 +429,7 @@ pub fn menu_item_update(mn: &mut IpgMenu,
 
 }
 
-pub fn try_extract_menu_update(update_obj: PyObject) -> IpgMenuParam {
+pub fn try_extract_menu_update(update_obj: &PyObject) -> IpgMenuParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgMenuParam>(py);
@@ -443,8 +440,8 @@ pub fn try_extract_menu_update(update_obj: PyObject) -> IpgMenuParam {
     })
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgMenuBarStyleParam {
     BaseIpgColor,
     BaseRgbaColor,
@@ -459,8 +456,8 @@ pub enum IpgMenuBarStyleParam {
 }
 
 pub fn menu_bar_style_update_item(style: &mut IpgMenuBarStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_menu_bar_style_update(item);
     let name = "BarStyle".to_string();
@@ -501,12 +498,12 @@ pub fn menu_bar_style_update_item(style: &mut IpgMenuBarStyle,
     }
 }
 
-fn get_menu_bar_style(style: Option<IpgWidgets>) -> Option<IpgMenuBarStyle>{
+fn get_menu_bar_style(style: Option<&IpgWidgets>) -> Option<IpgMenuBarStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgMenuBarStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }
@@ -515,7 +512,7 @@ fn get_menu_bar_style(style: Option<IpgWidgets>) -> Option<IpgMenuBarStyle>{
     }
 }
 
-pub fn try_extract_menu_bar_style_update(update_obj: PyObject) -> IpgMenuBarStyleParam {
+pub fn try_extract_menu_bar_style_update(update_obj: &PyObject) -> IpgMenuBarStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgMenuBarStyleParam>(py);
@@ -526,8 +523,8 @@ pub fn try_extract_menu_bar_style_update(update_obj: PyObject) -> IpgMenuBarStyl
     })
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgMenuStyleParam {
     BaseIpgColor,
     BaseRgbaColor,
@@ -548,8 +545,8 @@ pub enum IpgMenuStyleParam {
 }
 
 pub fn menu_style_update_item(style: &mut IpgMenuStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_menu_style_update(item);
     let name = "MenuStyle".to_string();
@@ -610,12 +607,12 @@ pub fn menu_style_update_item(style: &mut IpgMenuStyle,
     }
 }
 
-fn get_menu_style(style: Option<IpgWidgets>) -> Option<IpgMenuStyle>{
+fn get_menu_style(style: Option<&IpgWidgets>) -> Option<IpgMenuStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgMenuStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }
@@ -624,7 +621,7 @@ fn get_menu_style(style: Option<IpgWidgets>) -> Option<IpgMenuStyle>{
     }
 }
 
-pub fn try_extract_menu_style_update(update_obj: PyObject) -> IpgMenuStyleParam {
+pub fn try_extract_menu_style_update(update_obj: &PyObject) -> IpgMenuStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgMenuStyleParam>(py);

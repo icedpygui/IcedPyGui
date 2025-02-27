@@ -5,10 +5,7 @@ use super::helpers::{get_width, try_extract_boolean,
     try_extract_f64, try_extract_ipg_color, 
     try_extract_ipg_horizontal_alignment, 
     try_extract_rgba_color, try_extract_string};
-use super::callbacks::{
-    set_or_get_widget_callback_data, 
-    WidgetCallbackIn, WidgetCallbackOut
-};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
 use super::ipg_enums::{IpgHorizontalAlignment, IpgWidgets};
 use iced::widget::text::LineHeight;
 use iced::widget::toggler::{self, Status};
@@ -18,13 +15,10 @@ use iced::widget::Toggler;
 use iced::{alignment, Color, Element, Length, Theme};
 
 
-
 #[derive(Debug, Clone)]
 pub struct IpgToggler {
     pub id: usize,
     pub show: bool,
-    pub user_data: Option<PyObject>,
-
     pub is_toggled: bool,
     pub label: Option<String>,
     pub width: Length,
@@ -40,8 +34,6 @@ impl IpgToggler {
     pub fn new( 
         id: usize,
         show: bool,
-        user_data: Option<PyObject>,
-
         label: Option<String>,
         width: Length,
         size: f32,
@@ -54,7 +46,6 @@ impl IpgToggler {
         Self {
             id,
             show,
-            user_data,
             is_toggled: false,
             label,
             width,
@@ -120,9 +111,9 @@ pub enum TOGMessage {
 }
 
 
-pub fn construct_toggler(tog: IpgToggler, 
-                        style_opt: Option<IpgWidgets>,
-                        ) -> Option<Element<'static, app::Message>> {
+pub fn construct_toggler<'a>(tog: &'a IpgToggler, 
+                        style_opt: Option<&IpgWidgets>) 
+                        -> Option<Element<'a, app::Message>> {
     
     if !tog.show {
         return None
@@ -130,15 +121,15 @@ pub fn construct_toggler(tog: IpgToggler,
 
     let style = get_toggler_style(style_opt);
 
-    let text_alignment = get_text_alignment(tog.text_alignment);
+    let text_alignment = get_text_alignment(&tog.text_alignment);
 
-    let label = match tog.label {
+    let label = match &tog.label {
         Some(label) => label,
-        None => "".to_string(),
+        None => &"".to_string(),
     };
 
     let ipg_tog: Element<TOGMessage> = Toggler::new(tog.is_toggled)
-                                                    .label(label)
+                                                    .label(label.clone())
                                                     .on_toggle(TOGMessage::Toggled)
                                                     .size(tog.size)
                                                     .width(tog.width)
@@ -163,20 +154,17 @@ pub fn toggle_callback(state: &mut IpgState, id: usize, message: TOGMessage) {
     match message {
         TOGMessage::Toggled(on_toggle) => {
             wci.on_toggle = Some(on_toggle);
-            let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.on_toggle = Some(on_toggle);
-            wco.event_name = "toggled".to_string();
-            process_callback(wco);
+            let _ = set_or_get_widget_callback_data(state, wci);
+            process_callback(id, "toggled".to_string(), on_toggle);
         }
     }
 }
 
-pub fn process_callback(wco: WidgetCallbackOut) 
+pub fn process_callback(id: usize, event_name: String, toggled: bool) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -185,32 +173,30 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Toggler callback could not be found with id {}", wco.id),
+        None => panic!("Toggler callback could not be found with id {}", id),
     };
 
+    let user_data_opt = app_cbs.user_data.get(&id);
+
     Python::with_gil(|py| {
-            if wco.user_data.is_some() {
-                let user_data = match wco.user_data {
-                    Some(ud) => ud,
-                    None => panic!("User Data could not be found in Toggler callback"),
-                };
+            if user_data_opt.is_some() {
                 let res = callback.call1(py, (
-                                                                    wco.id,
-                                                                    wco.on_toggle,  
-                                                                    user_data
+                                                                    id,
+                                                                    toggled,  
+                                                                    user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Toggler: 2 parameters (id, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Toggler: 3 parameters (id, toggled, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    wco.id,
-                                                                    wco.on_toggle,  
+                                                                    id,
+                                                                    toggled,  
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Toggler: 1 parameter (id) is required or a python error in this function. {er}"),
+                    Err(er) => panic!("Toggler: 2 parameter (id, toggled) is required or a python error in this function. {er}"),
                 }
             } 
     });
@@ -221,7 +207,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
 
 
 #[derive(Debug, Clone, PartialEq)]
-#[pyclass]
+#[pyclass(eq, eq_int)]
 pub enum IpgTogglerParam {
     HorizontalAlignment,
     Label,
@@ -235,8 +221,8 @@ pub enum IpgTogglerParam {
 
 
 pub fn toggler_item_update(tog: &mut IpgToggler,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_toggler_update(item);
@@ -280,7 +266,7 @@ pub fn toggler_item_update(tog: &mut IpgToggler,
 }
 
 
-pub fn try_extract_toggler_update(update_obj: PyObject) -> IpgTogglerParam {
+pub fn try_extract_toggler_update(update_obj: &PyObject) -> IpgTogglerParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgTogglerParam>(py);
@@ -291,7 +277,7 @@ pub fn try_extract_toggler_update(update_obj: PyObject) -> IpgTogglerParam {
     })
 }
 
-fn get_text_alignment(ta: IpgHorizontalAlignment) -> alignment::Horizontal {
+fn get_text_alignment(ta: &IpgHorizontalAlignment) -> alignment::Horizontal {
     match ta {
         IpgHorizontalAlignment::Left => alignment::Horizontal::Left,
         IpgHorizontalAlignment::Center => alignment::Horizontal::Center,
@@ -373,8 +359,8 @@ pub fn get_styling(theme: &Theme, status: Status,
 
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgTogglerStyleParam {
     BackgroundIpgColor,
     BackgroundRbgaColor,
@@ -398,8 +384,8 @@ pub enum IpgTogglerStyleParam {
 }
 
 pub fn toggler_style_update_item(style: &mut IpgTogglerStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_toggler_style_update(item);
     let name = "ogglerStyle".to_string();
@@ -469,12 +455,12 @@ pub fn toggler_style_update_item(style: &mut IpgTogglerStyle,
     }
 }
 
-pub fn get_toggler_style(style: Option<IpgWidgets>) -> Option<IpgTogglerStyle>{
+pub fn get_toggler_style(style: Option<&IpgWidgets>) -> Option<IpgTogglerStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgTogglerStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }
@@ -483,7 +469,7 @@ pub fn get_toggler_style(style: Option<IpgWidgets>) -> Option<IpgTogglerStyle>{
     }
 }
 
-pub fn try_extract_toggler_style_update(update_obj: PyObject) -> IpgTogglerStyleParam {
+pub fn try_extract_toggler_style_update(update_obj: &PyObject) -> IpgTogglerStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgTogglerStyleParam>(py);

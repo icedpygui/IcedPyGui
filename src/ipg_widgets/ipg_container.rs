@@ -96,15 +96,15 @@ impl IpgContainerStyle {
 }
 
 
-pub fn construct_container(con: IpgContainer, 
-                            mut content: Vec<Element<Message>>,
-                            style_opt: Option<IpgWidgets> ) 
-                            -> Element<Message> {
+pub fn construct_container<'a>(con: &'a IpgContainer, 
+                            mut content: Vec<Element<'a, Message>>,
+                            style_opt: Option<&IpgWidgets> ) 
+                            -> Element<'a, Message> {
     
     if !con.show {return horizontal_space().into()}
 
-    let align_h = get_horizontal_alignment(con.align_x);
-    let align_v = get_vertical_alignment(con.align_y);
+    let align_h = get_horizontal_alignment(&con.align_x);
+    let align_v = get_vertical_alignment(&con.align_y);
     let style = get_cont_style(style_opt);
 
     // Since a container can have only one element and the 
@@ -131,8 +131,8 @@ pub fn construct_container(con: IpgContainer,
     
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgContainerParam {
     AlignX,
     AlignY,
@@ -147,8 +147,8 @@ pub enum IpgContainerParam {
 }
 
 pub fn container_item_update(cont: &mut IpgContainer,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_container_update(item);
@@ -197,7 +197,7 @@ pub fn container_item_update(cont: &mut IpgContainer,
     }
 }
 
-pub fn try_extract_container_update(update_obj: PyObject) -> IpgContainerParam {
+pub fn try_extract_container_update(update_obj: &PyObject) -> IpgContainerParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgContainerParam>(py);
@@ -208,12 +208,12 @@ pub fn try_extract_container_update(update_obj: PyObject) -> IpgContainerParam {
     })
 }
 
-pub fn get_cont_style(style: Option<IpgWidgets>) -> Option<IpgContainerStyle>{
+pub fn get_cont_style(style: Option<&IpgWidgets>) -> Option<IpgContainerStyle>{
     match style {
         Some(st) => {
             match st {
                 IpgWidgets::IpgContainerStyle(style) => {
-                    Some(style)
+                    Some(style.clone())
                 }
                 _ => None,
             }
@@ -264,8 +264,8 @@ pub fn get_styling(theme: &Theme,
     
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgContainerStyleParam {
     BackgroundIpgColor,
     BackgroundRgbaColor,
@@ -282,8 +282,8 @@ pub enum IpgContainerStyleParam {
 }
 
 pub fn container_style_update_item(style: &mut IpgContainerStyle,
-                            item: PyObject,
-                            value: PyObject,) 
+                            item: &PyObject,
+                            value: &PyObject,) 
 {
     let update = try_extract_container_style_update(item);
     let name = "ContainerStyle".to_string();
@@ -332,7 +332,7 @@ pub fn container_style_update_item(style: &mut IpgContainerStyle,
 
 }
 
-pub fn try_extract_container_style_update(update_obj: PyObject) -> IpgContainerStyleParam {
+pub fn try_extract_container_style_update(update_obj: &PyObject) -> IpgContainerStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgContainerStyleParam>(py);

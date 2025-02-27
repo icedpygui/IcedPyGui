@@ -21,8 +21,6 @@ pub struct IpgColorPicker {
     pub id: usize,
     pub show: bool,
     pub color: Color,
-    pub user_data: Option<PyObject>,
-
     //button related
     pub label: String,
     pub width: Length,
@@ -39,7 +37,6 @@ impl IpgColorPicker {
         id: usize,
         show: bool,
         color: Color,
-        user_data: Option<PyObject>,
         // button related
         label: String,
         width: Length,
@@ -54,7 +51,6 @@ impl IpgColorPicker {
             id,
             show,
             color,
-            user_data,
             // button related
             label,
             width,
@@ -122,14 +118,14 @@ pub enum ColPikMessage {
 }
 
 
-pub fn construct_color_picker(cp: IpgColorPicker,
-                                style_opt: Option<IpgWidgets>,
-                                ) -> Option<Element<'static, Message>> {
+pub fn construct_color_picker<'a>(cp: &'a IpgColorPicker,
+                                style_opt: Option<&IpgWidgets>,
+                                ) -> Option<Element<'a, Message>> {
 
     let mut label = text(cp.label.clone());
    
     if cp.style_arrow.is_some() {
-        let arrow = get_bootstrap_arrow(cp.style_arrow.unwrap());
+        let arrow = get_bootstrap_arrow(&cp.style_arrow);
         label = text(arrow).font(iced::Font::with_name("bootstrap-icons"));
     }
 
@@ -169,37 +165,31 @@ pub fn color_picker_callback(state: &mut IpgState, id: usize, message: ColPikMes
         ColPikMessage::OnCancel => {
             wci.id = id;
             wci.value_bool = Some(false);
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_cancel".to_string();
-            process_callback(wco);
+            let _ = set_or_get_widget_callback_data(state, wci);
+            process_callback(id, "on_cancel".to_string(), None);
         },
         ColPikMessage::OnSubmit(color) => {
             wci.id = id;
             wci.value_bool = Some(false);
             wci.color = Some(convert_color_to_list(color));
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_submit".to_string();
-            process_callback(wco);
+            let _ = set_or_get_widget_callback_data(state, wci);
+            process_callback(id, "on_submit".to_string(), Some(convert_color_to_list(color)));
         },
         ColPikMessage::OnPress => {
             wci.id = id;
             wci.value_bool = Some(true);
-            let mut wco = set_or_get_widget_callback_data(state, wci);
-            wco.id = id;
-            wco.event_name = "on_press".to_string();
-            process_callback(wco);
+            let _ = set_or_get_widget_callback_data(state, wci);
+            process_callback(id, "on_press".to_string(), None);
         },
     }
 }
 
 
-fn process_callback(wco: WidgetCallbackOut) 
+fn process_callback(id: usize, event_name: String, color: Option<Vec<f64>>) 
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
 
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -208,28 +198,26 @@ fn process_callback(wco: WidgetCallbackOut)
 
     let callback = match callback_opt {
         Some(cb) => cb,
-        None => panic!("Callback could not be found with id {}", wco.id),
+        None => panic!("Callback could not be found with id {}", id),
     };
+
+    let user_data_opt = app_cbs.user_data.get(&id);
                   
     Python::with_gil(|py| {
-        if wco.user_data.is_some() {
-            let user_data = match wco.user_data {
-                Some(ud) => ud,
-                None => panic!("ColorPicker user_data in callback could not be found"),
-            };
+        if user_data_opt.is_some() && color.is_some() {
             let res = callback.call1(py, (
-                                                                wco.id, 
-                                                                wco.color,
-                                                                user_data
+                                                                id, 
+                                                                color.unwrap(),
+                                                                user_data_opt.unwrap()
                                                                 ));
             match res {
                 Ok(_) => (),
                 Err(er) =>panic!("ColorPicker: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
             }
-        } else  if wco.color.is_some(){
+        } else  if color.is_some() {
             let res = callback.call1(py, (
-                                                                wco.id,
-                                                                wco.color, 
+                                                                id,
+                                                                color.unwrap(), 
                                                                 ));
             match res {
                 Ok(_) => (),
@@ -237,7 +225,7 @@ fn process_callback(wco: WidgetCallbackOut)
             }
         } else {
             let res = callback.call1(py, (
-                                                                wco.id,
+                                                                id,
                                                                 ));
             match res {
                 Ok(_) => (),
@@ -251,8 +239,8 @@ fn process_callback(wco: WidgetCallbackOut)
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgColorPickerParam {
     ArrowStyle,
     Clip,
@@ -269,8 +257,8 @@ pub enum IpgColorPickerParam {
 }
 
 pub fn color_picker_update(cp: &mut IpgColorPicker,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             ) 
 {
     let update = try_extract_cp_update(item);
@@ -323,7 +311,7 @@ pub fn color_picker_update(cp: &mut IpgColorPicker,
     }
 }
 
-pub fn try_extract_cp_update(update_obj: PyObject) -> IpgColorPickerParam {
+pub fn try_extract_cp_update(update_obj: &PyObject) -> IpgColorPickerParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgColorPickerParam>(py);
@@ -334,8 +322,8 @@ pub fn try_extract_cp_update(update_obj: PyObject) -> IpgColorPickerParam {
     })
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgColorPickerStyleParam {
     BackgroundIpgColor,
     BackgroundRbgaColor,
@@ -355,8 +343,8 @@ pub enum IpgColorPickerStyleParam {
 }
 
 pub fn color_picker_style_update_item(style: &mut IpgColorPickerStyle,
-                                        item: PyObject,
-                                        value: PyObject,) 
+                                        item: &PyObject,
+                                        value: &PyObject,) 
 {
 
     let update = try_extract_color_picker_style_update(item);
@@ -415,7 +403,7 @@ pub fn color_picker_style_update_item(style: &mut IpgColorPickerStyle,
     }
 }
 
-pub fn try_extract_color_picker_style_update(update_obj: PyObject) -> IpgColorPickerStyleParam {
+pub fn try_extract_color_picker_style_update(update_obj: &PyObject) -> IpgColorPickerStyleParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgColorPickerStyleParam>(py);
@@ -426,7 +414,7 @@ pub fn try_extract_color_picker_style_update(update_obj: PyObject) -> IpgColorPi
     })
 }
 
-fn get_cp_style(style: Option<IpgWidgets>) -> Option<IpgButtonStyle>{
+fn get_cp_style(style: Option<&IpgWidgets>) -> Option<IpgButtonStyle>{
     match style {
         Some(st) => {
             match st {
@@ -436,7 +424,7 @@ fn get_cp_style(style: Option<IpgWidgets>) -> Option<IpgButtonStyle>{
                         background_color: style.background_color,
                         background_color_hovered: style.background_color_hovered,
                         border_color: style.border_color,
-                        border_radius: style.border_radius,
+                        border_radius: style.border_radius.clone(),
                         border_width: style.border_width,
                         shadow_color: style.shadow_color,
                         shadow_offset_x: style.shadow_offset_x,

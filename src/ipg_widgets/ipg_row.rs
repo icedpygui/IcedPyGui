@@ -86,8 +86,8 @@ pub enum IpgRowParam {
 }
 
 pub fn row_item_update(col: &mut IpgRow,
-                            item: PyObject,
-                            value: PyObject,
+                            item: &PyObject,
+                            value: &PyObject,
                             )
 {
     let update = try_extract_row_update(item);
@@ -124,7 +124,7 @@ pub fn row_item_update(col: &mut IpgRow,
     }
 }
 
-pub fn try_extract_row_update(update_obj: PyObject) -> IpgRowParam {
+pub fn try_extract_row_update(update_obj: &PyObject) -> IpgRowParam {
 
     Python::with_gil(|py| {
         let res = update_obj.extract::<IpgRowParam>(py);
