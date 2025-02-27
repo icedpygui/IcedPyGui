@@ -48,8 +48,8 @@ impl IpgColumn {
     }
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgColumnParam {
     Align,
     Clip,

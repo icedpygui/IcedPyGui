@@ -115,7 +115,7 @@ pub enum TIMMessage {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
 pub enum IpgTimerParam {
     DurationMs,
@@ -390,7 +390,7 @@ fn disabled(style: button::Style) -> button::Style {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
 pub enum IpgTimerStyleParam {
     BackgroundIpgColor,

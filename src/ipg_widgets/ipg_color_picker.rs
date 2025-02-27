@@ -3,10 +3,13 @@ use crate::graphics::colors::get_color;
 use crate::{access_callbacks, IpgState};
 use crate::app::Message;
 use crate::style::styling::IpgStyleStandard;
-use super::helpers::{get_height, get_padding_f64, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32, try_extract_vec_f64};
-use super::ipg_button::{self, get_bootstrap_arrow, try_extract_button_arrow, IpgButtonArrow, IpgButtonStyle};
-use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut 
-                       };
+use super::helpers::{get_height, get_padding_f64, get_width, 
+    try_extract_boolean, try_extract_f64, try_extract_ipg_color, 
+    try_extract_rgba_color, try_extract_string, try_extract_style_standard, 
+    try_extract_vec_f32, try_extract_vec_f64};
+use super::ipg_button::{self, get_bootstrap_arrow, 
+    try_extract_button_arrow, IpgButtonArrow, IpgButtonStyle};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
 use super::ipg_enums::IpgWidgets;
 
 use iced::widget::{text, Button};

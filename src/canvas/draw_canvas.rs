@@ -35,8 +35,9 @@ pub enum IpgWidget {
     FreeHand(IpgFreeHand),
 }
 
-#[pyclass]
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq,)]
+#[pyclass(eq, eq_int)]
 pub enum IpgDrawMode {
     #[default]
     Display,

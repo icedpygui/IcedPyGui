@@ -6,8 +6,8 @@ use palette::color_difference::Wcag21RelativeContrast;
 use pyo3::pyclass;
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgStyleStandard {
     Primary,
     Success,

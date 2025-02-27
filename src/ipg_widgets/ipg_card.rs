@@ -2,14 +2,14 @@
 use crate::app::Message;
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_string};
 use crate::{access_callbacks, IpgState};
-use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut
-};
+use super::callbacks::WidgetCallbackIn;
 use super::helpers::try_extract_u64;
+use super::ipg_enums::IpgWidgets;
 
-use iced::{Color, Element, Length, Padding};
+use iced::{Element, Length, Padding};
 use iced::widget::{Column, Space, Text};
 
-use crate::iced_aw_widgets::card::Card;
+use crate::iced_aw_widgets::card::{Card, CardStyles};
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -80,48 +80,35 @@ pub enum CardMessage {
     OnClose,
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct IpgCardStyle {
-    pub id: usize,
-    pub background_color: Option<Color>,
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum IpgCardStyle {
+    Primary,
+    Secondary,
+    Success,
+    Danger,
+    Warning,
+    Info,
+    Light,
+    Dark,
+    White,
+    Default,
 }
 
-impl IpgCardStyle {
-    pub fn new(
-        id: usize,
-        background_color: Option<Color>,
-    ) -> Self {
-        Self {
-            id,
-            background_color,
-        }
-    }
-}
+pub fn construct_card<'a>(crd: &'a IpgCard,
+                            style_opt: Option<&'a IpgWidgets>) 
+                            -> Option<Element<'a, Message>> {
 
-// #[derive(Debug, Clone, PartialEq)]
-// #[pyclass(eq, eq_int)]
-// pub enum IpgCardStyle {
-//     Primary,
-//     Secondary,
-//     Success,
-//     Danger,
-//     Warning,
-//     Info,
-//     Light,
-//     Dark,
-//     White,
-//     Default,
-// }
-
-pub fn construct_card<'a>(crd: &'a IpgCard) -> Element<'a, Message> {
-
+    if !crd.show {return None}
     if !crd.is_open {
         let sp: Element<CardMessage> = Space::new(0.0, 0.0).into();
         let sp_mapped: Element<Message> = sp.map(move |message| Message::Card(crd.id, message));
-        return sp_mapped
+        return Some(sp_mapped)
     }
 
-    let style = get_card_style_from_obj(&crd.style);
+    let card_style = get_card_style(style_opt);
+
+    let style = get_style(card_style);
 
     let head: Element<CardMessage> = Text::new(crd.head.clone())
                                                 .width(Length::Fill)
@@ -156,14 +143,14 @@ pub fn construct_card<'a>(crd: &'a IpgCard) -> Element<'a, Message> {
                                                 .style(style)
                                                 .into();
 
-    card.map(move |message| Message::Card(crd.id, message))
+    Some(card.map(move |message| Message::Card(crd.id, message)))
     
 }
 
-pub fn card_callback(state: &mut IpgState, id: usize, message: CardMessage) {
+pub fn card_callback(_state: &mut IpgState, id: usize, message: CardMessage) {
     match message {
         CardMessage::OnClose => {
-            let wci: WidgetCallbackIn = 
+            let _ = 
                 WidgetCallbackIn{
                     id,
                     value_bool: Some(false),
@@ -219,7 +206,7 @@ pub fn process_callback(id: usize, event_name: String)
 }
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
 pub enum IpgCardParam {
     Head,
@@ -260,29 +247,40 @@ pub fn card_item_update(crd: &mut IpgCard,
     }
 }
 
+pub fn get_card_style(style: Option<&IpgWidgets>) -> Option<IpgCardStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgCardStyle(style) => {
+                    Some(style.clone())
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
 
-// pub fn get_card_style_from_obj(style_opt: &Option<PyObject>) -> CardStyles {
+pub fn get_style(style_opt: Option<IpgCardStyle>) -> CardStyles {
 
-//     let style_obj = match style_opt {
-//         Some(st) => st,
-//         None => return CardStyles::Primary,
-//     };
+    let ipg_style = match style_opt {
+        Some(st) => st,
+        None => return CardStyles::Primary,
+    };
 
-//     let ipg_card_style = try_extract_card_style(style_obj);
-
-//     match ipg_card_style {
-//         IpgCardStyle::Primary => CardStyles::Primary,
-//         IpgCardStyle::Secondary => CardStyles::Secondary, 
-//         IpgCardStyle::Success => CardStyles::Success, 
-//         IpgCardStyle::Danger => CardStyles::Danger, 
-//         IpgCardStyle::Warning => CardStyles::Warning,
-//         IpgCardStyle::Info => CardStyles::Info, 
-//         IpgCardStyle::Light => CardStyles::Light, 
-//         IpgCardStyle::Dark => CardStyles::Dark, 
-//         IpgCardStyle::White => CardStyles::White, 
-//         IpgCardStyle::Default => CardStyles::Default,
-//     }
-// }
+    match ipg_style {
+        IpgCardStyle::Primary => CardStyles::Primary,
+        IpgCardStyle::Secondary => CardStyles::Secondary, 
+        IpgCardStyle::Success => CardStyles::Success, 
+        IpgCardStyle::Danger => CardStyles::Danger, 
+        IpgCardStyle::Warning => CardStyles::Warning,
+        IpgCardStyle::Info => CardStyles::Info, 
+        IpgCardStyle::Light => CardStyles::Light, 
+        IpgCardStyle::Dark => CardStyles::Dark, 
+        IpgCardStyle::White => CardStyles::White, 
+        IpgCardStyle::Default => CardStyles::Default,
+    }
+}
 
 
 pub fn try_extract_card_style(style_obj: &PyObject) -> IpgCardStyle {
@@ -305,4 +303,10 @@ pub fn try_extract_card_update(update_obj: &PyObject) -> IpgCardParam {
             Err(_) => panic!("Card update extraction failed."),
         }
     })
+}
+
+pub fn card_style_update(style: &mut IpgCardStyle,
+                        item: &PyObject,
+                        value: &PyObject,) {
+
 }

@@ -91,8 +91,8 @@ pub fn construct_text<'a>(text: &'a IpgText)
 }
 
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgTextParam {
     Content,
     // Font,

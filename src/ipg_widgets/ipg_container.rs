@@ -98,7 +98,7 @@ impl IpgContainerStyle {
 
 pub fn construct_container<'a>(con: &'a IpgContainer, 
                             mut content: Vec<Element<'a, Message>>,
-                            style_opt: Option<&IpgWidgets> ) 
+                            style_opt: Option<&'a IpgWidgets> ) 
                             -> Element<'a, Message> {
     
     if !con.show {return horizontal_space().into()}
@@ -208,7 +208,7 @@ pub fn try_extract_container_update(update_obj: &PyObject) -> IpgContainerParam 
     })
 }
 
-pub fn get_cont_style(style: Option<&IpgWidgets>) -> Option<IpgContainerStyle>{
+pub fn get_cont_style<'a>(style: Option<&'a IpgWidgets>) -> Option<IpgContainerStyle>{
     match style {
         Some(st) => {
             match st {

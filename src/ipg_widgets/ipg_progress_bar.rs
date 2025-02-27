@@ -84,7 +84,7 @@ impl IpgProgressBarStyle {
 
 
 pub fn construct_progress_bar<'a>(bar: &'a IpgProgressBar, 
-                            style_opt: Option<&IpgWidgets>) 
+                            style_opt: Option<&'a IpgWidgets>) 
                             -> Option<Element<'a, app::Message>> {
     
     if !bar.show {

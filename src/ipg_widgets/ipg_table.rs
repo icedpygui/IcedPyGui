@@ -10,9 +10,8 @@ use iced::widget::scrollable::{Anchor, Scrollbar};
 use iced::{Length, Padding, Renderer, Theme};
 use iced::widget::{column, row, scrollable};
 
-use polars::frame::DataFrame;
+// use polars::frame::DataFrame;
 use pyo3::{pyclass, PyObject, Python};
-use pyo3::types::IntoPyDict;
 
 use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn, WidgetCallbackOut};
@@ -49,7 +48,6 @@ pub struct IpgTable {
         pub scroller_bar_width: f32,
         pub scroller_margin: f32,
         pub data: DataFrame,
-        pub user_data: Option<PyObject>,
         header_id: scrollable::Id,
         body_id: scrollable::Id,
         footer_id: Option<scrollable::Id>,
@@ -84,7 +82,6 @@ impl IpgTable {
         scroller_bar_width: f32,
         scroller_margin: f32,
         data: DataFrame,
-        user_data: Option<PyObject>,
         ) -> Self {
         Self {
             id,
@@ -114,7 +111,6 @@ impl IpgTable {
             scroller_bar_width,
             scroller_margin,
             data,
-            user_data,
             header_id: scrollable::Id::unique(),
             body_id: scrollable::Id::unique(),
             footer_id: Some(scrollable::Id::unique()),
@@ -123,8 +119,8 @@ impl IpgTable {
 }
 
 
-#[derive(Debug, Clone, Copy)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgTableRowHighLight {
     Darker,
     Lighter,
@@ -440,7 +436,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     } else if wco.event_name == "on_scroll" {
                         callback.call1(py, (
                             wco.id,
-                            wco.scroll_pos.into_py_dict_bound(py),  
+                            wco.scroll_pos,  
                             user_data
                             ))
                     } else {
@@ -468,7 +464,7 @@ pub fn process_callback(wco: WidgetCallbackOut)
                     } else if wco.event_name == "on_scroll" {
                         callback.call1(py, (
                             wco.id,
-                            wco.scroll_pos.into_py_dict_bound(py),  
+                            wco.scroll_pos,  
                             ))
                     } else {
                         panic!("Table callback: Event name {} could not be found", wco.event_name)
@@ -484,8 +480,8 @@ pub fn process_callback(wco: WidgetCallbackOut)
          
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgTableParam {
     Title,
     ColumnWidths,

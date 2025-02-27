@@ -1,15 +1,15 @@
 //! ipg_opaque
 use iced::mouse::Interaction;
-use iced::{Color, Element, Length, Theme};
-use iced::widget::{container, horizontal_space, mouse_area, opaque, Container};
+use iced::{Color, Element, Length};
+use iced::widget::{horizontal_space, mouse_area, opaque, Container};
 use pyo3::{pyclass, PyObject, Python};
 
 use crate::{access_callbacks, IpgState};
 use crate::app::Message;
 
-use super::callbacks::{container_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_horizontal_alignment, get_vertical_alignment, try_extract_boolean};
-use super::ipg_enums::{IpgHorizontalAlignment, IpgVerticalAlignment};
+use super::ipg_container::{self, get_cont_style};
+use super::ipg_enums::{IpgHorizontalAlignment, IpgVerticalAlignment, IpgWidgets};
 
 
 #[derive(Debug, Clone)]
@@ -68,7 +68,7 @@ impl IpgOpaqueStyle {
 
 pub fn construct_opaque<'a>(op: &'a IpgOpaque, 
                         mut content: Vec<Element<'a, Message>>, 
-                        style: Option<&'a &IpgOpaqueStyle> ) 
+                        style_opt: Option<&'a IpgWidgets> ) 
                         -> Element<'a, Message> {
 
     let new_content = if content.is_empty() {
@@ -79,6 +79,7 @@ pub fn construct_opaque<'a>(op: &'a IpgOpaque,
 
     let align_h = get_horizontal_alignment(&op.align_x);
     let align_v = get_vertical_alignment(&op.align_y);
+    let style = get_cont_style(style_opt);
 
     let cont: Element<'a, Message> = Container::new(new_content)
                 .width(op.width)
@@ -86,8 +87,8 @@ pub fn construct_opaque<'a>(op: &'a IpgOpaque,
                 .align_x(align_h)
                 .align_y(align_v)
                 .style(move|theme|
-                    get_styling(theme, 
-                        style,
+                    ipg_container::get_styling(theme, 
+                        style.clone(),
                         ))
                 .into();
     
@@ -102,29 +103,6 @@ pub fn construct_opaque<'a>(op: &'a IpgOpaque,
     
 }
 
-
-pub fn get_styling(theme: &Theme,
-                    style_opt: Option<&IpgOpaqueStyle>,  
-                    ) -> container::Style {
-    
-    if style_opt.is_none() {
-        return container::transparent(theme);
-    }
-
-    let style = style_opt.unwrap();
-
-    let background_color = if style.background_color.is_some() {
-        style.background_color.unwrap()
-    } else {
-        Color::TRANSPARENT
-    };
-
-    container::Style {
-        background: Some(background_color.into()),
-        ..Default::default()
-    }
-    
-}
 
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]

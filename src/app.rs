@@ -639,7 +639,7 @@ fn get_children<'a>(parents: &Vec<ParentChildIds>,
 }
 
 
-fn get_container<'a>(state: &IpgState, 
+fn get_container<'a>(state: &'a IpgState, 
                     id: &usize, 
                     content: Vec<Element<'a, Message>>,
                     canvas_state: &'a IpgCanvasState,
@@ -757,7 +757,13 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                     construct_button(btn, style_opt)
                 },
                 IpgWidgets::IpgCard(crd) => {
-                    Some(construct_card(crd))
+                    let style_opt = match crd.style_id {
+                        Some(id) => {
+                            state.widgets.get(&id).map(|st|st)
+                        },
+                        None => None,
+                    };
+                    construct_card(crd, style_opt)
                 },
                 IpgWidgets::IpgCheckBox(chk) => {
                     let style_opt = match chk.style_id {
@@ -802,27 +808,27 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                     construct_picklist(pick, style_opt)
                 },
                 IpgWidgets::IpgProgressBar(bar) => {
-                    let style_opt = match bar.style_id.clone() {
+                    let style_opt = match bar.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st)
                         },
                         None => None,
                     };
                     construct_progress_bar(bar, style_opt)
                 },
                 IpgWidgets::IpgRadio(radio) => {
-                    let style_opt = match radio.style_id.clone() {
+                    let style_opt = match radio.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st)
                         },
                         None => None,
                     };
                     construct_radio(radio, style_opt)
                 },
                 IpgWidgets::IpgRule(rule) => {
-                    let style_opt = match rule.style_id.clone() {
+                    let style_opt = match rule.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st)
                         },
                         None => None,
                     };
@@ -832,9 +838,9 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                     construct_selectable_text(sltxt)
                 },
                 IpgWidgets::IpgSeparator(sep) => {
-                    let style_opt = match sep.style_id.clone() {
+                    let style_opt = match sep.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st.clone())
+                            state.widgets.get(&id).map(|st|st)
                         },
                         None => None,
                     };

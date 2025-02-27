@@ -261,7 +261,7 @@ pub fn process_callback(id: usize, event_name: String,
 {
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+    let callback_present = app_cbs.callbacks.get(&(id, event_name));
        
     let callback_opt = match callback_present {
         Some(cb) => cb,
@@ -286,7 +286,7 @@ pub fn process_callback(id: usize, event_name: String,
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Scrollable: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Scrollable: 5 parameters (id, dict, dict, dict, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = callback.call1(py, (
@@ -297,7 +297,7 @@ pub fn process_callback(id: usize, event_name: String,
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Scrollable: 2 parameters (id, value,) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Scrollable: 4 parameters (id, dict. dict, dict) are required or a python error in this function. {er}"),
                 }
             } 
     });

@@ -72,8 +72,8 @@ fn get_alignment(align: IpgAlignment) -> Alignment {
     }
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgRowParam {
     Align,
     Clip,

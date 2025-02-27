@@ -18,7 +18,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
 
-use polars::frame::DataFrame;
+// use polars::frame::DataFrame;
 
 use iced::window::{self, Position};
 use iced::{Color, Font, Length, Point, Radians, Rectangle, Size, Theme, Vector};
@@ -587,7 +587,7 @@ impl IPG {
         };
 
         if on_resize.is_some() {
-            add_callback_to_mutex(id, "on_resize".to_string(), on_resize);
+            add_callback_to_mutex(id, "on_resize".to_string(), on_resize, user_data);
         }
 
         state.windows_str_ids.insert(window_id.clone(), id);
@@ -615,7 +615,6 @@ impl IPG {
                                             level.clone(),
                                             scale_factor,
                                             debug,
-                                            user_data.clone(),
                                             )));
         
         state.windows.push(IpgWindow::new(
@@ -634,7 +633,6 @@ impl IPG {
                                         level,
                                         scale_factor,
                                         debug,
-                                        user_data,
                                         ));
         state.last_id = id;
         drop(state);
@@ -941,7 +939,7 @@ impl IPG {
         let id = self.get_id(gen_id);
 
         if on_select.is_some() {
-            add_callback_to_mutex(id, "on_select".to_string(), on_select);
+            add_callback_to_mutex(id, "on_select".to_string(), on_select, user_data);
         }
 
         let spacing = bar_spacing.unwrap_or(0.0);
@@ -976,24 +974,23 @@ impl IPG {
         set_state_cont_wnd_ids(&mut state, &window_id, container_id, self.id, "add_menu".to_string());
 
         state.containers.insert(id, IpgContainers::IpgMenu(
-                            IpgMenu::new(
-                                id,
-                                bar_items,
-                                menu_items,
-                                bar_width,
-                                item_widths,
-                                spacing,
-                                padding,
-                                height,
-                                check_bounds_width,
-                                item_spacing,
-                                item_offset,
-                                menu_bar_style,
-                                menu_style,
-                                self.theme.clone(),
-                                show,
-                                user_data,
-                                )));
+            IpgMenu::new(
+                id,
+                bar_items,
+                menu_items,
+                bar_width,
+                item_widths,
+                spacing,
+                padding,
+                height,
+                check_bounds_width,
+                item_spacing,
+                item_offset,
+                menu_bar_style,
+                menu_style,
+                self.theme.clone(),
+                show,
+                )));
 
         state.last_id = id;
         drop(state);
@@ -1471,7 +1468,7 @@ impl IPG {
         self.id += 1;
 
         if on_scroll.is_some() {
-            add_callback_to_mutex(self.id, "on_scroll".to_string(), on_scroll);
+            add_callback_to_mutex(self.id, "on_scroll".to_string(), on_scroll, user_data);
         }
         // For scrollable the fill doesn't work well so as long as the fixed is
         // larger than the window, it will fill whatever space is left.
@@ -1505,7 +1502,6 @@ impl IPG {
                 v_bar_margin,
                 v_scroller_width,
                 v_bar_alignment,
-                user_data,
                 style_id,
                 )));
         state.last_id = self.id;
@@ -1682,10 +1678,10 @@ impl IPG {
         let mut table_width = column_widths.iter().sum();
         table_width += scroller_bar_width + scroller_margin + 10.0;
 
-        add_callback_to_mutex(id, "on_press".to_string(), None);
-        add_callback_to_mutex(id, "on_release".to_string(), None);
-        add_callback_to_mutex(id, "on_exit".to_string(), None);
-        add_callback_to_mutex(id, "on_enter".to_string(), None);
+        add_callback_to_mutex(id, "on_press".to_string(), None, None);
+        add_callback_to_mutex(id, "on_release".to_string(), None, None);
+        add_callback_to_mutex(id, "on_exit".to_string(), None, None);
+        add_callback_to_mutex(id, "on_enter".to_string(), None, None);
 
         set_state_of_container(id, window_id.clone(), Some(table_id.clone()), prt_id);
 
@@ -1693,36 +1689,36 @@ impl IPG {
 
         set_state_cont_wnd_ids(&mut state, &window_id, table_id, id, "add_table".to_string());
 
-        state.containers.insert(id, IpgContainers::IpgTable(IpgTable::new( 
-                                                    id,
-                                                    title,
-                                                    column_widths,
-                                                    height,
-                                                    width,
-                                                    header_enabled,
-                                                    control_row_enabled,
-                                                    footer_enabled,
-                                                    data_row_wise,
-                                                    date_column_wise,
-                                                    row_highlight,
-                                                    highlight_amount,
-                                                    column_spacing,
-                                                    row_spacing,
-                                                    row_max_height,
-                                                    divider_width,
-                                                    resize_columns_enabled,
-                                                    min_column_width,
-                                                    cell_padding,
-                                                    show,
-                                                    resize_offset,
-                                                    table_width_fixed,
-                                                    table_width,
-                                                    scroller_width,
-                                                    scroller_bar_width,
-                                                    scroller_margin,
-                                                    data,
-                                                    user_data,
-                                                    )));
+        state.containers.insert(id, IpgContainers::IpgTable(
+            IpgTable::new( 
+                id,
+                title,
+                column_widths,
+                height,
+                width,
+                header_enabled,
+                control_row_enabled,
+                footer_enabled,
+                data_row_wise,
+                date_column_wise,
+                row_highlight,
+                highlight_amount,
+                column_spacing,
+                row_spacing,
+                row_max_height,
+                divider_width,
+                resize_columns_enabled,
+                min_column_width,
+                cell_padding,
+                show,
+                resize_offset,
+                table_width_fixed,
+                table_width,
+                scroller_width,
+                scroller_bar_width,
+                scroller_margin,
+                data,
+                )));
         state.last_id = self.id;
         drop(state);
         Ok(id)
@@ -1905,12 +1901,18 @@ impl IPG {
     }
 
     #[pyo3(signature = (parent_id, head, body,      
-                        is_open=true, min_max_id=None, foot=None, 
-                        gen_id=None, close_size=15.0, on_close=None, 
-                        width=None, height=None, width_fill=false, height_fill=false, 
-                        max_width=f32::INFINITY, max_height=f32::INFINITY, 
-                        padding_head=vec![5.0], padding_body=vec![5.0], padding_foot=vec![5.0],
-                        style=None, show=true, user_data=None))]
+                        is_open=true, min_max_id=None, 
+                        foot=None, gen_id=None, close_size=15.0, 
+                        on_close=None, width=None, width_fill=false
+                        , height=None, height_fill=false, 
+                        max_width=f32::INFINITY, 
+                        max_height=f32::INFINITY, 
+                        padding_head=vec![5.0], 
+                        padding_body=vec![5.0], 
+                        padding_foot=vec![5.0],
+                        style_id=None, 
+                        show=true, 
+                        user_data=None))]
     fn add_card(&mut self,
                 parent_id: String, 
                 head: String,
@@ -1923,15 +1925,15 @@ impl IPG {
                 close_size: f32,
                 on_close: Option<PyObject>,
                 width: Option<f32>,
-                height: Option<f32>,
                 width_fill: bool,
+                height: Option<f32>,
                 height_fill: bool,
                 max_width: f32,
                 max_height: f32,
                 padding_head: Vec<f64>,
                 padding_body: Vec<f64>,
                 padding_foot: Vec<f64>,
-                style: Option<PyObject>,
+                style_id: Option<usize>,
                 show: bool,
                 user_data: Option<PyObject>, 
                 ) -> PyResult<usize> 
@@ -1969,7 +1971,7 @@ impl IPG {
                 head,
                 body,
                 foot,
-                style,
+                style_id,
                 show,
                 )));
 
@@ -2150,7 +2152,11 @@ impl IPG {
                         width=None, height=None, width_fill=false, 
                         height_fill=false, padding=vec![5.0], clip=false, 
                         style_id=None, style_standard=None, 
-                        style_arrow=None, user_data=None, show=false, 
+                        style_arrow=None,
+                        user_data_on_press=None,
+                        user_data_on_submit=None,
+                        user_data_on_cancel=None,
+                        show=false, 
                         ))]
     fn add_color_picker(
                         &mut self,
@@ -2171,22 +2177,24 @@ impl IPG {
                         style_id: Option<usize>,
                         style_standard: Option<IpgStyleStandard>,
                         style_arrow: Option<IpgButtonArrow>,
-                        user_data: Option<PyObject>,
+                        user_data_on_press: Option<PyObject>,
+                        user_data_on_submit: Option<PyObject>,
+                        user_data_on_cancel: Option<PyObject>,
                         show: bool,
                         ) -> PyResult<usize> 
     {
         let id = self.get_id(gen_id);
 
         if on_press.is_some() {
-            add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data);
+            add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data_on_press);
         }
 
         if on_submit.is_some() {
-            add_callback_to_mutex(id, "on_submit".to_string(), on_submit, user_data);
+            add_callback_to_mutex(id, "on_submit".to_string(), on_submit, user_data_on_submit);
         }
 
         if on_cancel.is_some() {
-            add_callback_to_mutex(id, "on_cancel".to_string(), on_cancel, user_data);
+            add_callback_to_mutex(id, "on_cancel".to_string(), on_cancel, user_data_on_cancel);
         }
 
         let color = Color::from(color_rgba);
@@ -4781,7 +4789,7 @@ impl IPG {
             callbacks.callback_events.insert((self.id, "key released".to_string()), py);
         }
         if user_data.is_some() {
-            callbacks.user_data.push((self.id, user_data.unwrap()));
+            callbacks.user_data.insert(self.id, user_data.unwrap());
         }
        
         drop(callbacks);
@@ -4852,7 +4860,7 @@ impl IPG {
         }
 
         if user_data.is_some() {
-            callbacks.user_data.push((self.id, user_data.unwrap()));
+            callbacks.user_data.insert(self.id, user_data.unwrap());
         }
         
         drop(callbacks);
@@ -4927,7 +4935,7 @@ impl IPG {
         }
        
         if user_data.is_some() {
-            callbacks.user_data.push((self.id, user_data.unwrap()));
+            callbacks.user_data.insert(self.id, user_data.unwrap());
         }
         
         drop(callbacks);
@@ -5038,7 +5046,7 @@ impl IPG {
 
         Ok((strong, weak, text)) 
     }
-
+    #[pyo3(signature = (gen_id=None))]
     fn get_id(&mut self, gen_id: Option<usize>) -> usize
     {
         // When an id is generated, it is put into the self.gen_ids.
@@ -5075,104 +5083,108 @@ fn match_widget(widget: &mut IpgWidgets,
         IpgWidgets::IpgCard(crd) => {
             card_item_update(crd, item, value);
         },
+        IpgWidgets::IpgCardStyle(card_style) => {
+            card_style_update(crd_style, item, value);
+        },
         IpgWidgets::IpgCheckBox(chk) => {
-            checkbox_item_update(chk, item, value);
+                checkbox_item_update(chk, item, value);
         },
         IpgWidgets::IpgCheckboxStyle(chk_style) => {
-            checkbox_style_update_item(chk_style, item, value);
-        },
+                checkbox_style_update_item(chk_style, item, value);
+            },
         IpgWidgets::IpgColorPicker(cp) => {
-            color_picker_update(cp, item, value);
-        },
+                color_picker_update(cp, item, value);
+            },
         IpgWidgets::IpgColorPickerStyle(cp_style) => {
-            color_picker_style_update_item(cp_style, item, value);
-        },
+                color_picker_style_update_item(cp_style, item, value);
+            },
         IpgWidgets::IpgContainerStyle(cont_style) => {
-            container_style_update_item(cont_style, item, value);
-        },
+                container_style_update_item(cont_style, item, value);
+            },
         IpgWidgets::IpgDatePicker(dp) => {
-            date_picker_item_update(dp, item, value);
-        },
+                date_picker_item_update(dp, item, value);
+            },
         IpgWidgets::IpgImage(img) => {
-            image_item_update(img, item, value);
-        },
+                image_item_update(img, item, value);
+            },
         IpgWidgets::IpgMenuStyle(style) => {
-            menu_style_update_item(style, item, value);
-        },
+                menu_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgMenuBarStyle(style) => {
-            menu_bar_style_update_item(style, item, value);
-        },
+                menu_bar_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgPickList(pl) => {
-            pick_list_item_update(pl, item, value);
-        },
+                pick_list_item_update(pl, item, value);
+            },
         IpgWidgets::IpgPickListStyle(style) => {
-            pick_list_style_update_item(style, item, value);
-        },
+                pick_list_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgProgressBar(pb) => {
-            progress_bar_item_update(pb, item, value);
-        },
+                progress_bar_item_update(pb, item, value);
+            },
         IpgWidgets::IpgProgressBarStyle(style) => {
-            progress_bar_style_update_item(style, item, value);
-        },
+                progress_bar_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgRadio(rd) => {
-            radio_item_update(rd, item, value);
-        },
+                radio_item_update(rd, item, value);
+            },
         IpgWidgets::IpgRadioStyle(style) => {
-            radio_style_update_item(style, item, value);
-        },
+                radio_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgRule(_) => (),
         IpgWidgets::IpgRuleStyle(style) => {
-            rule_style_update_item(style, item, value);
-        },
+                rule_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgScrollableStyle(style) => {
-            scroll_style_update_item(style, item, value)
-        },
+                scroll_style_update_item(style, item, value)
+            },
         IpgWidgets::IpgSelectableText(st) => {
-            selectable_text_item_update(st, item, value);
-        },
+                selectable_text_item_update(st, item, value);
+            },
         IpgWidgets::IpgSeparator(sep) => {
-            separator_item_update(sep, item, value);
-        },
+                separator_item_update(sep, item, value);
+            },
         IpgWidgets::IpgSeparatorStyle(style) => {
-            separator_style_update_item(style, item, value);
-        },
+                separator_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgSlider(slider) => {
-            slider_item_update(slider, item, value)
-        },
+                slider_item_update(slider, item, value)
+            },
         IpgWidgets::IpgSliderStyle(style) => {
-            slider_style_update_item(style, item, value)
-        },
+                slider_style_update_item(style, item, value)
+            },
         IpgWidgets::IpgSpace(_) => (),
         IpgWidgets::IpgSvg(sg) => {
-            svg_item_update(sg, item, value);
-        },
+                svg_item_update(sg, item, value);
+            },
         IpgWidgets::IpgText(txt) => {
-            text_item_update(txt, item, value);
-        },
+                text_item_update(txt, item, value);
+            },
         IpgWidgets::IpgTextInput(ti) => {
-            text_input_item_update(ti, item, value);
-        },
+                text_input_item_update(ti, item, value);
+            },
         IpgWidgets::IpgTextInputStyle(style) => {
-            text_input_style_update_item(style, item, value);
-        },
+                text_input_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgTimer(tim) => {
-            timer_item_update(tim, item, value);
-        },
+                timer_item_update(tim, item, value);
+            },
         IpgWidgets::IpgTimerStyle(style) => {
-            timer_style_update_item(style, item, value);
-        },
+                timer_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgCanvasTimer(ctim) => {
-            canvas_timer_item_update(ctim, item, value);
-        },
+                canvas_timer_item_update(ctim, item, value);
+            },
         IpgWidgets::IpgCanvasTimerStyle(style) => {
-            canvas_timer_style_update_item(style, item, value);
-        },
+                canvas_timer_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgToggler(tog) => {
-            toggler_item_update(tog, item, value);
-        },
+                toggler_item_update(tog, item, value);
+            },
         IpgWidgets::IpgTogglerStyle(style) => {
-            toggler_style_update_item(style, item, value);
-        },
+                toggler_style_update_item(style, item, value);
+            },
+
     }
 }
 
@@ -5383,7 +5395,7 @@ fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>
         app_cbs.callbacks.insert((id, event_name), py_obj);
 
         if user_data.is_some() {
-            app_cbs.user_data.push((id, user_data.unwrap()))
+            app_cbs.user_data.insert(id, user_data.unwrap());
         }
 
         drop(app_cbs);

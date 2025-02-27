@@ -1,7 +1,6 @@
 //! ipg_mousearea
 use crate::{access_callbacks, IpgState};
 use crate::app::Message;
-use super::callbacks::{container_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::try_extract_boolean;
 
 use iced::widget::MouseArea;
@@ -10,7 +9,6 @@ use iced::widget::Column;
 use iced::mouse::Interaction;
 
 use pyo3::pyclass;
-use pyo3::types::IntoPyDict;
 use pyo3::{PyObject, Python};
 
 
@@ -57,7 +55,7 @@ pub fn construct_mousearea<'a>(m_area: &'a IpgMouseArea,
                             content: Vec<Element<'a, Message>>) 
                             -> Element<'a, Message> {
 
-    let pointer: Interaction = get_interaction(m_area.mouse_pointer.clone());
+    let pointer: Interaction = get_interaction(&m_area.mouse_pointer);
 
     let cont: Element<Message> = Column::with_children(content).into();
 
@@ -78,12 +76,12 @@ pub fn construct_mousearea<'a>(m_area: &'a IpgMouseArea,
         .into()
 }
 
-pub fn get_interaction(pointer: Option<IpgMousePointer>) -> Interaction {
+pub fn get_interaction(pointer: &Option<IpgMousePointer>) -> Interaction {
     if pointer.is_none() {
         return Interaction::None
     }
 
-    match pointer.unwrap() {
+    match pointer.clone().unwrap() {
         IpgMousePointer::None => Interaction::None,
         IpgMousePointer::Idle => Interaction::Idle,
         IpgMousePointer::Pointer => Interaction::Pointer,

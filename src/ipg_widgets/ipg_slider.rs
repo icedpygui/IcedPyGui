@@ -2,7 +2,7 @@
 use crate::graphics::colors::get_color;
 use crate::{access_callbacks, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, 
-    WidgetCallbackIn, WidgetCallbackOut};
+    WidgetCallbackIn};
 
 use super::helpers::{get_radius, get_width, try_extract_ipg_color, 
     try_extract_rgba_color, try_extract_u16, try_extract_vec_f32, 
@@ -145,7 +145,7 @@ pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
         SLMessage::OnChange(value) => {
             wci.value_float_64 = Some(value as f64);
             let _ = set_or_get_widget_callback_data(state, wci);
-            process_callback(is, "on_change".to_string(), Some(value));
+            process_callback(id, "on_change".to_string(), Some(value));
         },
         SLMessage::OnRelease => {
             process_callback(id, "on_release".to_string(), None);

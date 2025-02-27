@@ -1,6 +1,6 @@
 //! callbacks
 #![allow(dead_code)]
-use crate::{access_state, IpgState};
+use crate::IpgState;
 use super::ipg_enums::IpgContainers;
 use super::ipg_table::IpgTableMouse;
 use super::{helpers::{format_date, MONTH_NAMES}, ipg_enums::IpgWidgets, ipg_radio::Choice};
@@ -435,38 +435,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
     
 }
 
-
-pub fn get_set_container_callback_data(wci: WidgetCallbackIn) -> WidgetCallbackOut {
-
-    let mut state = access_state();
-
-    let container_type_opt = state.containers.get_mut(&wci.id);
-
-    let container_type = match container_type_opt {
-        Some(cont) => cont,
-        None => panic!("Container with id {} could not be found", wci.id),
-    };
-    
-    let wco = match container_type {
-        IpgContainers::IpgCanvas(_) => {
-            WidgetCallbackOut::default()
-        },
-        IpgContainers::IpgMouseArea(m_area) => {
-            WidgetCallbackOut{..Default::default()}
-        },
-        IpgContainers::IpgTable(table) => {
-            WidgetCallbackOut{
-                ..Default::default()
-            }
-        }
-        IpgContainers::IpgScrollable(scroll) => {
-            WidgetCallbackOut{..Default::default()}
-        }
-        _ => {WidgetCallbackOut::default()},
-    };
-    drop(state);
-    wco  
-}
 
 pub fn container_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> WidgetCallbackOut {
 

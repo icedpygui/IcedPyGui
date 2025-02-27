@@ -199,8 +199,9 @@ pub struct IpgFreeHand {
     pub completed: bool,
 }
 
-#[pyclass]
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq,)]
+#[pyclass(eq, eq_int)]
 pub enum IpgCanvasWidget {
     None,
     Arc,

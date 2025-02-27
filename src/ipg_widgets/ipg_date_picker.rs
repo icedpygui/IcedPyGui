@@ -3,11 +3,12 @@ use crate::app::{Message, self};
 use crate::{access_callbacks, IpgState};
 use crate::style::styling::IpgStyleStandard;
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
+use super::ipg_enums::IpgWidgets;
 use crate::ICON_FONT_BOOT;
 use super::helpers::{get_padding_f64, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f64, 
     DATE_FORMATS, DAYS, MONTH_NAMES, WEEKDAYS};
-use super::ipg_button::{get_standard_style, get_styling, IpgButtonStyle};
+use super::ipg_button::{self, get_standard_style, IpgButtonStyle};
 
 use iced::advanced::graphics::core::Element;
 use iced::widget::{button, text};
@@ -93,12 +94,14 @@ pub enum DPMessage {
 }   
 
 pub fn construct_date_picker<'a>(dp: &'a IpgDatePicker, 
-                                btn_style_opt: Option<&'a &IpgButtonStyle>) 
+                                btn_style_opt: Option<&'a IpgWidgets>) 
                                 -> Element<'a, Message, Theme, Renderer> {
     
+    let btn_style  = get_widget_style(btn_style_opt);
+
     if !dp.show {
         let cal_show_btn: Element<'a, Message, Theme, Renderer> = 
-            calendar_show_button(dp, btn_style_opt);
+            calendar_show_button(dp, btn_style);
         return cal_show_btn
     }
     
@@ -217,7 +220,7 @@ fn get_days_of_month(year: i32, month: u32) -> i64 {
 }
 
 fn calendar_show_button<'a>(dp: &'a IpgDatePicker, 
-                            btn_style: Option<&'a &IpgButtonStyle>) 
+                            btn_style: Option<IpgButtonStyle>) 
                             -> Element<'a, Message, Theme, Renderer> {
 
     let show_btn: Element<DPMessage, Theme, Renderer> = 
@@ -226,8 +229,8 @@ fn calendar_show_button<'a>(dp: &'a IpgDatePicker,
                                     .height(Length::Shrink)
                                     .width(Length::Shrink)
                                     .style(move|theme, status|
-                                        get_styling(theme, status,
-                                            btn_style, 
+                                        ipg_button::get_styling(theme, status,
+                                            btn_style.clone(), 
                                             dp.button_style_standard.clone()
                                         ))
                                     .into();
@@ -648,5 +651,19 @@ pub fn date_picker_container(_theme: &Theme) -> container::Style {
             color: Color::TRANSPARENT,
         },
         ..Default::default()
+    }
+}
+
+fn get_widget_style<'a>(style: Option<&'a IpgWidgets>) -> Option<IpgButtonStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgButtonStyle(style) => {
+                    Some(style.clone())
+                }
+                _ => None,
+            }
+        },
+        None => None,
     }
 }

@@ -59,8 +59,8 @@ pub fn construct_stack(stk: IpgStack, mut content: Vec<Element<Message>> )
 
 }
 
-#[derive(Debug, Clone)]
-#[pyclass]
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
 pub enum IpgStackParam {
     Show,
 }
