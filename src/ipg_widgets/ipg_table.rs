@@ -29,7 +29,7 @@ pub struct IpgTable {
         pub height: f32,
         pub width: Length,
         pub header_enabled: bool,
-        pub control_row_enabled: bool,
+        pub header_custom_enabled: bool,
         pub footer_enabled: bool,
         pub add_data_row_wise: bool,
         pub add_data_column_wise: bool,
@@ -63,7 +63,7 @@ impl IpgTable {
         height: f32,
         width: Length,
         header_enabled: bool,
-        control_row_enabled: bool,
+        header_custom_enabled: bool,
         footer_enabled: bool,
         add_data_row_wise: bool,
         add_data_column_wise: bool,
@@ -92,7 +92,7 @@ impl IpgTable {
             height,
             width,
             header_enabled,
-            control_row_enabled,
+            header_custom_enabled,
             footer_enabled,
             add_data_row_wise,
             add_data_column_wise,
@@ -140,21 +140,30 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             ) 
                             -> Element<'a, Message, Theme, Renderer> {
     
-    dbg!(&tbl.df);
-
-    let df_columns = tbl.df.get_columns().to_vec();
-  
-    let num_of_columns = df_columns.len();
-
-    let mut columns: Vec<Element<'a, Message, Theme, Renderer>> = vec![];
-    for col in df_columns.iter() {
-        columns.push(text(col.name().to_string()).into());
-    }
+    let columns = 
+        if tbl.header_enabled {
+            let df_columns = tbl.df.get_columns().to_vec();
+            let mut columns: Vec<Element<'a, Message, Theme, Renderer>> = vec![];
+            for col in df_columns.iter() {
+                if tbl.header_custom_enabled {
+                    columns.push(content.remove(0));
+                } else {    
+                    columns.push(text(col.name().to_string()).into());        
+                }
+            }
+            columns
+        } else {
+            let mut columns: Vec<Element<'a, Message, Theme, Renderer>> = vec![];
+            for _ in 0..tbl.column_widths.len() {
+                columns.push(content.remove(0));
+            }
+            columns
+        };
 
     // remove the footer from content, if enabled
     let mut footers = vec![];
     if tbl.footer_enabled {
-        for _ in 0..num_of_columns {
+        for _ in 0..tbl.column_widths.len() {
             footers.insert(0, content.remove(content.len()-1))
         }
     }
@@ -197,7 +206,8 @@ pub fn construct_table<'a>(tbl: IpgTable,
             rows.push(text(s).into());
         }
     }
-    let row_num_vec = vec![0; tbl.df.height()/tbl.df.width()];
+
+    let row_num_vec = vec![0; tbl.df.height()];
     let body: Element<'a, Message, Theme, Renderer> = 
         scrollable(column(row_num_vec.iter().enumerate()
         .map(|(index, _width)| {
@@ -405,96 +415,97 @@ pub fn table_callback(state: &mut IpgState, message: Message) {
 }
 
 
-pub fn process_callback(wco: WidgetCallbackOut) 
-{
-    let app_cbs = access_callbacks();
+// pub fn process_callback(wco: WidgetCallbackOut) 
+// {
+//     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+//     let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
 
-    let callback_opt = match callback_present {
-        Some(cb) => cb,
-        None => return,
-    };
+//     let callback_opt = match callback_present {
+//         Some(cb) => cb,
+//         None => return,
+//     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("Table callback could not be found with id {}", wco.id),
-    };
+//     let callback = match callback_opt {
+//         Some(cb) => cb,
+//         None => panic!("Table callback could not be found with id {}", wco.id),
+//     };
 
-    let table_index: (usize, usize) = match wco.index_table {
-        Some(ti) => ti,
-        None => panic!("Table: Unable to find table index for callback.")
-    };
+//     let table_index: (usize, usize) = match wco.index_table {
+//         Some(ti) => ti,
+//         None => panic!("Table: Unable to find table index for callback.")
+//     };
     
-    Python::with_gil(|py| {
+//     Python::with_gil(|py| {
         
-        if wco.user_data.is_some() {
-            let user_data = wco.user_data.unwrap();
-            let res = 
-                if wco.event_name == "on_button" {
-                    callback.call1(py, (
-                                wco.id,
-                                table_index, 
-                                user_data
-                                ))
-                    } else if wco.event_name == "on_checkbox" || wco.event_name == "on_toggler" {
-                        callback.call1(py, (
-                            wco.id,
-                            table_index,
-                            wco.on_toggle,  
-                            user_data
-                            ))
-                    } else if wco.event_name == "on_scroll" {
-                        callback.call1(py, (
-                            wco.id,
-                            wco.scroll_pos,  
-                            user_data
-                            ))
-                    } else {
-                        panic!("Table callback: Event name {} could not be found", wco.event_name)
-                    };
+//         if wco.user_data.is_some() {
+//             let user_data = wco.user_data.unwrap();
+//             let res = 
+//                 if wco.event_name == "on_button" {
+//                     callback.call1(py, (
+//                                 wco.id,
+//                                 table_index, 
+//                                 user_data
+//                                 ))
+//                     } else if wco.event_name == "on_checkbox" || wco.event_name == "on_toggler" {
+//                         callback.call1(py, (
+//                             wco.id,
+//                             table_index,
+//                             wco.on_toggle,  
+//                             user_data
+//                             ))
+//                     } else if wco.event_name == "on_scroll" {
+//                         callback.call1(py, (
+//                             wco.id,
+//                             wco.scroll_pos,  
+//                             user_data
+//                             ))
+//                     } else {
+//                         panic!("Table callback: Event name {} could not be found", wco.event_name)
+//                     };
                     
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("Table: 4 parameters (id, widget_index, on_toggle, user_data) are required or a python error in this function. {er}"),
-            }
-        } else {
+//             match res {
+//                 Ok(_) => (),
+//                 Err(er) => panic!("Table: 4 parameters (id, widget_index, on_toggle, user_data) are required or a python error in this function. {er}"),
+//             }
+//         } else {
             
-            let res = 
-                if wco.event_name == "on_button" {
-                    callback.call1(py, (
-                                wco.id,
-                                table_index, 
-                                ))
-                    } else if wco.event_name == "on_checkbox" || wco.event_name == "on_toggler" {
-                        callback.call1(py, (
-                            wco.id,
-                            table_index,
-                            wco.on_toggle,  
-                            ))
-                    } else if wco.event_name == "on_scroll" {
-                        callback.call1(py, (
-                            wco.id,
-                            wco.scroll_pos,  
-                            ))
-                    } else {
-                        panic!("Table callback: Event name {} could not be found", wco.event_name)
-                };
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("Table: if on_scroll, 2 parameters (id, scroll_pos), else 3 parameter (id, widget_index, on_toggle) are required or possibly a python error in this function. {er}"),
-            }
-        }
-    });
+//             let res = 
+//                 if wco.event_name == "on_button" {
+//                     callback.call1(py, (
+//                                 wco.id,
+//                                 table_index, 
+//                                 ))
+//                     } else if wco.event_name == "on_checkbox" || wco.event_name == "on_toggler" {
+//                         callback.call1(py, (
+//                             wco.id,
+//                             table_index,
+//                             wco.on_toggle,  
+//                             ))
+//                     } else if wco.event_name == "on_scroll" {
+//                         callback.call1(py, (
+//                             wco.id,
+//                             wco.scroll_pos,  
+//                             ))
+//                     } else {
+//                         panic!("Table callback: Event name {} could not be found", wco.event_name)
+//                 };
+//             match res {
+//                 Ok(_) => (),
+//                 Err(er) => panic!("Table: if on_scroll, 2 parameters (id, scroll_pos), else 3 parameter (id, widget_index, on_toggle) are required or possibly a python error in this function. {er}"),
+//             }
+//         }
+//     });
  
-    drop(app_cbs);
+//     drop(app_cbs);
          
-}
+// }
 
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
 pub enum IpgTableParam {
     Title,
+    PolarsDf,
     ColumnWidths,
     Height,
     Width,
@@ -526,6 +537,9 @@ pub fn table_item_update(
     match update {
         IpgTableParam::Title => {
             table.title = try_extract_string(value, name);
+        },
+        IpgTableParam::PolarsDf => {
+            table.df = value.into();
         },
         IpgTableParam::ColumnWidths => {
             table.column_widths = try_extract_vec_f32(value, name);
@@ -599,6 +613,16 @@ fn try_extract_row_highlight(value: &PyObject) -> IpgTableRowHighLight {
         match res {
             Ok(update) => update,
             Err(_) => panic!("Table update extraction of IpgTableRowHighLight failed"),
+        }
+    })
+}
+
+fn try_extract_polars_df(value: &PyObject) -> DataFrame {
+    Python::with_gil(|py| {
+        let res = value.extract::<DataFrame>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Table update extraction of Polars DataFrame failed"),
         }
     })
 }

@@ -47,11 +47,12 @@ class Books:
         self.delete_count = 0
         self.dp_id = 0
 
-        self.sort_list = ["None", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
+        self.author_sort_list = ["None", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
                           "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
         self.status_list = ["None", "Read", "To Be Read", "Maybe Continue Series", "Final", "Publish Date",
                             "Won't Finish", "Checked"]
         self.source_list = ["None", "Amazon Unlimited", "Amazon", "Library"]
+        
         self.sort_selected = "None"
         
         self.btn_style_id = 0
@@ -126,6 +127,8 @@ class Books:
                                     table_id="table",
                                     parent_id="stack",
                                     title="Books",
+                                    polars_df=self.df,
+                                    header_custom_enabled=True,
                                     column_widths=self.column_widths,
                                     height=self.tbl_height)
         
@@ -156,15 +159,16 @@ class Books:
                             user_data=999999) 
                             # needed large number to indicate new book
                             # other approaches could be used by not calling ope_modal directly
-                            
+                        
             
             if name == "Author":
                 self.ipg.add_pick_list(
                             parent_id=f"header{i}",
-                            options=self.sort_list,
+                            options=self.author_sort_list,
                             on_select=self.filter_books_author,
                             selected=self.sort_selected,
                             width_fill=True)
+               
                 
             if name == "Status":
                 self.ipg.add_pick_list(
@@ -182,76 +186,6 @@ class Books:
                             selected=self.sort_selected,
                             width_fill=True)
                 
-                
-            
-        # Add the rows
-        # make a new dataframe for ids so that the rows can be edited/filtered/updated
-        ids = {}
-        scheme = {}
-        for i in range(0, len(self.column_widths)):
-            ids[str(i)] = []
-            scheme[str(i)] = pl.Int64
-        
-        df_ids = pl.DataFrame(ids, scheme)
-
-        # iter through the rows to create the needed widgets
-        # for the table
-        show = True
-        for i in range(0, len(self.df) + 10):
-            row = []
-            if i >= len(self.df):
-                show=False
-                row = self.fill_with_defaults()
-                row[0] = i
-            else:
-                row = self.df.row(i)
-            
-            ids = {}
-            for k in range(0, len(row)):
-                ids[str(k)] = []
-            for j in range(0, len(row)):
-                if j == 0:
-                    ids[str(j)] = self.ipg.add_button(
-                                    parent_id="table",
-                                    label=f"Edit",
-                                    width=self.column_widths[0],
-                                    style_id=self.btn_style_id,
-                                    text_align_x=IpgHorizontalAlignment.Center,
-                                    on_press=self.open_modal,
-                                    padding=[0.0],
-                                    show = show,
-                                    user_data=i)
-                elif self.column_names[j] == "Url" and row[j] != "":
-                    ids[str(j)] = self.ipg.add_button(
-                                    parent_id="table",
-                                    label=self.column_names[j],
-                                    width=self.column_widths[j],
-                                    style_id=self.btn_style_id,
-                                    text_align_x=IpgHorizontalAlignment.Center,
-                                    on_press=self.show_url,
-                                    padding=[0.0],
-                                    show = show,
-                                    user_data=row[j])
-                else:
-                    ids[str(j)] = self.ipg.add_text(
-                                    parent_id="table",
-                                    content=row[j],
-                                    width_fill=True,
-                                    align_x=IpgHorizontalAlignment.Center,
-                                    align_y=IpgVerticalAlignment.Center,
-                                    show = show)
-            
-            # add this row id ids into the main df
-            new_df = pl.DataFrame(ids)
-            df_ids = pl.concat([df_ids, new_df])
-
-            # extend the list of ids for easier use in the update methods
-            self.list_ids.extend(list(ids.values()))
-        
-        # finally, concat the ids with the data vertically so that they remain together
-        self.df = pl.concat([self.df, df_ids], how="horizontal", rechunk=True)
-        # print(self.df.row(0))
-        
     # ******************************create modal************************************
     def create_modal(self):
 
@@ -345,7 +279,7 @@ class Books:
                             padding=[0.0, 0.0, 0.0, 5.0],
                             on_input=self.input_changed,
                             on_submit=self.on_submit,
-                            user_data=i)
+                            user_data_on_input=i)
                     
             # need to keep the id's for later use in the modal
             self.modal_col_ids.append(id)
@@ -503,8 +437,8 @@ class Books:
             return
         
         # filter the df
-        df = self.df.filter(pl.col('Author').str.to_lowercase().str.starts_with(selected.lower()))
-        self.filter(df)
+        df_filtered = self.df.filter(pl.col('Author').str.to_lowercase().str.starts_with(selected.lower()))
+        
 
 
     def filter_books_status(self, pick_id: int, selected: str):
@@ -531,24 +465,6 @@ class Books:
                 return True
         return False
     
-    
-    def filter(self, df: pl.DataFrame):
-        # select only the columns with the ids
-        keepers = df.select(self.column_id_names)
-        list_to_keep = []
-        
-        for column in keepers.iter_columns():
-            list_to_keep.extend(column.to_list())
-        
-        ids = []    
-        for id in self.list_ids:
-            if id not in list_to_keep:
-                ids.append((id, False))
-            else:
-                # else used because the table might have already been filtered
-                ids.append((id, True))
-            
-        self.ipg.show_items("main", ids)
         
     def reset_filters(self):
         ids = []

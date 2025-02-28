@@ -8,7 +8,7 @@ ipg = IPG()
 # The data returns the item selected and can be named anything.
 # The update items uses the text widget id and the "content" parameter
 # to update.  The value is what you want the content parameter to equal.
-def picked_item(pl_id, data):
+def picked_item(pl_id: int, data: str):
     print(f"pl_id = {pl_id} data = {data}")
 
 
@@ -22,7 +22,7 @@ ipg.add_window("main", "Pick List Demo", 800, 600,
 ipg.add_column(
         window_id="main", 
         container_id="col",
-        align_x=IpgAlignment.Start, 
+        align=IpgAlignment.Start, 
         width_fill=True)
 
 ipg.add_space(

@@ -2417,7 +2417,7 @@ class IPG:
                     width: Optional[float],
                     width_fill: bool=False,
                     header_enabled: bool=True,
-                    control_row_enabled: bool=False,
+                    header_custom_enabled: bool=False,
                     footer_enabled: bool=False,
                     resize_columns_enabled: bool=True,
                     min_column_width: Optional[float]=50.0,
@@ -2453,6 +2453,12 @@ class IPG:
                 Width of the table.
             height: float
                 Height of the table.
+            header_enabled: bool,
+                Whether to have a header row on top
+            header_custom_enabled: bool,
+                Whether to use a custom header, create your own widgets
+            footer_enabled: bool,
+                Whether to have a footer row at the bottom
             parent_id: Optional[str]
                 If parent_id == window_id then not required, 
                 If another container then required.
@@ -2582,7 +2588,9 @@ class IPG:
                         size: Optional[float]=20.0,
                         line_height_pixels: Optional[int],
                         line_height_relative: Optional[float],
-                        user_data: Optional[any]=None,
+                        use_data_on_submit: Optional[any]=None,
+                        user_data_on_submit: Optional[any]=None,
+                        user_data_on_paste: Optional[any]=None,
                         is_secure: bool=False,
                         style_id: Optional[str]=None,
                         show: bool=True,
@@ -2621,7 +2629,9 @@ class IPG:
                 Sets the height of the text box in pixels.
             line_height_relative: Optional[float],
                 Sets the height of the text box with a float.  
-            user_data: any
+            user_data_on_input: any,
+            user_data_on_submit: any,
+            user_data_on_paste: any
                 Any data that might be needed in the callback function.
             is_secure: bool
                 Hides the entered text, for passwords, etc.
