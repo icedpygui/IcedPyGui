@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, OrderedDict, Optional, Tuple, Union
-
+from typing import Any, Callable, List, Optional, Union, DataFrame
 
 class IPG:
     """
@@ -2411,6 +2410,7 @@ class IPG:
                     window_id: str,
                     table_id: str,
                     title: str,
+                    polars_df: DataFrame,
                     column_widths: list,
                     height: float,
                     *,
@@ -2447,6 +2447,8 @@ class IPG:
                 The id of the container.
             title: str
                 Title used for table.
+            polars_df: DataFrame
+                data in polars dataframe format
             width: float
                 Width of the table.
             height: float

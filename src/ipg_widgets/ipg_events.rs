@@ -523,15 +523,16 @@ fn process_keyboard_callback(id: usize,
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Button: 2 parameters (id, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("KeyBoard Event: 3 parameters (id, dict, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = callback.call1(py, (
-                                                                    id,  
+                                                                    id,
+                                                                    hmap_s_s,  
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Button: 1 parameter (id) is required or possibly a python error in this function. {er}"),
+                    Err(er) => panic!("Keyboard Event: 2 parameter (id, dict) is required or possibly a python error in this function. {er}"),
                 }
             } 
     });
@@ -622,7 +623,7 @@ fn process_window_callback(id: usize,
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Button: 3 parameters (id, dict, dict, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Wndow Event: 3 parameters (id, dict, dict, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = callback.call1(py, (
@@ -632,7 +633,7 @@ fn process_window_callback(id: usize,
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Window: 3 parameter (id, dict, dict) is required or possibly a python error in this function. {er}"),
+                    Err(er) => panic!("Wndow Event: 3 parameter (id, dict, dict) is required or possibly a python error in this function. {er}"),
                 }
             } 
     });
@@ -673,7 +674,7 @@ fn process_touch_callback(id: usize,
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Touch: 4 parameters (id, dict, dict, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Touch Event: 4 parameters (id, dict, dict, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = callback.call1(py, (
@@ -683,7 +684,7 @@ fn process_touch_callback(id: usize,
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Button: 3 parameter (id, dict, dict) is required or possibly a python error in this function. {er}"),
+                    Err(er) => panic!("Touch Event: 3 parameter (id, dict, dict) is required or possibly a python error in this function. {er}"),
                 }
             } 
     });

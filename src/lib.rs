@@ -14,6 +14,7 @@ use ipg_widgets::ipg_separator::{separator_item_update, separator_style_update_i
 use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, canvas_timer_style_update_item, 
     IpgCanvasTimer, IpgCanvasTimerParam, IpgCanvasTimerStyle, IpgCanvasTimerStyleParam};
 
+use polars::frame::DataFrame;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -23,6 +24,7 @@ use pyo3::PyObject;
 use iced::window::{self, Position};
 use iced::{Color, Font, Length, Point, Radians, Rectangle, Size, Theme, Vector};
 use iced::widget::text::{self, LineHeight};
+use pyo3_polars::PyDataFrame;
 
 use core::panic;
 use std::collections::HashMap;
@@ -42,8 +44,7 @@ use ipg_widgets::ipg_button::{button_item_update, button_style_update_item,
     IpgButton, IpgButtonArrow, IpgButtonParam, IpgButtonStyle, IpgButtonStyleParam};
 use ipg_widgets::ipg_canvas::{canvas_item_update, IpgCanvas, 
     IpgCanvasGeometryParam, IpgCanvasParam};
-use ipg_widgets::ipg_card::{card_item_update, IpgCard, 
-    IpgCardStyle, IpgCardParam};
+use ipg_widgets::ipg_card::{card_item_update, card_style_update, IpgCard, IpgCardParam, IpgCardStyle, IpgCardStyleParam};
 use ipg_widgets::ipg_checkbox::{checkbox_item_update, checkbox_style_update_item, 
     IpgCheckBox, IpgCheckboxParam, IpgCheckboxStyle, IpgCheckboxStyleParam};
 use ipg_widgets::ipg_column::{column_item_update, IpgColumn, IpgColumnParam};
@@ -1604,13 +1605,14 @@ impl IPG {
     }
     
     #[pyo3(signature = (window_id, table_id, title,
+                        polars_df,
                         column_widths,height,
                         width=None, width_fill=false, 
                         header_enabled=true,
                         control_row_enabled=false,
                         footer_enabled=false,
-                        data_row_wise=true,
-                        date_column_wise=false,
+                        data_row_wise=false,
+                        data_column_wise=false,
                         parent_id=None,
                         row_highlight=None, 
                         highlight_amount=0.15,
@@ -1625,15 +1627,14 @@ impl IPG {
                         scroller_width=10.0,
                         scroller_bar_width=10.0,
                         scroller_margin=0.0,
-                        data=DataFrame::default(),
                         gen_id=None,  
                         show=true,
-                        user_data=None,
                         ))]
     fn add_table(&mut self,
                     window_id: String,
                     table_id: String,
                     title: String,
+                    polars_df: PyDataFrame,
                     column_widths: Vec<f32>,
                     height: f32,
                     // **above required
@@ -1643,7 +1644,7 @@ impl IPG {
                     control_row_enabled: bool,
                     footer_enabled: bool,
                     data_row_wise: bool,
-                    date_column_wise: bool,
+                    data_column_wise: bool,
                     parent_id: Option<String>,
                     row_highlight: Option<IpgTableRowHighLight>,
                     highlight_amount: f32,
@@ -1658,10 +1659,8 @@ impl IPG {
                     scroller_width: f32,
                     scroller_bar_width: f32,
                     scroller_margin: f32,
-                    data: PyDataFrame,
                     gen_id: Option<usize>,
                     show: bool,
-                    user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
     {
 
@@ -1674,10 +1673,17 @@ impl IPG {
             None => window_id.clone(),
         };
 
-        let resize_offset =  (0..column_widths.len()).map(|_| None).collect();
-        let mut table_width = column_widths.iter().sum();
+        let mut resize_offset = vec![];
+        let mut table_width = 0.0;
+
+        for width in column_widths.iter() { 
+            resize_offset.push(Some(0.0));
+            table_width += width;
+        }
         table_width += scroller_bar_width + scroller_margin + 10.0;
 
+        let df: DataFrame = polars_df.into();
+       
         add_callback_to_mutex(id, "on_press".to_string(), None, None);
         add_callback_to_mutex(id, "on_release".to_string(), None, None);
         add_callback_to_mutex(id, "on_exit".to_string(), None, None);
@@ -1693,6 +1699,7 @@ impl IPG {
             IpgTable::new( 
                 id,
                 title,
+                df,
                 column_widths,
                 height,
                 width,
@@ -1700,7 +1707,7 @@ impl IPG {
                 control_row_enabled,
                 footer_enabled,
                 data_row_wise,
-                date_column_wise,
+                data_column_wise,
                 row_highlight,
                 highlight_amount,
                 column_spacing,
@@ -1717,7 +1724,6 @@ impl IPG {
                 scroller_width,
                 scroller_bar_width,
                 scroller_margin,
-                data,
                 )));
         state.last_id = self.id;
         drop(state);
@@ -1845,7 +1851,7 @@ impl IPG {
                         background_color=None, background_rgba=None,
                         background_color_hovered=None, background_rgba_hovered=None,
                         border_color=None, border_rgba=None,
-                        border_radius = vec![0.0], border_width=1.0,
+                        border_radius=vec![0.0], border_width=1.0,
                         shadow_color=None, shadow_rgba=None,
                         shadow_offset_x=0.0, shadow_offset_y=0.0,
                         shadow_blur_radius=1.0,
@@ -1981,26 +1987,83 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = ( 
+    #[pyo3(signature = (parent_id, 
                         background_color=None, 
                         background_rgba=None,
+                        border_radius=10.0, 
+                        border_width=1.0,
+                        border_color=None,
+                        border_rgba=None, 
+                        head_background_color=None,
+                        head_background_rgba=None, 
+                        head_text_color=None,
+                        head_text_rgba=None,
+                        body_background_color=None,
+                        body_background_rgba=None, 
+                        body_text_color=None,
+                        body_text_rgba=None, 
+                        foot_background_color=None,
+                        foot_background_rgba=None, 
+                        foot_text_color=None,
+                        foot_text_rgba=None, 
+                        close_color=None,
+                        close_rgba=None,
                         gen_id=None))]
     fn add_card_style(&mut self,
-                        background_color: Option<IpgColor>,
+                        parent_id: String,
+                        background_color: Option<IpgColor>, 
                         background_rgba: Option<[f32; 4]>,
+                        border_radius: f32, 
+                        border_width: f32, 
+                        border_color: Option<IpgColor>,
+                        border_rgba: Option<[f32; 4]>, 
+                        head_background_color: Option<IpgColor>,
+                        head_background_rgba: Option<[f32; 4]>, 
+                        head_text_color: Option<IpgColor>,
+                        head_text_rgba: Option<[f32; 4]>,
+                        body_background_color: Option<IpgColor>,
+                        body_background_rgba: Option<[f32; 4]>, 
+                        body_text_color: Option<IpgColor>,
+                        body_text_rgba: Option<[f32; 4]>, 
+                        foot_background_color: Option<IpgColor>,
+                        foot_background_rgba: Option<[f32; 4]>, 
+                        foot_text_color: Option<IpgColor>,
+                        foot_text_rgba: Option<[f32; 4]>, 
+                        close_color:Option<IpgColor>,
+                        close_rgba:Option<[f32; 4]>,
                         gen_id: Option<usize>,
                         ) -> PyResult<usize>
     {
         let id = self.get_id(gen_id);
 
-        let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
+        let background: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
+        let border_color: Option<Color> = get_color(border_rgba, border_color, 1.0, false);
+        let head_background: Option<Color> = get_color(head_background_rgba, head_background_color, 1.0, false);
+        let body_background: Option<Color> = get_color(body_background_rgba, body_background_color, 1.0, false);
+        let foot_background: Option<Color> = get_color(foot_background_rgba, foot_background_color, 1.0, false);
+        let head_text_color: Option<Color> = get_color(head_text_rgba, head_text_color, 1.0, false);
+        let body_text_color: Option<Color> = get_color(body_text_rgba, body_text_color, 1.0, false);
+        let foot_text_color: Option<Color> = get_color(foot_text_rgba, foot_text_color, 1.0, false);
+        let close_color: Option<Color> = get_color(close_rgba, close_color, 1.0, false);
+
+        set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgCardStyle(
             IpgCardStyle::new( 
                 id,
-                background_color,
+                background,
+                border_radius,
+                border_width,
+                border_color,
+                head_background, 
+                head_text_color, 
+                body_background, 
+                body_text_color, 
+                foot_background, 
+                foot_text_color, 
+                close_color,
                 )));
 
         state.last_id = id;
@@ -2291,7 +2354,8 @@ impl IPG {
 
     #[pyo3(signature = (parent_id, label="Calendar".to_string(), gen_id=None,
                         size_factor=1.0, padding=vec![0.0], on_submit=None, 
-                        user_data=None, show=false, 
+                        user_data=None, show=true,
+                        show_calendar=false, 
                         button_style_standard=None,
                         button_style_id=None,
                         ))]
@@ -2305,6 +2369,7 @@ impl IPG {
                         on_submit: Option<PyObject>,
                         user_data: Option<PyObject>,
                         show: bool,
+                        show_calendar: bool,
                         button_style_standard: Option<IpgStyleStandard>,
                         button_style_id: Option<usize>,
                         ) -> PyResult<usize> 
@@ -2332,9 +2397,11 @@ impl IPG {
                 size_factor,
                 padding,
                 show,
+                show_calendar,
                 button_style_standard,
                 button_style_id,
                 )));
+
         state.last_id = id;
         drop(state);
         Ok(id)
@@ -5080,11 +5147,11 @@ fn match_widget(widget: &mut IpgWidgets,
         IpgWidgets::IpgButtonStyle(btn_style) => {
             button_style_update_item(btn_style, item, value);
         },
-        IpgWidgets::IpgCard(crd) => {
-            card_item_update(crd, item, value);
+        IpgWidgets::IpgCard(card) => {
+            card_item_update(card, item, value);
         },
         IpgWidgets::IpgCardStyle(card_style) => {
-            card_style_update(crd_style, item, value);
+            card_style_update(card_style, item, value);
         },
         IpgWidgets::IpgCheckBox(chk) => {
                 checkbox_item_update(chk, item, value);
@@ -5263,8 +5330,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgCanvasGeometryParam>()?;
     m.add_class::<IpgDrawMode>()?;
     m.add_class::<IpgCanvasWidget>()?;
-    m.add_class::<IpgCardStyle>()?;
     m.add_class::<IpgCardParam>()?;
+    m.add_class::<IpgCardStyleParam>()?;
     m.add_class::<IpgCheckboxParam>()?;
     m.add_class::<IpgCheckboxStyleParam>()?;
     m.add_class::<IpgColor>()?;

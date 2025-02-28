@@ -1,6 +1,4 @@
 //! Displays a [`Card`].
-//!
-//! *This API requires the following crate features to be activated: card*
 
 // use crate::graphics::bootstrap::{icon_to_string, Bootstrap};
 use crate::graphics::BOOTSTRAP_FONT;
@@ -1010,15 +1008,10 @@ pub enum CardStyles {
     White,
     #[default]
     Default,
-    Custom(Box<dyn StyleSheet<Style = Theme>>),
+    Custom(Appearance),
 }
 
-impl CardStyles {
-    /// Creates a custom [`BadgeStyles`] style variant.
-    pub fn custom(style_sheet: impl StyleSheet<Style = Theme> + 'static) -> Self {
-        Self::Custom(Box::new(style_sheet))
-    }
-}
+
 
 impl StyleSheet for Theme {
     type Style = CardStyles;
@@ -1046,6 +1039,19 @@ impl StyleSheet for Theme {
             foot_text_color: foreground.text,
             ..Appearance::default()
         };
+        let all = |app: Appearance | Appearance{
+            background: app.background,
+            border_radius: app.border_radius,
+            border_width: app.border_width,
+            border_color: app.border_color.into(),
+            head_background: app.head_background.into(),
+            head_text_color: app.head_text_color,
+            body_background: app.body_background.into(),
+            body_text_color: app.body_text_color,
+            foot_background: app.foot_background.into(),
+            foot_text_color: app.foot_text_color,
+            close_color: app.close_color,
+        };
 
         match style {
             CardStyles::Primary => backing_with_text(colors::PRIMARY, colors::WHITE),
@@ -1058,7 +1064,7 @@ impl StyleSheet for Theme {
             CardStyles::Dark => backing_with_text(colors::DARK, colors::WHITE),
             CardStyles::White => backing_only(colors::WHITE),
             CardStyles::Default => backing_only([0.87, 0.87, 0.87].into()),
-            CardStyles::Custom(custom) => custom.active(self),
+            CardStyles::Custom(app) => all(*app),
         }
     }
 }

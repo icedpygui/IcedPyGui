@@ -12,9 +12,9 @@ use super::ipg_button::{self, get_standard_style, IpgButtonStyle};
 
 use iced::advanced::graphics::core::Element;
 use iced::widget::{button, text};
-use iced::{Background, Border, Color, Length, Padding, Renderer, Theme};
+use iced::{Length, Padding, Renderer, Theme};
 use iced::alignment::{self, Alignment};
-use iced::widget::{container, Button, Column, Container, PickList, Row, Space, Text};
+use iced::widget::{Button, Column, Container, PickList, Row, Space, Text};
 
 use chrono::prelude::*;
 use pyo3::{pyclass, PyObject, Python};
@@ -27,6 +27,7 @@ pub struct IpgDatePicker {
     pub size_factor: f32,
     pub padding: Padding,
     pub show: bool,
+    pub show_calendar: bool,
     
     pub selected_format: String,
     pub selected_year: i32,
@@ -51,6 +52,7 @@ impl IpgDatePicker {
         size_factor: f32,
         padding: Padding,
         show: bool,
+        show_calendar: bool,
         button_style_standard: Option<IpgStyleStandard>,
         button_style_id: Option<usize>,
         ) -> Self {
@@ -60,6 +62,7 @@ impl IpgDatePicker {
             size_factor,
             padding,
             show,
+            show_calendar,
 
             selected_format: "YYYY-mm-dd".to_string(),
             selected_year: Utc::now().year(),
@@ -95,91 +98,85 @@ pub enum DPMessage {
 
 pub fn construct_date_picker<'a>(dp: &'a IpgDatePicker, 
                                 btn_style_opt: Option<&'a IpgWidgets>) 
-                                -> Element<'a, Message, Theme, Renderer> {
+                                -> Option<Element<'a, Message, Theme, Renderer>> {
     
     let btn_style  = get_widget_style(btn_style_opt);
 
     if !dp.show {
+        return None;
+    }
+
+    if !dp.show_calendar {
         let cal_show_btn: Element<'a, Message, Theme, Renderer> = 
             calendar_show_button(dp, btn_style);
-        return cal_show_btn
+        return Some(cal_show_btn)
     }
     
-    let width = Length::Fixed(dp.show_width * dp.size_factor);
-    let height = Length::Fixed(dp.show_height * dp.size_factor);
-    
-    let content: Element<Message, Theme, Renderer> = 
-                                    Container::new(Space::new(0.0, 0.0))
-                                                .padding(dp.padding)
-                                                .align_x(alignment::Horizontal::Center)
-                                                .align_y(alignment::Vertical::Center)
-                                                .width(width)
-                                                .height(height)
-                                                .style(|theme| date_picker_container(theme))
-                                                .into();
-    
-    if dp.show {
+    // let content: Element<'a, Message, Theme, Renderer> = 
+    //                                 Container::new(Space::new(0.0, 0.0))
+    //                                             .padding(dp.padding)
+    //                                             .align_x(alignment::Horizontal::Center)
+    //                                             .align_y(alignment::Vertical::Center)
+    //                                             .width(width)
+    //                                             .height(height)
+    //                                             .style(|theme| date_picker_container(theme))
+    //                                             .into();
         
-        let col_content: Element<Message, Theme, Renderer> =
-            Column::with_children(vec![
-                create_first_row_arrows(dp.id, 
-                                        &dp.selected_month, 
-                                        dp.selected_month_index, 
-                                        dp.selected_year,
-                                        dp.size_factor),
-                
-                // Column titles S M T W T F S
-                Row::with_children(vec![Space::with_width(7.0*dp.size_factor).into(), 
-                                        create_day_row(dp.size_factor)])
-                                    .width(Length::Fill).into(),
-                
-                // days of the month
-                Row::with_children(vec![Space::with_width(5.0*dp.size_factor).into(), 
-                                        get_calendar_days(dp.id, 
-                                                            dp.selected_year,
-                                                            dp.selected_month_index,
-                                                            dp.selected_day,
-                                                            dp.size_factor),
-                                        ])
-                                        .width(Length::Fill).into(),
-
-                // close btn and format picklist
-                Row::with_children(vec![Space::with_width(5.0*dp.size_factor).into(), 
-                                        create_select_row(dp.id, 
-                                                            dp.selected_format.clone(), 
-                                                            dp.size_factor),
-                                        ])
-                                        .width(Length::Fill).into(),
-                
-                // bottom submit btn and selected date, if any
-                Row::with_children(vec![Space::with_width(5.0*dp.size_factor).into(),
-                                        create_submit_row(dp.id, 
-                                                            dp.size_factor, 
-                                                            dp.selected_date.clone())
+    let col_content: Element<Message, Theme, Renderer> =
+        Column::with_children(vec![
+            create_first_row_arrows(dp.id, 
+                                    &dp.selected_month, 
+                                    dp.selected_month_index, 
+                                    dp.selected_year,
+                                    dp.size_factor),
+            
+            // Column titles S M T W T F S
+            Row::with_children(vec![Space::with_width(7.0*dp.size_factor).into(), 
+                                    create_day_row(dp.size_factor)])
+                                .width(Length::Fill).into(),
+            
+            // days of the month
+            Row::with_children(vec![Space::with_width(5.0*dp.size_factor).into(), 
+                                    get_calendar_days(dp.id, 
+                                                        dp.selected_year,
+                                                        dp.selected_month_index,
+                                                        dp.selected_day,
+                                                        dp.size_factor),
                                     ])
                                     .width(Length::Fill).into(),
-                
-            ])
-            .spacing(3.0*dp.size_factor)
-            .height(Length::Fill)
-            .width(Length::Fill)
-            .align_x(Alignment::Center)
-            .into();
- 
-        let cont: Element<Message, Theme, Renderer> = Container::new(col_content)
-                                                                    // .style(theme::Container::Box)
-                                                                    .into();
 
-        let modal: Element<Message, Theme, Renderer> = 
-                                    Modal::new(content, cont)
-                                        // .on_blur(Message::DatePicker(DPMessage::HideModal))
-                                        .into();
-        modal
+            // close btn and format picklist
+            Row::with_children(vec![Space::with_width(5.0*dp.size_factor).into(), 
+                                    create_select_row(dp.id, 
+                                                        dp.selected_format.clone(), 
+                                                        dp.size_factor),
+                                    ])
+                                    .width(Length::Fill).into(),
+            
+            // bottom submit btn and selected date, if any
+            Row::with_children(vec![Space::with_width(5.0*dp.size_factor).into(),
+                                    create_submit_row(dp.id, 
+                                                        dp.size_factor, 
+                                                        dp.selected_date.clone())
+                                ])
+                                .width(Length::Fill).into(),
+            
+        ])
+        .spacing(3.0*dp.size_factor)
+        .height(Length::Fill)
+        .width(Length::Fill)
+        .align_x(Alignment::Center)
+        .into();
 
-    } else {
-        content
-    }
-        
+    let width = Length::Fixed(dp.show_width * dp.size_factor);
+    let height = Length::Fixed(dp.show_height * dp.size_factor);
+
+    Some(Container::new(col_content)
+            .width(width)
+            .height(height)
+        // .style(theme::Container::Box)
+        .into())
+
 }
 
 fn icon(unicode: char, size: f32) -> Text<'static> {
@@ -642,17 +639,17 @@ pub fn try_extract_date_picker_update(update_obj: &PyObject) -> IpgDatePickerPar
 }
 
 
-pub fn date_picker_container(_theme: &Theme) -> container::Style {
-    container::Style {
-        background: Some(Background::Color(Color::from_rgba(0.7, 0.5, 0.6, 1.0))),
-        border: Border {
-            radius: 4.0.into(),
-            width: 1.0,
-            color: Color::TRANSPARENT,
-        },
-        ..Default::default()
-    }
-}
+// pub fn date_picker_container(_theme: &Theme) -> container::Style {
+//     container::Style {
+//         background: Some(Background::Color(Color::from_rgba(0.7, 0.5, 0.6, 1.0))),
+//         border: Border {
+//             radius: 4.0.into(),
+//             width: 1.0,
+//             color: Color::TRANSPARENT,
+//         },
+//         ..Default::default()
+//     }
+// }
 
 fn get_widget_style<'a>(style: Option<&'a IpgWidgets>) -> Option<IpgButtonStyle>{
     match style {

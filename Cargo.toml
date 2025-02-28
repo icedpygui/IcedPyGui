@@ -18,8 +18,8 @@ iced = { version = "0.13.1", features = ["advanced", "canvas", "debug", "highlig
                                         "lazy", "smol", "svg", "tokio", "multi-window", "auto-detect-theme"] }
 iced_aw = {git = "https://github.com/iced-rs/iced_aw", rev = "3485f3a"}
 
-# polars = "0.46.0"
-# pyo3-polars = "0.20.0"
+polars = { version="0.46.0", features=["strings", "lazy"]}
+pyo3-polars = "0.20.0"
 
 tokio = { version = "1.0", features = ["fs"]}
 rfd = "0.13"

@@ -3,13 +3,12 @@
 use crate::app::Message;
 use crate::table;
 use crate::{access_callbacks, IpgState};
-use crate::table::table::{body_container, dummy_container, 
-    single_row_container};
+use crate::table::table::{body_container, dummy_container,          single_row_container};
 
 use iced::advanced::graphics::core::Element;
 use iced::widget::scrollable::{Anchor, Scrollbar};
 use iced::{Length, Padding, Renderer, Theme};
-use iced::widget::{column, row, scrollable, text};
+use iced::widget::{column, row, scrollable};
 
 use polars::frame::DataFrame;
 use pyo3::{pyclass, PyObject, Python};
@@ -139,16 +138,13 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             mut content: Vec<Element<'a, Message, Theme, Renderer>>, 
                             ) 
                             -> Element<'a, Message, Theme, Renderer> {
-    
-    dbg!(&tbl.df);
+    let num_of_columns = tbl.column_widths.len();
 
-    let df_columns = tbl.df.get_columns().to_vec();
-  
-    let num_of_columns = df_columns.len();
+    // remove the headers from the content
+    let mut columns  = vec![];
 
-    let mut columns: Vec<Element<'a, Message, Theme, Renderer>> = vec![];
-    for col in df_columns.iter() {
-        columns.push(text(col.name().to_string()).into());
+    for _ in 0..num_of_columns {
+        columns.push(content.remove(0));
     }
 
     // remove the footer from content, if enabled
@@ -189,17 +185,10 @@ pub fn construct_table<'a>(tbl: IpgTable,
         None
     };
     
-    let mut rows: Vec<Element<'a, Message, Theme, Renderer>> = vec![];
-    for idx in 0..tbl.df.height() {
-        let row_items = tbl.df.get_row(idx).unwrap();
-        for item in row_items.0.iter() {
-            let s = item.to_string();
-            rows.push(text(s).into());
-        }
-    }
-    let row_num_vec = vec![0; tbl.df.height()/tbl.df.width()];
+    let column_count = tbl.column_widths.len();
+    let rows = vec![0; content.len()/column_count];
     let body: Element<'a, Message, Theme, Renderer> = 
-        scrollable(column(row_num_vec.iter().enumerate()
+        scrollable(column(rows.iter().enumerate()
         .map(|(index, _width)| {
             table::style::wrapper::row(
                 iced::widget::row(column_widths
@@ -207,7 +196,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                     .enumerate()
                     .map(|(idx, width)| {
                         body_container(
-                            rows.remove(0),
+                            content.remove(0),
                             *width,
                             tbl.resize_offset[idx],
                             min_column_width,

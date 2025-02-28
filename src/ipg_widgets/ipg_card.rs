@@ -1,15 +1,16 @@
 //! ipg_card
 use crate::app::Message;
+use crate::graphics::colors::get_color;
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_string};
 use crate::{access_callbacks, IpgState};
 use super::callbacks::WidgetCallbackIn;
-use super::helpers::try_extract_u64;
+use super::helpers::{try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_u64};
 use super::ipg_enums::IpgWidgets;
 
-use iced::{Element, Length, Padding};
+use iced::{Color, Element, Length, Padding};
 use iced::widget::{Column, Space, Text};
 
-use crate::iced_aw_widgets::card::{Card, CardStyles};
+use crate::iced_aw_widgets::card::{self, Card, CardStyles};
 
 use pyo3::{pyclass, PyObject, Python};
 
@@ -80,20 +81,54 @@ pub enum CardMessage {
     OnClose,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[pyclass(eq, eq_int)]
-pub enum IpgCardStyle {
-    Primary,
-    Secondary,
-    Success,
-    Danger,
-    Warning,
-    Info,
-    Light,
-    Dark,
-    White,
-    Default,
+#[derive(Debug, Clone)]
+pub struct IpgCardStyle {
+    pub id: usize,
+    pub background: Option<Color>, 
+    pub border_radius: f32, 
+    pub border_width: f32, 
+    pub border_color: Option<Color>, 
+    pub head_background: Option<Color>, 
+    pub head_text_color: Option<Color>, 
+    pub body_background: Option<Color>, 
+    pub body_text_color: Option<Color>, 
+    pub foot_background: Option<Color>, 
+    pub foot_text_color: Option<Color>, 
+    pub close_color:Option<Color>,
 }
+
+impl IpgCardStyle {
+    pub fn new(
+        id: usize,
+        background: Option<Color>, 
+        border_radius: f32, 
+        border_width: f32, 
+        border_color: Option<Color>, 
+        head_background: Option<Color>, 
+        head_text_color: Option<Color>, 
+        body_background: Option<Color>, 
+        body_text_color: Option<Color>, 
+        foot_background: Option<Color>, 
+        foot_text_color: Option<Color>, 
+        close_color:Option<Color>,
+    ) -> Self {
+        Self {
+            id,
+            background,
+            border_radius,
+            border_width,
+            border_color,
+            head_background, 
+            head_text_color, 
+            body_background, 
+            body_text_color, 
+            foot_background, 
+            foot_text_color, 
+            close_color,
+        }
+    }
+}
+
 
 pub fn construct_card<'a>(crd: &'a IpgCard,
                             style_opt: Option<&'a IpgWidgets>) 
@@ -108,7 +143,7 @@ pub fn construct_card<'a>(crd: &'a IpgCard,
 
     let card_style = get_card_style(style_opt);
 
-    let style = get_style(card_style);
+    let style = custom_style(card_style);
 
     let head: Element<CardMessage> = Text::new(crd.head.clone())
                                                 .width(Length::Fill)
@@ -261,37 +296,55 @@ pub fn get_card_style(style: Option<&IpgWidgets>) -> Option<IpgCardStyle>{
     }
 }
 
-pub fn get_style(style_opt: Option<IpgCardStyle>) -> CardStyles {
+fn custom_style(ipg_style_opt: Option<IpgCardStyle>) -> CardStyles {
 
-    let ipg_style = match style_opt {
-        Some(st) => st,
-        None => return CardStyles::Primary,
+    let ipg_style = if ipg_style_opt.is_none() {
+        IpgCardStyle{
+            id: 0,
+            background: None,
+            border_radius: 10.0,
+            border_width: 1.0,
+            border_color: None,
+            head_background: None,
+            head_text_color: None,
+            body_background: None,
+            body_text_color: None,
+            foot_background: None,
+            foot_text_color: None,
+            close_color: None,
+        }
+    } else {
+        ipg_style_opt.unwrap()
     };
 
-    match ipg_style {
-        IpgCardStyle::Primary => CardStyles::Primary,
-        IpgCardStyle::Secondary => CardStyles::Secondary, 
-        IpgCardStyle::Success => CardStyles::Success, 
-        IpgCardStyle::Danger => CardStyles::Danger, 
-        IpgCardStyle::Warning => CardStyles::Warning,
-        IpgCardStyle::Info => CardStyles::Info, 
-        IpgCardStyle::Light => CardStyles::Light, 
-        IpgCardStyle::Dark => CardStyles::Dark, 
-        IpgCardStyle::White => CardStyles::White, 
-        IpgCardStyle::Default => CardStyles::Default,
-    }
-}
+    let background = ipg_style.background.unwrap_or_else(||Color::WHITE).into();
+    let border_radius = ipg_style.border_radius;
+    let border_width = ipg_style.border_width;
+    let border_color = ipg_style.border_color.unwrap_or_else(||[0.87, 0.87, 0.87].into()).into();
+    let head_background = ipg_style.head_background.unwrap_or_else(||[0.87, 0.87, 0.87].into()).into();
+    let head_text_color = ipg_style.head_text_color.unwrap_or_else(||Color::BLACK);
+    let body_background = ipg_style.body_background.unwrap_or_else(||Color::TRANSPARENT).into();
+    let body_text_color = ipg_style.body_text_color.unwrap_or_else(||Color::BLACK);
+    let foot_background = ipg_style.foot_background.unwrap_or_else(||Color::TRANSPARENT).into();
+    let foot_text_color = ipg_style.foot_text_color.unwrap_or_else(||Color::BLACK);
+    let close_color = ipg_style.close_color.unwrap_or_else(||Color::BLACK);
+
+    let custom= card::Appearance{ 
+        background, 
+        border_radius, 
+        border_width, 
+        border_color, 
+        head_background, 
+        head_text_color, 
+        body_background, 
+        body_text_color, 
+        foot_background, 
+        foot_text_color, 
+        close_color };
 
 
-pub fn try_extract_card_style(style_obj: &PyObject) -> IpgCardStyle {
+    CardStyles::Custom(custom)
 
-    Python::with_gil(|py| {
-        let res = style_obj.extract::<IpgCardStyle>(py);
-        match res {
-            Ok(st) => st,
-            Err(_) => panic!("Card style failed to extract."),
-        }
-    })
 }
 
 
@@ -305,8 +358,118 @@ pub fn try_extract_card_update(update_obj: &PyObject) -> IpgCardParam {
     })
 }
 
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum IpgCardStyleParam {
+    BackgroundIpgColor,
+    BackgroundRgbaColor,
+    BorderIpgColor,
+    BorderRgbaColor,
+    BorderRadius,
+    BorderWidth,
+    HeadBackgroundIpgColor,
+    HeadBackgroundRgbaColor,
+    HeadTextIpgColor,
+    HeadTextRgbaColor,
+    BodyBackgroundIpgColor,
+    BodyBackgroundRgbaColor,
+    BodyTextIpgColor,
+    BodyTextRgbaColor,
+    FootBackgroundIpgColor,
+    FootBackgroundRgbaColor,
+    FootTextIpgColor,
+    FootTextRgbaColor,
+    CloseIpgColor,
+    CloseRgbaColor,
+}
+
 pub fn card_style_update(style: &mut IpgCardStyle,
                         item: &PyObject,
                         value: &PyObject,) {
 
+    let update = try_extract_card_style_update(item);
+    let name = "Card Style".to_string();
+    
+    match update {
+        IpgCardStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.background = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCardStyleParam::BackgroundRgbaColor => {
+            style.background = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgCardStyleParam::BorderIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCardStyleParam::BorderRgbaColor => {
+            style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgCardStyleParam::BorderRadius => {
+            style.border_radius = try_extract_f64(value, name) as f32;
+        },
+        IpgCardStyleParam::BorderWidth => {
+            style.border_width = try_extract_f64(value, name) as f32;
+        },
+        IpgCardStyleParam::HeadBackgroundIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.head_background = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCardStyleParam::HeadBackgroundRgbaColor => {
+             style.head_background = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgCardStyleParam::HeadTextIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.head_text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCardStyleParam::HeadTextRgbaColor => {
+             style.head_text_color= Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgCardStyleParam::BodyBackgroundIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.body_background = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCardStyleParam::BodyBackgroundRgbaColor => {
+             style.body_background = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgCardStyleParam::BodyTextIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.body_text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCardStyleParam::BodyTextRgbaColor => {
+             style.body_text_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgCardStyleParam::FootBackgroundIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.foot_background = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCardStyleParam::FootBackgroundRgbaColor => {
+             style.foot_background = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgCardStyleParam::FootTextIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.foot_text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCardStyleParam::FootTextRgbaColor => {
+             style.foot_text_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgCardStyleParam::CloseIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.close_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgCardStyleParam::CloseRgbaColor => {
+             style.close_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+    }
+}
+
+fn try_extract_card_style_update(update_obj: &PyObject) -> IpgCardStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgCardStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Card style parameter update extraction failed"),
+        }
+    })
 }

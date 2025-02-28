@@ -3,8 +3,7 @@
 // Many thanks to "tarkah <admin@tarkah.dev>"
 // at https://github.com/tarkah/iced_table
 // for the code used use in the table.
-// Modifications were made to make it
-// fit in for IPG
+// Modifications were made to fit in with IPG
 
 
 use iced::advanced::graphics::core::Element;

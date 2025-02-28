@@ -211,11 +211,11 @@ pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
             }
         },
         IpgCanvasParam::TextAlignment => {
-            let align = try_extract_ipg_horizontal_alignment(value.clone());
+            let align = try_extract_ipg_horizontal_alignment(value);
             if align.is_some() {
                 canvas_state.selected_h_text_alignment = get_horizontal_alignment(&align.unwrap())
             }
-            let align = try_extract_ipg_vertical_alignment(value.clone());
+            let align = try_extract_ipg_vertical_alignment(value);
             if align.is_some() {
                 canvas_state.selected_v_text_alignment = get_vertical_alignment(&align.unwrap());
             }

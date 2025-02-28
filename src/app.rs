@@ -796,7 +796,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                         },
                         None => None,
                     };
-                    Some(construct_date_picker(dp, style_opt))
+                    construct_date_picker(dp, style_opt)
                 },
                 IpgWidgets::IpgPickList(pick) => {
                     let style_opt = match pick.style_id {
@@ -1098,7 +1098,7 @@ fn process_canvas_updates(cs: &mut IpgCanvasState) {
         } else {
            panic!("canvas_item_update: canvas item with id, {} not found", wid);
         };
-        match_canvas_widget(canvas_widget, item.clone(), value.clone());
+        match_canvas_widget(canvas_widget, item, value);
     }
     canvas_items.updates = vec![];
 
