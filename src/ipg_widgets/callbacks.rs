@@ -232,6 +232,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             //         ..Default::default()
             //     }
             // },
+            IpgWidgets::IpgOpaqueStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgPickList(pl) => {
                 pl.selected = wci.value_str;
                 return WidgetCallbackOut{

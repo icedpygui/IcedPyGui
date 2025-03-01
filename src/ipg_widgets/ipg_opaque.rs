@@ -4,10 +4,11 @@ use iced::{Color, Element, Length};
 use iced::widget::{horizontal_space, mouse_area, opaque, Container};
 use pyo3::{pyclass, PyObject, Python};
 
+use crate::graphics::colors::get_color;
 use crate::{access_callbacks, IpgState};
 use crate::app::Message;
 
-use super::helpers::{get_horizontal_alignment, get_vertical_alignment, try_extract_boolean};
+use super::helpers::{get_horizontal_alignment, get_vertical_alignment, try_extract_boolean, try_extract_ipg_color, try_extract_rgba_color};
 use super::ipg_container::{self, get_cont_style};
 use super::ipg_enums::{IpgHorizontalAlignment, IpgVerticalAlignment, IpgWidgets};
 
@@ -181,5 +182,40 @@ fn process_callback(id: usize, event_name: String)
     
     drop(app_cbs);   
 
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum IpgOpaqueStyleParam {
+    BackgroundIpgColor,
+    BackgroundRgbaColor,
+}
+
+pub fn opaque_style_update_item(style: &mut IpgOpaqueStyle, 
+                                item: &PyObject, 
+                                value: &PyObject) 
+{
+    let update = try_extract_opaque_style_update(item);
+    let name = "ContainerStyle".to_string();
+    match update {
+        IpgOpaqueStyleParam::BackgroundIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgOpaqueStyleParam::BackgroundRgbaColor => {
+            style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+    }
+}
+
+pub fn try_extract_opaque_style_update(update_obj: &PyObject) -> IpgOpaqueStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgOpaqueStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Opaque style parameter update extraction failed"),
+        }
+    })
 }
 

@@ -58,8 +58,7 @@ use ipg_widgets::ipg_image::{image_item_update, IpgImage,
 use ipg_widgets::ipg_menu::{menu_bar_style_update_item, menu_item_update, menu_style_update_item, IpgMenu, IpgMenuBarStyle, IpgMenuBarStyleParam, IpgMenuParam, IpgMenuStyle, IpgMenuStyleParam};
 use ipg_widgets::ipg_mousearea::{mousearea_item_update, IpgMouseArea, 
         IpgMouseAreaParam, IpgMousePointer};
-use ipg_widgets::ipg_opaque::{opaque_item_update, IpgOpaque, 
-    IpgOpaqueParam, IpgOpaqueStyle};
+use ipg_widgets::ipg_opaque::{opaque_item_update, opaque_style_update_item, IpgOpaque, IpgOpaqueParam, IpgOpaqueStyle};
 use ipg_widgets::ipg_pick_list::{convert_pyobject_vec_string, pick_list_item_update, pick_list_style_update_item, IpgPickList, IpgPickListHandle, IpgPickListParam, IpgPickListStyle, IpgPickListStyleParam};
 use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, progress_bar_style_update_item, 
     IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle, IpgProgressBarStyleParam};
@@ -102,10 +101,6 @@ const ICON_FONT_BOOT: Font = Font::with_name("bootstrap-icons");
 
 use std::sync::{Mutex, MutexGuard};
 use once_cell::sync::Lazy;
-
-pub const TABLE_INTERNAL_IDS_START: usize = 4_000_000_000;
-pub const TABLE_INTERNAL_IDS_END: usize = 4_000_000_999;
-
 
 #[derive(Debug)]
 pub struct Callbacks {
@@ -193,8 +188,9 @@ pub fn access_window_actions() -> MutexGuard<'static, WindowActions> {
 
 #[derive(Debug)]
 pub struct State {
-    pub ids: Lazy<HashMap<usize, Vec<IpgIds>>>,  // <window_id=usize, Vec<IpgIds=structure>>
+    pub ids_ipd_ids: Lazy<HashMap<usize, Vec<IpgIds>>>,  // <window_id=usize, Vec<IpgIds=structure>>
     pub last_id: usize,
+    pub gen_ids: Vec<usize>,
 
     pub containers: Lazy<HashMap<usize, IpgContainers>>,
     pub container_ids: Lazy<HashMap<usize, Vec<usize>>>,  // <window_id=usize, vec<container_id=usize>>
@@ -202,8 +198,6 @@ pub struct State {
     pub container_wnd_str_ids: Lazy<HashMap<String, String>>, // get window string id based on container string id
     pub container_window_usize_ids: Lazy<HashMap<usize, usize>>, //get window usize id based on container usize id
     
-    pub table_internal_ids_counter: usize,
-
     pub widgets: Lazy<HashMap<usize, IpgWidgets>>,
     pub widget_container_ids: Lazy<HashMap<usize, String>>, //widget_id=usize, container_id=String
     
@@ -215,24 +209,6 @@ pub struct State {
     pub window_mode: Lazy<HashMap<window::Id, (usize, window::Mode)>>,
 
     pub events: Vec<IpgEvents>,
-    
-    pub container_style: Lazy<HashMap<String, IpgContainerStyle>>,
-    pub button_style: Lazy<HashMap<String, IpgButtonStyle>>,
-    pub checkbox_style: Lazy<HashMap<String, IpgCheckboxStyle>>,
-    pub color_picker_style: Lazy<HashMap<String, IpgColorPickerStyle>>,
-    // pub menu_bar_style: Lazy<HashMap<String, IpgMenuBarStyle>>,
-    // pub menu_style: Lazy<HashMap<String, IpgMenuStyle>>,
-    // pub menu_separator_style: Lazy<HashMap<String, IpgMenuSeparatorStyle>>,
-    pub opaque_style: Lazy<HashMap<String, IpgOpaqueStyle>>,
-    pub pick_list_style: Lazy<HashMap<String, IpgPickListStyle>>,
-    pub progress_bar_style: Lazy<HashMap<String, IpgProgressBarStyle>>,
-    pub radio_style:  Lazy<HashMap<String, IpgRadioStyle>>,
-    pub rule_style:  Lazy<HashMap<String, IpgRuleStyle>>,
-    pub slider_style:  Lazy<HashMap<String, IpgSliderStyle>>,
-    pub text_input_style: Lazy<HashMap<String, IpgTextInputStyle>>,
-    pub toggler_style: Lazy<HashMap<String, IpgTogglerStyle>>,
-    pub scrollable_style: Lazy<HashMap<String, IpgScrollableStyle>>,
-
     pub keyboard_event_id_enabled: (usize, bool),
     pub mouse_event_id_enabled: (usize, bool),
     pub timer_event_id_enabled: (usize, bool),
@@ -246,16 +222,15 @@ pub struct State {
 
 pub static STATE: Mutex<State> = Mutex::new(
     State {
-        ids: Lazy::new(||HashMap::new()),
+        ids_ipd_ids: Lazy::new(||HashMap::new()),
         last_id: 0,
-        
+        gen_ids: vec![],
+
         containers: Lazy::new(||HashMap::new()),
         container_ids: Lazy::new(||HashMap::new()),
         container_str_ids: Lazy::new(||HashMap::new()),
         container_wnd_str_ids: Lazy::new(||HashMap::new()),
         container_window_usize_ids: Lazy::new(||HashMap::new()),
-
-        table_internal_ids_counter: TABLE_INTERNAL_IDS_START,
 
         widgets: Lazy::new(||HashMap::new()),
         widget_container_ids: Lazy::new(||HashMap::new()),
@@ -268,24 +243,6 @@ pub static STATE: Mutex<State> = Mutex::new(
         window_mode: Lazy::new(||HashMap::new()),
         
         events: vec![],
-
-        container_style: Lazy::new(||HashMap::new()),
-        button_style: Lazy::new(||HashMap::new()),
-        checkbox_style: Lazy::new(||HashMap::new()),
-        color_picker_style: Lazy::new(||HashMap::new()),
-        // menu_bar_style: Lazy::new(||HashMap::new()),
-        // menu_style: Lazy::new(||HashMap::new()),
-        // menu_separator_style: Lazy::new(||HashMap::new()),
-        opaque_style: Lazy::new(||HashMap::new()),
-        pick_list_style: Lazy::new(||HashMap::new()),
-        progress_bar_style: Lazy::new(||HashMap::new()),
-        radio_style: Lazy::new(||HashMap::new()),
-        rule_style: Lazy::new(||HashMap::new()),
-        slider_style: Lazy::new(||HashMap::new()),
-        text_input_style: Lazy::new(||HashMap::new()),
-        toggler_style: Lazy::new(||HashMap::new()),
-        scrollable_style: Lazy::new(||HashMap::new()),
-        
         keyboard_event_id_enabled: (0, false),
         mouse_event_id_enabled: (0, false), 
         timer_event_id_enabled: (0, false),
@@ -596,7 +553,7 @@ impl IPG {
 
         state.windows_str_ids.insert(window_id.clone(), id);
 
-        state.ids.insert(id, vec![IpgIds{id, parent_uid: 0, container_id: Some(window_id.clone()),
+        state.ids_ipd_ids.insert(id, vec![IpgIds{id, parent_uid: 0, container_id: Some(window_id.clone()),
                                                 parent_id: "".to_string(), is_container: true}]);
 
         state.container_ids.insert(id, vec![id]);
@@ -1302,12 +1259,11 @@ impl IPG {
         Ok(id)
     }
 
-    #[pyo3(signature = (style_id, 
+    #[pyo3(signature = ( 
                         background_color=None, 
                         background_rgba=None,
                         gen_id=None))]
     fn add_opaque_style(&mut self,
-                            style_id: String,
                             background_color: Option<IpgColor>,
                             background_rgba: Option<[f32; 4]>,
                             gen_id: Option<usize>,
@@ -1319,10 +1275,11 @@ impl IPG {
 
         let background_color: Option<Color> = get_color(background_rgba, background_color, 1.0, false);
 
-        state.opaque_style.insert(style_id, IpgOpaqueStyle::new( 
-                                                    id,
-                                                    background_color,
-                                                    ));
+        state.widgets.insert(id, IpgWidgets::IpgOpaqueStyle(
+            IpgOpaqueStyle::new( 
+                id,
+                background_color,
+                )));
         state.last_id = id;
         drop(state);
 
@@ -1792,7 +1749,7 @@ impl IPG {
                         clip=false, style_id=None, style_standard=None, 
                         style_arrow=None, user_data=None, show=true, 
                         ))]
-    fn add_button(&mut self,
+    fn add_button(&self,
                         parent_id: String,
                         label: String,
                         // ** above required
@@ -1813,12 +1770,6 @@ impl IPG {
                         show: bool,
                         ) -> PyResult<usize> 
     {
-        let id = self.get_id(gen_id);
-
-        if on_press.is_some() {
-            add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data);
-        }
-
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
 
@@ -1827,7 +1778,18 @@ impl IPG {
         let align_x = get_horizontal_alignment(&text_align_x);
         let align_y = get_vertical_alignment(&text_align_y);
 
+        let mut state = access_state();
+
+        state.last_id += 1;
+        let id = state.last_id;
+
+        drop(state);
+
         set_state_of_widget(id, parent_id);
+
+        if on_press.is_some() {
+            add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data);
+        }
 
         let mut state = access_state();
 
@@ -1847,7 +1809,6 @@ impl IPG {
                 style_arrow,                              
                 )));
 
-        state.last_id = id;
         drop(state);
         Ok(id)
     
@@ -5141,7 +5102,7 @@ impl IPG {
                 if self.gen_ids.contains(&id) {
                     id
                 } else {
-                    panic!("The id parameter for widgets must use a generate id.  This id {id} was not found in the gen_id list.")
+                    panic!("The gen_id parameter for id {id} was not found in the gen_id list.")
                 }
             }
             None => {
@@ -5174,99 +5135,102 @@ fn match_widget(widget: &mut IpgWidgets,
         },
         IpgWidgets::IpgCheckboxStyle(chk_style) => {
                 checkbox_style_update_item(chk_style, item, value);
-            },
+        },
         IpgWidgets::IpgColorPicker(cp) => {
                 color_picker_update(cp, item, value);
-            },
+        },
         IpgWidgets::IpgColorPickerStyle(cp_style) => {
                 color_picker_style_update_item(cp_style, item, value);
-            },
+        },
         IpgWidgets::IpgContainerStyle(cont_style) => {
                 container_style_update_item(cont_style, item, value);
-            },
+        },
         IpgWidgets::IpgDatePicker(dp) => {
                 date_picker_item_update(dp, item, value);
-            },
+        },
         IpgWidgets::IpgImage(img) => {
                 image_item_update(img, item, value);
-            },
+        },
         IpgWidgets::IpgMenuStyle(style) => {
                 menu_style_update_item(style, item, value);
-            },
+        },
         IpgWidgets::IpgMenuBarStyle(style) => {
                 menu_bar_style_update_item(style, item, value);
-            },
+        },
+        IpgWidgets::IpgOpaqueStyle(style) => {
+            opaque_style_update_item(style, item, value);
+        }
         IpgWidgets::IpgPickList(pl) => {
                 pick_list_item_update(pl, item, value);
-            },
+        },
         IpgWidgets::IpgPickListStyle(style) => {
                 pick_list_style_update_item(style, item, value);
-            },
+        },
         IpgWidgets::IpgProgressBar(pb) => {
                 progress_bar_item_update(pb, item, value);
-            },
+        },
         IpgWidgets::IpgProgressBarStyle(style) => {
                 progress_bar_style_update_item(style, item, value);
-            },
+        },
         IpgWidgets::IpgRadio(rd) => {
                 radio_item_update(rd, item, value);
-            },
+        },
         IpgWidgets::IpgRadioStyle(style) => {
                 radio_style_update_item(style, item, value);
-            },
+        },
         IpgWidgets::IpgRule(_) => (),
         IpgWidgets::IpgRuleStyle(style) => {
                 rule_style_update_item(style, item, value);
-            },
+        },
         IpgWidgets::IpgScrollableStyle(style) => {
                 scroll_style_update_item(style, item, value)
-            },
+        },
         IpgWidgets::IpgSelectableText(st) => {
                 selectable_text_item_update(st, item, value);
-            },
+        },
         IpgWidgets::IpgSeparator(sep) => {
                 separator_item_update(sep, item, value);
-            },
+        },
         IpgWidgets::IpgSeparatorStyle(style) => {
                 separator_style_update_item(style, item, value);
-            },
+        },
         IpgWidgets::IpgSlider(slider) => {
                 slider_item_update(slider, item, value)
-            },
+        },
         IpgWidgets::IpgSliderStyle(style) => {
                 slider_style_update_item(style, item, value)
-            },
+        },
         IpgWidgets::IpgSpace(_) => (),
         IpgWidgets::IpgSvg(sg) => {
                 svg_item_update(sg, item, value);
-            },
+        },
         IpgWidgets::IpgText(txt) => {
                 text_item_update(txt, item, value);
-            },
+        },
         IpgWidgets::IpgTextInput(ti) => {
                 text_input_item_update(ti, item, value);
-            },
+        },
         IpgWidgets::IpgTextInputStyle(style) => {
                 text_input_style_update_item(style, item, value);
-            },
+        },
         IpgWidgets::IpgTimer(tim) => {
                 timer_item_update(tim, item, value);
-            },
+        },
         IpgWidgets::IpgTimerStyle(style) => {
                 timer_style_update_item(style, item, value);
-            },
+        },
         IpgWidgets::IpgCanvasTimer(ctim) => {
                 canvas_timer_item_update(ctim, item, value);
-            },
+        },
         IpgWidgets::IpgCanvasTimerStyle(style) => {
                 canvas_timer_style_update_item(style, item, value);
-            },
+        },
         IpgWidgets::IpgToggler(tog) => {
                 toggler_item_update(tog, item, value);
-            },
+        },
         IpgWidgets::IpgTogglerStyle(style) => {
                 toggler_style_update_item(style, item, value);
-            },
+        },
 
     }
 }
@@ -5445,9 +5409,9 @@ fn set_state_of_container(
         None => None,
     };
     
-    let parent_uid = find_parent_uid(state.ids.get(&wnd_id_usize).unwrap(), parent_id.clone());
+    let parent_uid = find_parent_uid(state.ids_ipd_ids.get(&wnd_id_usize).unwrap(), parent_id.clone());
     
-    state.ids.get_mut(&wnd_id_usize).unwrap().push(IpgIds{id, parent_uid, container_id,
+    state.ids_ipd_ids.get_mut(&wnd_id_usize).unwrap().push(IpgIds{id, parent_uid, container_id,
                                                         parent_id, is_container: true});
 
     state.container_ids.get_mut(&wnd_id_usize).unwrap().push(id);
@@ -5477,9 +5441,9 @@ fn set_state_of_widget(
    
     let mut state = access_state();
 
-    let parent_uid = find_parent_uid(state.ids.get(&wnd_id_usize).unwrap(), parent_id.clone());
+    let parent_uid = find_parent_uid(state.ids_ipd_ids.get(&wnd_id_usize).unwrap(), parent_id.clone());
     
-    state.ids.get_mut(&wnd_id_usize).unwrap().push(IpgIds{id, parent_uid, container_id: None,
+    state.ids_ipd_ids.get_mut(&wnd_id_usize).unwrap().push(IpgIds{id, parent_uid, container_id: None,
                                                         parent_id, is_container: false});
 
     drop(state);

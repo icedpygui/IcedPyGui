@@ -1158,7 +1158,7 @@ fn show_widget(state: &mut IpgState, ids: &Vec<(usize, bool)>) {
 
 fn clone_state(state: &mut IpgState) {
     let mut mutex_state = access_state();
-    state.ids = mutex_state.ids.to_owned();
+    state.ids = mutex_state.ids_ipd_ids.to_owned();
     state.last_id = mutex_state.last_id.to_owned();
     state.containers = mutex_state.containers.to_owned();
     state.container_ids = mutex_state.container_ids.to_owned();
@@ -1173,22 +1173,7 @@ fn clone_state(state: &mut IpgState) {
     state.window_debug = mutex_state.window_debug.to_owned();
     state.window_theme = mutex_state.window_theme.to_owned();
     state.window_mode = mutex_state.window_mode.to_owned();
-    state.container_style = mutex_state.container_style.to_owned();
-    state.button_style = mutex_state.button_style.to_owned();
-    state.checkbox_style = mutex_state.checkbox_style.to_owned();
-    state.color_picker_style = mutex_state.color_picker_style.to_owned();
-    // state.menu_bar_style = mutex_state.menu_bar_style.to_owned();
-    // state.menu_style = mutex_state.menu_style.to_owned();
-    // state.menu_separator_style = mutex_state.menu_separator_style.to_owned();
-    state.opaque_style = mutex_state.opaque_style.to_owned();
-    state.pick_list_style = mutex_state.pick_list_style.to_owned();
-    state.progress_bar_style = mutex_state.progress_bar_style.to_owned();
-    state.radio_style = mutex_state.radio_style.to_owned();
-    state.rule_style = mutex_state.rule_style.to_owned();
-    state.slider_style = mutex_state.slider_style.to_owned();
-    state.text_input_style = mutex_state.text_input_style.to_owned();
-    state.toggler_style = mutex_state.toggler_style.to_owned();
-    state.scrollable_style = mutex_state.scrollable_style.to_owned();
+    
     state.keyboard_event_id_enabled = mutex_state.keyboard_event_id_enabled.to_owned();
     state.mouse_event_id_enabled = mutex_state.mouse_event_id_enabled.to_owned();
     state.timer_event_id_enabled = mutex_state.timer_event_id_enabled.to_owned();
@@ -1199,37 +1184,21 @@ fn clone_state(state: &mut IpgState) {
     state.canvas_timer_duration = mutex_state.canvas_timer_duration.to_owned();
 
     // zeroing out any vecs and hashmaps
-    mutex_state.ids = Lazy::new(||HashMap::new());
-    mutex_state.containers = Lazy::new(||HashMap::new());
-    mutex_state.container_ids = Lazy::new(||HashMap::new());
-    mutex_state.container_str_ids = Lazy::new(||HashMap::new());
-    mutex_state.container_wnd_str_ids = Lazy::new(||HashMap::new());
-    mutex_state.container_window_usize_ids = Lazy::new(||HashMap::new());
+    // mutex_state.ids_ipd_ids = Lazy::new(||HashMap::new());
+    // mutex_state.containers = Lazy::new(||HashMap::new());
+    // mutex_state.container_ids = Lazy::new(||HashMap::new());
+    // mutex_state.container_str_ids = Lazy::new(||HashMap::new());
+    // mutex_state.container_wnd_str_ids = Lazy::new(||HashMap::new());
+    // mutex_state.container_window_usize_ids = Lazy::new(||HashMap::new());
     mutex_state.widgets = Lazy::new(||HashMap::new());
     mutex_state.widget_container_ids = Lazy::new(||HashMap::new());
     mutex_state.windows = vec![];
     mutex_state.windows_iced_ipg_ids = Lazy::new(||HashMap::new());
-    mutex_state.windows_str_ids = Lazy::new(||HashMap::new());
+    // mutex_state.windows_str_ids = Lazy::new(||HashMap::new());
     mutex_state.window_debug = Lazy::new(||HashMap::new());
     mutex_state.window_theme = Lazy::new(||HashMap::new());
     mutex_state.window_mode = Lazy::new(||HashMap::new());
-    mutex_state.container_style = Lazy::new(||HashMap::new());
-    mutex_state.button_style = Lazy::new(||HashMap::new());
-    mutex_state.checkbox_style = Lazy::new(||HashMap::new());
-    mutex_state.color_picker_style = Lazy::new(||HashMap::new());
-    // mutex_state.menu_bar_style = Lazy::new(||HashMap::new());
-    // mutex_state.menu_style = Lazy::new(||HashMap::new());
-    // mutex_state.menu_separator_style = Lazy::new(||HashMap::new());
-    mutex_state.opaque_style = Lazy::new(||HashMap::new());
-    mutex_state.pick_list_style = Lazy::new(||HashMap::new());
-    mutex_state.progress_bar_style = Lazy::new(||HashMap::new());
-    mutex_state.radio_style = Lazy::new(||HashMap::new());
-    mutex_state.rule_style = Lazy::new(||HashMap::new());
-    mutex_state.slider_style = Lazy::new(||HashMap::new());
-    mutex_state.text_input_style = Lazy::new(||HashMap::new());
-    mutex_state.toggler_style = Lazy::new(||HashMap::new());
-    mutex_state.scrollable_style = Lazy::new(||HashMap::new());
-
+    
     drop(mutex_state);
 }
 

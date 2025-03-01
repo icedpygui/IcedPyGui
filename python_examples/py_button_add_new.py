@@ -6,11 +6,10 @@ ipg = IPG()
 
 def on_press(btn_id):
     print("button pressed")
-    id = ipg.add_space(
-            parent_id="col",
-            width=50.0,
-            height=5.0,
-            show=True)
+    id = ipg.add_button(
+            parent_id="col", 
+            label="1st Button", 
+            on_press=on_press)
     print(id)
 
 

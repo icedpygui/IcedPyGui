@@ -17,7 +17,7 @@ pub fn check_for_dup_container_ids(id: usize, container_id: Option<String>) {
 
     let state = access_state();
     
-    let parents = match state.ids.get(&id) {
+    let parents = match state.ids_ipd_ids.get(&id) {
         Some(ids) => ids,
         None => panic!("Ids in check_for_dup_container_ids not found")
     };
