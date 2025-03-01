@@ -2,7 +2,7 @@
 
 use crate::app::Message;
 use crate::table;
-use crate::{access_callbacks, IpgState};
+use crate::IpgState;
 use crate::table::table::{body_container, dummy_container, 
     single_row_container};
 
@@ -13,9 +13,10 @@ use iced::widget::{column, row, scrollable, text};
 
 use polars::frame::DataFrame;
 use pyo3::{pyclass, PyObject, Python};
+use pyo3_polars::PyDataFrame;
 
 use super::callbacks::{set_or_get_widget_callback_data, 
-    WidgetCallbackIn, WidgetCallbackOut};
+    WidgetCallbackIn};
 use super::helpers::{get_width, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f32};
 
@@ -31,6 +32,7 @@ pub struct IpgTable {
         pub header_enabled: bool,
         pub header_custom_enabled: bool,
         pub footer_enabled: bool,
+        pub control_columns: Vec<usize>,
         pub add_data_row_wise: bool,
         pub add_data_column_wise: bool,
         pub row_highlight: Option<IpgTableRowHighLight>,
@@ -65,6 +67,7 @@ impl IpgTable {
         header_enabled: bool,
         header_custom_enabled: bool,
         footer_enabled: bool,
+        control_columns: Vec<usize>,
         add_data_row_wise: bool,
         add_data_column_wise: bool,
         row_highlight: Option<IpgTableRowHighLight>,
@@ -94,6 +97,7 @@ impl IpgTable {
             header_enabled,
             header_custom_enabled,
             footer_enabled,
+            control_columns,
             add_data_row_wise,
             add_data_column_wise,
             row_highlight,
@@ -139,7 +143,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             mut content: Vec<Element<'a, Message, Theme, Renderer>>, 
                             ) 
                             -> Element<'a, Message, Theme, Renderer> {
-    
+    dbg!(&tbl.df.height());
     let columns = 
         if tbl.header_enabled {
             let df_columns = tbl.df.get_columns().to_vec();
@@ -197,17 +201,22 @@ pub fn construct_table<'a>(tbl: IpgTable,
     } else {
         None
     };
-    
+
     let mut rows: Vec<Element<'a, Message, Theme, Renderer>> = vec![];
     for idx in 0..tbl.df.height() {
         let row_items = tbl.df.get_row(idx).unwrap();
-        for item in row_items.0.iter() {
-            let s = item.to_string();
-            rows.push(text(s).into());
+        for (idx, item) in row_items.0.iter().enumerate() {
+            if tbl.control_columns.contains(&idx) {
+                rows.push(content.remove(0));
+            } else {
+                rows.push(text(item.to_string()).into());
+            }
+            
         }
     }
-
+ 
     let row_num_vec = vec![0; tbl.df.height()];
+
     let body: Element<'a, Message, Theme, Renderer> = 
         scrollable(column(row_num_vec.iter().enumerate()
         .map(|(index, _width)| {
@@ -509,6 +518,9 @@ pub enum IpgTableParam {
     ColumnWidths,
     Height,
     Width,
+    HeaderEnabled,
+    HeaderCustomEnabled,
+    FooterEnabled,
     RowHighlight,
     HighlightAmount,
     ColumnSpacing,
@@ -531,15 +543,11 @@ pub fn table_item_update(
                     value: &PyObject,
                     ) 
 {
-    
     let update = try_extract_table_update(item);
     let name = "Table".to_string();
     match update {
         IpgTableParam::Title => {
             table.title = try_extract_string(value, name);
-        },
-        IpgTableParam::PolarsDf => {
-            table.df = value.into();
         },
         IpgTableParam::ColumnWidths => {
             table.column_widths = try_extract_vec_f32(value, name);
@@ -593,9 +601,25 @@ pub fn table_item_update(
         IpgTableParam::ScrollerMargin => {
             table.scroller_margin = try_extract_f64(value, name) as f32;
         },
+        _ => ()
     }
 }
 
+pub fn table_dataframe_update( 
+                    table: &mut IpgTable,
+                    item: &PyObject,
+                    value: &PyDataFrame,
+                    ) 
+{
+    let update = try_extract_table_update(item);
+    match update {
+        IpgTableParam::PolarsDf => {
+            let df = Into::<DataFrame>::into(value.clone());
+            table.df= df;
+        },
+        _ => ()
+    }
+}
 pub fn try_extract_table_update(update_obj: &PyObject) -> IpgTableParam {
 
     Python::with_gil(|py| {
@@ -617,12 +641,4 @@ fn try_extract_row_highlight(value: &PyObject) -> IpgTableRowHighLight {
     })
 }
 
-fn try_extract_polars_df(value: &PyObject) -> DataFrame {
-    Python::with_gil(|py| {
-        let res = value.extract::<DataFrame>(py);
-        match res {
-            Ok(update) => update,
-            Err(_) => panic!("Table update extraction of Polars DataFrame failed"),
-        }
-    })
-}
+

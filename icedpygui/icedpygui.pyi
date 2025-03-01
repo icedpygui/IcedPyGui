@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable, List, Optional, Union, DataFrame
+from typing import Any, Callable, List, Optional, Union, DataFrame, PyDataFrame
 
 class IPG:
     """
@@ -2419,6 +2419,7 @@ class IPG:
                     header_enabled: bool=True,
                     header_custom_enabled: bool=False,
                     footer_enabled: bool=False,
+                    control_columns=list[int],
                     resize_columns_enabled: bool=True,
                     min_column_width: Optional[float]=50.0,
                     data_row_wise: bool=True,
@@ -2459,6 +2460,8 @@ class IPG:
                 Whether to use a custom header, create your own widgets
             footer_enabled: bool,
                 Whether to have a footer row at the bottom
+            control_columns: list[int]
+                The columns indexes  where control elements are place, i.e. buttons
             parent_id: Optional[str]
                 If parent_id == window_id then not required, 
                 If another container then required.
@@ -3633,7 +3636,29 @@ class IPG:
             ids (List[tuple[int, bool]]):
                 A list of the ids and they bool value to indicate either sgoe(True) or Hide(False).
         """
+    
+    def update_dataframe(self,
+                    wid: int, 
+                    param: str, 
+                    df: PyDataFrame,
+                    ):
+        """
+        Update a DataFrame example: update_dataframe(table_id, IpgTableParams.PolarsDf, my_df)
         
+        Parameters
+        ----------
+        wid: int
+            The widget id of the widget to be updated.
+        param: class property
+            a class like for a table would be IpgTableParams
+        df: PyDataFrame 
+            Polars Dataframe  
+
+        Returns
+        -------
+        None
+        """
+           
     def update_item(self,
                     wid: int, 
                     param: str, 
@@ -3648,7 +3673,7 @@ class IPG:
         wid: int
             The widget id of the widget to be updated.
         param: class property
-            Example: a button has a style class IpgButtonParams with properties of Primary, ...
+            Example: a button has a parameter IpgButtonParams.Width and value=float
         value: any 
             Any value which matches that used by the widget.  For example, to set a checkbox to true,
             param=IpgCheckboxParams.IsChecked, value=True  
@@ -4585,6 +4610,8 @@ class IpgPickListParam:
     ----------
     Options: list[str]
         Items in the picklist.
+    Selected: str
+        Item selected.
     Placeholder: str
         A placeholder in the picklist box.
     Padding: list[float]
@@ -4603,6 +4630,7 @@ class IpgPickListParam:
         Whether the picklist expands the available width of the container.
     """
     Options: list[str]
+    Selected: str
     Placeholder: str
     Padding: list[float]
     Show: bool
@@ -5234,8 +5262,12 @@ class IpgTableParam:
         Whether to show or hide the widget.
     """
     Title: str
+    PolarsDf: PyDataFrame
     Width: float
     Height: float
+    HeaderEnabled: bool
+    HeaderCustomEnabled: bool
+    FooterEnabled: bool
     ColumnWidths: list[float]
     ColumnSpacing: float
     RowSpacing: float

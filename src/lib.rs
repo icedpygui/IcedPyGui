@@ -78,8 +78,7 @@ use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, 
         IpgSvgParam, IpgSvgRotation};
-use ipg_widgets::ipg_table::{table_item_update, IpgTable, IpgTableParam, 
-        IpgTableRowHighLight};
+use ipg_widgets::ipg_table::{table_dataframe_update, table_item_update, IpgTable, IpgTableParam, IpgTableRowHighLight};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, text_input_style_update_item, 
     IpgTextInput, IpgTextInputParam, IpgTextInputStyle, IpgTextInputStyleParam};
@@ -134,6 +133,8 @@ pub struct UpdateItems {
     // window_id, wid
     pub deletes: Vec<(String, usize)>,
     pub shows: Vec<(String, Vec<(usize, bool)>)>,
+    pub dataframes: Vec<(usize, PyObject, PyDataFrame)>,
+    pub new_widgets: Lazy<HashMap<usize, IpgWidgets>>,
 }
 
 pub static UPDATE_ITEMS: Mutex<UpdateItems> = Mutex::new(UpdateItems {
@@ -141,6 +142,8 @@ pub static UPDATE_ITEMS: Mutex<UpdateItems> = Mutex::new(UpdateItems {
     moves: vec![],
     deletes: vec![],
     shows: vec![],
+    dataframes: vec![],
+    new_widgets: Lazy::new(||HashMap::new()),
 });
 
 pub fn access_update_items() -> MutexGuard<'static, UpdateItems> {
@@ -1611,6 +1614,7 @@ impl IPG {
                         header_enabled=true,
                         header_custom_enabled=false,
                         footer_enabled=false,
+                        control_columns=vec![],
                         data_row_wise=false,
                         data_column_wise=false,
                         parent_id=None,
@@ -1643,6 +1647,7 @@ impl IPG {
                     header_enabled: bool,
                     header_custom_enabled: bool,
                     footer_enabled: bool,
+                    control_columns: Vec<usize>,
                     data_row_wise: bool,
                     data_column_wise: bool,
                     parent_id: Option<String>,
@@ -1706,6 +1711,7 @@ impl IPG {
                 header_enabled,
                 header_custom_enabled,
                 footer_enabled,
+                control_columns,
                 data_row_wise,
                 data_column_wise,
                 row_highlight,
@@ -5039,6 +5045,16 @@ impl IPG {
     }
 
     #[pyo3(signature = (wid, item, value))]
+    fn update_dataframe(&self, wid: usize, item: PyObject, value: PyDataFrame) {
+        let mut all_updates = access_update_items();
+
+        all_updates.dataframes.push((wid, item, value));
+
+        drop(all_updates);
+
+    }
+
+    #[pyo3(signature = (wid, item, value))]
     fn update_item(&self, wid: usize, item: PyObject, value: PyObject) {
         let mut all_updates = access_update_items();
 
@@ -5296,6 +5312,19 @@ fn match_container(container: &mut IpgContainers,
             window_item_update(wnd, item, value);
         },
         _ => (),
+    }
+}
+
+fn match_container_for_df(container: &mut IpgContainers, 
+                    item: &PyObject, 
+                    value: &PyDataFrame, 
+                    ) 
+{
+    match container {
+        IpgContainers::IpgTable(table) => {
+            table_dataframe_update(table, item, value);
+        },
+        _ => ()
     }
 }
 

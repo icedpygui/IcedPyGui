@@ -71,12 +71,10 @@ pub fn construct_opaque<'a>(op: &'a IpgOpaque,
                         style_opt: Option<&'a IpgWidgets> ) 
                         -> Element<'a, Message> {
 
-    let new_content = if content.is_empty() {
-        content.remove(0)
-    } else {
-        horizontal_space().into()
-    };
+    if !op.show {return horizontal_space().into()}
 
+    let new_content = content.remove(0);
+    
     let align_h = get_horizontal_alignment(&op.align_x);
     let align_v = get_vertical_alignment(&op.align_y);
     let style = get_cont_style(style_opt);

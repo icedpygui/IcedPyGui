@@ -15,6 +15,7 @@ use iced::widget::{focus_next, horizontal_space, Canvas, Column};
 use iced::time;
 use iced::Color;
 use once_cell::sync::Lazy;
+use polars::frame::DataFrame;
 
 
 use crate::canvas::draw_canvas::IpgCanvasState;
@@ -26,8 +27,7 @@ use crate::ipg_widgets::ipg_separator::construct_separator;
 use crate::ipg_widgets::ipg_table::table_callback;
 use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, 
     canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
-use crate::{access_canvas_state, access_canvas_update_items, access_update_items, 
-    access_window_actions, ipg_widgets, match_container, match_widget, IpgState};
+use crate::{access_canvas_state, access_canvas_update_items, access_update_items, access_window_actions, ipg_widgets, match_container, match_container_for_df, match_widget, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
@@ -955,6 +955,7 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
     
     let mut all_updates = access_update_items();
 
+    // for deletes
     for (window_id, wid) in all_updates.deletes.iter() {
         let iced_id = match state.windows_str_ids.get(window_id) {
             Some(id) => *id,
@@ -985,6 +986,7 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
     }
     all_updates.deletes = vec![];
 
+    // for moves
     for (window_id, 
         widget_id, 
         target_container_str_id, 
@@ -1052,6 +1054,7 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
     }  
     all_updates.moves = vec![];
 
+    // for item updates
     for ((wid, item, value)) in all_updates.updates.iter() {
         let widget = state.widgets.get_mut(wid);
         if let Some(w) = widget {
@@ -1066,7 +1069,8 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
         }  
     }
     all_updates.updates = vec![];
-
+    
+    // updates for shows
     for (window_id, ids) in all_updates.shows.iter() {
         let iced_id = match state.windows_str_ids.get(window_id) {
             Some(id) => *id,
@@ -1082,6 +1086,16 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
     }
     
     all_updates.shows = vec![];
+
+    // for DataFrame
+    for ((wid, item, value)) in all_updates.dataframes.iter() {
+        match state.containers.get_mut(wid) {
+            Some(cnt) => {
+                match_container_for_df(cnt, item, value);
+            },
+            None => panic!("DataFrame_update: table with id {wid} not found.")
+        }
+    }
     
 }
 
