@@ -2,7 +2,7 @@
 
 use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, app};
+use crate::{access_callbacks, access_cbs, access_user_data, app};
 use super::helpers::{get_height, get_horizontal_alignment, get_padding_f64, 
     get_radius, get_vertical_alignment, get_width, try_extract_boolean, 
     try_extract_f64, try_extract_ipg_color, try_extract_ipg_horizontal_alignment, 
@@ -170,49 +170,48 @@ pub fn button_callback(id: usize, message: BTNMessage) {
 
 pub fn process_callback(id: usize, event_name: String) 
 {
-    let app_cbs = access_callbacks();
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
+    let app_cbs = access_cbs();
 
     let callback_present = 
         app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
 
-    let callback = match callback_opt {
-        Some(cb) => *cb,
-        None => panic!("Button callback could not be found with id {}", id),
-    };
-
-    let user_data_opt: Option<Py<PyAny>> = match app_cbs.user_data.get(&id) {
-        Some(py) => Some(py),
-        None => None,
-    };
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
 
     drop(app_cbs);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
-                let res = callback.call1(py, (
-                                                                    id,  
-                                                                    user_data_opt.unwrap()
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id,  
+                                                            user_data_opt.unwrap()
+                                                            ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Button: 2 parameters (id, user_data) are required or a python error in this function. {er}"),
                 }
             } else {
-                let res = callback.call1(py, (
-                                                                    id,  
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id,  
+                                                            ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Button: 1 parameter (id) is required or possibly a python error in this function. {er}"),
                 }
             } 
     });
-         
+
+    drop(ud);
 }
 
 

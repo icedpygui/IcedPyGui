@@ -120,6 +120,32 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
 }
 
 #[derive(Debug)]
+pub struct Cbs {
+    callbacks: Lazy<HashMap<(usize, String), PyObject>>,
+}
+
+pub static CBS: Mutex<Cbs> = Mutex::new(Cbs {
+    callbacks: Lazy::new(||HashMap::new()),
+});
+
+pub fn access_cbs() -> MutexGuard<'static, Cbs> {
+    CBS.lock().unwrap()
+}
+
+#[derive(Debug)]
+pub struct UserData {
+    user_data: Lazy<HashMap<usize, PyObject>>,
+}
+
+pub static USERDATA: Mutex<UserData> = Mutex::new(UserData {
+    user_data: Lazy::new(||HashMap::new()),
+});
+
+pub fn access_user_data() -> MutexGuard<'static, UserData> {
+    USERDATA.lock().unwrap()
+}
+
+#[derive(Debug)]
 pub struct UpdateItems {
     // wid, (item, value)
     pub updates: Vec<(usize, PyObject, PyObject)>, 
@@ -1788,7 +1814,11 @@ impl IPG {
         set_state_of_widget(id, parent_id);
 
         if on_press.is_some() {
-            add_callback_to_mutex(id, "on_press".to_string(), on_press, user_data);
+            add_cb_to_mutex(id, "on_press".to_string(), on_press.unwrap());
+        }
+
+        if user_data.is_some() {
+            add_user_data_to_mutex(id, user_data.unwrap());
         }
 
         let mut state = access_state();
@@ -5449,7 +5479,10 @@ fn set_state_of_widget(
     drop(state);
 }
 
-fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>, user_data: Option<PyObject>) {
+fn add_callback_to_mutex(id: usize, 
+                        event_name: String, 
+                        py_obj: Option<PyObject>, 
+                        user_data: Option<PyObject>) {
     
     let mut app_cbs = access_callbacks();
         
@@ -5460,6 +5493,25 @@ fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>
     }
 
     drop(app_cbs);
+}
+
+pub fn add_cb_to_mutex(id: usize, 
+                event_name: String, 
+                py_obj: PyObject) {
+
+    let mut app_cbs = access_cbs();
+    app_cbs.callbacks.insert((id, event_name), py_obj);
+    drop(app_cbs);
+}
+
+fn add_user_data_to_mutex(id: usize, 
+                            user_data: PyObject) {
+    
+    let mut ud = access_user_data();
+        
+    ud.user_data.insert(id, user_data);
+
+    drop(ud);
 }
 
 pub fn find_parent_uid(ipg_ids: &[IpgIds], parent_id: String) -> usize {

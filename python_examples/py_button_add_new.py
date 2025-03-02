@@ -1,5 +1,5 @@
-from icedpygui import IPG, IpgColor, IpgWindowTheme, IpgAlignment, IpgStyleStandard, IpgButtonArrow
-from icedpygui import IpgHorizontalAlignment, IpgVerticalAlignment
+from icedpygui import IPG
+
 
 ipg = IPG()
 
