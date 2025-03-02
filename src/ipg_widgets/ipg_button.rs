@@ -11,7 +11,7 @@ use super::helpers::{get_height, get_horizontal_alignment, get_padding_f64,
 use super::ipg_enums::IpgWidgets;
 
 use iced::widget::button::{self, Status, Style};
-use pyo3::{pyclass, PyObject, Python};
+use pyo3::{pyclass, Py, PyAny, PyObject, Python};
 
 use iced::widget::{text, Button, Text};
 use iced::{alignment, Border, Color, Element, Length, Padding, Shadow, Theme, Vector };
@@ -181,11 +181,16 @@ pub fn process_callback(id: usize, event_name: String)
     };
 
     let callback = match callback_opt {
-        Some(cb) => cb,
+        Some(cb) => *cb,
         None => panic!("Button callback could not be found with id {}", id),
     };
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    let user_data_opt: Option<Py<PyAny>> = match app_cbs.user_data.get(&id) {
+        Some(py) => Some(py),
+        None => None,
+    };
+
+    drop(app_cbs);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
@@ -207,8 +212,6 @@ pub fn process_callback(id: usize, event_name: String)
                 }
             } 
     });
-    
-    drop(app_cbs);
          
 }
 

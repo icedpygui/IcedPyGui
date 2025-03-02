@@ -5450,15 +5450,16 @@ fn set_state_of_widget(
 }
 
 fn add_callback_to_mutex(id: usize, event_name: String, py_obj: Option<PyObject>, user_data: Option<PyObject>) {
+    
     let mut app_cbs = access_callbacks();
+        
+    app_cbs.callbacks.insert((id, event_name), py_obj);
 
-        app_cbs.callbacks.insert((id, event_name), py_obj);
+    if user_data.is_some() {
+        app_cbs.user_data.insert(id, user_data.unwrap());
+    }
 
-        if user_data.is_some() {
-            app_cbs.user_data.insert(id, user_data.unwrap());
-        }
-
-        drop(app_cbs);
+    drop(app_cbs);
 }
 
 pub fn find_parent_uid(ipg_ids: &[IpgIds], parent_id: String) -> usize {

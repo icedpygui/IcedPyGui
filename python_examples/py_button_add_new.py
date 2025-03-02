@@ -8,7 +8,7 @@ def on_press(btn_id):
     print("button pressed")
     id = ipg.add_button(
             parent_id="col", 
-            label="1st Button", 
+            label="2nd Button", 
             on_press=on_press)
     print(id)
 
