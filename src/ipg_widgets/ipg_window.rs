@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::app::{self, Message};
-use crate::{access_callbacks, access_window_actions, IpgState};
+use crate::{access_window_actions, IpgState};
 
 use iced::window;
 use iced::{Element, Task, Theme, Size};
@@ -9,7 +9,6 @@ use iced::widget::Column;
 
 use pyo3::{pyclass, PyObject, Python};
 
-use super::callbacks::WidgetCallbackOut;
 use super::helpers::{try_extract_boolean, try_extract_f64, try_extract_u64, try_extract_vec_f32};
 
 
@@ -137,59 +136,59 @@ pub fn construct_window(content: Vec<Element<app::Message>>) -> Element<app::Mes
     Column::with_children(content).into()
 }
 
-fn process_callback(wco: WidgetCallbackOut) 
-{
-    let app_cbs = access_callbacks();
+// fn process_callback(wco: WidgetCallbackOut) 
+// {
+//     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
+//     let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
 
-    let callback_opt = match callback_present {
-        Some(cb) => cb,
-        None => return,
-    };
+//     let callback_opt = match callback_present {
+//         Some(cb) => cb,
+//         None => return,
+//     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("Window Callback could not be found with id {}", wco.id),
-    };
+//     let callback = match callback_opt {
+//         Some(cb) => cb,
+//         None => panic!("Window Callback could not be found with id {}", wco.id),
+//     };
 
-    let value = match wco.value_str {
-        Some(vl) => vl,
-        None => panic!("Window value in callback could not be found"),
-    };
+//     let value = match wco.value_str {
+//         Some(vl) => vl,
+//         None => panic!("Window value in callback could not be found"),
+//     };
 
-    Python::with_gil(|py| {
-        if wco.user_data.is_some() {
-            let user_data = match wco.user_data {
-                Some(ud) => ud,
-                None => panic!("Window callback user_data not found."),
-            };
-            let res = callback.call1(py, (
-                                                                wco.id, 
-                                                                value, 
-                                                                user_data
-                                                                )
-                                                                );
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("Window: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
-            }
-        } else {
-            let res = callback.call1(py, (
-                                                                wco.id, 
-                                                                value, 
-                                                                )
-                                                                );
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("Window: 2 parameters (id, value) are required or a python error in this function. {er}"),
-            }
-        } 
-    });
+//     Python::with_gil(|py| {
+//         if wco.user_data.is_some() {
+//             let user_data = match wco.user_data {
+//                 Some(ud) => ud,
+//                 None => panic!("Window callback user_data not found."),
+//             };
+//             let res = callback.call1(py, (
+//                                                                 wco.id, 
+//                                                                 value, 
+//                                                                 user_data
+//                                                                 )
+//                                                                 );
+//             match res {
+//                 Ok(_) => (),
+//                 Err(er) => panic!("Window: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
+//             }
+//         } else {
+//             let res = callback.call1(py, (
+//                                                                 wco.id, 
+//                                                                 value, 
+//                                                                 )
+//                                                                 );
+//             match res {
+//                 Ok(_) => (),
+//                 Err(er) => panic!("Window: 2 parameters (id, value) are required or a python error in this function. {er}"),
+//             }
+//         } 
+//     });
 
-    drop(app_cbs);
+//     drop(app_cbs);
 
-}
+// }
 
 
 #[derive(Debug, Clone, PartialEq)]

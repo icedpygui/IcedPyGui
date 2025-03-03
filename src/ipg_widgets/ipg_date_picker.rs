@@ -1,6 +1,6 @@
 //! ipg_date_picker
 use crate::app::{Message, self};
-use crate::{access_callbacks, IpgState};
+use crate::{access_callbacks, access_user_data, IpgState};
 use crate::style::styling::IpgStyleStandard;
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
 use super::ipg_enums::IpgWidgets;
@@ -550,46 +550,52 @@ pub fn date_picker_update(state: &mut IpgState, id: usize, message: DPMessage) {
 
 fn process_callback(id: usize, event_name: String, selected_date: Option<String>) 
 {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    let callback_present = 
+        app_cbs.callbacks.get(&(id, event_name));
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("DatePicker callback could not be found with id {}", id),
-    };
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    drop(app_cbs);
                   
     Python::with_gil(|py| {
         if user_data_opt.is_some() && selected_date.is_some() {
-            let res = callback.call1(py, (
-                                                                id, 
-                                                                selected_date.unwrap(), 
-                                                                user_data_opt.unwrap()
-                                                                ));
+            let res = cb.call1(py, (
+                                                        id, 
+                                                        selected_date.unwrap(), 
+                                                        user_data_opt.unwrap()
+                                                        ));
             match res {
                 Ok(_) => (),
-                Err(er) => panic!("DatePicker: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
+                Err(er) => panic!("DatePicker: 3 parameters (id, value, user_data) 
+                                    are required or a python error in this function. {er}"),
             }
         } else if selected_date.is_some() {
-            let res = callback.call1(py, (
-                                                                id,
-                                                                selected_date.unwrap(), 
-                                                                ));
+            let res = cb.call1(py, (
+                                                        id,
+                                                        selected_date.unwrap(), 
+                                                        ));
             match res {
                 Ok(_) => (),
-                Err(er) => panic!("InputText: 2 parameters (id, value) are required or a python error in this function. {er}"),
+                Err(er) => panic!("InputText: 2 parameters (id, value) 
+                                    are required or a python error in this function. {er}"),
             }
         } 
     });
 
-    drop(app_cbs); 
+    drop(ud); 
 
 }      
 

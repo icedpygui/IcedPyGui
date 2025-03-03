@@ -1,7 +1,7 @@
 //!ipg_radio
 use crate::graphics::colors::get_color;
 use crate::ipg_widgets::helpers::try_extract_boolean;
-use crate::{access_callbacks, IpgState};
+use crate::{access_callbacks, access_user_data, IpgState};
 use crate::app;
 use super::helpers::{get_height, get_padding_f64, get_width, 
     try_extract_f64, try_extract_f64_option, try_extract_i64_option, 
@@ -302,47 +302,53 @@ pub fn radio_callback(state: &mut IpgState, id: usize, message: RDMessage) {
 
 fn process_callback(id: usize, event_name: String, selected_index: usize, selected_label: String) 
 {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    let callback_present = 
+        app_cbs.callbacks.get(&(id, event_name));
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("Radio Callback could not be found with id {}", id),
-    };
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    drop(app_cbs);
 
     Python::with_gil(|py| {
         if user_data_opt.is_some() {
-            let res = callback.call1(py, (
-                                                                id, 
-                                                                (selected_index, selected_label),
-                                                                user_data_opt.unwrap()
-                                                                ));
+            let res = cb.call1(py, (
+                                                        id, 
+                                                        (selected_index, selected_label),
+                                                        user_data_opt.unwrap()
+                                                        ));
             match res {
                 Ok(_) => (),
-                Err(er) => panic!("Radio: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
+                Err(er) => panic!("Radio: 3 parameters (id, value, user_data) 
+                                    are required or a python error in this function. {er}"),
             }
         } else {
-            let res = callback.call1(py, (
-                                    id,
-                                    (selected_index, selected_label), 
-                                    )
+            let res = cb.call1(py, (
+                                                        id,
+                                                        (selected_index, selected_label), 
+                                                        )
                             );
             match res {
                 Ok(_) => (),
-                Err(er) => panic!("Radio: 2 parameters (id, value) are required or a python error in this function. {er}"),
+                Err(er) => panic!("Radio: 2 parameters (id, value) 
+                                    are required or a python error in this function. {er}"),
             }
         } 
     });
 
-    drop(app_cbs);
+    drop(ud);
 
 }
 

@@ -1,7 +1,7 @@
 //! ipg_timer
 use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, app, IpgState};
+use crate::{access_callbacks, access_user_data, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_height, get_padding_f64, get_radius, 
@@ -200,54 +200,61 @@ pub fn canvas_tick_callback(state: &mut IpgState)
 
 fn process_callback(id: usize, event_name: String, counter: Option<u64>)
 {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    let callback_present = 
+        app_cbs.callbacks.get(&(id, event_name));
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("Timer callback could not be found with id {}", id),
-    };
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    drop(app_cbs);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() && counter.is_some() {
-                let res = callback.call1(py, (
-                                                                    id,
-                                                                    counter.unwrap(),  
-                                                                    user_data_opt.unwrap()
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id,
+                                                            counter.unwrap(),  
+                                                            user_data_opt.unwrap()
+                                                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("CanvasTimer: 3 parameters (id, counter, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("CanvasTimer: 3 parameters (id, counter, user_data) 
+                                        are required or a python error in this function. {er}"),
                 }
             } else if counter.is_some() {
-                let res = callback.call1(py, (
-                                                                    id,
-                                                                    counter.unwrap(),  
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id,
+                                                            counter.unwrap(),  
+                                                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("CanvasTimer: 2 parameters (id, counter) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("CanvasTimer: 2 parameters (id, counter) 
+                                        are required or a python error in this function. {er}"),
                 }
             } else {
-                let res = callback.call1(py, (
-                                                                    id, 
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id, 
+                                                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("CanvasTimer: 1 parameters (id) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("CanvasTimer: 1 parameter (id) 
+                                        is required or a python error in this function. {er}"),
                 }
             }
     });
     
-    drop(app_cbs);
+    drop(ud);
 }
 
 

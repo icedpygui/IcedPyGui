@@ -1,5 +1,6 @@
 //! ipg_pick_list
 use crate::access_callbacks;
+use crate::access_user_data;
 use crate::app;
 use crate::graphics::colors::get_color;
 use crate::IpgState;
@@ -192,46 +193,52 @@ pub fn construct_picklist<'a>(pick: &'a IpgPickList,
 
  fn process_callback(id: usize, event_name: String, selected: Option<String>) 
  {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    let callback_present = 
+        app_cbs.callbacks.get(&(id, event_name));
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("PickList Callback could not be found with id {}", id),
-    };
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    drop(app_cbs);
                    
     Python::with_gil(|py| {
         if user_data_opt.is_some() && selected.is_some() {
-            let res = callback.call1(py, (
-                                                                id, 
-                                                                selected.unwrap(), 
-                                                                user_data_opt.unwrap()
-                                                                ));
+            let res = cb.call1(py, (
+                                                        id, 
+                                                        selected.unwrap(), 
+                                                        user_data_opt.unwrap()
+                                                        ));
             match res {
                 Ok(_) => (),
-                Err(er) => panic!("PickList: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
+                Err(er) => panic!("PickList: 3 parameters (id, value, user_data) 
+                                    are required or a python error in this function. {er}"),
             }
         } else {
-            let res = callback.call1(py, (
-                                                                id, 
-                                                                selected.unwrap(), 
-                                                                ));
+            let res = cb.call1(py, (
+                                                        id, 
+                                                        selected.unwrap(), 
+                                                        ));
             match res {
                 Ok(_) => (),
-                Err(er) => panic!("InputText: 2 parameters (id, value) are required or a python error in this function. {er}"),
+                Err(er) => panic!("InputText: 2 parameters (id, value) 
+                                    are required or a python error in this function. {er}"),
             }
         } 
     });
 
-    drop(app_cbs); 
+    drop(ud); 
 
  }
 

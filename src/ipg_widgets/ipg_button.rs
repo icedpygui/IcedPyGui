@@ -2,7 +2,7 @@
 
 use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, access_cbs, access_user_data, app};
+use crate::{access_callbacks, access_user_data, app};
 use super::helpers::{get_height, get_horizontal_alignment, get_padding_f64, 
     get_radius, get_vertical_alignment, get_width, try_extract_boolean, 
     try_extract_f64, try_extract_ipg_color, try_extract_ipg_horizontal_alignment, 
@@ -11,7 +11,7 @@ use super::helpers::{get_height, get_horizontal_alignment, get_padding_f64,
 use super::ipg_enums::IpgWidgets;
 
 use iced::widget::button::{self, Status, Style};
-use pyo3::{pyclass, Py, PyAny, PyObject, Python};
+use pyo3::{pyclass, PyObject, Python};
 
 use iced::widget::{text, Button, Text};
 use iced::{alignment, Border, Color, Element, Length, Padding, Shadow, Theme, Vector };
@@ -22,6 +22,7 @@ use crate::graphics::bootstrap::{self, icon_to_char, icon_to_string};
 #[derive(Debug, Clone)]
 pub struct IpgButton {
     pub id: usize,
+    pub parent_id: String,
     pub show: bool,
 
     pub label: String,
@@ -39,6 +40,7 @@ pub struct IpgButton {
 impl IpgButton {
     pub fn new( 
         id: usize,
+        parent_id: String,
         show: bool,
 
         label: String,
@@ -54,6 +56,7 @@ impl IpgButton {
         ) -> Self {
         Self {
             id,
+            parent_id,
             show,
             label,
             width,
@@ -173,7 +176,7 @@ pub fn process_callback(id: usize, event_name: String)
     let ud = access_user_data();
     let user_data_opt = ud.user_data.get(&id);
 
-    let app_cbs = access_cbs();
+    let app_cbs = access_callbacks();
 
     let callback_present = 
         app_cbs.callbacks.get(&(id, event_name));
@@ -192,13 +195,15 @@ pub fn process_callback(id: usize, event_name: String)
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
-                let res = cb.call1(py, (
-                                                            id,  
-                                                            user_data_opt.unwrap()
-                                                            ));
+                let res = 
+                    cb.call1(py, (
+                            id,  
+                            user_data_opt.unwrap()
+                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Button: 2 parameters (id, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Button: 2 parameters (id, user_data) 
+                                            are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = cb.call1(py, (
@@ -206,7 +211,8 @@ pub fn process_callback(id: usize, event_name: String)
                                                             ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Button: 1 parameter (id) is required or possibly a python error in this function. {er}"),
+                    Err(er) => panic!("Button: 1 parameter (id) 
+                                            is required or possibly a python error in this function. {er}"),
                 }
             } 
     });

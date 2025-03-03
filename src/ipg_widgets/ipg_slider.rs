@@ -1,6 +1,6 @@
 //! ipg_slider
 use crate::graphics::colors::get_color;
-use crate::{access_callbacks, app, IpgState};
+use crate::{access_callbacks, access_user_data, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn};
 
@@ -155,55 +155,62 @@ pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
 
 pub fn process_callback(id: usize, event_name: String, on_change_value: Option<f32>) 
 {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(id, event_name));
-       
-    let callback_opt = match callback_present {
+    let callback_present = 
+        app_cbs.callbacks.get(&(id, event_name));
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("Slider Callback could not be found with id {}", id),
-    };
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    drop(app_cbs);
                  
     Python::with_gil(|py| {
         if user_data_opt.is_some() && on_change_value.is_some() {
             
-            let res = callback.call1(py, (
-                                                                id, 
-                                                                on_change_value.unwrap(), 
-                                                                user_data_opt,
-                                                                ));
+            let res = cb.call1(py, (
+                                                        id, 
+                                                        on_change_value.unwrap(), 
+                                                        user_data_opt,
+                                                        ));
             match res {
                 Ok(_) => (),
-                Err(er) => panic!("Slider: 3 parameters (id, value, user_data) are required or a python error in this function. {er}"),
+                Err(er) => panic!("Slider: 3 parameters (id, value, user_data) 
+                                    are required or a python error in this function. {er}"),
             }
         } else if on_change_value.is_some() {
-            let res = callback.call1(py, (
-                                                                id, 
-                                                                on_change_value.unwrap(), 
-                                                                ));
+            let res = cb.call1(py, (
+                                                        id, 
+                                                        on_change_value.unwrap(), 
+                                                        ));
             match res {
                 Ok(_) => (),
-                Err(er) => panic!("Slider: 2 parameters (id, value) are required or a python error in this function. {er}"),
+                Err(er) => panic!("Slider: 2 parameters (id, value) 
+                                    are required or a python error in this function. {er}"),
             }
         } else {
-            let res = callback.call1(py, (
-                                                                id,  
-                                                                ));
+            let res = cb.call1(py, (
+                                                        id,  
+                                                        ));
             match res {
                 Ok(_) => (),
-                Err(er) => panic!("Slider: 1 parameters (id) are required or a python error in this function. {er}"),
+                Err(er) => panic!("Slider: 1 parameter (id) 
+                                    is required or a python error in this function. {er}"),
             }
         }
     });
 
-    drop(app_cbs); 
+    drop(ud); 
 
 }
 

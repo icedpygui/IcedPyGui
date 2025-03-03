@@ -1,5 +1,5 @@
 //! ipg_mousearea
-use crate::{access_callbacks, IpgState};
+use crate::{access_callbacks, access_user_data, IpgState};
 use crate::app::Message;
 use super::helpers::try_extract_boolean;
 
@@ -119,65 +119,73 @@ pub fn mousearea_callback_point(_state: &mut IpgState,
 
 fn process_callback(id: usize, event_name: String, points_opt: Option<(String, f32, String, f32)>) 
 {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    let callback_present = 
+        app_cbs.callbacks.get(&(id, event_name));
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
-       
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("Image Callback could not be found with id {}", id),
-    };
-               
-    let user_data_opt = app_cbs.user_data.get(&id);
+
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
+
+    drop(app_cbs);
 
     Python::with_gil(|py| {
         if user_data_opt.is_some() && points_opt.is_some() {
-                let res = callback.call1(py, (
-                                                                    id, 
-                                                                    points_opt.unwrap(), 
-                                                                    user_data_opt.unwrap()
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id, 
+                                                            points_opt.unwrap(), 
+                                                            user_data_opt.unwrap()
+                                                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Image: 3 parameter (id, points, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Image: 3 parameter (id, points, user_data) 
+                                        are required or a python error in this function. {er}"),
                 }
             } else if points_opt.is_some() && user_data_opt.is_none() {
-                let res = callback.call1(py, (
-                                                                    id, 
-                                                                    points_opt.unwrap(), 
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id, 
+                                                            points_opt.unwrap(), 
+                                                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Image: 2 parameter (id, points) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Image: 2 parameter (id, points) 
+                                        are required or a python error in this function. {er}"),
                 }
             } else if user_data_opt.is_some() {
-                let res = callback.call1(py, (
-                                                                    id, 
-                                                                    user_data_opt.unwrap()
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id, 
+                                                            user_data_opt.unwrap()
+                                                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Image: 2 parameter (id, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Image: 2 parameter (id, user_data) 
+                                        are required or a python error in this function. {er}"),
                 }
             
             } else {
-                let res = callback.call1(py, (
-                                                                    id, 
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id, 
+                                                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Image: 1 parameter (id) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Image: 1 parameter (id) 
+                                        are required or a python error in this function. {er}"),
                 }
             }
     
     });
 
-    drop(app_cbs);   
+    drop(ud);   
 
 }
 

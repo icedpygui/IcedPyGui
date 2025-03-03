@@ -2,7 +2,7 @@
 use crate::app::Message;
 use crate::graphics::colors::get_color;
 use crate::ipg_widgets::helpers::{try_extract_boolean, try_extract_string};
-use crate::{access_callbacks, IpgState};
+use crate::{access_callbacks, access_user_data, IpgState};
 use super::callbacks::WidgetCallbackIn;
 use super::helpers::{try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_u64};
 use super::ipg_enums::IpgWidgets;
@@ -196,48 +196,55 @@ pub fn card_callback(_state: &mut IpgState, id: usize, message: CardMessage) {
     }
 }
 
-
 pub fn process_callback(id: usize, event_name: String) 
 {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
-    let callback_present = app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    let callback_present = 
+        app_cbs.callbacks.get(&(id, event_name));
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
-       
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("Card callback could not be found with id {}", id),
-    };
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
+
+    drop(app_cbs);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
-                let res = callback.call1(py, (
-                                                                    id,  
-                                                                    user_data_opt.unwrap()
-                                                                    ));
+                let res = 
+                    cb.call1(py, (
+                            id,  
+                            user_data_opt.unwrap()
+                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Card: 2 parameters (id, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Card: 2 parameters (id, user_data) 
+                                        are required or a python error in this function. {er}"),
                 }
             } else {
-                let res = callback.call1(py, (
-                                                                    id,  
-                                                                    ));
+                let res = 
+                    cb.call1(py, (
+                            id,  
+                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Card: 1 parameter (id) is required or a python error in this function. {er}"),
+                    Err(er) => panic!("Card: 1 parameter (id) 
+                                        is required or a python error in this function. {er}"),
                 }
             } 
     });
-    
-    drop(app_cbs);
-         
+
+    drop(ud);
+     
 }
 
 

@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use crate::ipg_widgets::ipg_window::get_ipg_mode;
-use crate::{access_callbacks, access_window_actions, IpgState};
+use crate::{access_callbacks, access_events, access_user_data, access_window_actions, IpgState};
 
 use iced::event::Event;
 use iced::keyboard::Event::{KeyPressed, KeyReleased, ModifiersChanged};
@@ -438,7 +438,7 @@ pub fn handle_window_closing(state: &mut IpgState, iced_id: window::Id, mode: wi
 }
 
 fn check_callback_if_none(id: usize, event_name: String) -> bool {
-    let cbs = access_callbacks();
+    let cbs = access_events();
 
     let cb_opt= cbs.callback_events
                                     .get(&(id, event_name));
@@ -497,47 +497,52 @@ fn process_keyboard_callback(id: usize,
                     hmap_s_s: HashMap<String, String>,
                     ) 
 {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
     let callback_present = 
         app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("KeyBoard callback could not be found with id {}", id),
-    };
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    drop(app_cbs);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
-                let res = callback.call1(py, (
-                                                                    id,
-                                                                    hmap_s_s,
-                                                                    user_data_opt.unwrap()
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id,
+                                                            hmap_s_s,
+                                                            user_data_opt.unwrap()
+                                                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("KeyBoard Event: 3 parameters (id, dict, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("KeyBoard Event: 3 parameters (id, dict, user_data) 
+                                        are required or a python error in this function. {er}"),
                 }
             } else {
-                let res = callback.call1(py, (
+                let res = cb.call1(py, (
                                                                     id,
                                                                     hmap_s_s,  
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Keyboard Event: 2 parameter (id, dict) is required or possibly a python error in this function. {er}"),
+                    Err(er) => panic!("Keyboard Event: 2 parameter (id, dict) 
+                                        is required or possibly a python error in this function. {er}"),
                 }
             } 
     });
     
-    drop(app_cbs);      
+    drop(ud);      
 
 }
 
@@ -546,47 +551,52 @@ fn process_mouse_callback(id: usize,
                     hmap_s_f: Option<HashMap<String, f32>>, 
                     ) 
 {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
     let callback_present = 
         app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("KeyBoard callback could not be found with id {}", id),
-    };
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    drop(app_cbs);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
-                let res = callback.call1(py, (
+                let res = cb.call1(py, (
                                                                     id,
                                                                     hmap_s_f,
                                                                     user_data_opt.unwrap()
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Mouse Event: 3 parameters (id, dict, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Mouse Event: 3 parameters (id, dict, user_data) 
+                                        are required or a python error in this function. {er}"),
                 }
             } else {
-                let res = callback.call1(py, (
+                let res = cb.call1(py, (
                                                                     id,
                                                                     hmap_s_f,  
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Mouse Event: 2 parameter (id, dict) is required or possibly a python error in this function. {er}"),
+                    Err(er) => panic!("Mouse Event: 2 parameter (id, dict) 
+                                        is required or possibly a python error in this function. {er}"),
                 }
             } 
     });
     
-    drop(app_cbs);
+    drop(ud);
 
 }
 
@@ -596,49 +606,54 @@ fn process_window_callback(id: usize,
                     hmap_s_s: Option<HashMap<String, String>>,
                     ) 
 {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
     let callback_present = 
         app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("KeyBoard callback could not be found with id {}", id),
-    };
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    drop(app_cbs);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
-                let res = callback.call1(py, (
-                                                                    id,
-                                                                    hmap_s_f,
-                                                                    hmap_s_s,
-                                                                    user_data_opt.unwrap()
-                                                                    ));
+                let res = cb.call1(py, (
+                                                            id,
+                                                            hmap_s_f,
+                                                            hmap_s_s,
+                                                            user_data_opt.unwrap()
+                                                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Wndow Event: 3 parameters (id, dict, dict, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Wndow Event: 3 parameters (id, dict, dict, user_data) 
+                                        are required or a python error in this function. {er}"),
                 }
             } else {
-                let res = callback.call1(py, (
+                let res = cb.call1(py, (
                                                                     id,
                                                                     hmap_s_f,
                                                                     hmap_s_s,  
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Wndow Event: 3 parameter (id, dict, dict) is required or possibly a python error in this function. {er}"),
+                    Err(er) => panic!("Wndow Event: 3 parameter (id, dict, dict) 
+                                        is required or possibly a python error in this function. {er}"),
                 }
             } 
     });
     
-    drop(app_cbs);
+    drop(ud);
 }
 
 fn process_touch_callback(id: usize,
@@ -647,26 +662,29 @@ fn process_touch_callback(id: usize,
                     hmap_s_pt: HashMap<String, (f32, f32)>,
                     ) 
 {
+    let ud = access_user_data();
+    let user_data_opt = ud.user_data.get(&id);
+
     let app_cbs = access_callbacks();
 
     let callback_present = 
         app_cbs.callbacks.get(&(id, event_name));
-
-    let callback_opt = match callback_present {
+    
+    let callback = match callback_present {
         Some(cb) => cb,
         None => return,
     };
 
-    let callback = match callback_opt {
-        Some(cb) => cb,
-        None => panic!("KeyBoard callback could not be found with id {}", id),
-    };
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
 
-    let user_data_opt = app_cbs.user_data.get(&id);
+    drop(app_cbs);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
-                let res = callback.call1(py, (
+                let res = cb.call1(py, (
                                                                     id,
                                                                     hmap_s_fg,
                                                                     hmap_s_pt,
@@ -674,21 +692,23 @@ fn process_touch_callback(id: usize,
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Touch Event: 4 parameters (id, dict, dict, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Touch Event: 4 parameters (id, dict, dict, user_data) 
+                                        are required or a python error in this function. {er}"),
                 }
             } else {
-                let res = callback.call1(py, (
+                let res = cb.call1(py, (
                                                                     id,
                                                                     hmap_s_fg,
                                                                     hmap_s_pt,  
                                                                     ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Touch Event: 3 parameter (id, dict, dict) is required or possibly a python error in this function. {er}"),
+                    Err(er) => panic!("Touch Event: 3 parameter (id, dict, dict) 
+                                        is required or possibly a python error in this function. {er}"),
                 }
             } 
     });
     
-    drop(app_cbs);
+    drop(ud);
     
 }

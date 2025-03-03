@@ -3,14 +3,14 @@ from icedpygui import IPG
 
 ipg = IPG()
 
-
+count = 0
 def on_press(btn_id):
-    print("button pressed")
-    id = ipg.add_button(
-            parent_id="col", 
-            label="2nd Button", 
-            on_press=on_press)
-    print(id)
+    global count
+    count += 1
+    ipg.add_button(
+        parent_id="col", 
+        label=f"Button_{count}", 
+        on_press=on_press)
 
 
 # Add the windows
@@ -37,7 +37,7 @@ ipg.add_column(
 
 ipg.add_button(
             parent_id="col", 
-            label="1st Button", 
+            label="Press Me to Add A Button", 
             on_press=on_press)
 
 ipg.start_session()

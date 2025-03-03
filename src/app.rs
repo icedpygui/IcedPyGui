@@ -27,7 +27,7 @@ use crate::ipg_widgets::ipg_separator::construct_separator;
 use crate::ipg_widgets::ipg_table::table_callback;
 use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, 
     canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
-use crate::{access_canvas_state, access_canvas_update_items, access_update_items, access_window_actions, ipg_widgets, match_container, match_container_for_df, match_widget, IpgState};
+use crate::{access_canvas_state, access_canvas_update_items, access_update_items, access_window_actions, ipg_widgets, match_container, match_container_for_df, match_widget, set_state_of_widget_running_state, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
@@ -1096,6 +1096,18 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
             None => panic!("DataFrame_update: table with id {wid} not found.")
         }
     }
+    // transfer any widgets or containers over
+    let mut mutex_state = access_state();
+    let widgets = mutex_state.widgets.to_owned();
+
+    for key in widgets.keys() {
+        let value = mutex_state.widgets.remove(key).unwrap();
+        let parent_id = get_widget_parent_id(&value);
+        set_state_of_widget_running_state(state, *key, parent_id);
+        state.widgets.insert(*key, value);
+    }
+
+    drop(mutex_state);
     
 }
 
@@ -1154,7 +1166,49 @@ fn show_widget(state: &mut IpgState, ids: &Vec<(usize, bool)>) {
     
 }
 
-
+fn get_widget_parent_id(widget: &IpgWidgets) -> String {
+    match widget {
+        IpgWidgets::IpgButton(ipg_button) => ipg_button.parent_id.clone(),
+        IpgWidgets::IpgButtonStyle(ipg_button_style) => todo!(),
+        IpgWidgets::IpgCard(ipg_card) => todo!(),
+        IpgWidgets::IpgCardStyle(ipg_card_style) => todo!(),
+        IpgWidgets::IpgCheckBox(ipg_check_box) => todo!(),
+        IpgWidgets::IpgCheckboxStyle(ipg_checkbox_style) => todo!(),
+        IpgWidgets::IpgColorPicker(ipg_color_picker) => todo!(),
+        IpgWidgets::IpgColorPickerStyle(ipg_color_picker_style) => todo!(),
+        IpgWidgets::IpgContainerStyle(ipg_container_style) => todo!(),
+        IpgWidgets::IpgDatePicker(ipg_date_picker) => todo!(),
+        IpgWidgets::IpgImage(ipg_image) => todo!(),
+        IpgWidgets::IpgMenuStyle(ipg_menu_style) => todo!(),
+        IpgWidgets::IpgMenuBarStyle(ipg_menu_bar_style) => todo!(),
+        IpgWidgets::IpgOpaqueStyle(ipg_opaque_style) => todo!(),
+        IpgWidgets::IpgPickList(ipg_pick_list) => todo!(),
+        IpgWidgets::IpgPickListStyle(ipg_pick_list_style) => todo!(),
+        IpgWidgets::IpgProgressBar(ipg_progress_bar) => todo!(),
+        IpgWidgets::IpgProgressBarStyle(ipg_progress_bar_style) => todo!(),
+        IpgWidgets::IpgRadio(ipg_radio) => todo!(),
+        IpgWidgets::IpgRadioStyle(ipg_radio_style) => todo!(),
+        IpgWidgets::IpgRule(ipg_rule) => todo!(),
+        IpgWidgets::IpgRuleStyle(ipg_rule_style) => todo!(),
+        IpgWidgets::IpgScrollableStyle(ipg_scrollable_style) => todo!(),
+        IpgWidgets::IpgSelectableText(ipg_selectable_text) => todo!(),
+        IpgWidgets::IpgSeparator(ipg_separator) => todo!(),
+        IpgWidgets::IpgSeparatorStyle(ipg_separator_style) => todo!(),
+        IpgWidgets::IpgSlider(ipg_slider) => todo!(),
+        IpgWidgets::IpgSliderStyle(ipg_slider_style) => todo!(),
+        IpgWidgets::IpgSpace(ipg_space) => todo!(),
+        IpgWidgets::IpgSvg(ipg_svg) => todo!(),
+        IpgWidgets::IpgText(ipg_text) => todo!(),
+        IpgWidgets::IpgTextInput(ipg_text_input) => todo!(),
+        IpgWidgets::IpgTextInputStyle(ipg_text_input_style) => todo!(),
+        IpgWidgets::IpgTimer(ipg_timer) => todo!(),
+        IpgWidgets::IpgTimerStyle(ipg_timer_style) => todo!(),
+        IpgWidgets::IpgCanvasTimer(ipg_canvas_timer) => todo!(),
+        IpgWidgets::IpgCanvasTimerStyle(ipg_canvas_timer_style) => todo!(),
+        IpgWidgets::IpgToggler(ipg_toggler) => todo!(),
+        IpgWidgets::IpgTogglerStyle(ipg_toggler_style) => todo!(),
+    }
+}
 
 fn clone_state(state: &mut IpgState) {
     let mut mutex_state = access_state();
