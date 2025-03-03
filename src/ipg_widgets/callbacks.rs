@@ -324,8 +324,10 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             //     let wco = WidgetCallbackOut::default();
             //     wco
             // },
-            IpgWidgets::IpgTextInput(_) => {
+            IpgWidgets::IpgTextInput(ti) => {
+                ti.value = wci.value_str.unwrap();
                 return WidgetCallbackOut{
+                    value_str: Some(ti.value.clone()),
                     ..Default::default()
                 }
             },

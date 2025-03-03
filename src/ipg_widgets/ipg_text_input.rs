@@ -165,8 +165,8 @@ pub fn text_input_callback(state: &mut IpgState, id: usize, message: TIMessage) 
     match message {
         TIMessage::OnInput(value) => {
             wci.value_str = Some(value.clone());
-            let _ = set_or_get_widget_callback_data(state, wci);
-            process_callback(id, "on_input".to_string(), value);
+            let wco = set_or_get_widget_callback_data(state, wci);
+            process_callback(id, "on_input".to_string(), wco.value_str.unwrap());
         },
         TIMessage::OnSubmit(value) => {
             let _ = set_or_get_widget_callback_data(state, wci);

@@ -4992,43 +4992,43 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (wid, item, value))]
+    #[pyo3(signature = (wid, param, value))]
     fn update_dataframe(&self, 
                         wid: usize, 
-                        item: PyObject, 
+                        param: PyObject, 
                         value: PyDataFrame) 
     {
         let mut all_updates = access_update_items();
 
-        all_updates.dataframes.push((wid, item, value));
+        all_updates.dataframes.push((wid, param, value));
 
         drop(all_updates);
 
     }
 
-    #[pyo3(signature = (wid, item, value))]
+    #[pyo3(signature = (wid, param, value))]
     fn update_item(&self, 
                     wid: usize, 
-                    item: PyObject, 
+                    param: PyObject, 
                     value: PyObject) 
     {
         let mut all_updates = access_update_items();
 
-        all_updates.updates.push((wid, item, value));
+        all_updates.updates.push((wid, param, value));
 
         drop(all_updates);
 
     }
 
-    #[pyo3(signature = (wid, item, value))]
+    #[pyo3(signature = (wid, param, value))]
     fn update_canvas_item(&self, 
                             wid: usize, 
-                            item: PyObject, 
+                            param: PyObject, 
                             value: PyObject) 
     {
         let mut canvas_items = access_canvas_update_items();
 
-        canvas_items.updates.push((wid, item, value));
+        canvas_items.updates.push((wid, param, value));
 
         drop(canvas_items);
 

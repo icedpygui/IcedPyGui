@@ -3,28 +3,47 @@ from icedpygui import IPG, IpgColor, IpgContainerParam, IpgHorizontalAlignment, 
 
 # Moves the text to the top left position
 def change_alignment(btn_id):
-    ipg.update_item(cont2, IpgContainerParam.AlignX, IpgHorizontalAlignment.Left)
-    ipg.update_item(cont2, IpgContainerParam.AlignY, IpgVerticalAlignment.Top)
+    ipg.update_item(
+            wid=cont2, 
+            param=IpgContainerParam.AlignX, 
+            value=IpgHorizontalAlignment.Left)
+    
+    ipg.update_item(
+            wid=cont2, 
+            param=IpgContainerParam.AlignY, 
+            value=IpgVerticalAlignment.Top)
     
     
 # Moves the text to the center position
 def recenter(btn_id):
-    ipg.update_item(cont2, IpgContainerParam.Centered, True)
+    ipg.update_item(
+            wid=cont2, 
+            param=IpgContainerParam.Centered, 
+            value=True)
     
     
 # Moves text off center because padding on the left side
 # padding = [top, right, bottom, left]
 def padding(btn_id):
-    ipg.update_item(cont2, IpgContainerParam.Padding, [0.0, 0.0, 0.0, 50.0])  
+    ipg.update_item(
+            wid=cont2, 
+            param=IpgContainerParam.Padding, 
+            value=[0.0, 0.0, 0.0, 50.0])  
     
 # change container width
 def width(btn_id):
-    ipg.update_item(cont2, IpgContainerParam.Width, 300.0)
+    ipg.update_item(
+            wid=cont2, 
+            param=IpgContainerParam.Width, 
+            value=300.0)
     
     
 # change container height
 def height(btn_id):
-    ipg.update_item(cont2, IpgContainerParam.Height, 300.0)
+    ipg.update_item(
+            wid=cont2, 
+            param=IpgContainerParam.Height, 
+            value=300.0)
  
 
 ipg = IPG()

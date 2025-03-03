@@ -3,14 +3,45 @@ from icedpygui import IPG, IpgColor, IpgContainerStyleParam
 # To change the style of the container, 
 # use the style id, not the container id.
 def change_container_styling(btn_id):
-    ipg.update_item(cont_style, IpgContainerStyleParam.BackgroundIpgColor, IpgColor.RED)
-    ipg.update_item(cont_style, IpgContainerStyleParam.BorderIpgColor, IpgColor.LIGHT_SALMON)
-    ipg.update_item(cont_style, IpgContainerStyleParam.BorderRadius, [5.0])
-    ipg.update_item(cont_style, IpgContainerStyleParam.BorderWidth, 5.0)
-    ipg.update_item(cont_style, IpgContainerStyleParam.ShadowBlurRadius, 10.0)
-    ipg.update_item(cont_style, IpgContainerStyleParam.ShadowIpgColor, IpgColor.RED)
-    ipg.update_item(cont_style, IpgContainerStyleParam.ShadowOffsetXY, [0.0, 0.0])
-    ipg.update_item(cont_style, IpgContainerStyleParam.TextIpgColor, IpgColor.WHITE)
+    ipg.update_item(
+            wid=cont_style, 
+            param=IpgContainerStyleParam.BackgroundIpgColor, 
+            value=IpgColor.RED)
+    
+    ipg.update_item(
+            wid=cont_style, 
+            param=IpgContainerStyleParam.BorderIpgColor, 
+            value=IpgColor.LIGHT_SALMON)
+    
+    ipg.update_item(
+            wid=cont_style, 
+            param=IpgContainerStyleParam.BorderRadius, 
+            value=[5.0])
+    
+    ipg.update_item(
+            wid=cont_style, 
+            param=IpgContainerStyleParam.BorderWidth, 
+            value=5.0)
+    
+    ipg.update_item(
+            wid=cont_style, 
+            param=IpgContainerStyleParam.ShadowBlurRadius, 
+            value=10.0)
+    
+    ipg.update_item(
+            wid=cont_style, 
+            param=IpgContainerStyleParam.ShadowIpgColor, 
+            value=IpgColor.RED)
+    
+    ipg.update_item(
+            wid=cont_style, 
+            param=IpgContainerStyleParam.ShadowOffsetXY, 
+            value=[0.0, 0.0])
+    
+    ipg.update_item(
+            wid=cont_style, 
+            param=IpgContainerStyleParam.TextIpgColor, 
+            value=IpgColor.WHITE)
 
 ipg = IPG()
 

@@ -111,7 +111,7 @@ pub fn construct_date_picker<'a>(dp: &'a IpgDatePicker,
             calendar_show_button(dp, btn_style);
         return Some(cal_show_btn)
     }
-    
+    dbg!("here");
     // let content: Element<'a, Message, Theme, Renderer> = 
     //                                 Container::new(Space::new(0.0, 0.0))
     //                                             .padding(dp.padding)

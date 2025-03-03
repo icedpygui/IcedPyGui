@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgCardStyle, IpgCardParam
+from icedpygui import IPG, IpgCardParam, IpgCardStyleParam
 from icedpygui import IpgAlignment, IpgStyleStandard
 
 
@@ -13,10 +13,22 @@ def update_card(_btn_id: int):
     global card_id
     # The card_id is the first card in the series.  The only one that is changed.
     # The btn_id is not used.
-    ipg.update_item(card_id, IpgCardParam.Head, "This is a new head with Danger style")
-    ipg.update_item(card_id, IpgCardParam.Body, "This is a new body.")
-    ipg.update_item(card_id, IpgCardParam.Foot, "This is a new foot")
-    ipg.update_item(card_id, IpgCardParam.Style, IpgCardStyle.Danger)
+    ipg.update_item(
+            wid=card_id, 
+            param=IpgCardParam.Head, 
+            value="This is a new head with Danger style")
+    
+    ipg.update_item(
+            wid=card_id, 
+            param=IpgCardParam.Body, 
+            value="This is a new body.")
+    
+    ipg.update_item(
+            wid=card_id, 
+            param=IpgCardParam.Foot, 
+            value="This is a new foot")
+    
+    ipg.update_item(wid=card_id, param=IpgCardParam.Style, value=IpgCardStyleParam.Danger)
 
 
 # The callback will minimizes the first card, the button at the bottom left will maximize it.
@@ -66,7 +78,7 @@ ipg.add_scrollable(window_id="main", container_id="scroller", parent_id="cont", 
 # to see how things line up and getting the contents to scroll.  Just remember the
 # scrollable has to be larger than the container, column, or row.
 ipg.add_column(window_id="main", container_id="col", parent_id="scroller",
-               align_items=IpgAlignment.Center, width=400.0, 
+               align=IpgAlignment.Center, width=400.0, 
                spacing=0.0, padding=[10.0])
 
 # Add a row at the bottom to hold the button
@@ -86,29 +98,33 @@ body = ("\nThis is the body of the card.  \nNote how the style is add style=IpgC
 # Styles are set by importing the appropriate module, in this case IpgCardStyles, and selecting
 # the needed style from your IDE dropdown list.
 card_id = ipg.add_card("col", head, "Primary: " + body, foot="Foot",
-                       style=IpgCardStyle.Primary,
+                       style=IpgCardStyleParam.Primary,
                        on_close=minimize_card)
 ipg.add_card("col", head, "Secondary: " + body, foot="Foot",
-             style=IpgCardStyle.Secondary)
+             style=IpgCardStyleParam.Secondary)
 ipg.add_card("col", head, "Success: " + body, foot="Foot",
-             style=IpgCardStyle.Success)
+             style=IpgCardStyleParam.Success)
 ipg.add_card("col", head, "Danger: " + body, foot="Foot",
-             style=IpgCardStyle.Danger)
+             style=IpgCardStyleParam.Danger)
 ipg.add_card("col", head, "Warning: " + body, foot="Foot",
-             style=IpgCardStyle.Warning)
+             style=IpgCardStyleParam.Warning)
 ipg.add_card("col", head, "Info: " + body, foot="Foot",
-             style=IpgCardStyle.Info)
+             style=IpgCardStyleParam.Info)
 ipg.add_card("col", head, "Light: " + body, foot="Foot",
-             style=IpgCardStyle.Light)
+             style=IpgCardStyleParam.Light)
 ipg.add_card("col", head, "Dark: " + body, foot="Foot",
-             style=IpgCardStyle.Dark)
+             style=IpgCardStyleParam.Dark)
 ipg.add_card("col", head, body="White: " + body, foot="Foot",
-             style=IpgCardStyle.White)
+             style=IpgCardStyleParam.White)
 ipg.add_card("col", head, "Default: " + body, foot="Foot",
-             style=IpgCardStyle.Default)
+             style=IpgCardStyleParam.Default)
 
 # if you use no style, them this is what you get, which is Default.
-ipg.add_card("col", head, "Default: If you use no style setting.\n" + body, foot="Foot")
+ipg.add_card(
+        parent_id="col", 
+        head=head, 
+        body="Default: If you use no style setting.\n" + body, 
+        foot="Foot")
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

@@ -334,7 +334,7 @@ class Books:
                             padding=[0.0, 0.0, 0.0, 5.0],
                             on_input=self.input_changed,
                             on_submit=self.on_submit,
-                            user_data_on_input=i)
+                            user_data=i)
                     
             # need to keep the id's for later use in the modal
             self.modal_col_ids.append(id)

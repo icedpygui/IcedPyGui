@@ -16,7 +16,10 @@ x_id = ipg.generate_id()
 # The is_checked is a boolean which will toggle each time the
 # checkbox is clicked.
 def on_toggle(_chkbx_id: int, is_checked: bool):
-    ipg.update_item(x_id, IpgCheckboxParam.IconX, is_checked)
+    ipg.update_item(
+            wid=x_id, 
+            param=IpgCheckboxParam.IconX, 
+            value=is_checked)
 
 
 # Add a window first
@@ -42,7 +45,7 @@ ipg.add_column(
         window_id="main", 
         container_id="col", 
         parent_id="cont",
-        align_x=IpgAlignment.Start)
+        align=IpgAlignment.Start)
 
 # Add the first checkbox with the callback on_toggle.
 ipg.add_checkbox(

@@ -38,7 +38,7 @@ ipg.add_window("main", "KeyBoard Handler Demo", 800, 600,
 
 # A column is added to hold the widgets
 ipg.add_column("main", container_id="col",
-               align_items=IpgAlignment.Center,
+               align=IpgAlignment.Center,
                width_fill=True, height_fill=True)
 
 # a space for readability

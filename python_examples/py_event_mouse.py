@@ -57,7 +57,7 @@ ipg.add_window("main", "Mouse Handler Demo", 600, 600,
 
 # Add a column to hold the widgets
 ipg.add_column("main", container_id="col",
-               align_items=IpgAlignment.Center,
+               align=IpgAlignment.Center,
                width_fill=True, height_fill=True)
 
 # Add some spacing

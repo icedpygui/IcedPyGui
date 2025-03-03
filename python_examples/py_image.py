@@ -101,7 +101,7 @@ ipg.add_column(
         parent_id="main",
         width_fill=True, 
         height_fill=True,
-        align_x=IpgAlignment.Center)
+        align=IpgAlignment.Center)
 
 # Add a space for readability
 ipg.add_space(

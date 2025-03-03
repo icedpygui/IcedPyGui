@@ -97,8 +97,7 @@ style_id = ipg.add_button_style(border_radius=[20.0])
 ipg.add_window(window_id="main", 
                title="Button Update", 
                width=500, height=650,
-               pos_centered=True,
-               debug=True)
+               pos_centered=True)
 
 # Adding a container helps in aligning widgets since it has an x and y centering.
 # The IpgContainerAlignment.Center is used to center widgets.  The container defaults
@@ -115,59 +114,72 @@ ipg.add_container(window_id="main",
 # is also true usually doesn't work, the column or row will expand out of view.
 # The containers width_fill defaults to shrink to keep it that way unless needed.
 # Sometime you'll need to give them specific amounts to get alignments correct for your layout
-ipg.add_column("main", container_id="col", parent_id="cont",
-               align_x=IpgAlignment.Center)
+ipg.add_column(
+        window_id="main", 
+        container_id="col", 
+        parent_id="cont",
+        align=IpgAlignment.Center)
 
 # This is the only active button needed for this demo, so it's the only one with a callback
 # On some IDE setting, when you type in the callback name, it puts a () after the name.
 # If this happens, simply remove the ().  If you leave it in, you will get an error
 # about missing parameters.  This is not a function that is called but a python object
 # passed to rust to let it know what function needs to be called from rust.
-ipg.add_button(parent_id="col", 
-               label="Press to Change Buttons Below", 
-               on_press=update_button)
+ipg.add_button(
+        parent_id="col", 
+        label="Press to Change Buttons Below", 
+        on_press=update_button)
 
 # This timer button will change the button style widget
-ipg.add_timer(parent_id="col", 
-              duration_ms=500,
-              label="Continually change the button radius by press this button",
-              on_tick=on_tick)
+ipg.add_timer(
+        parent_id="col", 
+        duration_ms=500,
+        label="Continually change the button radius by press this button",
+        on_tick=on_tick)
 
 # The radius of this button is styled by using the style_id defined above.
 
-button_id = ipg.add_button(parent_id="col", 
-                            label="Corner Radius Will Change",
-                            )
+button_id = ipg.add_button(
+                parent_id="col", 
+                label="Corner Radius Will Change")
 
-label_btn = ipg.add_button(parent_id="col", 
-                           label="Label Will Change")
+label_btn = ipg.add_button(
+                parent_id="col", 
+                label="Label Will Change")
 
-width_btn = ipg.add_button(parent_id="col", 
-                           label="Width Will Change")
+width_btn = ipg.add_button(
+                parent_id="col", 
+                label="Width Will Change")
 
-height_btn = ipg.add_button(parent_id="col", 
-                            label="Height Will Change")
+height_btn = ipg.add_button(
+                parent_id="col", 
+                label="Height Will Change")
 
-padding_btn = ipg.add_button(parent_id="col", 
-                             label="Padding Will Change")
+padding_btn = ipg.add_button(
+                parent_id="col", 
+                label="Padding Will Change")
 
-style_btn = ipg.add_button(parent_id="col", 
-                           label="Styling Will Change")
+style_btn = ipg.add_button(
+                parent_id="col", 
+                label="Styling Will Change")
 
 # On many parameters that are updated, you will need to import the proper
 # dataclass so that the parameter can be selected.  In this case, you are working
 # with a button arrow, so import the IpgButtonArrow and select the one you want.
 # This method greatly cuts down on typos, if you had to use strings for the parameters.
-arrow_btn = ipg.add_button(parent_id="col", 
-                           label="",
-                           style_arrow=IpgButtonArrow.ArrowUp)
+arrow_btn = ipg.add_button(
+                parent_id="col", 
+                label="",
+                style_arrow=IpgButtonArrow.ArrowUp)
 
-show_btn = ipg.add_button(parent_id="col", 
-                          label="This button will disappear")
+show_btn = ipg.add_button(
+                parent_id="col", 
+                label="This button will disappear")
 
-hidden_btn = ipg.add_button(parent_id="col", 
-                          label="This button was hidden",
-                          show=False)
+hidden_btn = ipg.add_button(
+                parent_id="col", 
+                label="This button was hidden",
+                show=False)
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

@@ -3,36 +3,57 @@ from icedpygui import IPG, IpgColor, IpgColumnParam, IpgAlignment
 
 # Moves the text to the center position
 def align_center(btn_id):
-    ipg.update_item(col_id, IpgColumnParam.AlignX, IpgAlignment.Center)
+    ipg.update_item(
+            wid=col_id, 
+            param=IpgColumnParam.AlignX, 
+            value=IpgAlignment.Center)
 
      
 # Moves the text to the end position
 def align_end(btn_id):
-    ipg.update_item(col_id, IpgColumnParam.AlignX, IpgAlignment.End)
+    ipg.update_item(
+            wid=col_id, 
+            param=IpgColumnParam.AlignX, 
+            value=IpgAlignment.End)
     
     
 # Moves the text back to the start position
 def align_start(btn_id):
-    ipg.update_item(col_id, IpgColumnParam.AlignX, IpgAlignment.Start)
+    ipg.update_item(
+            wid=col_id, 
+            param=IpgColumnParam.AlignX, 
+            value=IpgAlignment.Start)
     
 
 # Moves text off start because padding on the left side
 # padding = [top, right, bottom, left]
 def padding(btn_id):
-    ipg.update_item(col_id, IpgColumnParam.Padding, [0.0, 0.0, 0.0, 50.0])  
+    ipg.update_item(
+            wid=col_id, 
+            param=IpgColumnParam.Padding, 
+            value=[0.0, 0.0, 0.0, 50.0])  
     
 # change container width
 def width(btn_id):
-    ipg.update_item(col_id, IpgColumnParam.Width, 200.0)
+    ipg.update_item(
+            wid=col_id, 
+            param=IpgColumnParam.Width, 
+            value=200.0)
     
     
 # change container height
 def height(btn_id):
-    ipg.update_item(col_id, IpgColumnParam.Height, 300.0)
+    ipg.update_item(
+            wid=col_id, 
+            param=IpgColumnParam.Height, 
+            value=300.0)
  
 # change container height
 def spacing(btn_id):
-    ipg.update_item(col_id, IpgColumnParam.Spacing, 20.0)
+    ipg.update_item(
+            wid=col_id, 
+            param=IpgColumnParam.Spacing, 
+            value=20.0)
     
     
 ipg = IPG()
@@ -63,7 +84,7 @@ col_id = ipg.add_column(
                 window_id="main",
                 container_id="col_txt",
                 parent_id="row",
-                align_x=IpgAlignment.Start,
+                align=IpgAlignment.Start,
                 width_fill=True,height=400.0
                 )
 
