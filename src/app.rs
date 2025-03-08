@@ -130,7 +130,7 @@ impl App {
         clone_state(&mut state);
 
         let mut canvas_state = IpgCanvasState::default();
-        clone_canvas_state(&mut canvas_state, state.last_id);
+        clone_canvas_state(&mut canvas_state);
         
         let mut open = add_windows(&mut state);
         open.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
@@ -170,9 +170,7 @@ impl App {
             },
             Message::Canvas(canvas_message) => {
                 canvas_callback(canvas_message, &mut self.state, &mut self.canvas_state);
-                self.canvas_state.last_id = self.state.last_id;
                 process_updates(&mut self.state, &mut self.canvas_state);
-                self.state.last_id = self.canvas_state.last_id;
                 get_tasks(&mut self.state)
             },
             Message::Card(id, message) => {
@@ -1062,7 +1060,10 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
         } else {
             match state.containers.get_mut(wid) {
                 Some(cnt) => {
-                    match_container(cnt, item, value, canvas_state);
+                    let last_id = match_container(cnt, item, value, canvas_state, state.last_id);
+                    if last_id.is_some() {
+                        state.last_id = last_id.unwrap();
+                    }
                 },
                 None => panic!("Item_update: Widget, Container, or Window with id {wid} not found.")
             }
@@ -1256,12 +1257,11 @@ fn clone_state(state: &mut IpgState) {
     drop(mutex_state);
 }
 
-fn clone_canvas_state(canvas_state: &mut IpgCanvasState, last_id: usize) {
+fn clone_canvas_state(canvas_state: &mut IpgCanvasState) {
     let mut mutex_cs = access_canvas_state();
     canvas_state.curves = mutex_cs.curves.to_owned();
     canvas_state.text_curves = mutex_cs.text_curves.to_owned();
     canvas_state.image_curves = mutex_cs.image_curves.to_owned();
-    canvas_state.last_id = last_id;
     canvas_state.width = mutex_cs.width;
     canvas_state.height = mutex_cs.height;
     canvas_state.border_width = mutex_cs.border_width;

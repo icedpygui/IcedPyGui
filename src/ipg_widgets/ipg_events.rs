@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use crate::ipg_widgets::ipg_window::get_ipg_mode;
-use crate::{access_callbacks, access_events, access_user_data, access_window_actions, IpgState};
+use crate::{access_events, access_user_data, access_window_actions, IpgState};
 
 use iced::event::Event;
 use iced::keyboard::Event::{KeyPressed, KeyReleased, ModifiersChanged};
@@ -100,6 +100,7 @@ pub fn process_keyboard_events(event: Event, event_id: usize)
 
             let hmap_s_s: HashMap<String, String> = 
                 HashMap::from([
+                    ("name".to_string(), event_name.clone()),
                     ("key".to_string(), key_str),
                     ("modifier".to_string(), mod_key),
                     ("location".to_string(), location_str)
@@ -122,6 +123,7 @@ pub fn process_keyboard_events(event: Event, event_id: usize)
             let location_str: String = process_location(location);
 
             let hmap_s_s: HashMap<String, String> = HashMap::from([
+                ("name".to_string(), event_name.clone()),
                 ("key".to_string(), key_str),
                 ("modifier".to_string(), mod_key),
                 ("location".to_string(), location_str)
@@ -440,7 +442,7 @@ pub fn handle_window_closing(state: &mut IpgState, iced_id: window::Id, mode: wi
 fn check_callback_if_none(id: usize, event_name: String) -> bool {
     let cbs = access_events();
 
-    let cb_opt= cbs.callback_events
+    let cb_opt= cbs.events
                                     .get(&(id, event_name));
     
     let check = match cb_opt {
@@ -496,27 +498,27 @@ fn process_keyboard_callback(id: usize,
                     event_name: String, 
                     hmap_s_s: HashMap<String, String>,
                     ) 
-{
+{   
     let ud = access_user_data();
     let user_data_opt = ud.user_data.get(&id);
-
-    let app_cbs = access_callbacks();
-
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
     
-    let callback = match callback_present {
+    let app_event = access_events();
+    
+    let event_present = 
+        app_event.events.get(&(id, event_name));
+    
+    let event = match event_present {
         Some(cb) => cb,
         None => return,
     };
-
+    
     let cb = 
         Python::with_gil(|py| {
-            callback.clone_ref(py)
+            event.clone_ref(py)
         });
-
-    drop(app_cbs);
-
+    
+    drop(app_event);
+    
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
                 let res = cb.call1(py, (
@@ -553,23 +555,23 @@ fn process_mouse_callback(id: usize,
 {
     let ud = access_user_data();
     let user_data_opt = ud.user_data.get(&id);
-
-    let app_cbs = access_callbacks();
-
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
     
-    let callback = match callback_present {
+    let app_event = access_events();
+    
+    let event_present = 
+        app_event.events.get(&(id, event_name));
+    
+    let event = match event_present {
         Some(cb) => cb,
         None => return,
     };
-
+    
     let cb = 
         Python::with_gil(|py| {
-            callback.clone_ref(py)
+            event.clone_ref(py)
         });
-
-    drop(app_cbs);
+    
+    drop(app_event);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
@@ -608,23 +610,23 @@ fn process_window_callback(id: usize,
 {
     let ud = access_user_data();
     let user_data_opt = ud.user_data.get(&id);
-
-    let app_cbs = access_callbacks();
-
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
     
-    let callback = match callback_present {
+    let app_event = access_events();
+    
+    let event_present = 
+        app_event.events.get(&(id, event_name));
+    
+    let event = match event_present {
         Some(cb) => cb,
         None => return,
     };
-
+    
     let cb = 
         Python::with_gil(|py| {
-            callback.clone_ref(py)
+            event.clone_ref(py)
         });
-
-    drop(app_cbs);
+    
+    drop(app_event);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {
@@ -664,23 +666,23 @@ fn process_touch_callback(id: usize,
 {
     let ud = access_user_data();
     let user_data_opt = ud.user_data.get(&id);
-
-    let app_cbs = access_callbacks();
-
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
     
-    let callback = match callback_present {
+    let app_event = access_events();
+    
+    let event_present = 
+        app_event.events.get(&(id, event_name));
+    
+    let event = match event_present {
         Some(cb) => cb,
         None => return,
     };
-
+    
     let cb = 
         Python::with_gil(|py| {
-            callback.clone_ref(py)
+            event.clone_ref(py)
         });
-
-    drop(app_cbs);
+    
+    drop(app_event);
 
     Python::with_gil(|py| {
             if user_data_opt.is_some() {

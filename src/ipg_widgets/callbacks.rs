@@ -192,7 +192,7 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     dp.is_submitted = wci.is_submitted.unwrap();
                 }
                 if wci.show.is_some() {
-                    dp.show = wci.show.unwrap();
+                    dp.show_calendar = wci.show.unwrap();
                 };
                 return WidgetCallbackOut{
                     selected_date: Some(dp.selected_date.clone()),

@@ -33,7 +33,7 @@ serde_json = "*"
 phf = { version = "0.11", default-features = false }
 
 [build-dependencies]
-pyo3-build-config = { version = "0.22.0", features = ["resolve-config"] }
+pyo3-build-config = { version = "0.23.3", features = ["resolve-config"] }
 
 [profile.release]
 strip = true

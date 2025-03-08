@@ -17,7 +17,7 @@ use super::canvas_helpers::to_radians;
 use super::geometries::{add_keypress, add_new_widget, check_if_text_widget, complete_new_widget, find_closest_point_index, find_closest_widget, get_del_key, get_widget_degrees, set_widget_mode_or_status_or_id, set_widget_point, update_edited_widget, update_rotated_widget, IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, IpgCircle, IpgEllipse, IpgFreeHand, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle, IpgRightTriangle, IpgText};
 
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum IpgWidget {
     #[default]
     None,
@@ -60,7 +60,6 @@ pub struct IpgCanvasState {
     background_cache: canvas::Cache,
     text_cache: Vec<canvas::Cache>,
     image_cache: Vec<canvas::Cache>,
-    pub last_id: usize,
     pub curves: HashMap<usize, IpgWidget>,
     pub text_curves: HashMap<usize, IpgWidget>,
     pub image_curves: HashMap<usize, IpgWidget>,
@@ -102,7 +101,6 @@ impl Default for IpgCanvasState {
             background_cache: canvas::Cache::new(),
             text_cache,
             image_cache,
-            last_id: 0,
             curves: HashMap::new(),
             text_curves: HashMap::new(),
             image_curves: HashMap::new(),
@@ -299,12 +297,11 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
                                     // First mouse click sets the state of the first Pending point
                                     // return a none since no Curve yet
                                     None => {
-                                        // in case the poly points, color, and width have changed since 
-                                        // the widget selected
                                         if self.state.selected_widget.is_none() {
                                             return (event::Status::Ignored, None)
                                         }
-                                        
+                                        // in case the poly points, color, and width have changed since 
+                                        // the widget selected, we set them
                                         let selected_widget = 
                                             add_new_widget(
                                                 self.state.selected_widget.unwrap(), 
@@ -316,7 +313,7 @@ impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
                                                 self.state.selected_h_text_alignment,
                                                 self.state.selected_v_text_alignment,
                                             );
-
+                                        
                                         let (widget, _) = 
                                             set_widget_point(
                                                 &selected_widget, 
@@ -844,14 +841,17 @@ impl DrawCurve {
 
     }
 
-    fn draw_text(text_curve: &IpgWidget, blink: bool, frame: &mut Frame, _theme: &Theme) {
-
+    fn draw_text(text_curve: &IpgWidget, mut blink: bool, frame: &mut Frame, _theme: &Theme) {
         let (path, color, width) = 
             match &text_curve {
                 IpgWidget::Text(txt) => {
                     // During edit or rotate, pending draws the text,
                     // so skip drawing here.  If completed, always draw here.
-                    if txt.draw_mode == IpgDrawMode::New || txt.status == IpgDrawStatus::Completed {
+                    if txt.draw_mode == IpgDrawMode::Display || 
+                        txt.draw_mode == IpgDrawMode::New {
+                        if txt.draw_mode == IpgDrawMode::Display {
+                            blink = false;
+                        }
                         frame.translate(Vector::new(txt.position.x, txt.position.y));
                         let (text, path) = 
                             build_text_path (

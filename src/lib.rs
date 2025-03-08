@@ -104,11 +104,11 @@ use once_cell::sync::Lazy;
 
 #[derive(Debug)]
 pub struct Events {
-    callback_events: Lazy<HashMap<(usize, String), PyObject>>,
+    events: Lazy<HashMap<(usize, String), PyObject>>,
 }
 
 pub static EVENTS: Mutex<Events> = Mutex::new(Events {
-    callback_events:  Lazy::new(||HashMap::new()),
+    events:  Lazy::new(||HashMap::new()),
 });
 
 pub fn access_events() -> MutexGuard<'static, Events> {
@@ -4788,10 +4788,10 @@ impl IPG {
         let mut events = access_events();
 
         if let Some(py) = on_key_press {
-            events.callback_events.insert((id, "key pressed".to_string()), py);
+            events.events.insert((id, "key pressed".to_string()), py);
         }
         if let Some(py) = on_key_release {
-            events.callback_events.insert((id, "key released".to_string()), py);
+            events.events.insert((id, "key released".to_string()), py);
         }
 
         drop(events);
@@ -4838,34 +4838,34 @@ impl IPG {
         let mut events = access_events();
 
         if let Some(py) = on_move {
-            events.callback_events.insert((id, "move".to_string()), py);
+            events.events.insert((id, "move".to_string()), py);
         }
         if let Some(py) = on_enter_window {
-            events.callback_events.insert((id, "enter window".to_string()), py);
+            events.events.insert((id, "enter window".to_string()), py);
         }
         if let Some(py) = on_exit_window {
-            events.callback_events.insert((id, "exit window".to_string()), py);
+            events.events.insert((id, "exit window".to_string()), py);
         }
         if let Some(py) = on_left_press {
-            events.callback_events.insert((id, "left press".to_string()), py);
+            events.events.insert((id, "left press".to_string()), py);
         }
         if let Some(py) = on_left_release {
-            events.callback_events.insert((id, "left release".to_string()), py);
+            events.events.insert((id, "left release".to_string()), py);
         }
         if let Some(py) = on_middle_press {
-            events.callback_events.insert((id, "middle press".to_string()), py);
+            events.events.insert((id, "middle press".to_string()), py);
         }
         if let Some(py) = on_middle_release {
-            events.callback_events.insert((id, "middle release".to_string()), py);
+            events.events.insert((id, "middle release".to_string()), py);
         }
         if let Some(py) = on_right_press {
-            events.callback_events.insert((id, "right press".to_string()), py);
+            events.events.insert((id, "right press".to_string()), py);
         }
         if let Some(py) = on_right_release {
-            events.callback_events.insert((id, "right release".to_string()), py);
+            events.events.insert((id, "right release".to_string()), py);
         }
         if let Some(py) = on_middle_scroll_line {
-            events.callback_events.insert((id, "middle scroll line".to_string()), py);
+            events.events.insert((id, "middle scroll line".to_string()), py);
         }
 
         drop(events);
@@ -4916,35 +4916,35 @@ impl IPG {
         let mut events = access_events();
 
         if let Some(py) = on_closed {
-            events.callback_events.insert((id, "closed".to_string()), py);
+            events.events.insert((id, "closed".to_string()), py);
         }
         if let Some(py) = on_moved {
-            events.callback_events.insert((id, "moved".to_string()), py);
+            events.events.insert((id, "moved".to_string()), py);
         }
         if let Some(py) = on_resized {
-            events.callback_events.insert((id, "resized".to_string()), py);
+            events.events.insert((id, "resized".to_string()), py);
         }
         if let Some(py) = on_redraw_requested {
-            events.callback_events.insert((id, "redraw requested".to_string()), py);
+            events.events.insert((id, "redraw requested".to_string()), py);
         }
         if let Some(py) = on_close_requested {
-            events.callback_events.insert((id, "close requested".to_string()), py);
+            events.events.insert((id, "close requested".to_string()), py);
         }
         if let Some(py) = on_focused {
-            events.callback_events.insert((id, "focused".to_string()), py);
+            events.events.insert((id, "focused".to_string()), py);
         }
         if let Some(py) = on_unfocused {
-            events.callback_events.insert((id, "unfocused".to_string()), py);
+            events.events.insert((id, "unfocused".to_string()), py);
         }
         if let Some(py) = on_file_hovered {
-            events.callback_events.insert((id, "file hovered".to_string()), py);
+            events.events.insert((id, "file hovered".to_string()), py);
         }
         if let Some(py) = on_file_dropped {
-            events.callback_events.insert((id, "file dropped".to_string()), py);
+            events.events.insert((id, "file dropped".to_string()), py);
         }
 
         if let Some(py) = on_files_hovered_left {
-            events.callback_events.insert((id, "files hovered left".to_string()), py);
+            events.events.insert((id, "files hovered left".to_string()), py);
         }
        
         drop(events);
@@ -5245,43 +5245,54 @@ fn match_container(container: &mut IpgContainers,
                     item: &PyObject, 
                     value: &PyObject, 
                     canvas_state: &mut IpgCanvasState,
-                    ) 
+                    last_id: usize,
+                    ) -> Option<usize>
 {
     match container {
         IpgContainers::IpgCanvas(_can) => {
-            canvas_item_update(canvas_state, item, value);
+            canvas_item_update(canvas_state, item, value, last_id)
         },
         IpgContainers::IpgColumn(col) => {
             column_item_update(col, item, value);
+            None
         },
         IpgContainers::IpgContainer(cont) => {
             container_item_update(cont, item, value);
+            None
         },
         IpgContainers::IpgMenu(menu) => {
             menu_item_update(menu, item, value);
+            None
         },
         IpgContainers::IpgMouseArea(m_area) => {
             mousearea_item_update(m_area, item, value);
+            None
         },
         IpgContainers::IpgOpaque(op) => {
             opaque_item_update(op, item, value);
+            None
         },
         IpgContainers::IpgRow(row) => {
             row_item_update(row, item, value);
+            None
         },
         IpgContainers::IpgStack(stack) => {
             stack_item_update(stack, item, value);
+            None
         },
         IpgContainers::IpgTable(table) => {
             table_item_update(table, item, value);
+            None
         },
         IpgContainers::IpgScrollable(scroll) => {
             scrollable_item_update(scroll, item, value);
+            None
         },
         IpgContainers::IpgWindow(wnd) => {
             window_item_update(wnd, item, value);
+            None
         },
-        _ => (),
+        _ => None,
     }
 }
 

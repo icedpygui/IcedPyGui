@@ -1,5 +1,7 @@
 //! ipg_svg
 #![allow(clippy::enum_variant_names)]
+use std::collections::HashMap;
+
 use crate::access_user_data;
 use crate::app;
 use crate::access_callbacks;
@@ -171,9 +173,10 @@ pub fn svg_callback(_state: &mut IpgState, id: usize, message: SvgMessage) {
             process_callback(id, "on_enter".to_string(), None);
         },
         SvgMessage::OnMove(point) => {
-            let points: Option<(String, f32, String, f32)> = Some(
-                ("x".to_string(), point.x,
-                "y".to_string(), point.y));
+            let points: Option<HashMap<String, f32>> = Some(HashMap::from([
+                ("x".to_string(), point.x),
+                ("y".to_string(), point.y)
+            ]));
             
             process_callback(id, "on_move".to_string(), points);
         },
@@ -184,7 +187,7 @@ pub fn svg_callback(_state: &mut IpgState, id: usize, message: SvgMessage) {
 }
 
 
-fn process_callback(id: usize, event_name: String, points_opt: Option<(String, f32, String, f32)>) 
+fn process_callback(id: usize, event_name: String, points_opt: Option<HashMap<String, f32>>) 
 {
     let ud = access_user_data();
     let user_data_opt = ud.user_data.get(&id);

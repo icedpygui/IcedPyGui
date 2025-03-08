@@ -14,7 +14,7 @@ use super::{canvas_helpers::{build_polygon, get_angle_of_vectors,
 
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgArc {
     pub id: usize,
     pub points: Vec<Point>,
@@ -31,7 +31,7 @@ pub struct IpgArc {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgBezier {
     pub id: usize,
     pub points: Vec<Point>,
@@ -46,7 +46,7 @@ pub struct IpgBezier {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgCircle {
     pub id: usize,
     pub center: Point,
@@ -61,7 +61,7 @@ pub struct IpgCircle {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgEllipse {
     pub id: usize,
     pub points: Vec<Point>,
@@ -77,7 +77,7 @@ pub struct IpgEllipse {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgCanvasImage {
     pub id: usize,
     pub path: image::Handle,
@@ -90,7 +90,7 @@ pub struct IpgCanvasImage {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgLine {
     pub id: usize,
     pub points: Vec<Point>,
@@ -104,7 +104,7 @@ pub struct IpgLine {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgPolyLine {
     pub id: usize,
     pub points: Vec<Point>,
@@ -120,7 +120,7 @@ pub struct IpgPolyLine {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgPolygon {
     pub id: usize,
     pub points: Vec<Point>,
@@ -137,7 +137,7 @@ pub struct IpgPolygon {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgRectangle {
     pub id: usize,
     pub top_left: Point,
@@ -153,7 +153,7 @@ pub struct IpgRectangle {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgRightTriangle {
     pub id: usize,
     pub points: Vec<Point>,
@@ -169,7 +169,7 @@ pub struct IpgRightTriangle {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgText {
     pub id: usize,
     pub content: String,
@@ -186,7 +186,7 @@ pub struct IpgText {
     pub status: IpgDrawStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IpgFreeHand {
     pub id: usize,
     pub points: Vec<Point>,
@@ -222,15 +222,15 @@ pub fn check_if_text_widget(canvas_widget: &IpgWidget) -> bool {
 }
 
 pub fn add_new_widget(widget: IpgCanvasWidget, 
-                    poly_points: usize, 
-                    color: Color,
-                    fill_color: Option<Color>,
-                    width: f32,
-                    draw_mode: IpgDrawMode,
-		            h_alignment: alignment::Horizontal,
-                    v_alignment: alignment::Vertical,
-                    ) 
-                    -> IpgWidget {
+                        poly_points: usize, 
+                        color: Color,
+                        fill_color: Option<Color>,
+                        width: f32,
+                        draw_mode: IpgDrawMode,
+                        h_alignment: alignment::Horizontal,
+                        v_alignment: alignment::Vertical,
+                        ) 
+                        -> IpgWidget {
     match widget {
         IpgCanvasWidget::None => {
             IpgWidget::None
