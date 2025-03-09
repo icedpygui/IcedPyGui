@@ -33,6 +33,7 @@ pub struct IpgTable {
         pub header_custom_enabled: bool,
         pub footer_enabled: bool,
         pub control_columns: Vec<usize>,
+        pub hide_columns: Vec<usize>,
         pub add_data_row_wise: bool,
         pub add_data_column_wise: bool,
         pub row_highlight: Option<IpgTableRowHighLight>,
@@ -68,6 +69,7 @@ impl IpgTable {
         header_custom_enabled: bool,
         footer_enabled: bool,
         control_columns: Vec<usize>,
+        hide_columns: Vec<usize>,
         add_data_row_wise: bool,
         add_data_column_wise: bool,
         row_highlight: Option<IpgTableRowHighLight>,
@@ -98,6 +100,7 @@ impl IpgTable {
             header_custom_enabled,
             footer_enabled,
             control_columns,
+            hide_columns,
             add_data_row_wise,
             add_data_column_wise,
             row_highlight,
@@ -143,7 +146,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             mut content: Vec<Element<'a, Message, Theme, Renderer>>, 
                             ) 
                             -> Element<'a, Message, Theme, Renderer> {
-    dbg!(&tbl.df.height());
+
     let columns = 
         if tbl.header_enabled {
             let df_columns = tbl.df.get_columns().to_vec();

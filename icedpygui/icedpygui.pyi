@@ -2420,6 +2420,7 @@ class IPG:
                     header_custom_enabled: bool=False,
                     footer_enabled: bool=False,
                     control_columns=list[int],
+                    hide_columns=list[int],
                     resize_columns_enabled: bool=True,
                     min_column_width: Optional[float]=50.0,
                     data_row_wise: bool=True,

@@ -27,6 +27,18 @@ from icedpygui.icedpygui import IpgContainerParam
 
 # File a bit long because I wanted to keep it in a single file, normally would split up
 
+# used to update a single row df for temp use
+def update_df_item(df: pl.DataFrame, column: str, value: str) -> pl.DataFrame:
+    print(column, value)
+    # print(df)
+    row_id = df.row(0)[0]
+
+    df = df.lazy().with_columns(
+        pl.when(pl.col("id") == row_id).then(value).otherwise(pl.col(column)).alias(column)
+        ).collect()
+    df
+
+
 class Books:
     def __init__(self):
         self.ipg = IPG()
@@ -49,7 +61,7 @@ class Books:
         self.header_control_ids = []
 
         self.modal_id = 0
-        self.modal_col_ids = []
+        self.modal_col_ids = {}
         self.current_modal_row = -1
         self.modal_row = {}
         self.modal_btns = []
@@ -308,14 +320,14 @@ class Books:
                             parent_id=f"row_{i}", 
                             label="Date", 
                             on_submit=self.change_date,
-                            user_data=self.dp_id)
+                            user_data=name)
                     
                 case "Status":
                     id = self.ipg.add_pick_list(
                             parent_id=f"row_{i}", 
                             options=self.status_list,
                             placeholder=name,
-                            user_data=i,
+                            user_data=name,
                             on_select=self.on_select)
                     
                 case "Source":
@@ -323,7 +335,7 @@ class Books:
                             parent_id=f"row_{i}", 
                             options=self.source_list,
                             placeholder=name,
-                            user_data=i,
+                            user_data=name,
                             on_select=self.on_select)
                 case _:
                     id = self.ipg.add_text_input(parent_id=f"row_{i}", 
@@ -334,10 +346,10 @@ class Books:
                             padding=[0.0, 0.0, 0.0, 5.0],
                             on_input=self.input_changed,
                             on_submit=self.on_submit,
-                            user_data=i)
+                            user_data=name)
                     
             # need to keep the id's for later use in the modal
-            self.modal_col_ids.append(id)
+            self.modal_col_ids[name] = id
         
         # Once all the fields have been added, add the buttons a the bottom
         self.ipg.add_space(parent_id="modal_column", 
@@ -366,28 +378,27 @@ class Books:
         else:
             # get the row by hash
             self.modal_row = self.df.filter(pl.col('id') == id)
-            # Get the row index for later use
-            self.current_modal_row = id
+        
         self.update_modal_fields()
         
     # ******************************update modal fileds************************************
     def update_modal_fields(self):
         #  get each field and update the corresponding widget
         #  id,Title,Series,Num,Author,Status,Returned,Source,Url
-        for i, name in enumerate(self.column_names):
-            item = self.modal_row[i]
- 
+        row = self.modal_row.to_dict()
+        for name in self.column_names:
+            item = row.get(name)[0]
             match name:
                 case "id":
                     None
                 case "Status":
-                    self.ipg.update_item(self.modal_col_ids[i], IpgPickListParam.Selected, item)
+                    self.ipg.update_item(self.modal_col_ids.get(name), IpgPickListParam.Selected, item)
                 case "Source":
-                    self.ipg.update_item(self.modal_col_ids[i], IpgPickListParam.Selected, item)
+                    self.ipg.update_item(self.modal_col_ids.get(name), IpgPickListParam.Selected, item)
                 case "Returned":
-                    self.ipg.update_item(self.modal_col_ids[i], IpgTextParam.Content, item)  
+                    self.ipg.update_item(self.modal_col_ids.get(name), IpgTextParam.Content, item)  
                 case _:
-                    self.ipg.update_item(self.modal_col_ids[i], IpgTextInputParam.Value, item)
+                    self.ipg.update_item(self.modal_col_ids.get(name), IpgTextInputParam.Value, item)
 
         self.ipg.update_item(self.modal_id, IpgContainerParam.Show, True)
 
@@ -398,10 +409,19 @@ class Books:
 
     # ******************************Modal exit and save************************************
     def exit_and_save(self, btn_id: int):
-        self.save_table_backup()
-        self.save_table()
         # update the table
-        self.update_table()
+        row_id_to_update = self.modal_row.get("id")
+        print(row_id_to_update)
+        # values = [99, 98]
+        # cols = ['value1', 'value2']
+        # for i, value in enumerate(values):
+        #     df = df.lazy().with_row_count(name="row_nr").with_columns(
+        #         when(col("id") == row_index_to_update).then(value).otherwise(col(cols[i])).alias(cols[i])
+        #     ).drop("row_nr").collect()
+        # self.update_table()
+        # # self.save_table_backup()
+        # self.save_table()
+        
         # exit
         self.exit_modal(0)
 
@@ -426,14 +446,7 @@ class Books:
         
         self.df = pl.concat([self.df, new_df])
         self.df = self.df.sort(["Author", "Series", "Num"])
-        print(self.df.head())
-        # self.ipg.add_button(
-        #                 parent_id="table",
-        #                 label=f"Edit {self.df.height}",
-        #                 width_fill=True,
-        #                 style_id=self.btn_style_id,
-        #                 on_press=self.open_modal,
-        #                 )
+
         self.ipg.update_dataframe(self.table_id, IpgTableParam.PolarsDf, self.df)
 
     # ******************************Modal delete book************************************
@@ -474,12 +487,10 @@ class Books:
         # update the text_input widget so the title shows otherwise the return clears the field
         self.ipg.update_item(ti_id, IpgTextInputParam.Value, value)
         # since the modal row was updated by the input changed, no need here
-    def input_changed(self, ti_id: int, value: str, index: int):
-        # Update the text_input value as it's typed
-        self.ipg.update_item(ti_id, IpgTextInputParam.Value, value)
-        # update the modal row
-        #index,Title,Series,Num,Author,Status,Returned,Source,Url
-        self.modal_row[index] = value
+    def input_changed(self, ti_id: int, value: str, name: str):
+        update_df_item(self.modal_row, name, value)
+        print(self.modal_row)
+        
 
     # ******************************Modal picklists************************************
     def on_select(self, pl_id: int, value: str, index: int):
