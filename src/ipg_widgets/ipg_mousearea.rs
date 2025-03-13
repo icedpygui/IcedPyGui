@@ -1,5 +1,5 @@
 //! ipg_mousearea
-use crate::{access_callbacks, access_user_data, IpgState};
+use crate::{access_callbacks, access_user_data1, IpgState};
 use crate::app::Message;
 use super::helpers::try_extract_boolean;
 
@@ -119,7 +119,7 @@ pub fn mousearea_callback_point(_state: &mut IpgState,
 
 fn process_callback(id: usize, event_name: String, points_opt: Option<(String, f32, String, f32)>) 
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();

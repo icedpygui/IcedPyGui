@@ -2,7 +2,7 @@
 #![allow(clippy::enum_variant_names)]
 use std::collections::HashMap;
 
-use crate::access_user_data;
+use crate::access_user_data1;
 use crate::app;
 use crate::access_callbacks;
 use crate::IpgState;
@@ -24,6 +24,7 @@ use pyo3::{PyObject, Python};
 #[derive(Debug, Clone)]
 pub struct IpgSvg {
         pub id: usize,
+        pub parent_id: String,
         pub svg_path: String,
         pub width: Length,
         pub height: Length,
@@ -38,6 +39,7 @@ pub struct IpgSvg {
 impl IpgSvg {
     pub fn new( 
         id: usize,
+        parent_id: String,
         svg_path: String,
         width: Length,
         height: Length,
@@ -50,6 +52,7 @@ impl IpgSvg {
         ) -> Self {
         Self {
             id,
+            parent_id,
             svg_path,
             width,
             height,
@@ -189,7 +192,7 @@ pub fn svg_callback(_state: &mut IpgState, id: usize, message: SvgMessage) {
 
 fn process_callback(id: usize, event_name: String, points_opt: Option<HashMap<String, f32>>) 
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();

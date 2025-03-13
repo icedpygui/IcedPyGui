@@ -2,6 +2,7 @@
 #![allow(unused)]
 #![allow(clippy::map_clone)]
 use std::collections::HashMap;
+use std::mem;
 
 use iced::widget::container::Id;
 use iced::widget::scrollable::Viewport;
@@ -27,7 +28,7 @@ use crate::ipg_widgets::ipg_separator::construct_separator;
 use crate::ipg_widgets::ipg_table::table_callback;
 use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, 
     canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
-use crate::{access_canvas_state, access_canvas_update_items, access_update_items, access_window_actions, ipg_widgets, match_container, match_container_for_df, match_widget, set_state_of_widget_running_state, IpgState};
+use crate::{access_canvas_state, access_canvas_update_items, access_user_data2, access_update_items, access_user_data1, access_window_actions, ipg_widgets, match_container, match_container_for_df, match_widget, set_state_of_widget_running_state, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
@@ -1109,7 +1110,7 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
     }
 
     drop(mutex_state);
-    
+
 }
 
 fn process_canvas_updates(cs: &mut IpgCanvasState) {
@@ -1171,7 +1172,7 @@ fn get_widget_parent_id(widget: &IpgWidgets) -> String {
     match widget {
         IpgWidgets::IpgButton(ipg_button) => ipg_button.parent_id.clone(),
         IpgWidgets::IpgButtonStyle(ipg_button_style) => todo!(),
-        IpgWidgets::IpgCard(ipg_card) => todo!(),
+        IpgWidgets::IpgCard(ipg_card) => ipg_card.parent_id.clone(),
         IpgWidgets::IpgCardStyle(ipg_card_style) => todo!(),
         IpgWidgets::IpgCheckBox(ipg_check_box) => todo!(),
         IpgWidgets::IpgCheckboxStyle(ipg_checkbox_style) => todo!(),
@@ -1199,7 +1200,7 @@ fn get_widget_parent_id(widget: &IpgWidgets) -> String {
         IpgWidgets::IpgSliderStyle(ipg_slider_style) => todo!(),
         IpgWidgets::IpgSpace(ipg_space) => todo!(),
         IpgWidgets::IpgSvg(ipg_svg) => todo!(),
-        IpgWidgets::IpgText(ipg_text) => todo!(),
+        IpgWidgets::IpgText(ipg_text) => ipg_text.parent_id.clone(),
         IpgWidgets::IpgTextInput(ipg_text_input) => todo!(),
         IpgWidgets::IpgTextInputStyle(ipg_text_input_style) => todo!(),
         IpgWidgets::IpgTimer(ipg_timer) => todo!(),

@@ -1,5 +1,5 @@
-import random
-import os
+
+import os, uuid
 from icedpygui import IPG, IpgTableRowHighLight, IpgTableParam, IpgColor
 from icedpygui import IpgTextParam, IpgAlignment, IpgHorizontalAlignment, IpgVerticalAlignment, IpgTextInputParam
 from icedpygui import IpgButtonParam, IpgPickListParam, IpgOpaqueParam, IpgDatePickerParam
@@ -27,16 +27,6 @@ from icedpygui.icedpygui import IpgContainerParam
 
 # File a bit long because I wanted to keep it in a single file, normally would split up
 
-# used to update a single row df for temp use
-def update_df_item(df: pl.DataFrame, column: str, value: str) -> pl.DataFrame:
-    print(column, value)
-    # print(df)
-    row_id = df.row(0)[0]
-
-    df = df.lazy().with_columns(
-        pl.when(pl.col("id") == row_id).then(value).otherwise(pl.col(column)).alias(column)
-        ).collect()
-    df
 
 
 class Books:
@@ -50,15 +40,15 @@ class Books:
         self.book_list = []
         self.column_names = []
         self.table_list = pl.DataFrame()
-        #          index,Title,Series,Num,Author,Status,Returned,Source,Url
+        #          id,Title,Series,Num,Author,Status,Returned,Source,Url
         self.column_widths = [100, 200, 200, 40, 150, 100, 120, 150, 75]
         self.tbl_width = sum(self.column_widths)
         self.tbl_height = 600.0
 
         self.table_id=0
         self.column_id_names = [ str(i) for i in range(0, len(self.column_widths)) ]
-        self.ids = pl.Series
         self.header_control_ids = []
+        self.footer_control_ids = []
 
         self.modal_id = 0
         self.modal_col_ids = {}
@@ -70,17 +60,15 @@ class Books:
 
         self.author_sort_list = ["None", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
                           "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
-                            # I wish I had put a ratings column in but I didn't originally.
-                            # I usually can tell the ratings by "Won't finish" or "maybe continue"
-                            # The publish date is for when a new book will come out, sometimes I use
-                            # the checked date so that I occasionally look and see if the next book is out.
         self.status_list = ["None", "Read", "To Be Read", "Maybe Continue Series", "Final", "Publish Date",
                             "Won't Finish", "Checked"]
         self.source_list = ["None", "Amazon Unlimited", "Amazon", "Library"]
+        self.returned_list = []
         
         self.author_selected = "None"
         self.status_selected = "None"
         self.source_selected = "None"
+        self.returned_selected = "None"
         
         self.btn_style_id = 0
         self.modal_style_id = 0
@@ -101,10 +89,20 @@ class Books:
         self.df = pl.read_csv(f"{cwd}/python_examples/resources/books.csv",
                               try_parse_dates=False,
                               missing_utf8_is_empty_string=True)
-        
+        # self.df = self.df.drop("edit_id")
+        # self.df = self.df.drop("url_id")
+        # self.save_table()
+        # quit()
         self.df = self.df.sort(["Author", "Series", "Num"])
         self.column_names = self.df.columns
         
+        # Make the dropdown list for the years
+        s = self.df.select(
+                pl.col('Returned').str.slice(0, 4)
+                ).unique().to_series()
+        self.returned_list = s.filter(s != "").sort().to_list()
+        self.returned_list.insert(0, "None")
+
     # ******************************create styles************************************
     def create_styles(self):
         self.btn_style_id = self.ipg.add_button_style(border_radius=[10.0])
@@ -141,12 +139,14 @@ class Books:
     # ******************************create table************************************
     def create_table(self):
         # Once the table is created, the next additions to the
-        # table MUST follow in order, header (if enabled) foolowed by the footer(if enabled)
-        # The additions can occur at any time just as long as they are in order.
+        # table MUST follow in order, header (if enabled) followed by the footer(if enabled)
+        # The header and footer need to be done before the control columns.
         # The reason is that during the processing, a vector containing all of the widgets
-        # are sent to the table where the widgets are extracted of each group occurs.  Therefore, if the
-        # column names were not added first then the first row would be added in as column names
-        # unless the header is disabled.
+        # are sent to the table where the widgets are extracted for each group.
+        # Since the vector of elements don't contain any accessible info on what
+        # they are, the extraction had to be based on columns numbers and header, 
+        # footer, body order.
+        # 
         # Since we are using a stack as the "modal", we add the table to the stack
         # The container you want to appear will be add later and a show and hide
         # operation will reveal it.  Since it will be sitting on top of the stack,
@@ -158,6 +158,7 @@ class Books:
                                     title="Books",
                                     polars_df=self.df,
                                     header_custom_enabled=True,
+                                    footer_enabled=True,
                                     control_columns=[0, 8],
                                     column_widths=self.column_widths,
                                     height=self.tbl_height)
@@ -172,7 +173,8 @@ class Books:
                         parent_id="table",
                         width_fill=True)
             
-            if name == "id": name = ""
+            if name == "id": 
+                name = ""
             
             self.ipg.add_text(
                         parent_id=f"header{i}",
@@ -192,8 +194,21 @@ class Books:
                             style_id=self.btn_style_id,
                             user_data=999999) 
                             # needed large number to indicate new book
-                            # other approaches could be used by not calling ope_modal directly
-                        
+                            # other approaches could be used by not calling open_modal directly
+            if name == "Title":
+                id = self.ipg.add_text_input(
+                                parent_id=f"header{i}",
+                                placeholder="Search",
+                                width_fill=True,
+                                on_input=self.search_titles)
+                
+            if name == "Series":
+                id = self.ipg.add_text_input(
+                                parent_id=f"header{i}",
+                                placeholder="Search",
+                                width_fill=True,
+                                on_input=self.search_series)
+                
             if name == "Author":
                 id = self.ipg.add_pick_list(
                                 parent_id=f"header{i}",
@@ -212,6 +227,15 @@ class Books:
                                 width_fill=True)
                 self.header_control_ids.append(id)
                 
+            if name == "Returned":
+                id = self.ipg.add_pick_list(
+                                parent_id=f"header{i}",
+                                options=self.returned_list,
+                                on_select=self.filter_books_return_date,
+                                selected=self.returned_selected,
+                                width_fill=True)
+                self.header_control_ids.append(id)
+                
             if name == "Source":
                 id = self.ipg.add_pick_list(
                                 parent_id=f"header{i}",
@@ -221,32 +245,40 @@ class Books:
                                 width_fill=True)
                 self.header_control_ids.append(id)
     
+        # create the footer
+        for (i, name) in enumerate(self.column_names):
+            # The entire row must be filled with something
+            # so the empty string is used to fill where no widget.
+            content = ""
+            if name == "Returned":
+                content = f"Total = {self.df.height}"
+            id = self.ipg.add_text(
+                        parent_id="table",
+                        content=content,
+                        width_fill=True,
+                        align_x=IpgHorizontalAlignment.Center,
+                        align_y=IpgVerticalAlignment.Center,
+                        )
+            self.footer_control_ids.append(id)
+    
     # ******************************create control columns*************************
     def create_control_columns(self):
+        schema = {'edit_id': pl.Int64, "url_id": pl.Int64}
+        control_ids = pl.DataFrame(schema=schema)
         for row in self.df.rows():
-            # index column
-            self.ipg.add_button(
-                        parent_id="table",
-                        label=f"Edit",
-                        width_fill=True,
-                        style_id=self.btn_style_id,
-                        on_press=self.open_modal,
-                        user_data=row[0],
-                        )
+            # edit column
+            edit_id = self.make_edit_button(row[0])
+            
             # url column
-            if row[8] == "":
-                self.ipg.add_text(parent_id="table",
-                                  content="")
-            else:
-                self.ipg.add_button(
-                            parent_id="table",
-                            label=f"Url",
-                            width_fill=True,
-                            style_id=self.btn_style_id,
-                            on_press=self.open_url,
-                            user_data=row[0]
-                            )
-         
+            url_id = self.make_url_button(row[8], row[0])
+            
+            control_id = pl.DataFrame({"edit_id": edit_id, "url_id": url_id})
+            control_ids = pl.concat([control_ids, control_id])
+            
+        # add the ids to the main df so that when things rearrange or sorted, the 
+        # ids remain with the assigned row.
+        self.df = pl.concat([self.df, control_ids], how="horizontal")
+        
     # ******************************create modal************************************
     def create_modal(self):
 
@@ -312,6 +344,8 @@ class Books:
                     id = 0
                 
                 case "Returned":
+                    # Since the date_picker updates the text filed
+                    # the id of the text is used versus the dp_id
                     id = self.ipg.add_text(
                             parent_id=f"row_{i}",
                             content="")
@@ -345,7 +379,6 @@ class Books:
                             line_height_relative=1.3,
                             padding=[0.0, 0.0, 0.0, 5.0],
                             on_input=self.input_changed,
-                            on_submit=self.on_submit,
                             user_data=name)
                     
             # need to keep the id's for later use in the modal
@@ -356,7 +389,7 @@ class Books:
                            height=20.0)
         self.ipg.add_button(parent_id="modal_column", 
                             label="Exit & Discard Any Changes", 
-                            on_press=self.exit_modal,)
+                            on_press=self.exit_modal)
         self.ipg.add_button(parent_id="modal_column", 
                             label="Exit & Save Changes", 
                             on_press=self.exit_and_save)
@@ -403,66 +436,75 @@ class Books:
         self.ipg.update_item(self.modal_id, IpgContainerParam.Show, True)
 
     # ******************************Modal exit************************************
-    def exit_modal(self, btn_id: int):
+    def exit_modal(self, _btn_id: int):
         # update the tables modal_show value to hide the modal
         self.ipg.update_item(self.modal_id, IpgContainerParam.Show, False) 
 
     # ******************************Modal exit and save************************************
     def exit_and_save(self, btn_id: int):
         # update the table
-        row_id_to_update = self.modal_row.get("id")
-        print(row_id_to_update)
-        # values = [99, 98]
-        # cols = ['value1', 'value2']
-        # for i, value in enumerate(values):
-        #     df = df.lazy().with_row_count(name="row_nr").with_columns(
-        #         when(col("id") == row_index_to_update).then(value).otherwise(col(cols[i])).alias(cols[i])
-        #     ).drop("row_nr").collect()
-        # self.update_table()
-        # # self.save_table_backup()
-        # self.save_table()
-        
+        self.update_df_row()
+        self.save_table()
         # exit
         self.exit_modal(0)
 
     # ******************************Modal insert new book************************************
     def insert_new(self, btn_id: int):
         # make the hash for the id
-        combined = self.modal_row[1] + self.modal_row[4]
+        combined = str(self.modal_row.row(0)[1] + self.modal_row.row(0)[4])
         combined.replace(" ", "")
         id = hash(combined)
-        
+        edit_id = self.make_edit_button(id)
+        url_id = self.make_url_button(self.modal_row.row(0)[8], id)
+
+        # fill in the df
         new_df = pl.DataFrame({
             "id": id, 
-            "Title": self.modal_row[1],
-            "Series": self.modal_row[2],
-            "Num": self.modal_row[3],
-            "Author": self.modal_row[4],
-            "Status": self.modal_row[5],
+            "Title": self.modal_row.row(0)[1],
+            "Series": self.modal_row.row(0)[2],
+            "Num": self.modal_row.row(0)[3],
+            "Author": self.modal_row.row(0)[4],
+            "Status": self.modal_row.row(0)[5],
             "Returned": "",
-            "Source": self.modal_row[7],
-            "Url": self.modal_row[8],
+            "Source": self.modal_row.row(0)[7],
+            "Url": self.modal_row.row(0)[8],
+            "edit_id": edit_id, 
+            "url_id": url_id,
             })
-        
+
+        # Add the new book to the bottom of the table
         self.df = pl.concat([self.df, new_df])
         self.df = self.df.sort(["Author", "Series", "Num"])
-
-        self.ipg.update_dataframe(self.table_id, IpgTableParam.PolarsDf, self.df)
+        self.update_dataframe(self.df)
 
     # ******************************Modal delete book************************************
     def delete_book(self, btn_id: int):
-        # a way of ensuring the user wants to delete is to give 2 chances 
-        # or alternately make another modal
+        # a way of ensuring the user wants to delete is to give him 2 chances 
+        # or alternately make another modal and show a delete message
         if self.delete_count == 0:
             self.delete_count += 1
             self.ipg.update_item(btn_id, IpgButtonParam.Label, "Press Again to Delete")
             return
         else:
+            # resetting
             self.delete_count = 0
             self.ipg.update_item(btn_id, IpgButtonParam.Label, "Press to Delete")
+            # save a backup copy
             self.save_table_backup()
-            self.df = self.df.filter((pl.col('Title') != self.modal_row[1]) & (pl.col('Author') != self.modal_row[2]))
-            self.ipg.update_dataframe(self.table_id, IpgTableParam.PolarsDf, self.df)
+            # get the hash_id for filtering
+            hash_id = self.modal_row.row(0)[0]
+            # get the row to be deleted
+            delete_row = self.df.filter(pl.col("id") == hash_id)
+            # filter out the row to be deleted
+            self.df = self.df.filter(pl.col('id') != hash_id)
+            # delete the edit button
+            btn_id = delete_row.row(0)[9]
+            self.ipg.delete_item(window_id="main", wid=btn_id)
+            # delete the url button or the empty text widget
+            url_id = delete_row.row(0)[10]
+            self.ipg.delete_item(window_id="main", wid=url_id)
+            # update and save the df
+            self.update_dataframe(self.df)    
             self.save_table()
             self.exit_modal(btn_id)
     
@@ -473,41 +515,50 @@ class Books:
   
   # ******************************Modal save table backup************************************
     def save_table_backup(self):
+        save_table = self.df.select(pl.exclude(["edit_id", "url_id"]))
         cwd = os.getcwd()
-        self.df.write_csv(f"{cwd}/python_examples/resources/books_bkup.csv")
+        save_table.write_csv(f"{cwd}/python_examples/resources/books_bkup.csv")
 
     # ******************************Modal save table************************************
     def save_table(self):
+        save_table = self.df.select(pl.exclude(["edit_id", "url_id"]))
         cwd = os.getcwd()
-        self.df.write_csv(f"{cwd}/python_examples/resources/books.csv")
+        save_table.write_csv(f"{cwd}/python_examples/resources/books.csv")
 
     # ******************************Modal all the text inputs on submits************************************
     # The name parameter is the user_data
-    def on_submit(self, ti_id: int, value: str, name: str):
-        # update the text_input widget so the title shows otherwise the return clears the field
-        self.ipg.update_item(ti_id, IpgTextInputParam.Value, value)
-        # since the modal row was updated by the input changed, no need here
     def input_changed(self, ti_id: int, value: str, name: str):
-        update_df_item(self.modal_row, name, value)
-        print(self.modal_row)
-        
+        self.update_modal_row_item(name, value)
 
     # ******************************Modal picklists************************************
-    def on_select(self, pl_id: int, value: str, index: int):
-        # update the picklist widget
-        self.ipg.update_item(pl_id, IpgPickListParam.Selected, value)
-        # update the modal row
-        self.modal_row[index] = value
+    def on_select(self, pl_id: int, value: str, name: str):
+        self.update_modal_row_item(name, value)
 
     # ******************************Modal datepicker************************************
-    def change_date(self, btn_id: int, return_date: str, dp_id: int):
-        self.ipg.update_item(dp_id, IpgTextParam.Content, return_date)
+    def change_date(self, dp_id: int, return_date: str, name: str):
+        # update the returned value
+        text_id = self.modal_col_ids.get("Returned")
+        self.ipg.update_item(text_id, IpgTextParam.Content, return_date)
         # update the modal row
-        self.modal_row[6] = return_date
+        self.update_modal_row_item(name, return_date)
 
     # ******************************Table url button************************************
-    def open_url(self, btn_id: int, url: str):
+    def open_url(self, btn_id: int, row_id: int):
+        df_filtered = self.df.filter(pl.col('id') == row_id)
+        url = df_filtered.row(0)[8]
         webbrowser.open(url)
+
+    # ******************************Table search title column************************************
+    def search_titles(self, it_id: int, search=str):
+        df_filtered = self.df.filter(pl.col('Title').str.to_lowercase().str.contains(search.lower()))
+        self.reset_picklist_filters()
+        self.update_dataframe(df_filtered)
+        
+    # ******************************Table search series column************************************
+    def search_series(self, it_id: int, search=str):
+        df_filtered = self.df.filter(pl.col('Series').str.to_lowercase().str.contains(search.lower()))
+        self.reset_picklist_filters()
+        self.update_dataframe(df_filtered)
 
     # ******************************Table filter by author picklist************************************
     # The filtering resets all filters except the one being used
@@ -515,63 +566,127 @@ class Books:
     # versus the self.df for displaying.
     def filter_books_author(self, pick_id: int, selected: str):
         if selected == "None":
-            self.ipg.update_dataframe(self.table_id, IpgTableParam.PolarsDf, self.df)
+            self.update_dataframe(self.df)
             self.reset_filters(pick_id)
             return
         
         # filter the df
         df_filtered = self.df.filter(pl.col('Author').str.to_lowercase().str.starts_with(selected.lower()))
-        self.ipg.update_dataframe(self.table_id, IpgTableParam.PolarsDf, df_filtered)
+        self.update_dataframe(df_filtered)
         self.reset_filters(pick_id)
 
-    # ******************************Tabl filter by status************************************
+    # ******************************Table filter by status************************************
     def filter_books_status(self, pick_id: int, selected: str):
         if selected == "None":
-            self.ipg.update_dataframe(self.table_id, IpgTableParam.PolarsDf, self.df)
+            self.update_dataframe(self.df)
             self.reset_filters(pick_id)
             return
         
         # filter the df
         df_filtered = self.df.filter(pl.col('Status').str.to_lowercase().str.starts_with(selected.lower()))
-        self.ipg.update_dataframe(self.table_id, IpgTableParam.PolarsDf, df_filtered)
+        self.update_dataframe(df_filtered)
+        self.reset_filters(pick_id)
+    
+    # ******************************Table filter by return date************************************
+    def filter_books_return_date(self, pick_id: int, selected: str):
+        if selected == "None":
+            self.update_dataframe(self.df)
+            self.reset_filters(pick_id)
+            return
+        
+        # filter the df
+        df_filtered = self.df.filter(
+            (pl.col('Returned').str.starts_with(selected)) &
+            ((pl.col("Status") == "Read") | 
+                (pl.col("Status") == "Final") | 
+                (pl.col("Status").str.contains("Checked".lower()))))
+        # update the total footer text
+        self.ipg.update_item(
+                    wid=self.footer_control_ids[6], 
+                    param=IpgTextParam.Content, 
+                    value=f"Total={df_filtered.height}")
+        
+        self.update_dataframe(df_filtered)
+        
         self.reset_filters(pick_id)
     
     # ******************************Table filter by source************************************
     def filter_books_source(self, pick_id: int, selected: str):
         if selected == "None":
-            self.ipg.update_dataframe(self.table_id, IpgTableParam.PolarsDf, self.df)
+            self.update_dataframe(self.df)
             self.reset_filters(pick_id)
             return
         
         # filter the df
-        df_filtered = self.df.filter(pl.col('Source').str.to_lowercase().str.starts_with(selected.lower()))
-        self.ipg.update_dataframe(self.table_id, IpgTableParam.PolarsDf, df_filtered)
+        df_filtered = self.df.filter(pl.col('Source') == selected)
+        self.update_dataframe(df_filtered)
         self.reset_filters(pick_id)
 
     # ******************************helper functions************************************
-    def find_id_in_dataframe(self, df: pl.DataFrame, id: int) -> bool:
-        for col in self.df.columns:
-            if (self.df[col] == id).any():
-                return True
-        return False
-    
     def reset_filters(self, selecting_id: int):
         for id in self.header_control_ids:
             if id != selecting_id:
                 self.ipg.update_item(id, IpgPickListParam.Selected, "None")
+                
+    def reset_picklist_filters(self):
+        for id in self.header_control_ids:
+            self.ipg.update_item(id, IpgPickListParam.Selected, "None")
         
     def fill_with_defaults(self):
-        #id,Title,Series,Num,Author,Status,Returned,Source,Url
-        id = 0
-        title = ""
-        series = ""
-        num = ""
-        author = ""
-        status = "None"
-        returned = ""
-        source = "None"
-        url = ""
-        return [id, title, series, num, author, status, returned, source, url]
+        return pl.DataFrame({"id":0, "Title":"", "Series":"", "Num":"", "Author":"", 
+                             "Status":"None", "Returned":"", "Source":"None", "Url":""})
+        
+    # used to update a single row df for temp use
+    def update_modal_row_item(self, column: str, value: str):
+        row_id = self.modal_row.row(0)[0]
+        self.modal_row = self.modal_row.lazy().with_columns(
+            pl.when(pl.col("id") == row_id).then(pl.lit(value)).otherwise(pl.col(column)).alias(column)
+            ).collect()
+        
+    def update_df_row(self):
+        row_id = self.modal_row.row(0)[0]
+        for i, name in enumerate(self.column_names):
+            if name != "id":
+                value = self.modal_row.row(0)[i]
+                self.df = self.df.lazy().with_columns(
+                    pl.when(pl.col("id") == row_id).then(pl.lit(value)).otherwise(pl.col(name)).alias(name)
+                    ).collect()
+
+        self.update_dataframe(self.df)
+    
+    def make_edit_button(self, hash_value: int) -> int:
+        edit_id = self.ipg.add_button(
+                        parent_id="table",
+                        label=f"Edit",
+                        width_fill=True,
+                        style_id=self.btn_style_id,
+                        on_press=self.open_modal,
+                        user_data=hash_value,
+                        )
+        return edit_id
+    
+    def make_url_button(self, value: str, hash_value: int) -> int:
+        # if the btn is not used, the id will be the text widget
+        if value == "":
+            id = self.ipg.add_text(
+                        parent_id="table",
+                        content="")
+        else:
+            id = self.ipg.add_button(
+                        parent_id="table",
+                        label=f"Url",
+                        width_fill=True,
+                        style_id=self.btn_style_id,
+                        on_press=self.open_url,
+                        user_data=hash_value
+                        )
+        return id
+    
+    def update_dataframe(self, df):
+        update_df = df.select(pl.exclude(["edit_id", "url_id"]))
+        self.ipg.update_dataframe(self.table_id, IpgTableParam.PolarsDf, update_df)
+        
+        
     
 books = Books()
 books.start()

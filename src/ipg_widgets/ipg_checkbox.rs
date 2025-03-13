@@ -1,7 +1,7 @@
 //! ipg_checkbox
 use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, access_user_data, IpgState};
+use crate::{access_callbacks, access_user_data1, access_user_data2, IpgState};
 use crate::app;
 use super::helpers::{get_radius, get_shaping, get_width, try_extract_boolean, 
     try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, 
@@ -24,6 +24,7 @@ use pyo3::{pyclass, PyObject, Python};
 #[derive(Debug, Clone)]
 pub struct IpgCheckBox {
     pub id: usize,
+    pub parent_id: String,
     pub show: bool,
     pub is_checked: bool,
     pub label: String,
@@ -43,6 +44,7 @@ pub struct IpgCheckBox {
 impl IpgCheckBox {
     pub fn new(
         id: usize,
+        parent_id: String,
         show: bool,
         is_checked: bool,
         label: String,
@@ -59,6 +61,7 @@ impl IpgCheckBox {
         ) -> Self {
             Self {
                 id,
+                parent_id,
                 show,
                 is_checked,
                 label,
@@ -186,13 +189,17 @@ pub fn checkbox_callback(state: &mut IpgState, id: usize, message: CHKMessage) {
     }
 }
 
-fn process_callback(id: usize, is_checked: bool, event_name: String) 
+pub fn process_callback(id: usize, is_checked: bool, event_name: String) 
 {
-    let ud = access_user_data();
-    let user_data_opt = ud.user_data.get(&id);
+    let ud = access_user_data1();
+    
+    let ud_opt = ud.user_data.get(&id);
+
+    let mut ud_opt_chk = false;
+    let mut ud2_opt_chk = false;
 
     let app_cbs = access_callbacks();
-
+    
     let callback_present = 
         app_cbs.callbacks.get(&(id, event_name));
     
@@ -207,34 +214,69 @@ fn process_callback(id: usize, is_checked: bool, event_name: String)
         });
 
     drop(app_cbs);
-             
-    Python::with_gil(|py| {
-            if user_data_opt.is_some() {
-                let res = 
-                    cb.call1(py, (
-                            id, 
-                            is_checked, 
-                            user_data_opt.unwrap()
-                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Checkbox: 3 parameters (id, value, user_data) 
-                                        are required or python error in this function. {er}"),
-                }
-            } else {
-                let res = 
-                    cb.call1(py, (
-                            id, 
-                            is_checked 
-                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Checkbox: 2 parameters (id, value) 
-                                            are required or a python error in this function. {er}"),
-                }
-            } 
-    });
+    
+    // Needed to split up the callback due to the need
+    // to drop as as possible, one needs to be free
+    // at all times.
+    if ud_opt.is_some() {
+        ud_opt_chk = true;
+        Python::with_gil(|py| {
 
+            let res = 
+                cb.call1(py, (
+                        id,
+                        is_checked,  
+                        ud_opt.unwrap()
+                        ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Checkbox: 3 parameters (id, is_checked, user_data) are required or 
+                                        a python error in this function. {er}"),
+            }
+                
+        });
+    }
+
+    drop(ud);
+
+    let ud2 = access_user_data2();
+    let ud2_opt = ud2.user_data.get(&id);
+
+    if ud2_opt.is_some() {
+        ud2_opt_chk = true;
+        Python::with_gil(|py| {
+
+            let res = 
+                cb.call1(py, (
+                        id,
+                        is_checked,  
+                        ud2_opt.unwrap()
+                        ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Checkbox: 3 parameters (id, is_checked, user_data) 
+                                            are required or a python 
+                                            error in this function. {er}"),
+            }
+        });
+    }
+
+    drop(ud2);
+
+    if !ud_opt_chk && !ud2_opt_chk {
+        Python::with_gil(|py| {
+            let res = 
+                cb.call1(py, (
+                        id,
+                        is_checked,  
+                        ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Checkbox: 2 parameter (id, is_checked) is required or possibly a python 
+                                        error in this function. {er}"),
+            }
+        });
+    }
 }
 
 

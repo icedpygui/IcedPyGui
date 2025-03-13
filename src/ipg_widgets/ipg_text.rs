@@ -16,6 +16,7 @@ use super::ipg_enums::{IpgHorizontalAlignment, IpgVerticalAlignment};
 #[derive(Debug, Clone)]
 pub struct IpgText {
     pub id: usize,
+    pub parent_id: String,
     pub content: String,
     pub size: f32,
     pub line_height: LineHeight,
@@ -32,6 +33,7 @@ pub struct IpgText {
 impl IpgText {
     pub fn new( 
         id: usize,
+        parent_id: String,
         content: String,
         size: f32,
         line_height: LineHeight,
@@ -46,6 +48,7 @@ impl IpgText {
         ) -> Self {
         Self {
             id,
+            parent_id,
             content,
             size,
             line_height,

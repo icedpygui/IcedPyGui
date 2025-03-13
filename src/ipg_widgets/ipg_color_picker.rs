@@ -1,6 +1,6 @@
 //! ipg_color_picker
 use crate::graphics::colors::get_color;
-use crate::{access_callbacks, access_user_data, IpgState};
+use crate::{access_callbacks, access_user_data1, access_user_data2, IpgState};
 use crate::app::Message;
 use crate::style::styling::IpgStyleStandard;
 use super::helpers::{get_height, get_padding_f64, get_width, 
@@ -22,6 +22,7 @@ use pyo3::{pyclass, PyObject, Python};
 #[derive(Debug, Clone)]
 pub struct IpgColorPicker {
     pub id: usize,
+    pub parent_id: String,
     pub show: bool,
     pub color: Color,
     //button related
@@ -38,6 +39,7 @@ pub struct IpgColorPicker {
 impl IpgColorPicker {
     pub fn new( 
         id: usize,
+        parent_id: String,
         show: bool,
         color: Color,
         // button related
@@ -52,6 +54,7 @@ impl IpgColorPicker {
         ) -> Self {
         Self {
             id,
+            parent_id,
             show,
             color,
             // button related
@@ -188,13 +191,17 @@ pub fn color_picker_callback(state: &mut IpgState, id: usize, message: ColPikMes
 }
 
 
-fn process_callback(id: usize, event_name: String, color: Option<Vec<f64>>) 
+pub fn process_callback(id: usize, event_name: String, color: Option<Vec<f64>>) 
 {
-    let ud = access_user_data();
-    let user_data_opt = ud.user_data.get(&id);
+    let ud = access_user_data1();
+    
+    let ud_opt = ud.user_data.get(&id);
+
+    let mut ud_opt_chk = false;
+    let mut ud2_opt_chk = false;
 
     let app_cbs = access_callbacks();
-
+    
     let callback_present = 
         app_cbs.callbacks.get(&(id, event_name));
     
@@ -209,43 +216,82 @@ fn process_callback(id: usize, event_name: String, color: Option<Vec<f64>>)
         });
 
     drop(app_cbs);
-                  
-    Python::with_gil(|py| {
-        if user_data_opt.is_some() && color.is_some() {
-            let res = cb.call1(py, (
-                                                        id, 
-                                                        color.unwrap(),
-                                                        user_data_opt.unwrap()
-                                                        ));
+    
+    // Needed to split up the callback due to the need
+    // to drop as as possible, one needs to be free
+    // at all times.
+    if ud_opt.is_some() {
+        ud_opt_chk = true;
+        Python::with_gil(|py| {
+
+            let res = 
+                cb.call1(py, (
+                        id,
+                        color.clone().unwrap(),
+                        ud_opt.unwrap()
+                        ));
             match res {
                 Ok(_) => (),
-                Err(er) =>panic!("ColorPicker: 3 parameters (id, value, user_data) 
-                                    are required or a python error in this function. {er}"),
+                Err(er) => panic!("ColorPicker: 3 parameters (id, color, user_data) are required or 
+                                        a python error in this function. {er}"),
             }
-        } else  if color.is_some() {
-            let res = cb.call1(py, (
-                                                        id,
-                                                        color.unwrap(), 
-                                                        ));
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("ColorPicker: 2 parameters (id, value) 
-                                    are required or a python error in this function. {er}"),
-            }
-        } else {
-            let res = cb.call1(py, (
-                                                        id,
-                                                        ));
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("ColorPicker: 1 parameter (id) 
-                                    is required or a python error in this function. {er}"),
-            }
-        } 
-    });
+                
+        });
+    }
 
     drop(ud);
 
+    let ud2 = access_user_data2();
+    let ud2_opt = ud2.user_data.get(&id);
+
+    if ud2_opt.is_some() {
+        ud2_opt_chk = true;
+        Python::with_gil(|py| {
+
+            let res = 
+                cb.call1(py, (
+                        id,
+                        color.clone().unwrap(),
+                        ud2_opt.unwrap()
+                        ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("ColorPicker: 3 parameters (id, color, user_data) 
+                                            are required or a python 
+                                            error in this function. {er}"),
+            }
+        });
+    }
+
+    drop(ud2);
+
+    if !ud_opt_chk && !ud2_opt_chk {
+        Python::with_gil(|py| {
+            if color.is_some() {
+                let res = 
+                    cb.call1(py, (
+                            id,
+                            color.unwrap(),  
+                            ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("ColorPicker: 2 parameter (id, color) is required or possibly a python 
+                                            error in this function. {er}"),
+                }
+            } else {
+                let res = 
+                    cb.call1(py, (
+                            id, 
+                            ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("ColorPicker: 1 parameter (id) is required or possibly a python 
+                                            error in this function. {er}"),
+                }
+            }
+            
+        });
+    }
 }
 
 

@@ -1,6 +1,6 @@
 //! ipg_scrollable
 use crate::graphics::colors::get_color;
-use crate::{access_callbacks, access_user_data, app, IpgState};
+use crate::{access_callbacks, access_user_data1, app, IpgState};
 use super::helpers::{get_height, get_radius, get_width, 
     try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_vec_f32};
 use super::ipg_enums::IpgWidgets;
@@ -259,7 +259,7 @@ pub fn process_callback(id: usize, event_name: String,
                         rel: (String, f32, String, f32),
                         rev: (String, f32, String, f32)) 
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();

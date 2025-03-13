@@ -2,7 +2,8 @@
 #![allow(clippy::enum_variant_names)]
 use std::collections::HashMap;
 
-use crate::access_user_data;
+use crate::access_user_data1;
+use crate::access_user_data2;
 use crate::app;
 use crate::access_callbacks;
 use super::helpers::{get_height, get_padding_f64, get_width, 
@@ -24,6 +25,7 @@ use pyo3::{PyObject, Python};
 #[derive(Debug, Clone)]
 pub struct IpgImage {
         pub id: usize,
+        pub parent_id: String,
         pub image_path: String,
         pub width: Length,
         pub height: Length,
@@ -40,6 +42,7 @@ pub struct IpgImage {
 impl IpgImage {
     pub fn new( 
         id: usize,
+        parent_id: String,
         image_path: String,
         width: Length,
         height: Length,
@@ -54,6 +57,7 @@ impl IpgImage {
         ) -> Self {
         Self {
             id,
+            parent_id,
             image_path,
             width,
             height,
@@ -212,11 +216,15 @@ pub fn image_callback(id: usize, message: ImageMessage) {
 
 fn process_callback(id: usize, event_name: String, points_opt: Option<HashMap<String, f32>>) 
 {
-    let ud = access_user_data();
-    let user_data_opt = ud.user_data.get(&id);
+    let ud = access_user_data1();
+    
+    let ud_opt = ud.user_data.get(&id);
+
+    let mut ud_opt_chk = false;
+    let mut ud2_opt_chk = false;
 
     let app_cbs = access_callbacks();
-
+    
     let callback_present = 
         app_cbs.callbacks.get(&(id, event_name));
     
@@ -231,54 +239,109 @@ fn process_callback(id: usize, event_name: String, points_opt: Option<HashMap<St
         });
 
     drop(app_cbs);
-
-    Python::with_gil(|py| {
-        if user_data_opt.is_some() && points_opt.is_some() {
-                let res = cb.call1(py, (
-                                                            id, 
-                                                            points_opt.unwrap(), 
-                                                            user_data_opt.unwrap()
-                                                            ));
+    
+    // Needed to split up the callback due to the need
+    // to drop as as possible, one needs to be free
+    // at all times.
+    if ud_opt.is_some() {
+        ud_opt_chk = true;
+        Python::with_gil(|py| {
+            if points_opt.is_some() {
+                let res = 
+                    cb.call1(py, (
+                            id,
+                            points_opt.clone().unwrap(),  
+                            ud_opt.unwrap()
+                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Image: 3 parameter (id, points, user_data) are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Checkbox: 3 parameters (id, points, user_data) are required or 
+                                            a python error in this function. {er}"),
                 }
-            } else if points_opt.is_some() && user_data_opt.is_none() {
-                let res = cb.call1(py, (
-                                                            id, 
-                                                            points_opt.unwrap(), 
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Image: 2 parameter (id, points) 
-                                        are required or a python error in this function. {er}"),
-                }
-            } else if user_data_opt.is_some() {
-                let res = cb.call1(py, (
-                                                            id, 
-                                                            user_data_opt.unwrap()
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Image: 2 parameter (id, user_data) 
-                                        are required or a python error in this function. {er}"),
-                }
-            
             } else {
-                let res = cb.call1(py, (
-                                                            id, 
-                                                            ));
+                let res = 
+                    cb.call1(py, (
+                            id, 
+                            ud_opt.unwrap()
+                            ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Image: 1 parameter (id) 
-                                        are required or a python error in this function. {er}"),
+                    Err(er) => panic!("Checkbox: 3 parameters (id, user_data) are required or 
+                                            a python error in this function. {er}"),
                 }
             }
-    
-    });
+            
+                
+        });
+    }
 
-    drop(ud);   
+    drop(ud);
 
+    let ud2 = access_user_data2();
+    let ud2_opt = ud2.user_data.get(&id);
+
+    if ud2_opt.is_some() {
+        ud2_opt_chk = true;
+        Python::with_gil(|py| {
+            if points_opt.is_some() {
+                let res = 
+                    cb.call1(py, (
+                            id,
+                            points_opt.clone().unwrap(),  
+                            ud2_opt.unwrap()
+                            ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Image: 3 parameters (id, points, user_data) 
+                                                are required or a python 
+                                                error in this function. {er}"),
+                }
+            } else {
+                let res = 
+                    cb.call1(py, (
+                            id,  
+                            ud2_opt.unwrap()
+                            ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Image: 2 parameters (id, user_data) 
+                                                are required or a python 
+                                                error in this function. {er}"),
+                }
+            }
+            
+        });
+    }
+
+    drop(ud2);
+
+    if !ud_opt_chk && !ud2_opt_chk {
+        Python::with_gil(|py| {
+            if points_opt.is_some() {
+                let res = 
+                    cb.call1(py, (
+                            id,
+                            points_opt.clone().unwrap(),  
+                            ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Image: 2 parameter (id, points) is required or possibly a python 
+                                            error in this function. {er}"),
+                }
+            } else {
+                let res = 
+                    cb.call1(py, (
+                            id,  
+                            ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Image: 1 parameter (id) is required or possibly a python 
+                                            error in this function. {er}"),
+                }
+            }
+            
+        });
+    }
 }
 
 

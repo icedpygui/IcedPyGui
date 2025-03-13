@@ -1,7 +1,7 @@
 //! ipg_timer
 use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, access_user_data, app, IpgState};
+use crate::{access_callbacks, access_user_data1, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_height, get_padding_f64, get_radius, 
@@ -200,7 +200,7 @@ pub fn canvas_tick_callback(state: &mut IpgState)
 
 fn process_callback(id: usize, event_name: String, counter: Option<u64>)
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();

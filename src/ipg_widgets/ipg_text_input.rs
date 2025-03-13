@@ -1,7 +1,7 @@
 //! ipg_text_input
 #![allow(clippy::enum_variant_names)]
 use crate::graphics::colors::get_color;
-use crate::{access_callbacks, access_user_data, app, IpgState};
+use crate::{access_callbacks, access_user_data1, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
 use super::helpers::{get_padding_f64, get_radius, get_width, try_extract_ipg_color, try_extract_rgba_color, try_extract_vec_f32};
 use super::helpers::{try_extract_boolean, try_extract_f64, 
@@ -21,6 +21,7 @@ use pyo3::{PyObject, Python};
 #[derive(Debug, Clone)]
 pub struct IpgTextInput {
     pub id: usize,
+    pub parent_id: String,
     pub placeholder: String,
     pub value: String,
     pub is_secure: bool,
@@ -37,6 +38,7 @@ pub struct IpgTextInput {
 impl IpgTextInput {
     pub fn new( 
         id: usize,
+        parent_id: String,
         placeholder: String,
         is_secure: bool,
         // font: Option<Font>,
@@ -50,6 +52,7 @@ impl IpgTextInput {
         ) -> Self {
         Self {
             id,
+            parent_id,
             placeholder,
             value: "".to_string(),
             is_secure,
@@ -169,8 +172,9 @@ pub fn text_input_callback(state: &mut IpgState, id: usize, message: TIMessage) 
             process_callback(id, "on_input".to_string(), wco.value_str.unwrap());
         },
         TIMessage::OnSubmit(value) => {
-            let _ = set_or_get_widget_callback_data(state, wci);
-            process_callback(id, "on_submit".to_string(), value);
+            wci.value_str = Some(value.clone());
+            let wco = set_or_get_widget_callback_data(state, wci);
+            process_callback(id, "on_submit".to_string(), wco.value_str.unwrap());
         }
         TIMessage::OnPaste(value) => {
             wci.value_str = Some(value.clone());
@@ -184,7 +188,7 @@ pub fn text_input_callback(state: &mut IpgState, id: usize, message: TIMessage) 
 
 pub fn process_callback(id: usize, event_name: String, value: String) 
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();

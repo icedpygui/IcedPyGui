@@ -5,7 +5,7 @@ use iced::widget::{horizontal_space, mouse_area, opaque, Container};
 use pyo3::{pyclass, PyObject, Python};
 
 use crate::graphics::colors::get_color;
-use crate::{access_callbacks, access_user_data, IpgState};
+use crate::{access_callbacks, access_user_data1, IpgState};
 use crate::app::Message;
 
 use super::helpers::{get_horizontal_alignment, get_vertical_alignment, try_extract_boolean, try_extract_ipg_color, try_extract_rgba_color};
@@ -141,7 +141,7 @@ pub fn opaque_callback(_state: &mut IpgState, id: usize, event_name: String) {
 
 fn process_callback(id: usize, event_name: String) 
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();

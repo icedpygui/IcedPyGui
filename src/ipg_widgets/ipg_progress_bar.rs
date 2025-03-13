@@ -15,6 +15,7 @@ use super::ipg_enums::IpgWidgets;
 #[derive(Debug, Clone)]
 pub struct IpgProgressBar {
     pub id: usize,
+    pub parent_id: String,
     pub show: bool,
     
     pub min: f32,
@@ -29,6 +30,7 @@ pub struct IpgProgressBar {
 impl IpgProgressBar {
     pub fn new( 
         id: usize,
+        parent_id: String,
         show: bool,
         min: f32,
         max: f32,
@@ -40,6 +42,7 @@ impl IpgProgressBar {
     ) -> Self {
         Self {
             id,
+            parent_id,
             show,
             min,
             max,

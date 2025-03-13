@@ -24,6 +24,7 @@ use iced::{Background, Border, Color, Element,
 #[derive(Debug, Clone)]
 pub struct IpgSeparator {
     pub id: usize,
+    pub parent_id: String,
     pub separator_type: IpgSeparatorType,
     pub label: Option<String>,
     pub label_left_width: f32,
@@ -42,6 +43,7 @@ pub struct IpgSeparator {
 impl IpgSeparator {
     pub fn new( 
         id: usize,
+        parent_id: String,
         separator_type: IpgSeparatorType,
         label: Option<String>,
         label_left_width: f32,
@@ -58,6 +60,7 @@ impl IpgSeparator {
         ) -> Self {
         Self {
             id,
+            parent_id,
             separator_type,
             label,
             label_left_width,

@@ -3641,7 +3641,7 @@ class IPG:
     def update_dataframe(self,
                     wid: int, 
                     param: str, 
-                    df: PyDataFrame,
+                    value: PyDataFrame,
                     ):
         """
         Update a DataFrame example: update_dataframe(table_id, IpgTableParams.PolarsDf, my_df)
@@ -3652,7 +3652,7 @@ class IPG:
             The widget id of the widget to be updated.
         param: class property
             a class like for a table would be IpgTableParams
-        df: PyDataFrame 
+        value: PyDataFrame 
             Polars Dataframe  
 
         Returns

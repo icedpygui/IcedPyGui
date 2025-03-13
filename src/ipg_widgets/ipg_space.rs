@@ -7,6 +7,7 @@ use crate::app;
 #[derive(Debug, Clone)]
 pub struct IpgSpace {
     pub id: usize,
+    pub parent_id: String,
     pub width: Length,
     pub height: Length,
     pub show: bool,
@@ -14,12 +15,14 @@ pub struct IpgSpace {
 
 impl IpgSpace {
     pub fn new(
-        id: usize, 
+        id: usize,
+        parent_id: String, 
         width: Length, 
         height: Length, 
         show: bool) -> Self {
         Self {
             id,
+            parent_id,
             width,
             height,
             show,

@@ -1,7 +1,7 @@
 //!ipg_radio
 use crate::graphics::colors::get_color;
 use crate::ipg_widgets::helpers::try_extract_boolean;
-use crate::{access_callbacks, access_user_data, IpgState};
+use crate::{access_callbacks, access_user_data1, IpgState};
 use crate::app;
 use super::helpers::{get_height, get_padding_f64, get_width, 
     try_extract_f64, try_extract_f64_option, try_extract_i64_option, 
@@ -20,6 +20,7 @@ use pyo3::{pyclass, PyObject, Python};
 #[derive(Debug, Clone)]
 pub struct IpgRadio {
     pub id: usize,
+    pub parent_id: String,
     pub labels: Vec<String>,
     pub direction: IpgRadioDirection,
     pub spacing: f32,
@@ -41,6 +42,7 @@ pub struct IpgRadio {
 impl IpgRadio {
     pub fn new( 
         id: usize,
+        parent_id: String,
         labels: Vec<String>,
         direction: IpgRadioDirection,
         spacing: f32,
@@ -60,6 +62,7 @@ impl IpgRadio {
         ) -> Self {
         Self {
             id,
+            parent_id,
             labels,
             direction,
             spacing,
@@ -302,7 +305,7 @@ pub fn radio_callback(state: &mut IpgState, id: usize, message: RDMessage) {
 
 fn process_callback(id: usize, event_name: String, selected_index: usize, selected_label: String) 
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();

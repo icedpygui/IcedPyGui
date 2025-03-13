@@ -14,6 +14,7 @@ use super::ipg_enums::IpgWidgets;
 #[derive(Debug, Clone)]
 pub struct IpgRule {
     pub id: usize,
+    pub parent_id: String,
     pub width: Length,
     pub height: Length,
     pub thickness: u16,
@@ -24,7 +25,8 @@ pub struct IpgRule {
 
 impl IpgRule {
     pub fn new(
-        id: usize, 
+        id: usize,
+        parent_id: String, 
         width: Length, 
         height: Length,
         thickness: u16, 
@@ -34,6 +36,7 @@ impl IpgRule {
         ) -> Self {
         Self {
             id,
+            parent_id,
             width,
             height,
             thickness,

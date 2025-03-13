@@ -54,7 +54,7 @@ pub struct IpgTable {
         pub scroller_margin: f32,
         header_id: scrollable::Id,
         body_id: scrollable::Id,
-        footer_id: Option<scrollable::Id>,
+        footer_id: scrollable::Id,
 }
 
 impl IpgTable {
@@ -121,7 +121,7 @@ impl IpgTable {
             scroller_margin,
             header_id: scrollable::Id::unique(),
             body_id: scrollable::Id::unique(),
-            footer_id: Some(scrollable::Id::unique()),
+            footer_id: scrollable::Id::unique(),
         }
     }
 }
@@ -171,7 +171,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
     let mut footers = vec![];
     if tbl.footer_enabled {
         for _ in 0..tbl.column_widths.len() {
-            footers.insert(0, content.remove(content.len()-1))
+            footers.push(content.remove(0));
         }
     }
 
@@ -212,9 +212,9 @@ pub fn construct_table<'a>(tbl: IpgTable,
             if tbl.control_columns.contains(&idx) {
                 rows.push(content.remove(0));
             } else {
-                rows.push(text(item.to_string()).into());
+                let item = item.to_string().trim_matches('"').to_string();
+                rows.push(text(item).into());
             }
-            
         }
     }
  
@@ -257,7 +257,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
             horizontal: scrollbar,
             vertical: scrollbar,
         })
-        .height(Length::Fixed(tbl.height))
+        .height(Length::Fixed(tbl.height-100.0))
         .into();
     
         let footer = if tbl.footer_enabled {
@@ -345,7 +345,7 @@ fn add_header <'a>(id: usize,
 
 fn add_footer <'a>(
             id: usize,
-            footer_id: Option<scrollable::Id>,
+            footer_id: scrollable::Id,
             mut footers: Vec<Element<'a, Message, Theme, Renderer>>, 
             column_widths: Vec<f32>,
             min_width: f32,
@@ -354,45 +354,43 @@ fn add_footer <'a>(
             divider_width: f32,
             cell_padding: Padding) -> Element<'a, Message, Theme, Renderer>{
     
-    footer_id.map(|footer| {
-        scrollable(table::style::wrapper::footer(
-            row(column_widths
-                .iter()
-                .enumerate()
-                .map(|(index, width)| {
-                    single_row_container(
-                        id,
-                        index,
-                        footers.remove(0),
-                        *width,
-                        resize_offset[index],
-                        Some(Message::TableResizing),
-                        Some(Message::TableResized(id)),
-                        min_column_width,
-                        divider_width,
-                        cell_padding,
-                        Default::default(),
-                    )
-                })
-                .chain(dummy_container(
-                                column_widths.clone(),
-                                resize_offset.clone(), 
-                                min_width, 
-                                min_column_width))),
-                Default::default(),
-        ))
-        .id(footer)
-        .direction(scrollable::Direction::Both {
-            vertical: scrollable::Scrollbar::new()
-                .width(0)
-                .margin(0)
-                .scroller_width(0),
-            horizontal: scrollable::Scrollbar::new()
-                .width(0)
-                .margin(0)
-                .scroller_width(0),
-        })
-    }).unwrap().into()
+    scrollable(table::style::wrapper::footer(
+        row(column_widths
+            .iter()
+            .enumerate()
+            .map(|(index, column_width)| {
+                single_row_container(
+                    id,
+                    index,
+                    footers.remove(0),
+                    *column_width,
+                    resize_offset[index],
+                    Some(Message::TableResizing),
+                    Some(Message::TableResized(id)),
+                    min_column_width,
+                    divider_width,
+                    cell_padding,
+                    Default::default(),
+                )
+            })
+            .chain(dummy_container(column_widths.clone(),
+                                    resize_offset.clone(),
+                                    min_width, 
+                                    min_column_width))),
+            Default::default(),
+    ))
+    .id(footer_id)
+    .direction(scrollable::Direction::Both {
+        vertical: scrollable::Scrollbar::new()
+            .width(0)
+            .margin(0)
+            .scroller_width(0),
+        horizontal: scrollable::Scrollbar::new()
+            .width(0)
+            .margin(0)
+            .scroller_width(0),
+    })
+    .into()
 }
 
 fn get_scrollbar(alignment: Anchor, width: f32, margin: f32, scroller_width: f32) -> Scrollbar {

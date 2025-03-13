@@ -21,9 +21,11 @@ def on_input(_txt_input_id, data):
     ipg.update_item(text_on_input_id, IpgTextParam.Content, value=data)
 
 
-# This only fires when you press enter to submit
-def on_submit(_txt_input_id, data):
-    ipg.update_item(text_on_submit_id, IpgTextParam.Content, value=data)
+# This only fires when you press enter to submit, it passes na value like
+# as does the on_input.
+def on_submit(_txt_input_id, value: str):
+    print("submitted", value)
+    # ipg.update_item(text_on_submit_id, IpgTextParam.Content, value=data)
 
 
 # This fired when you paste something into the field
@@ -111,7 +113,7 @@ ipg.add_window(
 ipg.add_column(
         window_id="main", 
         container_id="col",
-        align_x=IpgAlignment.Center,
+        align=IpgAlignment.Center,
         height_fill=True, 
         width_fill=True, 
         spacing=10)

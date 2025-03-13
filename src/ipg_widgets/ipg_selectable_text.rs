@@ -1,6 +1,6 @@
 //!ipg_selectable_text
 #![allow(clippy::enum_variant_names)]
-use crate::access_user_data;
+use crate::access_user_data1;
 use crate::app;
 use crate::access_callbacks;
 use crate::graphics::colors::get_color;
@@ -25,6 +25,7 @@ use pyo3::{PyObject, Python};
 #[derive(Debug, Clone)]
 pub struct IpgSelectableText {
         pub id: usize,
+        pub parent_id: String,
         pub content: String,
         pub width: Length,
         pub height: Length,
@@ -41,6 +42,7 @@ pub struct IpgSelectableText {
 impl IpgSelectableText {
     pub fn new( 
         id: usize,
+        parent_id: String,
         content: String,
         width: Length,
         height: Length,
@@ -55,6 +57,7 @@ impl IpgSelectableText {
         ) -> Self {
         Self {
             id,
+            parent_id,
             content,
             width,
             height,
@@ -167,7 +170,7 @@ pub fn selectable_text_callback(id: usize, message: SLTXTMessage) {
 
 fn process_callback(id: usize, event_name: String, points_opt: Option<(String, f32, String, f32)>) 
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();

@@ -1,7 +1,7 @@
 //! ipg_timer
 use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, access_user_data, app, IpgState};
+use crate::{access_callbacks, access_user_data1, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_i64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_u64, try_extract_vec_f32, try_extract_vec_f64};
 use super::ipg_button::{get_bootstrap_arrow, get_standard_style, try_extract_button_arrow, IpgButtonArrow};
@@ -16,6 +16,7 @@ use pyo3::{pyclass, PyObject, Python};
 #[derive(Debug, Clone)]
 pub struct IpgTimer {
     pub id: usize,
+    pub parent_id: String,
     pub duration_ms: u64,
     pub label: String,
     pub width: Length,
@@ -34,6 +35,7 @@ pub struct IpgTimer {
 impl IpgTimer {
     pub fn new(
         id: usize,
+        parent_id: String,
         duration_ms: u64,
         label: String,
         width: Length,
@@ -47,6 +49,7 @@ impl IpgTimer {
         ) -> Self {
         Self {
             id,
+            parent_id,
             duration_ms,
             label,
             width,
@@ -197,7 +200,7 @@ pub fn tick_callback(state: &mut IpgState)
 
 fn process_callback(id: usize, event_name: String, counter: Option<u64>)
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();

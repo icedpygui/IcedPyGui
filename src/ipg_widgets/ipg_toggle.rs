@@ -1,6 +1,6 @@
 //! ipg_toggler
 use crate::graphics::colors::get_color;
-use crate::{access_callbacks, access_user_data, app, IpgState};
+use crate::{access_callbacks, access_user_data1, app, IpgState};
 use super::helpers::{get_width, try_extract_boolean, 
     try_extract_f64, try_extract_ipg_color, 
     try_extract_ipg_horizontal_alignment, 
@@ -18,6 +18,7 @@ use iced::{alignment, Color, Element, Length, Theme};
 #[derive(Debug, Clone)]
 pub struct IpgToggler {
     pub id: usize,
+    pub parent_id: String,
     pub show: bool,
     pub is_toggled: bool,
     pub label: Option<String>,
@@ -33,6 +34,7 @@ pub struct IpgToggler {
 impl IpgToggler {
     pub fn new( 
         id: usize,
+        parent_id: String,
         show: bool,
         label: Option<String>,
         width: Length,
@@ -45,6 +47,7 @@ impl IpgToggler {
         ) -> Self {
         Self {
             id,
+            parent_id,
             show,
             is_toggled: false,
             label,
@@ -162,7 +165,7 @@ pub fn toggle_callback(state: &mut IpgState, id: usize, message: TOGMessage) {
 
 pub fn process_callback(id: usize, event_name: String, toggled: bool) 
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();

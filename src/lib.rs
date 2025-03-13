@@ -129,16 +129,29 @@ pub fn access_callbacks() -> MutexGuard<'static, Callbacks> {
 }
 
 #[derive(Debug)]
-pub struct UserData {
+pub struct UserData1 {
     user_data: Lazy<HashMap<usize, PyObject>>,
 }
 
-pub static USERDATA: Mutex<UserData> = Mutex::new(UserData {
+pub static USERDATA1: Mutex<UserData1> = Mutex::new(UserData1 {
     user_data: Lazy::new(||HashMap::new()),
 });
 
-pub fn access_user_data() -> MutexGuard<'static, UserData> {
-    USERDATA.lock().unwrap()
+pub fn access_user_data1() -> MutexGuard<'static, UserData1> {
+    USERDATA1.lock().unwrap()
+}
+
+#[derive(Debug)]
+pub struct UserData2 {
+    user_data: Lazy<HashMap<usize, PyObject>>,
+}
+
+pub static USERDATA2: Mutex<UserData2> = Mutex::new(UserData2 {
+    user_data: Lazy::new(||HashMap::new()),
+});
+
+pub fn access_user_data2() -> MutexGuard<'static, UserData2> {
+    USERDATA2.lock().unwrap()
 }
 
 #[derive(Debug)]
@@ -1809,7 +1822,7 @@ impl IPG {
             add_callback_to_mutex(id, "on_press".to_string(), on_press.unwrap());
         }
 
-        if user_data.is_some() {
+        if user_data.is_some(){
             add_user_data_to_mutex(id, user_data.unwrap());
         }
 
@@ -1950,13 +1963,14 @@ impl IPG {
         let padding_body = get_padding_f64(padding_body);
         let padding_foot = get_padding_f64(padding_foot);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgCard(
             IpgCard::new(
                 id,
+                parent_id,
                 is_open,
                 min_max_id,
                 width,
@@ -2108,13 +2122,14 @@ impl IPG {
 
         let width = get_width(width, width_fill);
         
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgCheckBox(
             IpgCheckBox::new(
                 id,
+                parent_id,
                 show,
                 is_checked,
                 label,
@@ -2260,13 +2275,14 @@ impl IPG {
 
         let padding = get_padding_f64(padding);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgColorPicker(
             IpgColorPicker::new(
                 id,
+                parent_id,
                 show,
                 color,
                 // button related
@@ -2382,13 +2398,14 @@ impl IPG {
 
         let padding = get_padding_f64(padding);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgDatePicker(
             IpgDatePicker::new(
                 id,
+                parent_id,
                 label,
                 size_factor,
                 padding,
@@ -2494,13 +2511,14 @@ impl IPG {
 
         let padding = get_padding_f64(padding);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgImage(
             IpgImage::new(
                 id,
+                parent_id,
                 image_path,
                 width,
                 height,
@@ -2572,13 +2590,14 @@ impl IPG {
 
          let options =  convert_pyobject_vec_string(options);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgPickList(
             IpgPickList::new(  
                 id,
+                parent_id,
                 show,
                 options,
                 placeholder,
@@ -2691,13 +2710,14 @@ impl IPG {
         let width = get_width(width, width_fill);
         let height: Length = get_height(height, height_fill);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgProgressBar(
             IpgProgressBar::new(   
                 id,
+                parent_id,
                 show,
                 min,
                 max,
@@ -2821,13 +2841,14 @@ impl IPG {
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgRadio(
             IpgRadio::new( 
                 id,
+                parent_id,
                 labels,
                 direction,
                 spacing,
@@ -2936,13 +2957,14 @@ impl IPG {
         let width = get_width(width, width_fill);
         let height = get_height(None, true);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgRule(
             IpgRule::new(
                 id,
+                parent_id,
                 width,
                 height,
                 thickness,
@@ -2978,13 +3000,14 @@ impl IPG {
         let width = get_width(None, true); // not used for vertical, just defaulted
         let height = get_height(height, height_fill);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgRule(
             IpgRule::new(
                 id,
+                parent_id,
                 width,
                 height,
                 thickness,
@@ -3134,13 +3157,14 @@ impl IPG {
 
         let text_color = get_color(text_rgba, text_color, 1.0, false);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
         
         state.widgets.insert(id, IpgWidgets::IpgSelectableText(
             IpgSelectableText::new(
                 id,
+                parent_id,
                 content,
                 width,
                 height,
@@ -3194,13 +3218,14 @@ impl IPG {
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgSeparator(
             IpgSeparator::new( 
                 id,
+                parent_id,
                 separator_type,
                 label,
                 label_left_width,
@@ -3297,13 +3322,14 @@ impl IPG {
         let width = get_width(width, width_fill);
         let height = height.unwrap_or(16.0);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgSlider(
             IpgSlider::new( 
                 id,
+                parent_id,
                 show,
                 min,
                 max,
@@ -3403,13 +3429,14 @@ impl IPG {
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgSpace(
             IpgSpace::new( 
                 id,
+                parent_id,
                 width,
                 height,
                 show,
@@ -3505,13 +3532,14 @@ impl IPG {
         let width = get_width(width, width_fill);
         let height = get_height(height, height_fill);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgSvg(
             IpgSvg::new(
                 id,
+                parent_id,
                 svg_path,
                 width,
                 height,
@@ -3576,13 +3604,14 @@ impl IPG {
 
         let style = get_color(text_rgba, text_color, 1.0, false);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
         
         state.widgets.insert(id, IpgWidgets::IpgText(
             IpgText::new(
                 id,
+                parent_id,
                 content,
                 size,
                 line_height,
@@ -3656,13 +3685,14 @@ impl IPG {
 
         let line_height = get_line_height(line_height_pixels, line_height_relative);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
         
         state.widgets.insert(id, IpgWidgets::IpgTextInput(
             IpgTextInput::new( 
                 id,
+                parent_id,
                 placeholder,
                 is_secure,
                 // font,
@@ -3806,13 +3836,14 @@ impl IPG {
 
         let padding = get_padding_f64(padding);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
         
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgTimer(
             IpgTimer::new(
                 id,
+                parent_id,
                 duration_ms,
                 label,
                 width,
@@ -4062,13 +4093,14 @@ impl IPG {
 
         let width = get_width(width, width_fill);
 
-        set_state_of_widget(id, parent_id);
+        set_state_of_widget(id, parent_id.clone());
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgToggler(
             IpgToggler::new(
                 id,
+                parent_id,
                 show,
                 label,
                 width,
@@ -4799,7 +4831,7 @@ impl IPG {
 
         drop(events);
 
-        let mut callback_user_data = access_user_data();
+        let mut callback_user_data = access_user_data1();
 
         if user_data.is_some() {
             callback_user_data.user_data.insert(id, user_data.unwrap());
@@ -4873,7 +4905,7 @@ impl IPG {
 
         drop(events);
 
-        let mut callback_user_data = access_user_data();
+        let mut callback_user_data = access_user_data1();
 
         if user_data.is_some() {
             callback_user_data.user_data.insert(id, user_data.unwrap());
@@ -4952,7 +4984,7 @@ impl IPG {
        
         drop(events);
 
-        let mut callback_user_data = access_user_data();
+        let mut callback_user_data = access_user_data1();
 
         if user_data.is_some() {
             callback_user_data.user_data.insert(id, user_data.unwrap());
@@ -5505,11 +5537,16 @@ fn add_callback_to_mutex(id: usize,
 fn add_user_data_to_mutex(id: usize, 
                             user_data: PyObject) {
     
-    let mut ud = access_user_data();
+    let mut lock = USERDATA1.try_lock();
+    if let Ok(ref mut ud) = lock {
+        ud.user_data.insert(id, user_data);
         
-    ud.user_data.insert(id, user_data);
-
-    drop(ud);
+    } else {
+        let mut temp_ud = access_user_data2();
+        temp_ud.user_data.insert(id, user_data);
+        drop(temp_ud);
+    }
+    drop(lock);
 }
 
 pub fn find_parent_uid(ipg_ids: &[IpgIds], parent_id: String) -> usize {

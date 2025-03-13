@@ -1,6 +1,6 @@
 //! ipg_slider
 use crate::graphics::colors::get_color;
-use crate::{access_callbacks, access_user_data, app, IpgState};
+use crate::{access_callbacks, access_user_data1, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn};
 
@@ -20,6 +20,7 @@ use pyo3::{PyObject, pyclass, Python};
 #[derive(Debug, Clone)]
 pub struct IpgSlider {
     pub id: usize,
+    pub parent_id: String,
     pub show: bool,
     
     pub min: f32,
@@ -34,6 +35,7 @@ pub struct IpgSlider {
 impl IpgSlider {
     pub fn new( 
         id: usize,
+        parent_id: String,
         show: bool,
         min: f32,
         max: f32,
@@ -45,6 +47,7 @@ impl IpgSlider {
     ) -> Self {
         Self {
             id,
+            parent_id,
             show,
             min,
             max,
@@ -155,7 +158,7 @@ pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
 
 pub fn process_callback(id: usize, event_name: String, on_change_value: Option<f32>) 
 {
-    let ud = access_user_data();
+    let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
 
     let app_cbs = access_callbacks();
