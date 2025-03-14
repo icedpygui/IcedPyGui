@@ -25,7 +25,7 @@ ipg.add_column(
         window_id="main", 
         container_id="col", 
         parent_id="cont",
-        align_x=IpgAlignment.Center)
+        align=IpgAlignment.Center)
 
 # Add some spacing
 ipg.add_space(

@@ -232,7 +232,7 @@ fn process_callback(id: usize, event_name: String, counter: Option<u64>)
                     Err(er) => panic!("CanvasTimer: 3 parameters (id, counter, user_data) 
                                         are required or a python error in this function. {er}"),
                 }
-            } else if counter.is_some() {
+            } else if user_data_opt.is_none() && counter.is_some() {
                 let res = cb.call1(py, (
                                                             id,
                                                             counter.unwrap(),  

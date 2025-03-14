@@ -1,4 +1,6 @@
 //! ipg_scrollable
+use std::collections::HashMap;
+
 use crate::graphics::colors::get_color;
 use crate::{access_callbacks, access_user_data1, app, IpgState};
 use super::helpers::{get_height, get_radius, get_width, 
@@ -242,22 +244,21 @@ fn get_direction(direction: IpgScrollableDirection,
 }
 
 pub fn scrollable_callback(_state: &mut IpgState, id: usize, vp: Viewport) {
-
-    let abs: (String, f32, String, f32) = ("abs_x".to_string(), vp.absolute_offset().x,
-                                            "abs_y".to_string(), vp.absolute_offset().y);
-    let rel: (String, f32, String, f32) = ("rel_x".to_string(), vp.relative_offset().x,
-                                            "rel_y".to_string(), vp.relative_offset().y);
-    let rev = ("rev_x".to_string(), vp.absolute_offset_reversed().x,
-                                            "rev_y".to_string(), vp.absolute_offset_reversed().y);
+    let mut hmap = HashMap::new();
+    hmap.insert("abs_x".to_string(), vp.absolute_offset().x);
+    hmap.insert("abs_y".to_string(), vp.absolute_offset().y);
+    hmap.insert("rel_x".to_string(), vp.relative_offset().x);
+    hmap.insert("rel_y".to_string(), vp.relative_offset().y);
+    hmap.insert("rev_x".to_string(), vp.absolute_offset_reversed().x);
+    hmap.insert("rev_y".to_string(), vp.absolute_offset_reversed().y);
     
-    process_callback(id, "on_scroll".to_string(), abs, rel, rev);
+    process_callback(id, "on_scroll".to_string(), hmap);
 }
 
 
-pub fn process_callback(id: usize, event_name: String, 
-                        abs: (String, f32, String, f32),
-                        rel: (String, f32, String, f32),
-                        rev: (String, f32, String, f32)) 
+pub fn process_callback(id: usize, 
+                        event_name: String, 
+                        hmap: HashMap<String, f32>) 
 {
     let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
@@ -283,26 +284,22 @@ pub fn process_callback(id: usize, event_name: String,
             if user_data_opt.is_some() {
                 let res = cb.call1(py, (
                                                             id, 
-                                                            abs,
-                                                            rel,
-                                                            rev, 
+                                                            hmap, 
                                                             user_data_opt.unwrap()
                                                             ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Scrollable: 5 parameters (id, dict, dict, dict, user_data) 
+                    Err(er) => panic!("Scrollable: 3 parameters (id, dict, user_data) 
                                         are required or a python error in this function. {er}"),
                 }
             } else {
                 let res = cb.call1(py, (
                                                             id, 
-                                                            abs,
-                                                            rel,
-                                                            rev, 
+                                                            hmap,
                                                             ));
                 match res {
                     Ok(_) => (),
-                    Err(er) => panic!("Scrollable: 4 parameters (id, dict. dict, dict) 
+                    Err(er) => panic!("Scrollable: 4 parameters (id, dict) 
                                         are required or a python error in this function. {er}"),
                 }
             } 

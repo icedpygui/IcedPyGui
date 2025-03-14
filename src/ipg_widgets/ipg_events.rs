@@ -574,18 +574,18 @@ fn process_mouse_callback(id: usize,
     drop(app_event);
 
     Python::with_gil(|py| {
-            if user_data_opt.is_some() {
+            if user_data_opt.is_some() && hmap_s_f.is_some() {
                 let res = cb.call1(py, (
                                                                     id,
                                                                     hmap_s_f,
-                                                                    user_data_opt.unwrap()
+                                                                    user_data_opt
                                                                     ));
                 match res {
                     Ok(_) => (),
                     Err(er) => panic!("Mouse Event: 3 parameters (id, dict, user_data) 
                                         are required or a python error in this function. {er}"),
                 }
-            } else {
+            } else if user_data_opt.is_none() && hmap_s_f.is_some() {
                 let res = cb.call1(py, (
                                                                     id,
                                                                     hmap_s_f,  
@@ -595,7 +595,17 @@ fn process_mouse_callback(id: usize,
                     Err(er) => panic!("Mouse Event: 2 parameter (id, dict) 
                                         is required or possibly a python error in this function. {er}"),
                 }
-            } 
+            } else if user_data_opt.is_some() && hmap_s_f.is_none() {
+                let res = cb.call1(py, (
+                                                                    id,
+                                                                    user_data_opt,  
+                                                                    ));
+                match res {
+                    Ok(_) => (),
+                    Err(er) => panic!("Mouse Event: 2 parameter (id, dict) 
+                                        is required or possibly a python error in this function. {er}"),
+                }
+            }
     });
     
     drop(ud);

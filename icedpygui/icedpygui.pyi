@@ -818,21 +818,21 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
     def add_button_style(self,
-                            background_color: Optional[IpgColor]=None,
-                            background_rgba: Optional[list[float, 4]]=None,
-                            background_color_hovered: Optional[IpgColor]=None,
-                            background_rgba_hovered: Optional[list[float, 4]]=None,
-                            border_color: Optional[IpgColor]=None, 
-                            border_rgba: Optional[list[float, 4]]=None,
-                            border_radius: list[float | float, 4]=[0.0], 
-                            border_width: float=1.0,
-                            shadow_color: Optional[IpgColor]=None, 
-                            shadow_rgba: Optional[list]=None,
-                            shadow_offset_x: float=0.0, 
-                            shadow_offset_y: float=0.0,
-                            shadow_blur_radius: float=1.0,
-                            text_color: Optional[IpgColor]=None, 
-                            text_rgba: Optional[list[float, 4]]=None
+                        background_color: Optional[IpgColor]=None,
+                        background_rgba: Optional[list[float, 4]]=None,
+                        background_color_hovered: Optional[IpgColor]=None,
+                        background_rgba_hovered: Optional[list[float, 4]]=None,
+                        border_color: Optional[IpgColor]=None, 
+                        border_rgba: Optional[list[float, 4]]=None,
+                        border_radius: list[float | float, 4]=[0.0], 
+                        border_width: float=1.0,
+                        shadow_color: Optional[IpgColor]=None, 
+                        shadow_rgba: Optional[list]=None,
+                        shadow_offset_x: float=0.0, 
+                        shadow_offset_y: float=0.0,
+                        shadow_blur_radius: float=1.0,
+                        text_color: Optional[IpgColor]=None, 
+                        text_rgba: Optional[list[float, 4]]=None
                         ) -> int:
         """
         Adds styling to button
@@ -889,7 +889,7 @@ class IPG:
                     padding_body: float=5.0, 
                     padding_foot: float=5.0,
                     show: bool=True,
-                    style: IpgCardStyle=IpgCardStyle.Primary, 
+                    style_id: Optional[int]=None,
                     user_data: Optional[any]=None, 
                 ) -> int:
         """
@@ -929,9 +929,9 @@ class IPG:
                 Sets the padding around the footer.
             show: bool
                 Shows or hides the card.
-            style: IpgCardStyles
-                Sets the style of the card. 
-            user_data: any 
+            style: Optional[int]
+                Id of the add_button_style. 
+            user_data: Optional[any] 
                 Any data in any form needed by user to be passed through as a callback. 
 
         Returns
@@ -940,6 +940,85 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
 
+    def add_card_style(self,
+                        background_color: Optional[IpgColor]=None, 
+                        background_rgba: Optional[list[float, 4]]=None,
+                        border_radius: float=10.0, 
+                        border_width: float=1.0, 
+                        border_color: Optional[IpgColor]=None,
+                        border_rgba: Optional[list[float, 4]]=None, 
+                        head_background_color: Optional[IpgColor]=None,
+                        head_background_rgba: Optional[list[float, 4]]=None, 
+                        head_text_color: Optional[IpgColor]=None,
+                        head_text_rgba: Optional[list[float, 4]]=None,
+                        body_background_color: Optional[IpgColor]=None,
+                        body_background_rgba: Optional[list[float, 4]]=None, 
+                        body_text_color: Optional[IpgColor]=None,
+                        body_text_rgba: Optional[list[float, 4]]=None, 
+                        foot_background_color: Optional[IpgColor]=None,
+                        foot_background_rgba: Optional[list[float, 4]]=None, 
+                        foot_text_color: Optional[IpgColor]=None,
+                        foot_text_rgba: Optional[list[float, 4]]=None, 
+                        close_color: Optional[IpgColor]=None,
+                        close_rgba: Optional[list[float, 4]]=None,
+                        gen_id: Optional[int]=None,
+                       ) -> int:
+        """
+        Adds styling to the Card
+
+        Parameters
+        ----------
+            background_color: Optional[IpgColor]=None
+                Color of the background.
+            background_rgba: Optional[list[float, 4]]=None
+                Color of the background in rgba format.
+            border_color: Optional[IpgColor]=None
+                Color used for the border.
+            border_rgba: list[float; 4]=None
+                Color of the border in rgba format.
+            border_radius: Optional[list[float]]=None
+                The radius border, [float]=all corners, 
+                [float, 4]=[top-left, top-right, bottom-right, bottom-left].
+            border_width: float
+                Border width.
+            head_background_color: Optional[IpgColor]=None
+                Color of the header as IpgColor
+            head_background_rgba: Optional[list[float, 4]]=None
+                Color of the header in rgba format 
+            head_text_color: Optional[IpgColor]=None
+                Color of the text as IpgColor
+            head_text_rgba: Optional[list[float, 4]]=None
+                Color of the tect in rgba format
+            body_background_color: Optional[IpgColor]=None
+                color of body as IpgColor
+            body_background_rgba: Optional[list[float, 4]]=None
+                Color of body in rgba format
+            body_text_color: Optional[IpgColor]=None
+                Color of text as IpgColor
+            body_text_rgba: Optional[list[float, 4]]=None
+                Color of text in rgba format 
+            foot_background_color: Optional[IpgColor]=None
+                Color of footer as IpgColor
+            foot_background_rgba: Optional[list[float, 4]]=None
+                Color of footer in rgba format 
+            foot_text_color: Optional[IpgColor]=None
+                Color of footer text as IpgColor
+            foot_text_rgba: Optional[list[float, 4]]=None
+                Color of footer text in rgba format 
+            close_color: Optional[IpgColor]=None
+                Color of the closed button as IpgColor
+            close_rgba: Optional[list[float, 4]]=None
+                Color of the close button in rgba format
+            gen_id: Optional[int]=None
+                The only allowable entry for this id is the value generated by ipg.generate_id().
+                
+        Returns
+        -------
+        id: int
+            Id of widget which is used for the style_id of the card.
+        """
+    
+    
     def add_checkbox(self,
                     parent_id: str,
                     *,
@@ -2423,8 +2502,6 @@ class IPG:
                     hide_columns=list[int],
                     resize_columns_enabled: bool=True,
                     min_column_width: Optional[float]=50.0,
-                    data_row_wise: bool=True,
-                    date_column_wise: bool=False,
                     parent_id: Optional[str]=None,
                     row_highlight: Optional[IpgTableRowHighLight]=None,
                     highlight_amount: float=0.15,
@@ -2473,18 +2550,8 @@ class IPG:
             column_widths: List[float]
                 A list of value for the column widths, if only one value is supplied then it will 
                 be the default for all columns.
-            widgets_columns: dict{int, List[IpgTableWidget]}
-                The column where the values are converted to text and used as labels for the widget.
             gen_id: int
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            on_button: Callable
-                Callback when a button is pressed.
-            on_checkbox: Callable
-                Callback when a checkbox is toggled.
-            on_modal: Callable
-                Callback when a modal is pressed.
-            on_toggler: Callable
-                Callback when a toggler is toggled.
             user_data: any
                 Any data that might be needed in the callback function.
             show:: bool
@@ -2661,8 +2728,6 @@ class IPG:
                                 border_rgba_focused: Optional[list[float, 4]]=None,
                                 border_width: Optional[float]=None,
                                 border_radius: Optional[list[float]]=None,
-                                # icon_color: Optional[IpgColor]=None,
-                                # icon_rgba: Optional[list[float, 4]]=None,
                                 placeholder_color: Optional[IpgColor]=None,
                                 placeholder_rgba: Optional[list[float, 4]]=None,
                                 value_color: Optional[IpgColor]=None,
@@ -2698,9 +2763,6 @@ class IPG:
                     The width of the border.
                 border_radius: Optional[list[float]]=None
                     The roundness of the border comers, [1 value]=all, [4 values]=[top-left, top-right, bottom-right, bottom-left]
-                # icon_color: Optional[IpgColor]=None
-                #     The color of the icon 
-                # icon_rgba: Optional[list[float, 4]]=None
                 placeholder_color: Optional[IpgColor]=None
                     The color of the placeholder text.
                 placeholder_rgba: Optional[list[float, 4]]=None

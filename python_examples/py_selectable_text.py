@@ -122,7 +122,7 @@ wnd_id = ipg.add_window(
 ipg.add_column(
         window_id="main", 
         container_id="col",
-        align_x=IpgAlignment.Center,
+        align=IpgAlignment.Center,
         width_fill=True, 
         height_fill=True,
         spacing=5.0)

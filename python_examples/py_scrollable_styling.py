@@ -52,7 +52,7 @@ ipg.add_column(
         container_id="col",
         parent_id="scroll", 
         width_fill=True,
-        align_x=IpgAlignment.Center)
+        align=IpgAlignment.Center)
 
 #  Add some content to scroll
 for i in range(0, 25):

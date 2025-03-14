@@ -24,8 +24,7 @@ def on_input(_txt_input_id, data):
 # This only fires when you press enter to submit, it passes na value like
 # as does the on_input.
 def on_submit(_txt_input_id, value: str):
-    print("submitted", value)
-    # ipg.update_item(text_on_submit_id, IpgTextParam.Content, value=data)
+    ipg.update_item(text_on_submit_id, IpgTextParam.Content, value=value)
 
 
 # This fired when you paste something into the field

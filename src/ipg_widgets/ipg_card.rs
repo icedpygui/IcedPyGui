@@ -181,7 +181,7 @@ pub fn construct_card<'a>(crd: &'a IpgCard,
                                                 .style(style)
                                                 .into();
 
-    Some(card.map(move |message| Message::Card(crd.id, message)))
+    Some(card.map(move |message: CardMessage| Message::Card(crd.id, message)))
     
 }
 

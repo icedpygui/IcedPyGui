@@ -86,7 +86,7 @@ tiger_path = cwd + "/python_examples/resources/tiger_0.svg"
 ipg.add_column(
         window_id="main", 
         container_id="col",
-        align_x=IpgAlignment.Center)
+        align=IpgAlignment.Center)
 
 
 svg_id = ipg.add_svg(

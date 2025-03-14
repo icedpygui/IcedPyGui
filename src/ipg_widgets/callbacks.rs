@@ -71,7 +71,8 @@ pub struct WidgetCallbackOut {
     pub toggler_user_data: Option<PyObject>,
     pub scroller_user_data: Option<PyObject>,
     pub value_bool: Option<bool>,
-    pub value_float: Option<f64>,
+    pub value_float_64: Option<f64>,
+    pub value_float_32: Option<f32>,
     pub value_str: Option<String>,
 }
 
@@ -100,7 +101,7 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 };
                 crd.is_open = is_open;
                 return WidgetCallbackOut{
-                     ..Default::default()
+                        ..Default::default()
                     }
             },
             IpgWidgets::IpgCardStyle(_) => {
@@ -151,7 +152,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 }
             },
             IpgWidgets::IpgDatePicker(dp) => {
-                
                 if wci.selected_day.is_some() {
                     dp.selected_day = wci.selected_day.unwrap();
                 }
@@ -168,10 +168,10 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     } else {
                         dp.selected_month_index += 1;
                     }
-                    
+            
                     dp.selected_month = MONTH_NAMES[dp.selected_month_index].to_string();
                 }
-                
+        
                 if wci.selected_year.is_some() {
                     let yr = wci.selected_year.unwrap();
                     dp.selected_year += yr;             
@@ -187,7 +187,7 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                         dp.selected_month_index, 
                         dp.selected_day
                         );
-                
+        
                 if wci.is_submitted.is_some() {
                     dp.is_submitted = wci.is_submitted.unwrap();
                 }
@@ -204,34 +204,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 }
             },
-            // IpgWidgets::IpgMenu(menu) => {
-            //     let mut wco = WidgetCallbackOut::default();
-            //     if wci.is_checked.is_some() {
-            //         menu.is_checked = wci.is_checked.unwrap();
-            //         wco.is_checked = wci.is_checked;
-            //     }
-            //     if wci.on_toggle.is_some() {
-            //         menu.is_toggled = wci.on_toggle.unwrap();
-            //         wco.on_toggle = wci.on_toggle;
-            //     }
-            //     wco.user_data = menu.user_data.clone();
-            //     return wco
-            // },
-            // IpgWidgets::IpgMenuStyle(_) => {
-            //     return WidgetCallbackOut{
-            //         ..Default::default()
-            //     }
-            // },
-            // IpgWidgets::IpgMenuBarStyle(_) => {
-            //     return WidgetCallbackOut{
-            //         ..Default::default()
-            //     }
-            // },
-            // IpgWidgets::IpgMenuSeparatorStyle(_) => {
-            //     return WidgetCallbackOut{
-            //         ..Default::default()
-            //     }
-            // },
             IpgWidgets::IpgOpaqueStyle(_) => {
                 return WidgetCallbackOut{
                     ..Default::default()
@@ -293,7 +265,6 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 }
             },
             IpgWidgets::IpgSlider(slider) => {
-                // Do on_change if something
                 if wci.value_float_64.is_some() {
                     slider.value = match wci.value_float_64 {
                         Some(v) => v as f32,
@@ -301,6 +272,7 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     };
                 }
                 return WidgetCallbackOut{
+                    value_float_32: Some(slider.value),
                     ..Default::default()
                 }
             },
@@ -317,13 +289,14 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 }
             },
+            IpgWidgets::IpgTableStyle(_) => {
+                return WidgetCallbackOut{
+                    ..Default::default()
+                }
+            },
             IpgWidgets::IpgText(_) => {
                 return WidgetCallbackOut::default()
             },
-            // IpgWidgets::IpgTextEditor(_) => {
-            //     let wco = WidgetCallbackOut::default();
-            //     wco
-            // },
             IpgWidgets::IpgTextInput(ti) => {
                 ti.value = wci.value_str.unwrap();
                 return WidgetCallbackOut{
@@ -395,7 +368,8 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     ..Default::default()
                 }
             },
-        }
+            
+            }
     } else {
 
         let container_opt = state.containers.get_mut(&wci.id);

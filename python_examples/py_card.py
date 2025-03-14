@@ -1,11 +1,11 @@
 from icedpygui import IPG, IpgCardParam, IpgCardStyleParam
-from icedpygui import IpgAlignment, IpgStyleStandard
+from icedpygui import IpgAlignment, IpgColor, IpgStyleStandard
 
 
 # Needed first, see other demos for using a class
 ipg = IPG()
 
-
+card_id = 0
 # Callback function for changing the card style
 # The update function is (wid, param, value)
 # wid = widget id
@@ -16,19 +16,18 @@ def update_card(_btn_id: int):
     ipg.update_item(
             wid=card_id, 
             param=IpgCardParam.Head, 
-            value="This is a new head with Danger style")
+            value="This is a new head text")
     
     ipg.update_item(
             wid=card_id, 
             param=IpgCardParam.Body, 
-            value="This is a new body.")
+            value="This is a new body text.")
     
     ipg.update_item(
             wid=card_id, 
             param=IpgCardParam.Foot, 
-            value="This is a new foot")
+            value="This is a new foot text")
     
-    ipg.update_item(wid=card_id, param=IpgCardParam.Style, value=IpgCardStyleParam.Danger)
 
 
 # The callback will minimizes the first card, the button at the bottom left will maximize it.
@@ -49,6 +48,15 @@ def maximize_card(_btn_id: int):
     global card_id
     ipg.update_item(card_id, IpgCardParam.IsOpen, True)
 
+# The style id is used in the card style_id to set the style
+# In this case we create 4 simple styles for later use
+colors = [IpgColor.PRIMARY, IpgColor.SUCCESS, IpgColor.DANGER, IpgColor.BLUE]
+style_ids = []
+for i in range(0, 4):
+    id = ipg.add_card_style(
+            body_background_color=colors[i],
+            foot_background_color=IpgColor.DARK_GREY)
+    style_ids.append(id)
 
 # window added first
 ipg.add_window(window_id="main", title="Card Demo", width=800, height=600,
@@ -92,39 +100,20 @@ ipg.add_button("bottom_row", "Card 1", style_standard=IpgStyleStandard.Primary,
 
 # define the head and body of the cards.
 head = "Python Iced_aw Card"
-body = ("\nThis is the body of the card.  \nNote how the style is add style=IpgCardStyles.Primary.  This method should "
-        "cut down on typo errors versus having to type in parameters that need to match exactly.")
+body = "This is the body of the card."
+foot = "Foot"
 
-# Styles are set by importing the appropriate module, in this case IpgCardStyles, and selecting
-# the needed style from your IDE dropdown list.
-card_id = ipg.add_card("col", head, "Primary: " + body, foot="Foot",
-                       style=IpgCardStyleParam.Primary,
-                       on_close=minimize_card)
-ipg.add_card("col", head, "Secondary: " + body, foot="Foot",
-             style=IpgCardStyleParam.Secondary)
-ipg.add_card("col", head, "Success: " + body, foot="Foot",
-             style=IpgCardStyleParam.Success)
-ipg.add_card("col", head, "Danger: " + body, foot="Foot",
-             style=IpgCardStyleParam.Danger)
-ipg.add_card("col", head, "Warning: " + body, foot="Foot",
-             style=IpgCardStyleParam.Warning)
-ipg.add_card("col", head, "Info: " + body, foot="Foot",
-             style=IpgCardStyleParam.Info)
-ipg.add_card("col", head, "Light: " + body, foot="Foot",
-             style=IpgCardStyleParam.Light)
-ipg.add_card("col", head, "Dark: " + body, foot="Foot",
-             style=IpgCardStyleParam.Dark)
-ipg.add_card("col", head, body="White: " + body, foot="Foot",
-             style=IpgCardStyleParam.White)
-ipg.add_card("col", head, "Default: " + body, foot="Foot",
-             style=IpgCardStyleParam.Default)
+for i in range(0, 4):
+    id = ipg.add_card(
+            parent_id="col", 
+            head=head, 
+            body=body, 
+            foot=foot,
+            style_id=style_ids[i],
+            on_close=minimize_card)
+    if i == 0:
+        card_id = id
 
-# if you use no style, them this is what you get, which is Default.
-ipg.add_card(
-        parent_id="col", 
-        head=head, 
-        body="Default: If you use no style setting.\n" + body, 
-        foot="Foot")
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

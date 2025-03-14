@@ -1,13 +1,17 @@
 //! ipg_table
 
 use crate::app::Message;
+use crate::graphics::colors::get_color;
 use crate::table;
 use crate::IpgState;
 use crate::table::table::{body_container, dummy_container, 
     single_row_container};
 
 use iced::advanced::graphics::core::Element;
+use iced::widget::container;
 use iced::widget::scrollable::{Anchor, Scrollbar};
+use iced::Border;
+use iced::Color;
 use iced::{Length, Padding, Renderer, Theme};
 use iced::widget::{column, row, scrollable, text};
 
@@ -17,8 +21,12 @@ use pyo3_polars::PyDataFrame;
 
 use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn};
+use super::helpers::get_radius;
+use super::helpers::try_extract_ipg_color;
+use super::helpers::try_extract_rgba_color;
 use super::helpers::{get_width, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f32};
+use super::ipg_enums::IpgWidgets;
 
 
 #[derive(Debug, Clone)]
@@ -34,8 +42,6 @@ pub struct IpgTable {
         pub footer_enabled: bool,
         pub control_columns: Vec<usize>,
         pub hide_columns: Vec<usize>,
-        pub add_data_row_wise: bool,
-        pub add_data_column_wise: bool,
         pub row_highlight: Option<IpgTableRowHighLight>,
         pub highlight_amount: f32,
         pub column_spacing: f32,
@@ -52,6 +58,7 @@ pub struct IpgTable {
         pub scroller_width: f32,
         pub scroller_bar_width: f32,
         pub scroller_margin: f32,
+        pub style_id: Option<usize>,
         header_id: scrollable::Id,
         body_id: scrollable::Id,
         footer_id: scrollable::Id,
@@ -70,8 +77,6 @@ impl IpgTable {
         footer_enabled: bool,
         control_columns: Vec<usize>,
         hide_columns: Vec<usize>,
-        add_data_row_wise: bool,
-        add_data_column_wise: bool,
         row_highlight: Option<IpgTableRowHighLight>,
         highlight_amount: f32,
         column_spacing: f32,
@@ -88,6 +93,7 @@ impl IpgTable {
         scroller_width: f32,
         scroller_bar_width: f32,
         scroller_margin: f32,
+        style_id: Option<usize>,
         ) -> Self {
         Self {
             id,
@@ -101,8 +107,6 @@ impl IpgTable {
             footer_enabled,
             control_columns,
             hide_columns,
-            add_data_row_wise,
-            add_data_column_wise,
             row_highlight,
             highlight_amount,
             column_spacing,
@@ -119,6 +123,7 @@ impl IpgTable {
             scroller_width,
             scroller_bar_width,
             scroller_margin,
+            style_id,
             header_id: scrollable::Id::unique(),
             body_id: scrollable::Id::unique(),
             footer_id: scrollable::Id::unique(),
@@ -143,7 +148,8 @@ pub enum IpgTableMouse {
 }
 
 pub fn construct_table<'a>(tbl: IpgTable, 
-                            mut content: Vec<Element<'a, Message, Theme, Renderer>>, 
+                            mut content: Vec<Element<'a, Message, Theme, Renderer>>,
+                            _style_opt: Option<&IpgWidgets>, 
                             ) 
                             -> Element<'a, Message, Theme, Renderer> {
 
@@ -642,4 +648,335 @@ fn try_extract_row_highlight(value: &PyObject) -> IpgTableRowHighLight {
     })
 }
 
+#[derive(Debug, Clone)]
+pub struct IpgTableStyle {
+    pub id: usize,
+    pub header_background_color: Option<Color>,
+    pub header_border_color: Option<Color>,
+    pub header_border_radius: Vec<f32>,
+    pub header_border_width: f32,
+    pub header_text_color: Option<Color>,
+    pub body_background_color: Option<Color>,
+    pub body_border_color: Option<Color>,
+    pub body_border_radius: Vec<f32>,
+    pub body_border_width: f32,
+    pub body_text_color: Option<Color>,
+    pub footer_background_color: Option<Color>,
+    pub footer_border_color: Option<Color>,
+    pub footer_border_radius: Vec<f32>,
+    pub footer_border_width: f32,
+    pub footer_text_color: Option<Color>,
+    pub divider_hover_color: Option<Color>,
+    pub divider_unhover_color: Option<Color>,
+}
+
+impl IpgTableStyle {
+    pub fn new(
+        id: usize,
+        header_background_color: Option<Color>,
+        header_border_color: Option<Color>,
+        header_border_radius: Vec<f32>,
+        header_border_width: f32,
+        header_text_color: Option<Color>,
+        body_background_color: Option<Color>,
+        body_border_color: Option<Color>,
+        body_border_radius: Vec<f32>,
+        body_border_width: f32,
+        body_text_color: Option<Color>,
+        footer_background_color: Option<Color>,
+        footer_border_color: Option<Color>,
+        footer_border_radius: Vec<f32>,
+        footer_border_width: f32,
+        footer_text_color: Option<Color>,
+        divider_hover_color: Option<Color>,
+        divider_unhover_color: Option<Color>,
+    ) -> Self {
+        Self {
+            id,
+            header_background_color,
+            header_border_color,
+            header_border_radius,
+            header_border_width,
+            header_text_color,
+            body_background_color,
+            body_border_color,
+            body_border_radius,
+            body_border_width,
+            body_text_color,
+            footer_background_color,
+            footer_border_color,
+            footer_border_radius,
+            footer_border_width,
+            footer_text_color,
+            divider_hover_color,
+            divider_unhover_color,
+        }
+    }
+}
+
+pub fn get_table_style<'a>(style: Option<&'a IpgWidgets>) -> Option<&IpgTableStyle>{
+    match style {
+        Some(st) => {
+            match st {
+                IpgWidgets::IpgTableStyle(style) => {
+                    Some(style)
+                }
+                _ => None,
+            }
+        },
+        None => None,
+    }
+}
+
+pub fn get_header_styling(theme: &iced::Theme,
+                style_opt: Option<&IpgTableStyle>,  
+                ) -> container::Style {
+    
+    let style = style_opt.unwrap();
+
+    let mut header_style = container::Style {
+                                    text_color: Some(theme.extended_palette().background.strong.text),
+                                    background: Some(theme.extended_palette().background.strong.color.into()),
+                                    ..Default::default()
+                                        };
+    if style_opt.is_none() {
+        return header_style;
+    }
+
+    let border = Border::default();
+
+    header_style.background = Some(style.header_background_color.unwrap_or(Color::TRANSPARENT).into());
+    header_style.border.color = style.header_border_color.unwrap_or(border.color);
+    header_style.border.radius = get_radius(style.header_border_radius.clone(), "Table".to_string());
+    header_style.border.width = style.header_border_width;
+    header_style.text_color = Some(style.header_text_color.unwrap_or(header_style.text_color.unwrap()));
+    
+    header_style
+}
+
+pub fn get_row_styling(theme: &Theme,
+                style_opt: Option<IpgTableStyle>,
+                index: usize, 
+                ) -> container::Style {
+    
+    if style_opt.is_none() {
+        let pair = theme.extended_palette().background.weak;
+        return container::Style {
+                text_color: Some(pair.text),
+                background: Some(pair.color.into()),
+                ..Default::default()
+                }
+    }
+
+    let style = style_opt.unwrap();
+
+    let pair = if index % 2 == 0 {
+            theme.extended_palette().background.base
+        } else {
+            theme.extended_palette().background.weak
+        };
+    let mut body_style =  container::Style {
+                                    text_color: Some(pair.text),
+                                    background: Some(pair.color.into()),
+                                    ..Default::default()
+                                };
+
+    let border = Border::default();
+
+    body_style.background = Some(style.body_background_color.unwrap_or(Color::TRANSPARENT).into());
+    body_style.border.color = style.body_border_color.unwrap_or(border.color);
+    body_style.border.radius = get_radius(style.body_border_radius.clone(), "Table".to_string());
+    body_style.border.width = style.body_border_width;
+    body_style.text_color = Some(style.header_text_color.unwrap_or(body_style.text_color.unwrap()));
+    
+    body_style
+}
+
+pub fn get_footer_styling(theme: &Theme,
+                style_opt: Option<&IpgTableStyle>,  
+                ) -> container::Style {
+    
+    if style_opt.is_none() {
+        return container::transparent(theme);
+    }
+
+    let style = style_opt.unwrap();
+
+    let mut footer_style = container::Style::default();
+
+    let border = Border::default();
+
+    footer_style.background = Some(style.footer_background_color.unwrap_or(Color::TRANSPARENT).into());
+    footer_style.border.color = style.footer_border_color.unwrap_or(border.color);
+    footer_style.border.radius = get_radius(style.footer_border_radius.clone(), "Table".to_string());
+    footer_style.border.width = style.footer_border_width;
+    footer_style.text_color = Some(style.header_text_color.unwrap_or(footer_style.text_color.unwrap()));
+    
+    footer_style
+}
+
+pub fn get_divider_styling(theme: &Theme,
+                style_opt: Option<&IpgTableStyle>,
+                hovered: bool,  
+                ) -> container::Style {
+    
+    let pair = if hovered {
+            theme.extended_palette().primary.base
+        } else {
+            theme.extended_palette().background.weak
+        };
+
+    let mut divider_style = container::Style {
+            background: Some(pair.color.into()),
+            ..Default::default()
+        };
+
+    if style_opt.is_none() {
+        return divider_style;
+    }
+
+    let style = style_opt.unwrap();
+
+    if hovered {
+        divider_style.background = Some(style.divider_hover_color.unwrap_or(pair.color).into());
+    } else {
+        divider_style.background = Some(style.divider_unhover_color.unwrap_or(pair.color).into());
+    }
+
+    divider_style
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum IpgTableStyleParam {
+    HeaderBackgroundIpgColor,
+    HeaderBackgroundRgbaColor,
+    HeaderBorderIpgColor,
+    HeaderBorderRgbaColor,
+    HeaderBorderRadius,
+    HeaderBorderWidth,
+    HeaderTextIpgColor,
+    HeaderTextRgbaColor,
+
+    BodyBackgroundIpgColor,
+    BodyBackgroundRgbaColor,
+    BodyBorderIpgColor,
+    BodyBorderRgbaColor,
+    BodyBorderRadius,
+    BodyBorderWidth,
+    BodyTextIpgColor,
+    BodyTextRgbaColor,
+
+    FooterBackgroundIpgColor,
+    FooterBackgroundRgbaColor,
+    FooterBorderIpgColor,
+    FooterBorderRgbaColor,
+    FooterBorderRadius,
+    FooterBorderWidth,
+    FooterTextIpgColor,
+    FooterTextRgbaColor,
+}
+
+pub fn table_style_update_item(style: &mut IpgTableStyle,
+                            item: &PyObject,
+                            value: &PyObject,) 
+{
+    let update = try_extract_table_style_update(item);
+    let name = "TableStyle".to_string();
+    match update {
+        IpgTableStyleParam::HeaderBackgroundIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.header_background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTableStyleParam::BodyBackgroundIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.body_background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTableStyleParam::FooterBackgroundIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.footer_background_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTableStyleParam::HeaderBackgroundRgbaColor => {
+            style.header_background_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgTableStyleParam::BodyBackgroundRgbaColor => {
+            style.body_background_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgTableStyleParam::FooterBackgroundRgbaColor => {
+            style.footer_background_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgTableStyleParam::HeaderBorderIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.header_border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTableStyleParam::BodyBorderIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.body_border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTableStyleParam::FooterBorderIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.footer_border_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTableStyleParam::HeaderBorderRgbaColor => {
+            style.header_border_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgTableStyleParam::BodyBorderRgbaColor => {
+            style.body_border_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgTableStyleParam::FooterBorderRgbaColor => {
+            style.footer_border_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgTableStyleParam::HeaderBorderRadius => {
+            style.header_border_radius = try_extract_vec_f32(value, name);
+        },
+        IpgTableStyleParam::BodyBorderRadius => {
+            style.body_border_radius = try_extract_vec_f32(value, name);
+        },
+        IpgTableStyleParam::FooterBorderRadius => {
+            style.footer_border_radius = try_extract_vec_f32(value, name);
+        },
+        IpgTableStyleParam::HeaderBorderWidth => {
+            style.header_border_width = try_extract_f64(value, name) as f32;
+        },
+        IpgTableStyleParam::BodyBorderWidth => {
+            style.body_border_width = try_extract_f64(value, name) as f32;
+        },
+        IpgTableStyleParam::FooterBorderWidth => {
+            style.footer_border_width = try_extract_f64(value, name) as f32;
+        },
+        IpgTableStyleParam::HeaderTextIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.header_text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTableStyleParam::BodyTextIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.body_text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTableStyleParam::FooterTextIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.footer_text_color = get_color(None, Some(color), 1.0, false);
+        },
+        IpgTableStyleParam::HeaderTextRgbaColor => {
+            style.header_text_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgTableStyleParam::BodyTextRgbaColor => {
+            style.body_text_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+        IpgTableStyleParam::FooterTextRgbaColor => {
+            style.footer_text_color = Some(Color::from(try_extract_rgba_color(value, name)));
+        },
+    }
+
+}
+
+pub fn try_extract_table_style_update(update_obj: &PyObject) -> IpgTableStyleParam {
+
+    Python::with_gil(|py| {
+        let res = update_obj.extract::<IpgTableStyleParam>(py);
+        match res {
+            Ok(update) => update,
+            Err(_) => panic!("Table style parameter update extraction failed"),
+        }
+    })
+}
 

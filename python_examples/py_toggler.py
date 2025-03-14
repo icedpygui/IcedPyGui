@@ -81,7 +81,7 @@ ipg.add_column(
         container_id="col", 
         width_fill=True, 
         height_fill=True,
-        align_x=IpgAlignment.Center, 
+        align=IpgAlignment.Center, 
         spacing=5.0)
 
 # Add a column at the top for the toggler and a text widget
@@ -89,7 +89,7 @@ ipg.add_column(
         window_id="main", 
         container_id="col_top", 
         parent_id="col",
-        align_x=IpgAlignment.Center,
+        align=IpgAlignment.Center,
         height=110.0, 
         spacing=5.0, 
         padding=[5.0], 
@@ -108,7 +108,7 @@ ipg.add_column(
         window_id="main", 
         container_id="col_bot", 
         parent_id="col",
-        align_x=IpgAlignment.Center, 
+        align=IpgAlignment.Center, 
         spacing=10.0, 
         padding=[5.0])
 
@@ -147,7 +147,7 @@ ipg.add_row(
         window_id="main", 
         container_id="row", 
         parent_id="col_bot", 
-        align_items=IpgAlignment.Center,
+        align=IpgAlignment.Center,
         width_fill=True)
 
 ipg.add_button(

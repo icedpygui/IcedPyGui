@@ -45,7 +45,7 @@ def on_mouse_move(image_id, point: dict):
         index = ferris_ids.index(image_id)
     except:
         index = tiger_ids.index(image_id)
-    print(point)
+
     x = '{:{}.{}}'.format(point.get('x'), 10, 4)
     y = '{:{}.{}}'.format(point.get('y'), 10, 4)
     ipg.update_item(

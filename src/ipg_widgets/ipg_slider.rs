@@ -148,15 +148,17 @@ pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
         SLMessage::OnChange(value) => {
             wci.value_float_64 = Some(value as f64);
             let _ = set_or_get_widget_callback_data(state, wci);
-            process_callback(id, "on_change".to_string(), Some(value));
+            process_callback(id, "on_change".to_string(), value);
         },
         SLMessage::OnRelease => {
-            process_callback(id, "on_release".to_string(), None);
+            // to be consistent, returning value for both
+            let wco = set_or_get_widget_callback_data(state, wci);
+            process_callback(id, "on_release".to_string(), wco.value_float_32.unwrap());
         },
     }
 }
 
-pub fn process_callback(id: usize, event_name: String, on_change_value: Option<f32>) 
+pub fn process_callback(id: usize, event_name: String, value: f32) 
 {
     let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
@@ -179,11 +181,11 @@ pub fn process_callback(id: usize, event_name: String, on_change_value: Option<f
     drop(app_cbs);
                  
     Python::with_gil(|py| {
-        if user_data_opt.is_some() && on_change_value.is_some() {
+        if user_data_opt.is_some() {
             
             let res = cb.call1(py, (
                                                         id, 
-                                                        on_change_value.unwrap(), 
+                                                        value, 
                                                         user_data_opt,
                                                         ));
             match res {
@@ -191,24 +193,15 @@ pub fn process_callback(id: usize, event_name: String, on_change_value: Option<f
                 Err(er) => panic!("Slider: 3 parameters (id, value, user_data) 
                                     are required or a python error in this function. {er}"),
             }
-        } else if on_change_value.is_some() {
+        } else {
             let res = cb.call1(py, (
                                                         id, 
-                                                        on_change_value.unwrap(), 
+                                                        value, 
                                                         ));
             match res {
                 Ok(_) => (),
                 Err(er) => panic!("Slider: 2 parameters (id, value) 
                                     are required or a python error in this function. {er}"),
-            }
-        } else {
-            let res = cb.call1(py, (
-                                                        id,  
-                                                        ));
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("Slider: 1 parameter (id) 
-                                    is required or a python error in this function. {er}"),
             }
         }
     });

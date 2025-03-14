@@ -17,11 +17,11 @@ def point_on_circle(center_x, center_y, radius, angle):
     return [x, y]
 
 
-def on_start(timer_id: int, elapsed: int):
+def on_start(timer_id: int):
     ipg.update_item(timer_id, IpgCanvasTimerParam.Label, "Stop Timer")
     
 
-def on_stop(timer_id: int, elapsed: int):
+def on_stop(timer_id: int):
     ipg.update_item(timer_id, IpgCanvasTimerParam.Label, "Start Timer")
 
 
@@ -37,9 +37,6 @@ def on_tick(timer_id: int, elapsed: int):
     ipg.update_canvas_item(moon_id, IpgCanvasGeometryParam.Position, moon_point)
     ipg.update_canvas_item(sun_id, IpgCanvasGeometryParam.Rotation, sun_rotation)
     
-
-
-
 
 ipg = IPG()
 

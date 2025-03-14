@@ -1,10 +1,18 @@
-from icedpygui import IPG, IpgColor
+from icedpygui import IPG, IpgColor, IpgTextParam
 
 ipg = IPG()
 
 
 def color_selected(cp_id: int, color: list):
-    print(color)
+    # Need to change the list color to a str type
+    string = "["
+    for i in range(0, len(color)):
+        string += str(color[i]) + ", "
+    string += "]"
+    
+    ipg.update_item(wid=text_id, 
+                    param=IpgTextParam.Content, 
+                    value=string)
 
 
 def cp_opened(cp_id: int):
@@ -32,18 +40,28 @@ ipg.add_window(
         height=500.0,
         pos_centered=True)
 
-# Add the container to center both x and y.  Holds only one widget.
+# Add the container to center both x and y (default).  Holds only one widget.
 ipg.add_container(
         window_id="main", 
         container_id="cont",
         width_fill=True, 
         height_fill=True)
 
+# Add a column to hold multiple widgets
+ipg.add_column(
+    window_id="main",
+    container_id="col",
+    parent_id="cont")
+
 ipg.add_color_picker(
-        parent_id="cont",
+        parent_id="col",
         on_submit=color_selected,
         on_press=cp_opened,
         on_cancel=cp_canceled,
         style_id=cp_style)
+
+text_id = ipg.add_text(
+            parent_id="col",
+            content="Color value here")
 
 ipg.start_session()

@@ -19,7 +19,7 @@ ipg.add_column(
         container_id="col", 
         width_fill=True, 
         height_fill=True,
-        align_x=IpgAlignment.Center, 
+        align=IpgAlignment.Center, 
         spacing=5.0)
 
 ipg.add_space(

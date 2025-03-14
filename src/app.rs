@@ -706,7 +706,14 @@ fn get_container<'a>(state: &'a IpgState,
                     construct_opaque(op, content, style_opt)
                 },
                 IpgContainers::IpgTable(table) => {
-                    construct_table(table.clone(), content)
+                    let style_opt = 
+                        match table.style_id {
+                            Some(id) => {
+                                state.widgets.get(&id).map(|st| st)
+                            },
+                            None => None,
+                        };
+                    construct_table(table.clone(), content, style_opt)
                 },
                 IpgContainers::IpgRow(row) => {
                     construct_row(row, content)
@@ -1200,6 +1207,7 @@ fn get_widget_parent_id(widget: &IpgWidgets) -> String {
         IpgWidgets::IpgSliderStyle(ipg_slider_style) => todo!(),
         IpgWidgets::IpgSpace(ipg_space) => todo!(),
         IpgWidgets::IpgSvg(ipg_svg) => todo!(),
+        IpgWidgets::IpgTableStyle(ipg_table_style) => todo!(),
         IpgWidgets::IpgText(ipg_text) => ipg_text.parent_id.clone(),
         IpgWidgets::IpgTextInput(ipg_text_input) => todo!(),
         IpgWidgets::IpgTextInputStyle(ipg_text_input_style) => todo!(),
@@ -1209,6 +1217,7 @@ fn get_widget_parent_id(widget: &IpgWidgets) -> String {
         IpgWidgets::IpgCanvasTimerStyle(ipg_canvas_timer_style) => todo!(),
         IpgWidgets::IpgToggler(ipg_toggler) => todo!(),
         IpgWidgets::IpgTogglerStyle(ipg_toggler_style) => todo!(),
+        
     }
 }
 

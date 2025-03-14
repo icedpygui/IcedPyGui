@@ -542,6 +542,9 @@ class solitaire:
                 self.move_stock_to_waste()
                 self.origin = None
                 return
+            elif card.get("stock") and card.get("stock"):
+                self.origin = None
+                return
             elif card.get("name") == "tab_mousearea":
                 self.origin = None
                 return
@@ -575,9 +578,9 @@ class solitaire:
         elif self.cards.get(self.origin).get("tableau") and self.cards.get(self.target).get("stock"):
             self.content = "Cannot move a card to stock"
             ids = None
-        else:
-            if len(ids) == 0:
-                raise Exception("target_str_id is None")
+        elif self.cards.get(self.origin).get("Stock") and self.cards.get(self.target).get("stock"):
+            self.content = "Cannot move a card back to stock"
+            ids = None
         
         if ids is not None:
             for wid, str_id in ids:

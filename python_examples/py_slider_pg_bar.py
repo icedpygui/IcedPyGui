@@ -8,12 +8,12 @@ show = True
 
 # Couple of callbacks for change and release
 # The slider_id is not used since we are updating the bar and the text
-def slider_on_change(_slider_id, data):
+def slider_on_change(_slider_id: int, data: float):
     ipg.update_item(on_change_id, IpgTextParam.Content, f"On Change value is {data}")
     ipg.update_item(bar_id, IpgProgressBarParam.Value, data)
 
 
-def slider_on_release(_slider_id, data):
+def slider_on_release(_slider_id: int, data: float):
     ipg.update_item(on_release_id, IpgTextParam.Content, f"On Release value is {data}")
 
 
@@ -82,7 +82,7 @@ ipg.add_window(
 ipg.add_column(
         window_id="main", 
         container_id="col",
-        align_x=IpgAlignment.Center,
+        align=IpgAlignment.Center,
         width_fill=True, 
         height_fill=True, 
         spacing=5)

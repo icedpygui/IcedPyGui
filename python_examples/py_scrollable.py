@@ -126,7 +126,7 @@ class DemoScrollable:
                     container_id=self.cont_v_middle,
                     parent_id=self.scroll_v, 
                     width_fill=True,
-                    align_x=IpgAlignment.Center)
+                    align=IpgAlignment.Center)
 
         for i in range(0, 25):
             self.ipg.add_text(
@@ -223,16 +223,26 @@ class DemoScrollable:
                                     parent_id=self.cont_h_bottom,
                                     content=f"Some data when scrolled")
 
-    # The data in this case in a dictionary, check the docs or print data to
-    # determine the key, value of the data.
+    # The data in this case in a dictionary, absolute, relative, and absolute reversed
+    # {'abs_x': 0.0, 'abs_y': 0.0, 'rel_x': 0.0, 'rev_x': 0.0, 'rev_y': 0.0, 'rel_y': 0.0}
     def on_scroll_v(self, id, data):
-        text = "\n".join("{}: {}".format(k, v) for k, v in data.items())
-        
+        text = "\n" + 'abs_x = ' + str(data.get('abs_x'))
+        text += "\n" + 'abs_y = ' + str(data.get('abs_y'))
+        text += "\n" + 'rel_x = ' + str(data.get('rel_x'))
+        text += "\n" + 'rel_y = ' + str(data.get('rel_y'))
+        text += "\n" + 'rev_x = ' + str(data.get('rev_x'))
+        text += "\n" + 'rev_y = ' + str(data.get('rev_y'))
+ 
         self.ipg.update_item(self.cb_text_v, IpgTextParam.Content,
                              value=f"scrollable id = {id}\n{text}")
 
     def on_scroll_h(self, id, data):
-        text = "\n".join("{}: {}".format(k, v) for k, v in data.items())
+        text = "\n" + 'abs_x = ' + str(data.get('abs_x'))
+        text += "\n" + 'abs_y = ' + str(data.get('abs_y'))
+        text += "\n" + 'rel_x = ' + str(data.get('rel_x'))
+        text += "\n" + 'rel_y = ' + str(data.get('rel_y'))
+        text += "\n" + 'rev_x = ' + str(data.get('rev_x'))
+        text += "\n" + 'rev_y = ' + str(data.get('rev_y'))
         
         self.ipg.update_item(self.cb_text_h, IpgTextParam.Content,
                              value=f"scrollable id = {id}\n{text}")
@@ -262,7 +272,7 @@ class DemoScrollable:
                     container_id="col", 
                     parent_id=self.cont_b,
                     spacing=10, 
-                    align_x=IpgAlignment.Center)
+                    align=IpgAlignment.Center)
         
         # Display some info
         self.ipg.add_text(
@@ -283,7 +293,7 @@ class DemoScrollable:
                     window_id=self.wnd_b, 
                     container_id=self.col_b, 
                     parent_id=self.scroll_b,
-                    align_x=IpgAlignment.Center)
+                    align=IpgAlignment.Center)
 
         for _ in range(0, 25):
             self.ipg.add_text(

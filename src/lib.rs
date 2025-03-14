@@ -77,7 +77,7 @@ use ipg_widgets::ipg_space::IpgSpace;
 use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, 
         IpgSvgParam, IpgSvgRotation};
-use ipg_widgets::ipg_table::{table_dataframe_update, table_item_update, IpgTable, IpgTableParam, IpgTableRowHighLight};
+use ipg_widgets::ipg_table::{table_dataframe_update, table_item_update, table_style_update_item, IpgTable, IpgTableParam, IpgTableRowHighLight, IpgTableStyle};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, text_input_style_update_item, 
     IpgTextInput, IpgTextInputParam, IpgTextInputStyle, IpgTextInputStyleParam};
@@ -1600,8 +1600,6 @@ impl IPG {
                         footer_enabled=false,
                         control_columns=vec![],
                         hide_columns=vec![],
-                        data_row_wise=false,
-                        data_column_wise=false,
                         parent_id=None,
                         row_highlight=None, 
                         highlight_amount=0.15,
@@ -1616,7 +1614,8 @@ impl IPG {
                         scroller_width=10.0,
                         scroller_bar_width=10.0,
                         scroller_margin=0.0,
-                        gen_id=None,  
+                        gen_id=None,
+                        style_id=None,  
                         show=true,
                         user_data=None,
                         ))]
@@ -1635,8 +1634,6 @@ impl IPG {
                     footer_enabled: bool,
                     control_columns: Vec<usize>,
                     hide_columns: Vec<usize>,
-                    data_row_wise: bool,
-                    data_column_wise: bool,
                     parent_id: Option<String>,
                     row_highlight: Option<IpgTableRowHighLight>,
                     highlight_amount: f32,
@@ -1652,6 +1649,7 @@ impl IPG {
                     scroller_bar_width: f32,
                     scroller_margin: f32,
                     gen_id: Option<usize>,
+                    style_id: Option<usize>,
                     show: bool,
                     user_data: Option<PyObject>,
                 ) -> PyResult<usize> 
@@ -1677,11 +1675,6 @@ impl IPG {
 
         let df: DataFrame = polars_df.into();
        
-        // add_callback_to_mutex(id, "on_press".to_string(), None);
-        // add_callback_to_mutex(id, "on_release".to_string(), None);
-        // add_callback_to_mutex(id, "on_exit".to_string(), None);
-        // add_callback_to_mutex(id, "on_enter".to_string(), None);
-
         if user_data.is_some() {
             add_user_data_to_mutex(id, user_data.unwrap());
         }
@@ -1705,8 +1698,6 @@ impl IPG {
                 footer_enabled,
                 control_columns,
                 hide_columns,
-                data_row_wise,
-                data_column_wise,
                 row_highlight,
                 highlight_amount,
                 column_spacing,
@@ -1723,11 +1714,118 @@ impl IPG {
                 scroller_width,
                 scroller_bar_width,
                 scroller_margin,
+                style_id,
                 )));
 
         drop(state);
         Ok(id)
 
+    }
+
+    #[pyo3(signature = ( 
+                        header_background_color=None, header_background_rgba=None,
+                        header_border_color=None, header_border_rgba=None,
+                        header_border_radius = vec![0.0], header_border_width=0.0,
+                        header_text_color=None, header_text_rgba=None,
+
+                        body_background_color=None, body_background_rgba=None,
+                        body_border_color=None, body_border_rgba=None,
+                        body_border_radius = vec![0.0], body_border_width=0.0,
+                        body_text_color=None, body_text_rgba=None,
+
+                        footer_background_color=None, footer_background_rgba=None,
+                        footer_border_color=None, footer_border_rgba=None,
+                        footer_border_radius = vec![0.0], footer_border_width=0.0,
+                        footer_text_color=None, footer_text_rgba=None,
+
+                        divider_hover_color=None,
+                        divider_hover_rgba=None,
+                        divider_unhover_color=None,
+                        divider_unhover_rgba=None,
+
+                        gen_id=None))]
+    fn add_table_style(&self,
+                            header_background_color: Option<IpgColor>,
+                            header_background_rgba: Option<[f32; 4]>,
+                            header_border_color: Option<IpgColor>,
+                            header_border_rgba: Option<[f32; 4]>,
+                            header_border_radius: Vec<f32>,
+                            header_border_width: f32,
+                            header_text_color: Option<IpgColor>,
+                            header_text_rgba: Option<[f32; 4]>,
+
+                            body_background_color: Option<IpgColor>,
+                            body_background_rgba: Option<[f32; 4]>,
+                            body_border_color: Option<IpgColor>,
+                            body_border_rgba: Option<[f32; 4]>,
+                            body_border_radius: Vec<f32>,
+                            body_border_width: f32,
+                            body_text_color: Option<IpgColor>,
+                            body_text_rgba: Option<[f32; 4]>,
+
+                            footer_background_color: Option<IpgColor>,
+                            footer_background_rgba: Option<[f32; 4]>,
+                            footer_border_color: Option<IpgColor>,
+                            footer_border_rgba: Option<[f32; 4]>,
+                            footer_border_radius: Vec<f32>,
+                            footer_border_width: f32,
+                            footer_text_color: Option<IpgColor>,
+                            footer_text_rgba: Option<[f32; 4]>,
+
+                            divider_hover_color: Option<IpgColor>,
+                            divider_hover_rgba: Option<[f32; 4]>,
+                            divider_unhover_color: Option<IpgColor>,
+                            divider_unhover_rgba: Option<[f32; 4]>,
+
+                            gen_id: Option<usize>,
+                            ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let header_background_color: Option<Color> = get_color(header_background_rgba, header_background_color, 1.0, false);
+        let header_border_color: Option<Color> = get_color(header_border_rgba, header_border_color, 1.0, false);
+        let header_text_color: Option<Color> = get_color(header_text_rgba, header_text_color, 1.0, false);
+
+        let body_background_color: Option<Color> = get_color(body_background_rgba, body_background_color, 1.0, false);
+        let body_border_color: Option<Color> = get_color(body_border_rgba, body_border_color, 1.0, false);
+        let body_text_color: Option<Color> = get_color(body_text_rgba, body_text_color, 1.0, false);
+
+        let footer_background_color: Option<Color> = get_color(footer_background_rgba, footer_background_color, 1.0, false);
+        let footer_border_color: Option<Color> = get_color(footer_border_rgba, footer_border_color, 1.0, false);
+        let footer_text_color: Option<Color> = get_color(footer_text_rgba, footer_text_color, 1.0, false);
+
+        let divider_hover_color = get_color(divider_hover_rgba, divider_hover_color, 1.0, false);
+        let divider_unhover_color = get_color(divider_unhover_rgba, divider_unhover_color, 1.0, false);
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgTableStyle(
+            IpgTableStyle::new( 
+                id,
+                header_background_color,
+                header_border_color,
+                header_border_radius,
+                header_border_width,
+                header_text_color,
+
+                body_background_color,
+                body_border_color,
+                body_border_radius,
+                body_border_width,
+                body_text_color,
+                    
+                footer_background_color,
+                footer_border_color,
+                footer_border_radius,
+                footer_border_width,
+                footer_text_color,
+
+                divider_hover_color,
+                divider_unhover_color,
+                )));
+
+        drop(state);
+        Ok(id)
     }
 
     #[pyo3(signature = (window_id, container_id, position, text_to_display, 
@@ -1993,7 +2091,7 @@ impl IPG {
 
     }
 
-    #[pyo3(signature = (parent_id, 
+    #[pyo3(signature = ( 
                         background_color=None, 
                         background_rgba=None,
                         border_radius=10.0, 
@@ -2016,7 +2114,6 @@ impl IPG {
                         close_rgba=None,
                         gen_id=None))]
     fn add_card_style(&self,
-                        parent_id: String,
                         background_color: Option<IpgColor>, 
                         background_rgba: Option<[f32; 4]>,
                         border_radius: f32, 
@@ -2051,8 +2148,6 @@ impl IPG {
         let body_text_color: Option<Color> = get_color(body_text_rgba, body_text_color, 1.0, false);
         let foot_text_color: Option<Color> = get_color(foot_text_rgba, foot_text_color, 1.0, false);
         let close_color: Option<Color> = get_color(close_rgba, close_color, 1.0, false);
-
-        set_state_of_widget(id, parent_id);
 
         let mut state = access_state();
 
@@ -5243,13 +5338,16 @@ fn match_widget(widget: &mut IpgWidgets,
         },
         IpgWidgets::IpgSpace(_) => (),
         IpgWidgets::IpgSvg(sg) => {
-                svg_item_update(sg, item, value);
+            svg_item_update(sg, item, value);
         },
+        IpgWidgets::IpgTableStyle(style) => {
+            table_style_update_item(style, item, value);
+        }
         IpgWidgets::IpgText(txt) => {
-                text_item_update(txt, item, value);
+            text_item_update(txt, item, value);
         },
         IpgWidgets::IpgTextInput(ti) => {
-                text_input_item_update(ti, item, value);
+            text_input_item_update(ti, item, value);
         },
         IpgWidgets::IpgTextInputStyle(style) => {
                 text_input_style_update_item(style, item, value);
