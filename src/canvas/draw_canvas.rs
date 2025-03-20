@@ -1,5 +1,5 @@
 //! draw_canvas
-#![allow(clippy::unnecessary_unwrap)]
+// #![allow(clippy::unnecessary_unwrap)]
 use std::collections::HashMap;
 
 use iced::{alignment, mouse, Color, Length, Vector};
@@ -813,24 +813,22 @@ impl DrawCurve {
                     _ => (None, None, None, 0, None),
                 };
 
-                let stroke = if line_dash.is_some() && color.is_some() && width.is_some() {
-                    Stroke {
-                        style: stroke::Style::Solid(color.unwrap()),
-                        width: width.unwrap(),
+                let stroke = match (line_dash, color, width) {
+                    (Some(line_dash), Some(color), Some(width)) => Stroke {
+                        style: stroke::Style::Solid(color),
+                        width,
                         line_dash: LineDash {
                             offset,
-                            segments: &line_dash.unwrap(),
+                            segments: &line_dash.clone(),
                         },
                         ..Stroke::default()
-                    }
-                } else if line_dash.is_none() && color.is_some() && width.is_some() {
-                    Stroke {
-                        style: stroke::Style::Solid(color.unwrap()),
-                        width: width.unwrap(),
+                    },
+                    (None, Some(color), Some(width)) => Stroke {
+                        style: stroke::Style::Solid(color),
+                        width,
                         ..Stroke::default()
-                    }
-                } else {
-                    Stroke::default()
+                    },
+                    _ => Stroke::default(),
                 };
                 
                 if let Some(path) = path { frame.stroke(
