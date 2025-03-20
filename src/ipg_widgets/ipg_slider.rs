@@ -440,14 +440,9 @@ pub fn try_extract_slider_style_update(update_obj: &PyObject) -> IpgSliderStyleP
 
 fn get_slider_style(style: Option<&IpgWidgets>) -> Option<IpgSliderStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgSliderStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
-    }
+        Some(IpgWidgets::IpgSliderStyle(style)) => {
+            Some(style.clone())
+        }
+            _ => None,
+        }
 }

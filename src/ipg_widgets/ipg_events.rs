@@ -445,10 +445,7 @@ fn check_callback_if_none(id: usize, event_name: String) -> bool {
     let cb_opt= cbs.events
                                     .get(&(id, event_name));
     
-    let check = match cb_opt {
-        Some(_) => true,
-        None => false,
-    };
+    let check = cb_opt.is_some();
     drop(cbs);
     check
 }

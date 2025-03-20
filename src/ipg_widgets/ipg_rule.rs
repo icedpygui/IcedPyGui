@@ -136,15 +136,10 @@ fn construct_rule_vertical<'a>(rule: &'a IpgRule,
 
 fn get_rule_style(style: Option<&IpgWidgets>) -> Option<IpgRuleStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgRuleStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgRuleStyle(style)) => {
+            Some(style.clone())
+        }
+        _ => None,
     }
 }
 

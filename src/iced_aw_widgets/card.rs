@@ -1,5 +1,5 @@
 //! Displays a [`Card`].
-
+#![allow(clippy::large_enum_variant)]
 // use crate::graphics::bootstrap::{icon_to_string, Bootstrap};
 use crate::graphics::BOOTSTRAP_FONT;
 
@@ -398,10 +398,10 @@ where
             .expect("Native: Layout should have a head layout");
         let close_layout = head_children.next();
 
-        let is_mouse_over_close = close_layout.map_or(false, |layout| {
-            let bounds = layout.bounds();
-            bounds.contains(cursor.position().unwrap_or_default())
-        });
+        let is_mouse_over_close = close_layout.is_some_and(|layout| {
+             let bounds = layout.bounds();
+             bounds.contains(cursor.position().unwrap_or_default())
+         });
 
         let mouse_interaction = if is_mouse_over_close {
             mouse::Interaction::Pointer
@@ -1043,12 +1043,12 @@ impl StyleSheet for Theme {
             background: app.background,
             border_radius: app.border_radius,
             border_width: app.border_width,
-            border_color: app.border_color.into(),
-            head_background: app.head_background.into(),
+            border_color: app.border_color,
+            head_background: app.head_background,
             head_text_color: app.head_text_color,
-            body_background: app.body_background.into(),
+            body_background: app.body_background,
             body_text_color: app.body_text_color,
-            foot_background: app.foot_background.into(),
+            foot_background: app.foot_background,
             foot_text_color: app.foot_text_color,
             close_color: app.close_color,
         };

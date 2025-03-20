@@ -404,7 +404,7 @@ fn get_handle(ipg_handle: &IpgPickListHandle,
             };
 
             let arrow_opened = match opened {
-                Some(op) => get_bootstrap_arrow_char(&op),
+                Some(op) => get_bootstrap_arrow_char(op),
                 None => get_bootstrap_arrow_char(&IpgButtonArrow::ArrowBarRight),
             };
 
@@ -576,14 +576,9 @@ pub fn try_extract_pick_list_style_update(update_obj: &PyObject) -> IpgPickListS
 
 fn get_pick_list_style(style: Option<&IpgWidgets>) -> Option<IpgPickListStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgPickListStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
-    }
+        Some(IpgWidgets::IpgPickListStyle(style)) => {
+            Some(style.clone())
+        }
+            _ => None,
+        }
 }

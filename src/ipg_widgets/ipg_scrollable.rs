@@ -673,15 +673,10 @@ pub fn scroll_style_update_item(style: &mut IpgScrollableStyle,
 
 fn get_scroll_style(style: Option<&IpgWidgets>) -> Option<IpgScrollableStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgScrollableStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgScrollableStyle(style)) => {
+            Some(style.clone())
+        }
+        _ => None,
     }
 }
 

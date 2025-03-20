@@ -357,7 +357,7 @@ pub fn convert_to_export(widgets: &HashMap<usize, IpgWidget>,
 
     let mut curves = widgets.clone();
     for (k, v) in text.iter() {
-        curves.insert(k.clone(), v.clone());
+        curves.insert(*k, v.clone());
     }
 
     let mut export = vec![];
@@ -428,8 +428,8 @@ pub fn convert_to_export(widgets: &HashMap<usize, IpgWidget>,
         };
 
         let x_color = ExportColor::from_rgba(&color);
-        let x_fill_color = if fill_color.is_some() {
-            ExportColor::from_rgba(&fill_color.unwrap())
+        let x_fill_color = if let Some(color) = fill_color {
+            ExportColor::from_rgba(&color)
         } else {
             ExportColor::from_rgba(& Color::from_rgba(0.0, 0.0, 0.0, 0.0))
         };

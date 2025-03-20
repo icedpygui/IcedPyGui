@@ -240,12 +240,12 @@ fn calendar_show_button<'a>(dp: &'a IpgDatePicker,
 }
 
 
-fn create_first_row_arrows<'a>(id: usize, 
-                            selected_month: &'a String, 
+fn create_first_row_arrows(id: usize, 
+                            selected_month: &str, 
                             selected_month_index: usize, 
                             selected_year: i32,
                             size_factor: f32) 
-                            -> Element<'a, Message, Theme, Renderer> 
+                            -> Element<'_, Message, Theme, Renderer> 
 {
     let btn_arrow_width = 18.0 * size_factor;
     let btn_arrow_height = 15.0 * size_factor;
@@ -301,7 +301,7 @@ fn create_first_row_arrows<'a>(id: usize,
                 right_btn.map(move |message| Message::DatePicker(id, message));
 
     let selected_month_cont: Element<Message, Theme, Renderer> = 
-            Container::new(Text::new(selected_month.clone())
+            Container::new(Text::new(selected_month.to_owned())
                         .size(text_size))
                         .align_x(alignment::Horizontal::Center)
                         .align_y(alignment::Vertical::Center)
@@ -702,16 +702,11 @@ pub fn try_extract_date_picker_update(update_obj: &PyObject) -> IpgDatePickerPar
 //     }
 // }
 
-fn get_widget_style<'a>(style: Option<&'a IpgWidgets>) -> Option<IpgButtonStyle>{
+fn get_widget_style(style: Option<&IpgWidgets>) -> Option<IpgButtonStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgButtonStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
-    }
+        Some(IpgWidgets::IpgButtonStyle(style)) => {
+            Some(style.clone())
+        }
+        _ => None,
+        }
 }

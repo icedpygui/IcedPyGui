@@ -75,8 +75,8 @@ where
 
     let spacing = Space::new(divider_width, Length::Shrink);
 
-    let height = if row_max_height.is_some() {
-        Length::Fixed(row_max_height.unwrap())
+    let height = if let Some(max) = row_max_height {
+        Length::Fixed(max)
     } else {
         Length::Shrink
     };

@@ -148,8 +148,8 @@ pub(crate) mod wrapper {
         style: <Theme as super::Catalog>::Style,
     }
 
-    impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
-        for Wrapper<'a, Message, Theme, Renderer>
+    impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer>
+        for Wrapper<'_, Message, Theme, Renderer>
     where
         Renderer: iced::advanced::Renderer,
         Theme: super::Catalog,

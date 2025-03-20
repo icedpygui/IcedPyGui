@@ -208,17 +208,12 @@ pub fn try_extract_container_update(update_obj: &PyObject) -> IpgContainerParam 
     })
 }
 
-pub fn get_cont_style<'a>(style: Option<&'a IpgWidgets>) -> Option<IpgContainerStyle>{
+pub fn get_cont_style(style: Option<&IpgWidgets>) -> Option<IpgContainerStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgContainerStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgContainerStyle(style)) => {
+            Some(style.clone())
+        }
+        _ => None,
     }
 }
 

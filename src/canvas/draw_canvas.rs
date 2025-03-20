@@ -1,5 +1,5 @@
 //! draw_canvas
-
+#![allow(clippy::unnecessary_unwrap)]
 use std::collections::HashMap;
 
 use iced::{alignment, mouse, Color, Length, Vector};
@@ -179,7 +179,7 @@ struct DrawPending<'a> {
     image_curves: &'a HashMap<usize, IpgWidget>,
 }
 
-impl<'a> canvas::Program<IpgWidget> for DrawPending<'a> {
+impl canvas::Program<IpgWidget> for DrawPending<'_> {
     type State = Option<Pending>;
 
     fn update(
@@ -880,19 +880,14 @@ impl DrawCurve {
     }
 
     fn draw_image(image_curve: &IpgWidget, frame: &mut Frame, _theme: &Theme) {
-        match &image_curve {
-            IpgWidget::Image(img) => {
-                frame.translate(Vector::new(img.position.x, img.position.y));
-                frame.rotate(to_radians(&img.rotation));
-                frame.draw_image(
-                    img.bounds,
-                    &img.path,
-                );
-                
-            },
-            _ => ()
-        };
- 
+        if let IpgWidget::Image(img) = &image_curve {
+             frame.translate(Vector::new(img.position.x, img.position.y));
+             frame.rotate(to_radians(&img.rotation));
+             frame.draw_image(
+                         img.bounds,
+                        &img.path,
+             );
+         };
     }
 
 }

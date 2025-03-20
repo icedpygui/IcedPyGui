@@ -622,10 +622,8 @@ fn get_children<'a>(parents: &Vec<ParentChildIds>,
         if parent_ids.contains(child) {
             let index = parents.iter().position(|r| &r.parent_id == child).unwrap();
             content.push(get_children(parents, &index, parent_ids, state, canvas_state));
-        } else {
-            if get_widget(state, child).is_some() {
+        } else if get_widget(state, child).is_some() {
                 content.push(get_widget(state, child).unwrap());
-            }
         }
     }
     let id = &parents[*index].parent_id;
@@ -663,7 +661,7 @@ fn get_container<'a>(state: &'a IpgState,
                     let style_opt = 
                         match con.style_id {
                             Some(id) => {
-                                state.widgets.get(&id).map(|st| st)
+                                state.widgets.get(&id)
                             },
                             None => None,
                         };
@@ -674,14 +672,14 @@ fn get_container<'a>(state: &'a IpgState,
                     let bar_style: Option<&IpgWidgets> = 
                         match menu.menu_bar_style_id {
                             Some(id) => {
-                                state.widgets.get(&id).map(|st| st)
+                                state.widgets.get(&id)
                             },
                             None => None,
                         };
                     let menu_style: Option<&IpgWidgets> = 
                         match menu.menu_style_id {
                             Some(id) => {
-                                state.widgets.get(&id).map(|st| st)
+                                state.widgets.get(&id)
                             },
                             None => None,
                         };
@@ -698,7 +696,7 @@ fn get_container<'a>(state: &'a IpgState,
                     let style_opt = 
                         match op.style_id {
                             Some(id) => {
-                                state.widgets.get(&id).map(|st| st)
+                                state.widgets.get(&id)
                             },
                             None => None,
                         };
@@ -709,7 +707,7 @@ fn get_container<'a>(state: &'a IpgState,
                     let style_opt = 
                         match table.style_id {
                             Some(id) => {
-                                state.widgets.get(&id).map(|st| st)
+                                state.widgets.get(&id)
                             },
                             None => None,
                         };
@@ -721,7 +719,7 @@ fn get_container<'a>(state: &'a IpgState,
                 IpgContainers::IpgScrollable(scroll) => {
                     let style_opt = match scroll.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st| st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
@@ -755,7 +753,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                 IpgWidgets::IpgButton(btn) => {
                     let style_opt = match btn.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
@@ -765,7 +763,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                 IpgWidgets::IpgCard(crd) => {
                     let style_opt = match crd.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
@@ -774,7 +772,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                 IpgWidgets::IpgCheckBox(chk) => {
                     let style_opt = match chk.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
@@ -783,7 +781,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                 IpgWidgets::IpgColorPicker(cp) => {
                     let style_opt = match cp.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
@@ -798,7 +796,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                 IpgWidgets::IpgDatePicker(dp) => {
                     let style_opt = match dp.button_style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
@@ -807,7 +805,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                 IpgWidgets::IpgPickList(pick) => {
                     let style_opt = match pick.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
@@ -816,7 +814,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                 IpgWidgets::IpgProgressBar(bar) => {
                     let style_opt = match bar.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
@@ -825,7 +823,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                 IpgWidgets::IpgRadio(radio) => {
                     let style_opt = match radio.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
@@ -834,7 +832,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                 IpgWidgets::IpgRule(rule) => {
                     let style_opt = match rule.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
@@ -846,14 +844,14 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                 IpgWidgets::IpgSeparator(sep) => {
                     let style_opt = match sep.style_id {
                         Some(id) => {
-                            state.widgets.get(&id).map(|st|st)
+                            state.widgets.get(&id)
                         },
                         None => None,
                     };
                     construct_separator(sep, style_opt)
                 }
                 IpgWidgets::IpgSlider(slider) => {
-                    let style_opt = match slider.style_id.clone() {
+                    let style_opt = match slider.style_id {
                         Some(id) => {
                             state.widgets.get(&id)
                         },
@@ -871,7 +869,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                     construct_text(text)
                 },
                 IpgWidgets::IpgTextInput(input) => {
-                    let style_opt = match input.style_id.clone() {
+                    let style_opt = match input.style_id {
                         Some(id) => {
                             state.widgets.get(&id)
                         },
@@ -880,7 +878,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                     construct_text_input(input, style_opt)       
                 },
                 IpgWidgets::IpgTimer(timer) => {
-                    let style_opt = match timer.style_id.clone() {
+                    let style_opt = match timer.style_id {
                         Some(id) => {
                             state.widgets.get(&id)
                         },
@@ -889,7 +887,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                     construct_timer(timer, style_opt)
                 },
                 IpgWidgets::IpgCanvasTimer(ctimer) => {
-                    let style_opt = match ctimer.style_id.clone() {
+                    let style_opt = match ctimer.style_id {
                         Some(id) => {
                             state.widgets.get(&id)
                         },
@@ -898,7 +896,7 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                     construct_canvas_timer(ctimer, style_opt)
                 },
                 IpgWidgets::IpgToggler(tog) => {
-                    let style_opt = match tog.style_id.clone() {
+                    let style_opt = match tog.style_id {
                         Some(id) => {
                             state.widgets.get(&id)
                         },
@@ -1139,7 +1137,7 @@ fn process_canvas_updates(cs: &mut IpgCanvasState) {
 
 }
 
-fn show_widget(state: &mut IpgState, ids: &Vec<(usize, bool)>) {
+fn show_widget(state: &mut IpgState, ids: &[(usize, bool)]) {
     
     for (id, value) in ids.iter() {
         
@@ -1150,25 +1148,25 @@ fn show_widget(state: &mut IpgState, ids: &Vec<(usize, bool)>) {
             panic!("Show_items - unable to find id {}", id)
         };
         match widget {
-            IpgWidgets::IpgButton(ipg_button) => ipg_button.show=*value,
-            IpgWidgets::IpgCard(ipg_card) => ipg_card.show=*value,
-            IpgWidgets::IpgCheckBox(ipg_check_box) => ipg_check_box.show=*value,
-            IpgWidgets::IpgColorPicker(ipg_color_picker) => ipg_color_picker.show=*value,
-            IpgWidgets::IpgDatePicker(ipg_date_picker) => ipg_date_picker.show=*value,
-            IpgWidgets::IpgImage(ipg_image) => ipg_image.show=*value,
-            IpgWidgets::IpgPickList(ipg_pick_list) => ipg_pick_list.show=*value,
-            IpgWidgets::IpgProgressBar(ipg_progress_bar) => ipg_progress_bar.show=*value,
-            IpgWidgets::IpgRadio(ipg_radio) => ipg_radio.show=*value,
-            IpgWidgets::IpgRule(ipg_rule) => ipg_rule.show=*value,
-            IpgWidgets::IpgSelectableText(ipg_selectable_text) => ipg_selectable_text.show=*value,
-            IpgWidgets::IpgSeparator(ipg_separator) => ipg_separator.show=*value,
-            IpgWidgets::IpgSlider(ipg_slider) => ipg_slider.show=*value,
-            IpgWidgets::IpgSpace(ipg_space) => ipg_space.show=*value,
-            IpgWidgets::IpgSvg(ipg_svg) => ipg_svg.show=*value,
-            IpgWidgets::IpgText(ipg_text) => ipg_text.show=*value,
-            IpgWidgets::IpgTextInput(ipg_text_input) => ipg_text_input.show=*value,
-            IpgWidgets::IpgTimer(ipg_timer) => ipg_timer.show=*value,
-            IpgWidgets::IpgToggler(ipg_toggler) => ipg_toggler.show=*value,
+            IpgWidgets::IpgButton(ipg_button) => ipg_button.show= *value,
+            IpgWidgets::IpgCard(ipg_card) => ipg_card.show= *value,
+            IpgWidgets::IpgCheckBox(ipg_check_box) => ipg_check_box.show= *value,
+            IpgWidgets::IpgColorPicker(ipg_color_picker) => ipg_color_picker.show= *value,
+            IpgWidgets::IpgDatePicker(ipg_date_picker) => ipg_date_picker.show= *value,
+            IpgWidgets::IpgImage(ipg_image) => ipg_image.show= *value,
+            IpgWidgets::IpgPickList(ipg_pick_list) => ipg_pick_list.show= *value,
+            IpgWidgets::IpgProgressBar(ipg_progress_bar) => ipg_progress_bar.show= *value,
+            IpgWidgets::IpgRadio(ipg_radio) => ipg_radio.show= *value,
+            IpgWidgets::IpgRule(ipg_rule) => ipg_rule.show  = * value,
+            IpgWidgets::IpgSelectableText(ipg_selectable_text) => ipg_selectable_text.show= *value,
+            IpgWidgets::IpgSeparator(ipg_separator) => ipg_separator.show= *value,
+            IpgWidgets::IpgSlider(ipg_slider) => ipg_slider.show= *value,
+            IpgWidgets::IpgSpace(ipg_space) => ipg_space.show= *value,
+            IpgWidgets::IpgSvg(ipg_svg) => ipg_svg.show= *value,
+            IpgWidgets::IpgText(ipg_text) => ipg_text.show= *value,
+            IpgWidgets::IpgTextInput(ipg_text_input) => ipg_text_input.show= *value,
+            IpgWidgets::IpgTimer(ipg_timer) => ipg_timer.show= *value,
+            IpgWidgets::IpgToggler(ipg_toggler) => ipg_toggler.show= *value,
             _ => (),
         }
     }

@@ -482,15 +482,10 @@ pub fn canvas_timer_style_update_item(style: &mut IpgCanvasTimerStyle,
 
 fn get_canvas_timer_style(style: Option<&IpgWidgets>) -> Option<IpgCanvasTimerStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgCanvasTimerStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
+        Some(IpgWidgets::IpgCanvasTimerStyle(style)) => {
+                Some(style.clone())
             }
-        },
-        None => None,
+        _ => None,
     }
 }
 

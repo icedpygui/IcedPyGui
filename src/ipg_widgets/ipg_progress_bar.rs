@@ -299,16 +299,11 @@ pub fn progress_bar_style_update_item(style: &mut IpgProgressBarStyle,
 
 fn get_progress_bar_style(style: Option<&IpgWidgets>) -> Option<IpgProgressBarStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgProgressBarStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
-    }
+        Some(IpgWidgets::IpgProgressBarStyle(style)) => {
+            Some(style.clone())
+        }
+            _ => None,
+        }
 }
 
 pub fn try_extract_progress_bar_style_update(update_obj: &PyObject) -> IpgProgressBarStyleParam {

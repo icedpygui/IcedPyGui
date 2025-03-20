@@ -64,8 +64,8 @@ impl IpgText {
     }
 }
 
-pub fn construct_text<'a>(text: &'a IpgText) 
-                    -> Option<Element<'a, Message>> {
+pub fn construct_text(text: &IpgText) 
+                    -> Option<Element<'_, Message>> {
 
     if !text.show {
         return None

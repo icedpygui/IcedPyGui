@@ -87,8 +87,8 @@ pub enum SLTXTMessage {
 }
 
 
-pub fn construct_selectable_text<'a>(sl_text: &'a IpgSelectableText) 
-                                -> Option<Element<'a, app::Message>> {
+pub fn construct_selectable_text(sl_text: &IpgSelectableText) 
+                                -> Option<Element<'_, app::Message>> {
     if !sl_text.show {
         return None
     }

@@ -417,15 +417,10 @@ pub fn button_style_update_item(style: &mut IpgButtonStyle,
 
 pub fn get_btn_style(style: Option<&IpgWidgets>) -> Option<IpgButtonStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgButtonStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgButtonStyle(style)) => {
+            Some(style.clone())
+        }
+        _ => None,
     }
 }
 

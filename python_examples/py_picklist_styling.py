@@ -14,8 +14,12 @@ def picked_item(pl_id: int, data: str):
 
 # Add window must be the first widget. Other windows can be added
 # at anytime.
-ipg.add_window("main", "Pick List Demo", 800, 600,
-                pos_x=100, pos_y=25)
+ipg.add_window(
+        window_id="main", 
+        title="Pick List Demo", 
+        width=700, 
+        height=400,
+        pos_centered=True)
 
 # all widgets need to be added to a container, so a container
 # is the second widget needed.

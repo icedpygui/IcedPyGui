@@ -145,7 +145,7 @@ where
         }
     }
 }
-impl<'a, Message, Theme, Renderer> Menu<'a, Message, Theme, Renderer>
+impl<Message, Theme, Renderer> Menu<'_, Message, Theme, Renderer>
 where
     Theme: Catalog,
     Renderer: renderer::Renderer,
@@ -650,7 +650,7 @@ where
         }
     }
 }
-impl<'a, Message, Theme, Renderer> Item<'a, Message, Theme, Renderer>
+impl<Message, Theme, Renderer> Item<'_, Message, Theme, Renderer>
 where
     Theme: Catalog,
     Renderer: renderer::Renderer,
@@ -692,19 +692,6 @@ where
             *tree = self.tree();
         }
     }
-
-    /// tree: Tree{stateless, \[widget_tree, menu_tree]}
-    ///
-    /* pub(super) fn layout(
-        &self,
-        tree: &mut Tree,
-        renderer: &Renderer,
-        limits: &Limits,
-    ) -> Node {
-        self.item
-            .as_widget()
-            .layout(&mut tree.children[0], renderer, limits)
-    } */
 
     /// tree: Tree{stateless, \[widget_tree, menu_tree]}
     ///

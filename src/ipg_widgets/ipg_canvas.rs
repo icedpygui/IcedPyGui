@@ -89,7 +89,7 @@ pub fn canvas_callback(canvas_message: CanvasMessage, app_state: &mut IpgState, 
                     match draw_mode {
                         IpgDrawMode::Edit | IpgDrawMode::Rotate => {
                             let id = get_widget_id(&widget);
-                            canvas_state.edit_widget_id = Some(id.clone());
+                            canvas_state.edit_widget_id = Some(id);
                             canvas_state.text_curves.entry(id).and_modify(|k| *k= widget);
                         },
                         _ => (),
@@ -119,7 +119,7 @@ pub fn canvas_callback(canvas_message: CanvasMessage, app_state: &mut IpgState, 
                     } else {
                         // if not new must be in edit or rotate mode so modify.
                         let id = get_widget_id(&widget);
-                        canvas_state.edit_widget_id = Some(id.clone());
+                        canvas_state.edit_widget_id = Some(id);
                         canvas_state.curves.entry(id).and_modify(|k| *k= widget);
                     }
                     

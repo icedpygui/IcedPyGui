@@ -482,15 +482,10 @@ pub fn timer_style_update_item(style: &mut IpgTimerStyle,
 
 fn get_timer_style(style: Option<&IpgWidgets>) -> Option<IpgTimerStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgTimerStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgTimerStyle(style)) => {
+            Some(style.clone())
+        }
+        _ => None,   
     }
 }
 

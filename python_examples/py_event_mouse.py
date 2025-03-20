@@ -50,23 +50,42 @@ ipg.add_event_mouse(enabled=True,
                     )
 
 # Adding a window
-ipg.add_window("main", "Mouse Handler Demo", 600, 600,
-               pos_x=100, pos_y=25)
+ipg.add_window(
+        window_id="main", 
+        title="Mouse Handler Demo", 
+        width=600, 
+        height=600,
+        pos_centered=True)
 
 # Add a column to hold the widgets
-ipg.add_column("main", container_id="col",
-               align=IpgAlignment.Center,
-               width_fill=True, height_fill=True)
+ipg.add_column(
+        window_id="main", 
+        container_id="col",
+        align=IpgAlignment.Center,
+        width_fill=True, 
+        height_fill=True)
 
 # Add some spacing
-ipg.add_space(parent_id="col", height=150.0)
+ipg.add_space(
+        parent_id="col", 
+        height=150.0)
 
 # Add all of the text widget for info display
-text_for_moved = ipg.add_text(parent_id="col", content="Mouse position will be here")
-text_for_pressed = ipg.add_text(parent_id="col", content="Button presses will show here")
-text_for_released = ipg.add_text(parent_id="col", content="Button releases will show here")
-text_for_scroll_line = ipg.add_text(parent_id="col", content="Button scroll line data will show here")
-text_for_user_data = ipg.add_text(parent_id="col", content="Button user data will show here")
+text_for_moved = ipg.add_text(
+                    parent_id="col", 
+                    content="Mouse position will be here")
+text_for_pressed = ipg.add_text(
+                    parent_id="col", 
+                    content="Button presses will show here")
+text_for_released = ipg.add_text(
+                    parent_id="col", 
+                    content="Button releases will show here")
+text_for_scroll_line = ipg.add_text(
+                    parent_id="col", 
+                    content="Button scroll line data will show here")
+text_for_user_data = ipg.add_text(
+                    parent_id="col", 
+                    content="Button user data will show here")
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

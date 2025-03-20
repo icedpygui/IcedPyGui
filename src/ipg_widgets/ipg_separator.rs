@@ -1,5 +1,5 @@
 //! ipg_separator
-
+#![allow(clippy::enum_variant_names)]
 use crate::app::Message;
 use crate::graphics::colors::{get_color, IpgColor};
 use crate::iced_aw_widgets::menu::quad::{InnerBounds, Quad};
@@ -128,7 +128,7 @@ pub fn construct_separator<'a>(sep: &'a IpgSeparator,
         let style = style_opt.unwrap();
 
         sep_color = if style.color.is_some() {
-            style.color.unwrap().into()
+            style.color.unwrap()
         } else {
             sep_color
         };
@@ -168,10 +168,10 @@ pub fn construct_separator<'a>(sep: &'a IpgSeparator,
     
 }
 
-fn get_dot<'a>(sep: &'a IpgSeparator, 
+fn get_dot(sep: &IpgSeparator, 
             sep_color: Color,
             border: Border) 
-            -> Element<'a, app::Message>{
+            -> Element<'_, app::Message>{
     
     let color = if sep.dot_fill {
         sep_color
@@ -199,7 +199,6 @@ fn get_dot<'a>(sep: &'a IpgSeparator,
                 radius: Radius::new(radius),
                 color: border.color,
                 width: sep.dot_border_width,
-                ..Default::default()
             },
             width,
             height,
@@ -212,9 +211,9 @@ fn get_dot<'a>(sep: &'a IpgSeparator,
     .into()
 }
 
-fn get_label<'a>(sep: &'a IpgSeparator,
+fn get_label(sep: &IpgSeparator,
             sep_color: Color) 
-            -> Element<'a, app::Message> {
+            -> Element<'_, app::Message> {
 
     let q_1: Element<Message, Theme, Renderer> = Quad {
         width: Length::Fixed(sep.label_left_width),
@@ -241,9 +240,9 @@ fn get_label<'a>(sep: &'a IpgSeparator,
                         .into()
 }
 
-fn get_line<'a>(sep: &'a IpgSeparator,
+fn get_line(sep: &IpgSeparator,
             sep_color: Color) 
-            -> Element<'a, app::Message> {
+            -> Element<'_, app::Message> {
     Quad {
         width: sep.width,
         height: sep.height,
@@ -333,7 +332,6 @@ fn try_extract_separator_update(update_obj: &PyObject) -> IpgSeparatorParam {
     })
 }
 
-
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
 pub enum IpgSeparatorStyleParam {
@@ -380,16 +378,11 @@ fn try_extract_separator_style_update(update_obj: &PyObject) -> IpgSeparatorStyl
 
 pub fn get_sep_style(style: Option<&IpgWidgets>) -> Option<IpgSeparatorStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgSeparatorStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
-    }
+        Some(IpgWidgets::IpgSeparatorStyle(style)) => {
+            Some(style.clone())
+        }
+            _ => None,
+        }
 }
 
 fn separator(bg_color: Background) -> Quad {

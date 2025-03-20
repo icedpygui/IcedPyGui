@@ -20,20 +20,20 @@ list_ids = []
 row_ids = []
 filered_ids = []
 column_widths = [100.0] * 5
-edit = [str(generate_unique_id()) for _ in range(0, 5) ]
+edit = [str(generate_unique_id()) for _ in range(0, 11) ]
 
 data = {
     "Edit": edit,
-    "str": ["H", "e", "l", "l", "o"],
-    "one": [1.0, 2.0, 3.0, 4.0, 5.0],
-    "two": [1, 2, 3, 4, 5],
-    "three": [1, 2, 3, 4, 5],
-}
+    "str": ["H", "e", "l", "l", "o", " ", "W", "o", "r", "l", "d"],
+    "one": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0],
+    "two": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22],
+    "three": [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33],
+    }
 df = pl.DataFrame(data)
 print(df)
 
 def open_modal(btn_id: int, index: str):
-   row = df.filter(pl.col("Edit") == index)
+    row = df.filter(pl.col("Edit") == index)
     ipg.update_item(modal_id, IpgContainerParam.Show, True)
     ipg.update_item(modal_title, IpgTextParam.Content, f"Modal for Row {index[0]}")
 

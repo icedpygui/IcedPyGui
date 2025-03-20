@@ -383,15 +383,10 @@ fn get_styling(theme: &Theme,
 
 fn get_text_input_style(style: Option<&IpgWidgets>) -> Option<IpgTextInputStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgTextInputStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgTextInputStyle(style)) => {
+            Some(style.clone())
+        }
+        _ => None,
     }
 }
 

@@ -1,5 +1,5 @@
 //! ipg_table
-
+#![allow(clippy::unit_arg)]
 use crate::app::Message;
 use crate::graphics::colors::get_color;
 use crate::table;
@@ -8,9 +8,7 @@ use crate::table::table::{body_container, dummy_container,
     single_row_container};
 
 use iced::advanced::graphics::core::Element;
-use iced::widget::container;
 use iced::widget::scrollable::{Anchor, Scrollbar};
-use iced::Border;
 use iced::Color;
 use iced::{Length, Padding, Renderer, Theme};
 use iced::widget::{column, row, scrollable, text};
@@ -21,7 +19,6 @@ use pyo3_polars::PyDataFrame;
 
 use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn};
-use super::helpers::get_radius;
 use super::helpers::try_extract_ipg_color;
 use super::helpers::try_extract_rgba_color;
 use super::helpers::{get_width, try_extract_boolean, 
@@ -251,8 +248,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                         min_column_width))),
                         Default::default(),
                 index,
-            )
-            .into()
+            )   
         })))
         .id(tbl.body_id)
         .on_scroll(move |viewport| {
@@ -299,16 +295,16 @@ pub fn construct_table<'a>(tbl: IpgTable,
     
 }
 
-fn add_header <'a>(id: usize,
+fn add_header(id: usize,
                     header_id: scrollable::Id,
-                    mut columns: Vec<Element<'a, Message, Theme, Renderer>>, 
+                    mut columns: Vec<Element<'_, Message, Theme, Renderer>>, 
                     column_widths: Vec<f32>,
                     min_width: f32,
                     resize_offset: Vec<Option<f32>>,
                     min_column_width: f32,
                     divider_width: f32,
                     cell_padding: Padding) 
-                -> Element<'a, Message, Theme, Renderer> {
+                -> Element<'_, Message, Theme, Renderer> {
 
     scrollable(table::style::wrapper::header(
         row(column_widths
@@ -349,16 +345,16 @@ fn add_header <'a>(id: usize,
     .into()
 }
 
-fn add_footer <'a>(
+fn add_footer(
             id: usize,
             footer_id: scrollable::Id,
-            mut footers: Vec<Element<'a, Message, Theme, Renderer>>, 
+            mut footers: Vec<Element<'_, Message, Theme, Renderer>>, 
             column_widths: Vec<f32>,
             min_width: f32,
             resize_offset: Vec<Option<f32>>,
             min_column_width: f32,
             divider_width: f32,
-            cell_padding: Padding) -> Element<'a, Message, Theme, Renderer>{
+            cell_padding: Padding) -> Element<'_, Message, Theme, Renderer>{
     
     scrollable(table::style::wrapper::footer(
         row(column_widths
@@ -619,13 +615,10 @@ pub fn table_dataframe_update(
                     ) 
 {
     let update = try_extract_table_update(item);
-    match update {
-        IpgTableParam::PolarsDf => {
-            let df = Into::<DataFrame>::into(value.clone());
-            table.df= df;
-        },
-        _ => ()
-    }
+    if update == IpgTableParam::PolarsDf {
+         let df = Into::<DataFrame>::into(value.clone());
+         table.df= df;
+     }
 }
 pub fn try_extract_table_update(update_obj: &PyObject) -> IpgTableParam {
 
@@ -714,137 +707,7 @@ impl IpgTableStyle {
     }
 }
 
-pub fn get_table_style<'a>(style: Option<&'a IpgWidgets>) -> Option<&IpgTableStyle>{
-    match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgTableStyle(style) => {
-                    Some(style)
-                }
-                _ => None,
-            }
-        },
-        None => None,
-    }
-}
 
-pub fn get_header_styling(theme: &iced::Theme,
-                style_opt: Option<&IpgTableStyle>,  
-                ) -> container::Style {
-    
-    let style = style_opt.unwrap();
-
-    let mut header_style = container::Style {
-                                    text_color: Some(theme.extended_palette().background.strong.text),
-                                    background: Some(theme.extended_palette().background.strong.color.into()),
-                                    ..Default::default()
-                                        };
-    if style_opt.is_none() {
-        return header_style;
-    }
-
-    let border = Border::default();
-
-    header_style.background = Some(style.header_background_color.unwrap_or(Color::TRANSPARENT).into());
-    header_style.border.color = style.header_border_color.unwrap_or(border.color);
-    header_style.border.radius = get_radius(style.header_border_radius.clone(), "Table".to_string());
-    header_style.border.width = style.header_border_width;
-    header_style.text_color = Some(style.header_text_color.unwrap_or(header_style.text_color.unwrap()));
-    
-    header_style
-}
-
-pub fn get_row_styling(theme: &Theme,
-                style_opt: Option<IpgTableStyle>,
-                index: usize, 
-                ) -> container::Style {
-    
-    if style_opt.is_none() {
-        let pair = theme.extended_palette().background.weak;
-        return container::Style {
-                text_color: Some(pair.text),
-                background: Some(pair.color.into()),
-                ..Default::default()
-                }
-    }
-
-    let style = style_opt.unwrap();
-
-    let pair = if index % 2 == 0 {
-            theme.extended_palette().background.base
-        } else {
-            theme.extended_palette().background.weak
-        };
-    let mut body_style =  container::Style {
-                                    text_color: Some(pair.text),
-                                    background: Some(pair.color.into()),
-                                    ..Default::default()
-                                };
-
-    let border = Border::default();
-
-    body_style.background = Some(style.body_background_color.unwrap_or(Color::TRANSPARENT).into());
-    body_style.border.color = style.body_border_color.unwrap_or(border.color);
-    body_style.border.radius = get_radius(style.body_border_radius.clone(), "Table".to_string());
-    body_style.border.width = style.body_border_width;
-    body_style.text_color = Some(style.header_text_color.unwrap_or(body_style.text_color.unwrap()));
-    
-    body_style
-}
-
-pub fn get_footer_styling(theme: &Theme,
-                style_opt: Option<&IpgTableStyle>,  
-                ) -> container::Style {
-    
-    if style_opt.is_none() {
-        return container::transparent(theme);
-    }
-
-    let style = style_opt.unwrap();
-
-    let mut footer_style = container::Style::default();
-
-    let border = Border::default();
-
-    footer_style.background = Some(style.footer_background_color.unwrap_or(Color::TRANSPARENT).into());
-    footer_style.border.color = style.footer_border_color.unwrap_or(border.color);
-    footer_style.border.radius = get_radius(style.footer_border_radius.clone(), "Table".to_string());
-    footer_style.border.width = style.footer_border_width;
-    footer_style.text_color = Some(style.header_text_color.unwrap_or(footer_style.text_color.unwrap()));
-    
-    footer_style
-}
-
-pub fn get_divider_styling(theme: &Theme,
-                style_opt: Option<&IpgTableStyle>,
-                hovered: bool,  
-                ) -> container::Style {
-    
-    let pair = if hovered {
-            theme.extended_palette().primary.base
-        } else {
-            theme.extended_palette().background.weak
-        };
-
-    let mut divider_style = container::Style {
-            background: Some(pair.color.into()),
-            ..Default::default()
-        };
-
-    if style_opt.is_none() {
-        return divider_style;
-    }
-
-    let style = style_opt.unwrap();
-
-    if hovered {
-        divider_style.background = Some(style.divider_hover_color.unwrap_or(pair.color).into());
-    } else {
-        divider_style.background = Some(style.divider_unhover_color.unwrap_or(pair.color).into());
-    }
-
-    divider_style
-}
 
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]

@@ -96,8 +96,8 @@ pub enum IpgSvgRotation {
     Solid,
 }
 
-pub fn construct_svg<'a>(sg: &'a IpgSvg) 
-                    -> Option<Element<'a, app::Message>> {
+pub fn construct_svg(sg: &IpgSvg) 
+                    -> Option<Element<'_, app::Message>> {
 
     if !sg.show {
         return None

@@ -72,8 +72,8 @@ where
     }
 }
 
-impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
-    for Divider<'a, Message, Theme, Renderer>
+impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer>
+    for Divider<'_, Message, Theme, Renderer>
 where
     Message: Clone,
     Renderer: renderer::Renderer,
@@ -253,7 +253,7 @@ where
         layout: Layout<'_>,
         renderer: &Renderer,
         translation: Vector,
-    ) -> Option<overlay::Element<'_, Message, Theme, Renderer>> {
+    ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
         self.content.as_widget_mut().overlay(
             &mut tree.children[0],
             layout.children().next().unwrap(),

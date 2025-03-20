@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgColor, IpgTextParam
+from icedpygui import IPG, IpgColor, IpgTextParam, IpgColorPickerParam
 
 ipg = IPG()
 

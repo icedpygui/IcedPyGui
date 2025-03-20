@@ -8,7 +8,8 @@ ipg.add_window(
         window_id="main", 
         title="Canvas",
         width=400.0,
-        height=400.0)
+        height=400.0,
+        pos_centered=True)
 
 ipg.add_canvas(
         window_id="main", 

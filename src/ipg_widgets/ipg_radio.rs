@@ -143,10 +143,8 @@ pub fn construct_radio<'a>(radio: &'a IpgRadio,
 
     let style_opt = get_radio_style(style_opt);
 
-    let selected = match radio.is_selected {
-        Some(is) => Some(CHOICES[radio.group_index][is]),
-        None => None,
-    };
+    let selected = radio.is_selected
+                                    .map(|is| CHOICES[radio.group_index][is]);
 
     let mut radio_elements = vec![];
 
@@ -615,15 +613,10 @@ pub fn radio_style_update_item(style: &mut IpgRadioStyle,
 
 fn get_radio_style(style: Option<&IpgWidgets>) -> Option<IpgRadioStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgRadioStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgRadioStyle(style)) => {
+            Some(*style)
+        }
+        _ => None,
     }
 }
 

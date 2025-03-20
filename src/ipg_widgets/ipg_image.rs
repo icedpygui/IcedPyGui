@@ -110,8 +110,8 @@ pub enum IpgImageRotation {
     Solid,
 }
 
-pub fn construct_image<'a>(image: &'a IpgImage) 
-                        -> Option<Element<'a, app::Message>> {
+pub fn construct_image(image: &IpgImage) 
+                        -> Option<Element<'_, app::Message>> {
 
     if !image.show {
         return None

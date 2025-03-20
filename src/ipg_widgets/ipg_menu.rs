@@ -500,15 +500,10 @@ pub fn menu_bar_style_update_item(style: &mut IpgMenuBarStyle,
 
 fn get_menu_bar_style(style: Option<&IpgWidgets>) -> Option<IpgMenuBarStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgMenuBarStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgMenuBarStyle(style)) => {
+            Some(style.clone())
+        }
+        _ => None,
     }
 }
 
@@ -609,15 +604,10 @@ pub fn menu_style_update_item(style: &mut IpgMenuStyle,
 
 fn get_menu_style(style: Option<&IpgWidgets>) -> Option<IpgMenuStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgMenuStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgMenuStyle(style)) => {
+            Some(style.clone())
+        }
+        _ => None,
     }
 }
 

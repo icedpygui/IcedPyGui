@@ -330,21 +330,18 @@ pub fn card_item_update(crd: &mut IpgCard,
 
 pub fn get_card_style(style: Option<&IpgWidgets>) -> Option<IpgCardStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgCardStyle(style) => {
-                    Some(style.clone())
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgCardStyle(style)) => {
+            Some(style.clone())
+        }
+        _ => None,
     }
 }
 
 fn custom_style(ipg_style_opt: Option<IpgCardStyle>) -> CardStyles {
 
-    let ipg_style = if ipg_style_opt.is_none() {
+    let ipg_style = if let Some(style) = ipg_style_opt {
+            style
+        } else {
         IpgCardStyle{
             id: 0,
             background: None,
@@ -359,21 +356,19 @@ fn custom_style(ipg_style_opt: Option<IpgCardStyle>) -> CardStyles {
             foot_text_color: None,
             close_color: None,
         }
-    } else {
-        ipg_style_opt.unwrap()
     };
 
-    let background = ipg_style.background.unwrap_or_else(||Color::WHITE).into();
+    let background = ipg_style.background.unwrap_or(Color::WHITE).into();
     let border_radius = ipg_style.border_radius;
     let border_width = ipg_style.border_width;
-    let border_color = ipg_style.border_color.unwrap_or_else(||[0.87, 0.87, 0.87].into()).into();
-    let head_background = ipg_style.head_background.unwrap_or_else(||[0.87, 0.87, 0.87].into()).into();
-    let head_text_color = ipg_style.head_text_color.unwrap_or_else(||Color::BLACK);
-    let body_background = ipg_style.body_background.unwrap_or_else(||Color::TRANSPARENT).into();
-    let body_text_color = ipg_style.body_text_color.unwrap_or_else(||Color::BLACK);
-    let foot_background = ipg_style.foot_background.unwrap_or_else(||Color::TRANSPARENT).into();
-    let foot_text_color = ipg_style.foot_text_color.unwrap_or_else(||Color::BLACK);
-    let close_color = ipg_style.close_color.unwrap_or_else(||Color::BLACK);
+    let border_color = ipg_style.border_color.unwrap_or([0.87, 0.87, 0.87].into());
+    let head_background = ipg_style.head_background.unwrap_or([0.87, 0.87, 0.87].into()).into();
+    let head_text_color = ipg_style.head_text_color.unwrap_or(Color::BLACK);
+    let body_background = ipg_style.body_background.unwrap_or(Color::TRANSPARENT).into();
+    let body_text_color = ipg_style.body_text_color.unwrap_or(Color::BLACK);
+    let foot_background = ipg_style.foot_background.unwrap_or(Color::TRANSPARENT).into();
+    let foot_text_color = ipg_style.foot_text_color.unwrap_or(Color::BLACK);
+    let close_color = ipg_style.close_color.unwrap_or(Color::BLACK);
 
     let custom= card::Appearance{ 
         background, 
@@ -386,7 +381,8 @@ fn custom_style(ipg_style_opt: Option<IpgCardStyle>) -> CardStyles {
         body_text_color, 
         foot_background, 
         foot_text_color, 
-        close_color };
+        close_color 
+    };
 
 
     CardStyles::Custom(custom)

@@ -472,27 +472,22 @@ pub fn try_extract_color_picker_style_update(update_obj: &PyObject) -> IpgColorP
 
 fn get_cp_style(style: Option<&IpgWidgets>) -> Option<IpgButtonStyle>{
     match style {
-        Some(st) => {
-            match st {
-                IpgWidgets::IpgColorPickerStyle(style) => {
-                    Some(IpgButtonStyle {
-                        id: style.id,
-                        background_color: style.background_color,
-                        background_color_hovered: style.background_color_hovered,
-                        border_color: style.border_color,
-                        border_radius: style.border_radius.clone(),
-                        border_width: style.border_width,
-                        shadow_color: style.shadow_color,
-                        shadow_offset_x: style.shadow_offset_x,
-                        shadow_offset_y: style.shadow_offset_y,
-                        shadow_blur_radius: style.shadow_blur_radius,
-                        text_color: style.text_color,
-                    })
-                }
-                _ => None,
-            }
-        },
-        None => None,
+        Some(IpgWidgets::IpgColorPickerStyle(style)) => {
+            Some(IpgButtonStyle {
+                id: style.id,
+                background_color: style.background_color,
+                background_color_hovered: style.background_color_hovered,
+                border_color: style.border_color,
+                border_radius: style.border_radius.clone(),
+                border_width: style.border_width,
+                shadow_color: style.shadow_color,
+                shadow_offset_x: style.shadow_offset_x,
+                shadow_offset_y: style.shadow_offset_y,
+                shadow_blur_radius: style.shadow_blur_radius,
+                text_color: style.text_color,
+            })
+        }
+        _ => None,
     }
 }
 

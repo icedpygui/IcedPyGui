@@ -191,9 +191,9 @@ text_points = []
 # Another way is to add a column with the image, info, and points then put the columns into row.
 for i in range(0, 4):
     text_ids.append(ipg.add_text(
-                            parent_id="row2", 
-                            content="Press image above me", 
-                            width=100.0))
+                        parent_id="row2", 
+                        content="Press image above me", 
+                        width=100.0))
 
 # adding a final row for the points display
 ipg.add_row(
