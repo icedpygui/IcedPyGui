@@ -214,7 +214,12 @@ impl canvas::Program<IpgWidget> for DrawPending<'_> {
                                     // 3 - finish
                                     None => {
                                         let widget_opt = 
-                                            find_closest_widget(self.curves, self.text_curves, cursor_position);
+                                            find_closest_widget(
+                                                self.curves, 
+                                                self.text_curves, 
+                                                cursor_position,
+                                                IpgDrawMode::Edit
+                                            );
                                         
                                         let selected_widget = 
                                             match widget_opt {
@@ -368,7 +373,11 @@ impl canvas::Program<IpgWidget> for DrawPending<'_> {
                                     // 2 - click to finish
                                     None => {
                                         let widget_opt = 
-                                            find_closest_widget(self.curves, self.text_curves, cursor_position);
+                                            find_closest_widget(
+                                                self.curves, 
+                                                self.text_curves, 
+                                                cursor_position,
+                                                IpgDrawMode::Rotate);
                                         
                                         let selected_widget = 
                                             match widget_opt {

@@ -451,7 +451,8 @@ pub fn complete_new_widget(widget: IpgWidget, cursor: Point) -> Option<IpgWidget
         IpgWidget::Ellipse(mut ell) => {
             ell.center = ell.points[0];
             let vx = ell.points[1].distance(ell.center);
-            let vy = cursor.distance(ell.center);
+            let new_pt = Point{ x: ell.center.x, y: cursor.y };
+            let vy = new_pt.distance(ell.center);
             ell.radii = Vector{ x: vx, y: vy };
             Some(IpgWidget::Ellipse(ell))
         },
@@ -1300,15 +1301,20 @@ pub fn set_widget_point(widget: &IpgWidget, cursor: Point) -> (IpgWidget, bool) 
 
 pub fn find_closest_widget(curves: &HashMap<usize, IpgWidget>, 
                             text_curves: &HashMap<usize, IpgWidget>,
-                            cursor: Point) 
+                            cursor: Point,
+                            draw_mode: IpgDrawMode) 
                             -> Option<IpgWidget> {
     let mut closest = f32::INFINITY;
     let mut closest_id = None;
-    for (id, cw) in curves.iter() {
-        let distance: f32 = get_distance_to_mid_point(cw, cursor);
-        if distance < closest {
-            closest = distance;
-            closest_id = Some(id);
+    for (id, wid) in curves.iter() {
+        if match_ipg_widget(wid) == IpgCanvasWidget::Circle && draw_mode == IpgDrawMode::Rotate {
+            // do nothing
+        } else {
+            let distance: f32 = get_distance_to_mid_point(wid, cursor);
+            if distance < closest {
+                closest = distance;
+                closest_id = Some(id);
+            }
         }
     }
 
@@ -1636,4 +1642,22 @@ pub fn get_mid_geometry(pts: &[Point], curve_type: IpgCanvasWidget) -> Point {
         IpgCanvasWidget::None => Point::default(),
     }
     
+}
+
+fn match_ipg_widget(widget: &IpgWidget) -> IpgCanvasWidget {
+    match widget {
+        IpgWidget::None => IpgCanvasWidget::None,
+        IpgWidget::Arc(_) => IpgCanvasWidget::Arc,
+        IpgWidget::Bezier(_) => IpgCanvasWidget::Bezier,
+        IpgWidget::Circle(_) => IpgCanvasWidget::Circle,
+        IpgWidget::Ellipse(_) => IpgCanvasWidget::Ellipse,
+        IpgWidget::Image(_) => IpgCanvasWidget::None,
+        IpgWidget::Line(_) => IpgCanvasWidget::Line,
+        IpgWidget::PolyLine(_) => IpgCanvasWidget::PolyLine,
+        IpgWidget::Polygon(_) => IpgCanvasWidget::Polygon,
+        IpgWidget::Rectangle(_) => IpgCanvasWidget::Rectangle,
+        IpgWidget::RightTriangle(_) => IpgCanvasWidget::RightTriangle,
+        IpgWidget::Text(_) => IpgCanvasWidget::Text,
+        IpgWidget::FreeHand(_) => IpgCanvasWidget::FreeHand,
+    }
 }

@@ -5,14 +5,12 @@ ipg = IPG()
 
 show = True
 
-
 # Couple of callbacks for change and release
 # The slider_id is not used since we are updating the bar and the text
 def slider_on_change(_slider_id: int, data: float):
     ipg.update_item(on_change_id, IpgTextParam.Content, f"On Change value is {data}")
     ipg.update_item(bar_id, IpgProgressBarParam.Value, data)
-
-
+    
 def slider_on_release(_slider_id: int, data: float):
     ipg.update_item(on_release_id, IpgTextParam.Content, f"On Release value is {data}")
 
@@ -68,6 +66,7 @@ sl_style = ipg.add_slider_style(
                     handle_rectangle_border_radius=[5.0],
                     handle_border_width=2.0,
                     handle_border_color=IpgColor.DARK_GREEN,)
+
 
 # Add the window
 ipg.add_window(
@@ -209,16 +208,10 @@ ipg.add_row(
         container_id="row_4", 
         parent_id="col")
 
-ipg.add_row(
-        window_id="main", 
-        container_id="row_10", 
-        parent_id="col")
-
 ipg.add_button(
-        parent_id="row_10", 
+        parent_id="row_4", 
         label="Press Me to Toggle Show", 
         on_press=toggle_show)
-
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

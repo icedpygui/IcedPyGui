@@ -179,29 +179,6 @@ pub fn to_radians(degrees: &f32) -> f32 {
 }
 
 
-// pub fn text_layout(content: &String, shaping: Shaping, font: Font, size: Pixels) -> Vec<LayoutLine> {
-//     let mut font_system =
-//         text::font_system().write().expect("Write font system");
-
-//     let mut buffer = cosmic_text::BufferLine::new(
-//         content,
-//         cosmic_text::LineEnding::default(),
-//         cosmic_text::AttrsList::new(text::to_attributes(font)),
-//         text::to_shaping(shaping),
-//     );
-
-//     let layout = buffer.layout(
-//         font_system.raw(),
-//         size.0,
-//         None,
-//         cosmic_text::Wrap::None,
-//         None,
-//         4,
-//     ).to_vec();
-//     layout
-// }
-
-
 #[test]
 fn test_get_linear_regression() {
     let points: Vec<Point>= 
