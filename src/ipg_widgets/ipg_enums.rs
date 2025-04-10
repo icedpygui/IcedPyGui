@@ -11,6 +11,7 @@ use super::ipg_color_picker::{IpgColorPicker, IpgColorPickerStyle};
 use super::ipg_container::{IpgContainer, IpgContainerStyle};
 use super::ipg_column::IpgColumn;
 use super::ipg_date_picker::IpgDatePicker;
+use super::ipg_divider::{IpgDividerHorizontal, IpgDividerVertical, IpgDividerStyle};
 use super::ipg_image::IpgImage;
 use super::ipg_menu::{IpgMenu, IpgMenuBarStyle, IpgMenuStyle};
 // use super::ipg_modal::IpgModal;
@@ -70,6 +71,9 @@ pub enum IpgWidgets {
     IpgColorPicker(IpgColorPicker),
     IpgColorPickerStyle(IpgColorPickerStyle),
     IpgContainerStyle(IpgContainerStyle),
+    IpgDividerHorizontal(IpgDividerHorizontal),
+    IpgDividerVertical(IpgDividerVertical),
+    IpgDividerStyle(IpgDividerStyle),
     IpgDatePicker(IpgDatePicker),
     IpgImage(IpgImage),
     IpgMenuStyle(IpgMenuStyle),

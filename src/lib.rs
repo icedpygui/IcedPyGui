@@ -9,6 +9,9 @@ use iced::widget::image;
 use iced_aw::iced_fonts;
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
+use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
+    divider_vertical_item_update, IpgDividerHorizontal, IpgDividerParam, IpgDividerStyle, 
+    IpgDividerStyleParam, IpgDividerVertical};
 use ipg_widgets::ipg_separator::{separator_item_update, separator_style_update_item, 
     IpgSeparator, IpgSeparatorParam, IpgSeparatorStyle, IpgSeparatorStyleParam, IpgSeparatorType};
 use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, canvas_timer_style_update_item, 
@@ -2888,6 +2891,217 @@ impl IPG {
                 mouse_pointer,
                 show,
             )));
+
+        drop(state);
+        Ok(id)
+
+    }
+
+    #[pyo3(signature = (
+        parent_id,
+        widths,
+        handle_width,
+        handle_height,
+        handle_offsets=None,
+        include_last_handle=true,
+        on_change=None,
+        on_release=None,
+        width=None,
+        width_fill=true,
+        height=None,
+        height_fill=true,
+        style_id=None,
+        gen_id=None,
+        user_data=None,
+        show=true,
+        ))]
+    fn add_divider_horizontal(
+        &self,
+        parent_id: String,
+        widths: Vec<f32>,
+        handle_width: f32,
+        handle_height: f32,
+        handle_offsets: Option<Vec<f32>>,
+        include_last_handle: bool,
+        on_change: Option<PyObject>,
+        on_release: Option<PyObject>,
+        width: Option<f32>,
+        width_fill: bool,
+        height: Option<f32>,
+        height_fill: bool,
+        style_id: Option<usize>,
+        gen_id: Option<usize>,
+        user_data: Option<PyObject>,
+        show: bool,
+    ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        if let Some(py) = on_change {
+            add_callback_to_mutex(id, "on_change".to_string(), py);
+        }
+
+        if let Some(py) = on_release {
+            add_callback_to_mutex(id, "on_release".to_string(), py);
+        }
+
+        if let Some(py) = user_data {
+            add_user_data_to_mutex(id, py);
+        }
+
+        let width = get_width(width, width_fill);
+
+        let height = get_height(height, height_fill);
+
+        set_state_of_widget(id, parent_id.clone());
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgDividerHorizontal(
+            IpgDividerHorizontal::new(
+                id,
+                parent_id,
+                show,
+                widths,
+                handle_width,
+                handle_height,
+                handle_offsets,
+                include_last_handle,
+                width,
+                height,
+                style_id,
+                )));
+
+        drop(state);
+        Ok(id)
+    }
+
+    #[pyo3(signature = (
+        parent_id,
+        heights,
+        handle_width,
+        handle_height,
+        handle_offsets=None,
+        include_last_handle=true,
+        on_change=None,
+        on_release=None,
+        width=None,
+        width_fill=true,
+        height=None,
+        height_fill=true,
+        style_id=None,
+        gen_id=None,
+        user_data=None,
+        show=true,
+        ))]
+    fn add_divider_vertical(
+        &self,
+        parent_id: String,
+        heights: Vec<f32>,
+        handle_width: f32,
+        handle_height: f32,
+        handle_offsets: Option<Vec<f32>>,
+        include_last_handle: bool,
+        on_change: Option<PyObject>,
+        on_release: Option<PyObject>,
+        width: Option<f32>,
+        width_fill: bool,
+        height: Option<f32>,
+        height_fill: bool,
+        style_id: Option<usize>,
+        gen_id: Option<usize>,
+        user_data: Option<PyObject>,
+        show: bool,
+    ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        if let Some(py) = on_change {
+            add_callback_to_mutex(id, "on_change".to_string(), py);
+        }
+
+        if let Some(py) = on_release {
+            add_callback_to_mutex(id, "on_release".to_string(), py);
+        }
+
+        if let Some(py) = user_data {
+            add_user_data_to_mutex(id, py);
+        }
+
+        let width = get_width(width, width_fill);
+
+        let height = get_height(height, height_fill);
+
+        set_state_of_widget(id, parent_id.clone());
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgDividerVertical(
+            IpgDividerVertical::new(
+                id,
+                parent_id,
+                show,
+                heights,
+                handle_width,
+                handle_height,
+                handle_offsets,
+                include_last_handle,
+                width,
+                height,
+                style_id,
+                )));
+
+        drop(state);
+        Ok(id)
+    }
+
+    #[pyo3(signature = (
+        background_color=None,
+        background_rgba=None,
+        background_color_hovered=None,
+        background_rgba_hovered=None,
+        background_transparent=false,
+        border_color=None,
+        border_rgba=None,
+        border_width=0.0,
+        border_radius=0.0,
+        gen_id=None
+        ))]
+    fn add_divider_style(
+        &self,
+        background_color: Option<IpgColor>,
+        background_rgba: Option<[f32; 4]>,
+        background_color_hovered: Option<IpgColor>,
+        background_rgba_hovered: Option<[f32; 4]>,
+        background_transparent: bool,
+        border_color: Option<IpgColor>,
+        border_rgba: Option<[f32; 4]>,
+        border_width: f32,
+        border_radius: f32,
+        gen_id: Option<usize>,
+        ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+        
+        let background: Option<Color> = 
+            get_color(background_rgba, background_color, 1.0, false);
+        let background_hovered: Option<Color> = 
+            get_color(background_rgba_hovered, background_color_hovered, 1.0, false);
+        let border_color: Option<Color> = 
+            get_color(border_rgba, border_color, 1.0, false);
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgDividerStyle(
+            IpgDividerStyle::new( 
+                id,
+                background,
+                background_hovered,
+                background_transparent,
+                border_color,
+                border_width,
+                border_radius,
+                )));
 
         drop(state);
         Ok(id)
@@ -5783,33 +5997,42 @@ fn match_widget(
         IpgWidgets::IpgButton(btn) => {
             button_item_update(btn, item, value);
         },
-        IpgWidgets::IpgButtonStyle(btn_style) => {
-            button_style_update_item(btn_style, item, value);
+        IpgWidgets::IpgButtonStyle(style) => {
+            button_style_update_item(style, item, value);
         },
         IpgWidgets::IpgCard(card) => {
             card_item_update(card, item, value);
         },
-        IpgWidgets::IpgCardStyle(card_style) => {
-            card_style_update(card_style, item, value);
+        IpgWidgets::IpgCardStyle(style) => {
+            card_style_update(style, item, value);
         },
         IpgWidgets::IpgCheckBox(chk) => {
-                checkbox_item_update(chk, item, value);
+            checkbox_item_update(chk, item, value);
         },
-        IpgWidgets::IpgCheckboxStyle(chk_style) => {
-                checkbox_style_update_item(chk_style, item, value);
+        IpgWidgets::IpgCheckboxStyle(style) => {
+            checkbox_style_update_item(style, item, value);
         },
         IpgWidgets::IpgColorPicker(cp) => {
-                color_picker_update(cp, item, value);
+            color_picker_update(cp, item, value);
         },
-        IpgWidgets::IpgColorPickerStyle(cp_style) => {
-                color_picker_style_update_item(cp_style, item, value);
+        IpgWidgets::IpgColorPickerStyle(style) => {
+            color_picker_style_update_item(style, item, value);
         },
-        IpgWidgets::IpgContainerStyle(cont_style) => {
-                container_style_update_item(cont_style, item, value);
+        IpgWidgets::IpgContainerStyle(style) => {
+            container_style_update_item(style, item, value);
         },
         IpgWidgets::IpgDatePicker(dp) => {
-                date_picker_item_update(dp, item, value);
+            date_picker_item_update(dp, item, value);
         },
+        IpgWidgets::IpgDividerHorizontal(div) => {
+            divider_horizontal_item_update(div, item, value);
+        },
+        IpgWidgets::IpgDividerVertical(div) => {
+            divider_vertical_item_update(div, item, value);
+        },
+        IpgWidgets::IpgDividerStyle(style) => {
+            divider_style_update_item(style, item, value);
+        }
         IpgWidgets::IpgImage(img) => {
                 image_item_update(img, item, value);
         },
@@ -6011,6 +6234,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgContainerParam>()?;
     m.add_class::<IpgContainerStyleParam>()?;
     m.add_class::<IpgDatePickerParam>()?;
+    m.add_class::<IpgDividerParam>()?;
+    m.add_class::<IpgDividerStyleParam>()?;
     m.add_class::<IpgImageContentFit>()?;
     m.add_class::<IpgImageFilterMethod>()?;
     m.add_class::<IpgImageParam>()?;

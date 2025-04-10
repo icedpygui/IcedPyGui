@@ -410,7 +410,7 @@ pub fn table_callback(state: &mut IpgState, message: Message) {
             let wci = WidgetCallbackIn{
                 id,
                 index: Some(index),
-                value_float_32: Some(offset),
+                value_f32: Some(offset),
                 table_mouse: IpgTableMouse::Resizing,
                 ..Default::default()};
             let _ = set_or_get_widget_callback_data(state, wci);

@@ -1,6 +1,7 @@
 //! mod.rs
 
 pub mod callbacks;
+pub mod divider;
 pub mod helpers;
 pub mod ipg_button;
 pub mod ipg_canvas;
@@ -10,6 +11,7 @@ pub mod ipg_color_picker;
 pub mod ipg_column;
 pub mod ipg_container;
 pub mod ipg_date_picker;
+pub mod ipg_divider;
 pub mod ipg_enums;
 pub mod ipg_events;
 pub mod ipg_image;

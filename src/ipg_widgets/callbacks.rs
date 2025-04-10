@@ -36,8 +36,8 @@ pub struct WidgetCallbackIn {
     pub date_format: Option<String>,
     pub show: Option<bool>,
     pub submit_str: Option<String>,
-    pub value_float_64: Option<f64>,
-    pub value_float_32: Option<f32>,
+    pub value_f64: Option<f64>,
+    pub value_f32: Option<f32>,
     pub value_str: Option<String>,
     pub value_bool: Option<bool>,
     pub value_usize: Option<usize>,
@@ -70,9 +70,10 @@ pub struct WidgetCallbackOut {
     pub checkbox_user_data: Option<PyObject>,
     pub toggler_user_data: Option<PyObject>,
     pub scroller_user_data: Option<PyObject>,
+    pub value_usize: Option<usize>,
     pub value_bool: Option<bool>,
-    pub value_float_64: Option<f64>,
-    pub value_float_32: Option<f32>,
+    pub value_f64: Option<f64>,
+    pub value_f32: Option<f32>,
     pub value_str: Option<String>,
 }
 
@@ -85,14 +86,10 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
     if widget_opt.is_some() {
         match widget_opt.unwrap() {
             IpgWidgets::IpgButton(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgButtonStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgCard(crd) => {
                 let is_open = match wci.value_bool {
@@ -100,28 +97,20 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     None => panic!("Card is_open value not found"),
                 };
                 crd.is_open = is_open;
-                return WidgetCallbackOut{
-                        ..Default::default()
-                    }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgCardStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgCheckBox(cbox) => {
                 cbox.is_checked = match wci.on_toggle {
                     Some(data) => data,
                     None => panic!("Checkbox is_checked not found")
                 };
-                return WidgetCallbackOut{
-                    ..Default::default()
-                } 
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgCheckboxStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgColorPicker(cp) => {
                 cp.show = match wci.value_bool {
@@ -137,19 +126,42 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                     cp.color = Color::from_rgba(color[0] as f32, color[1] as f32, 
                                             color[2] as f32, color[3] as f32);
                 }
-                return WidgetCallbackOut{
-                    ..Default::default()
+                return WidgetCallbackOut::default();
+            },
+            IpgWidgets::IpgDividerHorizontal(div) => {
+                if wci.value_str == Some("on_change".to_string()) {
+                    div.index_in_use = wci.value_usize.unwrap();
+                    div.value_in_use = wci.value_f32.unwrap();
+                    return WidgetCallbackOut::default();
                 }
+                if wci.value_str == Some("on_release".to_string()) {
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.value_usize = Some(div.index_in_use);
+                    wco.value_f32 = Some(div.value_in_use);
+                    return wco
+                }
+            },
+            IpgWidgets::IpgDividerVertical(div) => {
+                if wci.value_str == Some("on_change".to_string()) {
+                    div.index_in_use = wci.value_usize.unwrap();
+                    div.value_in_use = wci.value_f32.unwrap();
+                    return WidgetCallbackOut::default();
+                }
+                if wci.value_str == Some("on_release".to_string()) {
+                    let mut wco = WidgetCallbackOut::default();
+                    wco.value_usize = Some(div.index_in_use);
+                    wco.value_f32 = Some(div.value_in_use);
+                    return wco
+                }
+            },
+            IpgWidgets::IpgDividerStyle(_) => {
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgColorPickerStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgContainerStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgDatePicker(dp) => {
                 if wci.selected_day.is_some() {
@@ -200,99 +212,71 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 }
             },
             IpgWidgets::IpgImage(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgOpaqueStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgPickList(pl) => {
                 pl.selected = wci.value_str;
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgPickListStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgProgressBar(_) => {
                 return WidgetCallbackOut::default()
             },
             IpgWidgets::IpgProgressBarStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgRadio(_) => {
                 return WidgetCallbackOut::default()
             },
             IpgWidgets::IpgRadioStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgRule(_) => {
                 return WidgetCallbackOut::default()
             },
             IpgWidgets::IpgRuleStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgScrollableStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgSelectableText(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgSeparator(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgSeparatorStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgSlider(slider) => {
-                if wci.value_float_64.is_some() {
-                    slider.value = match wci.value_float_64 {
+                if wci.value_f64.is_some() {
+                    slider.value = match wci.value_f64 {
                         Some(v) => v as f32,
                         None => panic!("Slider submit value could not be found"),
                     };
                 }
                 return WidgetCallbackOut{
-                    value_float_32: Some(slider.value),
+                    value_f32: Some(slider.value),
                     ..Default::default()
                 }
             },
             IpgWidgets::IpgSliderStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgSpace(_) => {
                 return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgSvg(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgTableStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgText(_) => {
                 return WidgetCallbackOut::default()
@@ -305,9 +289,7 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 }
             },
             IpgWidgets::IpgTextInputStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgTimer(tim) => {
                 tim.counter += 1;
@@ -324,9 +306,7 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 }
             },
             IpgWidgets::IpgTimerStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgCanvasTimer(ctim) => {
                 ctim.counter += 1;
@@ -343,30 +323,20 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                 }
             },
             IpgWidgets::IpgCanvasTimerStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgToggler(tog) => {
                 if let Some(tg) = wci.on_toggle { tog.is_toggled = tg }
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgTogglerStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgMenuStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             IpgWidgets::IpgMenuBarStyle(_) => {
-                return WidgetCallbackOut{
-                    ..Default::default()
-                }
+                return WidgetCallbackOut::default();
             },
             
             }
@@ -375,18 +345,11 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
         let container_opt = state.containers.get_mut(&wci.id);
         if container_opt.is_some() {
             match container_opt.unwrap() {
-                // IpgContainers::IpgModal(modal) => {
-                //     modal.show = true;
-                //     return WidgetCallbackOut{
-                //         user_data: modal.user_data.clone(),
-                //         ..Default::default()
-                //     }
-                // },
                 IpgContainers::IpgTable(tbl) => {
                     match wci.table_mouse {
                         IpgTableMouse::None => (),
                         IpgTableMouse::Resizing => {
-                            tbl.resize_offset[wci.index.unwrap()] = wci.value_float_32;
+                            tbl.resize_offset[wci.index.unwrap()] = wci.value_f32;
                         },
                         IpgTableMouse::Resized => {
                             let mut not_none_index = 0;
@@ -400,13 +363,9 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                                     }
                                 });
                             tbl.resize_offset[not_none_index] = None;
-                            
                         },
                     }
-                    
-                    return WidgetCallbackOut{
-                        ..Default::default()
-                    }
+                    return WidgetCallbackOut::default();
                 },
                 _ => panic!("container not found")
             }
@@ -431,15 +390,13 @@ pub fn container_callback_data(state: &mut IpgState, wci: WidgetCallbackIn) -> W
             WidgetCallbackOut::default()
         },
         IpgContainers::IpgMouseArea(_) => {
-            WidgetCallbackOut{..Default::default()}
+            WidgetCallbackOut::default()
         },
         IpgContainers::IpgTable(_) => {
-            WidgetCallbackOut{
-                ..Default::default()
-            }
+            return WidgetCallbackOut::default();
         }
         IpgContainers::IpgScrollable(_) => {
-            WidgetCallbackOut{..Default::default()}
+            return WidgetCallbackOut::default();
         }
         _ => {
             WidgetCallbackOut::default()

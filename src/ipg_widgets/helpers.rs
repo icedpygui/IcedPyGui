@@ -249,6 +249,16 @@ pub fn try_extract_f64(value: &PyObject, name: String) -> f64 {
     })  
 }
 
+pub fn try_extract_f32(value: &PyObject, name: String) -> f32 {
+    Python::with_gil(|py| {
+        let res = value.extract::<f32>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("{}-Unable to extract python float", name),
+        }
+    })  
+}
+
 
 pub fn try_extract_i64_option(value: &PyObject) -> Option<i64> {
     Python::with_gil(|py| {

@@ -23,6 +23,7 @@ use crate::canvas::draw_canvas::IpgCanvasState;
 use crate::ipg_widgets::ipg_canvas::match_canvas_widget;
 use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, 
     construct_color_picker, ColPikMessage};
+use crate::ipg_widgets::ipg_divider::{construct_divider_horizontal, construct_divider_vertical, divider_callback, DivMessage};
 use crate::ipg_widgets::ipg_menu::{IpgMenuBarStyle, IpgMenuStyle};
 use crate::ipg_widgets::ipg_separator::construct_separator;
 use crate::ipg_widgets::ipg_table::table_callback;
@@ -78,6 +79,7 @@ pub enum Message {
     CheckBox(usize, CHKMessage),
     ColorPicker(usize, ColPikMessage),
     DatePicker(usize, DPMessage),
+    Divider(usize, DivMessage),
     EventKeyboard(Event),
     EventMouse(Event),
     EventWindow((window::Id, Event)),
@@ -194,6 +196,11 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
+            Message::Divider(id, message) => {
+                divider_callback(&mut self.state, id, message);
+                process_updates(&mut self.state, &mut self.canvas_state);
+                Task::none()
+            },
             Message::EventKeyboard(event) => {
                 process_keyboard_events(event, self.state.keyboard_event_id_enabled.0);
                 process_updates(&mut self.state, &mut self.canvas_state);
@@ -224,11 +231,6 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
-            // Message::Modal(id, message) => {
-            //     modal_callback(&mut self.state, id, message);
-            //     process_updates(&mut self.state, &mut self.canvas_state);
-            //     focus_next()
-            // },
             Message::MouseAreaOnPress(id) => {
                 mousearea_callback(&mut self.state, id, "on_press".to_string());
                 process_updates(&mut self.state, &mut self.canvas_state);
@@ -786,7 +788,25 @@ fn get_widget<'a>(state: &'a IpgState, id: &usize) -> Option<Element<'a, Message
                         None => None,
                     };
                     construct_color_picker(cp, style_opt)
-                }
+                },
+                IpgWidgets::IpgDividerHorizontal(div) => {
+                    let style_opt = match div.style_id {
+                        Some(id) => {
+                            state.widgets.get(&id)
+                        },
+                        None => None,
+                    };
+                    construct_divider_horizontal(div, style_opt)
+                },
+                IpgWidgets::IpgDividerVertical(div) => {
+                    let style_opt = match div.style_id {
+                        Some(id) => {
+                            state.widgets.get(&id)
+                        },
+                        None => None,
+                    };
+                    construct_divider_vertical(div, style_opt)
+                },
                 IpgWidgets::IpgImage(image) => {
                     construct_image(image)
                 },
@@ -1185,6 +1205,9 @@ fn get_widget_parent_id(widget: &IpgWidgets) -> String {
         IpgWidgets::IpgColorPickerStyle(ipg_color_picker_style) => todo!(),
         IpgWidgets::IpgContainerStyle(ipg_container_style) => todo!(),
         IpgWidgets::IpgDatePicker(ipg_date_picker) => todo!(),
+        IpgWidgets::IpgDividerHorizontal(_) => todo!(),
+        IpgWidgets::IpgDividerVertical(_) => todo!(),
+        IpgWidgets::IpgDividerStyle(_) => todo!(),
         IpgWidgets::IpgImage(ipg_image) => todo!(),
         IpgWidgets::IpgMenuStyle(ipg_menu_style) => todo!(),
         IpgWidgets::IpgMenuBarStyle(ipg_menu_bar_style) => todo!(),

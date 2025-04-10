@@ -146,14 +146,14 @@ pub fn slider_callback(state: &mut IpgState, id: usize, message: SLMessage) {
            
     match message {
         SLMessage::OnChange(value) => {
-            wci.value_float_64 = Some(value as f64);
+            wci.value_f64 = Some(value as f64);
             let _ = set_or_get_widget_callback_data(state, wci);
             process_callback(id, "on_change".to_string(), value);
         },
         SLMessage::OnRelease => {
             // to be consistent, returning value for both
             let wco = set_or_get_widget_callback_data(state, wci);
-            process_callback(id, "on_release".to_string(), wco.value_float_32.unwrap());
+            process_callback(id, "on_release".to_string(), wco.value_f32.unwrap());
         },
     }
 }
