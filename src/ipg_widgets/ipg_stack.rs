@@ -5,7 +5,7 @@ use pyo3::{pyclass, PyObject, Python};
 
 use crate::app::Message;
 
-use super::helpers::try_extract_boolean;
+use super::helpers::{get_height, get_width, try_extract_boolean, try_extract_f32};
 
 #[derive(Debug, Clone)]
 pub struct IpgStack {
@@ -62,6 +62,10 @@ pub fn construct_stack(stk: IpgStack, mut content: Vec<Element<Message>> )
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
 pub enum IpgStackParam {
+    Width,
+    WidthFill,
+    Height,
+    HeightFill,
     Show,
 }
 
@@ -72,6 +76,20 @@ pub fn stack_item_update(stk: &mut IpgStack,
     let update = try_extract_stack_update(item);
     let name = "Stack".to_string();
     match update {
+        IpgStackParam::Width => {
+            let w = Some(try_extract_f32(value, name));
+            stk.width = get_width(w, false)
+        },
+        IpgStackParam::WidthFill => {
+            stk.width = get_width(None, try_extract_boolean(value, name));
+        },
+        IpgStackParam::Height => {
+            let h = Some(try_extract_f32(value, name));
+            stk.height = get_height(h, false)
+        },
+        IpgStackParam::HeightFill => {
+            stk.height = get_height(None, try_extract_boolean(value, name));
+        },
         IpgStackParam::Show => {
             stk.show = try_extract_boolean(value, name);
         },

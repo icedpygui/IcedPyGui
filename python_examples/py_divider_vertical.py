@@ -1,27 +1,45 @@
 from icedpygui import IPG, IpgDividerParam, IpgColumnParam, IpgColor, IpgTextParam
 
-# This is a demo to show how the divider_horizontal is used.
-# Just put the cursor over the highlighted boder and drag
+# This is a demo to show how the divider_vertical is used.
+# Just put the cursor over a highlighted border and drag
 
 ipg = IPG()
 
 
 def divider_change(div_id: int, index: int, value: float):
-    # Both the columns and the divider need to be updated
+    # Get the difference to be added to the right column
+    diff = heights[index] - value
+    
+    # Update the top locally and in ipg
+    heights[index] = value
     ipg.update_item(
             wid=column_ids[index],
             param=IpgColumnParam.Height,
             value=value)
     
-    heights[index] = value
-    ipg.update_item(
-            wid=div_id,
-            param=IpgDividerParam.Heights,
-            value=heights)
+    # Update the bottom locally and in ipg
+    if index < len(heights)-1:
+            heights[index+1] += diff
+            ipg.update_item(
+                wid=column_ids[index+1],
+                param=IpgColumnParam.Height,
+                value=heights[index+1])
     
+    # Update the divider
+    ipg.update_item(
+                wid=div_id,
+                param=IpgDividerParam.Heights,
+                value=heights)
+    
+    # Update the two text items
     ipg.update_item(wid=text_ids[index],
                     param=IpgTextParam.Content,
                     value=f"Width={value}")
+    
+    if index < len(heights)-1:
+        ipg.update_item(wid=text_ids[index+1],
+                    param=IpgTextParam.Content,
+                    value=f"Width={heights[index+1]}")
 
 
 heights = [175.0, 175.0]

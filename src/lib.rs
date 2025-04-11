@@ -72,7 +72,7 @@ use ipg_widgets::ipg_progress_bar::{progress_bar_item_update, progress_bar_style
     IpgProgressBar, IpgProgressBarParam, IpgProgressBarStyle, IpgProgressBarStyleParam};
 use ipg_widgets::ipg_radio::{radio_item_update, radio_style_update_item, IpgRadio, 
     IpgRadioDirection, IpgRadioParam, IpgRadioStyle, IpgRadioStyleParam};
-use ipg_widgets::ipg_row::{row_item_update, IpgRow};
+use ipg_widgets::ipg_row::{row_item_update, IpgRow, IpgRowParam};
 use ipg_widgets::ipg_rule::{rule_style_update_item, IpgRule, IpgRuleStyle, IpgRuleStyleParam};
 use ipg_widgets::ipg_scrollable::{scroll_style_update_item, scrollable_item_update, 
     IpgScrollable, IpgScrollableAlignment, IpgScrollableDirection, IpgScrollableParam, 
@@ -6254,6 +6254,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgRadioDirection>()?;
     m.add_class::<IpgRadioParam>()?;
     m.add_class::<IpgRadioStyleParam>()?;
+    m.add_class::<IpgRowParam>()?;
     m.add_class::<IpgRuleStyleParam>()?;
     m.add_class::<IpgScrollableDirection>()?;
     m.add_class::<IpgScrollableParam>()?;

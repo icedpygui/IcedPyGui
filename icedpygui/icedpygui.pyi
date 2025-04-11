@@ -4958,6 +4958,17 @@ class IpgRadioStyleParam:
     TextRgbaColor:list[float, 4]
 
 
+class IpgRowParam:
+    Align:IpgAlignment
+    Clip:bool
+    Padding:list[float]
+    Width:float
+    WidthFill:bool
+    Height:float
+    HeightFill:bool
+    Spacing:float
+
+
 class IpgRuleStyleParam:
     IpgColor:IpgColor
     RbgaColor:List[float, 4]
