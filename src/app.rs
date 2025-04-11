@@ -1269,18 +1269,11 @@ fn clone_state(state: &mut IpgState) {
     state.timer_duration = mutex_state.timer_duration.to_owned();
     state.canvas_timer_duration = mutex_state.canvas_timer_duration.to_owned();
 
-    // zeroing out any vecs and hashmaps
-    // mutex_state.ids_ipd_ids = Lazy::new(||HashMap::new());
-    // mutex_state.containers = Lazy::new(||HashMap::new());
-    // mutex_state.container_ids = Lazy::new(||HashMap::new());
-    // mutex_state.container_str_ids = Lazy::new(||HashMap::new());
-    // mutex_state.container_wnd_str_ids = Lazy::new(||HashMap::new());
-    // mutex_state.container_window_usize_ids = Lazy::new(||HashMap::new());
+    // zeroing out any unneeded vecs and hashmaps
     mutex_state.widgets = Lazy::new(||HashMap::new());
     mutex_state.widget_container_ids = Lazy::new(||HashMap::new());
     mutex_state.windows = vec![];
     mutex_state.windows_iced_ipg_ids = Lazy::new(||HashMap::new());
-    // mutex_state.windows_str_ids = Lazy::new(||HashMap::new());
     mutex_state.window_debug = Lazy::new(||HashMap::new());
     mutex_state.window_theme = Lazy::new(||HashMap::new());
     mutex_state.window_mode = Lazy::new(||HashMap::new());
