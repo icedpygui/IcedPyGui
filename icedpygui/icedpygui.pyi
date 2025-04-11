@@ -4030,21 +4030,21 @@ class IpgButtonStyleParam:
     TextRgbaColor: list[float, 4]
         The label text color in rgba format
     """
-    BackgroundIpgColor=IpgColor
-    BackgroundRbgaColor=list[float, 4]
-    BackgroundIpgColorHovered=IpgColor
-    BackgroundIpgRgbaHovered=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderRadius=list
-    BorderWidth=float
-    ShadowIpgColor=IpgColor
-    ShadowRgbaColor=list[float, 4]
-    ShadowOffsetX=float
-    ShadowOffsetY=float
-    ShadowBlurRadius=float
-    TextIpgColor=IpgColor
-    TextRgbaColor=list[float, 4]
+    BackgroundIpgColor:IpgColor
+    BackgroundRbgaColor:list[float, 4]
+    BackgroundIpgColorHovered:IpgColor
+    BackgroundIpgRgbaHovered:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderRadius:list
+    BorderWidth:float
+    ShadowIpgColor:IpgColor
+    ShadowRgbaColor:list[float, 4]
+    ShadowOffsetX:float
+    ShadowOffsetY:float
+    ShadowBlurRadius:float
+    TextIpgColor:IpgColor
+    TextRgbaColor:list[float, 4]
     
     
 class IpgDrawMode:
@@ -4227,22 +4227,1467 @@ class IpgCheckboxStyleParam:
     TextRgbaColor: list[float, 4]
         The label text color in rgba format
     """
-    BackgroundIpgColor=IpgColor
-    BackgroundRgbaColor=list[float, 4]
-    BackgroundIpgColorHovered=IpgColor
-    BackgroundRgbaColorHovered=list[float, 4]
-    AccentIpgColor=IpgColor
-    AccentRgbaColor=list[float, 4]
-    AccentIpgColorHovered=IpgColor
-    AccentRgbaColorHovered=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderRadius=list[float]
-    BorderWidth=float
-    IconIpgColor=IpgColor
-    IconRgbaColor=list[float, 4]
-    TextIpgColor=IpgColor
-    TextRgbaColor=list[float, 4]
+    BackgroundIpgColor:IpgColor
+    BackgroundRgbaColor:list[float, 4]
+    BackgroundIpgColorHovered:IpgColor
+    BackgroundRgbaColorHovered:list[float, 4]
+    AccentIpgColor:IpgColor
+    AccentRgbaColor:list[float, 4]
+    AccentIpgColorHovered:IpgColor
+    AccentRgbaColorHovered:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderRadius:list[float]
+    BorderWidth:float
+    IconIpgColor:IpgColor
+    IconRgbaColor:list[float, 4]
+    TextIpgColor:IpgColor
+    TextRgbaColor:list[float, 4]
+
+
+class IpgColorPickerParam:
+    """
+    Button parameters
+
+    Parameters
+    ----------
+    ArrowStyle: IpgButtonArrow
+        A button becomes a type of arrow.
+    Height: float
+        The height of the button.
+    HeightFill: bool
+        Whether the button height fills the available space of a container.
+    Label: str
+        The label of the button.
+    Padding: list
+        The padding around the button.
+    Clip: bool
+        Whether the label is clipped or not
+    Show: bool
+        Whether to show the button
+    StyleId: int
+        The id of the add_button_style()
+    StyleStandard: IpgStyleStandard
+        One of the standard styles
+    Width: float
+        The width of the button
+    WidthFill: bool
+         Whether the button width fills the available space of a container.
+    """
+    ArrowStyle: IpgButtonArrow
+    CanvasColor: list
+    DrawColor: list
+    Height: float
+    HeightFill: bool
+    Label: str
+    Padding: list
+    Clip: bool
+    Show: bool
+    StyleId: int
+    StyleStandard: IpgStyleStandard
+    Width: float
+    WidthFill: bool
+
+
+class IpgColorPickerStyleParam:
+    """
+    Color Picker Style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    BackgroundIpgColorHovered: IpgColor
+        When hovered, the Background color in IpgColor format
+    BackgroundIpgRgbaHovered: list[float, 4]
+        When hovered, the background color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list
+        The border radius [float]=all, [float, 4]=each individual one       
+    BorderWidth: float
+        The width of the border line
+    ShadowIpgColor: IpgColor
+        Shadow color in IpgColor format
+    ShadowRgbaColor: list[float, 4]
+        Shadow color in rgba format
+    ShadowOffsetX: float
+        The offfset of the show towards the x direction
+    ShadowOffsetY: float
+        The offfset of the show towards the y direction
+    ShadowBlurRadius: float
+        How much to blur the shadow radius
+    TextIpgColor: IpgColor
+        The label text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        The label text color in rgba format
+    """
+    BackgroundIpgColor:IpgColor
+    BackgroundRbgaColor:list[float, 4]
+    BackgroundIpgColorHovered:IpgColor
+    BackgroundIpgRgbaHovered:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderRadius:list
+    BorderWidth:float
+    ShadowIpgColor:IpgColor
+    ShadowRgbaColor:list[float, 4]
+    ShadowOffsetX:float
+    ShadowOffsetY:float
+    ShadowBlurRadius:float
+    TextIpgColor:IpgColor
+    TextRgbaColor:list[float, 4]
+
+
+class IpgColumnParam:
+    AlignX:IpgAlignment
+    Clip:bool
+    Padding:list[float]
+    Width:float
+    WidthFill:bool
+    Height:float
+    HeightFill:bool
+    Spacing:float
+    
+
+class IpgContainerParam:
+    AlignX:IpgHorizontalAlignment
+    AlignY:IpgVerticalAlignment
+    Centered:bool
+    Clip:bool
+    Padding:list[float]
+    Width:float
+    WidthFill:bool
+    Height:float
+    HeightFill:bool
+    Show:bool
+
+
+class IpgContainerStyleParam:
+    BackgroundIpgColor:IpgColor
+    BackgroundRgbaColor:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderRadius:float
+    BorderWidth:float
+    ShadowIpgColor:IpgColor
+    ShadowRgbaColor:list[float, 4]
+    ShadowOffsetXY:list[float, 4]
+    ShadowBlurRadius:float
+    TextIpgColor:IpgColor
+    TextRgbaColor:list[float, 4]
+    
+
+class IpgDatePickerParam:
+    """
+    Date Picker parameters
+
+    Parameters
+    ----------
+    Label: str
+        Label for the initial button
+    Padding: list[float]
+        Padding around the button
+    SizeFactor: float
+        Size of the calendar
+    Show: bool
+        Whether to show or not.
+    """
+    Label: str
+    Padding: list[float]
+    SizeFactor: float
+    Show: bool
+
+    
+class IpgDividerParam:
+    """
+    Divider parameters
+    
+    Parameters
+    ----------
+    HandleWidth: float
+        Width of handle
+    HandleHeight: float
+        Height of the handle
+    Widths: list[float],
+        The widths for divider_horizontal
+    Heights: List[float],
+        The heights for divider_vertical
+    StyleId: int,
+        The id of the add_divider_style()
+    Show: bool,
+        Wheterh to show the widget or not.
+    """
+    HandleWidth:float
+    HandleHeight:float
+    Widths:list[float]
+    Heights:list[float]
+    Style:int
+    Show:bool
+    
+    
+class IpgDividerStyleParam:
+    """_
+    Divider style parameters
+    
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor,
+        Background color
+    BackgroundRgbaColor: list[float, 4],
+        Background color in rgba format
+    BorderIpgColor: IpgColor,
+        Border color
+    BorderRgbaColor: list[float, 4],
+        Border color in rgba format
+    BorderWidth: float,
+        Border width
+    BorderRadius: float,
+        Radius of the 4 border corners
+    Transparent: bool,
+        Whether to use the transparent style
+    """
+    BackgroundIpgColor:IpgColor
+    BackgroundRgbaColor:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderWidth:float
+    BorderRadius:float
+    Transparent:bool
+    
+
+class IpgImageContentFit:
+    """
+    Content fit for the image
+
+    Parameters
+    ---------
+    Contain: IpgImageContentFit.Contain
+        The image will be scaled (preserving aspect ratio) so that it just fits within the window.
+    Cover: IpgImageContentFit.Cover 
+        Scale the image to cover all of the bounding box, cropping if needed.
+    Fill: IpgImageContentFit.Fill
+        Distort the image so the widget is 100% covered without cropping.
+    IpgNoneIpgImageContentFit.IpgNone
+        Don't resize or scale the image at all.  This is best for when you've sized the image yourself.
+    ScaleDown: IpgImageContentFit.ScaleDown
+        Scale the image down if it's too big for the space, but never scale it up.
+    """
+    Contain: str
+    Cover: str
+    Fill: str
+    IpgNone: str
+    ScaleDown: str
+
+
+class IpgImageFilterMethod:
+    '''
+    How the image is filtered
+
+    Parameters
+    ----------
+    Linear: IpgImageMethodFilter.Linear
+        Bi-linear interpolation image filtering strategy.
+    Nearest: IpgImageMethodFilter.Nearest
+        Nearest neighbor image filtering strategy.
+    '''
+    Linear: str
+    Nearest: str
+
+
+class IpgImageRotation:
+    """
+    What happens to the container when image is rotated.
+
+    Parameters
+    ----------
+    Floating: IpgImageRotation.Floating
+        When image is rotated, it floats above the container, not distorting it.
+    Solid: IpgImageRotation.Solid
+        When the image is rotated, the container resizes to fit.
+    """
+    Floating: str
+    Solid: str
+
+
+class IpgImageParam:
+    """
+    Image parameters
+
+    Parameters
+    ----------
+    Height: float
+        Sets the height of the widget. 
+    HeightFill: bool
+        Sets the height to fill the available space, overrides height.
+    ImagePath: str
+        Path to where the image is.
+    Opacity: float
+        How much opacity, 1=opaque, 0=transparent
+    Padding: list[float]
+        The padding around the image.
+    RotationRadians: float
+        How much to rotate the image in radians.
+    Show: bool
+        Whether to show or hide the image.
+    Width: float
+        Width of the image.
+    WidthFill: bool
+    Whether to fill the width to the available container size.
+    """
+    Height: float
+    HeightFill: bool
+    ImagePath: str
+    Opacity: float
+    Padding: list[float]
+    RotationRadians: float
+    Show: bool
+    Width: float
+    WidthFill: bool
+
+
+class IpgMenuParam:
+    """
+    Menu Bar parameters
+
+    Parameters
+    ----------
+    BarHeight: float
+        The height od the bar
+    BarPadding: list[float]
+        The padding around the bar.
+    BarSpacing: float
+        The space between the bar and the menu items.
+    BarWidths: list[float]
+        The width of each menu item in the bar.
+    CheckBoundsWidth: float
+        Widths of the dropdown menu.
+    Show: bool
+        Whether to show or hide the widget
+    """
+    BarHeight:float
+    BarPadding:list[float]
+    BarSpacing:float
+    BarWidths:list[float]
+    CheckBoundsWidth:float
+    Show:bool
+
+
+class IpgMenuStyleParam:
+    BaseIpgColor:IpgColor
+    BaseRgbaColor:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderRadius:list[float]
+    BorderWidth:float
+    ShadowIpgColor:IpgColor
+    ShadowRgbaColor:list[float, 4]
+    ShadowOffsetXY:list[float, 2]
+    ShadowBlurRadius:float
+    PathBaseIpgColor:IpgColor
+    PathBaseRgbaColor:list[float, 4]
+    PathBorderIpgColor:IpgColor
+    PathBorderRgbaColor:list[float, 4]
+    PathBorderRadius:list[float]
+    PathBorderWidth:float
+
+class IpgMenuBarStyleParam:
+    BaseIpgColor:IpgColor
+    BaseRgbaColor:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderRadius:list[float]
+    BorderWidth:float
+    ShadowIpgColor:IpgColor
+    ShadowRgbaColor:list[float, 4]
+    ShadowOffsetXY:list[float, 2]
+    ShadowBlurRadius:float
+
+
+class IpgMenuSeparatorStyleParam:
+    SeparatorType:IpgMenuSeparatorType
+    Width:float
+    WidthFill:bool
+    Height:float
+    HeightFill:bool
+    QuadRatios:list[float, 2]
+    SeparatorIpgColor:IpgColor
+    SeparatorRgbaColor:list[float, 4]
+    SeparatorBorderIpgColor:IpgColor
+    SeparatorBorderRgbaColor:list[float, 4]
+    SeparatorBorderRadius:list[float]
+    SeparatorBorderWidth:float
+    SeparatorShadowIpgColor:IpgColor
+    SeparatorShadowRgbaColor:list[float, 4]
+    SeparatorShadowOffset:float
+    SeparatorShadowBlurRadius:float
+    BackgroundIpgColor:IpgColor
+    BackgroundRgbaColor:list[float, 4]
+    BackgroundBorderIpgColor:IpgColor
+    BackgroundBorderRbgaColor:list[float, 4]
+    BackgroundBorderWidth:float
+    BackgroundBorderRadius:list[float]
+    BackgroundShadowIpgColor:IpgColor
+    BackgroundShadowRbgaColor:list[float, 4]
+    BackgroundShadowOffset:float
+    BackgroundShadowBlurRadius:float
+
+
+class IpgMenuType:
+    """
+    The type of widgets a menu item can be.  Used in item_styles parameter.
+    """
+    Button=''
+    Checkbox=''
+    Dot=''
+    Label=''
+    Line=''
+    Text=''
+    Toggler=''
+
+
+class IpgMenuSeparatorType:
+    """
+    The separator types id used.
+    """
+    Circle=''
+    Dot=''
+    Label=''
+    Line=''
+
+
+class IpgMousePointer:
+    """
+    Pointer types for the mouse interactions
+    """
+    Idle=''
+    Pointer=''
+    Grab=''
+    Text=''
+    Crosshair=''
+    Working=''
+    Grabbing=''
+    ResizingHorizontally=''
+    ResizingVertically=''
+    NotAllowed=''
+    ZoomIn=''
+
+class IpgOpaqueParam:
+    """
+    Opaque update parameters.
+    """
+    Show: bool
+
+
+class IpgPickListParam:
+    """
+    PickList update parameters
+
+    Parameters
+    ----------
+    Options: list[str]
+        Items in the picklist.
+    Selected: str
+        Item selected.
+    Placeholder: str
+        A placeholder in the picklist box.
+    Padding: list[float]
+        Padding around the picklist.
+    Show: bool
+        Whether to show or hide the widget.
+    StyleId: int
+        The id of the add_picklist_style()
+    TextSize: float
+        Size of the text.
+    TextLineHeight: float
+        Size od the text box.
+    Width: float
+        Width of the picklist.
+    WidthFill: bool
+        Whether the picklist expands the available width of the container.
+    """
+    Options: list[str]
+    Selected: str
+    Placeholder: str
+    Padding: list[float]
+    Show: bool
+    StyleId: int
+    TextSize: float
+    TextLineHeight: float
+    Width: float
+    WidthFill: bool
+
+
+class IpgPickListHandle:
+    """
+    The type of handle for the picklist.
+    """
+    Arrow=''
+    Dynamic=''
+    HandleNone=''
+    Static=''
+
+
+class IpgPickListStyleParam:
+    """
+    PickList style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list
+        The border radius [float]=all, [float, 4]=each individual one       
+    BorderWidth: float
+        The width of the border line
+    HandleIpgColor: IpgColor
+        Handle color in IpgColor format
+    HandleRgbaColor: list[float, 4]
+        Handle color in rgba format
+    PlaceholderIpgColor: IpgColor
+        Placeholder color in IpgColor format
+    PlaceholderRgbaColor: list[float, 4]
+        Placeholder color in rgba format
+    TextIpgColor: IpgColor
+        The label text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        The label text color in rgba format
+    """
+    BackgroundIpgColor:IpgColor
+    BackgroundRbgaColor:List[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderRadius:list
+    BorderWidth:float
+    HandleIpgColor:IpgColor
+    HandleRgbaColor:list[float, 4]
+    PlaceholderIpgColor:IpgColor
+    PlaceholderRgbaColor:list[float, 4]
+    TextIpgColor:IpgColor
+    TextRgbaColor:list[float, 4]
+
+class IpgProgressBarParam:
+    """
+    The ProgressBar update parameters.
+
+    Parameters
+    ----------
+    Height: float
+        Height of the bar.
+    HeightFill: bool
+        Whether the bar fills the height of the container.
+    Min: float
+        Minimum value of the bar.
+    Max: float
+        Maximum value of the bar.
+    Show: bool
+        Whether to show or hide the bar.
+    StyleId: int
+        The id of the add_progress_bar_style()
+    StyleStandard: str
+        The standard style of the IpgStandardStyle class
+    Value: float
+        The value of the bar.
+    Width: float
+        The width of the bar.
+    WidthFill: bool
+        Whether the bar fills the width of the container.
+    """
+    Height: float
+    HeightFill: bool
+    Min: float
+    Max: float
+    Show: bool
+    StyleId: int
+    StyleStandard: str
+    Value: float
+    Width: float
+    WidthFill: bool
+
+
+class IpgProgressBarStyleParam:
+    """
+    Progress Bar style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    BarIpgColor: IpgColor
+        Bar color in IpgColor format
+    BarRgbaColor: list[float, 4]
+        Bar color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list
+        The border radius [float]=all, [float, 4]=each individual one       
+    BorderWidth: float
+        The width of the border line
+    """
+    BackgroundIpgColor:IpgColor
+    BackgroundRbgaColor:List[float, 4]
+    BarIpgColor:IpgColor
+    BarRgbaColor:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderRadius:list
+    BorderWidth:float
+    
+
+class IpgRadioDirection:
+    """
+    Direction the radio button are aligned.
+    """
+    Horizontal=''
+    Vertical=''
+
+
+class IpgRadioParam:
+    """
+    Radio button parameters
+
+    Parameters
+    ----------
+    Direction: str
+        The IpgRadioDirection class
+    Labels: list[str]
+        The labels for each radio button
+    Padding: list[float]
+        The padding around the radio
+    SelectedIndex: int
+        The index of the radio selected
+    Show: bool
+        Whether to show or hide the radio group
+    Size: float
+        The size of the radio circle.
+    Spacing: float
+        The spacing between the radio buttons in the group.
+    StyleId: int
+        The id of the add_radio_style().
+    TextSpacing: float
+        The spacing between the radio  and the label.
+    TextSize=''
+        The size of the label.
+    LineHeightPixels: int
+        The label box height in pixels.
+    LineHeightRelative: float
+        The label box height relative to the default.
+    UserData: any
+        Any user data need of any format.
+    Width: float
+        The width of the widget group.
+    WidthFill: bool
+        Whether the widget group fill the container width.
+    Height: float
+        The height of the widget group.
+    HeightFill: bool
+        Whether the widget group fill the container height.
+    """
+    Direction: str
+    Labels: list[str]
+    Padding: list[float]
+    SelectedIndex: int
+    Show: bool
+    Size: float
+    Spacing: float
+    StyleId: int
+    TextSpacing: float
+    TextSize:float
+    LineHeightPixels: int
+    LineHeightRelative: float
+    UserData: any
+    Width: float
+    WidthFill: bool
+    Height: float
+    HeightFill: bool
+
+
+class IpgRadioStyleParam:
+    """
+    Radio style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    DotIpgColor: IpgColor
+        Dot color in IpgColor format
+    DotRgbaColor: list[float, 4]
+        Dot color in rgba format
+    DotIpgColorHovered: IpgColor
+        Dot hover color in IpgColor format
+    DotRgbaColorHovered: list[float, 4]
+        Dot hover color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format    
+    BorderWidth: float
+        The width of the border line
+    TextIpgColor: IpgColor
+        The label text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        The label text color in rgba format
+    """
+    BackgroundIpgColor:IpgColor
+    BackgroundRbgaColor:List[float, 4]
+    DotIpgColor:IpgColor
+    DotRgbaColor:list[float, 4]
+    DotIpgColorHovered:IpgColor
+    DotRgbaColorHovered:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderWidth:float
+    TextIpgColor:IpgColor
+    TextRgbaColor:list[float, 4]
+
+
+class IpgRuleStyleParam:
+    IpgColor:IpgColor
+    RbgaColor:List[float, 4]
+    BorderRadius:float
+    FillModePercent:float
+    FillModePadded:int
+    FillModeAsymmetricPadding:list[int]
+
+
+class IpgScrollableDirection:
+    """
+    The scroll direction of the Scrollable
+    """
+    Vertical=''
+    Horizontal=''
+    Both=''
+
+
+class IpgScrollableParam:
+    """
+    The Scrollable parameters
+
+    Parameters
+    ----------
+    Width: float
+        The width of the scrollable.
+    WidthFill: bool
+        Whether the scrollable fills the width container.
+    Height: float
+        The height of the scrollable.
+    HeightFill: bool
+        Whether the scrollable fills the height container.
+    HBarWidth: float
+        The horizontal bar width
+    HBarMargin: float
+        The horizontal bar margin.
+    HScrollerWidth: float
+        The horizontal scroller width.
+    HBarAlignment: IpgAlignment
+        The horizontal bar alignment.
+    VBarWidth: float
+        The vertical bar width.
+    VBarMargin: float
+        The vertical margin.
+    VScrollerWidth: float
+        The vertical scroller width.
+    VBarAlignment: IpgAlignment
+        The vertical bar alignment.
+    """
+    Width: float
+    WidthFill: bool
+    Height: float
+    HeightFill: bool
+    HBarWidth: float
+    HBarMargin: float
+    HScrollerWidth: float
+    HBarAlignment: IpgAlignment
+    VBarWidth: float
+    VBarMargin: float
+    VScrollerWidth: float
+    VBarAlignment: IpgAlignment
+
+
+class IpgScrollableStyleParam:
+    """
+    The Scrollable style parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor: list[float, 4]
+        Background color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list[float]
+        Border radius as a list of 1 or 4
+    BorderWidth: float
+        Border widt as a float
+    ShadowIpgColor: IpgColor
+        Shadow color in IpgColor format
+    ShadowRgbaColor: list[float, 4]
+        Shadow color in rgba format
+    ShadowOffsetX: float
+        Amount of offset shadow in x irection
+    ShadowOffsetY: float
+        Amount of offset shadow in y direction
+    ShadowBlurRadius: list[float]
+        How much to blur the radius
+    TextIpgColor: IpgColor
+        Text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        Text color in rgba format
+    ScrollbarIpgColor: IpgColor
+        Scrollbar color in IpgColor format
+    ScrollbarRgbaColor: list[float, 4]
+        Scrollbar color in rgba format
+    ScrollbarBorderRadius: list[float]
+        Border radius as a list of 1 or 4
+    ScrollbarBorderWidth: float
+        Width of the border
+    ScrollbarBorderIpgColor: IpgColor
+        Scrollbar border color in IpgColor format
+    ScrollbarBorderRgbaColor: list[float, 4]
+        Scrollbar border color in rgba format
+    ScrollerIpgColor: IpgColor
+        Scroller color in IpgColor format
+    ScrollerRgbaColor: list[float, 4]
+        Scroller color in rgba format
+    ScrollerIpgColorHovered: IpgColor
+        Scroller hover color in IpgColor format
+    ScrollerRgbaColorHovered: list[float, 4]
+        Scroller hover color in rgba format
+    ScrollerIpgColorDragged: IpgColor
+        Scroller drag color in IpgColor format
+    ScrollerRgbaColorDragged: list[float, 4]
+        Scroller drag color in rgba format
+    """
+    BackgroundIpgColor:IpgColor
+    BackgroundRbgaColor:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderRadius:list[float]
+    BorderWidth:float
+    ShadowIpgColor:IpgColor
+    ShadowRgbaColor:list[float, 4]
+    ShadowOffsetX:float
+    ShadowOffsetY:float
+    ShadowBlurRadius:list[float]
+    TextIpgColor:IpgColor
+    TextRgbaColor:list[float, 4]
+    ScrollbarIpgColor:IpgColor
+    ScrollbarRgbaColor:list[float, 4]
+    ScrollbarBorderRadius:list[float]
+    ScrollbarBorderWidth:float
+    ScrollbarBorderIpgColor:IpgColor
+    ScrollbarBorderRgbaColor:list[float, 4]
+    ScrollerIpgColor:IpgColor
+    ScrollerRgbaColor:list[float, 4]
+    ScrollerIpgColorHovered:IpgColor
+    ScrollerRgbaColorHovered:list[float, 4]
+    ScrollerIpgColorDragged:IpgColor
+    ScrollerRgbaColorDragged:list[float, 4]
+
+
+class IpgSelectableTextParam:
+    """
+    SelectableText parameters
+
+    Parameters
+    ----------
+    Text: str
+        The text
+    Width: float
+        The width of the widget.
+    WidthFill: bool
+        Whether the widget fills the container width.
+    Height: float
+        The height of the widget.
+    HeightFill: bool
+        Whether the widget fills the container height.
+    HorizontalAlign: IpgHorizontalAlignment
+        The horizontal alignment using the IpgHorizontalAlignment class
+    VerticalAlign: IpgVerticalAlignment
+        The vertical alignment using the IpgVerticalAlignment class
+    LineHeight: float
+        The size of the box the text.
+    Size: float
+        The size of the text.
+    TextColor: IpgColor
+        The color of the text.
+    TextRgba: list[float, 4]
+        The color of the text in rgba format.
+    Show: bool
+        Whether to show or hide the widget.
+    """
+    Text: str
+    Width: float
+    WidthFill: bool
+    Height: float
+    HeightFill: bool
+    HorizontalAlign: IpgHorizontalAlignment
+    VerticalAlign: IpgVerticalAlignment
+    LineHeight: float
+    Size: float
+    TextColor: IpgColor
+    TextRgba: list[float, 4]
+    Show: bool
+
+
+class IpgSeparatorParam:
+    DotCount: int
+    DotFill: bool
+    DotBorderWidth: float
+    DotRadius: float
+    Height: float
+    HeightFill: bool
+    Label: str
+    Spacing: float
+    Show: bool
+    StyleId: int
+    Width: float
+    WidthFill: bool
+
+
+class IpgSeparatorType:
+    Dot=""
+    Label=""
+    Line=""
+
+
+class IpgSliderParam:
+    """
+    Slider update parameters
+
+    Parameters
+    ----------
+    Min: float
+        The minimum range value.
+    Max: float
+        The maximum range value.
+    Step: float
+        The step of the range value.
+    Value: float
+        The current value.
+    Width: float
+        The width of the widget.
+    WidthFill: bool
+        Whether the width of the widget fills the container.
+    Height: float
+        The height of the widget.
+    StyleId: int
+        The id of the add_slider_style() function.
+    Show: bool
+        Whether to show or hide the widget.
+    """
+    Min: float
+    Max: float
+    Step: float
+    Value: float
+    Width: float
+    WidthFill: bool
+    Height: float
+    StyleId: int
+    Show: bool
+
+
+class IpgSliderStyleParam:
+    RailIpgColor:IpgColor
+    RailRbgaColor:list[float, 4]
+    RailIpgColorHovered:IpgColor
+    RailIpgRgbaHovered:list[float, 4]
+    RailBorderRadius:list[float]
+    RailWidth:float
+
+    HandleIpgColor:IpgColor
+    HandleRgbaColor:list[float, 4]
+    HandleBorderIpgColor:IpgColor
+    HandleBorderRgbaColor:list[float, 4]
+    HandleBorderWidth:float
+    HandleCircleRadius:float
+    HandleRectangleWidth:int
+    HandleRectangleBorderRadius:list[float]
+    
+    
+class IpgStackParam:
+    """
+    Stack update parameters
+
+    Parameters
+    ----------
+    ShowStack: bool
+        Show the top widget of the stack.
+    """
+    ShowStack: bool
+
+class IpgStyleStandard:
+    """
+    Standard styles for widgets
+    """
+    Primary=''
+    Success=''
+    Danger=''
+    Text=''
+
+
+class IpgSvgParam:
+    """
+    SVG image parameters
+    
+    Parameters
+    ----------
+    Height: float
+        The height of the widget.
+    HeightFill: bool
+        Whether the height of the widget fills the container.
+    ImagePath: str
+        The path to the image.
+    Show: bool
+        Whether to show or hide the widget.
+    Width: float
+        The width of the widget.
+    WidthFill: bool
+        Whether the width of the widget fills the container.
+    RotationRadians: float
+        How much to rotate the svg image in radians.
+    Opacity: float
+        The opacity of the widget.
+    """
+    Height: float
+    HeightFill: bool
+    ImagePath: str
+    Show: bool
+    Width: float
+    WidthFill: bool
+    RotationRadians: float
+    Opacity: float
+
+class IpgSvgContentFit:
+    """
+    How the image is sized.
+    """
+    Contain=''
+    Cover=''
+    Fill=''
+    IpgNone=''
+    ScaleDown=''
+
+
+class IpgSvgRotation:
+    """
+    How the images interacts with the background during rotations.
+    """
+    Floating=''
+    Solid=''
+
+
+class IpgTableParam:
+    """
+    Table parameters
+
+    Parameters
+    ----------
+    Title: str
+        Title for the table.
+    Data: list[dict]
+        Table data in list of dictionaries form
+    Width: float
+        Width of the table.
+    Height: float
+        Height of the table.
+    ColumnWidths: list[float]
+        List of column widths.
+    ColumnSpacing: float
+        Spacing between columns
+    RowSpacing: float
+        Spacing between rows
+    RowMaxHeight: float
+        Max height of the rows
+    RowHighlight: IpgTableRowHighLight
+        Sets the color type for highlighting alternate rows.
+    HighlightAmount: float
+        The highlighting amount.
+    ResizeColumnsEnabled: bool
+        Enables the ability to resize the columns
+    MinColumnWidth: float
+        If resizing, the min column width
+    CellPadding: list[float]
+        Padding around the cells
+    TableWidthFixed: bool
+        If the table width is fixed, doesn't change with resizing
+    TableWidth: float
+        Changes the table width which initially is the sum of column widths
+    ScrollerWidth: float
+        Scroller width
+    ScrollerBarWidth: float
+        Scroller bar width
+    ScrollerMargin: float
+        Scroller margin
+    Show: bool
+        Whether to show or hide the widget.
+    """
+    Title:str
+    PolarsDf:PyDataFrame
+    Width:float
+    Height:float
+    HeaderEnabled:bool
+    HeaderCustomEnabled:bool
+    FooterEnabled:bool
+    ColumnWidths:list[float]
+    ColumnSpacing:float
+    RowSpacing:float
+    RowMaxHeight:float
+    RowHighlight:IpgTableRowHighLight
+    HighlightAmount:float
+    DividerWidth:float
+    ResizeColumnsEnabled:bool
+    MinColumnWidth:float
+    CellPadding:list[float]
+    TableWidthFixed:bool
+    TableWidth:float
+    ScrollerWidth:float
+    ScrollerBarWidth:float
+    ScrollerMargin:float
+    Show:bool
+
+
+class IpgTableRowHighLight:
+    """
+    How the table highlighting is applied.
+    """
+    Darker=''
+    Lighter=''
+
+
+class IpgTableWidget:
+    """
+    The type of widget to use in the table row, if needed.
+    """
+    Button=''
+    Checkbox=''
+    Modal=''
+    Toggler=''
+
+
+class IpgTextInputParam:
+    """
+    TextInput parameters
+
+    Parameters
+    ----------
+    Placeholder: str
+        The text in the box for instructions.
+    Value: str
+        The value typed in or pasted in the box
+    IsSecure: bool
+        Whether to display the text in a readable format or not.
+    Width: float
+        The width of the widget.
+    Padding: list[float]
+        The padding around the widget.
+    Size: float
+        The text ize.
+    LineHeightPixels: float
+        The height of the text box in pixels.
+    LineHeightRelative: float
+        The height of the text box relative to the default size.
+    StyleId: int
+        The id of add_textinput_style() function.
+    """
+    Placeholder:str
+    Value:str
+    IsSecure:bool
+    Width:float
+    Padding:list[float]
+    Size:float
+    LineHeightPixels:float
+    LineHeightRelative:float
+    StyleId:int
+
+
+class IpgTextParam:
+    """
+    Text parameters
+
+    Parameters
+    ----------
+    Content: str
+        The text.
+    Height: float
+        The height of the widget.
+    HeightFill: bool
+        Whether to fill the height of the container with the widget.
+    HorizontalAlignment: IpgHorizontalAlignment
+        The alignment of the text in the text box.
+    LineHeight: float
+        The height of the text box.
+    Size: float
+        The size of the text.
+    TextColor: IpgColor
+        The color of the text.
+    TextRgba: list[float]
+        The color of the text in rgba format.
+    VerticalAlignment: IpgVerticalAlignment
+        The alignment of the text in the text box.
+    Width: float
+        The width of the widget.
+    WidthFill: bool
+        Whether to fill the width of the container with the widget.
+    Show: bool
+        Whether to show or hide the widget.
+    """
+    Content:str
+    Height:float
+    HeightFill:bool
+    HorizontalAlignment:IpgHorizontalAlignment
+    LineHeight:float
+    Size:float
+    TextColor:IpgColor
+    TextRgba:list[float]
+    VerticalAlignment:IpgVerticalAlignment
+    Width:float
+    WidthFill:bool
+    Show:bool
+
+
+class IpgTextInputStyleParam:
+    BackgroundIpgColor:IpgColor
+    BackgroundRgbaColor:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderIpgColorHovered:IpgColor
+    BorderRgbaColorHovered:list[float, 4]
+    BorderIpgColorFocused:IpgColor
+    BorderRgbaColorFocused:list[float, 4]
+    BorderWidth:float
+    BorderRadius:list[float]
+    PlaceholderIpgColor:IpgColor
+    PlaceholderRgbaColor:list[float, 4]
+    ValueIpgColor:IpgColor
+    ValueRgbaColor:list[float, 4]
+    SelectionIpgColor:IpgColor
+    SelectionRgbaColor:list[float, 4]
+
+
+class IpgTimerParam:
+    DurationMs:int
+    ArrowStyle:str
+    Counter:int
+    Height:float
+    HeightFill:bool
+    Label:str
+    Padding:list
+    Clip:bool
+    Show:bool
+    StyleId:int
+    StyleStandard:str
+    Width:float
+    WidthFill:bool
+
+
+class IpgTimerStyleParam:
+    """
+    Timer button parameters
+
+    Parameters
+    ----------
+    BackgroundIpgColor: IpgColor
+        Background color in IpgColor format
+    BackgroundRbgaColor :list[float, 4]
+        Background color in rgba format
+    BackgroundIpgColorHovered: IpgColor
+        When hovered, the Background color in IpgColor format
+    BackgroundIpgRgbaHovered: list[float, 4]
+        When hovered, the background color in rgba format
+    BorderIpgColor: IpgColor
+        Border color in IpgColor format
+    BorderRgbaColor: list[float, 4]
+        Border color in rgba format
+    BorderRadius: list
+        The border radius [float]=all, [float, 4]=each individual one       
+    BorderWidth: float
+        The width of the border line
+    ShadowIpgColor: IpgColor
+        Shadow color in IpgColor format
+    ShadowRgbaColor: list[float, 4]
+        Shadow color in rgba format
+    ShadowOffsetX: float
+        The offfset of the show towards the x direction
+    ShadowOffsetY: float
+        The offfset of the show towards the y direction
+    ShadowBlurRadius: float
+        How much to blur the shadow radius
+    TextIpgColor: IpgColor
+        The label text color in IpgColor format
+    TextRgbaColor: list[float, 4]
+        The label text color in rgba format
+    """
+    BackgroundIpgColor:IpgColor
+    BackgroundRbgaColor:list[float, 4]
+    BackgroundIpgColorHovered:IpgColor
+    BackgroundIpgRgbaHovered:list[float, 4]
+    BorderIpgColor:IpgColor
+    BorderRgbaColor:list[float, 4]
+    BorderRadius:list
+    BorderWidth:float
+    ShadowIpgColor:IpgColor
+    ShadowRgbaColor:list[float, 4]
+    ShadowOffsetX:float
+    ShadowOffsetY:float
+    ShadowBlurRadius:float
+    TextIpgColor:IpgColor
+    TextRgbaColor:list[float, 4]
+
+
+class IpgCanvasTimerParam:
+    DurationMs:int
+    ArrowStyle:str
+    Counter:int
+    Height:float
+    HeightFill:bool
+    Label:str
+    Padding:list
+    Clip:bool
+    Show:bool
+    StyleId:int
+    StyleStandard:str
+    Width:float
+    WidthFill:bool
+
+
+class IpgTogglerParam:
+    """
+    Toggler parameters
+
+    Parameters
+    ----------
+    Alignment: IpgAlignment
+        Align widget using IpgAlignment
+    Label: str
+        String label for widget.
+    LineHeight: float
+        The height of the text box for the widget.
+    Show: bool
+        Whether to show or hide the widget.
+    Size: float
+        The size of the toggler.
+    TextSize: float
+        The text size of the label.
+    Width: float
+        The width of the widget.
+    WidthFill: bool
+        Whether the width fills the container.
+    """
+    Alignment: IpgAlignment
+    Label: str
+    LineHeight: float
+    Show: bool
+    Size: float
+    TextSize: float
+    Width: float
+    WidthFill: bool
+
+
+class IpgWindowParam:
+    '''
+    Parameters
+    ----------
+    Debug: bool=False
+        If true draws a frame around all widgets.
+    Decorations: int=0
+        The int is the windows id, toggles whether the window has a frame and header
+    Level: IpgWindowLevel=IpgWindowLevel.Normal
+        The window stacking behavior: Normal, AlwaysOnBottom, AlwaysOnTop.
+    Mode: IpgWindowMode=IpgWindowMode.Windowed
+        How the window appears, windowed, hidden, or full screen.
+    Position: tuple[int, float, float]
+        Position of the window, (window_id, pos_x, pos_y).
+    Theme: IpgWindowTheme=IpgWindowTheme.Dark
+        Window theme.
+    ScaleFactor: float=1.0
+        Window scale factor
+    '''
+    Debug:bool
+    Decorations:int
+    Level:tuple[id, IpgWindowLevel]
+    Mode:IpgWindowMode
+    Position:tuple[int, float, float]
+    Size:tuple[int, float, float]
+    Theme:IpgWindowTheme
+    ScaleFactor:float
+    
+
+
+class IpgWindowLevel:
+    """
+    The stacking order of the windows
+    """
+    Normal=''
+    AlwaysOnBottom=''
+    AlwaysOnTop=''
+
+
+class IpgWindowMode:
+    """
+    Determine the window mode
+
+    Parameters
+    ----------
+    Closed
+        Window is hidden and can be reopened with a callback
+    FullScreen
+        Window is full screen, ensure you have a way of returning it to windowed
+    Windowed (default)
+        Window is not full screen and can be moved, etc.
+    """
+    Closed=''
+    FullScreen=''
+    Windowed=''
+    
+
+class IpgWindowTheme:
+    """
+    Window themes
+    """
+    Dark=''
+    Light=''
+    CatppuccinLatte=''
+    CatppuccinFrappe=''
+    CatppuccinMacchiato=''
+    CatppuccinMocha=''
+    Dracula=''
+    Ferra=''
+    GruvboxLight=''
+    GruvboxDark=''
+    KanagawaWave=''
+    KanagawaDragon=''
+    KanagawaLotus=''
+    Moonfly=''
+    Nightfly=''
+    Nord=''
+    Oxocarbon=''
+    SolarizedLight=''
+    SolarizedDark=''
+    TokyoNight=''
+    TokyoNightStorm=''
+    TokyoNightLight=''
+
 
 class IpgColor:
     """
@@ -4405,1444 +5850,6 @@ class IpgColor:
     WHITE_SMOKE=''
     YELLOW=''
     YELLOW_GREEN=''
-
-
-class IpgColorPickerParam:
-    """
-    Button parameters
-
-    Parameters
-    ----------
-    ArrowStyle: IpgButtonArrow
-        A button becomes a type of arrow.
-    Height: float
-        The height of the button.
-    HeightFill: bool
-        Whether the button height fills the available space of a container.
-    Label: str
-        The label of the button.
-    Padding: list
-        The padding around the button.
-    Clip: bool
-        Whether the label is clipped or not
-    Show: bool
-        Whether to show the button
-    StyleId: int
-        The id of the add_button_style()
-    StyleStandard: IpgStyleStandard
-        One of the standard styles
-    Width: float
-        The width of the button
-    WidthFill: bool
-         Whether the button width fills the available space of a container.
-    """
-    ArrowStyle: IpgButtonArrow
-    CanvasColor: list
-    DrawColor: list
-    Height: float
-    HeightFill: bool
-    Label: str
-    Padding: list
-    Clip: bool
-    Show: bool
-    StyleId: int
-    StyleStandard: IpgStyleStandard
-    Width: float
-    WidthFill: bool
-
-
-class IpgColorPickerStyleParam:
-    """
-    Color Picker Style parameters
-
-    Parameters
-    ----------
-    BackgroundIpgColor: IpgColor
-        Background color in IpgColor format
-    BackgroundRbgaColor :list[float, 4]
-        Background color in rgba format
-    BackgroundIpgColorHovered: IpgColor
-        When hovered, the Background color in IpgColor format
-    BackgroundIpgRgbaHovered: list[float, 4]
-        When hovered, the background color in rgba format
-    BorderIpgColor: IpgColor
-        Border color in IpgColor format
-    BorderRgbaColor: list[float, 4]
-        Border color in rgba format
-    BorderRadius: list
-        The border radius [float]=all, [float, 4]=each individual one       
-    BorderWidth: float
-        The width of the border line
-    ShadowIpgColor: IpgColor
-        Shadow color in IpgColor format
-    ShadowRgbaColor: list[float, 4]
-        Shadow color in rgba format
-    ShadowOffsetX: float
-        The offfset of the show towards the x direction
-    ShadowOffsetY: float
-        The offfset of the show towards the y direction
-    ShadowBlurRadius: float
-        How much to blur the shadow radius
-    TextIpgColor: IpgColor
-        The label text color in IpgColor format
-    TextRgbaColor: list[float, 4]
-        The label text color in rgba format
-    """
-    BackgroundIpgColor=IpgColor
-    BackgroundRbgaColor=list[float, 4]
-    BackgroundIpgColorHovered=IpgColor
-    BackgroundIpgRgbaHovered=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderRadius=list
-    BorderWidth=float
-    ShadowIpgColor=IpgColor
-    ShadowRgbaColor=list[float, 4]
-    ShadowOffsetX=float
-    ShadowOffsetY=float
-    ShadowBlurRadius=float
-    TextIpgColor=IpgColor
-    TextRgbaColor=list[float, 4]
-
-
-class IpgColumnParam:
-    AlignX=IpgAlignment
-    Clip=bool
-    Padding=list[float]
-    Width=float
-    WidthFill=bool
-    Height=float
-    HeightFill=bool
-    Spacing=float
-    
-
-class IpgContainerParam:
-    AlignX=IpgHorizontalAlignment
-    AlignY=IpgVerticalAlignment
-    Centered=bool
-    Clip=bool
-    Padding=list[float]
-    Width=float
-    WidthFill=bool
-    Height=float
-    HeightFill=bool
-    Show=bool
-
-
-class IpgContainerStyleParam:
-    BackgroundIpgColor=IpgColor
-    BackgroundRgbaColor=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderRadius=float
-    BorderWidth=float
-    ShadowIpgColor=IpgColor
-    ShadowRgbaColor=list[float, 4]
-    ShadowOffsetXY=list[float, 4]
-    ShadowBlurRadius=float
-    TextIpgColor=IpgColor
-    TextRgbaColor=list[float, 4]
-    
-
-class IpgDatePickerParam:
-    """
-    Date Picker parameters
-
-    Parameters
-    ----------
-    Label: str
-        Label for the initial button
-    Padding: list[float]
-        Padding around the button
-    SizeFactor: float
-        Size of the calendar
-    Show: bool
-        Whether to show or not.
-    """
-    Label: str
-    Padding: list[float]
-    SizeFactor: float
-    Show: bool
-
-    
-class IpgDividerParam:
-    """
-    Divider parameters
-    
-    Parameters
-    ----------
-    Widths: list[float],
-        The widths for divider_horizontal
-    Heights: List[float],
-        The heights for divider_vertical
-    StyleId: int,
-        The id of the add_divider_style()
-    Show: bool,
-        Wheterh to show the widget or not.
-    """
-    Widths=list[float]
-    Heights=list[float]
-    Style=int
-    Show=bool
-    
-    
-class IpgDividerStyleParam:
-    """_
-    Divider style parameters
-    
-    Parameters
-    ----------
-    BackgroundIpgColor: IpgColor,
-        Background color
-    BackgroundRgbaColor: list[float, 4],
-        Background color in rgba format
-    BorderIpgColor: IpgColor,
-        Border color
-    BorderRgbaColor: list[float, 4],
-        Border color in rgba format
-    BorderWidth: float,
-        Border width
-    BorderRadius: float,
-        Radius of the 4 border corners
-    Transparent: bool,
-        Whether to use the transparent style
-    """
-    BackgroundIpgColor=IpgColor,
-    BackgroundRgbaColor=list[float, 4],
-    BorderIpgColor=IpgColor,
-    BorderRgbaColor=list[float, 4],
-    BorderWidth=float,
-    BorderRadius=float,
-    Transparent=bool,
-    
-
-class IpgImageContentFit:
-    """
-    Content fit for the image
-
-    Parameters
-    ---------
-    Contain: IpgImageContentFit.Contain
-        The image will be scaled (preserving aspect ratio) so that it just fits within the window.
-    Cover: IpgImageContentFit.Cover 
-        Scale the image to cover all of the bounding box, cropping if needed.
-    Fill: IpgImageContentFit.Fill
-        Distort the image so the widget is 100% covered without cropping.
-    IpgNoneIpgImageContentFit.IpgNone
-        Don't resize or scale the image at all.  This is best for when you've sized the image yourself.
-    ScaleDown: IpgImageContentFit.ScaleDown
-        Scale the image down if it's too big for the space, but never scale it up.
-    """
-    Contain: str
-    Cover: str
-    Fill: str
-    IpgNone: str
-    ScaleDown: str
-
-
-class IpgImageFilterMethod:
-    '''
-    How the image is filtered
-
-    Parameters
-    ----------
-    Linear: IpgImageMethodFilter.Linear
-        Bi-linear interpolation image filtering strategy.
-    Nearest: IpgImageMethodFilter.Nearest
-        Nearest neighbor image filtering strategy.
-    '''
-    Linear: str
-    Nearest: str
-
-
-class IpgImageRotation:
-    """
-    What happens to the container when image is rotated.
-
-    Parameters
-    ----------
-    Floating: IpgImageRotation.Floating
-        When image is rotated, it floats above the container, not distorting it.
-    Solid: IpgImageRotation.Solid
-        When the image is rotated, the container resizes to fit.
-    """
-    Floating: str
-    Solid: str
-
-
-class IpgImageParam:
-    """
-    Image parameters
-
-    Parameters
-    ----------
-    Height: float
-        Sets the height of the widget. 
-    HeightFill: bool
-        Sets the height to fill the available space, overrides height.
-    ImagePath: str
-        Path to where the image is.
-    Opacity: float
-        How much opacity, 1=opaque, 0=transparent
-    Padding: list[float]
-        The padding around the image.
-    RotationRadians: float
-        How much to rotate the image in radians.
-    Show: bool
-        Whether to show or hide the image.
-    Width: float
-        Width of the image.
-    WidthFill: bool
-    Whether to fill the width to the available container size.
-    """
-    Height: float
-    HeightFill: bool
-    ImagePath: str
-    Opacity: float
-    Padding: list[float]
-    RotationRadians: float
-    Show: bool
-    Width: float
-    WidthFill: bool
-
-
-class IpgMenuParam:
-    """
-    Menu Bar parameters
-
-    Parameters
-    ----------
-    BarHeight: float
-        The height od the bar
-    BarPadding: list[float]
-        The padding around the bar.
-    BarSpacing: float
-        The space between the bar and the menu items.
-    BarWidths: list[float]
-        The width of each menu item in the bar.
-    CheckBoundsWidth: float
-        Widths of the dropdown menu.
-    Show: bool
-        Whether to show or hide the widget
-    """
-    BarHeight: float
-    BarPadding: list[float]
-    BarSpacing: float
-    BarWidths: list[float]
-    CheckBoundsWidth: float
-    Show: bool
-
-
-class IpgMenuStyleParam:
-    BaseIpgColor=IpgColor
-    BaseRgbaColor=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderRadius=list[float]
-    BorderWidth=float
-    ShadowIpgColor=IpgColor
-    ShadowRgbaColor=list[float, 4]
-    ShadowOffsetXY=list[float, 2]
-    ShadowBlurRadius=float
-    PathBaseIpgColor=IpgColor
-    PathBaseRgbaColor=list[float, 4]
-    PathBorderIpgColor=IpgColor
-    PathBorderRgbaColor=list[float, 4]
-    PathBorderRadius=list[float]
-    PathBorderWidth=float
-
-class IpgMenuBarStyleParam:
-    BaseIpgColor=IpgColor
-    BaseRgbaColor=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderRadius=list[float]
-    BorderWidth=float
-    ShadowIpgColor=IpgColor
-    ShadowRgbaColor=list[float, 4]
-    ShadowOffsetXY=list[float, 2]
-    ShadowBlurRadius=float
-
-
-class IpgMenuSeparatorStyleParam:
-    SeparatorType=IpgMenuSeparatorType
-    Width=float
-    WidthFill=bool
-    Height=float
-    HeightFill=bool
-    QuadRatios=list[float, 2]
-    SeparatorIpgColor=IpgColor
-    SeparatorRgbaColor=list[float, 4]
-    SeparatorBorderIpgColor=IpgColor
-    SeparatorBorderRgbaColor=list[float, 4]
-    SeparatorBorderRadius=list[float]
-    SeparatorBorderWidth=float
-    SeparatorShadowIpgColor=IpgColor
-    SeparatorShadowRgbaColor=list[float, 4]
-    SeparatorShadowOffset=float
-    SeparatorShadowBlurRadius=float
-    BackgroundIpgColor=IpgColor
-    BackgroundRgbaColor=list[float, 4]
-    BackgroundBorderIpgColor=IpgColor
-    BackgroundBorderRbgaColor=list[float, 4]
-    BackgroundBorderWidth=float
-    BackgroundBorderRadius=list[float]
-    BackgroundShadowIpgColor=IpgColor
-    BackgroundShadowRbgaColor=list[float, 4]
-    BackgroundShadowOffset=float
-    BackgroundShadowBlurRadius=float
-
-
-class IpgMenuType:
-    """
-    The type of widgets a menu item can be.  Used in item_styles parameter.
-    """
-    Button=''
-    Checkbox=''
-    Dot=''
-    Label=''
-    Line=''
-    Text=''
-    Toggler=''
-
-
-class IpgMenuSeparatorType:
-    """
-    The separator types id used.
-    """
-    Circle=''
-    Dot=''
-    Label=''
-    Line=''
-
-
-class IpgMousePointer:
-    """
-    Pointer types for the mouse interactions
-    """
-    Idle=''
-    Pointer=''
-    Grab=''
-    Text=''
-    Crosshair=''
-    Working=''
-    Grabbing=''
-    ResizingHorizontally=''
-    ResizingVertically=''
-    NotAllowed=''
-    ZoomIn=''
-
-class IpgOpaqueParam:
-    """
-    Opaque update parameters.
-    """
-    Show: bool
-
-
-class IpgPickListParam:
-    """
-    PickList update parameters
-
-    Parameters
-    ----------
-    Options: list[str]
-        Items in the picklist.
-    Selected: str
-        Item selected.
-    Placeholder: str
-        A placeholder in the picklist box.
-    Padding: list[float]
-        Padding around the picklist.
-    Show: bool
-        Whether to show or hide the widget.
-    StyleId: int
-        The id of the add_picklist_style()
-    TextSize: float
-        Size of the text.
-    TextLineHeight: float
-        Size od the text box.
-    Width: float
-        Width of the picklist.
-    WidthFill: bool
-        Whether the picklist expands the available width of the container.
-    """
-    Options: list[str]
-    Selected: str
-    Placeholder: str
-    Padding: list[float]
-    Show: bool
-    StyleId: int
-    TextSize: float
-    TextLineHeight: float
-    Width: float
-    WidthFill: bool
-
-
-class IpgPickListHandle:
-    """
-    The type of handle for the picklist.
-    """
-    Arrow=''
-    Dynamic=''
-    HandleNone=''
-    Static=''
-
-
-class IpgPickListStyleParam:
-    """
-    PickList style parameters
-
-    Parameters
-    ----------
-    BackgroundIpgColor: IpgColor
-        Background color in IpgColor format
-    BackgroundRbgaColor :list[float, 4]
-        Background color in rgba format
-    BorderIpgColor: IpgColor
-        Border color in IpgColor format
-    BorderRgbaColor: list[float, 4]
-        Border color in rgba format
-    BorderRadius: list
-        The border radius [float]=all, [float, 4]=each individual one       
-    BorderWidth: float
-        The width of the border line
-    HandleIpgColor: IpgColor
-        Handle color in IpgColor format
-    HandleRgbaColor: list[float, 4]
-        Handle color in rgba format
-    PlaceholderIpgColor: IpgColor
-        Placeholder color in IpgColor format
-    PlaceholderRgbaColor: list[float, 4]
-        Placeholder color in rgba format
-    TextIpgColor: IpgColor
-        The label text color in IpgColor format
-    TextRgbaColor: list[float, 4]
-        The label text color in rgba format
-    """
-    BackgroundIpgColor=IpgColor
-    BackgroundRbgaColor=List[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderRadius=list
-    BorderWidth=float
-    HandleIpgColor=IpgColor
-    HandleRgbaColor=list[float, 4]
-    PlaceholderIpgColor=IpgColor
-    PlaceholderRgbaColor=list[float, 4]
-    TextIpgColor=IpgColor
-    TextRgbaColor=list[float, 4]
-
-class IpgProgressBarParam:
-    """
-    The ProgressBar update parameters.
-
-    Parameters
-    ----------
-    Height: float
-        Height of the bar.
-    HeightFill: bool
-        Whether the bar fills the height of the container.
-    Min: float
-        Minimum value of the bar.
-    Max: float
-        Maximum value of the bar.
-    Show: bool
-        Whether to show or hide the bar.
-    StyleId: int
-        The id of the add_progress_bar_style()
-    StyleStandard: str
-        The standard style of the IpgStandardStyle class
-    Value: float
-        The value of the bar.
-    Width: float
-        The width of the bar.
-    WidthFill: bool
-        Whether the bar fills the width of the container.
-    """
-    Height: float
-    HeightFill: bool
-    Min: float
-    Max: float
-    Show: bool
-    StyleId: int
-    StyleStandard: str
-    Value: float
-    Width: float
-    WidthFill: bool
-
-
-class IpgProgressBarStyleParam:
-    """
-    Progress Bar style parameters
-
-    Parameters
-    ----------
-    BackgroundIpgColor: IpgColor
-        Background color in IpgColor format
-    BackgroundRbgaColor :list[float, 4]
-        Background color in rgba format
-    BarIpgColor: IpgColor
-        Bar color in IpgColor format
-    BarRgbaColor: list[float, 4]
-        Bar color in rgba format
-    BorderIpgColor: IpgColor
-        Border color in IpgColor format
-    BorderRgbaColor: list[float, 4]
-        Border color in rgba format
-    BorderRadius: list
-        The border radius [float]=all, [float, 4]=each individual one       
-    BorderWidth: float
-        The width of the border line
-    """
-    BackgroundIpgColor=IpgColor
-    BackgroundRbgaColor=List[float, 4]
-    BarIpgColor=IpgColor
-    BarRgbaColor=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderRadius=list
-    BorderWidth=float
-    
-
-class IpgRadioDirection:
-    """
-    Direction the radio button are aligned.
-    """
-    Horizontal=''
-    Vertical=''
-
-
-class IpgRadioParam:
-    """
-    Radio button parameters
-
-    Parameters
-    ----------
-    Direction: str
-        The IpgRadioDirection class
-    Labels: list[str]
-        The labels for each radio button
-    Padding: list[float]
-        The padding around the radio
-    SelectedIndex: int
-        The index of the radio selected
-    Show: bool
-        Whether to show or hide the radio group
-    Size: float
-        The size of the radio circle.
-    Spacing: float
-        The spacing between the radio buttons in the group.
-    StyleId: int
-        The id of the add_radio_style().
-    TextSpacing: float
-        The spacing between the radio  and the label.
-    TextSize=''
-        The size of the label.
-    LineHeightPixels: int
-        The label box height in pixels.
-    LineHeightRelative: float
-        The label box height relative to the default.
-    UserData: any
-        Any user data need of any format.
-    Width: float
-        The width of the widget group.
-    WidthFill: bool
-        Whether the widget group fill the container width.
-    Height: float
-        The height of the widget group.
-    HeightFill: bool
-        Whether the widget group fill the container height.
-    """
-    Direction: str
-    Labels: list[str]
-    Padding: list[float]
-    SelectedIndex: int
-    Show: bool
-    Size: float
-    Spacing: float
-    StyleId: int
-    TextSpacing: float
-    TextSize=''
-    LineHeightPixels: int
-    LineHeightRelative: float
-    UserData: any
-    Width: float
-    WidthFill: bool
-    Height: float
-    HeightFill: bool
-
-
-class IpgRadioStyleParam:
-    """
-    Radio style parameters
-
-    Parameters
-    ----------
-    BackgroundIpgColor: IpgColor
-        Background color in IpgColor format
-    BackgroundRbgaColor :list[float, 4]
-        Background color in rgba format
-    DotIpgColor: IpgColor
-        Dot color in IpgColor format
-    DotRgbaColor: list[float, 4]
-        Dot color in rgba format
-    DotIpgColorHovered: IpgColor
-        Dot hover color in IpgColor format
-    DotRgbaColorHovered: list[float, 4]
-        Dot hover color in rgba format
-    BorderIpgColor: IpgColor
-        Border color in IpgColor format
-    BorderRgbaColor: list[float, 4]
-        Border color in rgba format    
-    BorderWidth: float
-        The width of the border line
-    TextIpgColor: IpgColor
-        The label text color in IpgColor format
-    TextRgbaColor: list[float, 4]
-        The label text color in rgba format
-    """
-    BackgroundIpgColor=IpgColor
-    BackgroundRbgaColor=List[float, 4]
-    DotIpgColor=IpgColor
-    DotRgbaColor=list[float, 4]
-    DotIpgColorHovered=IpgColor
-    DotRgbaColorHovered=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderWidth=float
-    TextIpgColor=IpgColor
-    TextRgbaColor=list[float, 4]
-
-
-class IpgRuleStyleParam:
-    IpgColor=IpgColor
-    RbgaColor=List[float, 4]
-    BorderRadius=float
-    FillModePercent=float
-    FillModePadded=int,
-    FillModeAsymmetricPadding=list[int]
-
-
-class IpgScrollableDirection:
-    """
-    The scroll direction of the Scrollable
-    """
-    Vertical=''
-    Horizontal=''
-    Both=''
-
-
-class IpgScrollableParam:
-    """
-    The Scrollable parameters
-
-    Parameters
-    ----------
-    Width: float
-        The width of the scrollable.
-    WidthFill: bool
-        Whether the scrollable fills the width container.
-    Height: float
-        The height of the scrollable.
-    HeightFill: bool
-        Whether the scrollable fills the height container.
-    HBarWidth: float
-        The horizontal bar width
-    HBarMargin: float
-        The horizontal bar margin.
-    HScrollerWidth: float
-        The horizontal scroller width.
-    HBarAlignment: IpgAlignment
-        The horizontal bar alignment.
-    VBarWidth: float
-        The vertical bar width.
-    VBarMargin: float
-        The vertical margin.
-    VScrollerWidth: float
-        The vertical scroller width.
-    VBarAlignment: IpgAlignment
-        The vertical bar alignment.
-    """
-    Width: float
-    WidthFill: bool
-    Height: float
-    HeightFill: bool
-    HBarWidth: float
-    HBarMargin: float
-    HScrollerWidth: float
-    HBarAlignment: IpgAlignment
-    VBarWidth: float
-    VBarMargin: float
-    VScrollerWidth: float
-    VBarAlignment: IpgAlignment
-
-
-class IpgScrollableStyleParam:
-    """
-    The Scrollable style parameters
-
-    Parameters
-    ----------
-    BackgroundIpgColor: IpgColor
-        Background color in IpgColor format
-    BackgroundRbgaColor: list[float, 4]
-        Background color in rgba format
-    BorderIpgColor: IpgColor
-        Border color in IpgColor format
-    BorderRgbaColor: list[float, 4]
-        Border color in rgba format
-    BorderRadius: list[float]
-        Border radius as a list of 1 or 4
-    BorderWidth: float
-        Border widt as a float
-    ShadowIpgColor: IpgColor
-        Shadow color in IpgColor format
-    ShadowRgbaColor: list[float, 4]
-        Shadow color in rgba format
-    ShadowOffsetX: float
-        Amount of offset shadow in x irection
-    ShadowOffsetY: float
-        Amount of offset shadow in y direction
-    ShadowBlurRadius: list[float]
-        How much to blur the radius
-    TextIpgColor: IpgColor
-        Text color in IpgColor format
-    TextRgbaColor: list[float, 4]
-        Text color in rgba format
-    ScrollbarIpgColor: IpgColor
-        Scrollbar color in IpgColor format
-    ScrollbarRgbaColor: list[float, 4]
-        Scrollbar color in rgba format
-    ScrollbarBorderRadius: list[float]
-        Border radius as a list of 1 or 4
-    ScrollbarBorderWidth: float
-        Width of the border
-    ScrollbarBorderIpgColor: IpgColor
-        Scrollbar border color in IpgColor format
-    ScrollbarBorderRgbaColor: list[float, 4]
-        Scrollbar border color in rgba format
-    ScrollerIpgColor: IpgColor
-        Scroller color in IpgColor format
-    ScrollerRgbaColor: list[float, 4]
-        Scroller color in rgba format
-    ScrollerIpgColorHovered: IpgColor
-        Scroller hover color in IpgColor format
-    ScrollerRgbaColorHovered: list[float, 4]
-        Scroller hover color in rgba format
-    ScrollerIpgColorDragged: IpgColor
-        Scroller drag color in IpgColor format
-    ScrollerRgbaColorDragged: list[float, 4]
-        Scroller drag color in rgba format
-    """
-    BackgroundIpgColor=IpgColor
-    BackgroundRbgaColor=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderRadius=list[float]
-    BorderWidth=float
-    ShadowIpgColor=IpgColor
-    ShadowRgbaColor=list[float, 4]
-    ShadowOffsetX=float
-    ShadowOffsetY=float
-    ShadowBlurRadius=list[float]
-    TextIpgColor=IpgColor
-    TextRgbaColor=list[float, 4]
-    ScrollbarIpgColor=IpgColor
-    ScrollbarRgbaColor=list[float, 4]
-    ScrollbarBorderRadius=list[float]
-    ScrollbarBorderWidth=float
-    ScrollbarBorderIpgColor=IpgColor
-    ScrollbarBorderRgbaColor=list[float, 4]
-    ScrollerIpgColor=IpgColor
-    ScrollerRgbaColor=list[float, 4]
-    ScrollerIpgColorHovered=IpgColor
-    ScrollerRgbaColorHovered=list[float, 4]
-    ScrollerIpgColorDragged=IpgColor
-    ScrollerRgbaColorDragged=list[float, 4]
-
-
-class IpgSelectableTextParam:
-    """
-    SelectableText parameters
-
-    Parameters
-    ----------
-    Text: str
-        The text
-    Width: float
-        The width of the widget.
-    WidthFill: bool
-        Whether the widget fills the container width.
-    Height: float
-        The height of the widget.
-    HeightFill: bool
-        Whether the widget fills the container height.
-    HorizontalAlign: IpgHorizontalAlignment
-        The horizontal alignment using the IpgHorizontalAlignment class
-    VerticalAlign: IpgVerticalAlignment
-        The vertical alignment using the IpgVerticalAlignment class
-    LineHeight: float
-        The size of the box the text.
-    Size: float
-        The size of the text.
-    TextColor: IpgColor
-        The color of the text.
-    TextRgba: list[float, 4]
-        The color of the text in rgba format.
-    Show: bool
-        Whether to show or hide the widget.
-    """
-    Text: str
-    Width: float
-    WidthFill: bool
-    Height: float
-    HeightFill: bool
-    HorizontalAlign: IpgHorizontalAlignment
-    VerticalAlign: IpgVerticalAlignment
-    LineHeight: float
-    Size: float
-    TextColor: IpgColor
-    TextRgba: list[float, 4]
-    Show: bool
-
-
-class IpgSeparatorParam:
-    DotCount: int
-    DotFill: bool
-    DotBorderWidth: float
-    DotRadius: float
-    Height: float
-    HeightFill: bool
-    Label: str
-    Spacing: float
-    Show: bool
-    StyleId: int
-    Width: float
-    WidthFill: bool
-
-
-class IpgSeparatorType:
-    Dot=""
-    Label=""
-    Line=""
-
-
-class IpgSliderParam:
-    """
-    Slider update parameters
-
-    Parameters
-    ----------
-    Min: float
-        The minimum range value.
-    Max: float
-        The maximum range value.
-    Step: float
-        The step of the range value.
-    Value: float
-        The current value.
-    Width: float
-        The width of the widget.
-    WidthFill: bool
-        Whether the width of the widget fills the container.
-    Height: float
-        The height of the widget.
-    StyleId: int
-        The id of the add_slider_style() function.
-    Show: bool
-        Whether to show or hide the widget.
-    """
-    Min: float
-    Max: float
-    Step: float
-    Value: float
-    Width: float
-    WidthFill: bool
-    Height: float
-    StyleId: int
-    Show: bool
-
-
-class IpgSliderStyleParam:
-    RailIpgColor=IpgColor
-    RailRbgaColor=list[float, 4]
-    RailIpgColorHovered=IpgColor
-    RailIpgRgbaHovered=list[float, 4]
-    RailBorderRadius=list[float]
-    RailWidth=float
-
-    HandleIpgColor=IpgColor
-    HandleRgbaColor=list[float, 4]
-    HandleBorderIpgColor=IpgColor
-    HandleBorderRgbaColor=list[float, 4]
-    HandleBorderWidth=float
-    HandleCircleRadius=float
-    HandleRectangleWidth=int
-    HandleRectangleBorderRadius=list[float]
-    
-    
-class IpgStackParam:
-    """
-    Stack update parameters
-
-    Parameters
-    ----------
-    ShowStack: bool
-        Show the top widget of the stack.
-    """
-    ShowStack: bool
-
-class IpgStyleStandard:
-    """
-    Standard styles for widgets
-    """
-    Primary=''
-    Success=''
-    Danger=''
-    Text=''
-
-
-class IpgSvgParam:
-    """
-    SVG image parameters
-    
-    Parameters
-    ----------
-    Height: float
-        The height of the widget.
-    HeightFill: bool
-        Whether the height of the widget fills the container.
-    ImagePath: str
-        The path to the image.
-    Show: bool
-        Whether to show or hide the widget.
-    Width: float
-        The width of the widget.
-    WidthFill: bool
-        Whether the width of the widget fills the container.
-    RotationRadians: float
-        How much to rotate the svg image in radians.
-    Opacity: float
-        The opacity of the widget.
-    """
-    Height: float
-    HeightFill: bool
-    ImagePath: str
-    Show: bool
-    Width: float
-    WidthFill: bool
-    RotationRadians: float
-    Opacity: float
-
-class IpgSvgContentFit:
-    """
-    How the image is sized.
-    """
-    Contain=''
-    Cover=''
-    Fill=''
-    IpgNone=''
-    ScaleDown=''
-
-
-class IpgSvgRotation:
-    """
-    How the images interacts with the background during rotations.
-    """
-    Floating=''
-    Solid=''
-
-
-class IpgTableParam:
-    """
-    Table parameters
-
-    Parameters
-    ----------
-    Title: str
-        Title for the table.
-    Data: list[dict]
-        Table data in list of dictionaries form
-    Width: float
-        Width of the table.
-    Height: float
-        Height of the table.
-    ColumnWidths: list[float]
-        List of column widths.
-    ColumnSpacing: float
-        Spacing between columns
-    RowSpacing: float
-        Spacing between rows
-    RowMaxHeight: float
-        Max height of the rows
-    RowHighlight: IpgTableRowHighLight
-        Sets the color type for highlighting alternate rows.
-    HighlightAmount: float
-        The highlighting amount.
-    ResizeColumnsEnabled: bool
-        Enables the ability to resize the columns
-    MinColumnWidth: float
-        If resizing, the min column width
-    CellPadding: list[float]
-        Padding around the cells
-    TableWidthFixed: bool
-        If the table width is fixed, doesn't change with resizing
-    TableWidth: float
-        Changes the table width which initially is the sum of column widths
-    ScrollerWidth: float
-        Scroller width
-    ScrollerBarWidth: float
-        Scroller bar width
-    ScrollerMargin: float
-        Scroller margin
-    Show: bool
-        Whether to show or hide the widget.
-    """
-    Title: str
-    PolarsDf: PyDataFrame
-    Width: float
-    Height: float
-    HeaderEnabled: bool
-    HeaderCustomEnabled: bool
-    FooterEnabled: bool
-    ColumnWidths: list[float]
-    ColumnSpacing: float
-    RowSpacing: float
-    RowMaxHeight: float
-    RowHighlight: IpgTableRowHighLight
-    HighlightAmount: float
-    DividerWidth: float
-    ResizeColumnsEnabled: bool
-    MinColumnWidth: float
-    CellPadding: list[float]
-    TableWidthFixed: bool
-    TableWidth: float
-    ScrollerWidth: float
-    ScrollerBarWidth: float
-    ScrollerMargin: float
-    Show: bool
-
-
-class IpgTableRowHighLight:
-    """
-    How the table highlighting is applied.
-    """
-    Darker=''
-    Lighter=''
-
-
-class IpgTableWidget:
-    """
-    The type of widget to use in the table row, if needed.
-    """
-    Button=''
-    Checkbox=''
-    Modal=''
-    Toggler=''
-
-
-class IpgTextInputParam:
-    """
-    TextInput parameters
-
-    Parameters
-    ----------
-    Placeholder: str
-        The text in the box for instructions.
-    Value: str
-        The value typed in or pasted in the box
-    IsSecure: bool
-        Whether to display the text in a readable format or not.
-    Width: float
-        The width of the widget.
-    Padding: list[float]
-        The padding around the widget.
-    Size: float
-        The text ize.
-    LineHeightPixels: float
-        The height of the text box in pixels.
-    LineHeightRelative: float
-        The height of the text box relative to the default size.
-    StyleId: int
-        The id of add_textinput_style() function.
-    """
-    Placeholder: str
-    Value: str
-    IsSecure: bool
-    Width: float
-    Padding: list[float]
-    Size: float
-    LineHeightPixels: float
-    LineHeightRelative: float
-    StyleId: int
-
-
-class IpgTextParam:
-    """
-    Text parameters
-
-    Parameters
-    ----------
-    Content: str
-        The text.
-    Height: float
-        The height of the widget.
-    HeightFill: bool
-        Whether to fill the height of the container with the widget.
-    HorizontalAlignment: IpgHorizontalAlignment
-        The alignment of the text in the text box.
-    LineHeight: float
-        The height of the text box.
-    Size: float
-        The size of the text.
-    TextColor: IpgColor
-        The color of the text.
-    TextRgba: list[float]
-        The color of the text in rgba format.
-    VerticalAlignment: IpgVerticalAlignment
-        The alignment of the text in the text box.
-    Width: float
-        The width of the widget.
-    WidthFill: bool
-        Whether to fill the width of the container with the widget.
-    Show: bool
-        Whether to show or hide the widget.
-    """
-    Content: str
-    Height: float
-    HeightFill: bool
-    HorizontalAlignment: IpgHorizontalAlignment
-    LineHeight: float
-    Size: float
-    TextColor: IpgColor
-    TextRgba: list[float]
-    VerticalAlignment: IpgVerticalAlignment
-    Width: float
-    WidthFill: bool
-    Show: bool
-
-
-class IpgTextInputStyleParam:
-    BackgroundIpgColor=IpgColor
-    BackgroundRgbaColor=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderIpgColorHovered=IpgColor
-    BorderRgbaColorHovered=list[float, 4]
-    BorderIpgColorFocused=IpgColor
-    BorderRgbaColorFocused=list[float, 4]
-    BorderWidth=float
-    BorderRadius=list[float]
-    PlaceholderIpgColor=IpgColor
-    PlaceholderRgbaColor=list[float, 4]
-    ValueIpgColor=IpgColor
-    ValueRgbaColor=list[float, 4]
-    SelectionIpgColor=IpgColor
-    SelectionRgbaColor=list[float, 4]
-
-
-class IpgTimerParam:
-    DurationMs=int
-    ArrowStyle=str
-    Counter=int
-    Height=float
-    HeightFill=bool
-    Label=str
-    Padding=list
-    Clip=bool
-    Show=bool
-    StyleId=int
-    StyleStandard=str
-    Width=float
-    WidthFill=bool
-
-
-class IpgTimerStyleParam:
-    """
-    Timer button parameters
-
-    Parameters
-    ----------
-    BackgroundIpgColor: IpgColor
-        Background color in IpgColor format
-    BackgroundRbgaColor :list[float, 4]
-        Background color in rgba format
-    BackgroundIpgColorHovered: IpgColor
-        When hovered, the Background color in IpgColor format
-    BackgroundIpgRgbaHovered: list[float, 4]
-        When hovered, the background color in rgba format
-    BorderIpgColor: IpgColor
-        Border color in IpgColor format
-    BorderRgbaColor: list[float, 4]
-        Border color in rgba format
-    BorderRadius: list
-        The border radius [float]=all, [float, 4]=each individual one       
-    BorderWidth: float
-        The width of the border line
-    ShadowIpgColor: IpgColor
-        Shadow color in IpgColor format
-    ShadowRgbaColor: list[float, 4]
-        Shadow color in rgba format
-    ShadowOffsetX: float
-        The offfset of the show towards the x direction
-    ShadowOffsetY: float
-        The offfset of the show towards the y direction
-    ShadowBlurRadius: float
-        How much to blur the shadow radius
-    TextIpgColor: IpgColor
-        The label text color in IpgColor format
-    TextRgbaColor: list[float, 4]
-        The label text color in rgba format
-    """
-    BackgroundIpgColor=IpgColor
-    BackgroundRbgaColor=list[float, 4]
-    BackgroundIpgColorHovered=IpgColor
-    BackgroundIpgRgbaHovered=list[float, 4]
-    BorderIpgColor=IpgColor
-    BorderRgbaColor=list[float, 4]
-    BorderRadius=list
-    BorderWidth=float
-    ShadowIpgColor=IpgColor
-    ShadowRgbaColor=list[float, 4]
-    ShadowOffsetX=float
-    ShadowOffsetY=float
-    ShadowBlurRadius=float
-    TextIpgColor=IpgColor
-    TextRgbaColor=list[float, 4]
-
-
-class IpgCanvasTimerParam:
-    DurationMs=int
-    ArrowStyle=str
-    Counter=int
-    Height=float
-    HeightFill=bool
-    Label=str
-    Padding=list
-    Clip=bool
-    Show=bool
-    StyleId=int
-    StyleStandard=str
-    Width=float
-    WidthFill=bool
-
-
-class IpgTogglerParam:
-    """
-    Toggler parameters
-
-    Parameters
-    ----------
-    Alignment: IpgAlignment
-        Align widget using IpgAlignment
-    Label: str
-        String label for widget.
-    LineHeight: float
-        The height of the text box for the widget.
-    Show: bool
-        Whether to show or hide the widget.
-    Size: float
-        The size of the toggler.
-    TextSize: float
-        The text size of the label.
-    Width: float
-        The width of the widget.
-    WidthFill: bool
-        Whether the width fills the container.
-    """
-    Alignment: IpgAlignment
-    Label: str
-    LineHeight: float
-    Show: bool
-    Size: float
-    TextSize: float
-    Width: float
-    WidthFill: bool
-
-
-class IpgWindowParam:
-    '''
-    Parameters
-    ----------
-    Debug: bool=False
-        If true draws a frame around all widgets.
-    Decorations: int=0
-        The int is the windows id, toggles whether the window has a frame and header
-    Level: IpgWindowLevel=IpgWindowLevel.Normal
-        The window stacking behavior: Normal, AlwaysOnBottom, AlwaysOnTop.
-    Mode: IpgWindowMode=IpgWindowMode.Windowed
-        How the window appears, windowed, hidden, or full screen.
-    Position: tuple[int, float, float]
-        Position of the window, (window_id, pos_x, pos_y).
-    Theme: IpgWindowTheme=IpgWindowTheme.Dark
-        Window theme.
-    ScaleFactor: float=1.0
-        Window scale factor
-    '''
-    Debug: bool=False
-    Decorations: int=0
-    Level: tuple[id, IpgWindowLevel]=[0, IpgWindowLevel.Normal]
-    Mode: IpgWindowMode=IpgWindowMode.Windowed
-    Position: tuple[int, float, float]=[0.0]
-    Size: tuple[int, float, float]=[0.0]
-    Theme: IpgWindowTheme=IpgWindowTheme.Dark
-    ScaleFactor: float=1.0
-    
-
-
-class IpgWindowLevel:
-    """
-    The stacking order of the windows
-    """
-    Normal=''
-    AlwaysOnBottom=''
-    AlwaysOnTop=''
-
-
-class IpgWindowMode:
-    """
-    Determine the window mode
-
-    Parameters
-    ----------
-    Closed
-        Window is hidden and can be reopened with a callback
-    FullScreen
-        Window is full screen, ensure you have a way of returning it to windowed
-    Windowed (default)
-        Window is not full screen and can be moved, etc.
-    """
-    Closed=''
-    FullScreen=''
-    Windowed=''
-    
-
-class IpgWindowTheme:
-    """
-    Window themes
-    """
-    Dark=''
-    Light=''
-    CatppuccinLatte=''
-    CatppuccinFrappe=''
-    CatppuccinMacchiato=''
-    CatppuccinMocha=''
-    Dracula=''
-    Ferra=''
-    GruvboxLight=''
-    GruvboxDark=''
-    KanagawaWave=''
-    KanagawaDragon=''
-    KanagawaLotus=''
-    Moonfly=''
-    Nightfly=''
-    Nord=''
-    Oxocarbon=''
-    SolarizedLight=''
-    SolarizedDark=''
-    TokyoNight=''
-    TokyoNightStorm=''
-    TokyoNightLight=''
 
 
 class IpgButtonArrow:

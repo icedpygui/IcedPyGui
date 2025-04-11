@@ -7,58 +7,79 @@ ipg = IPG()
 
 
 def divider_row_change(div_id: int, index: int, value: float):
-    # Both the columns and the divider need to be updated
-    for i in range(0, len(heights)):
-        ipg.update_item(
-                wid=row_cont_ids[index][i],
-                param=IpgContainerParam.Height,
-                value=value)
-        
-        ipg.update_item(wid=row_text_ids[index][i],
-                    param=IpgTextParam.Content,
-                    value=f"Height={value}")
-
-    heights[index] = value
+    # get the difference
+    diff = rows[index] - value
+    # update left
+    rows[index] = value
+    # check if a right then add diff to right
+    if index < len(rows)-1:
+        rows[index+1] += diff
     ipg.update_item(
             wid=div_id,
             param=IpgDividerParam.Heights,
-            value=heights)
+            value=rows) 
+    
+    for i in range(0, len(columns)):
+        for (j, height) in enumerate(rows):
+            ipg.update_item(
+                wid=row_cont_ids[i][j],
+                param=IpgContainerParam.Height,
+                value=height)
+
+    # Since the width of the row may have changed,
+    # i.e. the handle on the end was used.  You
+    # can recalc every time or just check the index
+    if index == len(rows)-1:
+        ipg.update_item(
+            wid=div_col_id,
+            param=IpgDividerParam.HandleHeight,
+            value=sum(rows)
+        )
     
  
 def divider_col_change(div_id: int, index: int, value: float):
     # get the difference
-    diff = widths[index] - value
+    diff = columns[index] - value
     # update left
-    widths[index] = value
+    columns[index] = value
     # check if a right then add diff to right
-    if index < len(widths)-1:
-        widths[index+1] += diff
+    if index < len(columns)-1:
+        columns[index+1] += diff
     ipg.update_item(
             wid=div_id,
             param=IpgDividerParam.Widths,
-            value=widths) 
+            value=columns) 
     
-    for i in range(0, len(heights)):
-        for (j, width) in enumerate(widths):
+    for i in range(0, len(rows)):
+        for (j, width) in enumerate(columns):
             ipg.update_item(
                 wid=row_cont_ids[i][j],
                 param=IpgContainerParam.Width,
                 value=width)
 
+    # Since the width of the row may have changed,
+    # i.e. the handle on the end was used.  You
+    # can recalc every time or just check the index
+    if index == len(columns)-1:
+        ipg.update_item(
+            wid=div_row_id,
+            param=IpgDividerParam.HandleWidth,
+            value=sum(columns)
+        )
     
     
 
-
-heights = [100.0, 100.0]
-widths = [150.0, 150.0]
+# It can be easy visualize to use row/column vs widths/heights
+rows = [100.0, 100.0, 100.0]
+columns = [150.0, 150.0]
 row_cont_ids = []
 row_text_ids = []
 
-row_handle_width = sum(widths)  
+row_handle_width = sum(columns)  
 row_handle_height = 4.0
 
 col_handle_width = 4.0
-col_handle_height = sum(heights)
+col_handle_height = sum(rows)
 
      
 cont_style_id = ipg.add_container_style(border_color=IpgColor.WHITE,
@@ -116,7 +137,7 @@ ipg.add_column(
         padding=[0],
         width=row_handle_width)
 
-for i, height in enumerate(heights):
+for i, height in enumerate(rows):
     ipg.add_row(
         window_id="main",
         container_id=f"row{i}",
@@ -124,7 +145,7 @@ for i, height in enumerate(heights):
         spacing=0)
     text_ids = []
     cont_ids = []
-    for j, width in enumerate(widths):
+    for j, width in enumerate(columns):
         cont_ids.append(ipg.add_container(
                         window_id="main",
                         container_id=f"cont{i} {j}",
@@ -140,10 +161,10 @@ for i, height in enumerate(heights):
     row_text_ids.append(text_ids)
     row_cont_ids.append(cont_ids)
        
-# Make the vertical divider
-ipg.add_divider_vertical(
+# Make the vertical divider (rows)
+div_row_id = ipg.add_divider_vertical(
         parent_id="stack",
-        heights=heights,
+        heights=rows,
         handle_width=row_handle_width,
         handle_height=row_handle_height,
         on_change=divider_row_change,
@@ -151,10 +172,10 @@ ipg.add_divider_vertical(
         # style_id=divider_style_id
         )
 
-#Make the horizontal divider
-ipg.add_divider_horizontal(
+#Make the horizontal divider (columns)
+div_col_id = ipg.add_divider_horizontal(
     parent_id="stack",
-    widths=widths,
+    widths=columns,
     handle_width=col_handle_width,
     handle_height=col_handle_height,
     on_change=divider_col_change)

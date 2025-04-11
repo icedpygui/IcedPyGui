@@ -2768,136 +2768,6 @@ impl IPG {
     }
 
     #[pyo3(signature = (
-        parent_id, 
-        image_path, 
-        gen_id=None, 
-        width=None, 
-        width_fill=false, 
-        height=None, 
-        height_fill=false, 
-        padding=vec![5.0], 
-        content_fit=IpgImageContentFit::Contain, 
-        filter_method=IpgImageFilterMethod::Linear,
-        rotation=IpgImageRotation::Floating,
-        rotation_radians=0.0, 
-        opacity=1.0,
-        mouse_pointer=None,
-        on_press=None, 
-        on_release=None,
-        on_right_press=None, 
-        on_right_release=None,
-        on_middle_press=None, 
-        on_middle_release=None,
-        on_enter=None, 
-        on_move=None, 
-        on_exit=None,
-        user_data=None,
-        show=true,
-        ))]
-    fn add_image(
-        &self,
-        parent_id: String,
-        image_path: String,
-        // above required
-        gen_id: Option<usize>,
-        width: Option<f32>,
-        width_fill: bool,
-        height: Option<f32>,
-        height_fill: bool,
-        padding: Vec<f64>,
-        content_fit: IpgImageContentFit,
-        filter_method: IpgImageFilterMethod,
-        rotation: IpgImageRotation,
-        rotation_radians: f32,
-        opacity: f32,
-        mouse_pointer: Option<IpgMousePointer>,
-        on_press: Option<PyObject>,
-        on_release: Option<PyObject>,
-        on_right_press: Option<PyObject>,
-        on_right_release: Option<PyObject>,
-        on_middle_press: Option<PyObject>,
-        on_middle_release: Option<PyObject>,
-        on_enter: Option<PyObject>,
-        on_move: Option<PyObject>,
-        on_exit: Option<PyObject>,
-        user_data: Option<PyObject>,
-        show: bool,
-        ) -> PyResult<usize>
-    {
-        let id = self.get_id(gen_id);
-
-        if let Some(py) = on_press {
-            add_callback_to_mutex(id, "on_press".to_string(), py);
-        }
-        
-        if let Some(py) = on_release {
-            add_callback_to_mutex(id, "event_name".to_string(), py);
-        }
-        
-        if let Some(py) = on_right_press {
-            add_callback_to_mutex(id, "on_right_press".to_string(), py);
-        }
-        
-        if let Some(py) = on_right_release {
-            add_callback_to_mutex(id, "on_right_release".to_string(), py);
-        }
-        
-        if let Some(py) = on_middle_press {
-            add_callback_to_mutex(id, "on_middle_press".to_string(), py);
-        }
-        
-        if let Some(py) = on_middle_release {
-            add_callback_to_mutex(id, "on_middle_release".to_string(), py);
-        }
-        
-        if let Some(py) = on_enter {
-            add_callback_to_mutex(id, "on_enter".to_string(), py);
-        }
-        
-        if let Some(py) = on_move {
-            add_callback_to_mutex(id, "on_move".to_string(), py);
-        }
-        
-        if let Some(py) = on_exit {
-            add_callback_to_mutex(id, "on_exit".to_string(), py);
-        }
-
-        if let Some(py) = user_data {
-            add_user_data_to_mutex(id, py);
-        }
-        
-        let width = get_width(width, width_fill);
-        let height = get_height(height, height_fill);
-
-        let padding = get_padding_f64(padding);
-
-        set_state_of_widget(id, parent_id.clone());
-
-        let mut state = access_state();
-
-        state.widgets.insert(id, IpgWidgets::IpgImage(
-            IpgImage::new(
-                id,
-                parent_id,
-                image_path,
-                width,
-                height,
-                padding,
-                content_fit,
-                filter_method,
-                rotation,
-                rotation_radians,
-                opacity,
-                mouse_pointer,
-                show,
-            )));
-
-        drop(state);
-        Ok(id)
-
-    }
-
-    #[pyo3(signature = (
         parent_id,
         widths,
         handle_width,
@@ -3055,6 +2925,136 @@ impl IPG {
         Ok(id)
     }
 
+    #[pyo3(signature = (
+        parent_id, 
+        image_path, 
+        gen_id=None, 
+        width=None, 
+        width_fill=false, 
+        height=None, 
+        height_fill=false, 
+        padding=vec![5.0], 
+        content_fit=IpgImageContentFit::Contain, 
+        filter_method=IpgImageFilterMethod::Linear,
+        rotation=IpgImageRotation::Floating,
+        rotation_radians=0.0, 
+        opacity=1.0,
+        mouse_pointer=None,
+        on_press=None, 
+        on_release=None,
+        on_right_press=None, 
+        on_right_release=None,
+        on_middle_press=None, 
+        on_middle_release=None,
+        on_enter=None, 
+        on_move=None, 
+        on_exit=None,
+        user_data=None,
+        show=true,
+        ))]
+    fn add_image(
+        &self,
+        parent_id: String,
+        image_path: String,
+        // above required
+        gen_id: Option<usize>,
+        width: Option<f32>,
+        width_fill: bool,
+        height: Option<f32>,
+        height_fill: bool,
+        padding: Vec<f64>,
+        content_fit: IpgImageContentFit,
+        filter_method: IpgImageFilterMethod,
+        rotation: IpgImageRotation,
+        rotation_radians: f32,
+        opacity: f32,
+        mouse_pointer: Option<IpgMousePointer>,
+        on_press: Option<PyObject>,
+        on_release: Option<PyObject>,
+        on_right_press: Option<PyObject>,
+        on_right_release: Option<PyObject>,
+        on_middle_press: Option<PyObject>,
+        on_middle_release: Option<PyObject>,
+        on_enter: Option<PyObject>,
+        on_move: Option<PyObject>,
+        on_exit: Option<PyObject>,
+        user_data: Option<PyObject>,
+        show: bool,
+        ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        if let Some(py) = on_press {
+            add_callback_to_mutex(id, "on_press".to_string(), py);
+        }
+        
+        if let Some(py) = on_release {
+            add_callback_to_mutex(id, "event_name".to_string(), py);
+        }
+        
+        if let Some(py) = on_right_press {
+            add_callback_to_mutex(id, "on_right_press".to_string(), py);
+        }
+        
+        if let Some(py) = on_right_release {
+            add_callback_to_mutex(id, "on_right_release".to_string(), py);
+        }
+        
+        if let Some(py) = on_middle_press {
+            add_callback_to_mutex(id, "on_middle_press".to_string(), py);
+        }
+        
+        if let Some(py) = on_middle_release {
+            add_callback_to_mutex(id, "on_middle_release".to_string(), py);
+        }
+        
+        if let Some(py) = on_enter {
+            add_callback_to_mutex(id, "on_enter".to_string(), py);
+        }
+        
+        if let Some(py) = on_move {
+            add_callback_to_mutex(id, "on_move".to_string(), py);
+        }
+        
+        if let Some(py) = on_exit {
+            add_callback_to_mutex(id, "on_exit".to_string(), py);
+        }
+
+        if let Some(py) = user_data {
+            add_user_data_to_mutex(id, py);
+        }
+        
+        let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
+
+        let padding = get_padding_f64(padding);
+
+        set_state_of_widget(id, parent_id.clone());
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgImage(
+            IpgImage::new(
+                id,
+                parent_id,
+                image_path,
+                width,
+                height,
+                padding,
+                content_fit,
+                filter_method,
+                rotation,
+                rotation_radians,
+                opacity,
+                mouse_pointer,
+                show,
+            )));
+
+        drop(state);
+        Ok(id)
+
+    }
+    
     #[pyo3(signature = (
         background_color=None,
         background_rgba=None,

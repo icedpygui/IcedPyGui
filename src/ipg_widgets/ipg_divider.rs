@@ -329,28 +329,37 @@ pub fn process_callback(id: usize, event_name: String, index: usize, value: f32)
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
 pub enum IpgDividerParam {
+    HandleWidth,
+    HandleHeight,
     Widths,
     Heights,
     StyleId,
     Show,
 }
 
-pub fn divider_horizontal_item_update(divider: &mut IpgDividerHorizontal, 
-                            item: &PyObject, 
-                            value: &PyObject) {
+pub fn divider_horizontal_item_update(
+        divider: &mut IpgDividerHorizontal, 
+        item: &PyObject, 
+        value: &PyObject) {
 
     let update = try_extract_divider_update(item);
     let name = "Divider".to_string();
     match update {
+        IpgDividerParam::HandleWidth => {
+            divider.handle_width = try_extract_f32(value, name);
+        },
+        IpgDividerParam::HandleHeight => {
+            divider.handle_height = try_extract_f32(value, name);
+        },
         IpgDividerParam::Widths => {
             divider.widths = try_extract_vec_f32(value, name);
         },
         IpgDividerParam::Heights => {
             panic!("Horizontal Divider must use the Widths not Heights");
-        }
+        },
         IpgDividerParam::StyleId => {
             divider.style_id = Some(try_extract_f64(value, name) as usize);
-        }
+        },
         IpgDividerParam::Show => {
             divider.show = try_extract_boolean(value, name);
         },
@@ -358,22 +367,30 @@ pub fn divider_horizontal_item_update(divider: &mut IpgDividerHorizontal,
     }
 }
 
-pub fn divider_vertical_item_update(divider: &mut IpgDividerVertical, 
-                            item: &PyObject, 
-                            value: &PyObject) {
+pub fn divider_vertical_item_update(
+        divider: &mut IpgDividerVertical, 
+        item: &PyObject, 
+        value: &PyObject) {
 
     let update = try_extract_divider_update(item);
     let name = "Divider".to_string();
     match update {
+        IpgDividerParam::HandleWidth => {
+            divider.handle_width = try_extract_f32(value, name);
+        },
+        IpgDividerParam::HandleHeight => {
+            divider.handle_height = try_extract_f32(value, name);
+            
+        },
         IpgDividerParam::Widths => {
             panic!("Vertical Divider must use the Heights not Widths");
         },
         IpgDividerParam::Heights => {
             divider.heights = try_extract_vec_f32(value, name);
-        }
+        },
         IpgDividerParam::StyleId => {
             divider.style_id = Some(try_extract_f64(value, name) as usize);
-        }
+        },
         IpgDividerParam::Show => {
             divider.show = try_extract_boolean(value, name);
         },
@@ -451,9 +468,10 @@ pub enum IpgDividerStyleParam {
     BorderRadius,
 }
 
-pub fn divider_style_update_item(style: &mut IpgDividerStyle,
-                            item: &PyObject,
-                            value: &PyObject,) 
+pub fn divider_style_update_item(
+        style: &mut IpgDividerStyle,
+        item: &PyObject,
+        value: &PyObject,) 
 {
     let update = try_extract_divider_style_update(item);
     let name = "DividerStyle".to_string();
