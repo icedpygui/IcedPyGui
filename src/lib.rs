@@ -31,7 +31,6 @@ use core::panic;
 use std::collections::HashMap;
 
 mod app;
-pub mod table;
 use app::App;
 
 mod ipg_widgets;
@@ -86,7 +85,7 @@ use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, 
         IpgSvgParam, IpgSvgRotation};
 use ipg_widgets::ipg_table::{table_dataframe_update, table_item_update, 
-    table_style_update_item, IpgTable, IpgTableParam, IpgTableRowHighLight, IpgTableStyle};
+    table_style_update_item, IpgTable, IpgTableParam, IpgTableStyle};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, text_input_style_update_item, 
     IpgTextInput, IpgTextInputParam, IpgTextInputStyle, IpgTextInputStyleParam};
@@ -103,7 +102,7 @@ use ipg_widgets::ipg_enums::{IpgAlignment, IpgContainers, IpgHorizontalAlignment
 
 use ipg_widgets::helpers::{check_for_dup_container_ids, get_height, 
     get_horizontal_alignment, get_line_height, get_padding_f32, 
-    get_padding_f64, get_shaping, get_vertical_alignment, get_width};
+    get_padding_f64, get_shaping, get_vertical_alignment, get_width, try_extract_vec_str};
 
 use graphics::colors::{get_color, IpgColor};
 use style::styling::{readable, IpgStyleStandard};
@@ -1721,16 +1720,16 @@ impl IPG {
         table_id, 
         title,
         polars_df,
-        column_widths,height,
-        width=None, width_fill=false, 
+        column_widths,
+        height,
+        width=None, 
+        width_fill=false,
         header_enabled=true,
         header_custom_enabled=false,
-        footer_enabled=false,
+        footer=None,
         control_columns=vec![],
         hide_columns=vec![],
         parent_id=None,
-        row_highlight=None, 
-        highlight_amount=0.15,
         column_spacing=5.0,
         row_spacing=5.0,
         row_max_height=None,
@@ -1760,12 +1759,10 @@ impl IPG {
         width_fill: bool,
         header_enabled: bool,
         header_custom_enabled: bool,
-        footer_enabled: bool,
+        footer: Option<PyObject>,
         control_columns: Vec<usize>,
         hide_columns: Vec<usize>,
         parent_id: Option<String>,
-        row_highlight: Option<IpgTableRowHighLight>,
-        highlight_amount: f32,
         column_spacing: f32,
         row_spacing: f32,
         row_max_height: Option<f32>,
@@ -1803,6 +1800,12 @@ impl IPG {
         table_width += scroller_bar_width + scroller_margin + 10.0;
 
         let df: DataFrame = polars_df.into();
+
+        let footer = if footer.is_some() {
+            Some(try_extract_vec_str(&footer.unwrap(), "Table Footer".to_string()))
+        } else {
+            None
+        };
        
         if let Some(py) = user_data {
             add_user_data_to_mutex(id, py);
@@ -1824,11 +1827,9 @@ impl IPG {
                 width,
                 header_enabled,
                 header_custom_enabled,
-                footer_enabled,
+                footer,
                 control_columns,
                 hide_columns,
-                row_highlight,
-                highlight_amount,
                 column_spacing,
                 row_spacing,
                 row_max_height,
@@ -4327,6 +4328,102 @@ impl IPG {
 
     }
 
+    // #[pyo3(signature = (
+    //     parent_id,
+    //     size=None,
+    //     line_height=None,
+    //     text_color=None,
+    //     text_color_rgba=None,
+    //     highlight_bkg_color=None,
+    //     highlight_bkg_rgba=None,
+    //     highlight_border_color=None,
+    //     highlight_border_rgba=None,
+    //     highlight_border_radius=None,
+    //     highlight_border_width=None,
+    //     padding=None,
+    //     underline=false,
+    //     strikethrough=false,
+    //     style_id=None,
+    //     show=true,
+    //     gen_id=None,
+    //     ))]
+    // fn add_rich_text(
+    //     &self,
+    //     parent_id: String,
+    //     size: Option<f32>,
+    //     line_height: Option<f32>,
+    //     text_color: Option<IpgColor>,
+    //     text_color_rgba: Option<[f32; 4]>,
+    //     highlight_bkg_color: Option<IpgColor>,
+    //     highlight_bkg_rgba: Option<[f32; 4]>,
+    //     highlight_border_color: Option<IpgColor>,
+    //     highlight_border_rgba: Option<[f32; 4]>,
+    //     highlight_border_radius: Option<f32>,
+    //     highlight_border_width: Option<f32>,
+    //     padding: Option<Vec<f32>>,
+    //     underline: bool,
+    //     strikethrough: bool,
+    //     style_id: Option<usize>,
+    //     show: bool,
+    //     gen_id: Option<usize>,
+    //     ) -> PyResult<usize> 
+    // {
+    
+    //     let id = self.get_id(gen_id);
+
+    //     let color = get_color(text_color_rgba, text_color, 1.0, false);
+    //     let hl_bkg = get_color(highlight_bkg_rgba, highlight_bkg_color, 1.0, false);
+    //     let hl_border_color = get_color(highlight_border_rgba, highlight_border_color, 1.0, false);
+
+    //     let highlight = if hl_bkg.is_some(){
+    //         let background = Background::Color(hl_bkg.unwrap());
+    //         let mut border = Border::default();
+    //         if hl_border_color.is_some() {
+    //             border.color = hl_border_color.unwrap();
+    //         }
+    //         if highlight_border_radius.is_some() {
+    //             border.radius = iced::border::Radius::new(highlight_border_radius.unwrap().into())
+    //         }
+    //         if highlight_border_width.is_some() {
+    //             border.width = highlight_border_width.unwrap();
+    //         }
+    //         Some(Highlight{ background, border })
+    //     } else {
+    //         None
+    //     };
+
+        
+    //     let line_height = match line_height {
+    //         Some(lh) => Some(LineHeight::Relative(lh)),
+    //         None => None,
+    //     };
+
+    //     let padding = get_padding_f32(padding);
+
+    //     set_state_of_widget(id, parent_id.clone());
+
+    //     let mut state = access_state();
+        
+    //     state.widgets.insert(id, IpgWidgets::IpgRichText(
+    //         IpgRichText::new(
+    //             id,
+    //             parent_id,
+    //             size,
+    //             line_height,
+    //             color,
+    //             highlight,
+    //             padding,
+    //             underline,
+    //             strikethrough,
+    //             show,
+    //             style_id,
+    //             )));
+
+    //     drop(state);
+    //     Ok(id)
+
+    // }
+
     #[pyo3(signature = (
         parent_id, 
         placeholder, 
@@ -6269,7 +6366,6 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgStackParam>()?;
     m.add_class::<IpgStyleStandard>()?;
     m.add_class::<IpgSvgParam>()?;
-    m.add_class::<IpgTableRowHighLight>()?;
     m.add_class::<IpgTableParam>()?;
     m.add_class::<IpgTextInputParam>()?;
     m.add_class::<IpgTextInputStyleParam>()?;

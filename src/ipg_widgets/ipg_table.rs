@@ -1,17 +1,17 @@
 //! ipg_table
 #![allow(clippy::unit_arg)]
+
 use crate::app::Message;
 use crate::graphics::colors::get_color;
-use crate::table;
+
 use crate::IpgState;
-use crate::table::table::{body_container, dummy_container, 
-    single_row_container};
+
 
 use iced::advanced::graphics::core::Element;
 use iced::widget::scrollable::{Anchor, Scrollbar};
-use iced::Color;
-use iced::{Length, Padding, Renderer, Theme};
-use iced::widget::{column, row, scrollable, text};
+use iced::{Alignment, Color};
+use iced::{Length, Renderer, Theme};
+use iced::widget::{column, row, text};
 
 use polars::frame::DataFrame;
 use pyo3::{pyclass, PyObject, Python};
@@ -33,14 +33,13 @@ pub struct IpgTable {
         pub df: DataFrame,
         pub column_widths: Vec<f32>,
         pub height: f32,
+        // above required
         pub width: Length,
         pub header_enabled: bool,
         pub header_custom_enabled: bool,
-        pub footer_enabled: bool,
+        pub footer: Option<Vec<String>>,
         pub control_columns: Vec<usize>,
         pub hide_columns: Vec<usize>,
-        pub row_highlight: Option<IpgTableRowHighLight>,
-        pub highlight_amount: f32,
         pub column_spacing: f32,
         pub row_spacing: f32,
         pub row_max_height: Option<f32>,
@@ -56,9 +55,6 @@ pub struct IpgTable {
         pub scroller_bar_width: f32,
         pub scroller_margin: f32,
         pub style_id: Option<usize>,
-        header_id: scrollable::Id,
-        body_id: scrollable::Id,
-        footer_id: scrollable::Id,
 }
 
 impl IpgTable {
@@ -71,11 +67,9 @@ impl IpgTable {
         width: Length,
         header_enabled: bool,
         header_custom_enabled: bool,
-        footer_enabled: bool,
+        footer: Option<Vec<String>>,
         control_columns: Vec<usize>,
         hide_columns: Vec<usize>,
-        row_highlight: Option<IpgTableRowHighLight>,
-        highlight_amount: f32,
         column_spacing: f32,
         row_spacing: f32,
         row_max_height: Option<f32>,
@@ -101,11 +95,9 @@ impl IpgTable {
             width,
             header_enabled,
             header_custom_enabled,
-            footer_enabled,
+            footer,
             control_columns,
             hide_columns,
-            row_highlight,
-            highlight_amount,
             column_spacing,
             row_spacing,
             row_max_height,
@@ -121,9 +113,6 @@ impl IpgTable {
             scroller_bar_width,
             scroller_margin,
             style_id,
-            header_id: scrollable::Id::unique(),
-            body_id: scrollable::Id::unique(),
-            footer_id: scrollable::Id::unique(),
         }
     }
 }
@@ -145,254 +134,70 @@ pub enum IpgTableMouse {
 }
 
 pub fn construct_table<'a>(tbl: IpgTable, 
-                            mut content: Vec<Element<'a, Message, Theme, Renderer>>,
+                            content: Vec<Element<'a, Message, Theme, Renderer>>,
                             _style_opt: Option<&IpgWidgets>, 
                             ) 
                             -> Element<'a, Message, Theme, Renderer> {
 
-    let columns = 
-        if tbl.header_enabled {
-            let df_columns = tbl.df.get_columns().to_vec();
-            let mut columns: Vec<Element<'a, Message, Theme, Renderer>> = vec![];
-            for col in df_columns.iter() {
-                if tbl.header_custom_enabled {
-                    columns.push(content.remove(0));
-                } else {    
-                    columns.push(text(col.name().to_string()).into());        
+    // get the header
+    let header = if tbl.header_enabled {
+        let names: Vec<String> = tbl.df.get_column_names_str().iter().map(|s| s.to_string()).collect();
+        let mut header: Vec<Element<Message, Theme, Renderer>> = vec![];
+        for (i, name) in names.iter().enumerate() {
+            header.push(text(name.clone())
+                .align_x(Alignment::Center)
+                .width(tbl.column_widths[i]).into());
+        }
+        Some(Element::from(row(header)))
+    } else {
+        None
+    };
+    
+
+    let mut rows = vec![];
+    for idx in 0..tbl.df.height() {
+        let mut tbl_row = vec![];
+        if let Ok(row_val) = tbl.df.get_row(idx) {
+            let row_items: Vec<String> = row_val.0.iter().map(|item| item.to_string()).collect();
+            for (i, item) in row_items.iter().enumerate() {
+                if i != 0 {
+                    let txt = 
+                        text(item.clone())
+                            .align_x(Alignment::Center)
+                            .width(tbl.column_widths[i]);
+                    tbl_row.push(txt.into());
                 }
             }
-            columns
-        } else {
-            let mut columns: Vec<Element<'a, Message, Theme, Renderer>> = vec![];
-            for _ in 0..tbl.column_widths.len() {
-                columns.push(content.remove(0));
-            }
-            columns
-        };
-
-    // remove the footer from content, if enabled
-    let mut footers = vec![];
-    if tbl.footer_enabled {
-        for _ in 0..tbl.column_widths.len() {
-            footers.push(content.remove(0));
+            rows.push(row(tbl_row).into());
         }
     }
 
-    let column_widths: Vec<f32> = tbl.column_widths.iter().map(|width|width+tbl.divider_width).collect();
-    let min_column_width = tbl.min_column_width.unwrap_or(0.0);
-    let cell_padding = Padding::from(tbl.cell_padding);
-    let scrollbar = get_scrollbar(
-                                    Anchor::Start, 
-                                    tbl.scroller_bar_width, 
-                                    tbl.scroller_margin, 
-                                    tbl.scroller_width);
-
-    // if table_width_fixed then column resizing doesn't change the table width
-    let mut min_width = 0.0;
-    if tbl.table_width_fixed {
-        min_width = tbl.table_width;
-    }
-
-    let header = if tbl.header_enabled {
-        Some(add_header(
-            tbl.id, 
-            tbl.header_id, 
-            columns, 
-            column_widths.clone(), 
-            min_width, 
-            tbl.resize_offset.clone(), 
-            min_column_width, 
-            tbl.divider_width, 
-            cell_padding))
+    let footer = if let Some(footer_values) = &tbl.footer {
+        let mut footer = vec![];
+        for (i, f) in footer_values.iter().enumerate() {
+            let txt = 
+                text(f.clone())
+                    .align_x(Alignment::Center)
+                    .width(tbl.column_widths[i]);
+            footer.push(txt.into());
+        }
+        Some(Element::from(row(footer)))
     } else {
         None
     };
-
-    let mut rows: Vec<Element<'a, Message, Theme, Renderer>> = vec![];
-    for idx in 0..tbl.df.height() {
-        let row_items = tbl.df.get_row(idx).unwrap();
-        for (idx, item) in row_items.0.iter().enumerate() {
-            if tbl.control_columns.contains(&idx) {
-                rows.push(content.remove(0));
-            } else {
-                let item = item.to_string().trim_matches('"').to_string();
-                rows.push(text(item).into());
-            }
-        }
-    }
- 
-    let row_num_vec = vec![0; tbl.df.height()];
-
-    let body: Element<'a, Message, Theme, Renderer> = 
-        scrollable(column(row_num_vec.iter().enumerate()
-        .map(|(index, _width)| {
-            table::style::wrapper::row(
-                iced::widget::row(column_widths
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, width)| {
-                        body_container(
-                            rows.remove(0),
-                            *width,
-                            tbl.resize_offset[idx],
-                            min_column_width,
-                            tbl.divider_width,
-                            cell_padding,
-                            tbl.row_max_height,
-                        )
-                    })
-                    .chain(dummy_container(
-                        column_widths.clone(),
-                        tbl.resize_offset.clone(), 
-                        min_width, 
-                        min_column_width))),
-                        Default::default(),
-                index,
-            )   
-        })))
-        .id(tbl.body_id)
-        .on_scroll(move |viewport| {
-            let offset = viewport.absolute_offset();
-            (Message::TableSyncHeader)(scrollable::AbsoluteOffset { x: offset.x, y: offset.y })
-        })
-        .direction(scrollable::Direction::Both {
-            horizontal: scrollbar,
-            vertical: scrollbar,
-        })
-        .height(Length::Fixed(tbl.height-100.0))
-        .into();
     
-        let footer = if tbl.footer_enabled {
-        Some(add_footer(
-            tbl.id, 
-            tbl.footer_id, 
-            footers, 
-            column_widths, 
-            min_width, 
-            tbl.resize_offset, 
-            min_column_width, 
-            tbl.divider_width, 
-            cell_padding))
+    let col = if tbl.header_enabled && footer.is_some() {
+        column([header.unwrap()]).extend(rows).extend([footer.unwrap()])
+    } else if tbl.header_enabled {
+        column([header.unwrap()]).extend(rows)
+    } else if footer.is_some(){
+        column(rows).extend([footer.unwrap()])
     } else {
-        None
+        column(rows)
     };
 
-    let col = if header.is_some() && footer.is_some() {
-        column![header.unwrap(), body, footer.unwrap()]
-    } else if header.is_none() && footer.is_some() {
-        column![body, footer.unwrap()]
-    } else if header.is_some() && footer.is_none() {
-        column![header.unwrap(), body]
-    } else {
-        column![body]
-    };
+    col.into()
     
-    if tbl.table_width_fixed {
-            col.width(tbl.table_width).into()
-        } else {
-            col.into()
-        }
-    
-}
-
-fn add_header(id: usize,
-                    header_id: scrollable::Id,
-                    mut columns: Vec<Element<'_, Message, Theme, Renderer>>, 
-                    column_widths: Vec<f32>,
-                    min_width: f32,
-                    resize_offset: Vec<Option<f32>>,
-                    min_column_width: f32,
-                    divider_width: f32,
-                    cell_padding: Padding) 
-                -> Element<'_, Message, Theme, Renderer> {
-
-    scrollable(table::style::wrapper::header(
-        row(column_widths
-            .iter()
-            .enumerate()
-            .map(|(index, column_width)| {
-                single_row_container(
-                    id,
-                    index,
-                    columns.remove(0),
-                    *column_width,
-                    resize_offset[index],
-                    Some(Message::TableResizing),
-                    Some(Message::TableResized(id)),
-                    min_column_width,
-                    divider_width,
-                    cell_padding,
-                    Default::default(),
-                )
-            })
-            .chain(dummy_container(column_widths.clone(),
-                                    resize_offset.clone(),
-                                    min_width, 
-                                    min_column_width))),
-            Default::default(),
-    ))
-    .id(header_id)
-    .direction(scrollable::Direction::Both {
-        vertical: scrollable::Scrollbar::new()
-            .width(0)
-            .margin(0)
-            .scroller_width(0),
-        horizontal: scrollable::Scrollbar::new()
-            .width(0)
-            .margin(0)
-            .scroller_width(0),
-    })
-    .into()
-}
-
-fn add_footer(
-            id: usize,
-            footer_id: scrollable::Id,
-            mut footers: Vec<Element<'_, Message, Theme, Renderer>>, 
-            column_widths: Vec<f32>,
-            min_width: f32,
-            resize_offset: Vec<Option<f32>>,
-            min_column_width: f32,
-            divider_width: f32,
-            cell_padding: Padding) -> Element<'_, Message, Theme, Renderer>{
-    
-    scrollable(table::style::wrapper::footer(
-        row(column_widths
-            .iter()
-            .enumerate()
-            .map(|(index, column_width)| {
-                single_row_container(
-                    id,
-                    index,
-                    footers.remove(0),
-                    *column_width,
-                    resize_offset[index],
-                    Some(Message::TableResizing),
-                    Some(Message::TableResized(id)),
-                    min_column_width,
-                    divider_width,
-                    cell_padding,
-                    Default::default(),
-                )
-            })
-            .chain(dummy_container(column_widths.clone(),
-                                    resize_offset.clone(),
-                                    min_width, 
-                                    min_column_width))),
-            Default::default(),
-    ))
-    .id(footer_id)
-    .direction(scrollable::Direction::Both {
-        vertical: scrollable::Scrollbar::new()
-            .width(0)
-            .margin(0)
-            .scroller_width(0),
-        horizontal: scrollable::Scrollbar::new()
-            .width(0)
-            .margin(0)
-            .scroller_width(0),
-    })
-    .into()
 }
 
 fn get_scrollbar(alignment: Anchor, width: f32, margin: f32, scroller_width: f32) -> Scrollbar {
@@ -523,9 +328,7 @@ pub enum IpgTableParam {
     Width,
     HeaderEnabled,
     HeaderCustomEnabled,
-    FooterEnabled,
-    RowHighlight,
-    HighlightAmount,
+    Footer,
     ColumnSpacing,
     RowSpacing,
     DividerWidth,
@@ -561,12 +364,6 @@ pub fn table_item_update(
         },
         IpgTableParam::Height => {
             table.height = try_extract_f64(value, name) as f32;
-        },
-        IpgTableParam::RowHighlight => {
-            table.row_highlight = Some(try_extract_row_highlight(value));
-        },
-        IpgTableParam::HighlightAmount => {
-            table.highlight_amount = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::ColumnSpacing => {
             table.column_spacing = try_extract_f64(value, name) as f32;
@@ -627,16 +424,6 @@ pub fn try_extract_table_update(update_obj: &PyObject) -> IpgTableParam {
         match res {
             Ok(update) => update,
             Err(_) => panic!("Table update extraction failed"),
-        }
-    })
-}
-
-fn try_extract_row_highlight(value: &PyObject) -> IpgTableRowHighLight {
-    Python::with_gil(|py| {
-        let res = value.extract::<IpgTableRowHighLight>(py);
-        match res {
-            Ok(update) => update,
-            Err(_) => panic!("Table update extraction of IpgTableRowHighLight failed"),
         }
     })
 }

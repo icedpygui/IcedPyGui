@@ -281,6 +281,9 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             IpgWidgets::IpgText(_) => {
                 return WidgetCallbackOut::default()
             },
+            // IpgWidgets::IpgRichText(_) => {
+            //     return WidgetCallbackOut::default()
+            // },
             IpgWidgets::IpgTextInput(ti) => {
                 ti.value = wci.value_str.unwrap();
                 return WidgetCallbackOut{

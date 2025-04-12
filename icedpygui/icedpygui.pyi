@@ -2619,14 +2619,12 @@ class IPG:
                     width_fill: bool=False,
                     header_enabled: bool=True,
                     header_custom_enabled: bool=False,
-                    footer_enabled: bool=False,
+                    footer: Optional[list[str]]=None,
                     control_columns=list[int],
                     hide_columns=list[int],
                     resize_columns_enabled: bool=True,
                     min_column_width: Optional[float]=50.0,
                     parent_id: Optional[str]=None,
-                    row_highlight: Optional[IpgTableRowHighLight]=None,
-                    highlight_amount: float=0.15,
                     column_spacing: float=5.0,
                     row_spacing: float=5.0,
                     row_max_height: Optional[float]=None,
@@ -5359,13 +5357,11 @@ class IpgTableParam:
     Height:float
     HeaderEnabled:bool
     HeaderCustomEnabled:bool
-    FooterEnabled:bool
+    Footer:list[str]
     ColumnWidths:list[float]
     ColumnSpacing:float
     RowSpacing:float
     RowMaxHeight:float
-    RowHighlight:IpgTableRowHighLight
-    HighlightAmount:float
     DividerWidth:float
     ResizeColumnsEnabled:bool
     MinColumnWidth:float
@@ -5376,14 +5372,6 @@ class IpgTableParam:
     ScrollerBarWidth:float
     ScrollerMargin:float
     Show:bool
-
-
-class IpgTableRowHighLight:
-    """
-    How the table highlighting is applied.
-    """
-    Darker=''
-    Lighter=''
 
 
 class IpgTableWidget:

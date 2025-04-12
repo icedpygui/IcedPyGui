@@ -1,5 +1,5 @@
 from icedpygui import IPG, IpgHorizontalAlignment, IpgVerticalAlignment
-from icedpygui import IpgTableRowHighLight, IpgColor, IpgTextParam
+from icedpygui import IpgColor, IpgTextParam
 from icedpygui import IpgContainerParam, IpgAlignment
 import polars as pl
 import uuid
@@ -30,16 +30,10 @@ data = {
     "three": [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33],
     }
 df = pl.DataFrame(data)
-print(df)
 
-def open_modal(btn_id: int, index: str):
-    row = df.filter(pl.col("Edit") == index)
-    ipg.update_item(modal_id, IpgContainerParam.Show, True)
-    ipg.update_item(modal_title, IpgTextParam.Content, f"Modal for Row {index[0]}")
-
-
-# def close_modal(btn_id: int):
-#     ipg.update_item(modal_id, IpgContainerParam.Show, False)
+# The number of footer items must match the 
+# number of columns and they must be strings
+footer = ["This", "is", "a", "footer", "100"]
 
 
 def filter(pick_id: int, select: str):
@@ -87,7 +81,8 @@ ipg.add_table(
         column_widths=column_widths,
         height=300.0,
         control_columns=[0],
-        # footer_enabled=True,
+        header_enabled=True, #default value
+        footer=footer,
         table_width_fixed=True, # defaults to True, change to False to see the effect
         )
 
@@ -99,7 +94,7 @@ for i in range(0, 5):
                    label="Edit",
                    padding=[0.0],
                    width_fill=True,
-                   on_press=open_modal,
+                #    on_press=open_modal,
                    style_id=btn_style,
                    text_align_x=IpgHorizontalAlignment.Center,
                    user_data=edit[i])
