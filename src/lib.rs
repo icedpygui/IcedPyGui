@@ -5,8 +5,10 @@ use canvas::canvas_helpers::{build_polygon, get_mid_point, to_radians};
 use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode, IpgDrawStatus, IpgWidget};
 use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, 
     IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
-use iced::widget::image;
+use iced::border::Radius;
+use iced::widget::{container, image};
 use iced_aw::iced_fonts;
+use ipg_widgets::divider;
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
@@ -23,7 +25,7 @@ use pyo3::types::PyModule;
 use pyo3::PyObject;
 
 use iced::window::{self, Position};
-use iced::{Color, Font, Length, Point, Radians, Rectangle, Size, Theme, Vector};
+use iced::{Background, Color, Font, Length, Pixels, Point, Radians, Rectangle, Size, Theme, Vector};
 use iced::widget::text::{self, LineHeight};
 use pyo3_polars::PyDataFrame;
 
@@ -1855,23 +1857,25 @@ impl IPG {
     #[pyo3(signature = ( 
         header_background_color=None, header_background_rgba=None,
         header_border_color=None, header_border_rgba=None,
-        header_border_radius = vec![0.0], header_border_width=0.0,
+        header_border_radius = 0.0, header_border_width=0.0,
         header_text_color=None, header_text_rgba=None,
 
         body_background_color=None, body_background_rgba=None,
         body_border_color=None, body_border_rgba=None,
-        body_border_radius = vec![0.0], body_border_width=0.0,
+        body_border_radius = 0.0, body_border_width=0.0,
         body_text_color=None, body_text_rgba=None,
 
         footer_background_color=None, footer_background_rgba=None,
         footer_border_color=None, footer_border_rgba=None,
-        footer_border_radius = vec![0.0], footer_border_width=0.0,
+        footer_border_radius = 0.0, footer_border_width=0.0,
         footer_text_color=None, footer_text_rgba=None,
 
+        divider_color=None,
+        divider_rgba=None,
         divider_hover_color=None,
         divider_hover_rgba=None,
-        divider_unhover_color=None,
-        divider_unhover_rgba=None,
+        divider_drag_color=None,
+        divider_drag_rgba=None,
 
         gen_id=None
         ))]
@@ -1881,7 +1885,7 @@ impl IPG {
         header_background_rgba: Option<[f32; 4]>,
         header_border_color: Option<IpgColor>,
         header_border_rgba: Option<[f32; 4]>,
-        header_border_radius: Vec<f32>,
+        header_border_radius: f32,
         header_border_width: f32,
         header_text_color: Option<IpgColor>,
         header_text_rgba: Option<[f32; 4]>,
@@ -1890,7 +1894,7 @@ impl IPG {
         body_background_rgba: Option<[f32; 4]>,
         body_border_color: Option<IpgColor>,
         body_border_rgba: Option<[f32; 4]>,
-        body_border_radius: Vec<f32>,
+        body_border_radius: f32,
         body_border_width: f32,
         body_text_color: Option<IpgColor>,
         body_text_rgba: Option<[f32; 4]>,
@@ -1899,15 +1903,17 @@ impl IPG {
         footer_background_rgba: Option<[f32; 4]>,
         footer_border_color: Option<IpgColor>,
         footer_border_rgba: Option<[f32; 4]>,
-        footer_border_radius: Vec<f32>,
+        footer_border_radius: f32,
         footer_border_width: f32,
         footer_text_color: Option<IpgColor>,
         footer_text_rgba: Option<[f32; 4]>,
 
+        divider_color: Option<IpgColor>,
+        divider_rgba: Option<[f32; 4]>,
         divider_hover_color: Option<IpgColor>,
         divider_hover_rgba: Option<[f32; 4]>,
-        divider_unhover_color: Option<IpgColor>,
-        divider_unhover_rgba: Option<[f32; 4]>,
+        divider_drag_color: Option<IpgColor>,
+        divider_drag_rgba: Option<[f32; 4]>,
 
         gen_id: Option<usize>,
         ) -> PyResult<usize>
@@ -1921,12 +1927,35 @@ impl IPG {
         let header_text_color: Option<Color> = 
             get_color(header_text_rgba, header_text_color, 1.0, false);
 
+        let mut header_style = container::Style::default();
+        
+        if header_background_color.is_some() {
+            header_style.background = Some(Background::Color(header_background_color.unwrap()));
+        }
+        if header_border_color.is_some() {
+            header_style.border.color = header_border_color.unwrap()
+        }
+        header_style.text_color = header_text_color;
+        header_style.border.radius = Radius::new(Pixels(header_border_radius));
+        header_style.border.width = header_border_width;
+
         let body_background_color: Option<Color> = 
             get_color(body_background_rgba, body_background_color, 1.0, false);
         let body_border_color: Option<Color> = 
             get_color(body_border_rgba, body_border_color, 1.0, false);
         let body_text_color: Option<Color> = 
             get_color(body_text_rgba, body_text_color, 1.0, false);
+
+        let mut body_style = container::Style::default();
+        if body_background_color.is_some() {
+            body_style.background = Some(Background::Color(body_background_color.unwrap()));
+        }
+        if body_border_color.is_some() {
+            body_style.border.color = body_border_color.unwrap()
+        }
+        body_style.text_color = body_text_color;
+        body_style.border.radius = Radius::new(Pixels(body_border_radius));
+        body_style.border.width = body_border_width;
 
         let footer_background_color: Option<Color> = 
             get_color(footer_background_rgba, footer_background_color, 1.0, false);
@@ -1935,36 +1964,35 @@ impl IPG {
         let footer_text_color: Option<Color> = 
             get_color(footer_text_rgba, footer_text_color, 1.0, false);
 
+        let mut footer_style = container::Style::default();
+        if footer_background_color.is_some() {
+            footer_style.background = Some(Background::Color(footer_background_color.unwrap()));
+        }
+        if footer_border_color.is_some() {
+            footer_style.border.color = footer_border_color.unwrap()
+        }
+        footer_style.text_color = footer_text_color;
+        footer_style.border.radius = Radius::new(Pixels(footer_border_radius));
+        footer_style.border.width = footer_border_width;
+
+        let divider_color: Option<Color> = 
+            get_color(divider_rgba, divider_color, 1.0, false);
         let divider_hover_color = 
             get_color(divider_hover_rgba, divider_hover_color, 1.0, false);
         let divider_unhover_color = 
-            get_color(divider_unhover_rgba, divider_unhover_color, 1.0, false);
+            get_color(divider_drag_rgba, divider_drag_color, 1.0, false);
+
+        let mut divider_style = divider::default();
 
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgTableStyle(
             IpgTableStyle::new( 
                 id,
-                header_background_color,
-                header_border_color,
-                header_border_radius,
-                header_border_width,
-                header_text_color,
-
-                body_background_color,
-                body_border_color,
-                body_border_radius,
-                body_border_width,
-                body_text_color,
-                    
-                footer_background_color,
-                footer_border_color,
-                footer_border_radius,
-                footer_border_width,
-                footer_text_color,
-
-                divider_hover_color,
-                divider_unhover_color,
+                header_style,
+                body_style,
+                footer_style,
+                divider_style,
                 )));
 
         drop(state);
