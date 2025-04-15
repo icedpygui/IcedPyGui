@@ -2,15 +2,13 @@
 #![allow(clippy::unit_arg)]
 
 use crate::app::Message;
+use crate::{access_callbacks, access_user_data1, IpgState};
 
-use crate::IpgState;
-
-
-use iced::advanced::graphics::core::Element;
-use iced::widget::scrollable::{Anchor, Scrollbar};
-use iced::Alignment;
-use iced::{Length, Renderer, Theme};
-use iced::widget::{column, container, row, text};
+use iced::widget::scrollable::Scrollbar;
+use iced::{alignment, Border};
+use iced::Length::Fill;
+use iced::{Element, Length, Renderer, Theme};
+use iced::widget::{column, container, row, scrollable, stack, text};
 
 use polars::frame::DataFrame;
 use pyo3::{pyclass, PyObject, Python};
@@ -18,9 +16,7 @@ use pyo3_polars::PyDataFrame;
 
 use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn};
-use super::divider;
-use super::helpers::{get_radius, try_extract_f32, try_extract_ipg_color};
-use super::helpers::try_extract_rgba_color;
+use super::divider::{self, divider_horizontal};
 use super::helpers::{get_width, try_extract_boolean, 
     try_extract_f64, try_extract_string, try_extract_vec_f32};
 use super::ipg_enums::IpgWidgets;
@@ -47,6 +43,7 @@ pub struct IpgTable {
         pub resize_columns_enabled: bool,
         pub min_column_width: Option<f32>,
         pub cell_padding: f32,
+        pub text_size: f32,
         pub show: bool,
         pub resize_offset: Vec<Option<f32>>,
         pub table_width_fixed: bool,
@@ -55,6 +52,9 @@ pub struct IpgTable {
         pub scroller_bar_width: f32,
         pub scroller_margin: f32,
         pub style_id: Option<usize>,
+        pub header_scroller_id: scrollable::Id,
+        pub body_scroller_id: scrollable::Id,
+        pub footer_scroller_id: scrollable::Id,
 }
 
 impl IpgTable {
@@ -77,6 +77,7 @@ impl IpgTable {
         resize_columns_enabled: bool,
         min_column_width: Option<f32>,
         cell_padding: f32,
+        text_size: f32,
         show: bool,
         resize_offset: Vec<Option<f32>>,
         table_width_fixed: bool,
@@ -105,6 +106,7 @@ impl IpgTable {
             resize_columns_enabled,
             min_column_width,
             cell_padding,
+            text_size,
             show,
             resize_offset,
             table_width_fixed,
@@ -113,6 +115,9 @@ impl IpgTable {
             scroller_bar_width,
             scroller_margin,
             style_id,
+            header_scroller_id: scrollable::Id::unique(),
+            body_scroller_id: scrollable::Id::unique(),
+            footer_scroller_id: scrollable::Id::unique(),
         }
     }
 }
@@ -134,219 +139,190 @@ pub enum IpgTableMouse {
 }
 
 pub fn construct_table<'a>(tbl: IpgTable, 
-                            content: Vec<Element<'a, Message, Theme, Renderer>>,
+                            _content: Vec<Element<'a, Message, Theme, Renderer>>,
                             style_opt: Option<&IpgWidgets>, 
                             ) 
                             -> Element<'a, Message, Theme, Renderer> {
 
-    let style = get_table_style(style_opt);
+    let _style = get_table_style(style_opt);
     
 
-    // get the header
-    let header = if tbl.header_enabled {
-        let names: Vec<String> = tbl.df.get_column_names_str().iter().map(|s| s.to_string()).collect();
-        let mut header: Vec<Element<Message, Theme, Renderer>> = vec![];
-        for (i, name) in names.iter().enumerate() {
-            header.push(text(name.clone())
-                .align_x(Alignment::Center)
-                .width(tbl.column_widths[i]).into());
-        }
-        let cont = 
-            container(row(header))
-            .style(move|theme| {
-                if style.is_some() {
-                    style.unwrap().header_style
-                } else {
-                    container::bordered_box(theme)
-                }});
-
-        Some(Element::from(cont))
-    } else {
-        None
-    };
-    
-
-    let mut rows = vec![];
-    for idx in 0..tbl.df.height() {
-        let mut tbl_row = vec![];
-        if let Ok(row_val) = tbl.df.get_row(idx) {
-            let row_items: Vec<String> = row_val.0.iter().map(|item| item.to_string()).collect();
-            for (i, item) in row_items.iter().enumerate() {
-                if i != 0 {
+    let mut body_rows = vec![];
+        for idx in 0..tbl.df.height() {
+            if let Ok(df_row) = tbl.df.get_row(idx) {
+                let mut rw = vec![];
+                for (i, item) in df_row.0.iter().enumerate() {
                     let txt = 
-                        text(item.clone())
-                            .align_x(Alignment::Center)
+                        text(item.to_string())
+                            .size(tbl.text_size)
+                            .align_x(alignment::Horizontal::Center)
+                            .align_y(alignment::Vertical::Center)
                             .width(tbl.column_widths[i]);
-                    tbl_row.push(txt.into());
+                    rw.push(Element::from(txt));
                 }
+            body_rows.push(container(row(rw))
+                            .style(move|theme|bordered_box(theme, idx))
+                            .into());
             }
-            
-            let cont =
-                container(row(tbl_row))
-                .style(move|theme| {
-                    if style.is_some() {
-                        style.unwrap().body_style
-                    } else {
-                        container::bordered_box(theme)
-                    }});
-            
-            rows.push(cont.into());
         }
-    }
+        let body: Element<Message> = scrollable(column(body_rows))
+                                        .height(400.0)
+                                        .on_scroll(move|vp|Message::TableSync(vp.absolute_offset()))
+                                        .direction({
+                                            let scrollbar = Scrollbar::new();
+                                            scrollable::Direction::Both {
+                                                horizontal: scrollbar,
+                                                vertical: scrollbar,
+                                            }
+                                        })
+                                        .id(tbl.body_scroller_id.clone())
+                                        .into();
 
-    let footer = if let Some(footer_values) = &tbl.footer {
-        let mut footer = vec![];
-        for (i, f) in footer_values.iter().enumerate() {
-            let txt = 
-                text(f.clone())
-                    .align_x(Alignment::Center)
-                    .width(tbl.column_widths[i]);
-            footer.push(txt.into());
+        let header = if tbl.header_enabled {
+            let column_names = tbl.df.get_column_names_owned();
+            let header = column_names.iter().map(|s| s.to_string());
+            let mut rw = vec![];
+            for (i, hd) in header.into_iter().enumerate() {
+                    let txt = 
+                    text(hd)
+                    .size(tbl.text_size)
+                    .align_x(alignment::Horizontal::Center)
+                    .align_y(alignment::Vertical::Center)
+                    .width(Fill)
+                    .height(Fill);
+                rw.push(Element::from(
+                    container(txt)
+                        .width(tbl.column_widths[i])
+                        .height(25.0)
+                        .style(move|theme|container::bordered_box(theme))
+                        ));
+            }
+            Some(Element::from(scrollable(row(rw))
+                                .direction({
+                                    let scrollbar = scrollable::Scrollbar::new();
+                                    scrollable::Direction::Horizontal(scrollbar)
+                                    })
+                                .id(tbl.header_scroller_id.clone())
+                                ))
+        } else {
+            None
+        };
+
+        let div = 
+            divider_horizontal(
+                tbl.id,
+                tbl.column_widths.clone(),
+                4.0,
+                25.0,
+                Message::TableDivider,
+            );
+
+        let mut col = vec![];
+        if header.is_some() {
+            let stk = stack([header.unwrap(), div.into()]).into();
+            col.push(stk);
         }
-        let cont = 
-            container(row(footer))
-            .style(move|theme| {
-                if style.is_some() {
-                    style.unwrap().footer_style
-                } else {
-                    container::bordered_box(theme)
-                }});
-        Some(Element::from(cont))
-    } else {
-        None
-    };
-    
-    let col = if tbl.header_enabled && footer.is_some() {
-        column([header.unwrap()]).extend(rows).extend([footer.unwrap()])
-    } else if tbl.header_enabled {
-        column([header.unwrap()]).extend(rows)
-    } else if footer.is_some(){
-        column(rows).extend([footer.unwrap()])
-    } else {
-        column(rows)
-    };
-
-    col.into()
-    
-}
-
-fn get_scrollbar(alignment: Anchor, width: f32, margin: f32, scroller_width: f32) -> Scrollbar {
-    Scrollbar::new()
-        .anchor(alignment)
-        .width(width)
-        .margin(margin)
-        .scroller_width(scroller_width)
-}
-
-pub fn table_callback(state: &mut IpgState, message: Message) {
-
-    match message {
-        Message::TableResizing((id, index), offset) => {
-            let wci = WidgetCallbackIn{
-                id,
-                index: Some(index),
-                value_f32: Some(offset),
-                table_mouse: IpgTableMouse::Resizing,
-                ..Default::default()};
-            let _ = set_or_get_widget_callback_data(state, wci);
-        },
-        Message::TableResized(id) => {
-            let wci = WidgetCallbackIn{
-                id,
-                table_mouse: IpgTableMouse::Resized,
-                ..Default::default()};
-            let _ = set_or_get_widget_callback_data(state, wci);
-        },
-       _ => ()
-    }
-}
-
-
-// pub fn process_callback(wco: WidgetCallbackOut) 
-// {
-//     let app_cbs = access_callbacks();
-
-//     let callback_present = app_cbs.callbacks.get(&(wco.id, wco.event_name.clone()));
-
-//     let callback_opt = match callback_present {
-//         Some(cb) => cb,
-//         None => return,
-//     };
-
-//     let callback = match callback_opt {
-//         Some(cb) => cb,
-//         None => panic!("Table callback could not be found with id {}", wco.id),
-//     };
-
-//     let table_index: (usize, usize) = match wco.index_table {
-//         Some(ti) => ti,
-//         None => panic!("Table: Unable to find table index for callback.")
-//     };
-    
-//     Python::with_gil(|py| {
+        col.push(body.into());
         
-//         if wco.user_data.is_some() {
-//             let user_data = wco.user_data.unwrap();
-//             let res = 
-//                 if wco.event_name == "on_button" {
-//                     callback.call1(py, (
-//                                 wco.id,
-//                                 table_index, 
-//                                 user_data
-//                                 ))
-//                     } else if wco.event_name == "on_checkbox" || wco.event_name == "on_toggler" {
-//                         callback.call1(py, (
-//                             wco.id,
-//                             table_index,
-//                             wco.on_toggle,  
-//                             user_data
-//                             ))
-//                     } else if wco.event_name == "on_scroll" {
-//                         callback.call1(py, (
-//                             wco.id,
-//                             wco.scroll_pos,  
-//                             user_data
-//                             ))
-//                     } else {
-//                         panic!("Table callback: Event name {} could not be found", wco.event_name)
-//                     };
-                    
-//             match res {
-//                 Ok(_) => (),
-//                 Err(er) => panic!("Table: 4 parameters (id, widget_index, on_toggle, user_data) are required or a python error in this function. {er}"),
-//             }
-//         } else {
+        let main_col = column(col).spacing(5.0);
+    
+        container(container(main_col))
+            .width(Fill)
+            .height(Fill)
+            .padding(20)
+            .center_x(Fill)
+            .center_y(Fill)
+            .into()
+    
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum TableMessage {
+    ColumnResizing((usize, f32)),
+    DivOnRelease,
+}
+
+pub fn table_callback(
+        state: &mut IpgState,  
+        id: usize,  
+        message: TableMessage) {
+
+    let mut wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
+           
+    match message {
+        TableMessage::ColumnResizing((index, value)) => {
+            process_callback(
+                id, 
+                "on_column_resize".to_string(), 
+                index, 
+                value);
+        },
+        TableMessage::DivOnRelease => {
+            // to be consistent, returning values for both
+            wci.value_str = Some("on_release".to_string());
+            let wco = set_or_get_widget_callback_data(state, wci);
+            process_callback(
+                id, 
+                "on_release".to_string(), 
+                wco.value_usize.unwrap(), 
+                wco.value_f32.unwrap());
+        },
+    }
+}
+
+pub fn process_callback(id: usize, event_name: String, index: usize, value: f32) 
+{
+    let ud = access_user_data1();
+    let user_data_opt = ud.user_data.get(&id);
+
+    let app_cbs = access_callbacks();
+
+    let callback_present = 
+        app_cbs.callbacks.get(&(id, event_name));
+    
+    let callback = match callback_present {
+        Some(cb) => cb,
+        None => return,
+    };
+
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
+
+    drop(app_cbs);
+                 
+    Python::with_gil(|py| {
+        if user_data_opt.is_some() {
             
-//             let res = 
-//                 if wco.event_name == "on_button" {
-//                     callback.call1(py, (
-//                                 wco.id,
-//                                 table_index, 
-//                                 ))
-//                     } else if wco.event_name == "on_checkbox" || wco.event_name == "on_toggler" {
-//                         callback.call1(py, (
-//                             wco.id,
-//                             table_index,
-//                             wco.on_toggle,  
-//                             ))
-//                     } else if wco.event_name == "on_scroll" {
-//                         callback.call1(py, (
-//                             wco.id,
-//                             wco.scroll_pos,  
-//                             ))
-//                     } else {
-//                         panic!("Table callback: Event name {} could not be found", wco.event_name)
-//                 };
-//             match res {
-//                 Ok(_) => (),
-//                 Err(er) => panic!("Table: if on_scroll, 2 parameters (id, scroll_pos), else 3 parameter (id, widget_index, on_toggle) are required or possibly a python error in this function. {er}"),
-//             }
-//         }
-//     });
- 
-//     drop(app_cbs);
-         
-// }
+            let res = cb.call1(py, (
+                                                        id,
+                                                        index, 
+                                                        value, 
+                                                        user_data_opt,
+                                                        ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Table Divider: 4 parameters (id, value, user_data) 
+                                    are required or a python error in this function. {er}"),
+            }
+        } else {
+            let res = cb.call1(py, (
+                                                        id,
+                                                        index, 
+                                                        value, 
+                                                        ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Table Divider: 3 parameters (id, value) 
+                                    are required or a python error in this function. {er}"),
+            }
+        }
+    });
+
+    drop(ud); 
+
+}
 
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
@@ -501,6 +477,24 @@ pub fn get_table_style(style: Option<&IpgWidgets>) -> Option<IpgTableStyle> {
             Some(style.clone())
         }
         _ => None,
+    }
+}
+
+fn bordered_box(theme: &Theme, index: usize) -> container::Style {
+    let palette = theme.extended_palette();
+    let background = if index%2 == 0 {
+        Some(palette.background.strong.color.into())
+    } else {
+        Some(palette.background.weak.color.into())
+    };
+    container::Style {
+        background,
+        border: Border {
+            width: 1.0,
+            radius: 0.0.into(),
+            color: palette.background.base.color,
+        },
+        ..container::Style::default()
     }
 }
 

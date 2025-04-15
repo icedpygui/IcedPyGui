@@ -26,7 +26,7 @@ use crate::ipg_widgets::ipg_color_picker::{color_picker_callback,
 use crate::ipg_widgets::ipg_divider::{construct_divider_horizontal, construct_divider_vertical, divider_callback, DivMessage};
 use crate::ipg_widgets::ipg_menu::{IpgMenuBarStyle, IpgMenuStyle};
 use crate::ipg_widgets::ipg_separator::construct_separator;
-use crate::ipg_widgets::ipg_table::table_callback;
+use crate::ipg_widgets::ipg_table::{table_callback, TableMessage};
 use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, 
     canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
 use crate::{access_canvas_state, access_canvas_update_items, access_user_data2, access_update_items, access_user_data1, access_window_actions, ipg_widgets, match_container, match_container_for_df, match_widget, set_state_of_widget_running_state, IpgState};
@@ -93,9 +93,8 @@ pub enum Message {
     Slider(usize, SLMessage),
     Svg(usize, SvgMessage),
 
-    TableSyncHeader(scrollable::AbsoluteOffset),
-    TableResizing((usize, usize), f32),
-    TableResized(usize),
+    TableSync(scrollable::AbsoluteOffset),
+    TableDivider((usize, usize, f32)),
 
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
@@ -311,6 +310,15 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
+            Message::TableSync(absolute_offset) => {
+                Task::none()
+            },
+            Message::TableDivider((id, index, value)) => {
+                let message = TableMessage::ColumnResizing((index, value));
+                table_callback(&mut self.state, id, message);
+                process_updates(&mut self.state, &mut self.canvas_state);
+                Task::none()
+            },
             Message::TextInput(id, message) => {
                 text_input_callback(&mut self.state, id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
@@ -357,18 +365,6 @@ impl App {
             },
             Message::WindowOpened(_id, _position, size) => {
                 self.state.windows_opened += 1;
-                process_updates(&mut self.state, &mut self.canvas_state);
-                Task::none()
-            },
-            Message::TableSyncHeader(absolute_offset) => {
-                Task::none()
-            },
-            Message::TableResizing((id, index), width) => {
-                table_callback(&mut self.state, message);
-                Task::none()
-            },
-            Message::TableResized(id) => {
-                table_callback(&mut self.state, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },

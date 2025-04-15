@@ -594,7 +594,7 @@ impl IPG {
             window_position = Position::Centered;
         }
 
-        self.theme = get_iced_window_theme(theme.clone()); // used later for menu
+        self.theme = get_iced_window_theme(theme.clone());
         let iced_theme = get_iced_window_theme(theme);
 
         let mut state = access_state();
@@ -1724,6 +1724,7 @@ impl IPG {
         polars_df,
         column_widths,
         height,
+        on_column_resize=None,
         width=None, 
         width_fill=false,
         header_enabled=true,
@@ -1739,6 +1740,7 @@ impl IPG {
         resize_columns_enabled=true,
         min_column_width=50.0,
         cell_padding=0.0,
+        text_size=14.0,
         table_width_fixed=true,
         scroller_width=10.0,
         scroller_bar_width=10.0,
@@ -1757,6 +1759,7 @@ impl IPG {
         column_widths: Vec<f32>,
         height: f32,
         // **above required
+        on_column_resize: Option<PyObject>,
         width: Option<f32>,
         width_fill: bool,
         header_enabled: bool,
@@ -1772,6 +1775,7 @@ impl IPG {
         resize_columns_enabled: bool,
         min_column_width: Option<f32>,
         cell_padding: f32,
+        text_size: f32,
         table_width_fixed: bool,
         scroller_width: f32,
         scroller_bar_width: f32,
@@ -1813,6 +1817,10 @@ impl IPG {
             add_user_data_to_mutex(id, py);
         }
 
+        if let Some(py) = on_column_resize {
+            add_callback_to_mutex(id, "on_column_resize".to_string(), py);
+        }
+
         set_state_of_container(id, window_id.clone(), Some(table_id.clone()), prt_id);
 
         let mut state = access_state();
@@ -1839,6 +1847,7 @@ impl IPG {
                 resize_columns_enabled,
                 min_column_width,
                 cell_padding,
+                text_size,
                 show,
                 resize_offset,
                 table_width_fixed,
@@ -1979,7 +1988,7 @@ impl IPG {
             get_color(divider_rgba, divider_color, 1.0, false);
         let divider_hover_color = 
             get_color(divider_hover_rgba, divider_hover_color, 1.0, false);
-        let divider_unhover_color = 
+        let divider_drag_color = 
             get_color(divider_drag_rgba, divider_drag_color, 1.0, false);
 
         let mut divider_style = divider::default();

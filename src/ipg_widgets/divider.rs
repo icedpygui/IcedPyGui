@@ -13,11 +13,13 @@ use iced::{
 use iced::advanced::{Clipboard, Layout, Shell, Widget};
 
 // divider version 0.3.1
+// modified added id to Fn
 pub fn divider_horizontal<'a, Message, Theme>(
+    id: usize,
     widths: Vec<f32>,
     handle_width: f32,
     handle_height: f32,
-    on_change: impl Fn((usize, f32)) -> Message + 'a,
+    on_change: impl Fn((usize, usize, f32)) -> Message + 'a,
 ) -> Divider<'a, Message, Theme>
 where
     Message: Clone,
@@ -26,6 +28,7 @@ where
     let mut handle_offsets = vec![-handle_width/2.0; widths.len()-1];
         handle_offsets.extend([-handle_width]);
     Divider::new(
+            id,
             widths, 
             handle_width, 
             handle_height,
@@ -35,10 +38,11 @@ where
 }
 
 pub fn divider_vertical<'a, Message, Theme>(
+    id: usize,
     heights: Vec<f32>,
     handle_width: f32,
     handle_height: f32,
-    on_change: impl Fn((usize, f32)) -> Message + 'a,
+    on_change: impl Fn((usize, usize, f32)) -> Message + 'a,
 ) -> Divider<'a, Message, Theme>
 where
     Message: Clone,
@@ -50,6 +54,7 @@ where
         handle_offsets.extend([-handle_height]);
         
     Divider::new(
+            id,
             widths, 
             handle_width, 
             handle_height,
@@ -64,10 +69,11 @@ pub struct Divider<'a, Message, Theme = iced::Theme>
 where
     Theme: Catalog,
 {
+    id: usize,
     widths: Vec<f32>,
     handle_width: f32,
     handle_height: f32,
-    on_change: Box<dyn Fn((usize, f32)) -> Message + 'a>,
+    on_change: Box<dyn Fn((usize, usize, f32)) -> Message + 'a>,
     on_release: Option<Message>,
     width: Length,
     height: Length,
@@ -87,6 +93,7 @@ where
 
     /// Creates a new [`Divider`].
     pub fn new<F>(
+        id: usize,
         widths: Vec<f32>,
         handle_width: f32,
         handle_height: f32,
@@ -95,9 +102,10 @@ where
         on_change: F) 
         -> Self
     where
-        F: 'a + Fn((usize, f32)) -> Message,
+        F: 'a + Fn((usize, usize, f32)) -> Message,
     {
         Divider {
+            id,
             widths,
             handle_width,
             handle_height,
@@ -322,7 +330,7 @@ where
                                         let new_value = (position.x - w_h_bounds.x).round();
                                         (state.index, new_value)
                                     };
-                                
+                                let new_value = (self.id, new_value.0, new_value.1);
                                 shell.publish((self.on_change)(new_value));
                                 return event::Status::Captured;
                             }
@@ -363,7 +371,7 @@ where
                                         let new_value = (position.y - w_h_bounds.y).round();
                                         (state.index, new_value)
                                     };
-                                
+                                let new_value = (self.id, new_value.0, new_value.1);
                                 shell.publish((self.on_change)(new_value));
                                 return event::Status::Captured;
                             }

@@ -146,7 +146,7 @@ impl IpgDividerStyle {
 
 #[derive(Debug, Clone)]
 pub enum DivMessage {
-    OnChange((usize, f32)),
+    OnChange((usize, usize, f32)),
     OnRelease,
 }
 
@@ -179,8 +179,9 @@ pub fn construct_divider_horizontal<'a>(
         }
     };
 
-    let sld: Element<DivMessage, Theme> = 
+    let div: Element<DivMessage, Theme> = 
         divider_horizontal(
+            divider.id,
             divider.widths.clone(),
             divider.handle_width,
             divider.handle_height, 
@@ -198,7 +199,7 @@ pub fn construct_divider_horizontal<'a>(
                 )
             .into();
 
-    Some(sld.map(move |message| app::Message::Divider(divider.id, message)))
+    Some(div.map(move |message| app::Message::Divider(divider.id, message)))
 }
 
 pub fn construct_divider_vertical<'a>(
@@ -221,8 +222,9 @@ pub fn construct_divider_vertical<'a>(
         }
     };
 
-    let sld: Element<DivMessage, Theme> = 
+    let div: Element<DivMessage, Theme> = 
         divider_vertical(
+            divider.id,
             divider.heights.clone(),
             divider.handle_width,
             divider.handle_height, 
@@ -240,7 +242,7 @@ pub fn construct_divider_vertical<'a>(
                 )
             .into();
 
-    Some(sld.map(move |message| app::Message::Divider(divider.id, message)))
+    Some(div.map(move |message| app::Message::Divider(divider.id, message)))
 }
 
 pub fn divider_callback(state: &mut IpgState, id: usize, message: DivMessage) {
@@ -248,7 +250,7 @@ pub fn divider_callback(state: &mut IpgState, id: usize, message: DivMessage) {
     let mut wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
            
     match message {
-        DivMessage::OnChange((index, value)) => {
+        DivMessage::OnChange((id, index, value)) => {
             wci.value_f32 = Some(value);
             wci.value_usize = Some(index);
             wci.value_str = Some("on_change".to_string());

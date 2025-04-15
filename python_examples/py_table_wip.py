@@ -1,14 +1,30 @@
-from icedpygui import IPG, IpgHorizontalAlignment, IpgVerticalAlignment
-from icedpygui import IpgColor, IpgTextParam
-from icedpygui import IpgContainerParam, IpgAlignment
+from icedpygui import IPG, IpgHorizontalAlignment
+from icedpygui import IpgColor
+from icedpygui import IpgTableParam
 import polars as pl
 import uuid
 
 
 def generate_unique_id():
-  """Generates a unique ID using UUID1."""
   return uuid.uuid1()
 
+def table_column_resize(tbl_id: int, index: int, value: float):
+    diff = column_widths[index] - value
+
+    # Adjust the left side
+    column_widths[index] = value
+    
+    # Adjust the right side
+    if index < len(column_widths)-1:
+            column_widths[index+1] += diff
+    
+    # update the column widths in the table
+    ipg.update_item(
+        wid=tbl_id,
+        param=IpgTableParam.ColumnWidths,
+        value=column_widths,
+    )
+    
 
 ipg = IPG()
 
@@ -66,24 +82,20 @@ ipg.add_container(
 
 width = sum(column_widths)
 
-ipg.add_stack(
-        window_id="main",
-        container_id="stack",
-        parent_id="cont")
-
 # The table is added.
 ipg.add_table(
         window_id="main",
         table_id="table",
         title="My Table",
         polars_df=df,
-        parent_id="stack",
+        parent_id="cont",
         column_widths=column_widths,
         height=300.0,
         control_columns=[0],
         header_enabled=True, #default value
         footer=footer,
         table_width_fixed=True, # defaults to True, change to False to see the effect
+        on_column_resize=table_column_resize,
         )
 
 

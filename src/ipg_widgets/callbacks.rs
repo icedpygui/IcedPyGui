@@ -348,29 +348,10 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
         let container_opt = state.containers.get_mut(&wci.id);
         if container_opt.is_some() {
             match container_opt.unwrap() {
-                IpgContainers::IpgTable(tbl) => {
-                    match wci.table_mouse {
-                        IpgTableMouse::None => (),
-                        IpgTableMouse::Resizing => {
-                            tbl.resize_offset[wci.index.unwrap()] = wci.value_f32;
-                        },
-                        IpgTableMouse::Resized => {
-                            let mut not_none_index = 0;
-                            tbl.resize_offset
-                                .iter_mut()
-                                .enumerate()
-                                .for_each(|(index, offset)| {
-                                    if let Some(offset) = offset.take() {
-                                        tbl.column_widths[index] += offset;
-                                        not_none_index = index;
-                                    }
-                                });
-                            tbl.resize_offset[not_none_index] = None;
-                        },
-                    }
+                IpgContainers::IpgTable(_) => {
                     return WidgetCallbackOut::default();
                 },
-                _ => panic!("container not found")
+                _ => panic!("Callback: container not found")
             }
         }
     }
