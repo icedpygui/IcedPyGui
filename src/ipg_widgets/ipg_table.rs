@@ -14,30 +14,34 @@ use polars::frame::DataFrame;
 use pyo3::{pyclass, PyObject, Python};
 use pyo3_polars::PyDataFrame;
 
-use super::callbacks::{set_or_get_widget_callback_data, 
-    WidgetCallbackIn};
+use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
 use super::divider::{self, divider_horizontal};
 use super::helpers::{get_width, try_extract_boolean, 
-    try_extract_f64, try_extract_string, try_extract_vec_f32};
+    try_extract_f64, try_extract_vec_f32};
 use super::ipg_enums::IpgWidgets;
 
 
 #[derive(Debug, Clone)]
 pub struct IpgTable {
         pub id: usize,
-        pub title: String,
         pub df: DataFrame,
         pub column_widths: Vec<f32>,
         pub height: f32,
         // above required
         pub width: Length,
         pub header_enabled: bool,
-        pub header_custom_enabled: bool,
-        pub footer: Option<Vec<String>>,
+        pub header_height: f32,
+        pub header_resizer_width: f32,
+        pub header_scrollbar_height: f32,
+        pub header_scroller_height: f32,
+        pub footer_height: f32,
+        pub custom_header_rows: usize,
+        pub custom_footer_rows: usize,
         pub control_columns: Vec<usize>,
         pub hide_columns: Vec<usize>,
-        pub column_spacing: f32,
+        pub column_porportional_resize: bool,
         pub row_spacing: f32,
+        pub row_height: f32,
         pub row_max_height: Option<f32>,
         pub divider_width: f32,
         pub resize_columns_enabled: bool,
@@ -47,31 +51,39 @@ pub struct IpgTable {
         pub show: bool,
         pub resize_offset: Vec<Option<f32>>,
         pub table_width_fixed: bool,
-        pub table_width: f32,
         pub scroller_width: f32,
         pub scroller_bar_width: f32,
         pub scroller_margin: f32,
         pub style_id: Option<usize>,
+        pub released: bool,
         pub header_scroller_id: scrollable::Id,
         pub body_scroller_id: scrollable::Id,
         pub footer_scroller_id: scrollable::Id,
+        pub header_scroller_offset: f32,
+        pub body_scroller_offset: f32,
+        pub footer_scroller_offset: f32,
 }
 
 impl IpgTable {
     pub fn new( 
         id: usize,
-        title: String,
         df: DataFrame,
         column_widths: Vec<f32>,
         height: f32,
         width: Length,
         header_enabled: bool,
-        header_custom_enabled: bool,
-        footer: Option<Vec<String>>,
+        header_height: f32,
+        header_resizer_width: f32,
+        header_scrollbar_height: f32,
+        header_scroller_height: f32,
+        footer_height: f32,
+        custom_header_rows: usize,
+        custom_footer_rows: usize,
         control_columns: Vec<usize>,
         hide_columns: Vec<usize>,
-        column_spacing: f32,
+        column_porportional_resize: bool,
         row_spacing: f32,
+        row_height: f32,
         row_max_height: Option<f32>,
         divider_width: f32,
         resize_columns_enabled: bool,
@@ -81,26 +93,31 @@ impl IpgTable {
         show: bool,
         resize_offset: Vec<Option<f32>>,
         table_width_fixed: bool,
-        table_width: f32,
         scroller_width: f32,
         scroller_bar_width: f32,
         scroller_margin: f32,
         style_id: Option<usize>,
+        released: bool,
         ) -> Self {
         Self {
             id,
-            title,
             df,
             column_widths,
             height,
             width,
             header_enabled,
-            header_custom_enabled,
-            footer,
+            header_height,
+            header_resizer_width,
+            header_scrollbar_height,
+            header_scroller_height,
+            footer_height,
+            custom_header_rows,
+            custom_footer_rows,
             control_columns,
             hide_columns,
-            column_spacing,
+            column_porportional_resize,
             row_spacing,
+            row_height,
             row_max_height,
             divider_width,
             resize_columns_enabled,
@@ -110,14 +127,17 @@ impl IpgTable {
             show,
             resize_offset,
             table_width_fixed,
-            table_width,
             scroller_width,
             scroller_bar_width,
             scroller_margin,
             style_id,
+            released,
             header_scroller_id: scrollable::Id::unique(),
             body_scroller_id: scrollable::Id::unique(),
             footer_scroller_id: scrollable::Id::unique(),
+            header_scroller_offset: 0.0,
+            body_scroller_offset: 0.0,
+            footer_scroller_offset: 0.0,
         }
     }
 }
@@ -130,44 +150,55 @@ pub enum IpgTableRowHighLight {
     Lighter,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
-pub enum IpgTableMouse {
-    #[default]
-    None,
-    Resizing,
-    Resized,
-}
-
 pub fn construct_table<'a>(tbl: IpgTable, 
-                            _content: Vec<Element<'a, Message, Theme, Renderer>>,
+                            mut content: Vec<Element<'a, Message, Theme, Renderer>>,
                             style_opt: Option<&IpgWidgets>, 
                             ) 
                             -> Element<'a, Message, Theme, Renderer> {
 
     let _style = get_table_style(style_opt);
-    
 
+    let body_row_height = tbl.row_max_height.map_or(tbl.row_height, |max_height| {
+        if tbl.row_height > max_height {
+            max_height
+        } else {
+            tbl.row_height
+        }
+    });
+    
     let mut body_rows = vec![];
         for idx in 0..tbl.df.height() {
             if let Ok(df_row) = tbl.df.get_row(idx) {
                 let mut rw = vec![];
                 for (i, item) in df_row.0.iter().enumerate() {
-                    let txt = 
-                        text(item.to_string())
-                            .size(tbl.text_size)
-                            .align_x(alignment::Horizontal::Center)
-                            .align_y(alignment::Vertical::Center)
-                            .width(tbl.column_widths[i]);
-                    rw.push(Element::from(txt));
+                    if !tbl.control_columns.contains(&i) {
+                        let txt = 
+                            text(item.to_string())
+                                .size(tbl.text_size)
+                                .align_x(alignment::Horizontal::Center)
+                                .align_y(alignment::Vertical::Center)
+                                .width(tbl.column_widths[i]);
+                        rw.push(Element::from(txt));
+                    } else {
+                        rw.push(Element::from(container(content.remove(0))
+                                                .width(tbl.column_widths[i])
+                                                .center_x(tbl.column_widths[i])));
+                    }
                 }
-            body_rows.push(container(row(rw))
+            body_rows.push(container(row(rw)
+                                                .height(Fill))
+                            .height(body_row_height)
                             .style(move|theme|bordered_box(theme, idx))
                             .into());
             }
         }
+
         let body: Element<Message> = scrollable(column(body_rows))
-                                        .height(400.0)
-                                        .on_scroll(move|vp|Message::TableSync(vp.absolute_offset()))
+                                        .height(tbl.height)
+                                        .width(tbl.width)
+                                        .id(tbl.body_scroller_id)
+                                        .on_scroll(move|vp|Message::TableSync(
+                                                        vp.absolute_offset(), tbl.id))
                                         .direction({
                                             let scrollbar = Scrollbar::new();
                                             scrollable::Direction::Both {
@@ -175,10 +206,35 @@ pub fn construct_table<'a>(tbl: IpgTable,
                                                 vertical: scrollbar,
                                             }
                                         })
-                                        .id(tbl.body_scroller_id.clone())
+                                        
                                         .into();
+        
+        // Adjust the header height to include the scrollbar height if scrollbar in use.
+        let mut header_height = if tbl.width != Length::Shrink {
+            tbl.header_height + tbl.header_scroller_height + 5.0
+        } else {
+            tbl.header_height
+        };
 
-        let header = if tbl.header_enabled {
+        let mut footer_height = if tbl.width != Length::Shrink {
+            tbl.footer_height + tbl.header_scroller_height + 5.0
+        } else {
+            tbl.footer_height
+        };
+
+
+        if tbl.custom_header_rows > 0 {
+            header_height += header_height * tbl.custom_header_rows as f32;
+        }
+
+        if tbl.custom_footer_rows > 0 {
+            footer_height += header_height * tbl.custom_footer_rows as f32;
+        }
+
+        let mut header_column = vec![];
+
+        // add the header if enabled
+        if tbl.header_enabled {
             let column_names = tbl.df.get_column_names_owned();
             let header = column_names.iter().map(|s| s.to_string());
             let mut rw = vec![];
@@ -193,37 +249,95 @@ pub fn construct_table<'a>(tbl: IpgTable,
                 rw.push(Element::from(
                     container(txt)
                         .width(tbl.column_widths[i])
-                        .height(25.0)
+                        .height(header_height)
                         .style(move|theme|container::bordered_box(theme))
                         ));
             }
-            Some(Element::from(scrollable(row(rw))
+            header_column.push(Element::from(row(rw)));
+        }
+               
+        // add any custom header rows
+        if tbl.custom_header_rows > 0 {
+            for _ in 0..tbl.custom_header_rows {
+                let mut custom_rw = vec![];
+                for i in 0..tbl.df.width() {
+                    custom_rw.push(Element::from(container(content.remove(0))
+                                                        .width(tbl.column_widths[i])
+                                                        .center_x(tbl.column_widths[i])
+                                                        .style(move|theme|container::bordered_box(theme))
+                                                        ));
+                }
+                header_column.push(Element::from(row(custom_rw)));
+            }
+        }
+
+        let header = if header_column.len() > 0 {
+            Some(Element::from(scrollable(column(header_column))
+                                .width(tbl.width)
+                                .id(tbl.header_scroller_id)
                                 .direction({
-                                    let scrollbar = scrollable::Scrollbar::new();
+                                    let scrollbar = scrollable::Scrollbar::new()
+                                        .scroller_width(tbl.header_scrollbar_height)
+                                        .width(tbl.header_scrollbar_height);
                                     scrollable::Direction::Horizontal(scrollbar)
                                     })
-                                .id(tbl.header_scroller_id.clone())
+                                .on_scroll(move|vp| Message::TableSync(
+                                                    vp.absolute_offset(), tbl.id))
                                 ))
         } else {
             None
         };
 
-        let div = 
+
+        let footer = if tbl.custom_footer_rows > 0 {
+        let mut footer_column= vec![];
+        for _ in 0..tbl.custom_footer_rows {
+            let mut rw = vec![];
+            for i in 0..tbl.df.width() {
+                rw.push(Element::from(container(content.remove(0))
+                                                    .width(tbl.column_widths[i])
+                                                    .center_x(tbl.column_widths[i])
+                                                    .style(move|theme|container::bordered_box(theme))
+                                                    ));
+            }
+            footer_column.push(Element::from(row(rw)));
+        }
+            Some(column(footer_column))
+        } else {
+            None
+        };
+
+        let div_header = 
             divider_horizontal(
                 tbl.id,
                 tbl.column_widths.clone(),
-                4.0,
-                25.0,
-                Message::TableDivider,
-            );
+                tbl.header_resizer_width,
+                header_height,
+                Message::TableDividerChanged,
+            ).on_release(Message::TableDividerReleased(tbl.id));
+
+        let div_footer = 
+            divider_horizontal(
+                tbl.id,
+                tbl.column_widths.clone(),
+                tbl.header_resizer_width,
+                footer_height,
+                Message::TableDividerChanged,
+            ).on_release(Message::TableDividerReleased(tbl.id));
 
         let mut col = vec![];
         if header.is_some() {
-            let stk = stack([header.unwrap(), div.into()]).into();
+            let stk = stack([header.unwrap(), div_header.into()]).into();
             col.push(stk);
         }
+
         col.push(body.into());
-        
+
+        if footer.is_some() {
+            let stk = stack([footer.unwrap().into(), div_footer.into()]).into();
+            col.push(stk);
+        }
+
         let main_col = column(col).spacing(5.0);
     
         container(container(main_col))
@@ -238,39 +352,50 @@ pub fn construct_table<'a>(tbl: IpgTable,
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum TableMessage {
-    ColumnResizing((usize, f32)),
+    DivDragging((usize, f32)),
     DivOnRelease,
+    SyncScrollables(usize),
 }
 
 pub fn table_callback(
         state: &mut IpgState,  
         id: usize,  
-        message: TableMessage) {
+        message: TableMessage) 
+        -> (Option<scrollable::Id>, Option<scrollable::Id>, Option<scrollable::Id>){
 
     let mut wci: WidgetCallbackIn = WidgetCallbackIn{id, ..Default::default()};
-           
+
     match message {
-        TableMessage::ColumnResizing((index, value)) => {
-            process_callback(
-                id, 
-                "on_column_resize".to_string(), 
-                index, 
-                value);
-        },
-        TableMessage::DivOnRelease => {
-            // to be consistent, returning values for both
-            wci.value_str = Some("on_release".to_string());
+        TableMessage::DivDragging((index, value)) => {
+            wci.value_f32 = Some(value);
+            wci.value_usize = Some(index);
+            wci.value_str = Some("dragging".to_string());
             let wco = set_or_get_widget_callback_data(state, wci);
-            process_callback(
+            process_callback1(
                 id, 
-                "on_release".to_string(), 
-                wco.value_usize.unwrap(), 
-                wco.value_f32.unwrap());
+                "dragging".to_string(), 
+                index, 
+                wco.vec_f32);
+            return (None, None, None)
         },
+        TableMessage::DivOnRelease=> {
+            process_callback2(
+                id, 
+                "released".to_string()
+            );
+            return (None, None, None)
+        },
+        TableMessage::SyncScrollables(id) => {
+            wci.id = id;
+            wci.value_str = Some("sync".to_string());
+            let wco = set_or_get_widget_callback_data(state, wci);
+
+            return wco.scroller_ids.unwrap();
+        }
     }
 }
 
-pub fn process_callback(id: usize, event_name: String, index: usize, value: f32) 
+pub fn process_callback1(id: usize, event_name: String, index: usize, value: Vec<f32>) 
 {
     let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
@@ -324,10 +449,59 @@ pub fn process_callback(id: usize, event_name: String, index: usize, value: f32)
 
 }
 
+pub fn process_callback2(id: usize, event_name: String) 
+{
+    let ud = access_user_data1();
+    let user_data_opt = ud.user_data.get(&id);
+
+    let app_cbs = access_callbacks();
+
+    let callback_present = 
+        app_cbs.callbacks.get(&(id, event_name));
+    
+    let callback = match callback_present {
+        Some(cb) => cb,
+        None => return,
+    };
+
+    let cb = 
+        Python::with_gil(|py| {
+            callback.clone_ref(py)
+        });
+
+    drop(app_cbs);
+                 
+    Python::with_gil(|py| {
+        if user_data_opt.is_some() {
+            
+            let res = cb.call1(py, (
+                                                        id,
+                                                        user_data_opt,
+                                                        ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Table Divider: 2 parameters (id, user_data) 
+                                    are required or a python error in this function. {er}"),
+            }
+        } else {
+            let res = cb.call1(py, (
+                                                        id, 
+                                                        ));
+            match res {
+                Ok(_) => (),
+                Err(er) => panic!("Table Divider: 1 parameters (id) 
+                                    are required or a python error in this function. {er}"),
+            }
+        }
+    });
+
+    drop(ud); 
+
+}
+
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
 pub enum IpgTableParam {
-    Title,
     PolarsDf,
     ColumnWidths,
     Height,
@@ -335,7 +509,7 @@ pub enum IpgTableParam {
     HeaderEnabled,
     HeaderCustomEnabled,
     Footer,
-    ColumnSpacing,
+    ColumnPorportionalResize,
     RowSpacing,
     DividerWidth,
     ResizeColumnsEnabled,
@@ -343,7 +517,6 @@ pub enum IpgTableParam {
     CellPadding,
     Show,
     TableWidthFixed,
-    TableWidth,
     ScrollerWidth,
     ScrollerBarWidth,
     ScrollerMargin,
@@ -358,9 +531,6 @@ pub fn table_item_update(
     let update = try_extract_table_update(item);
     let name = "Table".to_string();
     match update {
-        IpgTableParam::Title => {
-            table.title = try_extract_string(value, name);
-        },
         IpgTableParam::ColumnWidths => {
             table.column_widths = try_extract_vec_f32(value, name);
         },
@@ -371,8 +541,8 @@ pub fn table_item_update(
         IpgTableParam::Height => {
             table.height = try_extract_f64(value, name) as f32;
         },
-        IpgTableParam::ColumnSpacing => {
-            table.column_spacing = try_extract_f64(value, name) as f32;
+        IpgTableParam::ColumnPorportionalResize => {
+            table.column_porportional_resize = try_extract_boolean(value, name);
         },
         IpgTableParam::RowSpacing => {
             table.row_spacing = try_extract_f64(value, name) as f32;
@@ -394,9 +564,6 @@ pub fn table_item_update(
         },
         IpgTableParam::TableWidthFixed => {
             table.table_width_fixed = try_extract_boolean(value, name);
-        },
-        IpgTableParam::TableWidth => {
-            table.table_width = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::ScrollerWidth => {
             table.scroller_width = try_extract_f64(value, name) as f32;

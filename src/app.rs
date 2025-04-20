@@ -93,8 +93,9 @@ pub enum Message {
     Slider(usize, SLMessage),
     Svg(usize, SvgMessage),
 
-    TableSync(scrollable::AbsoluteOffset),
-    TableDivider((usize, usize, f32)),
+    TableSync(scrollable::AbsoluteOffset, usize),
+    TableDividerChanged((usize, usize, f32)),
+    TableDividerReleased(usize),
 
     TextInput(usize, TIMessage),
     Toggler(usize, TOGMessage),
@@ -310,11 +311,27 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
-            Message::TableSync(absolute_offset) => {
+            Message::TableSync(offset, id) => {
+                let message = TableMessage::SyncScrollables(id);
+                let (header, body, footer) = table_callback(&mut self.state, id, message);
+                process_updates(&mut self.state, &mut self.canvas_state);
+                let mut tasks = vec![scrollable::scroll_to(body.unwrap(), offset)];
+                if header.is_some() {
+                    tasks.push(scrollable::scroll_to(header.unwrap(), offset));
+                }
+                if footer.is_some() {
+                    tasks.push(scrollable::scroll_to(footer.unwrap(), offset));
+                }
+                Task::batch(tasks)
+            },
+            Message::TableDividerChanged((id, index, value)) => {
+                let message = TableMessage::DivDragging((index, value));
+                table_callback(&mut self.state, id, message);
+                process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()
             },
-            Message::TableDivider((id, index, value)) => {
-                let message = TableMessage::ColumnResizing((index, value));
+            Message::TableDividerReleased(id) => {
+                let message = TableMessage::DivOnRelease;
                 table_callback(&mut self.state, id, message);
                 process_updates(&mut self.state, &mut self.canvas_state);
                 Task::none()

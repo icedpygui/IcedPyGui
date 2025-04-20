@@ -2618,8 +2618,10 @@ class IPG:
                     width: Optional[float],
                     width_fill: bool=False,
                     header_enabled: bool=True,
-                    header_custom_enabled: bool=False,
-                    footer: Optional[list[str]]=None,
+                    header_height: float=25.0,
+                    footer_height: float=25.0,
+                    custom_header_rows: int=0,
+                    custom_footer_rows: int=0,
                     control_columns=list[int],
                     hide_columns=list[int],
                     resize_columns_enabled: bool=True,
@@ -2627,6 +2629,7 @@ class IPG:
                     parent_id: Optional[str]=None,
                     column_spacing: float=5.0,
                     row_spacing: float=5.0,
+                    row_height: float=20.0,
                     row_max_height: Optional[float]=None,
                     cell_padding: float=0.0,
                     table_width_fixed: bool=True,
@@ -5312,8 +5315,6 @@ class IpgTableParam:
 
     Parameters
     ----------
-    Title: str
-        Title for the table.
     Data: list[dict]
         Table data in list of dictionaries form
     Width: float
@@ -5351,23 +5352,22 @@ class IpgTableParam:
     Show: bool
         Whether to show or hide the widget.
     """
-    Title:str
     PolarsDf:PyDataFrame
     Width:float
     Height:float
     HeaderEnabled:bool
     HeaderCustomEnabled:bool
-    Footer:list[str]
+    Footer:bool
     ColumnWidths:list[float]
     ColumnSpacing:float
     RowSpacing:float
     RowMaxHeight:float
     DividerWidth:float
     ResizeColumnsEnabled:bool
+    ColumnPorportionalResize:bool
     MinColumnWidth:float
     CellPadding:list[float]
     TableWidthFixed:bool
-    TableWidth:float
     ScrollerWidth:float
     ScrollerBarWidth:float
     ScrollerMargin:float

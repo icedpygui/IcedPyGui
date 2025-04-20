@@ -138,6 +138,7 @@ def add_buttons(window: str):
                 height=50.0,
                 text_align_x=IpgHorizontalAlignment.Right,
                 text_align_y=IpgVerticalAlignment.Top)
+        
 
 # Add the windows
 ipg.add_window(

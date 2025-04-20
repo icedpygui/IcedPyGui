@@ -1720,21 +1720,27 @@ impl IPG {
     #[pyo3(signature = (
         window_id, 
         table_id, 
-        title,
         polars_df,
         column_widths,
         height,
         on_column_resize=None,
+        on_column_resize_release=None,
         width=None, 
         width_fill=false,
         header_enabled=true,
-        header_custom_enabled=false,
-        footer=None,
+        header_height=25.0,
+        header_resizer_width=4.0,
+        header_scrollbar_height=5.0,
+        header_scroller_height=5.0,
+        footer_height=25.0,
+        custom_header_rows=0,
+        custom_footer_rows=0,
         control_columns=vec![],
         hide_columns=vec![],
         parent_id=None,
-        column_spacing=5.0,
+        column_porportional_resize=true,
         row_spacing=5.0,
+        row_height=20.0,
         row_max_height=None,
         divider_width=2.0,
         resize_columns_enabled=true,
@@ -1754,22 +1760,28 @@ impl IPG {
         &self,
         window_id: String,
         table_id: String,
-        title: String,
         polars_df: PyDataFrame,
         column_widths: Vec<f32>,
         height: f32,
         // **above required
         on_column_resize: Option<PyObject>,
+        on_column_resize_release: Option<PyObject>,
         width: Option<f32>,
         width_fill: bool,
         header_enabled: bool,
-        header_custom_enabled: bool,
-        footer: Option<PyObject>,
+        header_height: f32,
+        header_resizer_width: f32,
+        header_scrollbar_height: f32,
+        header_scroller_height: f32,
+        footer_height: f32,
+        custom_header_rows: usize,
+        custom_footer_rows: usize,
         control_columns: Vec<usize>,
         hide_columns: Vec<usize>,
         parent_id: Option<String>,
-        column_spacing: f32,
+        column_porportional_resize: bool,
         row_spacing: f32,
+        row_height: f32,
         row_max_height: Option<f32>,
         divider_width: f32,
         resize_columns_enabled: bool,
@@ -1807,19 +1819,20 @@ impl IPG {
 
         let df: DataFrame = polars_df.into();
 
-        let footer = if footer.is_some() {
-            Some(try_extract_vec_str(&footer.unwrap(), "Table Footer".to_string()))
-        } else {
-            None
-        };
-       
         if let Some(py) = user_data {
             add_user_data_to_mutex(id, py);
         }
 
         if let Some(py) = on_column_resize {
-            add_callback_to_mutex(id, "on_column_resize".to_string(), py);
+            add_callback_to_mutex(id, "dragging".to_string(), py);
         }
+
+        let released = if let Some(py) = on_column_resize_release {
+            add_callback_to_mutex(id, "released".to_string(), py);
+            true
+        } else {
+            false
+        };
 
         set_state_of_container(id, window_id.clone(), Some(table_id.clone()), prt_id);
 
@@ -1830,18 +1843,23 @@ impl IPG {
         state.containers.insert(id, IpgContainers::IpgTable(
             IpgTable::new( 
                 id,
-                title,
                 df,
                 column_widths,
                 height,
                 width,
                 header_enabled,
-                header_custom_enabled,
-                footer,
+                header_height,
+                header_resizer_width,
+                header_scrollbar_height,
+                header_scroller_height,
+                footer_height,
+                custom_header_rows,
+                custom_footer_rows,
                 control_columns,
                 hide_columns,
-                column_spacing,
+                column_porportional_resize,
                 row_spacing,
+                row_height,
                 row_max_height,
                 divider_width,
                 resize_columns_enabled,
@@ -1851,11 +1869,11 @@ impl IPG {
                 show,
                 resize_offset,
                 table_width_fixed,
-                table_width,
                 scroller_width,
                 scroller_bar_width,
                 scroller_margin,
                 style_id,
+                released,
                 )));
 
         drop(state);
@@ -1984,14 +2002,14 @@ impl IPG {
         footer_style.border.radius = Radius::new(Pixels(footer_border_radius));
         footer_style.border.width = footer_border_width;
 
-        let divider_color: Option<Color> = 
-            get_color(divider_rgba, divider_color, 1.0, false);
-        let divider_hover_color = 
-            get_color(divider_hover_rgba, divider_hover_color, 1.0, false);
-        let divider_drag_color = 
-            get_color(divider_drag_rgba, divider_drag_color, 1.0, false);
+        // let divider_color: Option<Color> = 
+        //     get_color(divider_rgba, divider_color, 1.0, false);
+        // let divider_hover_color = 
+        //     get_color(divider_hover_rgba, divider_hover_color, 1.0, false);
+        // let divider_drag_color = 
+        //     get_color(divider_drag_rgba, divider_drag_color, 1.0, false);
 
-        let mut divider_style = divider::default();
+        let divider_style = divider::default();
 
         let mut state = access_state();
 
