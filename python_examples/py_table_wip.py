@@ -80,6 +80,8 @@ ipg.add_container(
 width = sum(column_widths)
 
 # The table is added.
+# The defaults below are show for info and normally not be needed
+# unless alternate values are wanted.
 ipg.add_table(
         window_id="main",
         table_id="table",
@@ -87,14 +89,16 @@ ipg.add_table(
         parent_id="cont",
         column_widths=column_widths,
         height=150.0,
+        # above required
         # width=300.0, # see the scroller when the table is smaller than the column widths
-        control_columns=[0, 3],
-        header_enabled=True, #default value
-        custom_header_rows=1,
-        custom_footer_rows=1,
+        control_columns=[0, 3], # list for the indexes of the control columns
+        header_enabled=True, # default value, 
+        custom_header_rows=1, # the number of additional header rows, default=0
+        custom_footer_rows=1, # the number of footer rows, default=0
+        row_spacing=0.0, # default
         table_width_fixed=True, # defaults to True, change to False to see the effect
         column_porportional_resize=True, # defaults to True, when False
-        on_column_resize=table_column_resize, # may need in some cases where resizing causes alignment issues.
+        on_column_resize=table_column_resize, # may need in some cases where resizing causes alignment issues or other cases.
         )
 
 

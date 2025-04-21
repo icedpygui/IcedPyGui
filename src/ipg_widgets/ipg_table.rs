@@ -29,12 +29,16 @@ pub struct IpgTable {
         pub height: f32,
         // above required
         pub width: Length,
+        pub resizer_width: f32,
         pub header_enabled: bool,
         pub header_height: f32,
-        pub header_resizer_width: f32,
         pub header_scrollbar_height: f32,
         pub header_scroller_height: f32,
+        pub header_spacing: f32,
         pub footer_height: f32,
+        pub footer_scrollbar_height: f32,
+        pub footer_scroller_height: f32,
+        pub footer_spacing: f32,
         pub custom_header_rows: usize,
         pub custom_footer_rows: usize,
         pub control_columns: Vec<usize>,
@@ -43,7 +47,6 @@ pub struct IpgTable {
         pub row_spacing: f32,
         pub row_height: f32,
         pub row_max_height: Option<f32>,
-        pub divider_width: f32,
         pub resize_columns_enabled: bool,
         pub min_column_width: Option<f32>,
         pub cell_padding: f32,
@@ -59,9 +62,9 @@ pub struct IpgTable {
         pub header_scroller_id: scrollable::Id,
         pub body_scroller_id: scrollable::Id,
         pub footer_scroller_id: scrollable::Id,
-        pub header_scroller_offset: f32,
-        pub body_scroller_offset: f32,
-        pub footer_scroller_offset: f32,
+        pub header_scrollbar_spacing: Option<f32>,
+        pub body_scrollbar_spacing: Option<f32>,
+        pub footer_scrollbar_spacing: Option<f32>,
 }
 
 impl IpgTable {
@@ -71,12 +74,16 @@ impl IpgTable {
         column_widths: Vec<f32>,
         height: f32,
         width: Length,
+        resizer_width: f32,
         header_enabled: bool,
         header_height: f32,
-        header_resizer_width: f32,
         header_scrollbar_height: f32,
         header_scroller_height: f32,
+        header_spacing: f32,
         footer_height: f32,
+        footer_scrollbar_height: f32,
+        footer_scroller_height: f32,
+        footer_spacing: f32,
         custom_header_rows: usize,
         custom_footer_rows: usize,
         control_columns: Vec<usize>,
@@ -85,7 +92,6 @@ impl IpgTable {
         row_spacing: f32,
         row_height: f32,
         row_max_height: Option<f32>,
-        divider_width: f32,
         resize_columns_enabled: bool,
         min_column_width: Option<f32>,
         cell_padding: f32,
@@ -98,6 +104,10 @@ impl IpgTable {
         scroller_margin: f32,
         style_id: Option<usize>,
         released: bool,
+        header_scrollbar_spacing: Option<f32>,
+        body_scrollbar_spacing: Option<f32>,
+        footer_scrollbar_spacing: Option<f32>,
+        
         ) -> Self {
         Self {
             id,
@@ -105,12 +115,16 @@ impl IpgTable {
             column_widths,
             height,
             width,
+            resizer_width,
             header_enabled,
             header_height,
-            header_resizer_width,
             header_scrollbar_height,
             header_scroller_height,
+            header_spacing,
             footer_height,
+            footer_scrollbar_height,
+            footer_scroller_height,
+            footer_spacing,
             custom_header_rows,
             custom_footer_rows,
             control_columns,
@@ -119,7 +133,6 @@ impl IpgTable {
             row_spacing,
             row_height,
             row_max_height,
-            divider_width,
             resize_columns_enabled,
             min_column_width,
             cell_padding,
@@ -132,12 +145,12 @@ impl IpgTable {
             scroller_margin,
             style_id,
             released,
+            header_scrollbar_spacing,
+            body_scrollbar_spacing,
+            footer_scrollbar_spacing,
             header_scroller_id: scrollable::Id::unique(),
             body_scroller_id: scrollable::Id::unique(),
             footer_scroller_id: scrollable::Id::unique(),
-            header_scroller_offset: 0.0,
-            body_scroller_offset: 0.0,
-            footer_scroller_offset: 0.0,
         }
     }
 }
@@ -193,7 +206,10 @@ pub fn construct_table<'a>(tbl: IpgTable,
             }
         }
 
-        let body: Element<Message> = scrollable(column(body_rows))
+        let body_column = column(body_rows)
+                                                .spacing(tbl.row_spacing);
+
+        let body: Element<Message> = scrollable(body_column)
                                         .height(tbl.height)
                                         .width(tbl.width)
                                         .id(tbl.body_scroller_id)
@@ -209,27 +225,17 @@ pub fn construct_table<'a>(tbl: IpgTable,
                                         
                                         .into();
         
-        // Adjust the header height to include the scrollbar height if scrollbar in use.
-        let mut header_height = if tbl.width != Length::Shrink {
-            tbl.header_height + tbl.header_scroller_height + 5.0
-        } else {
+        let header_height = if tbl.header_enabled {
             tbl.header_height
-        };
-
-        let mut footer_height = if tbl.width != Length::Shrink {
-            tbl.footer_height + tbl.header_scroller_height + 5.0
         } else {
-            tbl.footer_height
+            0.0
         };
 
-
-        if tbl.custom_header_rows > 0 {
-            header_height += header_height * tbl.custom_header_rows as f32;
-        }
-
-        if tbl.custom_footer_rows > 0 {
-            footer_height += header_height * tbl.custom_footer_rows as f32;
-        }
+        let custom_header_height = if tbl.custom_header_rows > 0 {
+            tbl.header_height
+        } else {
+            0.0
+        };
 
         let mut header_column = vec![];
 
@@ -261,48 +267,75 @@ pub fn construct_table<'a>(tbl: IpgTable,
             for _ in 0..tbl.custom_header_rows {
                 let mut custom_rw = vec![];
                 for i in 0..tbl.df.width() {
-                    custom_rw.push(Element::from(container(content.remove(0))
-                                                        .width(tbl.column_widths[i])
-                                                        .center_x(tbl.column_widths[i])
-                                                        .style(move|theme|container::bordered_box(theme))
-                                                        ));
+                    custom_rw.push(Element::from(
+                        container(content.remove(0))
+                            .width(tbl.column_widths[i])
+                            .height(custom_header_height)
+                            .center_x(tbl.column_widths[i])
+                            .style(move|theme|container::bordered_box(theme))
+                            ));
                 }
                 header_column.push(Element::from(row(custom_rw)));
             }
         }
 
         let header = if header_column.len() > 0 {
-            Some(Element::from(scrollable(column(header_column))
-                                .width(tbl.width)
-                                .id(tbl.header_scroller_id)
-                                .direction({
-                                    let scrollbar = scrollable::Scrollbar::new()
-                                        .scroller_width(tbl.header_scrollbar_height)
-                                        .width(tbl.header_scrollbar_height);
-                                    scrollable::Direction::Horizontal(scrollbar)
-                                    })
-                                .on_scroll(move|vp| Message::TableSync(
-                                                    vp.absolute_offset(), tbl.id))
-                                ))
+            let hd_col = column(header_column)
+                                                .spacing(tbl.header_spacing);
+            Some(Element::from(
+                scrollable(hd_col)
+                    .width(tbl.width)
+                    .id(tbl.header_scroller_id)
+                    .direction({
+                        let scrollbar = scrollable::Scrollbar::new()
+                            .scroller_width(tbl.header_scroller_height)
+                            .width(tbl.header_scrollbar_height);
+                        if tbl.header_scrollbar_spacing.is_some(){
+                            scrollbar.spacing(tbl.header_scrollbar_spacing.unwrap());
+                        }
+                        scrollable::Direction::Horizontal(scrollbar)
+                        })
+                    .on_scroll(move|vp| Message::TableSync(
+                                        vp.absolute_offset(), tbl.id))
+                    ))
         } else {
             None
         };
 
 
         let footer = if tbl.custom_footer_rows > 0 {
-        let mut footer_column= vec![];
-        for _ in 0..tbl.custom_footer_rows {
-            let mut rw = vec![];
-            for i in 0..tbl.df.width() {
-                rw.push(Element::from(container(content.remove(0))
-                                                    .width(tbl.column_widths[i])
-                                                    .center_x(tbl.column_widths[i])
-                                                    .style(move|theme|container::bordered_box(theme))
-                                                    ));
+            let mut footer_column= vec![];
+            for _ in 0..tbl.custom_footer_rows {
+                let mut rw = vec![];
+                for i in 0..tbl.df.width() {
+                    rw.push(Element::from(
+                        container(content.remove(0))
+                            .width(tbl.column_widths[i])
+                            .height(tbl.footer_height)
+                            .center_x(tbl.column_widths[i])
+                            .style(move|theme|container::bordered_box(theme))
+                            ));
+                }
+                footer_column.push(Element::from(row(rw)));
             }
-            footer_column.push(Element::from(row(rw)));
-        }
-            Some(column(footer_column))
+            let ft_col = column(footer_column)
+                                                .spacing(tbl.footer_spacing);
+            Some(Element::from(
+                scrollable(ft_col)
+                    .width(tbl.width)
+                    .id(tbl.footer_scroller_id)
+                    .direction({
+                        let scrollbar = scrollable::Scrollbar::new()
+                            .scroller_width(tbl.footer_scroller_height)
+                            .width(tbl.footer_scrollbar_height);
+                        if tbl.footer_scrollbar_spacing.is_some(){
+                            scrollbar.spacing(tbl.footer_scrollbar_spacing.unwrap());
+                        }
+                        scrollable::Direction::Horizontal(scrollbar)
+                        })
+                    .on_scroll(move|vp| Message::TableSync(
+                                        vp.absolute_offset(), tbl.id))
+                    ))
         } else {
             None
         };
@@ -311,8 +344,8 @@ pub fn construct_table<'a>(tbl: IpgTable,
             divider_horizontal(
                 tbl.id,
                 tbl.column_widths.clone(),
-                tbl.header_resizer_width,
-                header_height,
+                tbl.resizer_width,
+                header_height + tbl.custom_header_rows as f32 * tbl.header_height,
                 Message::TableDividerChanged,
             ).on_release(Message::TableDividerReleased(tbl.id));
 
@@ -320,8 +353,8 @@ pub fn construct_table<'a>(tbl: IpgTable,
             divider_horizontal(
                 tbl.id,
                 tbl.column_widths.clone(),
-                tbl.header_resizer_width,
-                footer_height,
+                tbl.resizer_width,
+                tbl.custom_footer_rows as f32 * tbl.footer_height,
                 Message::TableDividerChanged,
             ).on_release(Message::TableDividerReleased(tbl.id));
 
@@ -511,7 +544,7 @@ pub enum IpgTableParam {
     Footer,
     ColumnPorportionalResize,
     RowSpacing,
-    DividerWidth,
+    ResizerWidth,
     ResizeColumnsEnabled,
     MinColumnWidth,
     CellPadding,
@@ -547,8 +580,8 @@ pub fn table_item_update(
         IpgTableParam::RowSpacing => {
             table.row_spacing = try_extract_f64(value, name) as f32;
         },
-        IpgTableParam::DividerWidth => {
-            table.divider_width = try_extract_f64(value, name) as f32;
+        IpgTableParam::ResizerWidth => {
+            table.resizer_width = try_extract_f64(value, name) as f32;
         },
         IpgTableParam::ResizeColumnsEnabled => {
             table.resize_columns_enabled = try_extract_boolean(value, name);
