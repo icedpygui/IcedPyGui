@@ -377,7 +377,7 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
 
                     // change the widths porportionally if enabled
                     if !tbl.table_width_fixed && index == tbl.column_widths.len()-1 {
-                        if tbl.column_porportional_resize {
+                        if tbl.column_proportional_resize {
                             let table_width: f32 = tbl.column_widths.iter().sum();
                             let percent = 1.0 - diff/table_width;
                             

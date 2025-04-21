@@ -2608,33 +2608,48 @@ class IPG:
         """
     
     def add_table(self,
-                    window_id: str,
-                    table_id: str,
-                    title: str,
+                    window_id: str, 
+                    table_id: str, 
                     polars_df: DataFrame,
-                    column_widths: list,
+                    column_widths: list[float],
                     height: float,
                     *,
-                    width: Optional[float],
+                    parent_id: Optional[str]=None,
+                    width: Optional[float]=None,
                     width_fill: bool=False,
+                    resizer_width: float=4.0,
                     header_enabled: bool=True,
-                    header_height: float=25.0,
-                    footer_height: float=25.0,
+                    header_row_height: float=20.0,
+                    header_scrollbar_height: float=5.0,
+                    header_scroller_height: float=5.0,
+                    header_row_spacing: float=0.0,
+                    footer_height: float=20.0,
+                    footer_scrollbar_height: float=5.0,
+                    footer_scroller_height: float=5.0,
+                    footer_spacing: float=0.0,
                     custom_header_rows: int=0,
                     custom_footer_rows: int=0,
-                    control_columns=list[int],
-                    hide_columns=list[int],
-                    resize_columns_enabled: bool=True,
-                    min_column_width: Optional[float]=50.0,
-                    parent_id: Optional[str]=None,
-                    column_spacing: float=5.0,
-                    row_spacing: float=5.0,
+                    control_columns: list=[],
+                    column_porportional_resize: bool=True,
+                    row_spacing: float=0.0,
                     row_height: float=20.0,
-                    row_max_height: Optional[float]=None,
-                    cell_padding: float=0.0,
+                    header_body_spacing: float=5.0,
+                    body_footer_spacing: float=5.0,
+                    resize_columns_enabled: bool=True,
+                    min_column_width: float=50.0,
+                    text_size: float=14.0,
                     table_width_fixed: bool=True,
+                    scroller_width: float=10.0,
+                    scroller_bar_width: float=10.0,
+                    scroller_margin: float=0.0,
+                    header_scrollbar_spacing: Optional[float]=None,
+                    body_scrollbar_spacing: Optional[float]=None,
+                    footer_scrollbar_spacing: Optional[float]=None,
                     gen_id: Optional[int]=None,
+                    style_id: Optional[str]=None,  
                     show: bool=True,
+                    on_column_resize: Optional[Callable]=None,
+                    on_column_resize_release: Optional[Callable]=None,
                     user_data: Optional[Any]=None,
                   ) -> int:
 
@@ -2647,39 +2662,84 @@ class IPG:
                 Id of the window to place container in.
             table_id: str
                 The id of the container.
-            title: str
-                Title used for table.
             polars_df: DataFrame
                 data in polars dataframe format
-            width: float
-                Width of the table.
+            column_widths: list[float]
+                Width of each column in table.
             height: float
                 Height of the table.
-            header_enabled: bool,
-                Whether to have a header row on top
-            header_custom_enabled: bool,
-                Whether to use a custom header, create your own widgets
-            footer_enabled: bool,
-                Whether to have a footer row at the bottom
-            control_columns: list[int]
-                The columns indexes  where control elements are place, i.e. buttons
             parent_id: Optional[str]
-                If parent_id == window_id then not required, 
-                If another container then required.
-            row_highlight: TableRowHighLight
-                Highlights alternate row by either darkening or lightening them up.
-            highlight_amount: float
-                Amount of highlighting to use if row_highlight is set.
-            column_widths: List[float]
-                A list of value for the column widths, if only one value is supplied then it will 
-                be the default for all columns.
-            gen_id: int
+                The id of another container to place the table in.
+            width: Optional[float]
+                The width of the table which overrides the total of the column widths.
+            width_fill: bool
+                Whether to fill the width of the container the table is in.
+            resizer_width: float
+                The width of the resier bars that the mouse interacts with.
+            header_enabled: bool
+                Whether to use the header container the values of the df.
+            header_row_height: float
+                The height of the header rows.
+            header_scrollbar_height: float
+                The header scroll bar height.
+            header_scroller_height: float
+                The header sroller height.
+            header_row_spacing: float
+                If more than one header row, the spacing.
+            footer_height: float
+                The height of the footer row(s).
+            footer_scrollbar_height: float
+                The height of the footer scroll bar.
+            footer_scroller_height: float
+                The height of the footer scroller.
+            footer_spacing: float
+                The spacing between the footer rows if more than one.
+            custom_header_rows: int
+                The number of custom headrs row.
+            custom_footer_rows: int
+                The number of footer or custom footer rows.
+            control_columns: list
+                A list of columns where one puts in widgets, the values are the indexes.
+            column_porportional_resize: bool
+                If the table is resized, how each column grows or shrinks.
+            row_spacing: float
+                The table body row spacing.
+            row_height: float
+                The table body height of each row.
+            header_body_spacing: float
+                The spacing bewtten the header and the body.
+            body_footer_spacing: float
+                The spacing between the body and the footer.
+            resize_columns_enabled: bool
+                Whether the columns can be resized.
+            min_column_width: float
+                The minimum column width when resizing.
+            text_size: float
+                The size of all of the text items.
+            table_width_fixed: bool
+                Whether the table can be resized or not.
+            scroller_width: float
+            scroller_bar_width: float
+            scroller_margin: float
+            header_scrollbar_spacing: Optional[float]
+                The sapce between the header and the scrollbar
+            body_scrollbar_spacing: Optional[float]
+                The space between the body and the scrollbar
+            footer_scrollbar_spacing: Optional[float]
+                The space between the footer and the scrollbar.
+            gen_id: Optional[int]
                 The only allowable entry for this id is that generated by ipg.generate_id().
-            user_data: any
+            style_id: Optional[str]
+                The id of the add_table_style widget.
+            show: bool
+                Whether to show the table or not.
+            on_column_resize: Optional[Callable]
+                The callback for when the column or table is resized.
+            on_column_resize_release: Optional[Callable]
+                The callack for when the mouse button is released from resizing.
+            user_data: Optional[Any]
                 Any data that might be needed in the callback function.
-            show:: bool
-                shows or hides the widget.
-            
+                
         Returns
         -------
         id: int

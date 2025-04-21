@@ -39,7 +39,7 @@ data = {
     "Edit": fill,
     "str": ["H", "e", "l", "l", "o", " ", "W", "o", "r", "l", "d"],
     "one": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0],
-    "Toggler": fill,
+    "Checks": fill,
     "two": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22],
     "three": [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33],
     }
@@ -53,11 +53,7 @@ def filter(pick_id: int, select: str):
     print()
 
 # Some styling for the widgets
-btn_style = ipg.add_button_style(border_radius=[5.0])
-chk_style = ipg.add_checkbox_style(border_width=3.0)
-tog_style = ipg.add_toggler_style(
-                    background_border_width=2.0, 
-                    background_border_color=IpgColor.YELLOW)
+btn_style = ipg.add_button_style(border_radius=[10.0])
 
 
 # Add the window
@@ -80,8 +76,6 @@ ipg.add_container(
 width = sum(column_widths)
 
 # The table is added.
-# The defaults below are show for info and normally not be needed
-# unless alternate values are wanted.
 ipg.add_table(
         window_id="main",
         table_id="table",
@@ -90,15 +84,12 @@ ipg.add_table(
         column_widths=column_widths,
         height=150.0,
         # above required
-        # width=300.0, # see the scroller when the table is smaller than the column widths
-        control_columns=[0, 3], # list for the indexes of the control columns
-        header_enabled=True, # default value, 
+        # width=300.0, # see the scroller when the table is smaller than the column widths, it defaults to sum of columns
+        width_fill=False, # best to allow the width to be the sum of the columns but maybe there is a use case out there
+        on_column_resize=table_column_resize, # may need in some cases where resizing causes alignment issues or other cases.
         custom_header_rows=1, # the number of additional header rows, default=0
         custom_footer_rows=1, # the number of footer rows, default=0
-        row_spacing=0.0, # default
-        table_width_fixed=True, # defaults to True, change to False to see the effect
-        column_porportional_resize=True, # defaults to True, when False
-        on_column_resize=table_column_resize, # may need in some cases where resizing causes alignment issues or other cases.
+        control_columns=[0, 3], # list for the indexes of the control columns
         )
 
 
@@ -124,7 +115,9 @@ ipg.add_table(
 
 # For the widgets in the control columns,
 # the lengths must match the dataframe or you'll
-# get an error.  In the Table code, each widget is
+# get an error.  
+# 
+# In the Table code, each widget is
 # placed into a container and the width of the column
 # is used as the container width along with centering the
 # widget.  
@@ -133,7 +126,7 @@ ipg.add_table(
 # If you set the width to fill, some widgets may not align there labels
 # correctly because it doesn't know the size.  If you use a set width, 
 # the alignment works but if you resize the column, you'll need to resize all of 
-# the button widths too, not a big effort in the callback.  If you want a wider
+# the widths too, not a big effort in the callback.  If you want a wider
 # widget with a smaller label, try using just the padding on each side.  The button
 # in the this table uses the padding as an example of making the button wider
 # but keeping the default shrink. 
@@ -151,9 +144,14 @@ for i in range(0, 11):
         style_id=btn_style,
         user_data=i)
 
-    ipg.add_toggler(
+    is_checked = False;
+    if i%2 == 0: 
+        is_checked = True
+        
+    ipg.add_checkbox(
         parent_id="table",
-        label="Tog",
+        label="Check Me",
+        is_checked=is_checked,
         user_data=i)
 
 

@@ -290,6 +290,16 @@ pub fn try_extract_u64(value: &PyObject, name: String) -> u64 {
     })  
 }
 
+pub fn try_extract_usize(value: &PyObject, name: String) -> usize {
+    Python::with_gil(|py| {
+        let res = value.extract::<usize>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("{}-Unable to extract usize", name),
+        }
+    })  
+}
+
 pub fn try_extract_f64_option(value: &PyObject) -> Option<f64> {
     Python::with_gil(|py| {
         let res = value.extract::<f64>(py);
@@ -323,6 +333,16 @@ pub fn try_extract_vec_f32(value: &PyObject, name: String) -> Vec<f32> {
 pub fn try_extract_vec_u16(value: &PyObject, name: String) -> Vec<u16> {
     Python::with_gil(|py| {
         let res = value.extract::<Vec<u16>>(py);
+        match res {
+            Ok(val) => val,
+            Err(_) => panic!("{}-Unable to extract python list[uint]", name),
+        }
+    })  
+}
+
+pub fn try_extract_vec_usize(value: &PyObject, name: String) -> Vec<usize> {
+    Python::with_gil(|py| {
+        let res = value.extract::<Vec<usize>>(py);
         match res {
             Ok(val) => val,
             Err(_) => panic!("{}-Unable to extract python list[uint]", name),
