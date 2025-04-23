@@ -695,31 +695,6 @@ pub fn transparent(theme: &Theme, status: Status) -> Style {
     }
 }
 
-pub fn background(theme: &Theme, status: Status) -> Style {
-    let palette = theme.extended_palette();
-
-    let color = match status {
-        Status::Active => palette.primary.strong.color,
-        Status::Hovered => palette.primary.base.color,
-        Status::Dragged => palette.primary.strong.color,
-    };
-
-    Style {
-        background: color.into(),
-        border_color: Color::TRANSPARENT,
-        border_width: 0.0,
-        border_radius: 0.0.into()
-    }
-}
-
-pub fn default() -> Style {
-    Style {
-        background: Color::TRANSPARENT.into(),
-        border_color: Color::TRANSPARENT,
-        border_width: 0.0,
-        border_radius: 0.0.into()
-    }
-}
 
 #[test]
 fn test_get_handle_bounds() {

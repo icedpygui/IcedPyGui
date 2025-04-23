@@ -8,7 +8,7 @@ use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget,
 use iced::border::Radius;
 use iced::widget::{container, image};
 use iced_aw::iced_fonts;
-use ipg_widgets::divider;
+
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
@@ -23,11 +23,11 @@ use polars::frame::DataFrame;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
+use pyo3_polars::PyDataFrame;
 
 use iced::window::{self, Position};
 use iced::{Background, Color, Font, Length, Pixels, Point, Radians, Rectangle, Size, Theme, Vector};
 use iced::widget::text::{self, LineHeight};
-use pyo3_polars::PyDataFrame;
 
 use core::panic;
 use std::collections::HashMap;
@@ -1725,7 +1725,6 @@ impl IPG {
         height,
         parent_id=None,
         width=None,
-        width_fill=false,
         resizer_width=4.0,
         header_enabled=true,
         header_row_height=20.0,
@@ -1740,9 +1739,9 @@ impl IPG {
         footer_scroller_height=5.0,
         footer_scrollbar_spacing=0.0,
         footer_spacing=0.0,
-        body_scrollbar_width=10.0,
+        body_scrollbar_width=5.0,
         body_scrollbar_margin=0.0,
-        body_scroller_width=10.0,
+        body_scroller_width=5.0,
         body_scrollbar_spacing=0.0,
         custom_header_rows=0,
         custom_footer_rows=0,
@@ -1753,7 +1752,7 @@ impl IPG {
         header_body_spacing=5.0,
         body_footer_spacing=5.0,
         resize_columns_enabled=true,
-        min_column_width=50.0,
+        min_column_width=0.0,
         text_size=14.0,
         table_width_fixed=true,
         gen_id=None,
@@ -1772,7 +1771,6 @@ impl IPG {
         height: f32,
         parent_id: Option<String>,
         width: Option<f32>,
-        width_fill: bool,
         resizer_width: f32,
         header_enabled: bool,
         header_row_height: f32,
@@ -1813,8 +1811,6 @@ impl IPG {
     {
 
         let id = self.get_id(gen_id);
-
-        let width = get_width(width, width_fill);
 
         let prt_id = match parent_id {
             Some(id) => id,
@@ -1900,27 +1896,37 @@ impl IPG {
     }
 
     #[pyo3(signature = ( 
-        header_background_color=None, header_background_rgba=None,
-        header_border_color=None, header_border_rgba=None,
-        header_border_radius = 0.0, header_border_width=0.0,
-        header_text_color=None, header_text_rgba=None,
+        header_background_color=None, 
+        header_background_rgba=None,
+        header_border_color=None, 
+        header_border_rgba=None,
+        header_border_radius = 0.0, 
+        header_border_width=0.0,
+        header_text_color=None, 
+        header_text_rgba=None,
 
-        body_background_color=None, body_background_rgba=None,
-        body_border_color=None, body_border_rgba=None,
-        body_border_radius = 0.0, body_border_width=0.0,
-        body_text_color=None, body_text_rgba=None,
+        body_background_color=None, 
+        body_background_rgba=None,
+        body_border_color=None, 
+        body_border_rgba=None,
+        body_border_radius = 0.0, 
+        body_border_width=0.0,
+        body_text_color=None, 
+        body_text_rgba=None,
 
-        footer_background_color=None, footer_background_rgba=None,
-        footer_border_color=None, footer_border_rgba=None,
-        footer_border_radius = 0.0, footer_border_width=0.0,
-        footer_text_color=None, footer_text_rgba=None,
+        footer_background_color=None, 
+        footer_background_rgba=None,
+        footer_border_color=None, 
+        footer_border_rgba=None,
+        footer_border_radius = 0.0, 
+        footer_border_width=0.0,
+        footer_text_color=None, 
+        footer_text_rgba=None,
 
         divider_color=None,
         divider_rgba=None,
         divider_hover_color=None,
         divider_hover_rgba=None,
-        divider_drag_color=None,
-        divider_drag_rgba=None,
 
         gen_id=None
         ))]
@@ -1957,8 +1963,6 @@ impl IPG {
         divider_rgba: Option<[f32; 4]>,
         divider_hover_color: Option<IpgColor>,
         divider_hover_rgba: Option<[f32; 4]>,
-        divider_drag_color: Option<IpgColor>,
-        divider_drag_rgba: Option<[f32; 4]>,
 
         gen_id: Option<usize>,
         ) -> PyResult<usize>
@@ -2020,15 +2024,24 @@ impl IPG {
         footer_style.border.radius = Radius::new(Pixels(footer_border_radius));
         footer_style.border.width = footer_border_width;
 
-        // let divider_color: Option<Color> = 
-        //     get_color(divider_rgba, divider_color, 1.0, false);
-        // let divider_hover_color = 
-        //     get_color(divider_hover_rgba, divider_hover_color, 1.0, false);
-        // let divider_drag_color = 
-        //     get_color(divider_drag_rgba, divider_drag_color, 1.0, false);
-
-        let divider_style = divider::default();
-
+        let divider_color: Option<Color> = 
+            get_color(divider_rgba, divider_color, 1.0, false);
+        let divider_hover_color = 
+            get_color(divider_hover_rgba, divider_hover_color, 1.0, false);
+      
+        let divider_style = 
+            if divider_color.is_some() || divider_hover_color.is_some() {
+                Some(IpgDividerStyle{ 
+                    id, background: divider_color, 
+                    background_hovered: divider_hover_color, 
+                    background_transparent: false, 
+                    border_color: None, 
+                    border_width: 0.0, 
+                    border_radius: 0.0})
+            } else {
+                 None
+            };
+       
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgTableStyle(
@@ -6046,7 +6059,7 @@ impl IPG {
                     value: PyObject) 
     {
         let mut all_updates = access_update_items();
-
+        
         all_updates.updates.push((wid, param, value));
 
         drop(all_updates);

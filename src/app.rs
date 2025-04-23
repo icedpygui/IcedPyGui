@@ -1109,7 +1109,7 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
         }  
     }
     all_updates.updates = vec![];
-    
+
     // updates for shows
     for (window_id, ids) in all_updates.shows.iter() {
         let iced_id = match state.windows_str_ids.get(window_id) {

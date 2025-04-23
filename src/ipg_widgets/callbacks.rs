@@ -363,8 +363,13 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
                         return wco;
                     }
                     // resizing
-                    let value = wci.value_f32.unwrap();
                     let index = wci.value_usize.unwrap();
+                   
+                    let value = if wci.value_f32 < tbl.min_column_width {
+                        tbl.min_column_width.unwrap()
+                    } else {
+                        wci.value_f32.unwrap()
+                    };
 
                     if tbl.table_width_fixed && index == tbl.column_widths.len()-1 {
                         // don't change width just return vec

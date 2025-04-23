@@ -2746,6 +2746,104 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
 
+    def add_table_styling(self,
+                        header_background_color: Optional[IpgColor]=None,
+                        header_background_rgba: Optional[list[float, 4]]=None,
+                        header_border_color: Optional[IpgColor]=None,
+                        header_border_rgba: Optional[list[float, 4]]=None,
+                        header_border_radius: float=0.0,
+                        header_border_width: float=0.0,
+                        header_text_color: Optional[IpgColor]=None,
+                        header_text_rgba: Optional[list[float, 4]]=None,
+
+                        body_background_color: Optional[IpgColor]=None,
+                        body_background_rgba: Optional[list[float, 4]]=None,
+                        body_border_color: Optional[IpgColor]=None,
+                        body_border_rgba: Optional[list[float, 4]]=None,
+                        body_border_radius: float=0.0,
+                        body_border_width: float=0.0,
+                        body_text_color: Optional[IpgColor]=None,
+                        body_text_rgba: Optional[list[float, 4]]=None,
+
+                        footer_background_color: Optional[IpgColor]=None,
+                        footer_background_rgba: Optional[list[float, 4]]=None,
+                        footer_border_color: Optional[IpgColor]=None,
+                        footer_border_rgba: Optional[list[float, 4]]=None,
+                        footer_border_radius: float=0.0,
+                        footer_border_width: float=0.0,
+                        footer_text_color: Optional[IpgColor]=None,
+                        footer_text_rgba: Optional[list[float, 4]]=None,
+
+                        divider_color: Optional[IpgColor]=None,
+                        divider_rgba: Optional[list[float, 4]]=None,
+                        divider_hover_color: Optional[IpgColor]=None,
+                        divider_hover_rgba: Optional[list[float, 4]]=None,
+
+                        gen_id: Optional[int]=None,
+                        ) -> int:
+                        
+        """
+        Styling for the table widget
+        
+        Parameters
+        ----------
+        header_background_color: Optional[IpgColor]
+            Header background color via IpgColor selection.
+        header_background_rgba: Optional[list[float, 4]]
+            Header background color in rgba format.
+        header_border_color: Optional[IpgColor]
+            Header border color via IpgColor selection.
+        header_border_rgba: Optional[list[float, 4]]
+            Header border color in rgba format.
+        header_border_radius: float=0.0,
+        header_border_width: float=0.0,
+        header_text_color: Optional[IpgColor]
+            Header text color via IpgColor selection.
+        header_text_rgba: Optional[list[float, 4]]
+            Header text color in rgba format.
+        body_background_color: Optional[IpgColor]
+            Body background color via IpgColor selection.
+        body_background_rgba: Optional[list[float, 4]]
+            Body background color in rgba format.
+        body_border_color: Optional[IpgColor]
+            Body border color via IpgColor selection.
+        body_border_rgba: Optional[list[float, 4]]
+            Body border color in rgba format.
+        body_border_radius: float=0.0,
+        body_border_width: float=0.0,
+        body_text_color: Optional[IpgColor]
+            Body text color via IpgColor selection.
+        body_text_rgba: Optional[list[float, 4]]
+            Body text color in rgba format.
+        footer_background_color: Optional[IpgColor]
+            Footer background color via IpgColor selection.
+        footer_background_rgba: Optional[list[float, 4]]
+            Footer background color in rgba format.
+        footer_border_color: Optional[IpgColor]
+            Footer border color via IpgColor selection.
+        footer_border_rgba: Optional[list[float, 4]]
+            Footer border color in rgba format.
+        footer_border_radius: float=0.0,
+        footer_border_width: float=0.0,
+        footer_text_color: Optional[IpgColor]
+            Footer text color via IpgColor selection.
+        footer_text_rgba: Optional[list[float, 4]]
+            Footer text color in rgba format.
+        divider_color: Optional[IpgColor]
+            Divider color via IpgColor selection.
+        divider_rgba: Optional[list[float, 4]]
+            Divider color in rgba format.
+        divider_hover_color: Optional[IpgColor]
+            Divider hover color via IpgColor selection.
+        divider_hover_rgba: Optional[list[float, 4]]
+            Divider hover color in rgba format.
+        gen_id: Optional[int]
+            The generated id value to use, if needed.
+        Returns
+        -------
+        id: int
+            The id of the styling which is used for the style_id parameer of the widget.
+        """
 
     def add_text(self,
                  parent_id: str,

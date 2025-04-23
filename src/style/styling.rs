@@ -1,5 +1,5 @@
 //! styling
-use iced::Color;
+use iced::{Color, Theme};
 // use palette::{FromColor, Hsl};
 use palette::rgb::Rgb;
 use palette::color_difference::Wcag21RelativeContrast;
@@ -85,4 +85,3 @@ fn relative_contrast(a: Color, b: Color) -> f32 {
 
     a_srgb.relative_contrast(b_srgb)
 }
-
