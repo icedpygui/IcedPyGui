@@ -4,32 +4,33 @@ from icedpygui import IPG, IpgWindowTheme
 
 
 
-data = {
-    "ids": [1, 2, 3],
-    "values": [
-        {"id": 1, "value": True},
-        {"id": 2, "value": True},
-        {"id": 3, "value": False},
-    ],
-}
+# data = {
+#     "ids": [1, 2, 3],
+#     "values": [
+#         {"id": 1, "value": True},
+#         {"id": 2, "value": True},
+#         {"id": 3, "value": False},
+#     ],
+# }
 
 data = {
     "ids": [1, 2, 3],
-    "values": [{1, True}, {2, True}, {3, False}]
+    "values": [(1, 0), [2, 1], [3, 2, 1]]
 }
-
-df = pl.DataFrame(
-    {
-        "int": [1, 2],
-        "str": ["a", "b"],
-        "bool": [True, None],
-        "list": [[1, 2], [3]],
-    }
-)
+df = pl.DataFrame(data, strict=False)
+print(df)
+# df = pl.DataFrame(
+#     {
+#         "int": [1, 2],
+#         "str": ["a", "b"],
+#         "bool": [True, None],
+#         "list": [[1, 2], [3]],
+#     }
+# )
 # df.select(pl.struct(pl.all()).alias("my_struct"))
 
-# df = pl.DataFrame(data)
-print(df)
+
+
 
 # ┌─────┬───────────┐
 # │ ids ┆ values    │
@@ -62,7 +63,7 @@ ipg.add_container(
         height_fill=True,
         centered=True,)
 
-column_widths = [100.0] * 4
+column_widths = [100.0] * 2
 
 # The table is added.
 table_id = ipg.add_table(

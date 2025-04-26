@@ -170,7 +170,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             -> Element<'a, Message, Theme, Renderer> {
     
     let _style = get_table_style(style_opt);
-    
+
     let mut body_rows = vec![];
         for idx in 0..tbl.df.height() {
             if let Ok(df_row) = tbl.df.get_row(idx) {

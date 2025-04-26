@@ -47,17 +47,21 @@ def math_op(pkl_id: int, selected: str, index: int):
 # you just pass back the new df.  However with control columns
 # you'll need to do some extra work since they are not part of
 # dataframe.
-# The approach that can be taken is to store the ids of the widgets 
-# in the dataframe and then filter out the unselected widgets
-# and the update the control rows, as done below.  If you don't need
-# this connection, keep the ids in a python list, get the slice of 
-# the bottom ones and use update_item to either hide or delete them.
-# if you want to unfilter the df later, just reshow them versus deleting them.
+# The approach that was used here was to store the true/false values 
+# in the checkbox column of the dataframe, filter the df and then use 
+# the checkbox_id python list to find the checkbox ids.  Once the ids
+# are found the just hide the ones not in the list.
+# Rust doesn't allow mixed lists so if one wanted to use the checkbox df column, 
+# they could store the id and a 0 or 1 for false/true, [23, 1].
+# You could also store it as a string and parse it later.
+# It's easiest to try and keep everthing in the df is possible.
 
-# Sometimes it's esy to work with a original_df and a working_df.
+# Sometimes it's easier to work with a original_df and a working_df.
 # In doing this your working_df is the filtered one and you can further select 
 # the columns you want to show.  It also makes it easier to back out of the 
-# filtering operation to get the unfiltered version.
+# filtering operation to get the unfiltered version.  By selecting just the
+# just the columns you vwant to show, you can eliminate the issue of not
+# having a mixed list in a column, just use as many as you want.
 def filtering(pkl_id: int, selected: str):
     global df, table_id
     match selected:
@@ -84,10 +88,9 @@ def filtering(pkl_id: int, selected: str):
             # in case it was hidden by another filter
             ipg.update_item(wid, IpgButtonParam.Show, True)
     
-    # Since we don't hace a list of ids in the df for the checkboxes,
+    # Since we don't have a list of ids in the df for the checkboxes,
     # we use the values the list of list for the update.
-    # We could have put put those values in the df but currently
-    # we cannot pass a df into rust containing a list in the df.
+    # The above text discussed alternate ways.
     for id_tf in checkbox_ids:
         if id_tf[1] == value:
             ipg.update_item(id_tf[0], IpgCheckboxParam.Show, True)
