@@ -1826,7 +1826,7 @@ impl IPG {
         }
 
         let df: DataFrame = polars_df.into();
-
+        
         if let Some(py) = user_data {
             add_user_data_to_mutex(id, py);
         }
@@ -2122,7 +2122,8 @@ impl IPG {
         height_fill=false, 
         padding=vec![5.0], 
         text_align_x=IpgHorizontalAlignment::Center, 
-        text_align_y=IpgVerticalAlignment::Center, 
+        text_align_y=IpgVerticalAlignment::Center,
+        text_size=16.0, 
         clip=false, 
         style_id=None, 
         style_standard=None, 
@@ -2144,6 +2145,7 @@ impl IPG {
         padding: Vec<f64>,
         text_align_x: IpgHorizontalAlignment,
         text_align_y: IpgVerticalAlignment,
+        text_size: f32,
         clip: bool,
         style_id: Option<usize>,
         style_standard: Option<IpgStyleStandard>,
@@ -2185,6 +2187,7 @@ impl IPG {
                 padding,
                 align_x,
                 align_y,
+                text_size,
                 clip,
                 style_id,
                 style_standard,

@@ -3,11 +3,7 @@
 use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
 use crate::{access_callbacks, access_user_data2, access_user_data1, app};
-use super::helpers::{get_height, get_horizontal_alignment, get_padding_f64, 
-    get_radius, get_vertical_alignment, get_width, try_extract_boolean, 
-    try_extract_f64, try_extract_ipg_color, try_extract_ipg_horizontal_alignment, 
-    try_extract_ipg_vertical_alignment, try_extract_rgba_color, 
-    try_extract_string, try_extract_style_standard, try_extract_vec_f32, try_extract_vec_f64};
+use super::helpers::{get_height, get_horizontal_alignment, get_padding_f64, get_radius, get_vertical_alignment, get_width, try_extract_boolean, try_extract_f32, try_extract_f64, try_extract_ipg_color, try_extract_ipg_horizontal_alignment, try_extract_ipg_vertical_alignment, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32, try_extract_vec_f64};
 use super::ipg_enums::IpgWidgets;
 
 use iced::widget::button::{self, Status, Style};
@@ -31,6 +27,7 @@ pub struct IpgButton {
     pub padding: Padding,
     pub text_align_x: alignment::Horizontal,
     pub text_align_y: alignment::Vertical,
+    pub text_size: f32,
     pub clip: bool,
     pub style_id: Option<usize>,
     pub style_standard: Option<IpgStyleStandard>,
@@ -49,6 +46,7 @@ impl IpgButton {
         padding: Padding,
         text_align_x: alignment::Horizontal,
         text_align_y: alignment::Vertical,
+        text_size: f32,
         clip: bool,
         style_id: Option<usize>,
         style_standard: Option<IpgStyleStandard>,
@@ -64,6 +62,7 @@ impl IpgButton {
             padding,
             text_align_x,
             text_align_y,
+            text_size,
             clip,
             style_id,
             style_standard,
@@ -135,13 +134,14 @@ pub fn construct_button<'a>(btn: &'a IpgButton,
 
     let mut label = text(btn.label.clone())
                                                         .align_x(btn.text_align_x)
-                                                        .align_y(btn.text_align_y);
+                                                        .align_y(btn.text_align_y)
+                                                        .size(btn.text_size);
 
     if btn.style_arrow.is_some() {
         let arrow = get_bootstrap_arrow(&btn.style_arrow);
         label = Text::new(arrow).font(iced::Font::with_name("bootstrap-icons"));
     }
-        
+    
     let ipg_btn: Element<BTNMessage> = Button::new(label)
                                 .height(btn.height)
                                 .padding(btn.padding)
@@ -273,6 +273,7 @@ pub enum IpgButtonParam {
     StyleStandard,
     TextAlignX,
     TextAlignY,
+    TextSize,
     Width,
     WidthFill,
 }
@@ -322,6 +323,9 @@ pub fn button_item_update(btn: &mut IpgButton,
         IpgButtonParam::TextAlignY => {
             let v_align = try_extract_ipg_vertical_alignment(value).unwrap();
             btn.text_align_y= get_vertical_alignment(&v_align);
+        },
+        IpgButtonParam::TextSize => {
+            btn.text_size = try_extract_f32(value, name);
         },
         IpgButtonParam::Width => {
             let val = try_extract_f64(value, name);

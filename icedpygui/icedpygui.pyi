@@ -762,6 +762,7 @@ class IPG:
                     padding: list=[10.0],
                     text_align_x: IpgHorizontalAlignment=IpgHorizontalAlignment.Center,
                     text_align_y: IpgVerticalAlignment=IpgVerticalAlignment.Center,
+                    text_size: float=16.0,
                     clip: bool=False, 
                     style_id: Optional[int]=None,
                     style_standard: Optional[IpgStyleStandard]=None,
@@ -799,6 +800,8 @@ class IPG:
                 Aligns the text in the horizontal direction
             text_align_y: IpgVerticalAlignment
                 Aligns the text in the vertical direction
+            text_size: float
+                Size of the text
             clip: bool
                 Whether to clip the label if width exceeded.
             style: Optional[int]
@@ -2846,22 +2849,24 @@ class IPG:
         """
 
     def add_text(self,
-                 parent_id: str,
-                 content: str,
-                 *,
-                 gen_id: Optional[int]=None,
-                 width: Optional[float]=None,
-                 height: Optional[float]=None,
-                 width_fill: bool=False,
-                 height_fill: bool=False,
-                 centered: bool,
-                 align_x: IpgHorizontalAlignment=IpgHorizontalAlignment.Left,
-                 align_y: IpgVerticalAlignment=IpgVerticalAlignment.Top,
-                 line_height: str="default",
-                 size: float=16.0,
-                 shaping: str="basic",
-                 show: bool=True,
-                 ) -> int:
+                parent_id: str,
+                content: str,
+                *,
+                gen_id: Optional[int]=None,
+                width: Optional[float]=None,
+                height: Optional[float]=None,
+                width_fill: bool=False,
+                height_fill: bool=False,
+                centered: bool,
+                align_x: IpgHorizontalAlignment=IpgHorizontalAlignment.Left,
+                align_y: IpgVerticalAlignment=IpgVerticalAlignment.Top,
+                line_height: str="default",
+                size: float=16.0,
+                shaping: str="basic",
+                text_color: Optional[IpgColor],
+                text_rgba: Optional[list[float, 4]],
+                show: bool=True,
+                ) -> int:
         """
         Adds a text widget to the gui.
 
@@ -2893,6 +2898,10 @@ class IPG:
                 Sets the text size.
             shaping: str
                 Sets the shape of the text using added fonts, uUse "Basic"(None) or "Advanced".
+            text_color: Optional[IpgColor]
+                The color of the text using IpgColor
+            text_rgba: Optional[list[float, 4]]]
+                The color of the text in rgba format.
             show:
                 shows or hides the widget.
         

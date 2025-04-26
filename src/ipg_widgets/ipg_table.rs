@@ -168,7 +168,7 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             style_opt: Option<&IpgWidgets>, 
                             ) 
                             -> Element<'a, Message, Theme, Renderer> {
-
+    
     let _style = get_table_style(style_opt);
     
     let mut body_rows = vec![];

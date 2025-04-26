@@ -53,7 +53,11 @@ def math_op(pkl_id: int, selected: str, index: int):
 # this connection, keep the ids in a python list, get the slice of 
 # the bottom ones and use update_item to either hide or delete them.
 # if you want to unfilter the df later, just reshow them versus deleting them.
-# 
+
+# Sometimes it's esy to work with a original_df and a working_df.
+# In doing this your working_df is the filtered one and you can further select 
+# the columns you want to show.  It also makes it easier to back out of the 
+# filtering operation to get the unfiltered version.
 def filtering(pkl_id: int, selected: str):
     global df, table_id
     match selected:
@@ -273,7 +277,8 @@ for i in range(df_width):
 # which is just a text update.
 footer_ids = []
 column_three_sum = df["three"].sum()
-footer = ["", "", "", "", "", f"Sum={column_three_sum}", ""]
+footer = [""] * 6
+footer[5] = f"Sum={column_three_sum}"
 for i in range(df_width):
     footer_ids.append(ipg.add_text(
                     parent_id="table",
