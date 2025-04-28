@@ -2611,50 +2611,51 @@ class IPG:
         """
     
     def add_table(self,
-                    window_id: str, 
-                    table_id: str, 
-                    polars_df: DataFrame,
-                    column_widths: list[float],
-                    height: float,
-                    *,
-                    parent_id: Optional[str]=None,
-                    width: Optional[float]=None,
-                    width_fill: bool=False,
-                    resizer_width: float=4.0,
-                    header_enabled: bool=True,
-                    header_row_height: float=20.0,
-                    header_scrollbar_height: float=5.0,
-                    header_scroller_height: float=5.0,
-                    header_row_spacing: float=0.0,
-                    footer_height: float=20.0,
-                    footer_scrollbar_height: float=5.0,
-                    footer_scroller_height: float=5.0,
-                    footer_spacing: float=0.0,
-                    custom_header_rows: int=0,
-                    custom_footer_rows: int=0,
-                    control_columns: list=[],
-                    column_porportional_resize: bool=True,
-                    row_spacing: float=0.0,
-                    row_height: float=20.0,
-                    header_body_spacing: float=5.0,
-                    body_footer_spacing: float=5.0,
-                    resize_columns_enabled: bool=True,
-                    min_column_width: float=50.0,
-                    text_size: float=14.0,
-                    table_width_fixed: bool=True,
-                    scroller_width: float=10.0,
-                    scroller_bar_width: float=10.0,
-                    scroller_margin: float=0.0,
-                    header_scrollbar_spacing: Optional[float]=None,
-                    body_scrollbar_spacing: Optional[float]=None,
-                    footer_scrollbar_spacing: Optional[float]=None,
-                    gen_id: Optional[int]=None,
-                    style_id: Optional[str]=None,  
-                    show: bool=True,
-                    on_column_resize: Optional[Callable]=None,
-                    on_column_resize_release: Optional[Callable]=None,
-                    user_data: Optional[Any]=None,
-                  ) -> int:
+            window_id: str, 
+            table_id: str, 
+            polars_df: DataFrame,
+            column_widths: list[float],
+            height: float,
+            *,
+            parent_id: Optional[str]=None,
+            width: Optional[float]=None,
+            width_fill: bool=False,
+            resizer_width: float=4.0,
+            header_enabled: bool=True,
+            header_row_height: float=20.0,
+            header_scrollbar_height: float=5.0,
+            header_scroller_height: float=5.0,
+            header_row_spacing: float=0.0,
+            footer_height: float=20.0,
+            footer_scrollbar_height: float=5.0,
+            footer_scroller_height: float=5.0,
+            footer_spacing: float=0.0,
+            custom_header_rows: int=0,
+            custom_footer_rows: int=0,
+            control_columns: list=[],
+            column_porportional_resize: bool=True,
+            row_spacing: float=0.0,
+            row_height: float=20.0,
+            body_row_highlight: bool,
+            header_body_spacing: float=5.0,
+            body_footer_spacing: float=5.0,
+            resize_columns_enabled: bool=True,
+            min_column_width: float=50.0,
+            text_size: float=14.0,
+            table_width_fixed: bool=True,
+            scroller_width: float=10.0,
+            scroller_bar_width: float=10.0,
+            scroller_margin: float=0.0,
+            header_scrollbar_spacing: Optional[float]=None,
+            body_scrollbar_spacing: Optional[float]=None,
+            footer_scrollbar_spacing: Optional[float]=None,
+            gen_id: Optional[int]=None,
+            style_id: Optional[str]=None,  
+            show: bool=True,
+            on_column_resize: Optional[Callable]=None,
+            on_column_resize_release: Optional[Callable]=None,
+            user_data: Optional[Any]=None,
+            ) -> int:
 
         """
         Adds a table to the gui.
@@ -2709,6 +2710,8 @@ class IPG:
                 The table body row spacing.
             row_height: float
                 The table body height of each row.
+            body_row_highlight: bool
+                Whether to highlight alternate row or not.
             header_body_spacing: float
                 The spacing bewtten the header and the body.
             body_footer_spacing: float
@@ -2749,41 +2752,41 @@ class IPG:
             Internal id of widget and can be used by user if equated.
         """
 
-    def add_table_styling(self,
-                        header_background_color: Optional[IpgColor]=None,
-                        header_background_rgba: Optional[list[float, 4]]=None,
-                        header_border_color: Optional[IpgColor]=None,
-                        header_border_rgba: Optional[list[float, 4]]=None,
-                        header_border_radius: float=0.0,
-                        header_border_width: float=0.0,
-                        header_text_color: Optional[IpgColor]=None,
-                        header_text_rgba: Optional[list[float, 4]]=None,
+    def add_table_style(self,
+            header_background_color: Optional[IpgColor]=None,
+            header_background_rgba: Optional[list[float, 4]]=None,
+            header_border_color: Optional[IpgColor]=None,
+            header_border_rgba: Optional[list[float, 4]]=None,
+            header_border_radius: float=0.0,
+            header_border_width: float=0.0,
+            header_text_color: Optional[IpgColor]=None,
+            header_text_rgba: Optional[list[float, 4]]=None,
 
-                        body_background_color: Optional[IpgColor]=None,
-                        body_background_rgba: Optional[list[float, 4]]=None,
-                        body_border_color: Optional[IpgColor]=None,
-                        body_border_rgba: Optional[list[float, 4]]=None,
-                        body_border_radius: float=0.0,
-                        body_border_width: float=0.0,
-                        body_text_color: Optional[IpgColor]=None,
-                        body_text_rgba: Optional[list[float, 4]]=None,
+            body_background_color: Optional[IpgColor]=None,
+            body_background_rgba: Optional[list[float, 4]]=None,
+            body_border_color: Optional[IpgColor]=None,
+            body_border_rgba: Optional[list[float, 4]]=None,
+            body_border_radius: float=0.0,
+            body_border_width: float=0.0,
+            body_text_color: Optional[IpgColor]=None,
+            body_text_rgba: Optional[list[float, 4]]=None,
 
-                        footer_background_color: Optional[IpgColor]=None,
-                        footer_background_rgba: Optional[list[float, 4]]=None,
-                        footer_border_color: Optional[IpgColor]=None,
-                        footer_border_rgba: Optional[list[float, 4]]=None,
-                        footer_border_radius: float=0.0,
-                        footer_border_width: float=0.0,
-                        footer_text_color: Optional[IpgColor]=None,
-                        footer_text_rgba: Optional[list[float, 4]]=None,
+            footer_background_color: Optional[IpgColor]=None,
+            footer_background_rgba: Optional[list[float, 4]]=None,
+            footer_border_color: Optional[IpgColor]=None,
+            footer_border_rgba: Optional[list[float, 4]]=None,
+            footer_border_radius: float=0.0,
+            footer_border_width: float=0.0,
+            footer_text_color: Optional[IpgColor]=None,
+            footer_text_rgba: Optional[list[float, 4]]=None,
 
-                        divider_color: Optional[IpgColor]=None,
-                        divider_rgba: Optional[list[float, 4]]=None,
-                        divider_hover_color: Optional[IpgColor]=None,
-                        divider_hover_rgba: Optional[list[float, 4]]=None,
+            divider_color: Optional[IpgColor]=None,
+            divider_rgba: Optional[list[float, 4]]=None,
+            divider_hover_color: Optional[IpgColor]=None,
+            divider_hover_rgba: Optional[list[float, 4]]=None,
 
-                        gen_id: Optional[int]=None,
-                        ) -> int:
+            gen_id: Optional[int]=None,
+            ) -> int:
                         
         """
         Styling for the table widget
@@ -5541,14 +5544,35 @@ class IpgTableParam:
     Show:bool
 
 
-class IpgTableWidget:
-    """
-    The type of widget to use in the table row, if needed.
-    """
-    Button=''
-    Checkbox=''
-    Modal=''
-    Toggler=''
+class IpgTableStyleParam:
+    HeaderBackgroundIpgColor:IpgColor
+    HeaderBackgroundRgbaColor:list[float, 4]
+    HeaderBorderIpgColor:IpgColor
+    HeaderBorderRgbaColor:list[float, 4]
+    HeaderBorderRadius:float
+    HeaderBorderWidth:float
+    HeaderTextIpgColor:IpgColor
+    HeaderTextRgbaColor:list[float, 4]
+
+    BodyBackgroundIpgColor:IpgColor
+    BodyBackgroundRgbaColor:list[float, 4]
+    BodyBorderIpgColor:IpgColor
+    BodyBorderRgbaColor:list[float, 4]
+    BodyBorderRadius:float
+    BodyBorderWidth:float
+    BodyTextIpgColor:IpgColor
+    BodyTextRgbaColor:list[float, 4]
+    BodyRowHighlighColor:IpgColor
+    BodyRowHighlightRgba:list[float, 4]
+
+    FooterBackgroundIpgColor:IpgColor
+    FooterBackgroundRgbaColor:list[float, 4]
+    FooterBorderIpgColor:IpgColor
+    FooterBorderRgbaColor:list[float, 4]
+    FooterBorderRadius:float
+    FooterBorderWidth:float
+    FooterTextIpgColor:IpgColor
+    FooterTextRgbaColor:list[float, 4]
 
 
 class IpgTextInputParam:

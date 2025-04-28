@@ -5,8 +5,8 @@ use canvas::canvas_helpers::{build_polygon, get_mid_point, to_radians};
 use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode, IpgDrawStatus, IpgWidget};
 use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, 
     IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
-use iced::border::Radius;
-use iced::widget::{container, image};
+
+use iced::widget::image;
 use iced_aw::iced_fonts;
 
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
@@ -26,7 +26,7 @@ use pyo3::PyObject;
 use pyo3_polars::PyDataFrame;
 
 use iced::window::{self, Position};
-use iced::{Background, Color, Font, Length, Pixels, Point, Radians, Rectangle, Size, Theme, Vector};
+use iced::{Color, Font, Length, Point, Radians, Rectangle, Size, Theme, Vector};
 use iced::widget::text::{self, LineHeight};
 
 use core::panic;
@@ -87,7 +87,7 @@ use ipg_widgets::ipg_stack::{stack_item_update, IpgStack, IpgStackParam};
 use ipg_widgets::ipg_svg::{svg_item_update, IpgSvg, IpgSvgContentFit, 
         IpgSvgParam, IpgSvgRotation};
 use ipg_widgets::ipg_table::{table_dataframe_update, table_item_update, 
-    table_style_update_item, IpgTable, IpgTableParam, IpgTableStyle};
+    table_style_update_item, IpgTable, IpgTableParam, IpgTableStyle, IpgTableStyleParam};
 use ipg_widgets::ipg_text::{text_item_update, IpgText, IpgTextParam};
 use ipg_widgets::ipg_text_input::{text_input_item_update, text_input_style_update_item, 
     IpgTextInput, IpgTextInputParam, IpgTextInputStyle, IpgTextInputStyleParam};
@@ -1743,6 +1743,7 @@ impl IPG {
         body_scrollbar_margin=0.0,
         body_scroller_width=5.0,
         body_scrollbar_spacing=0.0,
+        body_row_highlight=true,
         custom_header_rows=0,
         custom_footer_rows=0,
         control_columns=vec![],
@@ -1789,6 +1790,7 @@ impl IPG {
         body_scrollbar_margin: f32,
         body_scroller_width: f32,
         body_scrollbar_spacing: f32,
+        body_row_highlight: bool,
         custom_header_rows: usize,
         custom_footer_rows: usize,
         control_columns: Vec<usize>,
@@ -1873,6 +1875,7 @@ impl IPG {
                 body_scrollbar_margin,
                 body_scroller_width,
                 body_scrollbar_spacing,
+                body_row_highlight,
                 custom_header_rows,
                 custom_footer_rows,
                 control_columns,
@@ -1913,6 +1916,8 @@ impl IPG {
         body_border_width=0.0,
         body_text_color=None, 
         body_text_rgba=None,
+        body_row_highlight_color=None,
+        body_row_highlight_rgba=None,
 
         footer_background_color=None, 
         footer_background_rgba=None,
@@ -1949,6 +1954,8 @@ impl IPG {
         body_border_width: f32,
         body_text_color: Option<IpgColor>,
         body_text_rgba: Option<[f32; 4]>,
+        body_row_highlight_color: Option<IpgColor>,
+        body_row_highlight_rgba: Option<[f32; 4]>,
 
         footer_background_color: Option<IpgColor>,
         footer_background_rgba: Option<[f32; 4]>,
@@ -1969,88 +1976,60 @@ impl IPG {
     {
         let id = self.get_id(gen_id);
 
-        let header_background_color: Option<Color> = 
+        let header_background =  
             get_color(header_background_rgba, header_background_color, 1.0, false);
         let header_border_color: Option<Color> = 
             get_color(header_border_rgba, header_border_color, 1.0, false);
         let header_text_color: Option<Color> = 
             get_color(header_text_rgba, header_text_color, 1.0, false);
-
-        let mut header_style = container::Style::default();
         
-        if header_background_color.is_some() {
-            header_style.background = Some(Background::Color(header_background_color.unwrap()));
-        }
-        if header_border_color.is_some() {
-            header_style.border.color = header_border_color.unwrap()
-        }
-        header_style.text_color = header_text_color;
-        header_style.border.radius = Radius::new(Pixels(header_border_radius));
-        header_style.border.width = header_border_width;
-
-        let body_background_color: Option<Color> = 
+        let body_background: Option<Color> = 
             get_color(body_background_rgba, body_background_color, 1.0, false);
         let body_border_color: Option<Color> = 
             get_color(body_border_rgba, body_border_color, 1.0, false);
         let body_text_color: Option<Color> = 
             get_color(body_text_rgba, body_text_color, 1.0, false);
+        let body_row_highlight: Option<Color> = 
+            get_color(body_row_highlight_rgba, body_row_highlight_color, 1.0, false);
 
-        let mut body_style = container::Style::default();
-        if body_background_color.is_some() {
-            body_style.background = Some(Background::Color(body_background_color.unwrap()));
-        }
-        if body_border_color.is_some() {
-            body_style.border.color = body_border_color.unwrap()
-        }
-        body_style.text_color = body_text_color;
-        body_style.border.radius = Radius::new(Pixels(body_border_radius));
-        body_style.border.width = body_border_width;
-
-        let footer_background_color: Option<Color> = 
+        let footer_background: Option<Color> = 
             get_color(footer_background_rgba, footer_background_color, 1.0, false);
         let footer_border_color: Option<Color> = 
             get_color(footer_border_rgba, footer_border_color, 1.0, false);
         let footer_text_color: Option<Color> = 
             get_color(footer_text_rgba, footer_text_color, 1.0, false);
 
-        let mut footer_style = container::Style::default();
-        if footer_background_color.is_some() {
-            footer_style.background = Some(Background::Color(footer_background_color.unwrap()));
-        }
-        if footer_border_color.is_some() {
-            footer_style.border.color = footer_border_color.unwrap()
-        }
-        footer_style.text_color = footer_text_color;
-        footer_style.border.radius = Radius::new(Pixels(footer_border_radius));
-        footer_style.border.width = footer_border_width;
-
         let divider_color: Option<Color> = 
             get_color(divider_rgba, divider_color, 1.0, false);
         let divider_hover_color = 
             get_color(divider_hover_rgba, divider_hover_color, 1.0, false);
       
-        let divider_style = 
-            if divider_color.is_some() || divider_hover_color.is_some() {
-                Some(IpgDividerStyle{ 
-                    id, background: divider_color, 
-                    background_hovered: divider_hover_color, 
-                    background_transparent: false, 
-                    border_color: None, 
-                    border_width: 0.0, 
-                    border_radius: 0.0})
-            } else {
-                 None
-            };
-       
         let mut state = access_state();
 
         state.widgets.insert(id, IpgWidgets::IpgTableStyle(
             IpgTableStyle::new( 
                 id,
-                header_style,
-                body_style,
-                footer_style,
-                divider_style,
+                header_background,
+                header_border_color,
+                header_border_radius,
+                header_border_width,
+                header_text_color,
+                
+                body_background,
+                body_border_color,
+                body_border_radius,
+                body_border_width,
+                body_text_color,
+                body_row_highlight,
+                
+                footer_background,
+                footer_border_color,
+                footer_border_radius,
+                footer_border_width,
+                footer_text_color,
+                
+                divider_color,
+                divider_hover_color,
                 )));
 
         drop(state);
@@ -6220,56 +6199,56 @@ fn match_widget(
             divider_style_update_item(style, item, value);
         }
         IpgWidgets::IpgImage(img) => {
-                image_item_update(img, item, value);
+            image_item_update(img, item, value);
         },
         IpgWidgets::IpgMenuStyle(style) => {
-                menu_style_update_item(style, item, value);
+            menu_style_update_item(style, item, value);
         },
         IpgWidgets::IpgMenuBarStyle(style) => {
-                menu_bar_style_update_item(style, item, value);
+            menu_bar_style_update_item(style, item, value);
         },
         IpgWidgets::IpgOpaqueStyle(style) => {
             opaque_style_update_item(style, item, value);
         }
         IpgWidgets::IpgPickList(pl) => {
-                pick_list_item_update(pl, item, value);
+            pick_list_item_update(pl, item, value);
         },
         IpgWidgets::IpgPickListStyle(style) => {
-                pick_list_style_update_item(style, item, value);
+            pick_list_style_update_item(style, item, value);
         },
         IpgWidgets::IpgProgressBar(pb) => {
-                progress_bar_item_update(pb, item, value);
+            progress_bar_item_update(pb, item, value);
         },
         IpgWidgets::IpgProgressBarStyle(style) => {
-                progress_bar_style_update_item(style, item, value);
+            progress_bar_style_update_item(style, item, value);
         },
         IpgWidgets::IpgRadio(rd) => {
-                radio_item_update(rd, item, value);
+            radio_item_update(rd, item, value);
         },
         IpgWidgets::IpgRadioStyle(style) => {
-                radio_style_update_item(style, item, value);
+            radio_style_update_item(style, item, value);
         },
         IpgWidgets::IpgRule(_) => (),
         IpgWidgets::IpgRuleStyle(style) => {
-                rule_style_update_item(style, item, value);
+            rule_style_update_item(style, item, value);
         },
         IpgWidgets::IpgScrollableStyle(style) => {
-                scroll_style_update_item(style, item, value)
+            scroll_style_update_item(style, item, value)
         },
         IpgWidgets::IpgSelectableText(st) => {
-                selectable_text_item_update(st, item, value);
+            selectable_text_item_update(st, item, value);
         },
         IpgWidgets::IpgSeparator(sep) => {
-                separator_item_update(sep, item, value);
+            separator_item_update(sep, item, value);
         },
         IpgWidgets::IpgSeparatorStyle(style) => {
-                separator_style_update_item(style, item, value);
+            separator_style_update_item(style, item, value);
         },
         IpgWidgets::IpgSlider(slider) => {
-                slider_item_update(slider, item, value)
+            slider_item_update(slider, item, value)
         },
         IpgWidgets::IpgSliderStyle(style) => {
-                slider_style_update_item(style, item, value)
+            slider_style_update_item(style, item, value)
         },
         IpgWidgets::IpgSpace(_) => (),
         IpgWidgets::IpgSvg(sg) => {
@@ -6285,25 +6264,25 @@ fn match_widget(
             text_input_item_update(ti, item, value);
         },
         IpgWidgets::IpgTextInputStyle(style) => {
-                text_input_style_update_item(style, item, value);
+            text_input_style_update_item(style, item, value);
         },
         IpgWidgets::IpgTimer(tim) => {
-                timer_item_update(tim, item, value);
+            timer_item_update(tim, item, value);
         },
         IpgWidgets::IpgTimerStyle(style) => {
-                timer_style_update_item(style, item, value);
+            timer_style_update_item(style, item, value);
         },
         IpgWidgets::IpgCanvasTimer(ctim) => {
-                canvas_timer_item_update(ctim, item, value);
+            canvas_timer_item_update(ctim, item, value);
         },
         IpgWidgets::IpgCanvasTimerStyle(style) => {
-                canvas_timer_style_update_item(style, item, value);
+            canvas_timer_style_update_item(style, item, value);
         },
         IpgWidgets::IpgToggler(tog) => {
-                toggler_item_update(tog, item, value);
+            toggler_item_update(tog, item, value);
         },
         IpgWidgets::IpgTogglerStyle(style) => {
-                toggler_style_update_item(style, item, value);
+            toggler_style_update_item(style, item, value);
         },
 
     }
@@ -6456,6 +6435,7 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgStyleStandard>()?;
     m.add_class::<IpgSvgParam>()?;
     m.add_class::<IpgTableParam>()?;
+    m.add_class::<IpgTableStyleParam>()?;
     m.add_class::<IpgTextInputParam>()?;
     m.add_class::<IpgTextInputStyleParam>()?;
     m.add_class::<IpgTextParam>()?;
