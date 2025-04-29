@@ -209,24 +209,19 @@ pub fn construct_table<'a>(tbl: IpgTable,
             if let Ok(df_row) = tbl.df.get_row(idx) {
                 let mut rw = vec![];
                 for (i, item) in df_row.0.iter().enumerate() {
-                    if !tbl.control_columns.contains(&i) {
-                        let txt = 
-                            text(item.to_string())
+                    let cell = if !tbl.control_columns.contains(&i) {
+                            Element::from(text(item.to_string())
                                 .size(tbl.text_size)
                                 .align_x(alignment::Horizontal::Center)
                                 .align_y(alignment::Vertical::Center)
-                                .width(tbl.column_widths[i]);
-                        rw.push(Element::from(txt));
+                                .width(tbl.column_widths[i]))
+                        
                     } else {
-                        rw.push(Element::from(container(content.remove(0))
-                                                .width(tbl.column_widths[i])
-                                                .center_x(tbl.column_widths[i])));
-                    }
-                }
-            
-            body_rows.push(container(row(rw)
-                                                .height(Fill))
-                            .height(tbl.row_height)
+                        content.remove(0)
+                    };
+                    rw.push(Element::from(container(cell)
+                            .width(tbl.column_widths[i])
+                            .center_x(tbl.column_widths[i])
                             .style({
                                 let body_style = body_style.clone();
                                 move |theme| {
@@ -235,8 +230,10 @@ pub fn construct_table<'a>(tbl: IpgTable,
                                         theme, idx, 
                                         tbl.body_row_highlight)
                                 }
-                            })
-                            .into());
+                            })));
+                }
+            
+            body_rows.push(row(rw).into());
             }
         }
 
@@ -392,6 +389,18 @@ pub fn construct_table<'a>(tbl: IpgTable,
             None
         };
 
+        let div_body = 
+            divider_horizontal(
+                tbl.id,
+                tbl.column_widths.clone(),
+                tbl.resizer_width,
+                tbl.height,
+                Message::TableDividerChanged,
+            )
+            .include_last_handle(!tbl.resize_columns_enabled)
+            .on_release(Message::TableDividerReleased(tbl.id))
+            .style(move|theme, status| default_divider_style(theme, status));
+
         let div_header = 
             divider_horizontal(
                 tbl.id,
@@ -419,15 +428,21 @@ pub fn construct_table<'a>(tbl: IpgTable,
         let mut main_col = vec![];
 
         if header.is_some() && tbl.resize_columns_enabled {
-            let stk = stack([header.unwrap(), div_header.into()]).into();
-            main_col.push(stk);
+            let header_stk = 
+                stack([header.unwrap(), div_header.into()]).into();
+            main_col.push(header_stk);
             main_col.push(Space::new(5.0, tbl.header_body_spacing).into());
+
         } else if header.is_some() && !tbl.resize_columns_enabled {
             main_col.push(header.unwrap());
             main_col.push(Space::new(5.0, tbl.header_body_spacing).into());
         }
         
-        main_col.push(body.into());
+        if tbl.resize_columns_enabled {
+            main_col.push(stack([body.into(), div_body.into()]).into())
+        } else {
+            main_col.push(body.into());
+        }
 
         if footer.is_some() {
             main_col.push(Space::new(5.0, tbl.body_footer_spacing).into());

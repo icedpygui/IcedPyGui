@@ -402,17 +402,13 @@ where
                 &state.handle_bounds,
                 cursor,);
         
-        let status = if state.is_dragging {
-            Status::Dragged
-        } else if is_mouse_over.is_some() {
-            Status::Hovered
-        } else {
-            Status::Active
-        };
-
-        let style = theme.style(&self.class, status);
-
         for i in 0..self.widths.len() {
+            let style = if Some(i) == is_mouse_over {
+                theme.style(&self.class, Status::Hovered)
+            } else {
+                theme.style(&self.class, Status::Active)
+            };
+            
             renderer.fill_quad(
                 renderer::Quad {
                     bounds: state.width_height_bounds[i],
