@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 use crate::graphics::colors::get_color;
 use crate::{access_callbacks, access_user_data1, app, IpgState};
-use super::helpers::{get_height, get_radius, get_width, 
-    try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_vec_f32};
+use super::helpers::{get_height, get_radius, get_width, try_extract_f32, 
+    try_extract_ipg_color, try_extract_rgba_color, try_extract_vec_f32};
 use super::ipg_enums::IpgWidgets;
 
 use iced::widget::container;
@@ -31,10 +31,12 @@ pub struct IpgScrollable {
     pub h_bar_width: f32,
     pub h_bar_margin: f32,
     pub h_scroller_width: f32,
+    pub h_spacing: f32,
     pub h_bar_alignment: IpgScrollableAlignment,
     pub v_bar_width: f32,
     pub v_bar_margin: f32,
     pub v_scroller_width: f32,
+    pub v_spacing: f32,
     pub v_bar_alignment: IpgScrollableAlignment,
     pub style_id: Option<usize>,
     pub scroll_y_pos: f32,
@@ -52,10 +54,12 @@ impl IpgScrollable {
         h_bar_width: f32,
         h_bar_margin: f32,
         h_scroller_width: f32,
+        h_spacing: f32,
         h_bar_alignment: IpgScrollableAlignment,
         v_bar_width: f32,
         v_bar_margin: f32,
         v_scroller_width: f32,
+        v_spacing: f32,
         v_bar_alignment: IpgScrollableAlignment,
         style_id: Option<usize>,
     ) -> Self {
@@ -67,10 +71,12 @@ impl IpgScrollable {
             h_bar_width,
             h_bar_margin,
             h_scroller_width,
+            h_spacing,
             h_bar_alignment,
             v_bar_width,
             v_bar_margin,
             v_scroller_width,
+            v_spacing,
             v_bar_alignment,
             style_id,
             scroll_y_pos: 0.0,
@@ -179,10 +185,12 @@ pub fn construct_scrollable<'a>(scroll: &'a IpgScrollable,
                         scroll.h_bar_width,
                         scroll.h_bar_margin,
                         scroll.h_scroller_width,
+                        scroll.h_spacing,
                         scroll.h_bar_alignment.clone(),
                         scroll.v_bar_width,
                         scroll.v_bar_margin,
                         scroll.v_scroller_width,
+                        scroll.v_spacing,
                         scroll.v_bar_alignment.clone()
                     );
 
@@ -204,10 +212,12 @@ fn get_direction(direction: IpgScrollableDirection,
                     h_width: f32,
                     h_margin: f32,
                     h_scroller_width: f32,
+                    h_spacing: f32,
                     h_alignment: IpgScrollableAlignment,
                     v_width: f32,
                     v_margin: f32,
                     v_scroller_width: f32,
+                    v_spacing: f32,
                     v_alignment: IpgScrollableAlignment
                 ) -> Direction {
 
@@ -225,13 +235,15 @@ fn get_direction(direction: IpgScrollableDirection,
                                     .anchor(h_alignment)
                                     .width(h_width)
                                     .margin(h_margin)
-                                    .scroller_width(h_scroller_width);
+                                    .scroller_width(h_scroller_width)
+                                    .spacing(h_spacing);
 
     let v_properties = Scrollbar::new()
                                     .anchor(v_alignment)
                                     .width(v_width)
                                     .margin(v_margin)
-                                    .scroller_width(v_scroller_width);
+                                    .scroller_width(v_scroller_width)
+                                    .spacing(v_spacing);
 
 
     match direction {
@@ -318,10 +330,12 @@ pub enum IpgScrollableParam {
     HBarWidth,
     HBarMargin,
     HScrollerWidth,
+    HSpacing,
     HBarAlignment,
     VBarWidth,
     VBarMargin,
     VScrollerWidth,
+    VSpacing,
     VBarAlignment,
     ScrollXTo,
     ScrollYTo,
@@ -337,33 +351,39 @@ pub fn scrollable_item_update(scroll: &mut IpgScrollable,
     let name = "Scrollable".to_string();
     match update {
         IpgScrollableParam::Width => {
-            let val = try_extract_f64(value, name);
-            scroll.width = get_width(Some(val as f32), false);
+            let val = try_extract_f32(value, name);
+            scroll.width = get_width(Some(val), false);
         },
         IpgScrollableParam::Height => {
-            let val = try_extract_f64(value, name);
-            scroll.height = get_height(Some(val as f32), false);
+            let val = try_extract_f32(value, name);
+            scroll.height = get_height(Some(val), false);
         },
         IpgScrollableParam::HBarWidth => {
-            scroll.h_bar_width = try_extract_f64(value, name) as f32;
+            scroll.h_bar_width = try_extract_f32(value, name);
         },
         IpgScrollableParam::HBarMargin => {
-            scroll.h_bar_margin = try_extract_f64(value, name) as f32;
+            scroll.h_bar_margin = try_extract_f32(value, name);
         },
         IpgScrollableParam::HScrollerWidth => {
-            scroll.h_scroller_width = try_extract_f64(value, name) as f32;
+            scroll.h_scroller_width = try_extract_f32(value, name);
+        },
+        IpgScrollableParam::HSpacing => {
+            scroll.h_spacing = try_extract_f32(value, name);
         },
         IpgScrollableParam::HBarAlignment => {
             scroll.h_bar_alignment = try_extract_alignment(value);
         },
         IpgScrollableParam::VBarWidth => {
-            scroll.v_bar_width = try_extract_f64(value, name) as f32;
+            scroll.v_bar_width = try_extract_f32(value, name);
         },
         IpgScrollableParam::VBarMargin => {
-            scroll.v_bar_margin = try_extract_f64(value, name) as f32;
+            scroll.v_bar_margin = try_extract_f32(value, name);
         },
         IpgScrollableParam::VScrollerWidth => {
-            scroll.v_scroller_width = try_extract_f64(value, name) as f32;
+            scroll.v_scroller_width = try_extract_f32(value, name);
+        },
+        IpgScrollableParam::VSpacing => {
+            scroll.v_spacing = try_extract_f32(value, name);
         },
         IpgScrollableParam::VBarAlignment => {
             scroll.v_bar_alignment = try_extract_alignment(value);
@@ -602,7 +622,7 @@ pub fn scroll_style_update_item(style: &mut IpgScrollableStyle,
             style.border_radius = try_extract_vec_f32(value, name);
         },
         IpgScrollableStyleParam::BorderWidth => {
-            style.border_width = try_extract_f64(value, name) as f32;
+            style.border_width = try_extract_f32(value, name);
         },
         IpgScrollableStyleParam::ShadowIpgColor => {
             let color = try_extract_ipg_color(value, name);
@@ -612,13 +632,13 @@ pub fn scroll_style_update_item(style: &mut IpgScrollableStyle,
             style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgScrollableStyleParam::ShadowOffsetX => {
-            style.shadow_offset_x = try_extract_f64(value, name) as f32;
+            style.shadow_offset_x = try_extract_f32(value, name);
         },
         IpgScrollableStyleParam::ShadowOffsetY => {
-            style.shadow_offset_y = try_extract_f64(value, name) as f32;
+            style.shadow_offset_y = try_extract_f32(value, name);
         },
         IpgScrollableStyleParam::ShadowBlurRadius => {
-            style.shadow_blur_radius = try_extract_f64(value, name) as f32;
+            style.shadow_blur_radius = try_extract_f32(value, name);
         },
         IpgScrollableStyleParam::TextIpgColor => {
             let color = try_extract_ipg_color(value, name);
@@ -638,7 +658,7 @@ pub fn scroll_style_update_item(style: &mut IpgScrollableStyle,
             style.scrollbar_border_radius = try_extract_vec_f32(value, name);
         },
         IpgScrollableStyleParam::ScrollbarBorderWidth => {
-            style.scrollbar_border_width = try_extract_f64(value, name) as f32;
+            style.scrollbar_border_width = try_extract_f32(value, name);
         },
         IpgScrollableStyleParam::ScrollbarBorderIpgColor => {
             let color = try_extract_ipg_color(value, name);

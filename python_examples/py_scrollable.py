@@ -13,18 +13,18 @@ from icedpygui import IpgAlignment, IpgScrollableDirection, IpgScrollableParam
 # However, you can just type in the string if you like.
 
 # Currently @dataclass is not supported since it sends a tuple 
-# and not a string.  Hopefully I can fixed in the near future.
+# and not a string. Hopefully I can fix it in the near future.
 
 # These demos use a lot of callbacks to change things on widgets,
-# this is probably something that you will seldom be use but it's added
-# in for completeness and testing.  It also makes the program a bit 
+# this is probably something that you will seldom use, but it's added
+# in for completeness and testing. It also makes the program a bit 
 # more complex than if you simply used the widget with one callback, 
-# so it's not as complex at it appears at first look.
+# so it's not as complex as it appears at first look.
 
 # Note on scrolling:
 # Sometimes getting the containers sized correctly takes a bit
-# of patience's.  When using scrolling, the size of the scrollable
-# should always be smaller than the container size.  The container
+# of patience. When using scrolling, the size of the scrollable
+# should always be smaller than the container size. The container
 # will be the default shrink and you set the size of the scrollable
 # to be something less than the size of your data or container items.
 
@@ -161,10 +161,16 @@ class DemoScrollable:
                     on_press=self.change_height)
 
     def change_width(self, btn_id):
-        self.ipg.update_item(self.scroll_id_1, IpgScrollableParam.Width, 300.0)
+        self.ipg.update_item(
+            wid=self.scroll_id_1, 
+            param=IpgScrollableParam.Width, 
+            value=300.0)
 
     def change_height(self, btn_id):
-        self.ipg.update_item(self.scroll_id_1, IpgScrollableParam.Height, 200.0)
+        self.ipg.update_item(
+            wid=self.scroll_id_1, 
+            param=IpgScrollableParam.Height, 
+            value=200.0)
 
     # ************Window 2 scrolling a row container horizontally**********************************************
 
@@ -233,8 +239,10 @@ class DemoScrollable:
         text += "\n" + 'rev_x = ' + str(data.get('rev_x'))
         text += "\n" + 'rev_y = ' + str(data.get('rev_y'))
  
-        self.ipg.update_item(self.cb_text_v, IpgTextParam.Content,
-                             value=f"scrollable id = {id}\n{text}")
+        self.ipg.update_item(
+            wid=self.cb_text_v, 
+            param=IpgTextParam.Content,
+            value=f"scrollable id = {id}\n{text}")
 
     def on_scroll_h(self, id, data):
         text = "\n" + 'abs_x = ' + str(data.get('abs_x'))
@@ -244,8 +252,10 @@ class DemoScrollable:
         text += "\n" + 'rev_x = ' + str(data.get('rev_x'))
         text += "\n" + 'rev_y = ' + str(data.get('rev_y'))
         
-        self.ipg.update_item(self.cb_text_h, IpgTextParam.Content,
-                             value=f"scrollable id = {id}\n{text}")
+        self.ipg.update_item(
+            wid=self.cb_text_h, 
+            param=IpgTextParam.Content,
+            value=f"scrollable id = {id}\n{text}")
 
     # ***************Window 3-scrolling both directions with other property setting**********************************
 
@@ -424,27 +434,47 @@ class DemoScrollable:
 
     def inc_dec_h_bar_width(self, btn_id, inc_dec):
         self.h_bar_width += inc_dec
-        self.ipg.update_item(self.scroll_id_3, IpgScrollableParam.HBarWidth, self.h_bar_width)
+        self.ipg.update_item(
+            wid=self.scroll_id_3, 
+            param=IpgScrollableParam.HBarWidth, 
+            value=self.h_bar_width)
 
     def inc_dec_v_bar_width(self, btn_id, inc_dec):
         self.v_bar_width += inc_dec
-        self.ipg.update_item(self.scroll_id_3, IpgScrollableParam.VBarWidth, self.v_bar_width)
+        self.ipg.update_item(
+            wid=self.scroll_id_3, 
+            param=IpgScrollableParam.VBarWidth, 
+            value=self.v_bar_width)
 
     def inc_dec_h_bar_margin(self, btn_id, inc_dec):
         self.h_bar_margin += inc_dec
-        self.ipg.update_item(self.scroll_id_3, IpgScrollableParam.HBarMargin, self.h_bar_margin)
+        self.ipg.update_item(
+            wid=self.scroll_id_3, 
+            param=IpgScrollableParam.HBarMargin, 
+            value=self.h_bar_margin)
 
     def inc_dec_v_bar_margin(self, btn_id, inc_dec):
         self.v_bar_margin += inc_dec
-        self.ipg.update_item(self.scroll_id_3, IpgScrollableParam.VBarMargin, self.v_bar_margin)
+        self.ipg.update_item(
+            wid=self.scroll_id_3, 
+            param=IpgScrollableParam.VBarMargin, 
+            value=self.v_bar_margin)
 
-    def inc_dec_h_scroller_width(self, btn_id, inc_dec):
+        def inc_dec_h_scroller_width(self, btn_id: int, inc_dec: float):
         self.h_scroller_width += inc_dec
-        self.ipg.update_item(self.scroll_id_3, IpgScrollableParam.HScrollerWidth, self.h_scroller_width)
-
-    def inc_dec_v_scroller_width(self, btn_id, inc_dec):
+        self.ipg.update_item(
+            wid=self.scroll_id_3, 
+            param=IpgScrollableParam.HScrollerWidth, 
+            value=self.h_scroller_width
+        )
+    
+    def inc_dec_v_scroller_width(self, btn_id: int, inc_dec: float):
         self.v_scroller_width += inc_dec
-        self.ipg.update_item(self.scroll_id_3, IpgScrollableParam.VScrollerWidth, self.v_scroller_width)
+        self.ipg.update_item(
+            wid=self.scroll_id_3, 
+            param=IpgScrollableParam.VScrollerWidth, 
+            value=self.v_scroller_width
+        )
 
 
 # instantiate the class

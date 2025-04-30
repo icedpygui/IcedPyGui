@@ -563,10 +563,12 @@ class IPG:
                         h_bar_width: float=10.0,
                         h_bar_margin: float=0.0,
                         h_scroller_width: float=10.0,
+                        h_spacing: float=0.0,
                         h_bar_alignment: IpgAlignment=IpgAlignment.Start,
                         v_bar_width: float=10.0,
                         v_bar_margin: float=0.0,
                         v_scroller_width: float=10.0,
+                        v_spacing: float=0.0,
                         v_bar_alignment: IpgAlignment=IpgAlignment.Start,
                         on_scroll: Optional[Callable]=None,
                         style_id: Optional[str]=None,
@@ -600,6 +602,8 @@ class IPG:
                 Sets the horizontal bar margin.
             h_scroller_width: float
                 Sets the horizontal scroller bar width
+            h_spacing: float
+                Moves the spacebar down, if outside the container, will not show if not needed.
             h_bar_alignment: IpgScrollableAlignment
                 Sets the horizontal bar alignment Start or End
             v_bar_width: float
@@ -608,6 +612,8 @@ class IPG:
                 Sets the vertical bar margin.
             v_scroller_width: float
                 Sets the vertical scroller bar width
+            h_spacing: float
+                Moves the spacebar right, if outside the container, will not show if not needed.
             v_bar_alignment: IpgScrollableAlignment
                 Sets the vertical bar alignment Start or End
             on_scroll: Callable
@@ -5178,6 +5184,8 @@ class IpgScrollableParam:
         The horizontal bar margin.
     HScrollerWidth: float
         The horizontal scroller width.
+    HSpacing: float
+        If > 0.0 lowers the scroller
     HBarAlignment: IpgAlignment
         The horizontal bar alignment.
     VBarWidth: float
@@ -5186,8 +5194,15 @@ class IpgScrollableParam:
         The vertical margin.
     VScrollerWidth: float
         The vertical scroller width.
+    VSpacing: float
+    If > 0.0 moves scroller right.
     VBarAlignment: IpgAlignment
         The vertical bar alignment.
+        
+    Examples
+    --------
+    >>> ipg.update_item(wid=0, param=IpgScrollableParam.Width , 300.0)
+    >>> sipg.update_item(wid=0, param=IpgScrollableParam.HeightFill, True)
     """
     Width: float
     WidthFill: bool
@@ -5196,10 +5211,12 @@ class IpgScrollableParam:
     HBarWidth: float
     HBarMargin: float
     HScrollerWidth: float
+    HSpacing: float
     HBarAlignment: IpgAlignment
     VBarWidth: float
     VBarMargin: float
     VScrollerWidth: float
+    VSpacing: float
     VBarAlignment: IpgAlignment
 
 
