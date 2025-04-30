@@ -7,7 +7,7 @@ def set_cp_label(rd_id: int, selected: tuple[int, str]):
     global radio_selected
     global radio_ids
     radio_selected = selected
-    print(radio_selected)
+
     if "Header" in selected[1]:
         match selected[0]:
             case 0:
@@ -23,6 +23,8 @@ def set_cp_label(rd_id: int, selected: tuple[int, str]):
         # unselect other radios if selected
         ipg.update_item(wid=radio_ids[1], param=IpgRadioParam.SelectedIndex, value=None)
         ipg.update_item(wid=radio_ids[2], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[3], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[4], param=IpgRadioParam.SelectedIndex, value=None)
                 
     if "Body" in selected[1]:
         match selected[0]:
@@ -40,6 +42,8 @@ def set_cp_label(rd_id: int, selected: tuple[int, str]):
         # unselect other radios if selected
         ipg.update_item(wid=radio_ids[0], param=IpgRadioParam.SelectedIndex, value=None)
         ipg.update_item(wid=radio_ids[2], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[3], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[4], param=IpgRadioParam.SelectedIndex, value=None)
     
     if "Footer" in selected[1]:
         match selected[0]:           
@@ -53,15 +57,60 @@ def set_cp_label(rd_id: int, selected: tuple[int, str]):
                 ipg.update_item(
                     wid=cp_id, 
                     param=IpgColorPickerParam.Label, 
-                    value="Set Footer Boder Color")
+                    value="Set Footer Border Color")
         # unselect other radios if selected
         ipg.update_item(wid=radio_ids[0], param=IpgRadioParam.SelectedIndex, value=None)
         ipg.update_item(wid=radio_ids[1], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[3], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[4], param=IpgRadioParam.SelectedIndex, value=None)
+        
+    if "Divider" in selected[1]:
+        match selected[0]:           
+            case 0:
+                ipg.update_item(
+                    wid=cp_id, 
+                    param=IpgColorPickerParam.Label, 
+                    value="Set Divider Bkg")
+                
+            case 1:
+                ipg.update_item(
+                    wid=cp_id, 
+                    param=IpgColorPickerParam.Label, 
+                    value="Set Divider Hover Color")
+        # unselect other radios if selected
+        ipg.update_item(wid=radio_ids[0], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[1], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[2], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[4], param=IpgRadioParam.SelectedIndex, value=None)
+        
+    if "Scroller" in selected[1]:
+        match selected[0]:           
+            case 0:
+                ipg.update_item(
+                    wid=cp_id, 
+                    param=IpgColorPickerParam.Label, 
+                    value="Set Scroller Bkg")
+                
+            case 1:
+                ipg.update_item(
+                    wid=cp_id, 
+                    param=IpgColorPickerParam.Label, 
+                    value="Set Scroller Hover Color")
+            case 2:
+                ipg.update_item(
+                    wid=cp_id, 
+                    param=IpgColorPickerParam.Label, 
+                    value="Set Scroller Rail Color")
+        # unselect other radios if selected
+        ipg.update_item(wid=radio_ids[0], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[1], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[2], param=IpgRadioParam.SelectedIndex, value=None)
+        ipg.update_item(wid=radio_ids[3], param=IpgRadioParam.SelectedIndex, value=None)
            
             
 def set_color(cp_id: int, color: list):
     global radio_selected
-    print(radio_selected)
+
     if "Header" in radio_selected[1]:
         match radio_selected[0]:
             case 0:
@@ -134,6 +183,40 @@ def set_color(cp_id: int, color: list):
                     wid=tbl_style_id,
                     param=IpgTableStyleParam.FooterBorderWidth,
                     value=2.0)
+                
+    if "Divider" in radio_selected[1]:
+        match radio_selected[0]:
+            case 0:
+                ipg.update_item(
+                    wid=tbl_style_id,
+                    param=IpgTableStyleParam.DividerBackgroundRgbaColor,
+                    value=color)
+                
+            case 1:
+                ipg.update_item(
+                    wid=tbl_style_id,
+                    param=IpgTableStyleParam.DividerHoverRgbaColor,
+                    value=color)
+    
+    if "Scroller" in radio_selected[1]:
+        match radio_selected[0]:
+            case 0:
+                ipg.update_item(
+                    wid=tbl_style_id,
+                    param=IpgTableStyleParam.ScrollerBackgroundRgbaColor,
+                    value=color)
+                
+            case 1:
+                ipg.update_item(
+                    wid=tbl_style_id,
+                    param=IpgTableStyleParam.ScrollerHoverRgbaColor,
+                    value=color)
+                
+            case 2:
+                ipg.update_item(
+                    wid=tbl_style_id,
+                    param=IpgTableStyleParam.ScrollerRailRgbaColor,
+                    value=color)
 
 
 ipg = IPG()
@@ -163,7 +246,7 @@ ipg.add_window(
         window_id="main", 
         title="Table Demo",
         width=700, 
-        height=550,
+        height=600,
         pos_centered=True,
         theme=IpgWindowTheme.TokyoNightStorm,
         debug=False)
@@ -203,11 +286,23 @@ radio_ids.append(ipg.add_radio(
     on_select=set_cp_label,
     direction=IpgRadioDirection.Horizontal))
 
+radio_ids.append(ipg.add_radio(
+    parent_id="col",
+    labels=["Set Divider Bkg", "Set Divider Hover Color"],
+    on_select=set_cp_label,
+    direction=IpgRadioDirection.Horizontal))
+
+radio_ids.append(ipg.add_radio(
+    parent_id="col",
+    labels=["Set Scroller Bkg", "Set Scroller Hover Color", "Set Scroller Rail Color"],
+    on_select=set_cp_label,
+    direction=IpgRadioDirection.Horizontal))
 
 cp_id = ipg.add_color_picker(
     parent_id="col",
     label="Set Header Bkg",
     on_submit=set_color)
+
 
 # The table is added.
 table_id = ipg.add_table(
@@ -217,6 +312,7 @@ table_id = ipg.add_table(
         parent_id="col",
         column_widths=column_widths,
         height=150.0,
+        # width=200.0, # uncomment to show header and footer scrollers
         custom_footer_rows=1,
         style_id=tbl_style_id
         )

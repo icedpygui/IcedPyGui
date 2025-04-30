@@ -19,7 +19,6 @@ use pyo3_polars::PyDataFrame;
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
 use super::divider::{self, divider_horizontal};
 use super::helpers::{try_extract_boolean, try_extract_f32, try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_usize, try_extract_vec_f32, try_extract_vec_usize};
-use super::ipg_divider::IpgDividerStyle;
 use super::ipg_enums::IpgWidgets;
 
 
@@ -160,13 +159,6 @@ impl IpgTable {
 }
 
 
-#[derive(Debug, Clone, PartialEq)]
-#[pyclass(eq, eq_int)]
-pub enum IpgTableRowHighLight {
-    Darker,
-    Lighter,
-}
-
 pub fn construct_table<'a>(tbl: IpgTable, 
                             mut content: Vec<Element<'a, Message, Theme, Renderer>>,
                             style_opt: Option<&IpgWidgets>, 
@@ -174,7 +166,11 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             -> Element<'a, Message, Theme, Renderer> {
     
     let style = get_table_style_opt(style_opt);
-    let (header_style, footer_style, body_style) = 
+    let (header_style, 
+        footer_style, 
+        body_style,
+        divider_style,
+        scrollable_style) = 
     if style.is_some() {
         let style = style.unwrap();
             (Some(HeaderStyle{
@@ -198,10 +194,19 @@ pub fn construct_table<'a>(tbl: IpgTable,
                 border_width: style.body_border_width,
                 text_color: style.body_text_color,
                 row_highlight: style.body_row_highlight,
-            })
+            }),
+            Some(DividerStyle {
+                background: style.divider_background,
+                hover: style.divider_hover_color,
+            }),
+            Some(ScrollableStyle {
+                rail: style.rail,
+                scroller: style.scroller,
+                scroller_hover: style.scroller_hover,
+            }),
         )
     } else {
-        (None, None, None)
+        (None, None, None, None, None)
     };
 
     let mut body_rows = vec![];
@@ -239,30 +244,41 @@ pub fn construct_table<'a>(tbl: IpgTable,
 
         let body_column = column(body_rows)
                                                 .spacing(tbl.row_spacing);
-        let table_width = if tbl.width.is_some() {
-            tbl.width.unwrap()
-        } else {
-            tbl.column_widths.iter().sum()
-        };
-        let body: Element<Message> = scrollable(body_column)
-                                        .height(tbl.height)
-                                        .width(table_width)
-                                        .id(tbl.body_scroller_id)
-                                        .on_scroll(move|vp|Message::TableSync(
-                                                        vp.absolute_offset(), tbl.id))
-                                        .direction({
-                                            let scrollbar = Scrollbar::new()
-                                                .scroller_width(tbl.body_scroller_width)
-                                                .width(tbl.body_scrollbar_width)
-                                                .margin(tbl.body_scrollbar_margin);
-                                            scrollable::Direction::Both {
-                                                horizontal: scrollbar,
-                                                vertical: scrollbar,
-                                            }
-                                        })
-                                        .style(move|theme, status| 
-                                            default_scrollable_style(theme, status))
-                                        .into();
+        let (table_width, scroller_needed) = tbl.width.map_or_else(
+            || (tbl.column_widths.iter().sum(), false),
+            |width| {
+                let total_width: f32 = tbl.column_widths.iter().sum();
+                if width < total_width {
+                    (width, true)
+                } else {
+                    (width, false)
+                }
+            },
+        );
+        let body: Element<Message> = 
+                scrollable(body_column)
+                    .height(tbl.height)
+                    .width(table_width)
+                    .id(tbl.body_scroller_id)
+                    .on_scroll(move|vp|Message::TableSync(
+                                    vp.absolute_offset(), tbl.id))
+                    .direction({
+                        let scrollbar = Scrollbar::new()
+                            .scroller_width(tbl.body_scroller_width)
+                            .width(tbl.body_scrollbar_width)
+                            .margin(tbl.body_scrollbar_margin);
+                        scrollable::Direction::Both {
+                            horizontal: scrollbar,
+                            vertical: scrollbar,
+                        }
+                    })
+                    .style({
+                        let scrollable_style = scrollable_style.clone();
+                        move |theme, status| {
+                            get_scrollable_style(&scrollable_style, theme, status)
+                        }
+                    })
+                    .into();
         
         let header_height = if tbl.header_enabled {
             tbl.header_row_height
@@ -315,7 +331,12 @@ pub fn construct_table<'a>(tbl: IpgTable,
                             .width(tbl.column_widths[i])
                             .height(custom_header_height)
                             .center_x(tbl.column_widths[i])
-                            .style(move|theme|default_style(theme, 0, false))
+                            .style({
+                            let header_style = header_style.clone();
+                                    move |theme| {
+                                        get_header_style(&header_style, theme)
+                                    }
+                                })
                             ));
                 }
                 header_column.push(Element::from(row(custom_rw)));
@@ -324,25 +345,31 @@ pub fn construct_table<'a>(tbl: IpgTable,
 
         let header = if header_column.len() > 0 {
             let hd_col = column(header_column)
-                                                .spacing(tbl.header_row_spacing);
-
-            Some(Element::from(
-                scrollable(hd_col)
-                    .id(tbl.header_scroller_id)
-                    .width(table_width)
-                    .direction({
-                        let scrollbar = scrollable::Scrollbar::new()
-                            .scroller_width(tbl.header_scroller_height)
-                            .width(tbl.header_scrollbar_height)
-                            .margin(tbl.header_scrollbar_margin)
-                            .spacing(tbl.header_scrollbar_spacing);
-                        scrollable::Direction::Horizontal(scrollbar)
-                        })
-                    .on_scroll(move|vp| Message::TableSync(
-                                        vp.absolute_offset(), tbl.id))
-                    .style(move|theme, status| 
-                        default_scrollable_style(theme, status))
-                    ))
+                                                .spacing(tbl.header_row_spacing).into();
+            if scroller_needed {
+                Some(Element::from(
+                    scrollable(hd_col)
+                        .id(tbl.header_scroller_id)
+                        .width(table_width)
+                        .direction({
+                            let scrollbar = scrollable::Scrollbar::new()
+                                .scroller_width(tbl.header_scroller_height)
+                                .width(tbl.header_scrollbar_height)
+                                .margin(tbl.header_scrollbar_margin)
+                                .spacing(tbl.header_scrollbar_spacing);
+                            scrollable::Direction::Horizontal(scrollbar)
+                            })
+                        .on_scroll(move|vp| Message::TableSync(
+                                            vp.absolute_offset(), tbl.id))
+                        .style({
+                                let scrollable_style = scrollable_style.clone();
+                                move |theme, status| {
+                                    get_scrollable_style(&scrollable_style, theme, status)
+                                }
+                            })))
+            } else {
+                Some(hd_col)
+            }
         } else {
             None
         };
@@ -367,24 +394,31 @@ pub fn construct_table<'a>(tbl: IpgTable,
                 footer_column.push(Element::from(row(rw)));
             }
             let ft_col = column(footer_column)
-                                                .spacing(tbl.footer_spacing);
-            Some(Element::from(
-                scrollable(ft_col)
-                    .id(tbl.footer_scroller_id)
-                    .width(table_width)
-                    .direction({
-                        let scrollbar = scrollable::Scrollbar::new()
-                            .scroller_width(tbl.footer_scroller_height)
-                            .width(tbl.footer_scrollbar_height)
-                            .margin(tbl.footer_scrollbar_margin)
-                            .spacing(tbl.footer_scrollbar_spacing);
-                        scrollable::Direction::Horizontal(scrollbar)
-                        })
-                    .on_scroll(move|vp| Message::TableSync(
-                                        vp.absolute_offset(), tbl.id))
-                    .style(move|theme, status| 
-                        default_scrollable_style(theme, status))
-                    ))
+                                                .spacing(tbl.footer_spacing).into();
+            if scroller_needed {
+                Some(Element::from(
+                    scrollable(ft_col)
+                        .id(tbl.footer_scroller_id)
+                        .width(table_width)
+                        .direction({
+                            let scrollbar = scrollable::Scrollbar::new()
+                                .scroller_width(tbl.footer_scroller_height)
+                                .width(tbl.footer_scrollbar_height)
+                                .margin(tbl.footer_scrollbar_margin)
+                                .spacing(tbl.footer_scrollbar_spacing);
+                            scrollable::Direction::Horizontal(scrollbar)
+                            })
+                        .on_scroll(move|vp| Message::TableSync(
+                                            vp.absolute_offset(), tbl.id))
+                        .style({
+                                let scrollable_style = scrollable_style.clone();
+                                move |theme, status| {
+                                    get_scrollable_style(&scrollable_style, theme, status)
+                                }
+                            })))
+            } else {
+                Some(ft_col)
+            }
         } else {
             None
         };
@@ -399,7 +433,15 @@ pub fn construct_table<'a>(tbl: IpgTable,
             )
             .include_last_handle(!tbl.resize_columns_enabled)
             .on_release(Message::TableDividerReleased(tbl.id))
-            .style(move|theme, status| default_divider_style(theme, status));
+            .style({
+                let div_style = divider_style.clone();
+                move |theme, status| {
+                    get_divider_style(
+                        &div_style, 
+                        theme, 
+                        status,)
+                }
+            });
 
         let div_header = 
             divider_horizontal(
@@ -814,8 +856,12 @@ pub struct IpgTableStyle {
     pub footer_border_width: f32,
     pub footer_text_color: Option<Color>,
 
-    pub divider_color: Option<Color>,
+    pub divider_background: Option<Color>,
     pub divider_hover_color: Option<Color>,
+
+    pub rail: Option<Color>,
+    pub scroller: Option<Color>,
+    pub scroller_hover: Option<Color>,
 }
 
 impl IpgTableStyle {
@@ -840,8 +886,12 @@ impl IpgTableStyle {
         footer_border_width: f32,
         footer_text_color: Option<Color>,
 
-        divider_color: Option<Color>,
+        divider_background: Option<Color>,
         divider_hover_color: Option<Color>,
+
+        rail: Option<Color>,
+        scroller: Option<Color>,
+        scroller_hover: Option<Color>,
     ) -> Self {
         Self {
             id,
@@ -864,8 +914,12 @@ impl IpgTableStyle {
             footer_border_width,
             footer_text_color,
             
-            divider_color,
+            divider_background,
             divider_hover_color,
+
+            rail,
+            scroller,
+            scroller_hover,
         }
     }
 }
@@ -896,6 +950,19 @@ struct BodyStyle {
     border_width: f32,
     text_color: Option<Color>,
     row_highlight: Option<Color>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct DividerStyle {
+    background: Option<Color>,
+    hover: Option<Color>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct ScrollableStyle {
+    rail: Option<Color>,
+    scroller: Option<Color>,
+    scroller_hover: Option<Color>,
 }
 
 pub fn get_table_style_opt(style: Option<&IpgWidgets>) -> Option<IpgTableStyle> {
@@ -1018,7 +1085,6 @@ fn default_style(
 }
 
 fn default_border_style(_theme: &Theme) -> container::Style {
-
     container::Style {
         background: Some(Color::TRANSPARENT.into()),
         border: Border {
@@ -1106,11 +1172,61 @@ pub fn default_scrollable_style(theme: &Theme, status: scrollable::Status) -> sc
     }
 }
 
+fn get_scrollable_style(
+        style_opt: &Option<ScrollableStyle>,
+        theme: &Theme, 
+        status: scrollable::Status) 
+        -> scrollable::Style {
+
+    let mut style = default_scrollable_style(theme, status);
+
+    if style_opt.is_none() {
+        return style
+    }
+    
+    let style_opt = style_opt.clone().unwrap();
+
+    if let Some(rail) = style_opt.rail {
+        style.horizontal_rail.background = Some(rail.into());
+        style.vertical_rail.background = Some(rail.into());
+    }
+
+    let scroller_color = match (style_opt.scroller.is_some(), style_opt.scroller_hover.is_some()) {
+        (true, true) => {
+            match status {
+                scrollable::Status::Active => style_opt.scroller.unwrap(),
+                _ => style_opt.scroller_hover.unwrap().into(),
+            }
+        },
+        (true, false) => {
+            match status {
+                scrollable::Status::Active => style_opt.scroller.unwrap(),
+                _ => style.horizontal_rail.scroller.color,
+            }
+        },
+        (false, true) => {
+            match status {
+                scrollable::Status::Active => style.horizontal_rail.scroller.color,
+                _ => style_opt.scroller_hover.unwrap()
+            }
+        },
+        (false, false) => {
+            style.horizontal_rail.scroller.color
+        }
+        
+    };
+
+    style.horizontal_rail.scroller.color = scroller_color;
+    style.vertical_rail.scroller.color = scroller_color;
+    
+    style
+}
+
+
 pub fn default_divider_style(_theme: &Theme, status: divider::Status) -> divider::Style {
     let background = match status {
         divider::Status::Active => ROW_COLOR.into(),
-        divider::Status::Hovered => ROW_CONTRAST_COLOR.into(),
-        divider::Status::Dragged => ROW_CONTRAST_COLOR.into(),
+       _ => ROW_CONTRAST_COLOR.into(),
     };
     divider::Style {
         background,
@@ -1118,6 +1234,48 @@ pub fn default_divider_style(_theme: &Theme, status: divider::Status) -> divider
         border_color: Color::TRANSPARENT,
         border_radius: Radius::from(0.0),
     }
+}
+
+fn get_divider_style(
+        style_opt: &Option<DividerStyle>, 
+        theme: &Theme, 
+        status: divider::Status) 
+        -> divider::Style {
+    
+    let mut style = default_divider_style(theme, status);
+
+    if style_opt.is_none() {
+        return style
+    }
+    
+    let style_opt = style_opt.clone().unwrap();
+
+    style.background = 
+    match (style_opt.background.is_some(),  
+            style_opt.hover.is_some()) {
+        (true, true) => {
+            match status {
+                divider::Status::Active => style_opt.background.unwrap().into(),
+                _ => style_opt.hover.unwrap().into(),
+            }
+        },
+        (true, false) => {
+            match status {
+                divider::Status::Active => style_opt.background.unwrap().into(),
+                _ => style.background,
+            }
+        },
+        (false, true,) => {
+            match status {
+                divider::Status::Active => style.background,
+                _ => style_opt.hover.unwrap().into(),
+            }
+        },
+        _ => style.background,
+    };
+
+    
+    style
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1151,6 +1309,19 @@ pub enum IpgTableStyleParam {
     FooterBorderWidth,
     FooterTextIpgColor,
     FooterTextRgbaColor,
+
+    DividerBackgroundIpgColor,
+    DividerBackgroundRgbaColor,
+    DividerHoverIpgColor,
+    DividerHoverRgbaColor,
+
+    ScrollerBackgroundIpgColor,
+    ScrollerBackgroundRgbaColor,
+    ScrollerHoverIpgColor,
+    ScrollerHoverRgbaColor,
+    ScrollerRailIpgColor,
+    ScrollerRailRgbaColor,
+    
 }
 
 pub fn table_style_update_item(
@@ -1174,6 +1345,26 @@ pub fn table_style_update_item(
             let color = try_extract_ipg_color(value, name);
             style.footer_background = Some(get_color(None, Some(color), 1.0, false).unwrap().into());
         },
+        IpgTableStyleParam::DividerBackgroundIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.divider_background = Some(get_color(None, Some(color), 1.0, false).unwrap().into());
+        },
+        IpgTableStyleParam::DividerHoverIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.divider_hover_color = Some(get_color(None, Some(color), 1.0, false).unwrap().into());
+        },
+        IpgTableStyleParam::ScrollerBackgroundIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.scroller = Some(get_color(None, Some(color), 1.0, false).unwrap().into());
+        },
+        IpgTableStyleParam::ScrollerHoverIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.scroller_hover = Some(get_color(None, Some(color), 1.0, false).unwrap().into());
+        },
+        IpgTableStyleParam::ScrollerRailIpgColor => {
+            let color = try_extract_ipg_color(value, name);
+            style.rail = Some(get_color(None, Some(color), 1.0, false).unwrap().into());
+        },
         IpgTableStyleParam::HeaderBackgroundRgbaColor => {
             style.header_background = Some(Color::from(try_extract_rgba_color(value, name)).into());
         },
@@ -1182,6 +1373,21 @@ pub fn table_style_update_item(
         },
         IpgTableStyleParam::FooterBackgroundRgbaColor => {
             style.footer_background = Some(Color::from(try_extract_rgba_color(value, name)).into());
+        },
+        IpgTableStyleParam::DividerBackgroundRgbaColor => {
+            style.divider_background = Some(Color::from(try_extract_rgba_color(value, name)).into());
+        },
+        IpgTableStyleParam::DividerHoverRgbaColor => {
+            style.divider_hover_color = Some(Color::from(try_extract_rgba_color(value, name)).into());
+        },
+        IpgTableStyleParam::ScrollerBackgroundRgbaColor => {
+            style.scroller = Some(Color::from(try_extract_rgba_color(value, name)).into());
+        },
+        IpgTableStyleParam::ScrollerHoverRgbaColor => {
+            style.scroller_hover = Some(Color::from(try_extract_rgba_color(value, name)).into());
+        },
+        IpgTableStyleParam::ScrollerRailRgbaColor => {
+            style.rail = Some(Color::from(try_extract_rgba_color(value, name)).into());
         },
         IpgTableStyleParam::HeaderBorderIpgColor => {
             let color = try_extract_ipg_color(value, name);

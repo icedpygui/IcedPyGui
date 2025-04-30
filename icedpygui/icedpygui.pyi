@@ -5573,6 +5573,18 @@ class IpgTableStyleParam:
     FooterBorderWidth:float
     FooterTextIpgColor:IpgColor
     FooterTextRgbaColor:list[float, 4]
+    
+    DividerBackgroundIpgColor:IpgColor
+    DividerBackgroundRgbaColor:list[float, 4]
+    DividerHoverIpgColor:IpgColor
+    DividerHoverRgbaColor:list[float, 4]
+    
+    ScrollerBackgroundIpgColor:IpgColor
+    ScrollerBackgroundRgbaColor:list[float, 4]
+    ScrollerHoverIpgColor:IpgColor
+    ScrollerHoverRgbaColor:list[float, 4]
+    ScrollerRailIpgColor:IpgColor
+    ScrollerRailRgbaColor:list[float, 4]
 
 
 class IpgTextInputParam:

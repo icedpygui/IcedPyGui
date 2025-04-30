@@ -1933,6 +1933,13 @@ impl IPG {
         divider_hover_color=None,
         divider_hover_rgba=None,
 
+        scroller_rail_color=None,
+        scroller_rail_rgba=None,
+        scroller_color=None,
+        scroller_rgba=None,
+        scroller_hover_color=None,
+        scroller_hover_rgba=None,
+
         gen_id=None
         ))]
     fn add_table_style(
@@ -1971,6 +1978,13 @@ impl IPG {
         divider_hover_color: Option<IpgColor>,
         divider_hover_rgba: Option<[f32; 4]>,
 
+        scroller_rail_color: Option<IpgColor>,
+        scroller_rail_rgba: Option<[f32; 4]>,
+        scroller_color: Option<IpgColor>,
+        scroller_rgba: Option<[f32; 4]>,
+        scroller_hover_color: Option<IpgColor>,
+        scroller_hover_rgba: Option<[f32; 4]>,
+
         gen_id: Option<usize>,
         ) -> PyResult<usize>
     {
@@ -1999,10 +2013,14 @@ impl IPG {
         let footer_text_color: Option<Color> = 
             get_color(footer_text_rgba, footer_text_color, 1.0, false);
 
-        let divider_color: Option<Color> = 
+        let divider_background: Option<Color> = 
             get_color(divider_rgba, divider_color, 1.0, false);
         let divider_hover_color = 
             get_color(divider_hover_rgba, divider_hover_color, 1.0, false);
+
+        let rail = get_color(scroller_rail_rgba, scroller_rail_color, 1.0, false);
+        let scroller = get_color(scroller_rgba, scroller_color, 1.0, false);
+        let scroller_hover = get_color(scroller_hover_rgba, scroller_hover_color, 1.0, false);
       
         let mut state = access_state();
 
@@ -2028,8 +2046,12 @@ impl IPG {
                 footer_border_width,
                 footer_text_color,
                 
-                divider_color,
+                divider_background,
                 divider_hover_color,
+
+                rail,
+                scroller,
+                scroller_hover,
                 )));
 
         drop(state);
