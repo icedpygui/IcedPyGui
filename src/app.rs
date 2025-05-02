@@ -38,7 +38,7 @@ use ipg_widgets::ipg_column::construct_column;
 use ipg_widgets::ipg_container::construct_container;
 use ipg_widgets::ipg_date_picker::{DPMessage, construct_date_picker, date_picker_update};
 use ipg_widgets::ipg_enums::{IpgContainers, IpgWidgets};
-use ipg_widgets::ipg_events::{IpgKeyBoardEvent, handle_window_closing, process_keyboard_events, 
+use ipg_widgets::ipg_events::{IpgKeyBoardEvent, process_keyboard_events, 
     process_mouse_events, process_touch_events, process_window_event};
 use ipg_widgets::helpers::find_key_for_value;
 use ipg_widgets::ipg_image::{ImageMessage, construct_image, image_callback};
@@ -213,13 +213,16 @@ impl App {
             },
             Message::EventWindow((window_id, event)) => {
                 process_window_event(&mut self.state, event, window_id);
-                if self.state.windows_opened == 0 {
+                process_updates(&mut self.state, &mut self.canvas_state);
+                if self.state.windows_opened.len() == self.state.windows_hidden.len() {
                     iced::exit()
                 } else {
-                    
                     // check for any other window changes
                     get_tasks(&mut self.state)
                 }
+            },
+            Message::WindowOpened(_, _, _) => {
+                Task::none()
             },
             Message::EventTouch(event) => {
                 process_touch_events(event, self.state.touch_event_id_enabled.0);
@@ -380,18 +383,13 @@ impl App {
                 process_updates(&mut self.state, &mut self.canvas_state);
                 get_tasks(&mut self.state)
             },
-            Message::WindowOpened(_id, _position, size) => {
-                self.state.windows_opened += 1;
-                process_updates(&mut self.state, &mut self.canvas_state);
-                Task::none()
-            },
         }
         
     }
 
     pub fn view(&self, window_id: window::Id) -> Element<self::Message> {
 
-        let (_visible, debug, theme) = get_window_values(window_id, &self.state);
+        let (debug, theme) = get_window_values(window_id, &self.state);
  
         let content = 
             create_content(window_id, &self.state, &self.canvas_state);
@@ -480,7 +478,7 @@ impl App {
 }
 
 
-fn get_window_values(iced_window_id: window::Id, state: &IpgState) -> (bool, bool, Theme) {
+fn get_window_values(iced_window_id: window::Id, state: &IpgState) -> (bool, Theme) {
 
     let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_window_id);
     let ipg_window_id = match ipg_window_id_opt {
@@ -491,15 +489,10 @@ fn get_window_values(iced_window_id: window::Id, state: &IpgState) -> (bool, boo
     let window_opt = state.containers.get(&ipg_window_id);
     let ipg_window = get_window_container(window_opt);
 
-    let vis = match ipg_window.mode {
-        ipg_widgets::ipg_window::IpgWindowMode::Windowed => true,
-        ipg_widgets::ipg_window::IpgWindowMode::FullScreen => true,
-        ipg_widgets::ipg_window::IpgWindowMode::Closed => false,
-    };
     let debug = ipg_window.debug;
     let theme = ipg_window.theme.clone();
 
-    (vis, debug, theme)
+    (debug, theme)
 }
 
 fn get_tasks(ipg_state: &mut IpgState) -> Task<Message> {
@@ -511,10 +504,6 @@ fn get_tasks(ipg_state: &mut IpgState) -> Task<Message> {
     for (ipg_id, mode) in state.mode.iter() {
         let iced_id = find_key_for_value(ipg_state.windows_iced_ipg_ids.clone(), *ipg_id);
         actions.push(window::change_mode(iced_id, *mode));
-        let is_empty = handle_window_closing(ipg_state, iced_id, *mode);
-        if is_empty {
-            actions.push(iced::exit());
-        }
     }
     state.mode = vec![];
 

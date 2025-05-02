@@ -69,7 +69,6 @@ def close_window(btn_id: int, window_id: int):
 
 
 # Window events return a window_id and event name at the minimum.
-# It's the only widget which doesn't return it's own id, since it would never be used.
 def event_on_closed(wnd_id: int, event_name: str):
     ipg.update_item(event_text_id, IpgTextParam.Content, f"You closed window width id {wnd_id}")
 

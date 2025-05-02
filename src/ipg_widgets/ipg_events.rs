@@ -3,7 +3,6 @@
 #![allow(clippy::enum_variant_names)]
 use std::collections::HashMap;
 
-use crate::ipg_widgets::ipg_window::get_ipg_mode;
 use crate::{access_events, access_user_data1, access_window_actions, IpgState};
 
 use iced::event::Event;
@@ -17,7 +16,6 @@ use iced::mouse::ScrollDelta;
 use iced::window;
 use pyo3::Python;
 
-use super::ipg_enums::IpgContainers;
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct IpgKeyBoardEvent {
@@ -283,11 +281,10 @@ pub fn process_touch_events(event: Event, event_id: usize) {
 
 pub fn process_window_event(state: &mut IpgState,
                             event: Event,
-                            window_id: window::Id,
-                        ) -> bool
+                            window_id: window::Id)
 {
     let event_id = state.window_event_id_enabled.0;
-    let event_enabled = state.window_event_id_enabled.1; 
+    let _event_enabled = state.window_event_id_enabled.1;
 
     let mut hmap_s_f: Option<HashMap<String, f32>> = None;
     let mut hmap_s_s: Option<HashMap<String, String>> = None;
@@ -297,158 +294,142 @@ pub fn process_window_event(state: &mut IpgState,
         None => panic!("Process window event: Unable to find the ipg window id using the iced id {:?}.", window_id)
     };
 
-    match event {
-        Event::Window(event) => {
-            if ((event == iced::window::Event::CloseRequested) || 
-                event == iced::window::Event::Closed) && !event_enabled {
-                let mut actions = access_window_actions();
-                        actions.mode.push((ipg_id, window::Mode::Hidden));
-                        drop(actions);
-
-                state.windows_opened -= 1;
-                if state.windows_opened == 0 {return true}
-                handle_window_closing(state, window_id, window::Mode::Hidden);
-                
-            } else if !event_enabled {
-                return false
-            }
-            let event_name = match event {
-                // Cannot use window open since a window need to be predefined.
-                // Py user will use show and hide to the same effect.
-                iced::window::Event::Opened { position: _, size: _ } => {
-                    state.windows_opened += 1;
-                    "opened".to_string()
-                },
-                iced::window::Event::Closed => {
-                    state.windows_opened -= 1;
-                    handle_window_closing(state, window_id, window::Mode::Hidden);
-                    "closed".to_string()
-                },
-                iced::window::Event::Moved(point) => {
-                    hmap_s_f = Some(HashMap::from([
-                                    ("x".to_string(), point.x),
-                                    ("y".to_string(), point.y),
-                                    ]));
-                    "moved".to_string()
-                },
-                iced::window::Event::Resized (size) => {
-                    
-                    hmap_s_f = Some(HashMap::from([
-                                    ("width".to_string(), size.width),
-                                    ("height".to_string(), size.height),
-                                    ]));
-                    "resized".to_string()
-                },
-                iced::window::Event::RedrawRequested(_) => {
-                    "redraw requested".to_string()
-                },
-                iced::window::Event::CloseRequested => {
-                    //  if callback present, don't close window
-                    let name = "close requested".to_string();
-                    let cb = check_callback_if_none(event_id, name.clone());
-                    
-                    if !cb {
-                        let mut actions = access_window_actions();
-                        actions.mode.push((ipg_id, window::Mode::Hidden));
-                        drop(actions);
-                        let is_empty = handle_window_closing(state, window_id, window::Mode::Hidden);
-                       
-                        if is_empty {
-                            return true;
-                        }
-                    }
-                    
-                    name
-                    
-                },
-                iced::window::Event::Focused => {
-                    "focused".to_string()
-                },
-                iced::window::Event::Unfocused => {
-                    "unfocused".to_string()
-                },
-                iced::window::Event::FileHovered(path) => {
-                    hmap_s_s = Some(HashMap::from([
-                                                ("file path".to_string(), 
-                                                path.display().to_string()),
-                                                ]));
-                    "file hovered".to_string()
-                },
-                iced::window::Event::FileDropped(path) => {
-                    hmap_s_s = Some(HashMap::from([
-                                                ("file path".to_string(), 
-                                                path.display().to_string()),
-                                                ]));
-                    "file dropped".to_string()
-                },
-                iced::window::Event::FilesHoveredLeft => {
-                    "files hovered left".to_string()
-                },
-            };
-
-            process_window_callback(ipg_id,
-                                    event_name, 
-                                    hmap_s_f,
-                                    hmap_s_s,
-                                    );
+    let event_name: Option<String> = match event {
+        Event::Window(window::Event::Opened { position: _, size: _ } )=> {
+            Some("opened".to_string())
         },
-        Event::Keyboard(_) => (),
-        Event::Mouse(_) => (),
-        Event::Touch(_) => (),   
-    }
-    false
-}
+        Event::Window(window::Event::Closed) => {
+            let mut actions = access_window_actions();
+                actions.mode.push((ipg_id, window::Mode::Hidden));
+                drop(actions);
 
-pub fn handle_window_closing(state: &mut IpgState, iced_id: window::Id, mode: window::Mode) -> bool {
+            if !state.windows_hidden.contains(&window_id){
+                state.windows_hidden.push(window_id);
+            }
+            Some("closed".to_string())
+        },
+        Event::Window(window::Event::Moved(point)) => {
+            hmap_s_f = Some(HashMap::from([
+                            ("x".to_string(), point.x),
+                            ("y".to_string(), point.y),
+                            ]));
+            Some("moved".to_string())
+        },
+        Event::Window(window::Event::Resized (size)) => {
+            hmap_s_f = Some(HashMap::from([
+                            ("width".to_string(), size.width),
+                            ("height".to_string(), size.height),
+                            ]));
+            Some("resized".to_string())
+        },
+        Event::Window(window::Event::RedrawRequested(_)) => {
+            Some("redraw requested".to_string())
+        },
+        Event::Window(window::Event::CloseRequested ) => {
+            let mut actions = access_window_actions();
+                actions.mode.push((ipg_id, window::Mode::Hidden));
+                drop(actions);
 
-    let mut all_hidden = true;
-    for (ic_id, (_ipg_id, md)) in state.window_mode.iter_mut() {
-        if ic_id == &iced_id {
-            *md = mode;
-        }
-        if *md != window::Mode::Hidden {
-            all_hidden = false;
-        }
-    }
+            if !state.windows_hidden.contains(&window_id){
+                state.windows_hidden.push(window_id);
+            }
+            Some("close requested".to_string())
+        },
+        Event::Window(window::Event::Focused) => {
+            Some("focused".to_string())
+        },
+        Event::Window(window::Event::Unfocused) => {
+            Some("unfocused".to_string())
+        },
+        Event::Window(window::Event::FileHovered(path)) => {
+            hmap_s_s = Some(HashMap::from([
+                                        ("file path".to_string(), 
+                                        path.display().to_string()),
+                                        ]));
+            Some("file hovered".to_string())
+        },
+        Event::Window(window::Event::FileDropped(path)) => {
+            hmap_s_s = Some(HashMap::from([
+                                        ("file path".to_string(), 
+                                        path.display().to_string()),
+                                        ]));
+            Some("file dropped".to_string())
+        },
+        Event::Window(window::Event::FilesHoveredLeft) => {
+            Some("files hovered left".to_string())
+        },
+        Event::Keyboard(_) => None,
+        Event::Mouse(_) => None,
 
-    if all_hidden {
-        return true;
-    }
-
-    // Windows are never destroyed, just hidden
-    let ipg_id_opt = state.windows_iced_ipg_ids.get(&iced_id);
-
-    let ipg_id_found = match ipg_id_opt {
-        Some(id) => *id,
-        None => panic!("Events: handle_window_closing: Unable to find ipg_id based on Iced_id {:?}", iced_id),
+        Event::Touch(_) => None,
     };
 
-    // Needed a clone here because can't borrow again from state below
-    let iced_ipg_ids = state.windows_iced_ipg_ids.clone();
-
-    // if any of the remaining windows are visible, then return false
-    for (_iced_id, ipg_id) in iced_ipg_ids {
-
-        if let Some(IpgContainers::IpgWindow(wnd)) = 
-            state.containers.get_mut(&ipg_id) {
-                if wnd.id == ipg_id_found {
-                    wnd.mode = get_ipg_mode(mode);
-                }
-            }
+    if event_name.is_some() {
+        process_window_callback(
+            ipg_id,
+            event_id,
+            event_name.unwrap(), 
+            hmap_s_f,
+            hmap_s_s,
+            );
     }
-    false
+        
 }
 
-fn check_callback_if_none(id: usize, event_name: String) -> bool {
-    let cbs = access_events();
+fn process_window_callback(
+    win_id: usize,
+    event_id: usize,
+    name: String,
+    hmap_s_f: Option<HashMap<String, f32>>,
+    hmap_s_s: Option<HashMap<String, String>>,) 
+{
+    let ud = access_user_data1();
+    let user_data_opt = ud.user_data.get(&win_id);
 
-    let cb_opt= cbs.events
-                                    .get(&(id, event_name));
-    
-    let check = cb_opt.is_some();
-    drop(cbs);
-    check
+    let app_event = access_events();
+    let event = match app_event.events.get(&(event_id, name.clone())) {
+        Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
+        None => return,
+    };
+
+    drop(app_event);
+
+    Python::with_gil(|py| {
+        let res = match (user_data_opt, hmap_s_f, hmap_s_s) {
+            (Some(user_data), Some(hmap_f), Some(hmap_s)) => {
+                event.call1(py, (win_id, name, hmap_f, hmap_s, user_data))
+            }
+            (Some(user_data), Some(hmap_f), None) => {
+                event.call1(py, (win_id, name, hmap_f, user_data))
+            }
+            (Some(user_data), None, Some(hmap_s)) => {
+                event.call1(py, (win_id, name, hmap_s, user_data))
+            }
+            (Some(user_data), None, None) => {
+                event.call1(py, (win_id, name, user_data))
+            }
+            (None, Some(hmap_f), Some(hmap_s)) => {
+                event.call1(py, (win_id, name, hmap_f, hmap_s))
+            }
+            (None, Some(hmap_f), None) => {
+                event.call1(py, (win_id, name, hmap_f))
+            }
+            (None, None, Some(hmap_s)) => {
+                event.call1(py, (win_id, name, hmap_s))
+            }
+            (None, None, None) => {
+                event.call1(py, (win_id, name,))
+            }
+        };
+
+        if let Err(err) = res {
+            panic!("Window Event callback error: {err}");
+        }
+    });
+
+    drop(ud);
 }
+
 
 fn process_key(key: Key<&str>) -> String {
    
@@ -555,59 +536,6 @@ fn process_mouse_callback(
 
         if let Err(err) = res {
             panic!("Mouse Event callback error: {err}");
-        }
-    });
-
-    drop(ud);
-}
-
-fn process_window_callback(
-    id: usize,
-    event_name: String,
-    hmap_s_f: Option<HashMap<String, f32>>,
-    hmap_s_s: Option<HashMap<String, String>>,) 
-{
-    let ud = access_user_data1();
-    let user_data_opt = ud.user_data.get(&id);
-
-    let app_event = access_events();
-    let event = match app_event.events.get(&(id, event_name)) {
-        Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
-        None => return,
-    };
-
-    drop(app_event);
-
-    Python::with_gil(|py| {
-        let res = match (user_data_opt, hmap_s_f, hmap_s_s) {
-            (Some(user_data), Some(hmap_f), Some(hmap_s)) => {
-                event.call1(py, (id, hmap_f, hmap_s, user_data))
-            }
-            (Some(user_data), Some(hmap_f), None) => {
-                event.call1(py, (id, hmap_f, user_data))
-            }
-            (Some(user_data), None, Some(hmap_s)) => {
-                event.call1(py, (id, hmap_s, user_data))
-            }
-            (Some(user_data), None, None) => {
-                event.call1(py, (id, user_data))
-            }
-            (None, Some(hmap_f), Some(hmap_s)) => {
-                event.call1(py, (id, hmap_f, hmap_s))
-            }
-            (None, Some(hmap_f), None) => {
-                event.call1(py, (id, hmap_f))
-            }
-            (None, None, Some(hmap_s)) => {
-                event.call1(py, (id, hmap_s))
-            }
-            (None, None, None) => {
-                event.call1(py, (id,))
-            }
-        };
-
-        if let Err(err) = res {
-            panic!("Window Event callback error: {err}");
         }
     });
 

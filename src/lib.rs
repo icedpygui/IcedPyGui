@@ -357,7 +357,8 @@ pub struct IpgState {
     pub window_debug: HashMap<window::Id, (usize, bool)>, // (wid, debug)
     pub window_theme: HashMap<window::Id, (usize, Theme)>, // (wid, window Theme)
     pub window_mode: HashMap<window::Id, (usize, window::Mode)>,
-    pub windows_opened: u16,
+    pub windows_opened: Vec<window::Id>,
+    pub windows_hidden: Vec<window::Id>,
 
     pub container_style: HashMap<String, IpgContainerStyle>,
     pub button_style: HashMap<String, IpgButtonStyle>,
@@ -413,7 +414,8 @@ impl IpgState {
             window_debug: HashMap::new(),
             window_theme: HashMap::new(),
             window_mode: HashMap::new(),
-            windows_opened: 0,
+            windows_opened: vec![],
+            windows_hidden: vec![],
 
             container_style: HashMap::new(),
             button_style: HashMap::new(),

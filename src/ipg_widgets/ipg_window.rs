@@ -120,6 +120,10 @@ pub fn add_windows(state: &mut IpgState) -> Vec<Task<app::Message>> {
         state.window_debug.insert(iced_id, (id, debug));
         state.window_theme.insert(iced_id, (id, theme));
         state.window_mode.insert(iced_id, (id, get_iced_mode(&mode)));
+        state.windows_opened.push(iced_id);
+        if !visible {
+            state.windows_hidden.push(iced_id);
+        }
 
         let ipg_id = state.windows[i].id;
         state.windows_iced_ipg_ids.insert(iced_id, ipg_id);
