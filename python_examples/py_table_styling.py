@@ -300,7 +300,7 @@ radio_ids.append(ipg.add_radio(
 
 cp_id = ipg.add_color_picker(
     parent_id="col",
-    label="Set Header Bkg",
+    label="No Selection Made",
     on_submit=set_color)
 
 

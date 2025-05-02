@@ -3,17 +3,13 @@ use crate::graphics::colors::get_color;
 use crate::{access_callbacks, access_user_data1, access_user_data2, IpgState};
 use crate::app::Message;
 use crate::style::styling::IpgStyleStandard;
-use super::helpers::{get_height, get_padding_f64, get_width, 
-    try_extract_boolean, try_extract_f64, try_extract_ipg_color, 
-    try_extract_rgba_color, try_extract_string, try_extract_style_standard, 
-    try_extract_vec_f32, try_extract_vec_f64};
-use super::ipg_button::{self, get_bootstrap_arrow, 
-    try_extract_button_arrow, IpgButtonArrow, IpgButtonStyle};
+use super::helpers::{get_height, get_padding_f64, get_radius, get_width, try_extract_boolean, try_extract_f64, try_extract_ipg_color, try_extract_rgba_color, try_extract_string, try_extract_style_standard, try_extract_vec_f32, try_extract_vec_f64};
+use super::ipg_button::{get_standard_style, try_extract_button_arrow, IpgButtonArrow};
 use super::callbacks::{set_or_get_widget_callback_data, WidgetCallbackIn};
 use super::ipg_enums::IpgWidgets;
 
-use iced::widget::{text, Button};
-use iced::{Color, Element, Length, Padding, Theme};
+use iced::widget::{button, text, Button};
+use iced::{Border, Color, Element, Length, Padding, Shadow, Theme, Vector};
 use iced_aw::ColorPicker;
 
 use pyo3::{pyclass, PyObject, Python};
@@ -128,12 +124,7 @@ pub fn construct_color_picker<'a>(cp: &'a IpgColorPicker,
                                 style_opt: Option<&IpgWidgets>,
                                 ) -> Option<Element<'a, Message>> {
 
-    let mut label = text(cp.label.clone());
-   
-    if cp.style_arrow.is_some() {
-        let arrow = get_bootstrap_arrow(&cp.style_arrow);
-        label = text(arrow).font(iced::Font::with_name("bootstrap-icons"));
-    }
+    let label = text(cp.label.clone());
 
     let style = get_cp_style(style_opt);
 
@@ -143,7 +134,7 @@ pub fn construct_color_picker<'a>(cp: &'a IpgColorPicker,
                                     .width(cp.width)
                                     .on_press(ColPikMessage::OnPress)
                                     .style(move|theme: &Theme, status| {   
-                                        ipg_button::get_styling(theme, status,
+                                        get_styling(theme, status,
                                             style.clone(),
                                             cp.style_standard.clone())
                                         })
@@ -434,102 +425,95 @@ pub fn try_extract_color_picker_style_update(update_obj: &PyObject) -> IpgColorP
     })
 }
 
-fn get_cp_style(style: Option<&IpgWidgets>) -> Option<IpgButtonStyle>{
+fn get_cp_style(style: Option<&IpgWidgets>) -> Option<IpgColorPickerStyle>{
     match style {
         Some(IpgWidgets::IpgColorPickerStyle(style)) => {
-            Some(IpgButtonStyle {
-                id: style.id,
-                background_color: style.background_color,
-                background_color_hovered: style.background_color_hovered,
-                border_color: style.border_color,
-                border_radius: style.border_radius.clone(),
-                border_width: style.border_width,
-                shadow_color: style.shadow_color,
-                shadow_offset_x: style.shadow_offset_x,
-                shadow_offset_y: style.shadow_offset_y,
-                shadow_blur_radius: style.shadow_blur_radius,
-                text_color: style.text_color,
-            })
+            Some(style.clone())
         }
         _ => None,
     }
 }
 
-// pub fn get_styling(theme: &Theme, status: Status,
-//                     style_opt: Option<IpgColorPickerStyle>,
-//                     style_standard: Option<IpgStyleStandard>,
-//                     ) -> button::Style 
-// {
-//     if style_standard.is_none() && style_opt.is_none() {
-//         return button::primary(theme, status)
-//     }
+pub fn get_styling(theme: &Theme, status: button::Status,
+                    style_opt: Option<IpgColorPickerStyle>,
+                    style_standard: Option<IpgStyleStandard>,
+                    ) -> button::Style 
+{
+    if style_standard.is_none() && style_opt.is_none() {
+        return button::primary(theme, status)
+    }
 
-//     if style_opt.is_none() && style_standard.is_some() {
-//             return get_standard_style(theme, status, style_standard, None, None)
-//     }
+    if style_opt.is_none() && style_standard.is_some() {
+            return get_standard_style(theme, status, style_standard, None, None)
+    }
 
-//     let mut border = Border::default();
-//     let mut shadow = Shadow::default();
+    let mut border = Border::default();
+    let mut shadow = Shadow::default();
 
-//     let mut base_style = button::primary(theme, status);
-//     let mut hover_style = button::primary(theme, status);
+    let mut base_style = button::primary(theme, status);
+    let mut hover_style = button::primary(theme, status);
 
-//     let style = style_opt.unwrap_or_default();
+    let style = style_opt.unwrap_or_default();
 
-//     if style.border_color.is_some() {
-//         border.color = style.border_color.unwrap();
-//     }
+    if style.border_color.is_some() {
+        border.color = style.border_color.unwrap();
+    }
 
-//     border.radius = get_radius(style.border_radius.clone(), 
-//                                 "Button".to_string());
-//     border.width = style.border_width;
+    border.radius = get_radius(style.border_radius.clone(), 
+                                "ColorPicker".to_string());
+    border.width = style.border_width;
 
-//     if style.shadow_color.is_some() {
-//         shadow.color = style.shadow_color.unwrap();
-//         shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
-//         shadow.blur_radius = style.shadow_blur_radius;
-//     }
+    if style.shadow_color.is_some() {
+        shadow.color = style.shadow_color.unwrap();
+        shadow.offset = Vector{ x: style.shadow_offset_x, y: style.shadow_offset_y };
+        shadow.blur_radius = style.shadow_blur_radius;
+    }
 
-//     // style_standard overrides style except for border and shadow
-//     let style_standard = get_standard_style(theme, status, 
-//                                     style_standard, 
-//                                     Some(border), Some(shadow));
+    // style_standard overrides style except for border and shadow
+    let style_standard = get_standard_style(theme, status, 
+                                    style_standard, 
+                                    Some(border), Some(shadow));
     
-//     base_style.background = if style.background_color.is_some() {
-//         Some(style.background_color.unwrap().into())
-//     } else {
-//         style_standard.background
-//     };
+    base_style.background = if style.background_color.is_some() {
+        Some(style.background_color.unwrap().into())
+    } else {
+        style_standard.background
+    };
 
-//     hover_style.background = if style.background_color_hovered.is_some() {
-//         Some(style.background_color_hovered.unwrap().into())
-//     } else {
-//         style_standard.background
-//     };
+    hover_style.background = if style.background_color_hovered.is_some() {
+        Some(style.background_color_hovered.unwrap().into())
+    } else {
+        style_standard.background
+    };
 
-//     base_style.border = border;
-//     hover_style.border = border;
+    if style.text_color.is_some() {
+        base_style.text_color = style.text_color.unwrap();
+        hover_style.text_color = style.text_color.unwrap();
+    }
 
-//     base_style.shadow = shadow;
-//     hover_style.shadow = shadow;
+    base_style.border = border;
+    hover_style.border = border;
 
-//     match status {
-//         Status::Active | Status::Pressed => base_style,
-//         Status::Hovered => hover_style,
-//         Status::Disabled => disabled(base_style),
-//     }
+    base_style.shadow = shadow;
+    hover_style.shadow = shadow;
+
+    match status {
+        button::Status::Active | button::Status::Pressed => base_style,
+        button::Status::Hovered => hover_style,
+        button::Status::Disabled => disabled(base_style),
+    }
     
-// }
+}
 
-// fn disabled(style: Style) -> Style {
-//     Style {
-//         background: style
-//             .background
-//             .map(|background| background.scale_alpha(0.5)),
-//         text_color: style.text_color.scale_alpha(0.5),
-//         ..style
-//     }
-// }
+fn disabled(style: button::Style) -> button::Style {
+    button::Style {
+        background: style
+            .background
+            .map(|background| background.scale_alpha(0.5)),
+        text_color: style.text_color.scale_alpha(0.5),
+        ..style
+    }
+}
 
 fn convert_color_to_list(color: Color) -> Vec<f64> {
 
