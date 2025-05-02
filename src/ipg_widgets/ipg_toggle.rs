@@ -1,6 +1,6 @@
 //! ipg_toggler
 use crate::graphics::colors::get_color;
-use crate::{access_callbacks, access_user_data1, app, IpgState};
+use crate::{access_callbacks, access_user_data1, access_user_data2, app, IpgState};
 use super::helpers::{get_width, try_extract_boolean, 
     try_extract_f64, try_extract_ipg_color, 
     try_extract_ipg_horizontal_alignment, 
@@ -163,54 +163,53 @@ pub fn toggle_callback(state: &mut IpgState, id: usize, message: TOGMessage) {
     }
 }
 
-pub fn process_callback(id: usize, event_name: String, toggled: bool) 
+pub fn process_callback(
+    id: usize, 
+    event_name: String, 
+    toggled: bool) 
 {
-    let ud = access_user_data1();
-    let user_data_opt = ud.user_data.get(&id);
-
+    let ud1 = access_user_data1();
     let app_cbs = access_callbacks();
 
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
-    
-    let callback = match callback_present {
-        Some(cb) => cb,
+    // Retrieve the callback
+    let callback = match app_cbs.callbacks.get(&(id, event_name)) {
+        Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
         None => return,
     };
 
-    let cb = 
-        Python::with_gil(|py| {
-            callback.clone_ref(py)
-        });
-
     drop(app_cbs);
 
+    // Check user data from ud1
+    if let Some(user_data) = ud1.user_data.get(&id) {
+        Python::with_gil(|py| {
+            if let Err(err) = callback.call1(py, (id, toggled, user_data)) {
+                panic!("Toggler callback error: {err}");
+            }
+        });
+        drop(ud1); // Drop ud1 before processing ud2
+        return;
+    }
+    drop(ud1); // Drop ud1 if no user data is found
+
+    // Check user data from ud2
+    let ud2 = access_user_data2();
+    if let Some(user_data) = ud2.user_data.get(&id) {
+        Python::with_gil(|py| {
+            if let Err(err) = callback.call1(py, (id, toggled, user_data)) {
+                panic!("Toggler callback error: {err}");
+            }
+        });
+        drop(ud2); // Drop ud2 after processing
+        return;
+    }
+    drop(ud2); // Drop ud2 if no user data is found
+
+    // If no user data is found in both ud1 and ud2, call the callback with the id and toggled
     Python::with_gil(|py| {
-            if user_data_opt.is_some() {
-                let res = cb.call1(py, (
-                                                            id,
-                                                            toggled,  
-                                                            user_data_opt.unwrap()
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Toggler: 3 parameters (id, toggled, user_data) 
-                                        are required or a python error in this function. {er}"),
-                }
-            } else {
-                let res = cb.call1(py, (
-                                                            id,
-                                                            toggled,  
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Toggler: 2 parameter (id, toggled) 
-                                        is required or a python error in this function. {er}"),
-                }
-            } 
+        if let Err(err) = callback.call1(py, (id, toggled)) {
+            panic!("Toggler callback error: {err}");
+        }
     });
-    
-    drop(ud);
          
 }
 

@@ -491,23 +491,21 @@ fn process_location(location: Location) -> String {
     }
 }
 
-fn process_keyboard_callback(id: usize,
-                    event_name: String, 
-                    hmap_s_s: HashMap<String, String>,
-                    ) 
+fn process_keyboard_callback(
+        id: usize,
+        event_name: String, 
+        hmap_s_s: HashMap<String, String>,) 
 {   
     let ud = access_user_data1();
-    let user_data_opt = ud.user_data.get(&id);
-    
     let app_event = access_events();
     
-    let event_present = 
-        app_event.events.get(&(id, event_name));
+    let user_data_opt = ud.user_data.get(&id);
     
-    let event = match event_present {
-        Some(cb) => cb,
-        None => return,
-    };
+    let event = 
+        match app_event.events.get(&(id, event_name)) {
+            Some(cb) => cb,
+            None => return,
+        };
     
     let cb = 
         Python::with_gil(|py| {
@@ -517,207 +515,132 @@ fn process_keyboard_callback(id: usize,
     drop(app_event);
     
     Python::with_gil(|py| {
-            if user_data_opt.is_some() {
-                let res = cb.call1(py, (
-                                                            id,
-                                                            hmap_s_s,
-                                                            user_data_opt.unwrap()
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("KeyBoard Event: 3 parameters (id, dict, user_data) 
-                                        are required or a python error in this function. {er}"),
-                }
-            } else {
-                let res = cb.call1(py, (
-                                                                    id,
-                                                                    hmap_s_s,  
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Keyboard Event: 2 parameter (id, dict) 
-                                        is required or possibly a python error in this function. {er}"),
-                }
-            } 
+        let res = match user_data_opt {
+            Some(user_data) => cb.call1(py, (id, hmap_s_s, user_data)),
+            None => cb.call1(py, (id, hmap_s_s)),
+        };
+
+        if let Err(err) = res {
+            panic!("Keyboard Event callback error: {err}");
+        }
     });
     
     drop(ud);      
 
 }
 
-fn process_mouse_callback(id: usize,
-                    event_name: String, 
-                    hmap_s_f: Option<HashMap<String, f32>>, 
-                    ) 
+fn process_mouse_callback(
+        id: usize,
+        event_name: String,
+        hmap_s_f: Option<HashMap<String, f32>>,) 
 {
     let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
-    
+
     let app_event = access_events();
-    
-    let event_present = 
-        app_event.events.get(&(id, event_name));
-    
-    let event = match event_present {
-        Some(cb) => cb,
+    let event = match app_event.events.get(&(id, event_name)) {
+        Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
         None => return,
     };
-    
-    let cb = 
-        Python::with_gil(|py| {
-            event.clone_ref(py)
-        });
-    
+
     drop(app_event);
 
     Python::with_gil(|py| {
-            if user_data_opt.is_some() && hmap_s_f.is_some() {
-                let res = cb.call1(py, (
-                                                                    id,
-                                                                    hmap_s_f,
-                                                                    user_data_opt
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Mouse Event: 3 parameters (id, dict, user_data) 
-                                        are required or a python error in this function. {er}"),
-                }
-            } else if user_data_opt.is_none() && hmap_s_f.is_some() {
-                let res = cb.call1(py, (
-                                                                    id,
-                                                                    hmap_s_f,  
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Mouse Event: 2 parameter (id, dict) 
-                                        is required or possibly a python error in this function. {er}"),
-                }
-            } else if user_data_opt.is_some() && hmap_s_f.is_none() {
-                let res = cb.call1(py, (
-                                                                    id,
-                                                                    user_data_opt,  
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Mouse Event: 2 parameter (id, dict) 
-                                        is required or possibly a python error in this function. {er}"),
-                }
+        let res = match (user_data_opt, hmap_s_f) {
+            (Some(user_data), Some(hmap)) => event.call1(py, (id, hmap, user_data)),
+            (None, Some(hmap)) => event.call1(py, (id, hmap)),
+            (Some(user_data), None) => event.call1(py, (id, user_data)),
+            (None, None) => event.call1(py, (id,)),
+        };
+
+        if let Err(err) = res {
+            panic!("Mouse Event callback error: {err}");
+        }
+    });
+
+    drop(ud);
+}
+
+fn process_window_callback(
+    id: usize,
+    event_name: String,
+    hmap_s_f: Option<HashMap<String, f32>>,
+    hmap_s_s: Option<HashMap<String, String>>,) 
+{
+    let ud = access_user_data1();
+    let user_data_opt = ud.user_data.get(&id);
+
+    let app_event = access_events();
+    let event = match app_event.events.get(&(id, event_name)) {
+        Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
+        None => return,
+    };
+
+    drop(app_event);
+
+    Python::with_gil(|py| {
+        let res = match (user_data_opt, hmap_s_f, hmap_s_s) {
+            (Some(user_data), Some(hmap_f), Some(hmap_s)) => {
+                event.call1(py, (id, hmap_f, hmap_s, user_data))
             }
+            (Some(user_data), Some(hmap_f), None) => {
+                event.call1(py, (id, hmap_f, user_data))
+            }
+            (Some(user_data), None, Some(hmap_s)) => {
+                event.call1(py, (id, hmap_s, user_data))
+            }
+            (Some(user_data), None, None) => {
+                event.call1(py, (id, user_data))
+            }
+            (None, Some(hmap_f), Some(hmap_s)) => {
+                event.call1(py, (id, hmap_f, hmap_s))
+            }
+            (None, Some(hmap_f), None) => {
+                event.call1(py, (id, hmap_f))
+            }
+            (None, None, Some(hmap_s)) => {
+                event.call1(py, (id, hmap_s))
+            }
+            (None, None, None) => {
+                event.call1(py, (id,))
+            }
+        };
+
+        if let Err(err) = res {
+            panic!("Window Event callback error: {err}");
+        }
     });
-    
-    drop(ud);
 
-}
-
-fn process_window_callback(id: usize,
-                    event_name: String, 
-                    hmap_s_f: Option<HashMap<String, f32>>,
-                    hmap_s_s: Option<HashMap<String, String>>,
-                    ) 
-{
-    let ud = access_user_data1();
-    let user_data_opt = ud.user_data.get(&id);
-    
-    let app_event = access_events();
-    
-    let event_present = 
-        app_event.events.get(&(id, event_name));
-    
-    let event = match event_present {
-        Some(cb) => cb,
-        None => return,
-    };
-    
-    let cb = 
-        Python::with_gil(|py| {
-            event.clone_ref(py)
-        });
-    
-    drop(app_event);
-
-    Python::with_gil(|py| {
-            if user_data_opt.is_some() {
-                let res = cb.call1(py, (
-                                                            id,
-                                                            hmap_s_f,
-                                                            hmap_s_s,
-                                                            user_data_opt.unwrap()
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Wndow Event: 3 parameters (id, dict, dict, user_data) 
-                                        are required or a python error in this function. {er}"),
-                }
-            } else {
-                let res = cb.call1(py, (
-                                                                    id,
-                                                                    hmap_s_f,
-                                                                    hmap_s_s,  
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Wndow Event: 3 parameter (id, dict, dict) 
-                                        is required or possibly a python error in this function. {er}"),
-                }
-            } 
-    });
-    
     drop(ud);
 }
 
-fn process_touch_callback(id: usize,
-                    event_name: String,
-                    hmap_s_fg: HashMap<String, u64>,
-                    hmap_s_pt: HashMap<String, (f32, f32)>,
-                    ) 
+fn process_touch_callback(
+    id: usize,
+    event_name: String,
+    hmap_s_fg: HashMap<String, u64>,
+    hmap_s_pt: HashMap<String, (f32, f32)>,) 
 {
     let ud = access_user_data1();
     let user_data_opt = ud.user_data.get(&id);
-    
+
     let app_event = access_events();
-    
-    let event_present = 
-        app_event.events.get(&(id, event_name));
-    
-    let event = match event_present {
-        Some(cb) => cb,
+    let event = match app_event.events.get(&(id, event_name)) {
+        Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
         None => return,
     };
-    
-    let cb = 
-        Python::with_gil(|py| {
-            event.clone_ref(py)
-        });
-    
+
     drop(app_event);
 
     Python::with_gil(|py| {
-            if user_data_opt.is_some() {
-                let res = cb.call1(py, (
-                                                                    id,
-                                                                    hmap_s_fg,
-                                                                    hmap_s_pt,
-                                                                    user_data_opt.unwrap()
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Touch Event: 4 parameters (id, dict, dict, user_data) 
-                                        are required or a python error in this function. {er}"),
-                }
-            } else {
-                let res = cb.call1(py, (
-                                                                    id,
-                                                                    hmap_s_fg,
-                                                                    hmap_s_pt,  
-                                                                    ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Touch Event: 3 parameter (id, dict, dict) 
-                                        is required or possibly a python error in this function. {er}"),
-                }
-            } 
+        let res = match user_data_opt {
+            Some(user_data) => event.call1(py, (id, hmap_s_fg, hmap_s_pt, user_data)),
+            None => event.call1(py, (id, hmap_s_fg, hmap_s_pt)),
+        };
+
+        if let Err(err) = res {
+            panic!("Touch Event callback error: {err}");
+        }
     });
-    
+
     drop(ud);
-    
 }

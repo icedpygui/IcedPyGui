@@ -70,7 +70,8 @@ ipg.add_mousearea(window_id="main",
                   on_middle_release=on_middle_release,
                   on_right_press=on_right_press,
                   on_right_release=on_right_release,
-                  user_data="Some Data")
+                  user_data="Some Data"
+                  )
 
 # A text widget was added here but you can also add containers or other widgets too.
 ipg.add_text("ma", content="my content 1")

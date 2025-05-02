@@ -213,135 +213,74 @@ pub fn image_callback(id: usize, message: ImageMessage) {
     }
 }
 
-
-fn process_callback(id: usize, event_name: String, points_opt: Option<HashMap<String, f32>>) 
-{
-    let ud = access_user_data1();
-    
-    let ud_opt = ud.user_data.get(&id);
-
-    let mut ud_opt_chk = false;
-    let mut ud2_opt_chk = false;
+fn process_callback(
+    id: usize,
+    event_name: String,
+    points_opt: Option<HashMap<String, f32>>,
+) {
+    let ud1 = access_user_data1();
+    let ud_opt = ud1.user_data.get(&id);
 
     let app_cbs = access_callbacks();
-    
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
-    
-    let callback = match callback_present {
+    let callback = match app_cbs.callbacks.get(&(id, event_name)) {
         Some(cb) => cb,
         None => return,
     };
 
-    let cb = 
-        Python::with_gil(|py| {
-            callback.clone_ref(py)
-        });
-
+    let cb = Python::with_gil(|py| callback.clone_ref(py));
     drop(app_cbs);
-    
-    // Needed to split up the callback due to the need
-    // to drop as as possible, one needs to be free
-    // at all times.
-    if ud_opt.is_some() {
-        ud_opt_chk = true;
+
+    // Execute the callback with user data from ud1
+    if let Some(user_data) = ud_opt {
         Python::with_gil(|py| {
-            if points_opt.is_some() {
-                let res = 
-                    cb.call1(py, (
-                            id,
-                            points_opt.clone().unwrap(),  
-                            ud_opt.unwrap()
-                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Checkbox: 3 parameters (id, points, user_data) are required or 
-                                            a python error in this function. {er}"),
-                }
-            } else {
-                let res = 
-                    cb.call1(py, (
-                            id, 
-                            ud_opt.unwrap()
-                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Checkbox: 3 parameters (id, user_data) are required or 
-                                            a python error in this function. {er}"),
-                }
+            let res = match points_opt {
+                Some(ref points) => cb.call1(py, (id, points.clone(), user_data)),
+                None => cb.call1(py, (id, user_data)),
+            };
+
+            match res {
+                Ok(_) => (),
+                Err(err) => panic!("Image callback error with user_data from ud1: {err}")
             }
-            
-                
         });
+        drop(ud1); // Drop ud1 after processing
+        return;
     }
+    drop(ud1); // Drop ud1 if no user data is found
 
-    drop(ud);
-
+    // Execute the callback with user data from ud2
     let ud2 = access_user_data2();
-    let ud2_opt = ud2.user_data.get(&id);
-
-    if ud2_opt.is_some() {
-        ud2_opt_chk = true;
+    
+    if let Some(user_data) = ud2.user_data.get(&id) {
         Python::with_gil(|py| {
-            if points_opt.is_some() {
-                let res = 
-                    cb.call1(py, (
-                            id,
-                            points_opt.clone().unwrap(),  
-                            ud2_opt.unwrap()
-                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Image: 3 parameters (id, points, user_data) 
-                                                are required or a python 
-                                                error in this function. {er}"),
-                }
-            } else {
-                let res = 
-                    cb.call1(py, (
-                            id,  
-                            ud2_opt.unwrap()
-                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Image: 2 parameters (id, user_data) 
-                                                are required or a python 
-                                                error in this function. {er}"),
-                }
-            }
-            
-        });
-    }
+            let res = match points_opt {
+                Some(ref points) => cb.call1(py, (id, points.clone(), user_data)),
+                None => cb.call1(py, (id, user_data)),
+            };
 
-    drop(ud2);
-
-    if !ud_opt_chk && !ud2_opt_chk {
-        Python::with_gil(|py| {
-            if points_opt.is_some() {
-                let res = 
-                    cb.call1(py, (
-                            id,
-                            points_opt.clone().unwrap(),  
-                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Image: 2 parameter (id, points) is required or possibly a python 
-                                            error in this function. {er}"),
-                }
-            } else {
-                let res = 
-                    cb.call1(py, (
-                            id,  
-                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Image: 1 parameter (id) is required or possibly a python 
-                                            error in this function. {er}"),
-                }
+            match res {
+                Ok(_) => (),
+                Err(err) => panic!("Image callback error with user_data from ud2: {err}")
             }
-            
         });
+        drop(ud2); // Drop ud2 after processing
+        return;
     }
+    drop(ud2); // Drop ud2 if no user data is found
+
+    // Execute the callback without user data
+    Python::with_gil(|py| {
+        let res = match points_opt {
+                Some(ref points) => cb.call1(py, (id, points.clone())),
+                None => cb.call1(py, (id,)),
+            };
+
+            match res {
+                Ok(_) => (),
+                Err(err) => panic!("Image callback error without user_data: {err}")
+            }
+    });
+
 }
 
 

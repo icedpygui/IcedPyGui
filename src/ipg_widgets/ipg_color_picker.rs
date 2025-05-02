@@ -193,105 +193,69 @@ pub fn color_picker_callback(state: &mut IpgState, id: usize, message: ColPikMes
 
 pub fn process_callback(id: usize, event_name: String, color: Option<Vec<f64>>) 
 {
-    let ud = access_user_data1();
-    
-    let ud_opt = ud.user_data.get(&id);
-
-    let mut ud_opt_chk = false;
-    let mut ud2_opt_chk = false;
-
+    let ud1 = access_user_data1();
     let app_cbs = access_callbacks();
-    
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
-    
-    let callback = match callback_present {
-        Some(cb) => cb,
+
+    // Retrieve the callback
+    let callback = match app_cbs.callbacks.get(&(id, event_name.clone())) {
+        Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
         None => return,
     };
 
-    let cb = 
-        Python::with_gil(|py| {
-            callback.clone_ref(py)
-        });
-
     drop(app_cbs);
-    
-    // Needed to split up the callback due to the need
-    // to drop as as possible, one needs to be free
-    // at all times.
-    if ud_opt.is_some() {
-        ud_opt_chk = true;
+
+    // Check user data from ud1
+    if let Some(user_data) = ud1.user_data.get(&id) {
         Python::with_gil(|py| {
-
-            let res = 
-                cb.call1(py, (
-                        id,
-                        color.clone().unwrap(),
-                        ud_opt.unwrap()
-                        ));
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("ColorPicker: 3 parameters (id, color, user_data) are required or 
-                                        a python error in this function. {er}"),
-            }
-                
-        });
-    }
-
-    drop(ud);
-
-    let ud2 = access_user_data2();
-    let ud2_opt = ud2.user_data.get(&id);
-
-    if ud2_opt.is_some() {
-        ud2_opt_chk = true;
-        Python::with_gil(|py| {
-
-            let res = 
-                cb.call1(py, (
-                        id,
-                        color.clone().unwrap(),
-                        ud2_opt.unwrap()
-                        ));
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("ColorPicker: 3 parameters (id, color, user_data) 
-                                            are required or a python 
-                                            error in this function. {er}"),
-            }
-        });
-    }
-
-    drop(ud2);
-
-    if !ud_opt_chk && !ud2_opt_chk {
-        Python::with_gil(|py| {
-            if color.is_some() {
-                let res = 
-                    cb.call1(py, (
-                            id,
-                            color.unwrap(),  
-                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("ColorPicker: 2 parameter (id, color) is required or possibly a python 
-                                            error in this function. {er}"),
+            if event_name == "on_submit".to_string() {
+                if let Err(err) = callback.call1(py, (id, color, user_data)) {
+                    panic!("ColorPicker callback error: {err}");
                 }
             } else {
-                let res = 
-                    cb.call1(py, (
-                            id, 
-                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("ColorPicker: 1 parameter (id) is required or possibly a python 
-                                            error in this function. {er}"),
+                if let Err(err) = callback.call1(py, (id, user_data)) {
+                    panic!("ColorPicker callback error: {err}");
                 }
             }
             
         });
+        drop(ud1); // Drop ud1 before processing ud2
+        return;
     }
+    drop(ud1); // Drop ud1 if no user data is found
+
+    // Check user data from ud2
+    let ud2 = access_user_data2();
+    if let Some(user_data) = ud2.user_data.get(&id) {
+        Python::with_gil(|py| {
+            if event_name == "on_submit".to_string() {
+                if let Err(err) = callback.call1(py, (id, color, user_data)) {
+                    panic!("ColorPicker callback error: {err}");
+                }
+            } else {
+                if let Err(err) = callback.call1(py, (id, user_data)) {
+                    panic!("ColorPicker callback error: {err}");
+                }
+            }
+        });
+        drop(ud2); // Drop ud2 after processing
+        return;
+    }
+    drop(ud2); // Drop ud2 if no user data is found
+
+    // If no user data is found in both ud1 and ud2, call the 
+    // callback with only the id and color except for on_pressed
+    // which has only an id.
+    Python::with_gil(|py| {
+        if event_name == "on_submit".to_string() {
+            if let Err(err) = callback.call1(py, (id, color)) {
+                panic!("ColorPicker callback error: {err}");
+            }
+        } else {
+            if let Err(err) = callback.call1(py, (id,)) {
+                panic!("ColorPicker callback error: {err}");
+            }
+        }
+    });
 }
 
 

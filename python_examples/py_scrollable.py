@@ -58,7 +58,8 @@ class DemoScrollable:
         self.col_b: str = "col_b"
 
         self.cb_text_v: int = 0
-        self.cb_text_h: int = 0
+        self.cb_text_h1: int = 0
+        self.cb_text_h2: int = 0
         self.cb_text_b: int = 0
 
         self.scroll_id_1: int = 0
@@ -204,7 +205,8 @@ class DemoScrollable:
                     direction=IpgScrollableDirection.Horizontal,
                     width_fill=True, 
                     height=50.0,
-                    on_scroll=self.on_scroll_h)
+                    on_scroll=self.on_scroll_h,
+                    user_data="Some scrolling Horizontal data")
 
         # NOTE: The row width and height should be left at default, no value.
         self.ipg.add_row(
@@ -218,16 +220,17 @@ class DemoScrollable:
                         content="Scroll Me left or Right!")
 
         # The final mostly empty container is added at the bottom
-        self.ipg.add_container(
+        self.ipg.add_column(
                     window_id=self.wnd_h, 
                     container_id=self.cont_h_bottom,
-                    parent_id=self.wnd_h, 
-                    width_fill=True, 
-                    height=200)
+                    parent_id=self.wnd_h)
 
-        self.cb_text_h = self.ipg.add_text(
+        self.cb_text_h1 = self.ipg.add_text(
                                     parent_id=self.cont_h_bottom,
                                     content=f"Some data when scrolled")
+        self.cb_text_h2 = self.ipg.add_text(
+                                    parent_id=self.cont_h_bottom,
+                                    content=f"User data when scrolled")
 
     # The data in this case in a dictionary, absolute, relative, and absolute reversed
     # {'abs_x': 0.0, 'abs_y': 0.0, 'rel_x': 0.0, 'rev_x': 0.0, 'rev_y': 0.0, 'rel_y': 0.0}
@@ -244,7 +247,7 @@ class DemoScrollable:
             param=IpgTextParam.Content,
             value=f"scrollable id = {id}\n{text}")
 
-    def on_scroll_h(self, id, data):
+    def on_scroll_h(self, id, data, user_data: any):
         text = "\n" + 'abs_x = ' + str(data.get('abs_x'))
         text += "\n" + 'abs_y = ' + str(data.get('abs_y'))
         text += "\n" + 'rel_x = ' + str(data.get('rel_x'))
@@ -253,9 +256,14 @@ class DemoScrollable:
         text += "\n" + 'rev_y = ' + str(data.get('rev_y'))
         
         self.ipg.update_item(
-            wid=self.cb_text_h, 
+            wid=self.cb_text_h1, 
             param=IpgTextParam.Content,
             value=f"scrollable id = {id}\n{text}")
+        
+        self.ipg.update_item(
+            wid=self.cb_text_h2, 
+            param=IpgTextParam.Content,
+            value=f"user data = {user_data}")
 
     # ***************Window 3-scrolling both directions with other property setting**********************************
 
@@ -460,7 +468,7 @@ class DemoScrollable:
             param=IpgScrollableParam.VBarMargin, 
             value=self.v_bar_margin)
 
-        def inc_dec_h_scroller_width(self, btn_id: int, inc_dec: float):
+    def inc_dec_h_scroller_width(self, btn_id: int, inc_dec: float):
         self.h_scroller_width += inc_dec
         self.ipg.update_item(
             wid=self.scroll_id_3, 

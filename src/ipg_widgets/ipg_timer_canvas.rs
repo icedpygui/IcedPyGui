@@ -1,7 +1,7 @@
 //! ipg_timer
 use crate::graphics::colors::get_color;
 use crate::style::styling::IpgStyleStandard;
-use crate::{access_callbacks, access_user_data1, app, IpgState};
+use crate::{access_callbacks, access_user_data1, access_user_data2, app, IpgState};
 use super::callbacks::{set_or_get_widget_callback_data, 
     WidgetCallbackIn, WidgetCallbackOut};
 use super::helpers::{get_height, get_padding_f64, get_radius, 
@@ -198,63 +198,53 @@ pub fn canvas_tick_callback(state: &mut IpgState)
     process_callback(id, "on_tick".to_string(), wco.counter);
 }
 
-fn process_callback(id: usize, event_name: String, counter: Option<u64>)
+fn process_callback(
+        id: usize, 
+        event_name: String, 
+        counter: Option<u64>)
 {
-    let ud = access_user_data1();
-    let user_data_opt = ud.user_data.get(&id);
-
+    let ud1 = access_user_data1();
     let app_cbs = access_callbacks();
 
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
-    
-    let callback = match callback_present {
-        Some(cb) => cb,
+    // Retrieve the callback
+    let callback = match app_cbs.callbacks.get(&(id, event_name)) {
+        Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
         None => return,
     };
 
-    let cb = 
-        Python::with_gil(|py| {
-            callback.clone_ref(py)
-        });
-
     drop(app_cbs);
 
-    Python::with_gil(|py| {
-            if user_data_opt.is_some() && counter.is_some() {
-                let res = cb.call1(py, (
-                                                            id,
-                                                            counter.unwrap(),  
-                                                            user_data_opt.unwrap()
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("CanvasTimer: 3 parameters (id, counter, user_data) 
-                                        are required or a python error in this function. {er}"),
-                }
-            } else if user_data_opt.is_none() && counter.is_some() {
-                let res = cb.call1(py, (
-                                                            id,
-                                                            counter.unwrap(),  
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("CanvasTimer: 2 parameters (id, counter) 
-                                        are required or a python error in this function. {er}"),
-                }
-            } else {
-                let res = cb.call1(py, (
-                                                            id, 
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("CanvasTimer: 1 parameter (id) 
-                                        is required or a python error in this function. {er}"),
-                }
+    // Check user data from ud1
+    if let Some(user_data) = ud1.user_data.get(&id) {
+        Python::with_gil(|py| {
+            if let Err(err) = callback.call1(py, (id, counter, user_data)) {
+                panic!("CanvasTimer callback error: {err}");
             }
+        });
+        drop(ud1); // Drop ud1 before processing ud2
+        return;
+    }
+    drop(ud1); // Drop ud1 if no user data is found
+
+    // Check user data from ud2
+    let ud2 = access_user_data2();
+    if let Some(user_data) = ud2.user_data.get(&id) {
+        Python::with_gil(|py| {
+            if let Err(err) = callback.call1(py, (id, counter, user_data)) {
+                panic!("CanvasTimer callback error: {err}");
+            }
+        });
+        drop(ud2); // Drop ud2 after processing
+        return;
+    }
+    drop(ud2); // Drop ud2 if no user data is found
+
+    // If no user data is found in both ud1 and ud2, call the callback with the id and counter
+    Python::with_gil(|py| {
+        if let Err(err) = callback.call1(py, (id, counter)) {
+            panic!("CanvasTimer callback error: {err}");
+        }
     });
-    
-    drop(ud);
 }
 
 

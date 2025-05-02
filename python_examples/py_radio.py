@@ -27,11 +27,13 @@ def selected_radio_1(
             f"Radio callback id = {rd_id}, \n index = {data[0]}, \nlabel = {data[1]} \n user_data = {user_data}")
 
 
-def selected_radio_2(rd_id: int, data: list[int, str], user_data: str):
+def selected_radio_2(
+    rd_id: int, 
+    data: list[int, str]):
     ipg.update_item(
             rd_text_id_2, 
             IpgTextParam.Content,
-            f"Radio callback id = {rd_id}, \n index = {data[0]}, \nlabel = {data[1]} \n user_data = {user_data}")
+            f"Radio callback id = {rd_id}, \n index = {data[0]}, \nlabel = {data[1]} \n user_data = None used")
 
 
 # The callbacks below allow you to change all of the parameters for a widget.
@@ -337,8 +339,7 @@ rd_right_id = ipg.add_radio(
                         parent_id="row1", 
                         labels=["five", "six", "seven"],
                         direction=IpgRadioDirection.Horizontal,
-                        on_select=selected_radio_2, 
-                        user_data="Some data")
+                        on_select=selected_radio_2,)
 
 # add a row for the text associated with the above radio groups
 ipg.add_row(

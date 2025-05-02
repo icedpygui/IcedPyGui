@@ -1,6 +1,7 @@
 //! ipg_pick_list
 use crate::access_callbacks;
 use crate::access_user_data1;
+use crate::access_user_data2;
 use crate::app;
 use crate::graphics::colors::get_color;
 use crate::IpgState;
@@ -188,60 +189,59 @@ pub fn construct_picklist<'a>(pick: &'a IpgPickList,
             wci.value_str = Some(selected.clone());
             let _ = set_or_get_widget_callback_data(state, wci);
             
-            process_callback(id, "on_select".to_string(), Some(selected));
+            process_callback(id, "on_select".to_string(), selected);
         },
     }
  }
 
 
- fn process_callback(id: usize, event_name: String, selected: Option<String>) 
+ fn process_callback(
+        id: usize, 
+        event_name: String, 
+        selected: String) 
  {
-    let ud = access_user_data1();
-    let user_data_opt = ud.user_data.get(&id);
-
+    let ud1 = access_user_data1();
     let app_cbs = access_callbacks();
 
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
-    
-    let callback = match callback_present {
-        Some(cb) => cb,
+    // Retrieve the callback
+    let callback = match app_cbs.callbacks.get(&(id, event_name)) {
+        Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
         None => return,
     };
 
-    let cb = 
-        Python::with_gil(|py| {
-            callback.clone_ref(py)
-        });
-
     drop(app_cbs);
-                   
-    Python::with_gil(|py| {
-        if user_data_opt.is_some() && selected.is_some() {
-            let res = cb.call1(py, (
-                                                        id, 
-                                                        selected.unwrap(), 
-                                                        user_data_opt.unwrap()
-                                                        ));
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("PickList: 3 parameters (id, value, user_data) 
-                                    are required or a python error in this function. {er}"),
-            }
-        } else {
-            let res = cb.call1(py, (
-                                                        id, 
-                                                        selected.unwrap(), 
-                                                        ));
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("InputText: 2 parameters (id, value) 
-                                    are required or a python error in this function. {er}"),
-            }
-        } 
-    });
 
-    drop(ud); 
+    // Check user data from ud1
+    if let Some(user_data) = ud1.user_data.get(&id) {
+        Python::with_gil(|py| {
+            if let Err(err) = callback.call1(py, (id, selected, user_data)) {
+                panic!("PickList callback error: {err}");
+            }
+        });
+        drop(ud1); // Drop ud1 before processing ud2
+        return;
+    }
+    drop(ud1); // Drop ud1 if no user data is found
+
+    // Check user data from ud2
+    let ud2 = access_user_data2();
+    if let Some(user_data) = ud2.user_data.get(&id) {
+        Python::with_gil(|py| {
+            if let Err(err) = callback.call1(py, (id, selected, user_data)) {
+                panic!("PickList callback error: {err}");
+            }
+        });
+        drop(ud2); // Drop ud2 after processing
+        return;
+    }
+    drop(ud2); // Drop ud2 if no user data is found
+
+    // If no user data is found in both ud1 and ud2, call the callback with only the id and selected
+    Python::with_gil(|py| {
+        if let Err(err) = callback.call1(py, (id, selected)) {
+            panic!("PickList callback error: {err}");
+        }
+    });
 
  }
 

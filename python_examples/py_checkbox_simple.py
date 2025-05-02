@@ -15,7 +15,7 @@ x_id = ipg.generate_id()
 # needed ids for later use.
 # The is_checked is a boolean which will toggle each time the
 # checkbox is clicked.
-def on_toggle(_chkbx_id: int, is_checked: bool):
+def on_toggle(_chkbx_id: int, is_checked: bool, user_data: any):
     ipg.update_item(
             wid=x_id, 
             param=IpgCheckboxParam.IconX, 
@@ -51,7 +51,8 @@ ipg.add_column(
 ipg.add_checkbox(
         parent_id="col", 
         label="Check Me!!!",
-        on_toggle=on_toggle)
+        on_toggle=on_toggle,
+        user_data="Something") # not used in this demo
 
 # Add the second checkbox.  This has no callback since it not used.
 ipg.add_checkbox(

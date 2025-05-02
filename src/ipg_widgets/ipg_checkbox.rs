@@ -189,94 +189,53 @@ pub fn checkbox_callback(state: &mut IpgState, id: usize, message: CHKMessage) {
     }
 }
 
-pub fn process_callback(id: usize, is_checked: bool, event_name: String) 
+pub fn process_callback(
+        id: usize, 
+        is_checked: bool, 
+        event_name: String) 
 {
-    let ud = access_user_data1();
-    
-    let ud_opt = ud.user_data.get(&id);
-
-    let mut ud_opt_chk = false;
-    let mut ud2_opt_chk = false;
-
+    let ud1 = access_user_data1();
     let app_cbs = access_callbacks();
-    
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
-    
-    let callback = match callback_present {
-        Some(cb) => cb,
+
+    // Retrieve the callback
+    let callback = match app_cbs.callbacks.get(&(id, event_name)) {
+        Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
         None => return,
     };
 
-    let cb = 
-        Python::with_gil(|py| {
-            callback.clone_ref(py)
-        });
-
     drop(app_cbs);
-    
-    // Needed to split up the callback due to the need
-    // to drop as as possible, one needs to be free
-    // at all times.
-    if ud_opt.is_some() {
-        ud_opt_chk = true;
+
+    // Check user data from ud1
+    if let Some(user_data) = ud1.user_data.get(&id) {
         Python::with_gil(|py| {
-
-            let res = 
-                cb.call1(py, (
-                        id,
-                        is_checked,  
-                        ud_opt.unwrap()
-                        ));
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("Checkbox: 3 parameters (id, is_checked, user_data) are required or 
-                                        a python error in this function. {er}"),
+            if let Err(err) = callback.call1(py, (id, is_checked, user_data)) {
+                panic!("Checkbox callback error: {err}");
             }
-                
         });
+        drop(ud1); // Drop ud1 before processing ud2
+        return;
     }
+    drop(ud1); // Drop ud1 if no user data is found
 
-    drop(ud);
-
+    // Check user data from ud2
     let ud2 = access_user_data2();
-    let ud2_opt = ud2.user_data.get(&id);
-
-    if ud2_opt.is_some() {
-        ud2_opt_chk = true;
+    if let Some(user_data) = ud2.user_data.get(&id) {
         Python::with_gil(|py| {
-
-            let res = 
-                cb.call1(py, (
-                        id,
-                        is_checked,  
-                        ud2_opt.unwrap()
-                        ));
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("Checkbox: 3 parameters (id, is_checked, user_data) 
-                                            are required or a python 
-                                            error in this function. {er}"),
+            if let Err(err) = callback.call1(py, (id, is_checked, user_data)) {
+                panic!("Checkbox callback error: {err}");
             }
         });
+        drop(ud2); // Drop ud2 after processing
+        return;
     }
+    drop(ud2); // Drop ud2 if no user data is found
 
-    drop(ud2);
-
-    if !ud_opt_chk && !ud2_opt_chk {
-        Python::with_gil(|py| {
-            let res = 
-                cb.call1(py, (
-                        id,
-                        is_checked,  
-                        ));
-            match res {
-                Ok(_) => (),
-                Err(er) => panic!("Checkbox: 2 parameter (id, is_checked) is required or possibly a python 
-                                        error in this function. {er}"),
-            }
-        });
-    }
+    // If no user data is found in both ud1 and ud2, call the callback with only the id and is_checked
+    Python::with_gil(|py| {
+        if let Err(err) = callback.call1(py, (id, is_checked)) {
+            panic!("Checkbox callback error: {err}");
+        }
+    });
 }
 
 

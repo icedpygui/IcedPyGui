@@ -48,10 +48,12 @@ text_ids = []
 handle_width = 4.0  # defaults to 4 just using for demo info
 handle_height = 200.0
         
-cont_style_id = ipg.add_container_style(border_color=IpgColor.WHITE,
-                                        border_width=1.0)
+cont_style_id = ipg.add_container_style(
+                        border_color=IpgColor.WHITE,
+                        border_width=1.0)
 
-divider_style_id = ipg.add_divider_style(background_transparent=True)
+divider_style_id = ipg.add_divider_style(
+                        background_transparent=True)
 
 
 # Add a window first
@@ -95,35 +97,42 @@ ipg.add_stack(
 # cannot have any padding, since divider
 # cannot detect whether padding is used
 # it becomes misaligned.
-ipg.add_row(window_id="main",
-            parent_id="stack",
-            container_id="row",
-            spacing=0,
-            padding=[0])
+ipg.add_row(
+    window_id="main",
+    parent_id="stack",
+    container_id="row",
+    spacing=0,
+    padding=[0])
 
 for index, width in enumerate(column_widths):
     # add a container for styling purposes
-    ipg.add_container(window_id="main",
-                      container_id=f"cont{index}",
-                      parent_id="row",
-                      style_id=cont_style_id)
+    ipg.add_container(
+        window_id="main",
+        container_id=f"cont{index}",
+        parent_id="row",
+        style_id=cont_style_id)
     
-    column_ids.append(ipg.add_column(window_id="main",
-                   container_id=f"col{index}",
-                   parent_id=f"cont{index}",
-                   width=width))
+    column_ids.append(ipg.add_column(
+                        window_id="main",
+                        container_id=f"col{index}",
+                        parent_id=f"cont{index}",
+                        width=width))
     
-    text_ids.append(ipg.add_text(parent_id=f"col{index}",
-                 content=f"Width={width}"))
+    text_ids.append(ipg.add_text(
+                        parent_id=f"col{index}",
+                        content=f"Width={width}"))
     
-    ipg.add_button(parent_id=f"col{index}",
-                   label="Some Button")
+    ipg.add_button(
+        parent_id=f"col{index}",
+        label="Some Button")
     
-    ipg.add_button(parent_id=f"col{index}",
-                   label="Another Button")
+    ipg.add_button(
+        parent_id=f"col{index}",
+        label="Another Button")
 
-    ipg.add_toggler(parent_id=f"col{index}",
-                    label="Toggler"),
+    ipg.add_toggler(
+        parent_id=f"col{index}",
+        label="Toggler"),
 
        
        

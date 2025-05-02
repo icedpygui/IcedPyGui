@@ -3,7 +3,7 @@ from icedpygui import IPG, IpgColor, IpgTextParam, IpgColorPickerParam
 ipg = IPG()
 
 
-def color_selected(cp_id: int, color: list):
+def color_selected(cp_id: int, color: list, user_data: any):
     # Need to change the list color to a str type
     string = "["
     for i in range(0, len(color)):
@@ -15,11 +15,11 @@ def color_selected(cp_id: int, color: list):
                     value=string)
 
 
-def cp_opened(cp_id: int):
+def cp_opened(cp_id: int, user_data: any):
     print("color picker opened")
     
 
-def cp_canceled(cp_id: int):
+def cp_canceled(cp_id: int, user_data: any):
     print("color picker canceled")
 
 
@@ -58,7 +58,10 @@ ipg.add_color_picker(
         on_submit=color_selected,
         on_press=cp_opened,
         on_cancel=cp_canceled,
-        style_id=cp_style)
+        style_id=cp_style,
+        user_data="Something") #user data not used but supplied for testing
+        # If you use user_dta, all callback will require the user_data parameter
+        # or whatever name you want for it.
 
 text_id = ipg.add_text(
             parent_id="col",

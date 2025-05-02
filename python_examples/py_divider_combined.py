@@ -24,22 +24,22 @@ def divider_row_change(div_id: int, index: int, value: float):
     
     # Update the row above the divider
     ipg.update_item(
-            wid=row_ids[index], 
-            param=IpgRowParam.Height, 
-            value=value)
+        wid=row_ids[index], 
+        param=IpgRowParam.Height, 
+        value=value)
 
     # Update the row below the divider
     if index < len(rows)-1:
-            ipg.update_item(
-                wid=row_ids[index+1],
-                param=IpgRowParam.Height,
-                value=rows[index+1])
+        ipg.update_item(
+            wid=row_ids[index+1],
+            param=IpgRowParam.Height,
+            value=rows[index+1])
             
     # Update the divider
     ipg.update_item(
-                wid=div_id,
-                param=IpgDividerParam.Heights,
-                value=rows)
+        wid=div_id,
+        param=IpgDividerParam.Heights,
+        value=rows)
     
     # Update the height of the column divider
     ipg.update_item(
@@ -61,22 +61,22 @@ def divider_col_change(div_id: int, index: int, value: float):
     for i in range(0, len(rows)):
         # Update all the containers on the left of the divider
         ipg.update_item(
-                wid=container_ids[i][index], 
-                param=IpgContainerParam.Width, 
-                value=value)
+            wid=container_ids[i][index], 
+            param=IpgContainerParam.Width, 
+            value=value)
 
         # Update all the containers on the right of the divider
         if index < len(columns)-1:
-                ipg.update_item(
-                    wid=container_ids[i][index+1],
-                    param=IpgContainerParam.Width,
-                    value=columns[index+1])
+            ipg.update_item(
+                wid=container_ids[i][index+1],
+                param=IpgContainerParam.Width,
+                value=columns[index+1])
 
     # Update the column divider
     ipg.update_item(
-                wid=div_id,
-                param=IpgDividerParam.Widths,
-                value=columns)
+        wid=div_id,
+        param=IpgDividerParam.Widths,
+        value=columns)
     
     # Update the width of the row divider
     ipg.update_item(
@@ -96,8 +96,7 @@ def divider_col_change(div_id: int, index: int, value: float):
     ipg.update_item(
         wid=stack_id,
         param=IpgStackParam.Width,
-        value=sum(columns)
-    )
+        value=sum(columns))
 
 # It can be easy visualize to use row/column vs widths/heights
 rows = [100.0, 100.0, 100.0]
@@ -111,10 +110,12 @@ col_handle_width = 4.0
 col_handle_height = sum(rows)
 
      
-cont_style_id = ipg.add_container_style(border_color=IpgColor.WHITE,
-                                        border_width=1.0)
+cont_style_id = ipg.add_container_style(
+                        border_color=IpgColor.WHITE,
+                        border_width=1.0)
 
-divider_style_id = ipg.add_divider_style(background_transparent=True)
+divider_style_id = ipg.add_divider_style(
+                        background_transparent=True)
 
 
 # Add a window first
@@ -193,25 +194,25 @@ for i, height in enumerate(rows):
  
 # Make the vertical divider (rows)
 row_div = ipg.add_divider_vertical(
-        parent_id="stack",
-        heights=rows,
-        handle_width=row_handle_width,
-        handle_height=row_handle_height,
-        on_change=divider_row_change,
-        # use the style to see just the outline and not the divider
-        # style_id=divider_style_id
-        )
+            parent_id="stack",
+            heights=rows,
+            handle_width=row_handle_width,
+            handle_height=row_handle_height,
+            on_change=divider_row_change,
+            # use the style to see just the outline and not the divider
+            # style_id=divider_style_id
+            )
 
 #Make the horizontal divider (columns)
 col_div = ipg.add_divider_horizontal(
-        parent_id="stack",
-        widths=columns,
-        handle_width=col_handle_width,
-        handle_height=col_handle_height,
-        on_change=divider_col_change,
-        # use the style to see just the outline and not the divider
-        # style_id=divider_style_id
-        )
+            parent_id="stack",
+            widths=columns,
+            handle_width=col_handle_width,
+            handle_height=col_handle_height,
+            on_change=divider_col_change,
+            # use the style to see just the outline and not the divider
+            # style_id=divider_style_id
+            )
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

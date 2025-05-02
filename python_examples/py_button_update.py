@@ -63,7 +63,7 @@ def update_button(btn_id: int):
     # Changing the style
     ipg.update_item(style_btn, 
                     IpgButtonParam.StyleStandard, 
-                    value=IpgStyleStandard.Danger)
+                    value=IpgStyleStandard.Text)
     
     ipg.update_item(style_btn, 
                     IpgButtonParam.Label, 

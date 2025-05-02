@@ -1,5 +1,5 @@
 //! ipg_mousearea
-use crate::{access_callbacks, access_user_data1, IpgState};
+use crate::{access_callbacks, access_user_data1, access_user_data2, IpgState};
 use crate::app::Message;
 use super::helpers::try_extract_boolean;
 
@@ -117,75 +117,73 @@ pub fn mousearea_callback_point(_state: &mut IpgState,
 }
 
 
-fn process_callback(id: usize, event_name: String, points_opt: Option<(String, f32, String, f32)>) 
+fn process_callback(
+    id: usize, 
+    event_name: String, 
+    points_opt: Option<(String, f32, String, f32)>) 
 {
-    let ud = access_user_data1();
-    let user_data_opt = ud.user_data.get(&id);
+    let ud1 = access_user_data1();
+    let ud_opt = ud1.user_data.get(&id);
 
     let app_cbs = access_callbacks();
-
-    let callback_present = 
-        app_cbs.callbacks.get(&(id, event_name));
-    
-    let callback = match callback_present {
+    let callback = match app_cbs.callbacks.get(&(id, event_name)) {
         Some(cb) => cb,
         None => return,
     };
 
-    let cb = 
-        Python::with_gil(|py| {
-            callback.clone_ref(py)
-        });
-
+    let cb = Python::with_gil(|py| callback.clone_ref(py));
     drop(app_cbs);
 
-    Python::with_gil(|py| {
-        if user_data_opt.is_some() && points_opt.is_some() {
-                let res = cb.call1(py, (
-                                                            id, 
-                                                            points_opt.unwrap(), 
-                                                            user_data_opt.unwrap()
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Image: 3 parameter (id, points, user_data) 
-                                        are required or a python error in this function. {er}"),
-                }
-            } else if points_opt.is_some() && user_data_opt.is_none() {
-                let res = cb.call1(py, (
-                                                            id, 
-                                                            points_opt.unwrap(), 
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Image: 2 parameter (id, points) 
-                                        are required or a python error in this function. {er}"),
-                }
-            } else if user_data_opt.is_some() {
-                let res = cb.call1(py, (
-                                                            id, 
-                                                            user_data_opt.unwrap()
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Image: 2 parameter (id, user_data) 
-                                        are required or a python error in this function. {er}"),
-                }
-            
-            } else {
-                let res = cb.call1(py, (
-                                                            id, 
-                                                            ));
-                match res {
-                    Ok(_) => (),
-                    Err(er) => panic!("Image: 1 parameter (id) 
-                                        are required or a python error in this function. {er}"),
-                }
-            }
-    
-    });
+    // Execute the callback with user data from ud1
+    if let Some(user_data) = ud_opt {
+        Python::with_gil(|py| {
+            let res = match points_opt {
+                Some(ref points) => cb.call1(py, (id, points.clone(), user_data)),
+                None => cb.call1(py, (id, user_data)),
+            };
 
-    drop(ud);   
+            match res {
+                Ok(_) => (),
+                Err(err) => panic!("MouseArea callback error with user_data from ud1: {err}")
+            }
+        });
+        drop(ud1); // Drop ud1 after processing
+        return;
+    }
+    drop(ud1); // Drop ud1 if no user data is found
+
+    // Execute the callback with user data from ud2
+    let ud2 = access_user_data2();
+    
+    if let Some(user_data) = ud2.user_data.get(&id) {
+        Python::with_gil(|py| {
+            let res = match points_opt {
+                Some(ref points) => cb.call1(py, (id, points.clone(), user_data)),
+                None => cb.call1(py, (id, user_data)),
+            };
+
+            match res {
+                Ok(_) => (),
+                Err(err) => panic!("MouseArea callback error with user_data from ud2: {err}")
+            }
+        });
+        drop(ud2); // Drop ud2 after processing
+        return;
+    }
+    drop(ud2); // Drop ud2 if no user data is found
+
+    // Execute the callback without user data
+    Python::with_gil(|py| {
+        let res = match points_opt {
+                Some(ref points) => cb.call1(py, (id, points.clone())),
+                None => cb.call1(py, (id,)),
+            };
+
+            match res {
+                Ok(_) => (),
+                Err(err) => panic!("MouseArea callback error without user_data: {err}")
+            }
+    });
 
 }
 

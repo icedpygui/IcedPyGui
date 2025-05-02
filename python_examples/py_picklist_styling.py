@@ -12,6 +12,10 @@ def picked_item(pl_id: int, data: str):
     print(f"pl_id = {pl_id} data = {data}")
 
 
+def picked_item_with_user_data(pl_id: int, data: str, user_data: any):
+    print(f"pl_id = {pl_id} data = {data}, user_data = {user_data}")
+    
+
 # Add window must be the first widget. Other windows can be added
 # at anytime.
 ipg.add_window(
@@ -142,7 +146,8 @@ ipg.add_pick_list(
         arrow_size=25.0,
         placeholder="Choose a Number...",
         style_id=colors,
-        on_select=picked_item)
+        on_select=picked_item_with_user_data,
+        user_data="Some data")
 
 ipg.add_text(
         parent_id="row5", 

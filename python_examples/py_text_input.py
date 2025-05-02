@@ -17,19 +17,20 @@ secure = False
 # Since we want to update a text widget, the id of the text_input
 # widget is not used.
 # When you type in the text, this fires each time
-def on_input(_txt_input_id, data):
+def on_input(_txt_input_id, data, _user_data: any):
     ipg.update_item(text_on_input_id, IpgTextParam.Content, value=data)
 
 
 # This only fires when you press enter to submit, it passes na value like
 # as does the on_input.
-def on_submit(_txt_input_id, value: str):
+def on_submit(_txt_input_id, value: str, user_data: any):
     ipg.update_item(text_on_submit_id, IpgTextParam.Content, value=value)
+    ipg.update_item(text_user_data_id, IpgTextParam.Content, value=user_data)
 
 
 # This fired when you paste something into the field
 # To submit it, press enter.
-def on_paste(_txt_input_id, data):
+def on_paste(_txt_input_id, data, _user_data: any):
     ipg.update_item(text_on_paste_id, IpgTextParam.Content, value=data)
 
 
@@ -120,7 +121,7 @@ ipg.add_column(
 # Add some instructions
 ipg.add_text(
         parent_id="col", 
-        content="It's best to see the effects by pressing the buttons left to right and top to bottom")
+        content="It's best to see the effects by pressing \nthe buttons left to right and top to bottom")
 
 ipg.add_space(
         parent_id="col", 
@@ -133,7 +134,8 @@ ti_id = ipg.add_text_input(
                 width=200.0,
                 on_input=on_input,
                 on_submit=on_submit,
-                on_paste=on_paste)
+                on_paste=on_paste,
+                user_data="User data = Some user data")
 
 # Add the text widget to display the info
 text_on_input_id = ipg.add_text(
@@ -147,6 +149,10 @@ text_on_submit_id = ipg.add_text(
 text_on_paste_id = ipg.add_text(
                             parent_id="col", 
                             content="Text here will be added when pasted")
+
+text_user_data_id = ipg.add_text(
+                            parent_id="col", 
+                            content="User data will e here when submitted")
 
 # Add row for buttons
 ipg.add_row(
