@@ -33,4 +33,5 @@ from .icedpygui import IpgTextParam
 from .icedpygui import IpgTimerParam, IpgTimerStyleParam
 from .icedpygui import IpgCanvasTimerParam, IpgCanvasTimerStyleParam
 from .icedpygui import IpgTogglerParam, IpgTogglerStyleParam
+from .icedpygui import IpgToolTipPosition, IpgToolTipParam, IpgToolTipStyleParam
 from .icedpygui import IpgWindowLevel, IpgWindowMode, IpgWindowTheme, IpgWindowParam

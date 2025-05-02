@@ -336,6 +336,9 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             IpgWidgets::IpgTogglerStyle(_) => {
                 return WidgetCallbackOut::default();
             },
+            IpgWidgets::IpgToolTipStyle(_) => {
+                return WidgetCallbackOut::default();
+            },
             IpgWidgets::IpgMenuStyle(_) => {
                 return WidgetCallbackOut::default();
             },

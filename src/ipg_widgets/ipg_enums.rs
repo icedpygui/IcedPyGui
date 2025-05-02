@@ -38,7 +38,7 @@ use super::ipg_text_input::{IpgTextInput, IpgTextInputStyle};
 use super::ipg_timer::{IpgTimer, IpgTimerStyle};
 use super::ipg_timer_canvas::{IpgCanvasTimer, IpgCanvasTimerStyle};
 use super::ipg_toggle::{IpgToggler, IpgTogglerStyle};
-use super::ipg_tool_tip::IpgToolTip;
+use super::ipg_tool_tip::{IpgToolTip, IpgToolTipStyle};
 use super::ipg_window::IpgWindow;
 
 
@@ -108,6 +108,7 @@ pub enum IpgWidgets {
     IpgCanvasTimerStyle(IpgCanvasTimerStyle),
     IpgToggler(IpgToggler),
     IpgTogglerStyle(IpgTogglerStyle),
+    IpgToolTipStyle(IpgToolTipStyle),
 }
 
 

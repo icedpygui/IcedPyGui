@@ -29,6 +29,7 @@ use crate::ipg_widgets::ipg_separator::construct_separator;
 use crate::ipg_widgets::ipg_table::{table_callback, TableMessage};
 use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, 
     canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
+use crate::ipg_widgets::ipg_tool_tip;
 use crate::{access_canvas_state, access_canvas_update_items, access_user_data2, access_update_items, access_user_data1, access_window_actions, ipg_widgets, match_container, match_container_for_df, match_widget, set_state_of_widget_running_state, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage};
@@ -734,7 +735,14 @@ fn get_container<'a>(state: &'a IpgState,
                     construct_stack(stk.clone(), content)
                 }
                 IpgContainers::IpgToolTip(tool) => {
-                    construct_tool_tip(tool, content)
+                    let style_opt = 
+                        match tool.style_id {
+                            Some(id) => {
+                                state.widgets.get(&id)
+                            },
+                            None => None,
+                        };
+                    construct_tool_tip(tool, content, style_opt)
                 },
                 IpgContainers::IpgWindow(_wnd) => {
                     construct_window(content)
@@ -1241,7 +1249,7 @@ fn get_widget_parent_id(widget: &IpgWidgets) -> String {
         IpgWidgets::IpgCanvasTimerStyle(ipg_canvas_timer_style) => todo!(),
         IpgWidgets::IpgToggler(ipg_toggler) => todo!(),
         IpgWidgets::IpgTogglerStyle(ipg_toggler_style) => todo!(),
-        
+        IpgWidgets::IpgToolTipStyle(ipg_tool_tip) => todo!(),
     }
 }
 

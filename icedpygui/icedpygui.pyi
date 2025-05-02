@@ -5823,6 +5823,23 @@ class IpgTogglerParam:
     WidthFill: bool
 
 
+class IpgToolTipPosition:
+    FollowCursor=""
+    Top=""
+    Bottom=""
+    Left=""
+    Right=""
+
+
+class IpgToolTipParam:
+    Position: IpgToolTipPosition
+    TextToDisplay: str
+    Gap: float
+    Padding: list[float, 4]
+    SnapWithinViewport: bool
+    StyleId: int
+    
+    
 class IpgWindowParam:
     '''
     Parameters

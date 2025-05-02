@@ -95,7 +95,7 @@ use ipg_widgets::ipg_timer::{timer_item_update, timer_style_update_item, IpgTime
     IpgTimerParam, IpgTimerStyle, IpgTimerStyleParam};
 use ipg_widgets::ipg_toggle::{toggler_item_update, toggler_style_update_item, 
     IpgToggler, IpgTogglerParam, IpgTogglerStyle, IpgTogglerStyleParam};
-use ipg_widgets::ipg_tool_tip::IpgToolTip;
+use ipg_widgets::ipg_tool_tip::{tool_tip_style_update_item, tooltip_item_update, IpgToolTip, IpgToolTipParam, IpgToolTipPosition, IpgToolTipStyleParam};
 use ipg_widgets::ipg_window::{get_iced_window_theme, 
         window_item_update, IpgWindow, IpgWindowLevel, IpgWindowMode, 
         IpgWindowParam, IpgWindowTheme};
@@ -2069,30 +2069,31 @@ impl IPG {
     #[pyo3(signature = (
         window_id, 
         container_id, 
-        position, 
-        text_to_display, 
+        text_to_display,
+        position=IpgToolTipPosition::Top, 
         parent_id=None, 
         gap=10, 
         padding=0.0, 
         snap_within_viewport=true, 
-        style="box".to_string()
+        style_id=None,
+        gen_id=None,
         ))]
     fn add_tool_tip(
         &self,
         window_id: String,
         container_id: String,
-        position: String,
         text_to_display: String,
-        // **above required
+        position: IpgToolTipPosition,
         parent_id: Option<String>,
         gap: u16,
         padding: f32,
         snap_within_viewport: bool,
-        style: String,
+        style_id: Option<usize>,
+        gen_id: Option<usize>,
         ) -> PyResult<usize>
     {
 
-        let id = self.get_id(None);
+        let id = self.get_id(gen_id);
 
         let prt_id = match parent_id {
             Some(id) => id,
@@ -2113,7 +2114,7 @@ impl IPG {
                 gap,
                 padding,
                 snap_within_viewport,
-                style,
+                style_id,
                 )));
         drop(state);
         Ok(id)
@@ -6314,6 +6315,9 @@ fn match_widget(
         IpgWidgets::IpgTogglerStyle(style) => {
             toggler_style_update_item(style, item, value);
         },
+        IpgWidgets::IpgToolTipStyle(style) => {
+            tool_tip_style_update_item(style, item, value);
+        },
 
     }
 }
@@ -6366,11 +6370,14 @@ fn match_container(
             scrollable_item_update(scroll, item, value);
             None
         },
+        IpgContainers::IpgToolTip(tool) => {
+            tooltip_item_update(tool, item, value);
+            None
+        },
         IpgContainers::IpgWindow(wnd) => {
             window_item_update(wnd, item, value);
             None
         },
-        _ => None,
     }
 }
 
@@ -6475,6 +6482,9 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgCanvasTimerStyleParam>()?;
     m.add_class::<IpgTogglerParam>()?;
     m.add_class::<IpgTogglerStyleParam>()?;
+    m.add_class::<IpgToolTipPosition>()?;
+    m.add_class::<IpgToolTipParam>()?;
+    m.add_class::<IpgToolTipStyleParam>()?;
     m.add_class::<IpgWindowParam>()?;
     m.add_class::<IpgWindowLevel>()?;
     m.add_class::<IpgWindowTheme>()?;
