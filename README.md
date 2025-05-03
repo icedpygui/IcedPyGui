@@ -11,23 +11,26 @@ Python wrapper for Rust Iced Gui
 </div>
 
 ## Revisions
-* Current version 0.3.0
+* Current version 0.4.0
 
 ## Features
 
 * Supported Iced widgets
   * Button
+  * Canvas - Can add canvas widgets and dynamic drawing
+  * CanvasTimer - timed events for cnavas actions
+  * Card - Widget with a header and body text
   * Checkbox
-  * Canvas - Can add canvas widgets but dynamic drawing to follow
+  * ColorPicker - Widget for selecting a color
   * Column - a container holding widgets or other container in with horizontal positioning
-  * ComboBox - Needs modification to work in IPG, but PicKList good substitute
   * Container - container, holds a single container or widget, used for alignment purposes
+  * DatePicker - Widget for selecting a date
+  * Divider - Widget for resizing adjacent containers, columns, or rows
   * Events - keyboard, mouse, timer, and window
-  * Fonts - Future release
+  * Fonts - Future release (just basic one now)
   * Image - svg and png types
-  * Modal - discontinued for now, use stack or open a small window
+  * Menu - Dropdown menu for various actions, includes adding widgets into menu items
   * MouseArea - holds a widget and detect mouse movement and mouse button presses
-  * PaneGrid - maybe a future release, will need to be modified for IPG
   * PickList - essentially a combobox
   * ProgressBar - a bar used to show progression of some action
   * QRCodes - future release
@@ -35,33 +38,27 @@ Python wrapper for Rust Iced Gui
   * Row - a container holding widgets or other containers with vertical positioning.
   * Rule - A widget line divider for readability
   * Scrollable - container which allows scrolling items
+  * SelectableText - text widget that has mouse interaction
+  * Separator - Widget for separating items using lines of different types
   * Slider - A widget for creating values by sliding a bar
   * Space - a widget for helping align content
-  * Stack - a container that allows one to stack other containers
+  * Stack - a container that allows one to stack other containers into
   * Styling - All widget now have styling
   * SVG - image type
-  * TextEditor - Future release
-  * TextInput - Allows one to input any text, numerical ones coming soon
-  * Text - a text widget
-  * Toggler - a widget for setting conditions like true/false on/off, etc
-  * Tooltip - Only widget now, container ability future release
-  * Windows multiple - many windows enabled
-* Iced_aw widgets - are moved into IPG due to version conflicts
-  * Card - a container with a header and footer
-  * ColorPicker - future release
-  * Menu - Dropdown menu items
   * Tabs - future release
-* IPG widgets
-  * DatePicker - compact and resizable
-  * SelectableText - all mouse buttons supported
-  * Table - Easily loaded with a list of py dictionaries, supports adding buttons, checkboxes, and togglers, continually updating code
+  * Table - table for data and widgets, header body, and footer, uses Polars Dataframe
+  * TextEditor - possible future release
+  * TextInput - Allows one to input any text, numerical ones coming soon
+  * Text - a text widget, RichText in future release
+  * Timer - clocked event for dynamically controlling widgets or other timed events
+  * Toggler - a widget for setting conditions like true/false on/off, etc
+  * Tooltip - Widget for proping with info when mouse hovered over a widget
+  * Windows multiple - many windows enabled
 
 ## Future Enhancements to the program
-* Since upgrading to iced 0.13.1, I can now dispense with using a mutex to store some data.  These work fine but a mutex cannot use anything with a lifetime since it is static.  This will clear up some issues when trying to incorporated widgets such as the Editor, etc.
-* Some optimization might be possible by not rebuilding the widgets unless they change.  Not tested yet but hopefully it can happen.
-* More widgets will be added see those mentioned above, along with any other I can find.
-* Fonts is on the list for an upcoming release.
-## Python issues to be addressed
+* More widgets will be added as iced and other developers create widgets.
+* Reduce compile times during development by creating independent widget files or other method.
+## Python issues to be addressed(next version)
   * Need to incorporate using the 'with' statement in python.  Using with would allow one to not have to supply the window or parent id if those follow closely.  For example:
 
     ``` python
@@ -72,20 +69,19 @@ Python wrapper for Rust Iced Gui
 
   * @dataclass can be used but no IPG code in it until a later release
   * @staticmethod future release
-  * Better error messages during callbacks.  Currently an error in python code during the callback trigger a rust error which captures the python error but doesn't say where in the callback it happens.
+
 
 ## Pyo3 Enhancements
 
 * There are a number of future possible enhancements related to parallelism and async.
 
 ## Installation (PiPy)
-* Code not published to PiPy yet.  Download one of the wheels attached to the [release page](https://github.com/icedpygui/IcedPyGui/releases), code also in wheels folder or see below for installation via rust
-* Open one of the example using your favorite IDE.
+* Open one of the examples using your favorite IDE.
 * Create and activate a virtual environment
  ```python
-pip install path to wheel
+pip install icedpygui
 # or if already installed previously
-pip install --force-reinstall path to wheel
+pip install --force-reinstall icedpygui
  ```
 
 ## Installation (Rust)
@@ -94,7 +90,8 @@ pip install --force-reinstall path to wheel
 * Clone the repository and open in your favorite IDE
 * Create and activate a virtual environment - The venv for this take a couple of minutes to create, be patient, sometimes a restart of vs code needed to recognize the venv
 * Install maturin and compile the rust code
-* Use maturin develop (~10 sec compile time on AMD Rizen 7700, stored in local venv)
+* Depending on your linux system setup, you may get some compile erros about missing libraries.  Just add those as needed.
+* Use maturin develop (~20 sec compile time on AMD Rizen 7700, stored in local venv)
 * maturin build --release (~1.5 min compile time stored in target/wheels)
 * Copy over one of the python examples (link above), use the below code, or the demo in the [demo folder](https://github.com/icedpygui/IcedPyGui/tree/main/python_demo).
 
@@ -107,8 +104,8 @@ maturin develop
 
 ## Overview
 
-* IcedPyGui is based on [Rust Iced](https://github.com/iced-rs/iced) v0.12.1.
-* Widgets for [Iced_aw](https://github.com/iced-rs/iced_aw) v0.8.0 are used too .
+* IcedPyGui is based on [Rust Iced](https://github.com/iced-rs/iced) v0.13.1.
+* Widgets for [Iced_aw](https://github.com/iced-rs/iced_aw) are used too .
 * [Pyo3](https://github.com/pyo3/pyo3) is used as the python wrapper.
 * [Maturin](https://github.com/PyO3/maturin) is used to build and publish the module .
 * The syntax and the design of the callbacks were inspired by the python wrapper of Dear ImGui, [DearPyGui(DPG)](https://github.com/hoffstadt/DearPyGui).
@@ -117,33 +114,31 @@ maturin develop
 
 ## Intro
 
-Iced is a great GUI for Rust but it's still early in the development cycle, more good things will follow.  
+Iced is a great GUI for Rust, but it's still early in the development cycle. More good things will follow.  
 
-This project is the first I have published and so I expect I'll learn a lot and hopefully you can bare with me.
+This project is the first I have published, so I expect I'll learn a lot, and hopefully, you can bear with me.
 
-Rust's strict typing is mostly shielded from the python user but if you venture too far, you'll get burned with an error, so behave yourselves :)
+Rust's strict typing is mostly shielded from the Python user, but if you venture too far, you'll get burned with an error, so behave yourselves :)
 
-Iced uses a messaging system which acts like a callback and no widget ids are used except for the containers and windows.  This posed a bit of a problem in IPG but in most cases it was solved by mapping an id to the widget.  In cases where this was not possible, the code was pull into IPG and an id was added in with fairly simple changes so it shouldn't be hard to keep those few items updated.
+Iced uses a messaging system that acts like a callback, and no widget IDs are used except for the containers and windows. This posed a bit of a problem in IPG, but in most cases, it was solved by mapping an ID to the widget. In cases where this was not possible, the code was pulled into IPG, and an ID was added with fairly simple changes, so it shouldn't be hard to keep those few items updated.
 
-Iced doesn't use the concept of user data being passed around but when using DPG, sometimes the ability to send user data was very helpful.  Therefore, this concept was added to IPG.
-
-Each widget in IPG has a used data parameter which passes any additional information needed by the callback.  The user data is special because it is only passed through to rust and back out as a PyObject or PyAny.  Therefore any python data can be used since it is never extracted into a rust type.
+Iced doesn't use the concept of user data being passed around, but when using DPG, sometimes the ability to send user data was very helpful. Therefore, this concept was added to IPG. This user data is special because it is only passed through to Rust and back out as a `PyObject` or `PyAny`. Therefore, any Python data can be used since it is never extracted into a Rust type.
 
 ## Important rules
 
-* Import IPG as indicated below in the demo code and any parameter class needed for the widgets.
+Import IPG as indicated below in the demo code and any parameter class needed for the widgets.
 
-* Instantiate the Rust structure then add your containers and widgets.
+Instantiate the Rust structure, then add your containers and widgets.
 
-* The last line of code to execute must be ipg.start_session().  Any code after that will not be executed because Iced is now running.  You can place it anywhere, just make sure its last executed.  If you start your program and nothing happens, it might mean that you aren't executing start_session() or you forgot to add it in, been there, done that.
+The last line of code to execute must be ipg.start_session(). Any code after that will not be executed because Iced is now running. You can place it anywhere, just make sure it's the last to be executed. If you start your program and nothing happens, it might mean that you aren't executing start_session() or you forgot to add it in. Been there, done that.
 
-* Every widget needs to have a parent container previously defined and every container needs to have a window and optionally a parent container defined.  If the container is placed into a window then no parent_id is required.
+Every widget needs to have a parent container previously defined, and every container needs to have a window and optionally a parent container defined. If the container is placed into a window, then no parent_id is required.
 
-* Therefore at least one window needs to be added first and at least one container needs to be added to the window before any widgets are added.  As long as you have defined a parent, you can add a widget.
+Therefore, at least one window needs to be added first, and at least one container needs to be added to the window before any widgets are added. As long as you have defined a parent, you can add a widget.
 
 ## Let's get started with out first program
 
-Further below you'll find the full code to be tested in your IDE.  Sometimes the these code snippets don't paste properly into the IDE if the parameter names are in them.  But since these snippets are for learning, they need to be there for better understanding.  So look further down for the full code to copy and paste.
+Further below you'll find the full code to be tested in your IDE.  Sometimes the these code snippets don't paste properly into the IDE if the parameter names are in them.  But since these snippets are for learning, they need to be there for better understanding.  So look further down for the full code to copy and paste or use the readme_code.py file in the examples folder.
 
 First we import IPG from icedpygui.  This is a Rust structure to be instantiated.
 We will be using a container and a column, these have alignment parameters so we need to import the parameters classes so that we don't have to type in strings which result in irritating typos.  We'll also be updating a text widget to show some results, therefore the text parameter class is needed.
@@ -158,48 +153,65 @@ Let's instantiate the Rust structure and add some containers.  Since this is a s
 ```python
 ipg = IPG()
 
-ipg.add_window(window_id="main", title="Demo Window",
-               width=600, height=500,
-               pos_centered=True)
 
-# alignment defaults to centering
-ipg.add_container("main", container_id="cont",
-                  width_fill=True, height_fill=True)
+ipg.add_window(
+      window_id="main", 
+      title="Demo Window",
+      width=600, 
+      height=500,
+      pos_centered=True)
+
+# alignment defaults to centering but added for info
+ipg.add_container(
+        window_id="main", 
+        container_id="cont",
+        width_fill=True, 
+        height_fill=True,
+        centered=True)
 
 # The column width will shrink to the size of the largest widget by default.
 # If you were to use width_fill and height_fill here, the contents would be center
 # vertically but placed on the left of the window.  Essentially, the container
 # alignment would not be effective because they both would use all of the window space.
-ipg.add_column(window_id="main", container_id="col", 
-                parent_id="cont",
-                align_items=IpgAlignment.Center)
+ipg.add_column(
+      window_id="main", 
+      container_id="col", 
+      parent_id="cont",
+      align=IpgAlignment.Center)
 ```
 
-So, the window was added using an window_id, title, size and position, followed by a container and column.  The ids are a key part of IPG and can be consider the glue that holds everything together.  Each time there is an add command, a corresponding structure is initialized and stored in a Mutex using a HashMap with an integer id.  Once Iced is started, a recursive routine is called to create the nested tree for all of the containers and widgets which is used by Iced to display them.  Therefore, widgets can only be added during the add or construct phase.  This might seem restrictive but if you have a widget that you need later, just add it with the show parameter as false.  When the time comes for it's use, just change the parameter show to true and you now have it.  You can modify all of the widgets during a callback procedure where the command update_item() is used. You can also move widgets from container to container very easily.  You will see some of this in the demo code below.
+So, the window was added using an window_id, title, size and position, followed by a container and column.  The ids are a key part of IPG and can be consider the glue that holds everything together.  Each time there is an add command, a corresponding structure is initialized and stored in a Mutex using a HashMap with an integer id.  Once Iced is started, the mutext is copied over to the gui app and a recursive routine is called to create the nested tree for all of the containers and widgets which is used by Iced to display.  If your program needs additional widgets later, you can either create them initially and hide them (revealing during a callback) or create new ones during a callback.  You can modify all of the widgets during a callback procedure where the command update_item() is used. You can also move widgets from container to container very easily.  You will see some of this in the demo code below.
 
-Note how the ids are used.  A container must have a window_id because Iced is a multi-window GUI, we need to know which window to put it in.  In addition, if a container goes into another container, then the parent_id is needed.
+Note how the ids are used.  A container must have a window_id because Iced is a multi-window GUI, we need to know which window to put it in.  In addition, if a container goes into another container, then the parent_id is needed.  Ids have to be unigue in a window but not between windows.  To avoid confusion though it's best to try and keep them unique.  If you use a class for your probram, the ids can be predefined and a variable name can be used in the id field.  This helps prevent typos since you get a hint list.
 
 A quick word on width_fill parameter.  Almost all containers and widgets have a width and height.  The parameter width and height take a float number.  The width_fill and height_fill is bool and overrides the float.  The fill parameters will cause the width of the container or widget to fill the available space.  This works pretty good in most cases but there are some cases where there is a conflict as you'll see in some of the examples.
 
-The column was added because the container holds only one widget and we need a container that holds more.  We could have not used a container but only a column but then we would need to add spaces to get the column centered horizontally since a column only centers vertically.  So the container made it easier.
+The column was added because the container holds only one widget and we need a container that holds more.  We could have not used a container but only a column but then we would need to add spaces to get the items centered horizontally since a column only centers vertically.  So the container just made it easier.  Aligning can be troublesome but if you use the debug=Ture feature for the window, you'll be able to see the container outlines.  This helps a lot in troubleshooting the alignment issues.
 
 To make things a little bit more exciting, let's add 3 widgets in a Column container.
 
 ### Adding widgets
 
 ```python
-ipg.add_button(parent_id="col", label="Press Me!", on_press=button_pressed)
+ipg.add_button(
+      parent_id="col", 
+      label="Press Me!", 
+      on_press=button_pressed)
 
-ipg.add_checkbox(parent_id="col", label="Check Me!!!", on_toggle=checked)
+ipg.add_checkbox(
+      parent_id="col", 
+      label="Check Me!!!", 
+      on_toggle=checked)
 
-checked_text_id = ipg.add_text(parent_id="col",
-                               content="This will change when I'm checked")
+checked_text_id = ipg.add_text(
+                    parent_id="col",
+                    content="This will change when I'm checked")
 
 ```
 
 The button and checkbox widgets were next added and given a parent_id, which is the container_id that you want to put the widget in.  The callbacks are functions you want to execute when, for example, a button is pressed.  So in the case above, we have callback functions, button_pressed and checked.  Note, some IDE's automatically insert a () after a function name is typed in.  This will give you an error because these are references to the function and are not to be executed at this time.  So make sure the () is not present.
 
-As you may have noted, widgets don't get an id but are assigned an id during the construction of the Rust structure which returns an integer.  The text widget which was added last is an example where the id of the widget is needed for updating the text widget with some new content.
+As you may have noted, widgets don't get an id but are assigned an id during the construction of the Rust structure which returns an integer.  The text widget which was added last is an example where the id of the widget is needed for updating the text widget with some new content. If using a class, just make a self variable that's initialize to 0 then assign during hte widget creation.
 
 #### Defining callbacks
 
@@ -211,14 +223,16 @@ def button_pressed(btn_id):
 
 def checked(_chk_id: int, checked: bool):
     if checked:
-        ipg.update_item(wid=checked_text_id,
-                        param=IpgTextParam.Content,
-                        value="I'm checked")
+        ipg.update_item(
+              wid=checked_text_id,
+              param=IpgTextParam.Content,
+              value="I'm checked")
 
     else:
-        ipg.update_item(wid=checked_text_id,
-                        param=IpgTextParam.Content,
-                        value="I'm not checked")
+        ipg.update_item(
+              wid=checked_text_id,
+              param=IpgTextParam.Content,
+              value="I'm not checked")
 
 ```
 
@@ -228,7 +242,7 @@ We have used the term btn_id above versus id because id is used by python and it
 
 Another note on naming the callback parameters.  They can be named anything, order is most important.
 
-For the checkbox callback, we could just print the checked status but that really never happens in a real programs so let's display the info in a text widget by using the command update_item().
+For the checkbox callback, we could just print the checked status but that really never happens in a real programs so let's display the info in a text widget by using the function update_item().
 
 The update_item is going to be your goto function to change the way the gui looks and to process your data while Iced is running.  The update_item function takes 3 arguments, an integer id of the widget you want to update, the class name of the parameter you want to change, and the value you want to set it too.  Unless you are updating the calling widget, you'll need the id of the widget you want to update.  The class name is the same as the parameter name of the widget so you can look at the docs for which to select.
 
@@ -255,49 +269,68 @@ def button_pressed(btn_id):
 
 def checked(_chk_id: int, checked: bool):
     if checked:
-        ipg.update_item(checked_text_id,
-                        IpgTextParam.Content,
-                        "I'm checked")
+        ipg.update_item(
+              wid=checked_text_id,
+              param=IpgTextParam.Content,
+              value="I'm checked")
 
     else:
-        ipg.update_item(checked_text_id,
-                        IpgTextParam.Content,
-                        "I'm not checked")
+        ipg.update_item(
+              wid=checked_text_id,
+              param=IpgTextParam.Content,
+              value="I'm not checked")
 
 
 ipg = IPG()
 
-ipg.add_window(window_id="main", title="Demo Window",
-               width=600, height=500,
-               pos_centered=True)
+#  add the window centered on the screen
+ipg.add_window(
+      window_id="main", 
+      title="Demo Window",
+      width=600,
+      height=500,
+      pos_centered=True)
 
 # container alignment defaults to centering
-ipg.add_container("main", container_id="cont",
-                  width_fill=True, height_fill=True)
+ipg.add_container(
+      window_id="main", 
+      container_id="cont",
+      width_fill=True, 
+      height_fill=True)
 
 # The column width will shrink to the size of the largest widget by default.
-ipg.add_column(window_id="main", container_id="col", parent_id="cont",
-               align_items=IpgAlignment.Center)
+ipg.add_column(
+      window_id="main", 
+      container_id="col", 
+      parent_id="cont",
+      align=IpgAlignment.Center)
 
-ipg.add_button(parent_id="col", label="Press Me!", on_press=button_pressed)
+ipg.add_button(
+      parent_id="col", 
+      label="Press Me!", 
+      on_press=button_pressed)
 
-ipg.add_checkbox(parent_id="col", label="Check Me!!!", on_toggle=checked)
+ipg.add_checkbox(
+      parent_id="col", 
+      label="Check Me!!!", 
+      on_toggle=checked)
 
-checked_text_id = ipg.add_text(parent_id="col",
-                               content="This will change when I'm checked")
+checked_text_id = ipg.add_text(
+                    parent_id="col",
+                    content="This will change when I'm checked")
 
 ipg.start_session()
 
 ```
 
-Hopefully you were able to run the program successfully.  If not, try one of the examples and see if it will work.  All of the examples are run before publishing to make sure the code works.
+Hopefully you were able to run the program successfully.  If not, try one of the examples and see if it will work.  All of the examples are run before publishing to make sure the code works.  There's also the readme_code.py file available.
 
 The examples are found in a separate repository as indicated above and here
 <https://github.com/icedpygui/IcedPyGui-Python-Examples>
 
 ## Issues / Questions / Feedback / Contributing
 
-Feedback/Discussions/Questions are welcomed! You can come chat in the [Discord server](https://discord.com/channels/1233081452447666270/1233085181448032458).
+Feedback/Discussions/Questions are welcomed! You can come ask in the [Discord server](https://discord.com/channels/1233081452447666270/1233085181448032458).
 
 If you have errors not cleared up in questions, click on the issues tab and create a new one.  Follow the template.
 

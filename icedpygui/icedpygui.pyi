@@ -126,7 +126,7 @@ class IPG:
                     container_id: str,
                     *,
                     parent_id: Optional[str]=None,
-                    align_x: IpgAlignment=IpgAlignment.Start,
+                    align: IpgAlignment=IpgAlignment.Start,
                     width: Optional[float]=None,
                     height: Optional[float]=None,
                     width_fill: bool=False,
@@ -150,7 +150,7 @@ class IPG:
             parent_id: str
                 If parent_id == window_id then not required, 
                 If another container then required.
-            align_x: IpgAlignment
+            align: IpgAlignment
                 Sets the vertical alignment of the items in the column; Start, Center, End.
             width: float
                 Sets the width of the widget.
@@ -453,7 +453,7 @@ class IPG:
                 container_id: str,
                 *,
                 parent_id: Optional[str]=None,
-                align_items: IpgAlignment=IpgAlignment.Start,
+                align: IpgAlignment=IpgAlignment.Start,
                 width: Optional[float]=None,
                 height: Optional[float]=None,
                 width_fill: bool=False,
@@ -476,7 +476,7 @@ class IPG:
             parent_id: str
                 If parent_id == window_id then not required, 
                 If another container then required.
-            align_items: IpgRowAlignment
+            align: IpgRowAlignment
                 Sets the alignment Start, Center, or End.
             width: float
                 Sets the width of the widget.

@@ -1,7 +1,7 @@
 from icedpygui import IPG, IpgTextParam, IpgRadioDirection
 from icedpygui import IpgButtonParam, IpgProgressBarParam
 from icedpygui import IpgAlignment
-# from icedpygui import IpgTableWidget, IpgTableRowHighLight
+import polars as pl
 import random
 
 """
@@ -170,39 +170,39 @@ import random
 
 class Demo:
     def __init__(self) -> None:
-        self.ipg = IPG()  # initialize IPG, must use
+        self.ipg=IPG()  # initialize IPG, must use
 
         # window ids
-        self.wnd_1: str = "main_1"
-        self.wnd_2: str = "main_2"
+        self.wnd_1: str="main_1"
+        self.wnd_2: str="main_2"
 
         # containers for window 1
-        self.row_1: str = "row_1"
-        self.l_col_1: str = "left_col_1"
-        self.r_col_1: str = "right_col_1"
+        self.row_1: str="row_1"
+        self.l_col_1: str="left_col_1"
+        self.r_col_1: str="right_col_1"
 
         # widgets in window 1
         # 0 is not a valid id so if not initialized,
         # you'll get an error of not finding
         # the id.
-        self.btn_id: int = 0
-        self.button_presses: int = 0
-        self.btn_text_id: int = 0
-        self.text_id_chkbox: int = 0
-        self.bar_id: int = 0
-        self.slider_text_id: int = 0
-        self.picklist_text_id: int = 0
-        self.radio_1_text_id: int = 0
-        self.radio_2_text_id: int = 0
-        self.selectable_text_id: int = 0
+        self.btn_id: int=0
+        self.button_presses: int=0
+        self.btn_text_id: int=0
+        self.text_id_chkbox: int=0
+        self.bar_id: int=0
+        self.slider_text_id: int=0
+        self.picklist_text_id: int=0
+        self.radio_1_text_id: int=0
+        self.radio_2_text_id: int=0
+        self.selectable_text_id: int=0
         self.text_input_id: int= 0
 
         # containers for window 2
-        self.l_col_2: str = "left_col_2"
-        self.r_col_2: str = "right_col_2"
+        self.l_col_2: str="left_col_2"
+        self.r_col_2: str="right_col_2"
 
         # Widgets in window 2
-        self.date_text_id: int = 0
+        self.date_text_id: int=0
 
     def start_gui(self):
         self.construct_window_1()
@@ -231,17 +231,26 @@ class Demo:
                     pos_x=100, 
                     pos_y=25)
 
-        self.ipg.add_row(
-                    window_id=self.wnd_1, 
-                    container_id=self.row_1, 
-                    width_fill=True, 
+        # Add container to center everything
+        self.ipg.add_container(
+                    window_id=self.wnd_1,
+                    container_id="cont1",
+                    width_fill=True,
                     height_fill=True)
         
+        # add row to hold the 2 columns
+        self.ipg.add_row(
+                    window_id=self.wnd_1, 
+                    container_id=self.row_1,
+                    parent_id="cont1")
+        
+        # This column will be on the left side
         self.ipg.add_column(
                     window_id=self.wnd_1, 
                     container_id=self.l_col_1, 
                     parent_id=self.row_1)
         
+        # This column will be on the right side
         self.ipg.add_column(
                     window_id=self.wnd_1, 
                     container_id=self.r_col_1, 
@@ -331,10 +340,9 @@ class Demo:
                     param=IpgProgressBarParam.Value, 
                     value=data)
 
-    def slider_on_release(self, slider_id):
-        print(slider_id)
-        # No data for release but maybe you want to 
-        # do something else
+    def slider_on_release(self, slider_id, data: float):
+        print(slider_id, data)
+        
         
         # A picklist is defined here width a place holder. The option list holder the selections.
     def construct_pick_list(self):
@@ -424,10 +432,12 @@ class Demo:
                     value=f"Selectable id: {sel_txt_id}")
 
     def selecting_text_with_point(self, _sel_txt_id, data):
+        x = round(data[1], 1)
+        y = round(data[3], 1)
         self.ipg.update_item(
                     wid=self.selectable_text_id, 
                     param=IpgTextParam.Content, 
-                    value=f"point: {data}")
+                    value=f"point: x={x} y={y}")
 
     def construct_text_input(self):
         self.ipg.add_text_input(
@@ -467,9 +477,18 @@ class Demo:
                     pos_x=650, 
                     pos_y=25)
 
+        # Add container to center everything
+        self.ipg.add_container(
+                    window_id=self.wnd_2,
+                    container_id="cont2",
+                    width_fill=True,
+                    height_fill=True)
+
+        # add a column to hold multiple widgets
         self.ipg.add_column(
                     window_id=self.wnd_2, 
                     container_id=self.l_col_2,
+                    parent_id="cont2",
                     width_fill=True, 
                     align=IpgAlignment.Center)
 
@@ -481,7 +500,7 @@ class Demo:
 
         self.date_text_id = self.ipg.add_text(
                                     parent_id=self.l_col_2,
-                                    content="You selected:")
+                                    content="")
 
     def date_selected(self, _date_id, date: str):
         self.ipg.update_item(
@@ -489,70 +508,38 @@ class Demo:
                     param=IpgTextParam.Content, 
                     value=f"You selected: {date}")
 
-    # A table is defined with 6 columns of widgets and random items.
-    # Rust does not allow types to be mixed in a list.
-    # Therefore, if a mixed list is needed, convert it to a list[str].
-    # The gui converts the list to strings anyway.
-    # Width and height are required for the table.
     def construct_table(self):
-        # Initialize the lists.
-        col0 = []
-        col1 = []
-        col2 = []
-        col3 = []
-        col4 = []
-        col5 = []
-        col6 = []
+        # define the column widths
+        column_widths = [100.0] * 4
+        # create the data dictionary
+        data = {
+            "str": ["H", "e", "l", "l", "o", " ", "W", "o", "r", "l", "d"],
+            "one": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0],
+            "two": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22],
+            "three": [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33],
+            }
 
-        # Add some random data of different types
-        for i in range(0, 20):
-            # labels for the button widget
-            col0.append("Button")
-            # labels for the checkboxes
-            col1.append("")
-            # make a float random number
-            col2.append(random.randrange(10, 99) + random.randrange(10, 99) / 100)
-            col3.append(random.choice(["one", "two", "three", "four", "five", "six", "seven"]))
-            col4.append(random.randrange(10, 99))
-            col5.append(random.choice([True, False]))
-
-        # Create the table, the requirement is a list of dictionaries.
-        # Rust does not have dictionaries but a similar type is called a HashMap.
-        # The reason for the list of dictionaries is that you cannot extract a
-        # mixed dictionary into a Rust HashMap.  The HashMap has to have predefined
-        # types.  In this case they are types dict[str, list[Widgets]], dict[str, list[float or int]], 
-        # list[str, list[str]], and list[str], list[bool].
-        # Each column is extracted based on a single type.  If a mixed column occurs, then an error
-        # will be generated.  If no existing type is found, then an error occurs or just skipped.
-        # Currently, not every variation is covered but that can be improved in future versions.
-        # This probably covers the vast majority of needs.  If you need that mixed column, convert
-        # the list to a string.  When the final version is displayed, it's converted to a string anyway.
-        data = [{"Button": col0},
-                {"CheckBox": col1},
-                {"Col2": col2},
-                {"Col3": col3},
-                {"Col4": col4},
-                {"Col5": col5}]
-
-        column_widths = [75.0, 100.0, 100.0, 100.0, 100.0, 100.0]
-        tbl_width = sum(column_widths)
+        # make the dataframe
+        df = pl.DataFrame(data)
         
-        # The table is added.
-        # self.ipg.add_table(
-        #             window_id=self.wnd_2,
-        #             table_id="table", 
-        #             title="My Table", 
-        #             data=data,
-        #             column_widths=column_widths,
-        #             width=tbl_width, 
-        #             height=300.0, 
-        #             row_highlight=IpgTableRowHighLight.Lighter,
-        #             data_length=len(col0),
-        #             button_fill_columns=[0],
-        #             checkbox_fill_columns=[1],
-        #             on_button=self.widget_button,
-        #             on_checkbox=self.widget_checkbox,
-        #             )
+        # Add the table.
+        self.ipg.add_table(
+                window_id=self.wnd_2,
+                table_id="table",
+                polars_df=df,
+                parent_id=self.l_col_2,
+                column_widths=column_widths,
+                height=150.0,
+                custom_footer_rows=1,
+                )
+
+        footer = ["This", "is", "a", "footer"]
+        
+        for i in range(len(footer)):
+            self.ipg.add_text(
+                    parent_id="table",
+                    content=footer[i],
+                    size=14.0)
 
     def widget_button(self, tbl_id: int, wid_index: tuple[int, int]):
         print(tbl_id, wid_index)

@@ -5,7 +5,14 @@ import polars as pl
 
 import random
 
-
+# Polars dataframe is used for the table becuase its very fast and since there
+# is a rust/python wrapper for the dataframe, it makes it easy to move data
+# between rust and python.  Otherwise using a dictionary would result
+# in a tedious extraction of all possible datatypes that one would want to
+# put into a table.  Even if you are not familiar with polars dataframe,
+# it only requires one line of code: df = pl.DataFrame(your dictionary)
+# The other operations like filtering, math ops on a column are much easier
+# and faster to do in polars than using a dictionary or lists.
 
 def table_column_resize(tbl_id: int, index: int, values: list[float]):
     print(index, values)
