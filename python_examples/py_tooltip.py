@@ -1,6 +1,6 @@
-from icedpygui import IPG, IpgToolTipPosition, IpgToolTipParam
+from icedpygui import IPG, IpgToolTipPosition
+from icedpygui import IpgToolTipParam, IpgButtonParam, IpgColor
 
-# This is a simple demo to change the checkmark of the checkbox to an x.
 ipg = IPG()
 
 positions = [
@@ -21,9 +21,33 @@ def change_position(btn_id):
     
     ipg.update_item(
         wid=tt_id,
-        param=IpgToolTipParam,
+        param=IpgToolTipParam.Position,
         value=positions[index])
     
+    match index:
+        case 0:
+            label = "Tool Tip On Top, Press to Change"
+        case 1:
+            label = "Tool Tip On Right, Press to Change"
+        case 2:
+            label = "Tool Tip On Bottom, Press to Change"
+        case 3:
+            label = "Tool Tip On Left, Press to Change"   
+        case 4:
+            label = "Tool Tip Follows Cursor, Press to Change"    
+            
+    ipg.update_item(
+        wid=btn_id,
+        param=IpgButtonParam.Label,
+        value=label)  
+    
+    
+ts_id = ipg.add_tooltip_style(
+            background_color=IpgColor.DARK_GRAY,
+            text_color=IpgColor.BLACK,
+            border_radius=[5.0],
+            border_color=IpgColor.WHITE,
+            border_width=2.0)  
     
 # Add a window first
 ipg.add_window(
@@ -47,13 +71,15 @@ tt_id = ipg.add_tool_tip(
     container_id="tt",
     parent_id="cont",
     text_to_display="Some Tip",
-    position=IpgToolTipPosition.Top
-)
+    position=IpgToolTipPosition.Top,
+    padding=5.0,
+    gap=20,
+    style_id=ts_id)
 
 btn_id = ipg.add_button(
     parent_id="tt",
-    label="Tool Tip Demo"
-)
+    label="Tool Tip On Top, Press to Change",
+    on_press=change_position)
 
 # Required to be the last widget sent to Iced,  If you start the program
 # and nothing happens, it might mean you forgot to add this command.

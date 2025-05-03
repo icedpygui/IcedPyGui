@@ -95,7 +95,7 @@ use ipg_widgets::ipg_timer::{timer_item_update, timer_style_update_item, IpgTime
     IpgTimerParam, IpgTimerStyle, IpgTimerStyleParam};
 use ipg_widgets::ipg_toggle::{toggler_item_update, toggler_style_update_item, 
     IpgToggler, IpgTogglerParam, IpgTogglerStyle, IpgTogglerStyleParam};
-use ipg_widgets::ipg_tool_tip::{tool_tip_style_update_item, tooltip_item_update, IpgToolTip, IpgToolTipParam, IpgToolTipPosition, IpgToolTipStyleParam};
+use ipg_widgets::ipg_tool_tip::{tool_tip_style_update_item, tooltip_item_update, IpgToolTip, IpgToolTipParam, IpgToolTipPosition, IpgToolTipStyle, IpgToolTipStyleParam};
 use ipg_widgets::ipg_window::{get_iced_window_theme, 
         window_item_update, IpgWindow, IpgWindowLevel, IpgWindowMode, 
         IpgWindowParam, IpgWindowTheme};
@@ -2121,6 +2121,68 @@ impl IPG {
 
     }
     
+    #[pyo3(signature = ( 
+        background_color=None, 
+        background_rgba=None,
+        border_color=None, 
+        border_rgba=None,
+        border_radius = vec![0.0], 
+        border_width=0.0,
+        shadow_color=None, 
+        shadow_rgba=None,
+        shadow_offset_xy=[0.0, 0.0],
+        shadow_blur_radius=0.0,
+        text_color=None, 
+        text_rgba=None,
+        gen_id=None
+        ))]
+    fn add_tooltip_style(
+        &self,
+        background_color: Option<IpgColor>,
+        background_rgba: Option<[f32; 4]>,
+        border_color: Option<IpgColor>,
+        border_rgba: Option<[f32; 4]>,
+        border_radius: Vec<f32>,
+        border_width: f32,
+        shadow_color: Option<IpgColor>,
+        shadow_rgba: Option<[f32; 4]>,
+        shadow_offset_xy: [f32; 2],
+        shadow_blur_radius: f32,
+        text_color: Option<IpgColor>,
+        text_rgba: Option<[f32; 4]>,
+        gen_id: Option<usize>,
+        ) -> PyResult<usize>
+    {
+        let id = self.get_id(gen_id);
+
+        let background_color: Option<Color> = 
+            get_color(background_rgba, background_color, 1.0, false);
+        let border_color: Option<Color> = 
+            get_color(border_rgba, border_color, 1.0, false);
+        let shadow: Option<Color> = 
+            get_color(shadow_rgba, shadow_color, 1.0, false);
+        let text_color: Option<Color> = 
+            get_color(text_rgba, text_color, 1.0, false);
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgToolTipStyle(
+            IpgToolTipStyle::new( 
+                id,
+                background_color,
+                border_color,
+                border_radius,
+                border_width,
+                shadow,
+                shadow_offset_xy,
+                shadow_blur_radius,
+                text_color,
+                )));
+
+        drop(state);
+        Ok(id)
+    }
+
     #[pyo3(signature = (
         parent_id, 
         label, 

@@ -121,6 +121,65 @@ class IPG:
         Add a canvas for drawing.
         """ 
 
+    def add_column(self,
+                    window_id: str,
+                    container_id: str,
+                    *,
+                    parent_id: Optional[str]=None,
+                    align_x: IpgAlignment=IpgAlignment.Start,
+                    width: Optional[float]=None,
+                    height: Optional[float]=None,
+                    width_fill: bool=False,
+                    height_fill: bool=False,
+                    max_width: float=float('inf'),
+                    padding: list=[10.0], 
+                    spacing: float=20.0,
+                    clip: bool=False,
+                    show: bool=True,
+                    ) -> int:
+
+        """ 
+        Adds a Column which is a container that distributes its contents vertically
+        
+        Parameters
+        ----------
+            window_id: str
+                Id of the window to place container in.
+            container_id: str
+                The id of the container.
+            parent_id: str
+                If parent_id == window_id then not required, 
+                If another container then required.
+            align_x: IpgAlignment
+                Sets the vertical alignment of the items in the column; Start, Center, End.
+            width: float
+                Sets the width of the widget.
+            width_fill: bool
+                Sets the width to fill the available space, overrides width.
+            height: float
+                Sets the height of the widget.   
+            height_fill: bool
+                Sets the height to fill the available space, overrides height.
+            max_width: float
+                Sets the maximum width the container is allowed to be.
+            padding: List[float]
+                Sets the padding for container.
+                use [float] for all sides,
+                use [float, float] for [top&bottom, left&right]
+                use [float, float, float, float] for [top, right, bottom, left]
+            spacing: float
+                Sets the spacing between items in column.
+            clip: bool
+                Whether to clip any text if size > container.
+            show: bool
+                Shows or hides widget.
+            
+        Returns
+        -------
+        id: int
+            Internal id of widget and can be used by user if equated.
+        """
+        
     def add_container(self,
                         window_id: str,
                         container_id: str,
@@ -234,65 +293,6 @@ class IPG:
                 Shadow offset in the x and y direction.
             shadow_blur_radius: float
                 The blur radius of the shadow.
-        """
-
-    def add_column(self,
-                    window_id: str,
-                    container_id: str,
-                    *,
-                    parent_id: Optional[str]=None,
-                    align_x: IpgAlignment=IpgAlignment.Start,
-                    width: Optional[float]=None,
-                    height: Optional[float]=None,
-                    width_fill: bool=False,
-                    height_fill: bool=False,
-                    max_width: float=float('inf'),
-                    padding: list=[10.0], 
-                    spacing: float=20.0,
-                    clip: bool=False,
-                    show: bool=True,
-                    ) -> int:
-
-        """ 
-        Adds a Column which is a container that distributes its contents vertically
-        
-        Parameters
-        ----------
-            window_id: str
-                Id of the window to place container in.
-            container_id: str
-                The id of the container.
-            parent_id: str
-                If parent_id == window_id then not required, 
-                If another container then required.
-            align_x: IpgAlignment
-                Sets the vertical alignment of the items in the column; Start, Center, End.
-            width: float
-                Sets the width of the widget.
-            width_fill: bool
-                Sets the width to fill the available space, overrides width.
-            height: float
-                Sets the height of the widget.   
-            height_fill: bool
-                Sets the height to fill the available space, overrides height.
-            max_width: float
-                Sets the maximum width the container is allowed to be.
-            padding: List[float]
-                Sets the padding for container.
-                use [float] for all sides,
-                use [float, float] for [top&bottom, left&right]
-                use [float, float, float, float] for [top, right, bottom, left]
-            spacing: float
-                Sets the spacing between items in column.
-            clip: bool
-                Whether to clip any text if size > container.
-            show: bool
-                Shows or hides widget.
-            
-        Returns
-        -------
-        id: int
-            Internal id of widget and can be used by user if equated.
         """
 
     # def add_modal(self,
@@ -725,6 +725,7 @@ class IPG:
                         text_to_display: str,
                         *,
                         parent_id: Optional[str]=None,
+                        padding: float=0.0,
                         gap: int=10,
                         style_id: str,
                      ) -> int:
@@ -744,6 +745,8 @@ class IPG:
                 Sets the tooltip message.
             parent_id: str
                 Id of another container, if not placing in a window.
+            padding: float
+                The space around the tool tip.
             gap: int
                 Sets the distance away from the widget.
             style: str
@@ -753,6 +756,52 @@ class IPG:
         -------
         id: int
             Internal id of widget and can be used by user if equated.
+        """
+
+    def add_tooltip_style(self,
+                            background_color: Optional[IpgColor]=None,
+                            background_rgba: Optional[list[float, 4]]=None,
+                            border_color: Optional[IpgColor]=None, 
+                            border_rgba: Optional[list[float, 4]]=None,
+                            border_radius: list[float]=[0.0], 
+                            border_width: float=0.0,
+                            shadow_color: Optional[IpgColor]=None, 
+                            shadow_rgba: Optional[list]=None,
+                            shadow_offset_xy: list[float, 2]=[0.0, 0.0], 
+                            shadow_blur_radius: float=0.0,
+                            text_color: Optional[IpgColor]=None,
+                            text_rgba: Optional[list[float, 4]]=None,
+                        ) -> int:
+        """
+        Adds styling to the tool tip
+
+        Parameters
+        ----------
+            background_color: IpgColor]
+                The Color::TRANSPARENT is used unless defined.
+            background_rgba: list,
+                The color in rgba format [float; 4] used as state above.
+            border_color: IpgColor
+                Color used for the border.
+            border_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            border_radius: list
+                The radius of the 4 corners, [float]=all corners, 
+                [float;4] top-left, top-right, bottom-right, bottom-left.
+            border_width: float
+                Border width.
+            shadow_color: IpgColor
+                The color of the shadow.
+            shadow_rgba: list
+                The color in rgba format [float; 4] used as state above.
+            shadow_offset_xy: list[float, 2]
+                Shadow offset in the x and y direction.
+            shadow_blur_radius: float
+                The blur radius of the shadow.
+            text_color: IpgColor
+                The color of the shadow.
+            text_rgba: list
+                The color in rgba format [float; 4] used as state above.
         """
 
     def add_button(self,

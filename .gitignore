@@ -13,6 +13,6 @@ Cargo.lock
 *.pdb
 .idea/misc.xml
 .venv
-icedpygui/__pycache__/__init__.cpython-310.pyc
-icedpygui/icedpygui.cpython-310-x86_64-linux-gnu.so
-py_example/__pycache__/callbacks.cpython-310.pyc
+icedpygui/__pycache__/__init__.cpython*.pyc
+icedpygui/icedpygui.cpython-*.so
+py_example/__pycache__/callbacks.cpython*.pyc
