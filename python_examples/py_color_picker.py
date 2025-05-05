@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgColor, IpgTextParam, IpgColorPickerParam
+from icedpygui import IPG, IpgColor, IpgTextParam, IpgColorPickerStyleParam
 
 ipg = IPG()
 
@@ -9,10 +9,17 @@ def color_selected(cp_id: int, color: list, user_data: any):
     for i in range(0, len(color)):
         string += str(color[i]) + ", "
     string += "]"
+    # update the text
+    ipg.update_item(
+            wid=text_id, 
+            param=IpgTextParam.Content, 
+            value=string)
     
-    ipg.update_item(wid=text_id, 
-                    param=IpgTextParam.Content, 
-                    value=string)
+    # change the buttton color
+    ipg.update_item(
+        wid=cp_style,
+        param=IpgColorPickerStyleParam.BackgroundRbga,
+        value=color)
 
 
 def cp_opened(cp_id: int, user_data: any):
@@ -60,7 +67,7 @@ ipg.add_color_picker(
         on_cancel=cp_canceled,
         style_id=cp_style,
         user_data="Something") #user data not used but supplied for testing
-        # If you use user_dta, all callback will require the user_data parameter
+        # If you use user_data, all callback will require the user_data parameter
         # or whatever name you want for it.
 
 text_id = ipg.add_text(

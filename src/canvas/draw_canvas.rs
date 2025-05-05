@@ -162,6 +162,10 @@ impl IpgCanvasState {
         }
     }
 
+    pub fn clear_background_cache(&mut self) {
+        self.background_cache.clear();
+    }
+
     pub fn clear_curves(&mut self) {
         self.curves.clear();
         self.request_redraw();
@@ -550,14 +554,14 @@ impl canvas::Program<IpgWidget> for DrawPending<'_> {
         bounds: iced::Rectangle,
         cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
-        
+
         let background =
             self.state.background_cache.draw(renderer, bounds.size(), 
                             |frame| {
 
-                let background = Path::rectangle(Point::ORIGIN, frame.size());
+                let path = Path::rectangle(Point::ORIGIN, frame.size());
                 if self.state.selected_canvas_color.is_some() {
-                    frame.fill(&background, self.state.selected_canvas_color.unwrap());
+                    frame.fill(&path, self.state.selected_canvas_color.unwrap());
                 }
                 
                 frame.stroke(

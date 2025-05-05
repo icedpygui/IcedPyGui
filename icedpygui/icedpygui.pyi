@@ -4552,16 +4552,16 @@ class IpgColorPickerStyleParam:
     TextRgbaColor: list[float, 4]
         The label text color in rgba format
     """
-    BackgroundIpgColor:IpgColor
-    BackgroundRbgaColor:list[float, 4]
+    BackgroundIpg:IpgColor
+    BackgroundRbga:list[float, 4]
     BackgroundIpgColorHovered:IpgColor
     BackgroundIpgRgbaHovered:list[float, 4]
     BorderIpgColor:IpgColor
-    BorderRgbaColor:list[float, 4]
+    BorderRgba:list[float, 4]
     BorderRadius:list
     BorderWidth:float
     ShadowIpgColor:IpgColor
-    ShadowRgbaColor:list[float, 4]
+    ShadowRgba:list[float, 4]
     ShadowOffsetX:float
     ShadowOffsetY:float
     ShadowBlurRadius:float

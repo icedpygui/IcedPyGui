@@ -337,15 +337,15 @@ pub fn try_extract_cp_update(update_obj: &PyObject) -> IpgColorPickerParam {
 #[pyclass(eq, eq_int)]
 pub enum IpgColorPickerStyleParam {
     BackgroundIpgColor,
-    BackgroundRbgaColor,
+    BackgroundRbga,
     BackgroundIpgColorHovered,
     BackgroundIpgRgbaHovered,
     BorderIpgColor,
-    BorderRgbaColor,
+    BorderRgba,
     BorderRadius,
     BorderWidth,
     ShadowIpgColor,
-    ShadowRgbaColor,
+    ShadowRgba,
     ShadowOffsetX,
     ShadowOffsetY,
     ShadowBlurRadius,
@@ -365,7 +365,7 @@ pub fn color_picker_style_update_item(style: &mut IpgColorPickerStyle,
             let color = try_extract_ipg_color(value, name);
             style.background_color = get_color(None, Some(color), 1.0, false);
         },
-        IpgColorPickerStyleParam::BackgroundRbgaColor => {
+        IpgColorPickerStyleParam::BackgroundRbga => {
             style.background_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgColorPickerStyleParam::BackgroundIpgColorHovered => {
@@ -379,7 +379,7 @@ pub fn color_picker_style_update_item(style: &mut IpgColorPickerStyle,
             let color = try_extract_ipg_color(value, name);
             style.border_color = get_color(None, Some(color), 1.0, false);
         },
-        IpgColorPickerStyleParam::BorderRgbaColor => {
+        IpgColorPickerStyleParam::BorderRgba => {
             style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgColorPickerStyleParam::BorderRadius => {
@@ -392,7 +392,7 @@ pub fn color_picker_style_update_item(style: &mut IpgColorPickerStyle,
             let color = try_extract_ipg_color(value, name);
             style.shadow_color = get_color(None, Some(color), 1.0, false);
         },
-        IpgColorPickerStyleParam::ShadowRgbaColor => {
+        IpgColorPickerStyleParam::ShadowRgba => {
             style.border_color = Some(Color::from(try_extract_rgba_color(value, name)));
         },
         IpgColorPickerStyleParam::ShadowOffsetX => {

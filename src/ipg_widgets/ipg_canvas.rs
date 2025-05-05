@@ -165,8 +165,7 @@ pub fn canvas_item_update(canvas_state: &mut IpgCanvasState,
         IpgCanvasParam::CanvasColor => {
             let rgba = try_extract_rgba_color(value, name);
             canvas_state.selected_canvas_color = Some(Color::from(rgba));
-            canvas_state.request_redraw();
-            canvas_state.request_text_redraw();
+            canvas_state.clear_background_cache();
             None
         }
         IpgCanvasParam::DrawColor => {

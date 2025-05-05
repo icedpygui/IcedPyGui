@@ -132,6 +132,12 @@ def submit_draw_color_picker(cp_id: int, color: list):
             wid=canvas_id, 
             param=IpgCanvasParam.DrawColor, 
             value=color)
+    # update the button to reflex the new color
+    # update the color picker button color
+    ipg.update_item(
+        cp_id_draw_color, 
+        IpgColorPickerStyleParam.BackgroundRbga, 
+        color)
     
     
 def submit_fill_color_picker(cp_id: int, color: list):
@@ -139,14 +145,24 @@ def submit_fill_color_picker(cp_id: int, color: list):
             wid=canvas_id, 
             param=IpgCanvasParam.FillColor, 
             value=color)
+    # update the color picker button color
+    ipg.update_item(
+        cp_id_fill_color, 
+        IpgColorPickerStyleParam.BackgroundRbga, 
+        color)
 
     
 def submit_canvas_color_picker(cp_id: int, color: list):
+    # update the canvas color
     ipg.update_item(
             wid=canvas_id, 
             param=IpgCanvasParam.CanvasColor, 
             value=color)
-    # ipg.update_item(cp_style_canvas, IpgColorPickerStyleParam.BackgroundRgbaColor, color)
+    # update the color picker button color
+    ipg.update_item(
+        cp_id_bkg_color, 
+        IpgColorPickerStyleParam.BackgroundRbga, 
+        color)
 
 
 def set_draw_width(input_id: int, width: str):
@@ -188,7 +204,9 @@ def set_vertical_text_alignment(pick_id: int, selected: str):
             param=IpgCanvasParam.TextAlignment, 
             value=align)    
     
-cp_style_canvas = ipg.add_color_picker_style(background_color=IpgColor.PRIMARY)
+cp_id_bkg_color = ipg.add_color_picker_style(background_color=IpgColor.PRIMARY)
+cp_id_draw_color = ipg.add_color_picker_style(background_color=IpgColor.PRIMARY)
+cp_id_fill_color = ipg.add_color_picker_style(background_color=IpgColor.TRANSPARENT)
 
 ipg.add_window(
         window_id="main", 
@@ -274,17 +292,19 @@ ipg.add_button(
 ipg.add_color_picker(
         parent_id="col",
         label="Set Draw Color",
-        on_submit=submit_draw_color_picker)
+        on_submit=submit_draw_color_picker,
+        style_id=cp_id_draw_color)
 
 ipg.add_color_picker(
         parent_id="col",
         label="Fill Color",
-        on_submit=submit_fill_color_picker)
+        on_submit=submit_fill_color_picker,
+        style_id=cp_id_fill_color)
 
 cp_canvas_color_id = ipg.add_color_picker(
                         parent_id="col",
                         label="Set Canvas Color",
-                        style_id=cp_style_canvas,
+                        style_id=cp_id_bkg_color,
                         on_submit=submit_canvas_color_picker)
 
 ipg.add_text_input(
