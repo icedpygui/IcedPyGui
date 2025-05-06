@@ -60,8 +60,9 @@ def on_tick(timer_id: int, counter: int):
             param=IpgTextParam.Content, 
             value=f"Count: {counter}")
     
-    if counter > len(colors):
+    if counter >= len(colors):
         ipg.update_item(wid=timer_id, param=IpgTimerParam.Counter, value=0)
+        counter = 0
         
     ipg.update_item(wid=btn_style, param=IpgButtonStyleParam.BackgroundIpgColor, value=colors[counter])
     ipg.update_item(wid=chk_style, param=IpgCheckboxStyleParam.BackgroundIpgColor, value=colors[counter])
@@ -203,7 +204,7 @@ ipg.add_toggler(
 # just like the regular button.
 ipg.add_timer(
         parent_id="col", 
-        duration_ms=300,
+        duration_ms=200,
         on_start=on_start, 
         on_tick=on_tick, 
         on_stop=on_stop,

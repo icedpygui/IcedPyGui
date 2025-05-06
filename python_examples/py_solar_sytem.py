@@ -21,7 +21,8 @@ def on_start(timer_id: int):
     ipg.update_item(timer_id, IpgCanvasTimerParam.Label, "Stop Timer")
     
 
-def on_stop(timer_id: int):
+# When the timer is stopped, 2nd parameter is sent for elapsed time.
+def on_stop(timer_id: int, _elapsed: int):
     ipg.update_item(timer_id, IpgCanvasTimerParam.Label, "Start Timer")
 
 

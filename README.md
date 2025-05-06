@@ -91,8 +91,8 @@ pip install --force-reinstall icedpygui
 * Create and activate a virtual environment - The venv for this take a couple of minutes to create, be patient, sometimes a restart of vs code needed to recognize the venv
 * Install maturin and compile the rust code
 * Depending on your linux system setup, you may get some compile erros about missing libraries.  Just add those as needed.
-* Use maturin develop (~20 sec compile time on AMD Rizen 7700, stored in local venv)
-* maturin build --release (~1.5 min compile time stored in target/wheels)
+* Use maturin develop (~25 sec compile time on AMD Rizen 7700, stored in local venv, after initial compile of libraries)
+* maturin build --release (~2 min compile time stored in target/wheels)
 * Copy over one of the python examples (link above), use the below code, or the demo in the [demo folder](https://github.com/icedpygui/IcedPyGui/tree/main/python_demo).
 
 ```python

@@ -6,7 +6,10 @@ from icedpygui import IpgTextParam
 
 
 def card_selected(card_id, name):
-    ipg.update_item(text_id, IpgTextParam.Content, f"Card selected is {name}")
+    ipg.update_item(
+        wid=text_id, 
+        param=IpgTextParam.Content, 
+        value=f"Card selected is {name}")
 
 
 ipg=IPG()        

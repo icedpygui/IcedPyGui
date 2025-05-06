@@ -178,14 +178,15 @@ pub fn canvas_timer_callback(state: &mut IpgState, id: usize, started: bool) -> 
     wci.value_bool = Some(started);
     let mut wco: WidgetCallbackOut = set_or_get_widget_callback_data(state, wci);
     wco.id = id;
+    // duration is the event time not total time
     let duration = wco.duration.unwrap_or(1);
-    let event_name = if started {
-        "on_start".to_string()
+    let (event_name, counter) = if started {
+        ("on_start".to_string(), None)
     } else {
-        "on_stop".to_string()
+        ("on_stop".to_string(), wco.counter)
     };
     
-    process_callback(id, event_name, None);
+    process_callback(id, event_name, counter);
     duration 
 }
 
@@ -207,41 +208,57 @@ fn process_callback(
     let app_cbs = access_callbacks();
 
     // Retrieve the callback
-    let callback = match app_cbs.callbacks.get(&(id, event_name)) {
+    let callback = match app_cbs.callbacks.get(&(id, event_name.clone())) {
         Some(cb) => Python::with_gil(|py| cb.clone_ref(py)),
         None => return,
     };
 
     drop(app_cbs);
 
-    // Check user data from ud1
-    if let Some(user_data) = ud1.user_data.get(&id) {
-        Python::with_gil(|py| {
-            if let Err(err) = callback.call1(py, (id, counter, user_data)) {
-                panic!("CanvasTimer callback error: {err}");
-            }
-        });
-        drop(ud1); // Drop ud1 before processing ud2
-        return;
-    }
-    drop(ud1); // Drop ud1 if no user data is found
-
-    // Check user data from ud2
-    let ud2 = access_user_data2();
-    if let Some(user_data) = ud2.user_data.get(&id) {
-        Python::with_gil(|py| {
-            if let Err(err) = callback.call1(py, (id, counter, user_data)) {
-                panic!("CanvasTimer callback error: {err}");
-            }
-        });
-        drop(ud2); // Drop ud2 after processing
-        return;
-    }
-    drop(ud2); // Drop ud2 if no user data is found
-
-    // If no user data is found in both ud1 and ud2, call the callback with the id and counter
     Python::with_gil(|py| {
-        if let Err(err) = callback.call1(py, (id, counter)) {
+        
+        let name_bool = if event_name == "on_start".to_string() {
+            true
+        } else {
+            false
+        };
+
+        if let Some(user_data) = ud1.user_data.get(&id) {
+            let res = match name_bool {
+                    true => callback.call1(py, (id, user_data)),
+                    false => callback.call1(py, (id, counter, user_data)),
+            };
+            if let Err(err) = res {
+                panic!("CanvasTimer callback error: {err}");
+            } else {
+                drop(ud1);
+                return
+            }
+        }
+        drop(ud1); // Drop ud1 if no user data is found
+
+        // Check user data from ud2
+        let ud2 = access_user_data2();
+
+        if let Some(user_data) = ud2.user_data.get(&id) {
+            let res = match name_bool {
+                    true => callback.call1(py, (id, user_data)),
+                    false => callback.call1(py, (id, counter, user_data)),
+            };
+            if let Err(err) = res {
+                panic!("CanvasTimer callback error: {err}");
+            } else {
+                drop(ud2);
+                return
+            }
+        }
+        drop(ud2); // Drop ud1 if no user data is found
+
+        let res = match name_bool {
+            true => callback.call1(py, (id, )),
+            false => callback.call1(py, (id, counter)),
+        };
+        if let Err(err) = res {
             panic!("CanvasTimer callback error: {err}");
         }
     });
