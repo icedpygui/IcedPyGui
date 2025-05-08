@@ -10,54 +10,61 @@ Python wrapper for Rust Iced Gui
 
 </div>
 
-## Revisions
-* Current version 0.4.0
+## Overview
+
+* IcedPyGui is based on [Rust Iced](https://github.com/iced-rs/iced) v0.13.1.
+* Widgets from [Iced_aw](https://github.com/iced-rs/iced_aw).
+* [Pyo3](https://github.com/pyo3/pyo3) is used as the Python wrapper.
+* [Maturin](https://github.com/PyO3/maturin) is used to build and publish the module.
+* The syntax and the design of the callbacks were inspired by the Python wrapper of Dear ImGui, [DearPyGui(DPG)](https://github.com/hoffstadt/DearPyGui).
+* The icon above was a merge of the Python and the Iced icons by [Deep Dream Generator](https://deepdreamgenerator.com)
+* [Python Examples are available here](https://github.com/icedpygui/IcedPyGui-Python-Examples).
 
 ## Features
 
 * Supported Iced widgets
   * Button
-  * Canvas - CAdd canvas widgets and dynamic drawing
-  * CanvasTimer - timed events for canvas actions
+  * Canvas - Add canvas widgets and dynamically drawing
+  * CanvasTimer - Timed events for canvas actions
   * Card - Widget with a header and body text
   * Checkbox
   * ColorPicker - Widget for selecting a color
-  * Column - A container holding widgets or other container in with horizontal positioning
+  * Column - A container holding widgets or other container in with vertical positioning
   * Container - Holds a single container or widget, used for alignment purposes, mostly
   * DatePicker - Widget for selecting a date
   * Divider - Widget for resizing adjacent containers, columns, or rows
-  * Events - keyboard, mouse, timer, and window
-  * Fonts - A future release (just basic one now)
-  * Image - svg and png types
-  * Menu - Dropdown menu for various actions, includes adding widgets into menu items
-  * MouseArea - holds a widget and detect mouse movement and mouse button presses
-  * PickList - essentially a combobox
-  * ProgressBar - a bar used to show progression of some action
-  * QRCodes - future release
-  * Radio buttons - multiple radios can be grouped, multiple groups allowed
-  * Row - a container holding widgets or other containers with vertical positioning.
+  * Events - keyboard, mouse, timer, and window events
+  * Fonts - A future release (just basic fonts now)
+  * Image - png types
+  * Menu - Dropdown menu for various actions, includes having widgets in menu items
+  * MouseArea - Holds a widget and detects mouse movement and mouse button presses
+  * PickList - Essentially a combo box type widget
+  * ProgressBar - A bar used to show progression of some action
+  * QRCodes - A future release
+  * Radio buttons - Multiple radios can be grouped and up to 26 groups allowed
+  * Row - A container holding widgets or other containers with horizontal positioning.
   * Rule - A widget line divider for readability
-  * Scrollable - container which allows scrolling items
-  * SelectableText - text widget that has mouse interaction
-  * Separator - Widget for separating items using lines of different types
+  * Scrollable - A wrapper for a container tp allow the scrolling of items
+  * SelectableText - A text widget that has mouse interaction
+  * Separator - Widget for separating items using lines of different types, similar to rule
   * Slider - A widget for creating values by sliding a bar
-  * Space - a widget for helping align content
-  * Stack - a container that allows one to stack other containers into
-  * Styling - All widget now have styling
+  * Space - A widget for helping align content
+  * Stack - A container that allows one to stack other containers into
+  * Styling - All widget now have their own styling widget
   * SVG - image type
-  * Tabs - future release
-  * Table - table for data and widgets, header body, and footer, uses Polars Dataframe
-  * TextEditor - possible future release
+  * Tabs - A future release
+  * Table - A table for data and widgets, header body, and footer, uses Polars Dataframe
+  * TextEditor - A possible future release
   * TextInput - Allows one to input any text, numerical ones coming soon
-  * Text - a text widget, RichText in future release
-  * Timer - clocked event for dynamically controlling widgets or other timed events
-  * Toggler - a widget for setting conditions like true/false on/off, etc
-  * Tooltip - Widget for prompting with info when mouse hovered over a widget
-  * Windows multiple - many windows enabled
+  * Text - a text widget, RichText in a future release
+  * Timer - A clocked event for dynamically controlling widgets or other timed events
+  * Toggler - A widget for setting conditions like true/false on/off, etc
+  * Tooltip - A widget for prompting with info when mouse hovered over a widget
+  * Windows multiple - Many windows can be used
 
 ## Future Enhancements to the program
 * More widgets will be added as iced and other developers create widgets.
-* Reduce compile times during development by creating independent widget files or other method.
+* Reduce compile times during development by creating independent widget files or other methods.
 ## Python issues to be addressed(next version)
   * Need to incorporate using the 'with' statement in python.  Using with would allow one to not have to supply the window or parent id if those follow closely.  For example:
 
@@ -88,7 +95,7 @@ pip install --force-reinstall icedpygui
 
 * Install Rust
 * Clone the repository and open in your favorite IDE
-* Create and activate a virtual environment - The venv for this take a couple of minutes to create, be patient, sometimes a restart of vs code needed to recognize the venv
+* Create and activate a virtual environment - The venv for this takes a couple of minutes to create, be patient, sometimes a restart of vs code is needed to recognize the venv
 * Install maturin and compile the rust code
 * Depending on your linux system setup, you may get some compile errors about missing libraries.  Simply add those as needed.
 * Use maturin develop (~25 sec compile time on AMD Ryzen 7700, stored in the local venv, after initial compile of libraries)
@@ -97,26 +104,23 @@ pip install --force-reinstall icedpygui
 
 ```python
 pip install maturin
+# for development use
 maturin develop
+# for release use
+maturin build --release
 ```
 
 * Open and run one of the python examples
-
-## Overview
-
-* IcedPyGui is based on [Rust Iced](https://github.com/iced-rs/iced) v0.13.1.
-* Widgets from [Iced_aw](https://github.com/iced-rs/iced_aw).
-* [Pyo3](https://github.com/pyo3/pyo3) is used as the Python wrapper.
-* [Maturin](https://github.com/PyO3/maturin) is used to build and publish the module.
-* The syntax and the design of the callbacks were inspired by the Python wrapper of Dear ImGui, [DearPyGui(DPG)](https://github.com/hoffstadt/DearPyGui).
-* The icon above was a merge of the Python and the Iced icons by [Deep Dream Generator](https://deepdreamgenerator.com)
-* [Python Examples are available here](https://github.com/icedpygui/IcedPyGui-Python-Examples).
 
 ## Intro
 
 Iced is a great GUI for Rust, but it's still early in the development cycle. More good things will follow.  
 
+This wrapper mostly shields the Python user from the strict typing in Rust but there are a very widgets where typing is important.  These will be noted in the example as they occur.
+
 Iced doesn't use the concept of user data being passed around, but when using DPG, sometimes the ability to send user data was very helpful. Therefore, this concept was added to IPG. This user data is special because it is only passed through to Rust and back out as a `PyObject` or `PyAny`. Therefore, any Python data can be used since it is never extracted into a Rust type.
+
+There are almost 50 examples that have a lot of detailed explanations in them.  You should find all of the widgets, their uses, and how to update them in a callback.  All of the examples are throughly tested before release, however, since there are so many you may find an error.  If so, please use the issue tracking in github to leave me a message or ask a question.  There's a link at the bottom also for a Discord discussion forum.
 
 ## Important rules
 
@@ -174,11 +178,11 @@ ipg.add_column(
       align=IpgAlignment.Center)
 ```
 
-So, the window was added using an window_id, title, size and position, followed by a container and column.  The ids are a key part of IPG and can be consider the glue that holds everything together.  Each time there is an add command, a corresponding structure is initialized and stored in a Mutex using a HashMap with an integer id.  Once Iced is started, the mutext is copied over to the gui app and a recursive routine is called to create the nested tree for all of the containers and widgets which is used by Iced to display.  If your program needs additional widgets later, you can either create them initially and hide them (revealing during a callback) or create new ones during a callback.  You can modify all of the widgets during a callback procedure where the command update_item() is used. You can also move widgets from container to container very easily.  You will see some of this in the demo code below.
+So, the window was added using an window_id, title, size and position, followed by a container and column.  The ids are a key part of IPG and can be consider the glue that holds everything together.  Each time there is an add command, a corresponding structure is initialized and stored in a Mutex using a HashMap with an integer id.  Once Iced is started, the mutext is copied over to the GUI app and a recursive routine is called to create the nested tree for all of the containers and widgets which is used by Iced to display.  If your program needs additional widgets later, you can either create them initially and hide them (revealing during a callback) or create new ones during a callback.  You can modify all of the widgets during a callback procedure where the command update_item() is used. You can also move widgets from container to container very easily.
 
-Note how the ids are used.  A container must have a window_id because Iced is a multi-window GUI, we need to know which window to put it in.  In addition, if a container goes into another container, then the parent_id is needed.  Ids have to be unigue in a window but not between windows.  To avoid confusion though it's best to try and keep them unique.  If you use a class for your probram, the ids can be predefined and a variable name can be used in the id field.  This helps prevent typos since you get a hint list.
+Note how the ids are used.  A container must have a window_id because Iced is a multi-window GUI, we need to know which window to put it in.  In addition, if a container goes into another container, then the parent_id is needed.  Ids have to be unigue in a window but not between windows.  To avoid confusion though it's best to try and keep them unique.  If you use a class for your program, the ids can be predefined and a variable name can be used in the id field.  This helps prevent typos since you get a hint list.  You can see this approach in the examples that use a class.
 
-A quick word on width_fill parameter.  Almost all containers and widgets have a width and height.  The parameter width and height take a float number.  The width_fill and height_fill is bool and overrides the float.  The fill parameters will cause the width of the container or widget to fill the available space.  This works pretty good in most cases but there are some cases where there is a conflict as you'll see in some of the examples.
+A quick word on width_fill parameter.  Almost all containers and widgets have a width and height.  The parameter width and height take a float number.  The width_fill and height_fill is a boolean type and overrides the float.  The fill parameters will cause the width of the container or widget to fill the available space.  This works pretty good in most cases but there are some cases where there is a conflict as you'll see in some of the examples.
 
 The column was added because the container holds only one widget and we need a container that holds more.  We could have not used a container but only a column but then we would need to add spaces to get the items centered horizontally since a column only centers vertically.  So the container just made it easier.  Aligning can be troublesome but if you use the debug=Ture feature for the window, you'll be able to see the container outlines.  This helps a lot in troubleshooting the alignment issues.
 
