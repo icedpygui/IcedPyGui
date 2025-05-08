@@ -6,7 +6,7 @@ Python wrapper for Rust Iced Gui
 
 # Iced + Python == IcedPyGui (IPG)
 
-![ipg_intro](https://github.com/user-attachments/assets/aababe49-558e-4ffc-b152-d252d67a54cc)
+<https://github.com/icedpygui/IcedPyGui/assets/163431522/4a30a7d3-d17e-4d90-bf34-320e9a5d8c5d>
 
 </div>
 
@@ -17,17 +17,17 @@ Python wrapper for Rust Iced Gui
 
 * Supported Iced widgets
   * Button
-  * Canvas - Can add canvas widgets and dynamic drawing
-  * CanvasTimer - timed events for cnavas actions
+  * Canvas - CAdd canvas widgets and dynamic drawing
+  * CanvasTimer - timed events for canvas actions
   * Card - Widget with a header and body text
   * Checkbox
   * ColorPicker - Widget for selecting a color
-  * Column - a container holding widgets or other container in with horizontal positioning
-  * Container - container, holds a single container or widget, used for alignment purposes
+  * Column - A container holding widgets or other container in with horizontal positioning
+  * Container - Holds a single container or widget, used for alignment purposes, mostly
   * DatePicker - Widget for selecting a date
   * Divider - Widget for resizing adjacent containers, columns, or rows
   * Events - keyboard, mouse, timer, and window
-  * Fonts - Future release (just basic one now)
+  * Fonts - A future release (just basic one now)
   * Image - svg and png types
   * Menu - Dropdown menu for various actions, includes adding widgets into menu items
   * MouseArea - holds a widget and detect mouse movement and mouse button presses
@@ -52,7 +52,7 @@ Python wrapper for Rust Iced Gui
   * Text - a text widget, RichText in future release
   * Timer - clocked event for dynamically controlling widgets or other timed events
   * Toggler - a widget for setting conditions like true/false on/off, etc
-  * Tooltip - Widget for proping with info when mouse hovered over a widget
+  * Tooltip - Widget for prompting with info when mouse hovered over a widget
   * Windows multiple - many windows enabled
 
 ## Future Enhancements to the program
@@ -90,9 +90,9 @@ pip install --force-reinstall icedpygui
 * Clone the repository and open in your favorite IDE
 * Create and activate a virtual environment - The venv for this take a couple of minutes to create, be patient, sometimes a restart of vs code needed to recognize the venv
 * Install maturin and compile the rust code
-* Depending on your linux system setup, you may get some compile erros about missing libraries.  Just add those as needed.
-* Use maturin develop (~25 sec compile time on AMD Rizen 7700, stored in local venv, after initial compile of libraries)
-* maturin build --release (~2 min compile time stored in target/wheels)
+* Depending on your linux system setup, you may get some compile errors about missing libraries.  Simply add those as needed.
+* Use maturin develop (~25 sec compile time on AMD Ryzen 7700, stored in the local venv, after initial compile of libraries)
+* maturin build --release (~2 min compile time stored in target/wheels directory)
 * Copy over one of the python examples (link above), use the below code, or the demo in the [demo folder](https://github.com/icedpygui/IcedPyGui/tree/main/python_demo).
 
 ```python
@@ -105,22 +105,16 @@ maturin develop
 ## Overview
 
 * IcedPyGui is based on [Rust Iced](https://github.com/iced-rs/iced) v0.13.1.
-* Widgets for [Iced_aw](https://github.com/iced-rs/iced_aw) are used too .
-* [Pyo3](https://github.com/pyo3/pyo3) is used as the python wrapper.
-* [Maturin](https://github.com/PyO3/maturin) is used to build and publish the module .
-* The syntax and the design of the callbacks were inspired by the python wrapper of Dear ImGui, [DearPyGui(DPG)](https://github.com/hoffstadt/DearPyGui).
-* The icon above was a merge of Python and Iced icons by [Deep Dream Generator](https://deepdreamgenerator.com)
-* [Python Examples are here](https://github.com/icedpygui/IcedPyGui-Python-Examples).
+* Widgets from [Iced_aw](https://github.com/iced-rs/iced_aw).
+* [Pyo3](https://github.com/pyo3/pyo3) is used as the Python wrapper.
+* [Maturin](https://github.com/PyO3/maturin) is used to build and publish the module.
+* The syntax and the design of the callbacks were inspired by the Python wrapper of Dear ImGui, [DearPyGui(DPG)](https://github.com/hoffstadt/DearPyGui).
+* The icon above was a merge of the Python and the Iced icons by [Deep Dream Generator](https://deepdreamgenerator.com)
+* [Python Examples are available here](https://github.com/icedpygui/IcedPyGui-Python-Examples).
 
 ## Intro
 
 Iced is a great GUI for Rust, but it's still early in the development cycle. More good things will follow.  
-
-This project is the first I have published, so I expect I'll learn a lot, and hopefully, you can bear with me.
-
-Rust's strict typing is mostly shielded from the Python user, but if you venture too far, you'll get burned with an error, so behave yourselves :)
-
-Iced uses a messaging system that acts like a callback, and no widget IDs are used except for the containers and windows. This posed a bit of a problem in IPG, but in most cases, it was solved by mapping an ID to the widget. In cases where this was not possible, the code was pulled into IPG, and an ID was added with fairly simple changes, so it shouldn't be hard to keep those few items updated.
 
 Iced doesn't use the concept of user data being passed around, but when using DPG, sometimes the ability to send user data was very helpful. Therefore, this concept was added to IPG. This user data is special because it is only passed through to Rust and back out as a `PyObject` or `PyAny`. Therefore, any Python data can be used since it is never extracted into a Rust type.
 
