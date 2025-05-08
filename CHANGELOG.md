@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 None
 
+## [0.4.0] - 2025-05-08
+- updated to 0.4.0
+- many internal optimizations
+- canvas draw widget
+- new table using polars dataframe
+- divider widget, allow resizing containers
+
 ## [0.3.0] - 2024-10-29
 
 - updated to iced 0.13.1
