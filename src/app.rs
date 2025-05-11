@@ -20,7 +20,9 @@ use polars::frame::DataFrame;
 
 
 use crate::canvas::draw_canvas::IpgCanvasState;
+use crate::chart::draw_chart::IpgChartState;
 use crate::ipg_widgets::ipg_canvas::match_canvas_widget;
+use crate::ipg_widgets::ipg_chart::{chart_callback, construct_chart, ChartMessage};
 use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, 
     construct_color_picker, ColPikMessage};
 use crate::ipg_widgets::ipg_divider::{construct_divider_horizontal, construct_divider_vertical, divider_callback, DivMessage};
@@ -77,6 +79,7 @@ pub enum Message {
     Button(usize, BTNMessage),
     Canvas(CanvasMessage),
     Card(usize, CardMessage),
+    Chart(ChartMessage),
     CheckBox(usize, CHKMessage),
     ColorPicker(usize, ColPikMessage),
     DatePicker(usize, DPMessage),
@@ -125,6 +128,7 @@ pub enum Message {
 pub struct App {
     state: IpgState,
     canvas_state: IpgCanvasState,
+    chart_state: IpgChartState,
 }
 
 impl App {
@@ -135,6 +139,8 @@ impl App {
 
         let mut canvas_state = IpgCanvasState::default();
         clone_canvas_state(&mut canvas_state);
+
+        let mut chart_state = IpgChartState::default();
         
         let mut open = add_windows(&mut state);
         open.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
@@ -143,6 +149,7 @@ impl App {
             Self {
                 state,
                 canvas_state,
+                chart_state,
             },
             
             Task::batch(open),
@@ -169,52 +176,57 @@ impl App {
             },
             Message::Button(id, message) => {
                 button_callback(id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 get_tasks(&mut self.state)
             },
             Message::Canvas(canvas_message) => {
                 canvas_callback(canvas_message, &mut self.state, &mut self.canvas_state);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 get_tasks(&mut self.state)
             },
             Message::Card(id, message) => {
                 card_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
+            },
+            Message::Chart(chart_message) => {
+                chart_callback(chart_message, &mut self.state, &mut self.chart_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
+                get_tasks(&mut self.state)
             },
             Message::CheckBox(id, message) => {
                 checkbox_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 get_tasks(&mut self.state)
             },
             Message::ColorPicker(id, message ) => {
                 color_picker_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             }
             Message::DatePicker(id, message) => {
                 date_picker_update(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::Divider(id, message) => {
                 divider_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::EventKeyboard(event) => {
                 process_keyboard_events(event, self.state.keyboard_event_id_enabled.0);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::EventMouse(event) => {
                 process_mouse_events(event, self.state.mouse_event_id_enabled.0);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::EventWindow((window_id, event)) => {
                 process_window_event(&mut self.state, event, window_id);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 if self.state.windows_opened.len() == self.state.windows_hidden.len() {
                     iced::exit()
                 } else {
@@ -227,98 +239,98 @@ impl App {
             },
             Message::EventTouch(event) => {
                 process_touch_events(event, self.state.touch_event_id_enabled.0);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::Image(id, message) => {
                 image_callback(id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::MouseAreaOnPress(id) => {
                 mousearea_callback(&mut self.state, id, "on_press".to_string());
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::MouseAreaOnRelease(id) => {
                 mousearea_callback(&mut self.state, id, "on_release".to_string());
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::MouseAreaOnRightPress(id) => {
                 mousearea_callback(&mut self.state, id, "on_right_press".to_string());
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::MouseAreaOnRightRelease(id) => {
                 mousearea_callback(&mut self.state, id, "on_right_release".to_string());
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::MouseAreaOnMiddlePress(id) => {
                 mousearea_callback(&mut self.state, id, "on_middle_press".to_string());
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::MouseAreaOnMiddleRelease(id) => {
                 mousearea_callback(&mut self.state, id, "on_middle_release".to_string());
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::MouseAreaOnEnter(id) => {
                 mousearea_callback(&mut self.state, id, "on_enter".to_string());
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::MouseAreaOnMove(point, id) => {
                 mousearea_callback_point(&mut self.state, id, point, "on_move".to_string());
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::MouseAreaOnExit(id) => {
                 mousearea_callback(&mut self.state, id, "on_exit".to_string());
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::OpaqueOnPress(id) => {
                 opaque_callback(&mut self.state, id, "on_press".to_string());
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::PickList(id, message) => {
                 pick_list_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::Radio(id, message) => {
                 radio_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::Scrolled(vp, id) => {
                 scrollable_callback(&mut self.state, id, vp);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::SelectableText(id, message) => {
                 selectable_text_callback(id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::Slider(id, message) => {
                 slider_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::Svg(id, message) => {
                 svg_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::TableSync(offset, id) => {
                 let message = TableMessage::SyncScrollables(id);
                 let (header, body, footer) = table_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 let mut tasks = vec![scrollable::scroll_to(body.unwrap(), offset)];
                 if header.is_some() {
                     tasks.push(scrollable::scroll_to(header.unwrap(), offset));
@@ -331,18 +343,18 @@ impl App {
             Message::TableDividerChanged((id, index, value)) => {
                 let message = TableMessage::DivDragging((index, value));
                 table_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::TableDividerReleased(id) => {
                 let message = TableMessage::DivOnRelease;
                 table_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::TextInput(id, message) => {
                 text_input_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::CanvasTextBlink => {
@@ -353,13 +365,13 @@ impl App {
             },
             Message::Tick => {
                 tick_callback(&mut self.state);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 Task::none()
             },
             Message::CanvasTick => {
                 canvas_tick_callback(&mut self.state);
                 process_canvas_updates(&mut self.canvas_state);
-                process_updates(&mut self.state, &mut self.canvas_state); 
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state); 
                 self.canvas_state.request_image_redraw();
                 Task::none()
             },
@@ -368,7 +380,7 @@ impl App {
                 self.state.timer_event_id_enabled.0 = id;
                 let started = self.state.timer_event_id_enabled.1;
                 self.state.timer_duration = timer_callback(&mut self.state, id, started);
-                process_updates(&mut self.state, &mut self.canvas_state);    
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);    
                 Task::none()
             },
             Message::CanvasTimer(id, message) => {
@@ -376,12 +388,12 @@ impl App {
                 self.state.canvas_timer_event_id_enabled.0 = id;
                 let started = self.state.canvas_timer_event_id_enabled.1;
                 self.state.canvas_timer_duration = canvas_timer_callback(&mut self.state, id, started);
-                process_updates(&mut self.state, &mut self.canvas_state);    
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);    
                 Task::none()
             },
             Message::Toggler(id, message) => {
                 toggle_callback(&mut self.state, id, message);
-                process_updates(&mut self.state, &mut self.canvas_state);
+                process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 get_tasks(&mut self.state)
             },
         }
@@ -393,7 +405,7 @@ impl App {
         let (debug, theme) = get_window_values(window_id, &self.state);
  
         let content = 
-            create_content(window_id, &self.state, &self.canvas_state);
+            create_content(window_id, &self.state, &self.canvas_state, &self.chart_state);
         
         if debug {
             let color = match_theme_with_debug_color(theme);
@@ -544,8 +556,12 @@ fn get_tasks(ipg_state: &mut IpgState) -> Task<Message> {
 
 
 // Central method to get the structures stored in the mutex and then the children 
-fn create_content<'a>(iced_id: window::Id, state: &'a IpgState, canvas_state: &'a IpgCanvasState) 
-                -> Element<'a, Message> {
+fn create_content<'a>(
+    iced_id: window::Id, 
+    state: &'a IpgState, 
+    canvas_state: &'a IpgCanvasState,
+    chart_state: &'a IpgChartState,) 
+    -> Element<'a, Message> {
     
     let ipg_window_id_opt = state.windows_iced_ipg_ids.get(&iced_id);
 
@@ -565,7 +581,8 @@ fn create_content<'a>(iced_id: window::Id, state: &'a IpgState, canvas_state: &'
                                                                 &0, 
                                                                 &unique_parent_ids,
                                                                 state,
-                                                                canvas_state,);
+                                                                canvas_state,
+                                                                chart_state,);
     content
 }
 
@@ -588,7 +605,10 @@ struct ParentChildIds {
     child_ids: Vec<usize>,
 }
 
-fn get_combine_parents_and_children(parent_ids: &Vec<usize>, ids_opt: Option<&Vec<IpgIds>>) -> Vec<ParentChildIds> {
+fn get_combine_parents_and_children(
+    parent_ids: &Vec<usize>, 
+    ids_opt: Option<&Vec<IpgIds>>) 
+    -> Vec<ParentChildIds> {
 
     let mut parent_child_ids: Vec<ParentChildIds> = vec![];
 
@@ -618,6 +638,7 @@ fn get_children<'a>(parents: &Vec<ParentChildIds>,
                 parent_ids: &Vec<usize>, 
                 state: &'a IpgState,
                 canvas_state: &'a IpgCanvasState,
+                chart_state: &'a IpgChartState,
                 ) -> Element<'a, Message> 
 {
 
@@ -626,7 +647,7 @@ fn get_children<'a>(parents: &Vec<ParentChildIds>,
     for child in parents[*index].child_ids.iter() {
         if parent_ids.contains(child) {
             let index = parents.iter().position(|r| &r.parent_id == child).unwrap();
-            content.push(get_children(parents, &index, parent_ids, state, canvas_state));
+            content.push(get_children(parents, &index, parent_ids, state, canvas_state, chart_state));
         } else if get_widget(state, child).is_some() {
                 content.push(get_widget(state, child).unwrap());
         }
@@ -634,7 +655,7 @@ fn get_children<'a>(parents: &Vec<ParentChildIds>,
     let id = &parents[*index].parent_id;
 
     if id != &0 {
-        get_container(state, id, content, canvas_state)
+        get_container(state, id, content, canvas_state, chart_state)
     } else {
         Column::with_children(content).into()  // the final container
     }
@@ -645,6 +666,7 @@ fn get_container<'a>(state: &'a IpgState,
                     id: &usize, 
                     content: Vec<Element<'a, Message>>,
                     canvas_state: &'a IpgCanvasState,
+                    chart_state: &'a IpgChartState,
                     ) -> Element<'a, Message> {
 
     let container_opt: Option<&IpgContainers> = state.containers.get(id);
@@ -655,6 +677,9 @@ fn get_container<'a>(state: &'a IpgState,
             match container {
                 IpgContainers::IpgCanvas(canvas) => {
                     construct_canvas(canvas_state)
+                },
+                IpgContainers::IpgChart(chart) => {
+                    construct_chart(chart_state)
                 },
                 IpgContainers::IpgColumn(col) => {
                     construct_column(col, content) 
@@ -985,7 +1010,10 @@ fn get_window_container(container_opt: Option<&IpgContainers>) -> &IpgWindow {
     }
 }
 
-fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
+fn process_updates(
+    state: &mut IpgState, 
+    canvas_state: &mut IpgCanvasState,
+    chart_state: &mut IpgChartState,) {
     
     let mut all_updates = access_update_items();
 
@@ -1096,7 +1124,13 @@ fn process_updates(state: &mut IpgState, canvas_state: &mut IpgCanvasState) {
         } else {
             match state.containers.get_mut(wid) {
                 Some(cnt) => {
-                    let last_id = match_container(cnt, item, value, canvas_state, state.last_id);
+                    let last_id = match_container(
+                                                cnt, 
+                                                item, 
+                                                value, 
+                                                canvas_state,
+                                                chart_state, 
+                                                state.last_id);
                     if last_id.is_some() {
                         state.last_id = last_id.unwrap();
                     }

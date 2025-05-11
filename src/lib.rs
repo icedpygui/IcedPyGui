@@ -6,9 +6,11 @@ use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode, IpgDrawStatus, IpgWidget}
 use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, 
     IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
 
+use chart::draw_chart::IpgChartState;
 use iced::widget::image;
 use iced_aw::iced_fonts;
 
+use ipg_widgets::ipg_chart::{chart_item_update, IpgChart};
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
@@ -41,6 +43,7 @@ mod iced_aw_widgets;
 mod graphics;
 mod style;
 mod canvas;
+mod chart;
 
 use ipg_widgets::ipg_button::{button_item_update, button_style_update_item, 
     IpgButton, IpgButtonArrow, IpgButtonParam, IpgButtonStyle, IpgButtonStyleParam};
@@ -335,6 +338,37 @@ pub static CANVAS_STATE: Mutex<CanvasState> = Mutex::new(
 
 pub fn access_canvas_state() -> MutexGuard<'static, CanvasState> {
     CANVAS_STATE.lock().unwrap()
+}
+
+#[derive(Debug)]
+pub struct ChartState {
+    pub chart_ids_str: Lazy<HashMap<String, usize>>,
+    pub curves: Lazy<HashMap<usize, IpgWidget>>,
+    pub text_curves: Lazy<HashMap<usize, IpgWidget>>,
+    pub image_curves: Lazy<HashMap<usize, IpgWidget>>,
+    pub width: Length,
+    pub height: Length,
+    pub background: Option<Color>,
+    pub border_color: Option<Color>,
+    pub border_width: Option<f32>,
+}
+
+pub static CHART_STATE: Mutex<ChartState> = Mutex::new(
+    ChartState {
+        chart_ids_str: Lazy::new(||HashMap::new()),
+        curves: Lazy::new(||HashMap::new()),
+        text_curves: Lazy::new(||HashMap::new()),
+        image_curves: Lazy::new(||HashMap::new()),
+        width: Length::Fill,
+        height: Length::Fill,
+        background: None,
+        border_color: None,
+        border_width: None,
+        },
+);
+
+pub fn access_chart_state() -> MutexGuard<'static, ChartState> {
+    CHART_STATE.lock().unwrap()
 }
 
 #[derive(Default, Debug, Clone)]
@@ -735,6 +769,76 @@ impl IPG {
         Ok(id)
     }
     
+    #[pyo3(signature = (
+        window_id,
+        chart_id,
+        width=None,
+        width_fill=false,
+        height=None,
+        height_fill=false,
+        border_width=2.0,
+        border_ipg_color=IpgColor::WHITE,
+        border_rgba_color=None,
+        background_ipg_color=None,
+        background_rgba_color=None,
+        parent_id=None,
+        gen_id=None,
+        ))]
+    fn add_chart(
+        &self,
+        window_id: String,
+        chart_id: String,
+        width: Option<f32>,
+        width_fill: bool,
+        height: Option<f32>,
+        height_fill: bool,
+        border_width: Option<f32>,
+        border_ipg_color: Option<IpgColor>,
+        border_rgba_color: Option<[f32; 4]>,
+        background_ipg_color: Option<IpgColor>,
+        background_rgba_color: Option<[f32; 4]>,
+        parent_id: Option<String>,
+        gen_id: Option<usize>,
+        )  -> PyResult<usize> 
+    {
+        let id = self.get_id(gen_id);
+
+        let width = get_width(width, width_fill);
+        let height = get_height(height, height_fill);
+        let background: Option<Color> = get_color(background_rgba_color, background_ipg_color, 1.0, false);
+
+        let border_color = get_color(border_rgba_color, border_ipg_color, 1.0, false);
+
+        let prt_id = match parent_id {
+            Some(id) => id,
+            None => window_id.clone(),
+        };
+
+        set_state_of_container(id, window_id.clone(), Some(chart_id.clone()), prt_id);
+
+        let mut state = access_state();
+
+        set_state_cont_wnd_ids(&mut state, &window_id, chart_id.clone(), id, "add_chart".to_string());
+
+        state.containers.insert(id, IpgContainers::IpgChart(IpgChart::new(
+                                                id,
+                                            )));
+ 
+        drop(state);
+
+        // set up the ChartState
+        let mut chart_state = access_chart_state();
+        chart_state.chart_ids_str.insert(chart_id, id);
+        chart_state.width = width;
+        chart_state.height = height;
+        chart_state.background = background;
+        chart_state.border_width = border_width;
+        chart_state.border_color = border_color;
+        drop(chart_state);
+
+        Ok(id)
+    }
+
     #[pyo3(signature = (
         window_id, 
         container_id, 
@@ -6389,12 +6493,16 @@ fn match_container(
     item: &PyObject, 
     value: &PyObject, 
     canvas_state: &mut IpgCanvasState,
+    chart_state: &mut IpgChartState,
     last_id: usize,
     ) -> Option<usize>
 {
     match container {
         IpgContainers::IpgCanvas(_can) => {
             canvas_item_update(canvas_state, item, value, last_id)
+        },
+        IpgContainers::IpgChart(_cht) => {
+            chart_item_update(chart_state, item, value, last_id)
         },
         IpgContainers::IpgColumn(col) => {
             column_item_update(col, item, value);

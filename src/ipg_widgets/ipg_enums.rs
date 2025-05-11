@@ -5,6 +5,7 @@ use pyo3::pyclass;
 use super::ipg_button::{IpgButton, IpgButtonStyle};
 use super::ipg_canvas::IpgCanvas;
 use super::ipg_card::{IpgCard, IpgCardStyle};
+use super::ipg_chart::IpgChart;
 use super::ipg_checkbox::{IpgCheckBox, IpgCheckboxStyle};
 use super::ipg_color_picker::{IpgColorPicker, IpgColorPickerStyle};
 // use super::ipg_color_picker::IpgColorPicker;
@@ -45,6 +46,7 @@ use super::ipg_window::IpgWindow;
 #[derive(Debug, Clone)]
 pub enum IpgContainers {
     IpgCanvas(IpgCanvas),
+    IpgChart(IpgChart),
     IpgColumn(IpgColumn),
     IpgContainer(IpgContainer),
     IpgMenu(IpgMenu),
