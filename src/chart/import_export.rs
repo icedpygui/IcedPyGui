@@ -5,8 +5,8 @@ use std::{collections::HashMap, fs::File, io::{BufWriter, Write}, path::Path};
 use iced::{alignment, widget::text::{LineHeight, Shaping}, Color, Font, Pixels, Point, Radians, Size, Vector};
 use serde::{Deserialize, Serialize};
 
-use super::{draw_chart::{IpgDrawMode, IpgDrawStatus, IpgWidget}, 
-    geometries::{IpgArc, IpgBezier, IpgChartWidget, IpgCircle, IpgEllipse, IpgFreeHand, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle, IpgRightTriangle, IpgText}};
+use super::{draw_chart::{IpgDrawMode, IpgDrawStatus, ChartWidget}, 
+    geometries::{IpgChartWidget, IpgCircle, IpgEllipse, ChartLine, IpgPolyLine, IpgPolygon, IpgRectangle, IpgText}};
 
 
 pub fn save(path: impl AsRef<Path>, data: &impl Serialize) -> std::io::Result<()> {
@@ -119,10 +119,10 @@ pub struct ExportWidget {
 
 #[allow(clippy::redundant_closure)]
 pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize) 
-                        -> (HashMap<usize, IpgWidget>, HashMap<usize, IpgWidget>, usize) {
+                        -> (HashMap<usize, ChartWidget>, HashMap<usize, ChartWidget>, usize) {
     
-    let mut curves: HashMap<usize, IpgWidget> = HashMap::new();
-    let mut text_curves: HashMap<usize, IpgWidget> = HashMap::new();
+    let mut curves: HashMap<usize, ChartWidget> = HashMap::new();
+    let mut text_curves: HashMap<usize, ChartWidget> = HashMap::new();
 
     for widget in widgets.iter() {
         let points: Vec<Point> = widget.points.iter().map(|p| convert_to_point(p)).collect();
@@ -144,44 +144,6 @@ pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize)
         match widget.name {
             IpgChartWidget::None => {
             },
-            IpgChartWidget::Arc => {
-                last_id += 1;
-                let arc = IpgArc {
-                    id: last_id,
-                    points,
-                    mid_point,
-                    radius: widget.radius,
-                    color,
-                    fill_color,
-                    width,
-                    stroke_dash_offset: None,
-                    stroke_dash_segments: None,
-                    start_angle: Radians(other_point.x),
-                    end_angle: Radians(other_point.y),
-                    draw_mode,
-                    status,
-                };
-                
-                curves.insert(last_id, IpgWidget::Arc(arc));
-            },
-            IpgChartWidget::Bezier => {
-                last_id += 1;
-                let bz = IpgBezier {
-                    id: last_id,
-                    points,
-                    mid_point,
-                    color,
-                    fill_color,
-                    width,
-                    stroke_dash_offset: None,
-                    stroke_dash_segments: None,
-                    rotation,
-                    draw_mode,
-                    status
-                };
-                
-                curves.insert(last_id, IpgWidget::Bezier(bz));
-            },
             IpgChartWidget::Circle => {
                 last_id += 1;
                 let cir = IpgCircle {
@@ -198,7 +160,7 @@ pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize)
                     status,
                 };
                 
-                curves.insert(last_id, IpgWidget::Circle(cir));
+                curves.insert(last_id, ChartWidget::Circle(cir));
             },
             IpgChartWidget::Ellipse => {
                 last_id += 1;
@@ -219,11 +181,11 @@ pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize)
                     status,
                 };
                 
-                curves.insert(last_id, IpgWidget::Ellipse(ell));
+                curves.insert(last_id, ChartWidget::Ellipse(ell));
             },
             IpgChartWidget::Line => {
                 last_id += 1;
-                let ln = IpgLine {
+                let ln = ChartLine {
                     id: last_id,
                     points,
                     mid_point,
@@ -235,7 +197,7 @@ pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize)
                     draw_mode,
                     status,
                 };
-                curves.insert(last_id, IpgWidget::Line(ln));
+                curves.insert(last_id, ChartWidget::Line(ln));
             },
             IpgChartWidget::Polygon => {
                 last_id += 1;
@@ -254,7 +216,7 @@ pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize)
                     draw_mode,
                     status,
                 };
-                curves.insert(last_id, IpgWidget::Polygon(pg));
+                curves.insert(last_id, ChartWidget::Polygon(pg));
             },
             IpgChartWidget::PolyLine => {
                 last_id += 1;
@@ -272,7 +234,7 @@ pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize)
                     draw_mode,
                     status,
                 };
-                curves.insert(last_id, IpgWidget::PolyLine(pl));
+                curves.insert(last_id, ChartWidget::PolyLine(pl));
             },
             IpgChartWidget::Rectangle => {
                 last_id += 1;
@@ -290,41 +252,8 @@ pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize)
                     draw_mode, 
                     status,
                 };
-                curves.insert(last_id, IpgWidget::Rectangle(rect));
-            }
-            IpgChartWidget::RightTriangle => {
-                last_id += 1;
-                let tr = IpgRightTriangle {
-                    id: last_id,
-                    points,
-                    mid_point,
-                    tr_point: other_point,
-                    color,
-                    fill_color,
-                    width,
-                    stroke_dash_offset: None,
-                    stroke_dash_segments: None,
-                    rotation,
-                    draw_mode,
-                    status,
-                };
-                curves.insert(last_id, IpgWidget::RightTriangle(tr));
+                curves.insert(last_id, ChartWidget::Rectangle(rect));
             },
-            IpgChartWidget::FreeHand => {
-                last_id += 1;
-                let fh = IpgFreeHand {
-                    id: last_id,
-                    points,
-                    color,
-                    width,
-                    stroke_dash_offset: None,
-                    stroke_dash_segments: None,
-                    draw_mode,
-                    status,
-                    completed: true,
-                };
-                curves.insert(last_id, IpgWidget::FreeHand(fh));
-            }
             IpgChartWidget::Text => {
                 last_id += 1;
                 let txt = IpgText {
@@ -342,8 +271,8 @@ pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize)
                     draw_mode,
                     status,
                 };
-                text_curves.insert(last_id, IpgWidget::Text(txt));
-            }
+                text_curves.insert(last_id, ChartWidget::Text(txt));
+            },
         }
     }
 
@@ -351,8 +280,8 @@ pub fn import_widgets(widgets: Vec<ExportWidget>, mut last_id: usize)
 
 }
 
-pub fn convert_to_export(widgets: &HashMap<usize, IpgWidget>, 
-                        text: &HashMap<usize, IpgWidget>) 
+pub fn convert_to_export(widgets: &HashMap<usize, ChartWidget>, 
+                        text: &HashMap<usize, ChartWidget>) 
                         -> Vec<ExportWidget> {
 
     let mut curves = widgets.clone();
@@ -379,44 +308,27 @@ pub fn convert_to_export(widgets: &HashMap<usize, IpgWidget>,
             vertical_alignment,
             ) = 
             match widget {
-                IpgWidget::Arc(arc) => {
-                    let other_point = Point{ x: arc.start_angle.0, y: arc.end_angle.0 };
-                    (IpgChartWidget::Arc, &arc.points, arc.mid_point, other_point, 0, 0.0, arc.radius, 
-                        arc.color, arc.fill_color, arc.width, String::new(), ExportHorizontal::None, ExportVertical::None)
-                },
-                IpgWidget::Bezier(bz) => {
-                    (IpgChartWidget::Bezier, &bz.points, bz.mid_point, Point::default(), 0, bz.rotation, 0.0, 
-                    bz.color, bz.fill_color, bz.width, String::new(), ExportHorizontal::None, ExportVertical::None)
-                },
-                IpgWidget::Circle(cir) => {
+                ChartWidget::Circle(cir) => {
                     (IpgChartWidget::Circle, &vec![cir.circle_point], cir.center, cir.circle_point, 0, 0.0, cir.radius, 
                         cir.color, cir.fill_color, cir.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
-                IpgWidget::Ellipse(ell) => {
+                ChartWidget::Ellipse(ell) => {
                     (IpgChartWidget::Ellipse, &ell.points, ell.center, Point::default(), 0, ell.rotation.0, 0.0, 
                     ell.color, ell.fill_color, ell.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
-                IpgWidget::Line(ln) => {
+                ChartWidget::Line(ln) => {
                     (IpgChartWidget::Line, &ln.points, ln.mid_point, Point::default(), 0, ln.rotation, 0.0, 
                     ln.color, Some(Color::TRANSPARENT), ln.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
-                IpgWidget::Polygon(pg) => {
+                ChartWidget::Polygon(pg) => {
                     (IpgChartWidget::Polygon, &pg.points, pg.mid_point, pg.pg_point, pg.poly_points, pg.rotation, 0.0, 
                         pg.color, pg.fill_color, pg.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
-                IpgWidget::PolyLine(pl) => {
+                ChartWidget::PolyLine(pl) => {
                     (IpgChartWidget::PolyLine, &pl.points, pl.mid_point, pl.pl_point, pl.poly_points, pl.rotation, 0.0, 
                         pl.color, Some(Color::TRANSPARENT), pl.width, String::new(), ExportHorizontal::None, ExportVertical::None)
                 },
-                IpgWidget::RightTriangle(tr) => {
-                    (IpgChartWidget::RightTriangle, &tr.points, tr.mid_point, tr.tr_point, 3, tr.rotation, 0.0, 
-                        tr.color, tr.fill_color, tr.width, String::new(), ExportHorizontal::None, ExportVertical::None)
-                },
-                IpgWidget::FreeHand(fh) => {
-                    (IpgChartWidget::FreeHand, &fh.points, Point::default(), Point::default(), 0, 0.0, 0.0, 
-                    fh.color, Some(Color::TRANSPARENT), fh.width, String::new(), ExportHorizontal::None, ExportVertical::None)
-                }
-                IpgWidget::Text(txt) => {
+                ChartWidget::Text(txt) => {
                     (IpgChartWidget::Text, &vec![], Point::default(), txt.position, 0, txt.rotation, 0.0, 
                     txt.color, Some(Color::TRANSPARENT), 0.0, txt.content.clone(), 
                     convert_to_export_horizontal(txt.horizontal_alignment), convert_to_export_vertical(txt.vertical_alignment))

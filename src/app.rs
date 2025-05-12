@@ -32,7 +32,7 @@ use crate::ipg_widgets::ipg_table::{table_callback, TableMessage};
 use crate::ipg_widgets::ipg_timer_canvas::{canvas_tick_callback, 
     canvas_timer_callback, construct_canvas_timer, CanvasTimerMessage};
 use crate::ipg_widgets::ipg_tool_tip;
-use crate::{access_canvas_state, access_canvas_update_items, access_user_data2, access_update_items, access_user_data1, access_window_actions, ipg_widgets, match_container, match_container_for_df, match_widget, set_state_of_widget_running_state, IpgState};
+use crate::{access_canvas_state, access_canvas_update_items, access_chart_state, access_update_items, access_user_data1, access_user_data2, access_window_actions, ipg_widgets, match_container, match_container_for_df, match_widget, set_state_of_widget_running_state, IpgState};
 use ipg_widgets::ipg_button::{BTNMessage, construct_button, button_callback};
 use ipg_widgets::ipg_canvas::{canvas_callback, construct_canvas, CanvasMessage};
 use ipg_widgets::ipg_card::{CardMessage, construct_card, card_callback};
@@ -141,6 +141,7 @@ impl App {
         clone_canvas_state(&mut canvas_state);
 
         let mut chart_state = IpgChartState::default();
+        clone_chart_state(&mut chart_state);
         
         let mut open = add_windows(&mut state);
         open.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
@@ -1336,6 +1337,25 @@ fn clone_canvas_state(canvas_state: &mut IpgCanvasState) {
     canvas_state.border_width = mutex_cs.border_width;
     canvas_state.border_color = mutex_cs.border_color;
     canvas_state.selected_canvas_color = mutex_cs.background;
+
+    // zeroing out any vecs and hashmaps
+    mutex_cs.curves = Lazy::new(||HashMap::new());
+    mutex_cs.text_curves = Lazy::new(||HashMap::new());
+    mutex_cs.image_curves = Lazy::new(||HashMap::new());
+    drop(mutex_cs);
+}
+
+fn clone_chart_state(chart_state: &mut IpgChartState) {
+    let mut mutex_cs = access_chart_state();
+    dbg!(&mutex_cs.curves);
+    chart_state.curves = mutex_cs.curves.to_owned();
+    chart_state.text_curves = mutex_cs.text_curves.to_owned();
+    chart_state.image_curves = mutex_cs.image_curves.to_owned();
+    chart_state.width = mutex_cs.width;
+    chart_state.height = mutex_cs.height;
+    chart_state.border_width = mutex_cs.border_width;
+    chart_state.border_color = mutex_cs.border_color;
+    chart_state.selected_chart_color = mutex_cs.background;
 
     // zeroing out any vecs and hashmaps
     mutex_cs.curves = Lazy::new(||HashMap::new());

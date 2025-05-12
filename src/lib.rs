@@ -6,7 +6,7 @@ use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode, IpgDrawStatus, IpgWidget}
 use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, 
     IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
 
-use chart::draw_chart::IpgChartState;
+use chart::draw_chart::{ChartWidget, IpgChartState};
 use iced::widget::image;
 use iced_aw::iced_fonts;
 
@@ -343,9 +343,9 @@ pub fn access_canvas_state() -> MutexGuard<'static, CanvasState> {
 #[derive(Debug)]
 pub struct ChartState {
     pub chart_ids_str: Lazy<HashMap<String, usize>>,
-    pub curves: Lazy<HashMap<usize, IpgWidget>>,
-    pub text_curves: Lazy<HashMap<usize, IpgWidget>>,
-    pub image_curves: Lazy<HashMap<usize, IpgWidget>>,
+    pub curves: Lazy<HashMap<usize, ChartWidget>>,
+    pub text_curves: Lazy<HashMap<usize, ChartWidget>>,
+    pub image_curves: Lazy<HashMap<usize, ChartWidget>>,
     pub width: Length,
     pub height: Length,
     pub background: Option<Color>,
@@ -750,9 +750,9 @@ impl IPG {
 
         set_state_cont_wnd_ids(&mut state, &window_id, canvas_id.clone(), id, "add_canvas".to_string());
 
-        state.containers.insert(id, IpgContainers::IpgCanvas(IpgCanvas::new(
-                                                id,
-                                            )));
+        state.containers.insert(
+            id, IpgContainers::IpgCanvas(
+                IpgCanvas::new(id,)));
  
         drop(state);
 
@@ -784,7 +784,7 @@ impl IPG {
         parent_id=None,
         gen_id=None,
         ))]
-    fn add_chart(
+    fn add_bar_chart(
         &self,
         window_id: String,
         chart_id: String,
@@ -820,9 +820,9 @@ impl IPG {
 
         set_state_cont_wnd_ids(&mut state, &window_id, chart_id.clone(), id, "add_chart".to_string());
 
-        state.containers.insert(id, IpgContainers::IpgChart(IpgChart::new(
-                                                id,
-                                            )));
+        state.containers.insert(
+            id, IpgContainers::IpgChart(
+                IpgChart::new(id,)));
  
         drop(state);
 

@@ -17,6 +17,8 @@ pyo3 = { version = "0.23.3", features = ["extension-module"] }
 iced = { version = "0.13.1", features = ["advanced", "canvas", "debug", "highlighter", "image", 
                                         "lazy", "smol", "svg", "tokio", "multi-window", "auto-detect-theme"] }
 iced_aw = {git = "https://github.com/iced-rs/iced_aw", rev = "3485f3a"}
+svg-simple-parser = "0.0.6"
+charts-rs = "0.3.22"
 
 polars = { version="0.46.0", features=["strings", "lazy"]}
 pyo3-polars = "0.20.0"

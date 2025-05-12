@@ -3,14 +3,16 @@
 // #![allow(dead_code)]
 use std::fs;
 use std::path::Path;
+use std::rc::Rc;
 
 use iced::widget::container;
-use iced::{Color, Element, Point, Radians};
+use iced::Color;
 use pyo3::{pyclass, PyObject, Python};
+use charts_rs::*;
 
 use crate::app::Message;
 use crate::chart::draw_chart::{IpgChartState, IpgDrawMode, 
-    IpgDrawStatus, IpgWidget};
+    IpgDrawStatus, ChartWidget};
 use crate::chart::geometries::{
     get_draw_mode_and_status, get_widget_id,
     set_widget_mode_or_status_or_id, IpgChartWidget
@@ -20,7 +22,7 @@ use crate::IpgState;
 
 use super::helpers::{
     get_horizontal_alignment, get_vertical_alignment, try_extract_f64, try_extract_ipg_horizontal_alignment,
-    try_extract_ipg_vertical_alignment, try_extract_point, try_extract_rgba_color, try_extract_string,
+    try_extract_ipg_vertical_alignment, try_extract_rgba_color, try_extract_string,
 };
 
 #[derive(Debug, Clone)]
@@ -34,8 +36,50 @@ impl IpgChart {
     }
 }
 
-pub fn construct_chart(chart_state: &IpgChartState) -> Element<Message> {
-    let draw: Element<ChartMessage> = container(
+fn construct_bar_chart() {
+    let mut bar_chart = BarChart::new_with_theme(
+        vec![
+            ("Evaporation", vec![2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6]).into(),
+            (
+                "Precipitation",
+                vec![2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6],
+            )
+                .into(),
+            ("Temperature", vec![2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3]).into(),
+        ],
+        vec![
+            "Mon".to_string(),
+            "Tue".to_string(),
+            "Wed".to_string(),
+            "Thu".to_string(),
+            "Fri".to_string(),
+            "Sat".to_string(),
+            "Sun".to_string(),
+        ],
+        THEME_GRAFANA,
+    );
+    bar_chart.title_text = "Mixed Line and Bar".to_string();
+    bar_chart.legend_margin = Some(Box {
+        top: bar_chart.title_height,
+        bottom: 5.0,
+        ..Default::default()
+    });
+    bar_chart.series_list[2].category = Some(SeriesCategory::Line);
+    bar_chart.series_list[2].y_axis_index = 1;
+    bar_chart.series_list[2].label_show = true;
+
+    bar_chart
+        .y_axis_configs
+        .push(bar_chart.y_axis_configs[0].clone());
+    bar_chart.y_axis_configs[0].axis_formatter = Some("{c} ml".to_string());
+    bar_chart.y_axis_configs[1].axis_formatter = Some("{c} °C".to_string());
+
+    let svg = &bar_chart.svg().unwrap();
+    parse_svg(svg);
+}
+
+pub fn construct_chart(chart_state: &IpgChartState) -> iced::Element<Message> {
+    let draw: iced::Element<ChartMessage> = container(
         chart_state
             .view(
                 &chart_state.curves,
@@ -50,7 +94,7 @@ pub fn construct_chart(chart_state: &IpgChartState) -> Element<Message> {
 
 #[derive(Debug, Clone)]
 pub enum ChartMessage {
-    WidgetDraw(IpgWidget),
+    WidgetDraw(ChartWidget),
 }
 
 pub fn chart_callback(chart_message: ChartMessage, app_state: &mut IpgState, chart_state: &mut IpgChartState) {
@@ -61,7 +105,7 @@ pub fn chart_callback(chart_message: ChartMessage, app_state: &mut IpgState, cha
             // Therefore, the pending has to return the curve also at each change so that
             // the curves can be updated.  The subscription clears the text cache at each tick.
             match widget {
-                IpgWidget::Text(_) => {
+                ChartWidget::Text(_) => {
                     let (draw_mode, draw_status) = get_draw_mode_and_status(&widget);
                     let id = get_widget_id(&widget);
                     match draw_status {
@@ -87,7 +131,7 @@ pub fn chart_callback(chart_message: ChartMessage, app_state: &mut IpgState, cha
                         },
                     }
                     match draw_mode {
-                        IpgDrawMode::Edit | IpgDrawMode::Rotate => {
+                        IpgDrawMode::Edit => {
                             let id = get_widget_id(&widget);
                             chart_state.edit_widget_id = Some(id);
                             chart_state.text_curves.entry(id).and_modify(|k| *k= widget);
@@ -276,6 +320,160 @@ pub enum IpgChartGeometryParam {
     Position,
     Rotation,
 }
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct BarChartElements {
+    pub line: Vec<Line>,
+    pub circle: Vec<Circle>,
+    pub rect: Vec<Rect>,
+    pub text: Vec<Text>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Line {
+    pub start: iced::Point,
+    pub end: iced::Point,
+    pub stroke_width: f32,
+    pub stroke: Option<iced::Color>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Circle {
+    pub center: iced::Point,
+    pub radius: f32,
+    pub fill: Option<iced::Color>,
+    pub stroke: Option<iced::Color>,
+    pub stroke_width: f32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Rect {
+    pub top_left: iced::Point,
+    pub size: iced::Size,
+    pub fill: Option<iced::Color>,
+    pub stroke: Option<iced::Color>,
+    pub stroke_width: f32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Text {
+
+}
+
+use svg_simple_parser::parse;
+fn parse_svg(svg: &str) -> BarChartElements {
+    let (_, root) = parse(svg).unwrap();
+    let mut bar_elements = BarChartElements::default();
+    for child in root.children.borrow().iter() {
+        if child.ele_type == "g" {
+            for elem in  child.children.borrow().iter() {
+                println!("{}", elem.ele_type);
+                match elem.ele_type {
+                    "line" => {
+                        bar_elements.line.push(get_line(elem, None));
+                    },
+                    "circle" => {
+                       bar_elements.circle.push(get_circle(elem))
+                    },
+                    "rect" => {
+                        
+                    }
+                    "text" => {
+                        
+                    },
+                    "g" => {
+                        let stroke = elem.attributes.borrow().get("stroke").map(|v| &**v);
+                        for child in  elem.children.borrow().iter() {
+                            match child.ele_type {
+                                "line" => bar_elements.line.push(get_line(child, stroke)),
+                                _ => println!("g - not found"),
+                            }
+                        }
+                    }
+                    _ => {
+                       
+                        // dbg!(elem);
+                    }
+                }
+            }
+        } else {
+
+            match child.ele_type {
+                "rect" => {
+                    let x = child.attributes.borrow().get("x").unwrap().parse::<f32>().unwrap();
+                    let y = child.attributes.borrow().get("y").unwrap().parse::<f32>().unwrap();
+                    let width = child.attributes.borrow().get("width").unwrap().parse::<f32>().unwrap();
+                    let height = child.attributes.borrow().get("height").unwrap().parse::<f32>().unwrap();
+                    let fill = child.attributes.borrow().get("fill")
+                                        .map(|v| &**v).unwrap();
+                    let stroke = child.attributes.borrow().get("fill")
+                                        .map(|v| &**v).unwrap();
+                    let stroke_width = child.attributes.borrow().get("stroke-width")
+                        .unwrap_or(&"0.0").parse::<f32>().unwrap();
+                    let rect = Rect{ top_left: iced::Point::new(x, y), 
+                                            size: iced::Size::new(width, height), 
+                                            fill: Some(iced::Color::parse(fill).unwrap()),
+                                            stroke: Some(iced::Color::parse(stroke).unwrap()),
+                                            stroke_width,
+                                            };
+                    bar_elements.rect.push(rect);
+                },
+                _ => {
+                    dbg!(child.ele_type);
+                }         
+             
+            }
+            
+        }
+    }
+     bar_elements
+}
+
+use svg_simple_parser::Element;
+fn get_line(child: &Rc<Element<'_>>, stroke_alt: Option<&str>) -> Line {
+    let attr = child.attributes.borrow();
+    let start_x = attr.get("x1").unwrap().parse::<f32>().unwrap();
+    let start_y = attr.get("y1").unwrap().parse::<f32>().unwrap();
+    let end_x = attr.get("x2").unwrap().parse::<f32>().unwrap();
+    let end_y = attr.get("y2").unwrap().parse::<f32>().unwrap();
+    let stroke_opt = attr.get("stroke");
+    let stroke = if stroke_opt.is_some() {
+        iced::Color::parse(stroke_opt.unwrap())
+    } else {
+        if stroke_alt.is_some() {
+            iced::Color::parse(stroke_alt.unwrap())
+        } else {
+            None
+        }
+    };
+    let stroke_width = attr.get("stroke-width").unwrap().parse::<f32>().unwrap();
+    Line {
+        start: iced::Point::new(start_x, start_y),
+        end: iced::Point::new(end_x, end_y),
+        stroke_width,
+        stroke,
+    }
+}
+
+fn get_circle(child: &Rc<Element<'_>>) -> Circle {
+    let attr = child.attributes.borrow();
+    let x = attr.get("cx").unwrap().parse::<f32>().unwrap();
+    let y = attr.get("cy").unwrap().parse::<f32>().unwrap();
+    let radius = attr.get("r").unwrap().parse::<f32>().unwrap();
+    let stroke = attr.get("stroke").unwrap();
+    let stroke_color = iced::Color::parse(stroke).unwrap();
+    let stroke_width = attr.get("stroke-width").unwrap().parse::<f32>().unwrap();
+    let fill = attr.get("fill").map(|v| &**v).unwrap();
+    let fill_color = iced::Color::parse(fill).unwrap();
+
+    Circle { 
+        center: iced::Point::new(x, y), 
+        radius, 
+        fill: Some(fill_color), 
+        stroke: Some(stroke_color), 
+        stroke_width }
+}
+
 
 // pub fn match_chart_widget(widget: &mut IpgWidget, item: &PyObject, value: &PyObject) {
 //     let update_item = try_extract_geometry_update(item);

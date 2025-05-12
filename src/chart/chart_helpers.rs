@@ -2,7 +2,7 @@
 
 use std::f32::consts::PI;
 
-use iced::{Point, Radians};
+use iced::Point;
 
 use super::geometries::IpgChartWidget;
 
@@ -105,7 +105,6 @@ pub fn rotate_geometry(
                     widget: IpgChartWidget,
                     ) -> Vec<Point> {
     match widget {
-        IpgChartWidget::None => vec![],
         _ => {
             let theta = to_radians(step_degrees);
             let mut new_points = vec![];
@@ -146,28 +145,6 @@ pub fn get_horizontal_angle_of_vector(center: Point, p2: Point) -> f32 {
     };
 
     to_degrees(&new_angle)
-}
-
-pub fn get_angle_of_vectors(center: Point, p1: Point, p2: Point) -> Radians {
-
-    let pts = 
-        translate_geometry(
-            &[p1, p2], 
-            Point::default(), 
-            center,
-        );
-
-    let angle = ((pts[0].y).atan2(pts[0].x) -
-                        (pts[1].y).atan2(pts[1].x)) * -1.0;
-    
-    // Since beyond pi, angle goes negative
-    let new_angle = if angle < 0.0 {
-        2.0 * PI + angle
-    } else {
-        angle
-    };
-
-    Radians::from(new_angle)
 }
 
 pub fn to_degrees(radians_f32: &f32) -> f32 {
