@@ -7,11 +7,11 @@ ipg = IPG()
 ipg.add_window(
         window_id="main", 
         title="Chart",
-        width=400.0,
+        width=600.0,
         height=400.0,
         pos_centered=True)
 
-ipg.add_chart(
+ipg.add_bar_chart(
         window_id="main", 
         chart_id="chart",
         width_fill=True, 

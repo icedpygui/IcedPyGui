@@ -10,7 +10,7 @@ use chart::draw_chart::{ChartWidget, IpgChartState};
 use iced::widget::image;
 use iced_aw::iced_fonts;
 
-use ipg_widgets::ipg_chart::{chart_item_update, IpgChart};
+use ipg_widgets::ipg_chart::{chart_item_update, construct_bar_chart, parse_svg, IpgChart};
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
@@ -342,10 +342,9 @@ pub fn access_canvas_state() -> MutexGuard<'static, CanvasState> {
 
 #[derive(Debug)]
 pub struct ChartState {
-    pub chart_ids_str: Lazy<HashMap<String, usize>>,
-    pub curves: Lazy<HashMap<usize, ChartWidget>>,
-    pub text_curves: Lazy<HashMap<usize, ChartWidget>>,
-    pub image_curves: Lazy<HashMap<usize, ChartWidget>>,
+    pub curves: Vec<ChartWidget>,
+    pub text_curves: Vec<ChartWidget>,
+    pub image_curves: Vec<ChartWidget>,
     pub width: Length,
     pub height: Length,
     pub background: Option<Color>,
@@ -355,10 +354,9 @@ pub struct ChartState {
 
 pub static CHART_STATE: Mutex<ChartState> = Mutex::new(
     ChartState {
-        chart_ids_str: Lazy::new(||HashMap::new()),
-        curves: Lazy::new(||HashMap::new()),
-        text_curves: Lazy::new(||HashMap::new()),
-        image_curves: Lazy::new(||HashMap::new()),
+        curves: vec![],
+        text_curves: vec![],
+        image_curves: vec![],
         width: Length::Fill,
         height: Length::Fill,
         background: None,
@@ -826,9 +824,13 @@ impl IPG {
  
         drop(state);
 
+        let svg = construct_bar_chart();
+        let (curves, txt) = parse_svg(svg);
+
         // set up the ChartState
         let mut chart_state = access_chart_state();
-        chart_state.chart_ids_str.insert(chart_id, id);
+        chart_state.curves = curves;
+        chart_state.text_curves = txt;
         chart_state.width = width;
         chart_state.height = height;
         chart_state.background = background;

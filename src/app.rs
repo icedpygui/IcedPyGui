@@ -22,7 +22,7 @@ use polars::frame::DataFrame;
 use crate::canvas::draw_canvas::IpgCanvasState;
 use crate::chart::draw_chart::IpgChartState;
 use crate::ipg_widgets::ipg_canvas::match_canvas_widget;
-use crate::ipg_widgets::ipg_chart::{chart_callback, construct_chart, ChartMessage};
+use crate::ipg_widgets::ipg_chart::{construct_chart, ChartMessage};
 use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, 
     construct_color_picker, ColPikMessage};
 use crate::ipg_widgets::ipg_divider::{construct_divider_horizontal, construct_divider_vertical, divider_callback, DivMessage};
@@ -191,7 +191,7 @@ impl App {
                 Task::none()
             },
             Message::Chart(chart_message) => {
-                chart_callback(chart_message, &mut self.state, &mut self.chart_state);
+                // chart_callback(chart_message, &mut self.state, &mut self.chart_state);
                 process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 get_tasks(&mut self.state)
             },
@@ -1347,7 +1347,6 @@ fn clone_canvas_state(canvas_state: &mut IpgCanvasState) {
 
 fn clone_chart_state(chart_state: &mut IpgChartState) {
     let mut mutex_cs = access_chart_state();
-    dbg!(&mutex_cs.curves);
     chart_state.curves = mutex_cs.curves.to_owned();
     chart_state.text_curves = mutex_cs.text_curves.to_owned();
     chart_state.image_curves = mutex_cs.image_curves.to_owned();
@@ -1358,8 +1357,8 @@ fn clone_chart_state(chart_state: &mut IpgChartState) {
     chart_state.selected_chart_color = mutex_cs.background;
 
     // zeroing out any vecs and hashmaps
-    mutex_cs.curves = Lazy::new(||HashMap::new());
-    mutex_cs.text_curves = Lazy::new(||HashMap::new());
-    mutex_cs.image_curves = Lazy::new(||HashMap::new());
+    mutex_cs.curves = vec![];
+    mutex_cs.text_curves = vec![];
+    mutex_cs.image_curves = vec![];
     drop(mutex_cs);
 }
