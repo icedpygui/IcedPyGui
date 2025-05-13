@@ -825,12 +825,13 @@ impl IPG {
         drop(state);
 
         let svg = construct_bar_chart();
-        let (curves, txt) = parse_svg(svg);
+        // let (curves, txt) = parse_svg(svg);
 
         // set up the ChartState
         let mut chart_state = access_chart_state();
-        chart_state.curves = curves;
-        chart_state.text_curves = txt;
+        // chart_state.curves = curves;
+        // chart_state.text_curves = txt;
+        chart_state.image_curves = vec![svg];
         chart_state.width = width;
         chart_state.height = height;
         chart_state.background = background;

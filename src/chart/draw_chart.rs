@@ -397,14 +397,14 @@ impl DrawCurve {
     }
 
     fn draw_image(image_curve: &ChartWidget, frame: &mut Frame, _theme: &Theme) {
-        if let ChartWidget::Image(img) = &image_curve {
-             frame.translate(Vector::new(img.position.x, img.position.y));
-             frame.rotate(&img.rotation * PI/180.0);
-             frame.draw_image(
-                         img.bounds,
-                        &img.path,
-             );
-         };
+        // if let ChartWidget::Image(img) = &image_curve {
+        //      frame.translate(Vector::new(img.position.x, img.position.y));
+        //      frame.rotate(&img.rotation * PI/180.0);
+        frame.draw_image(
+                    img.bounds,
+                &img.path,
+        );
+        //  };
     }
 
 }

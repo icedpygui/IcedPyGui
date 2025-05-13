@@ -1,3 +1,4 @@
+import os
 from icedpygui import IPG, IpgColor
 import math
 
@@ -59,5 +60,26 @@ ipg.add_rectangle(
         height=75.0,
         stroke_width=2.0,)
 
+# Setting up the image path
+cwd = os.getcwd()
+
+ferris = cwd + "/python_examples/resources/ferris_0.png"
+tiger = cwd + "/python_examples/resources/tiger_0.png"
+
+ipg.add_canvas_image(
+    canvas_id="canvas",
+    image_path=ferris,
+    width=50.0,
+    height=50.0,
+    position_xy=(275.0, 325.0)
+)
+
+ipg.add_canvas_image(
+    canvas_id="canvas",
+    image_path=tiger,
+    width=50.0,
+    height=50.0,
+    position_xy=(275.0, 375.0)
+)
 
 ipg.start_session()
