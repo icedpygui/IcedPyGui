@@ -480,8 +480,18 @@ fn get_circle(child: &Rc<Element<'_>>) -> ChartCircle {
 
 fn get_text(child: &Rc<Element<'_>>, value: String) -> ChartText {
     let attr = child.attributes.borrow();
-    let x = attr.get("x").unwrap().parse::<f32>().unwrap();
-    let y = attr.get("y").unwrap().parse::<f32>().unwrap(); 
+    let mut x = attr.get("x").unwrap().parse::<f32>().unwrap();
+    let dx = attr.get("dx");
+    if dx.is_some() {
+        dbg!(&value, &dx);
+        x += dx.unwrap().parse::<f32>().unwrap();
+    }
+    let mut y = attr.get("y").unwrap().parse::<f32>().unwrap();
+    let dy = attr.get("dy");
+    if dy.is_some() {
+        dbg!(&value, &dy);
+        y += dy.unwrap().parse::<f32>().unwrap();
+    }  
     let fill = attr.get("fill").map(|v| &**v).unwrap();
     let fill_color = iced::Color::parse(fill).unwrap();
     let size = attr.get("font-size").unwrap().parse::<f32>().unwrap();
@@ -489,7 +499,7 @@ fn get_text(child: &Rc<Element<'_>>, value: String) -> ChartText {
     ChartText { 
         id: 0, 
         content: value, 
-        position: iced::Point::new(x, y), 
+        position: iced::Point::new(x+30.0, y), 
         color: fill_color, 
         size: size.into(), 
         line_height: LineHeight::default(), 

@@ -145,7 +145,7 @@ impl App {
         
         let mut open = add_windows(&mut state);
         open.push(font::load(include_bytes!("./graphics/fonts/bootstrap-icons.ttf").as_slice()).map(Message::FontLoaded));
-
+        
         (
             Self {
                 state,

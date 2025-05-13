@@ -7,8 +7,8 @@ ipg = IPG()
 ipg.add_window(
         window_id="main", 
         title="Chart",
-        width=600.0,
-        height=400.0,
+        width=700.0,
+        height=500.0,
         pos_centered=True)
 
 ipg.add_bar_chart(
