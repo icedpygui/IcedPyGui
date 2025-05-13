@@ -3,7 +3,7 @@
 use std::f32::consts::PI;
 
 use iced::widget::canvas::path::arc::Elliptical;
-use iced::{alignment, mouse, Color, Length, Radians, Vector};
+use iced::{alignment, mouse, Color, Radians, Vector};
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{self, stroke, Canvas, Frame, Geometry, LineDash, Path, Stroke};
 use iced::{Element, Point, Renderer, Theme};
@@ -30,7 +30,7 @@ pub enum ChartWidget {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq,)]
 #[pyclass(eq, eq_int)]
-pub enum IpgDrawMode {
+pub enum ChartDrawMode {
     #[default]
     Display,
     Edit,
@@ -38,7 +38,7 @@ pub enum IpgDrawMode {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq,)]
-pub enum IpgDrawStatus {
+pub enum ChartDrawStatus {
     Inprogress,
     Completed,
     Delete,
@@ -54,9 +54,9 @@ pub struct IpgChartState {
     pub curves: Vec<ChartWidget>,
     pub text_curves: Vec<ChartWidget>,
     pub image_curves: Vec<ChartWidget>,
-    pub draw_mode: IpgDrawMode,
-    pub width: Length,
-    pub height: Length,
+    pub draw_mode: ChartDrawMode,
+    pub width: f32,
+    pub height: f32,
     pub border_color: Option<Color>,
     pub border_width: Option<f32>,
     pub selected_widget: Option<IpgChartWidget>,
@@ -89,9 +89,9 @@ impl Default for IpgChartState {
             curves: vec![],
             text_curves: vec![],
             image_curves: vec![],
-            draw_mode: IpgDrawMode::Display,
-            width: Length::Fill,
-            height: Length::Fill,
+            draw_mode: ChartDrawMode::Display,
+            width: 300.0,
+            height: 300.0,
             border_color: None,
             border_width: None,
             selected_widget: None,
@@ -204,9 +204,7 @@ impl canvas::Program<ChartWidget> for DrawPending<'_> {
         let content =
             self.state.cache.draw(renderer, bounds.size(), 
                 |frame| {
-
                 DrawCurve::draw_all(self.curves, frame, theme);
-
             });
 
         let mut text_content = vec![];
@@ -397,16 +395,39 @@ impl DrawCurve {
     }
 
     fn draw_image(image_curve: &ChartWidget, frame: &mut Frame, _theme: &Theme) {
-        // if let ChartWidget::Image(img) = &image_curve {
-        //      frame.translate(Vector::new(img.position.x, img.position.y));
-        //      frame.rotate(&img.rotation * PI/180.0);
-        frame.draw_image(
-                    img.bounds,
-                &img.path,
-        );
-        //  };
+        if let ChartWidget::Image(img) = &image_curve {
+             frame.draw_image(
+                         img.bounds,
+                        &img.path,
+             );
+         };
     }
 
 }
 
+use resvg::usvg;
+use resvg::tiny_skia;
 
+pub fn svg_to_png() {
+    let input_svg = "../python_examples/resources/charts/bar_chart.svg";
+    let output_png = "../python_examples/resources/charts/bar_chart.png";
+
+    let tree = {
+        let mut opt = usvg::Options {
+            // Get file's absolute directory.
+            resources_dir: std::fs::canonicalize(&input_svg)
+                .ok()
+                .and_then(|p| p.parent().map(|p| p.to_path_buf())),
+            ..usvg::Options::default()
+        };
+        opt.fontdb_mut().load_system_fonts();
+
+        let svg_data = std::fs::read(&input_svg).unwrap();
+        usvg::Tree::from_data(&svg_data, &opt).unwrap()
+    };
+
+    let pixmap_size = tree.size().to_int_size();
+    let mut pixmap = tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
+    resvg::render(&tree, tiny_skia::Transform::default(), &mut pixmap.as_mut());
+    pixmap.save_png(output_png).unwrap();
+}

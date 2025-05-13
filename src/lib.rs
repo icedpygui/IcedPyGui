@@ -6,11 +6,12 @@ use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode, IpgDrawStatus, IpgWidget}
 use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, 
     IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
 
-use chart::draw_chart::{ChartWidget, IpgChartState};
+use chart::draw_chart::{svg_to_png, ChartDrawMode, ChartDrawStatus, ChartWidget, IpgChartState};
+use chart::geometries::ChartImage;
 use iced::widget::image;
 use iced_aw::iced_fonts;
 
-use ipg_widgets::ipg_chart::{chart_item_update, construct_bar_chart, parse_svg, IpgChart};
+use ipg_widgets::ipg_chart::{chart_item_update, construct_bar_chart, IpgChart};
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
@@ -33,6 +34,8 @@ use iced::widget::text::{self, LineHeight};
 
 use core::panic;
 use std::collections::HashMap;
+use std::env;
+use std::path::Path;
 
 mod app;
 use app::App;
@@ -342,11 +345,12 @@ pub fn access_canvas_state() -> MutexGuard<'static, CanvasState> {
 
 #[derive(Debug)]
 pub struct ChartState {
+    pub chart_ids_str: Lazy<HashMap<String, usize>>,
     pub curves: Vec<ChartWidget>,
     pub text_curves: Vec<ChartWidget>,
     pub image_curves: Vec<ChartWidget>,
-    pub width: Length,
-    pub height: Length,
+    pub width: f32,
+    pub height: f32,
     pub background: Option<Color>,
     pub border_color: Option<Color>,
     pub border_width: Option<f32>,
@@ -354,11 +358,12 @@ pub struct ChartState {
 
 pub static CHART_STATE: Mutex<ChartState> = Mutex::new(
     ChartState {
+        chart_ids_str: Lazy::new(||HashMap::new()),
         curves: vec![],
         text_curves: vec![],
         image_curves: vec![],
-        width: Length::Fill,
-        height: Length::Fill,
+        width: 300.0,
+        height: 300.0,
         background: None,
         border_color: None,
         border_width: None,
@@ -517,7 +522,7 @@ impl IPG {
             theme: Theme::Dark,
         }
     }
-
+    // pub const REQUIRED_FONT_BYTES: &[u8] = include_bytes!("graphics/fonts/Roboto.ttf");
     #[pyo3(signature = ())]
     fn start_session(&self) {
 
@@ -770,10 +775,8 @@ impl IPG {
     #[pyo3(signature = (
         window_id,
         chart_id,
-        width=None,
-        width_fill=false,
-        height=None,
-        height_fill=false,
+        width,
+        height,
         border_width=2.0,
         border_ipg_color=IpgColor::WHITE,
         border_rgba_color=None,
@@ -786,10 +789,8 @@ impl IPG {
         &self,
         window_id: String,
         chart_id: String,
-        width: Option<f32>,
-        width_fill: bool,
-        height: Option<f32>,
-        height_fill: bool,
+        width: f32,
+        height: f32,
         border_width: Option<f32>,
         border_ipg_color: Option<IpgColor>,
         border_rgba_color: Option<[f32; 4]>,
@@ -799,44 +800,63 @@ impl IPG {
         gen_id: Option<usize>,
         )  -> PyResult<usize> 
     {
+        let bounds = 
+            Rectangle::new(Point::ORIGIN, Size::new(width, height));
+    
+        let mut chart_state = access_chart_state();
+        
+        let mut current = match env::current_dir() {
+            Ok(path) => path.to_str().unwrap().to_string(),
+            Err(e) => panic!("Error getting current path: {}", e),
+        };
+        current += "/python_examples/resources/charts/bar_chart.png";
+        let path = Path::new(&current);
+
+        let handle_path = image::Handle::from_path(path);
+
+        if path.exists() {
+            println!("Path exists!");
+        } else {
+            println!("Path does not exist.");
+        }
+
         let id = self.get_id(gen_id);
 
-        let width = get_width(width, width_fill);
-        let height = get_height(height, height_fill);
-        let background: Option<Color> = get_color(background_rgba_color, background_ipg_color, 1.0, false);
-
-        let border_color = get_color(border_rgba_color, border_ipg_color, 1.0, false);
-
+        let image = 
+            ChartImage{ 
+                id, 
+                path: handle_path,
+                bounds,
+                width,
+                height,  
+                draw_mode: ChartDrawMode::Display, 
+                status: ChartDrawStatus::Completed,
+                };
+                
         let prt_id = match parent_id {
             Some(id) => id,
             None => window_id.clone(),
         };
-
         set_state_of_container(id, window_id.clone(), Some(chart_id.clone()), prt_id);
 
         let mut state = access_state();
 
         set_state_cont_wnd_ids(&mut state, &window_id, chart_id.clone(), id, "add_chart".to_string());
-
         state.containers.insert(
             id, IpgContainers::IpgChart(
                 IpgChart::new(id,)));
- 
-        drop(state);
 
-        let svg = construct_bar_chart();
-        // let (curves, txt) = parse_svg(svg);
+        let (bar_elements, text_elements) = construct_bar_chart();
 
-        // set up the ChartState
-        let mut chart_state = access_chart_state();
-        // chart_state.curves = curves;
-        // chart_state.text_curves = txt;
-        chart_state.image_curves = vec![svg];
+        // chart_state.image_curves.push(ChartWidget::Image(image));
+        chart_state.curves = bar_elements;
+        chart_state.text_curves = text_elements;
         chart_state.width = width;
         chart_state.height = height;
-        chart_state.background = background;
-        chart_state.border_width = border_width;
-        chart_state.border_color = border_color;
+        chart_state.background = None;
+        chart_state.border_width = Some(2.0);
+        chart_state.border_color = Some(Color::WHITE);
+        
         drop(chart_state);
 
         Ok(id)

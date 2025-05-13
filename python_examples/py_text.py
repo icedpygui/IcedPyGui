@@ -1,4 +1,4 @@
-from icedpygui import IPG, IpgTextWrapping, IpgTextParam
+from icedpygui import IPG, IpgTextParam
 
 # This is a simple demo for text with wrapping
 ipg = IPG()
@@ -50,13 +50,11 @@ ipg.add_slider(
 txt1 = ipg.add_text(
         parent_id="col",
         content="This is some very very very very very very very very long text.",
-        wrapping=IpgTextWrapping.Word,
         width=160.0)
 
 txt2 = ipg.add_text(
         parent_id="col",
         content="This is some very very very very very very very very long text.",
-        wrapping=IpgTextWrapping.NoWrapping,
         width=160.0)
 
 

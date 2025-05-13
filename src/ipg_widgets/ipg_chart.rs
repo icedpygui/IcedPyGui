@@ -9,8 +9,8 @@ use pyo3::{pyclass, PyObject, Python};
 use charts_rs::*;
 
 use crate::app::Message;
-use crate::chart::draw_chart::{IpgChartState, IpgDrawMode, 
-    IpgDrawStatus, ChartWidget};
+use crate::chart::draw_chart::{IpgChartState, ChartDrawMode, 
+    ChartDrawStatus, ChartWidget};
 use crate::chart::geometries::{
     ChartCircle, ChartLine, ChartRectangle, ChartText, IpgChartWidget
 };
@@ -32,6 +32,7 @@ impl IpgChart {
 }
 
 pub fn construct_chart(chart_state: &IpgChartState) -> iced::Element<Message> {
+
     let draw: iced::Element<ChartMessage> = container(
         chart_state
             .view(
@@ -220,9 +221,9 @@ pub fn try_extract_chart_update(update_obj: &PyObject) -> IpgChartParam {
     })
 }
 
-fn try_extract_mode(update_obj: &PyObject) -> IpgDrawMode {
+fn try_extract_mode(update_obj: &PyObject) -> ChartDrawMode {
     Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgDrawMode>(py);
+        let res = update_obj.extract::<ChartDrawMode>(py);
         match res {
             Ok(update) => update,
             Err(_) => panic!("Chart mode update extraction failed"),
@@ -286,7 +287,7 @@ pub struct Text {
 
 }
 
-pub fn construct_bar_chart() -> String {
+pub fn construct_bar_chart() -> (Vec<ChartWidget>, Vec<ChartWidget>) {
     let mut bar_chart = BarChart::new_with_theme(
         vec![
             ("Evaporation", vec![2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6]).into(),
@@ -324,7 +325,8 @@ pub fn construct_bar_chart() -> String {
     bar_chart.y_axis_configs[0].axis_formatter = Some("{c} ml".to_string());
     bar_chart.y_axis_configs[1].axis_formatter = Some("{c} °C".to_string());
 
-    bar_chart.svg().unwrap()
+    let svg = bar_chart.svg().unwrap();
+    parse_svg(svg)
     
 }
 
@@ -338,7 +340,7 @@ pub fn parse_svg(svg: String) -> (Vec<ChartWidget>, Vec<ChartWidget>) {
             text_values.push(cap[1].trim().to_string());
         }
 
-    let title = text_values.remove(0);
+    let _title = text_values.remove(0);
 
     let (_, root) = parse(&svg).unwrap();
 
@@ -407,8 +409,8 @@ pub fn parse_svg(svg: String) -> (Vec<ChartWidget>, Vec<ChartWidget>) {
                             fill_color: iced::Color::parse(fill),
                             stroke_dash_offset: None,
                             stroke_dash_segments: None,
-                            draw_mode: IpgDrawMode::Display,
-                            status: IpgDrawStatus::Completed,
+                            draw_mode: ChartDrawMode::Display,
+                            status: ChartDrawStatus::Completed,
                             };
 
                     bar_elements.push(ChartWidget::Rectangle(rect));
@@ -446,8 +448,8 @@ fn get_line(child: &Rc<Element<'_>>, stroke_alt: Option<&str>) -> ChartLine {
         stroke_width,
         stroke_dash_offset: None,
         stroke_dash_segments: None,
-        draw_mode: IpgDrawMode::Display,
-        status: IpgDrawStatus::Completed,
+        draw_mode: ChartDrawMode::Display,
+        status: ChartDrawStatus::Completed,
     }
 
 }
@@ -472,8 +474,8 @@ fn get_circle(child: &Rc<Element<'_>>) -> ChartCircle {
         stroke_width,
         stroke_dash_offset: None,
         stroke_dash_segments: None,
-        draw_mode: IpgDrawMode::Display,
-        status: IpgDrawStatus::Completed, 
+        draw_mode: ChartDrawMode::Display,
+        status: ChartDrawStatus::Completed, 
     }
 
 }
@@ -499,17 +501,17 @@ fn get_text(child: &Rc<Element<'_>>, value: String) -> ChartText {
     ChartText { 
         id: 0, 
         content: value, 
-        position: iced::Point::new(x+30.0, y), 
+        position: iced::Point::new(x, y), 
         color: fill_color, 
         size: size.into(), 
         line_height: LineHeight::default(), 
-        font: iced::Font::DEFAULT, 
+        font: iced::Font::with_name("Roboto"), 
         horizontal_alignment: alignment::Horizontal::Center, 
         vertical_alignment: alignment::Vertical::Center, 
         shaping: Shaping::Basic, 
         rotation: 0.0, 
-        draw_mode: IpgDrawMode::Display,
-        status: IpgDrawStatus::Completed, 
+        draw_mode: ChartDrawMode::Display,
+        status: ChartDrawStatus::Completed, 
     }
 }
 

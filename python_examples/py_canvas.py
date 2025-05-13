@@ -63,12 +63,12 @@ ipg.add_rectangle(
 # Setting up the image path
 cwd = os.getcwd()
 
-ferris = cwd + "/python_examples/resources/ferris_0.png"
-tiger = cwd + "/python_examples/resources/tiger_0.png"
+ferris0 = cwd + "/python_examples/resources/ferris_0.png"
+ferris1 = cwd + "/python_examples/resources/ferris_1.png"
 
 ipg.add_canvas_image(
     canvas_id="canvas",
-    image_path=ferris,
+    image_path=ferris0,
     width=50.0,
     height=50.0,
     position_xy=(275.0, 325.0)
@@ -76,10 +76,10 @@ ipg.add_canvas_image(
 
 ipg.add_canvas_image(
     canvas_id="canvas",
-    image_path=tiger,
+    image_path=ferris1,
     width=50.0,
     height=50.0,
-    position_xy=(275.0, 375.0)
+    position_xy=(330.0, 325.0)
 )
 
 ipg.start_session()

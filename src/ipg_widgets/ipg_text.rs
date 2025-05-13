@@ -1,5 +1,5 @@
 //! ipg_text
-use iced::{Color, Element, Length};
+use iced::{Color, Element, Font, Length};
 use iced::widget::text::{LineHeight, Shaping, Style};
 use iced::widget::Text;
 use crate::app::Message;
@@ -82,7 +82,7 @@ pub fn construct_text(text: &IpgText)
                         .height(text.height)
                         .align_x(hor_align)
                         .align_y(vert_align)
-                        // .font()
+                        .font(Font::with_name("Roboto"))
                         .shaping(text.shaping)
                         .style(move|_theme|{
                             let mut style = Style::default();

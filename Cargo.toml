@@ -18,7 +18,7 @@ iced = { version = "0.13.1", features = ["advanced", "canvas", "debug", "highlig
                                         "lazy", "smol", "svg", "tokio", "multi-window", "auto-detect-theme"] }
 iced_aw = {git = "https://github.com/iced-rs/iced_aw", rev = "3485f3a"}
 svg-simple-parser = "0.0.6"
-charts-rs = "0.3.22"
+charts-rs = { path = "../charts-rs", features = ["resvg", "image", "image-encoder"] }
 
 polars = { version="0.46.0", features=["strings", "lazy"]}
 pyo3-polars = "0.20.0"
@@ -34,6 +34,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "*"
 phf = { version = "0.11", default-features = false }
 regex = "1.11.1"
+resvg = "0.45.1"
 
 [build-dependencies]
 pyo3-build-config = { version = "0.23.3", features = ["resolve-config"] }

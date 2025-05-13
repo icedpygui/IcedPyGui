@@ -6,7 +6,7 @@ use iced::{alignment, widget::{image,
 use pyo3::pyclass;
 use serde::{Deserialize, Serialize};
 
-use super::draw_chart::{IpgDrawMode, IpgDrawStatus};
+use super::draw_chart::{ChartDrawMode, ChartDrawStatus};
 
 // use super::{chart_helpers::{ 
 //     get_line_from_slope_intercept, 
@@ -24,8 +24,8 @@ pub struct ChartCircle {
     pub fill_color: Option<Color>,
     pub stroke_dash_offset: Option<usize>,
     pub stroke_dash_segments: Option<Vec<f32>>,
-    pub draw_mode: IpgDrawMode,
-    pub status: IpgDrawStatus,
+    pub draw_mode: ChartDrawMode,
+    pub status: ChartDrawStatus,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -40,21 +40,19 @@ pub struct ChartEllipse {
     pub stroke_width: f32,
     pub stroke_dash_offset: Option<usize>,
     pub stroke_dash_segments: Option<Vec<f32>>,
-    pub draw_mode: IpgDrawMode,
-    pub status: IpgDrawStatus,
+    pub draw_mode: ChartDrawMode,
+    pub status: ChartDrawStatus,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChartImage {
     pub id: usize,
     pub path: image::Handle,
-    pub position: Point,
     pub bounds: Rectangle,
     pub width: f32,
     pub height: f32,
-    pub rotation: f32,
-    pub draw_mode: IpgDrawMode,
-    pub status: IpgDrawStatus,
+    pub draw_mode: ChartDrawMode,
+    pub status: ChartDrawStatus,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -65,8 +63,8 @@ pub struct ChartLine {
     pub stroke_width: f32,
     pub stroke_dash_offset: Option<usize>,
     pub stroke_dash_segments: Option<Vec<f32>>,
-    pub draw_mode: IpgDrawMode,
-    pub status: IpgDrawStatus,
+    pub draw_mode: ChartDrawMode,
+    pub status: ChartDrawStatus,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -78,8 +76,8 @@ pub struct ChartPolyLine {
     pub stroke_width: f32,
     pub stroke_dash_offset: Option<usize>,
     pub stroke_dash_segments: Option<Vec<f32>>,
-    pub draw_mode: IpgDrawMode,
-    pub status: IpgDrawStatus,
+    pub draw_mode: ChartDrawMode,
+    pub status: ChartDrawStatus,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -91,8 +89,8 @@ pub struct ChartPolygon {
     pub fill_color: Option<Color>,
     pub stroke_dash_offset: Option<usize>,
     pub stroke_dash_segments: Option<Vec<f32>>,
-    pub draw_mode: IpgDrawMode,
-    pub status: IpgDrawStatus,
+    pub draw_mode: ChartDrawMode,
+    pub status: ChartDrawStatus,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -105,8 +103,8 @@ pub struct ChartRectangle {
     pub fill_color: Option<Color>,
     pub stroke_dash_offset: Option<usize>,
     pub stroke_dash_segments: Option<Vec<f32>>,
-    pub draw_mode: IpgDrawMode,
-    pub status: IpgDrawStatus,
+    pub draw_mode: ChartDrawMode,
+    pub status: ChartDrawStatus,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -122,8 +120,8 @@ pub struct ChartText {
     pub vertical_alignment: alignment::Vertical,
     pub shaping: Shaping,
     pub rotation: f32,
-    pub draw_mode: IpgDrawMode,
-    pub status: IpgDrawStatus,
+    pub draw_mode: ChartDrawMode,
+    pub status: ChartDrawStatus,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq,)]
