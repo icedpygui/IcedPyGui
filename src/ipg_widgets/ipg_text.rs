@@ -24,7 +24,7 @@ pub struct IpgText {
     pub height: Length,
     pub align_x: IpgHorizontalAlignment,
     pub align_y: IpgVerticalAlignment,
-    // pub font: Font,
+    pub font: String,
     pub shaping: Shaping,
     pub show: bool,
     pub style: Option<Color>,
@@ -41,7 +41,7 @@ impl IpgText {
         height: Length,
         align_x: IpgHorizontalAlignment,
         align_y: IpgVerticalAlignment,
-        // font: Font,
+        font: String,
         shaping: Shaping,
         show: bool,
         style: Option<Color>,
@@ -56,7 +56,7 @@ impl IpgText {
             height,
             align_x,
             align_y,
-            // font,
+            font,
             shaping,
             show,
             style,
@@ -74,6 +74,11 @@ pub fn construct_text(text: &IpgText)
     let hor_align = get_horizontal_alignment(&text.align_x);
     let vert_align = get_vertical_alignment(&text.align_y);
 
+    let font = match text.font.clone().as_str() {
+        "FiraSans-Regular" => "FiraSans-Regular",
+        _ => "Roboto",
+    };
+
     Some(Text::new(text.content.clone()
                         )
                         .size(text.size)
@@ -82,7 +87,7 @@ pub fn construct_text(text: &IpgText)
                         .height(text.height)
                         .align_x(hor_align)
                         .align_y(vert_align)
-                        .font(Font::with_name("Roboto"))
+                        .font(Font::with_name(&font))
                         .shaping(text.shaping)
                         .style(move|_theme|{
                             let mut style = Style::default();

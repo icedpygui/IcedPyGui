@@ -522,7 +522,7 @@ impl IPG {
             theme: Theme::Dark,
         }
     }
-    // pub const REQUIRED_FONT_BYTES: &[u8] = include_bytes!("graphics/fonts/Roboto.ttf");
+    pub const REQUIRED_FONT_BYTES: &[u8] = include_bytes!("graphics/fonts/Roboto.ttf");
     #[pyo3(signature = ())]
     fn start_session(&self) {
 
@@ -4546,7 +4546,8 @@ impl IPG {
         align_x=IpgHorizontalAlignment::Left, 
         align_y=IpgVerticalAlignment::Top,
         line_height=1.3, 
-        size=16.0, 
+        size=16.0,
+        font="FiraSans-Regular".to_string(), 
         shaping="basic".to_string(), 
         text_color=None, 
         text_rgba=None,
@@ -4567,6 +4568,7 @@ impl IPG {
         mut align_y: IpgVerticalAlignment,
         line_height: f32,
         size: f32,
+        font: String,
         shaping: String,
         text_color: Option<IpgColor>,
         text_rgba: Option<[f32; 4]>,
@@ -4605,7 +4607,7 @@ impl IPG {
                 height,
                 align_x,
                 align_y,
-                // font: Font,
+                font,
                 shaping,
                 show,
                 style,

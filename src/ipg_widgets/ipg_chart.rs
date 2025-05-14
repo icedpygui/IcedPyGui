@@ -505,7 +505,7 @@ fn get_text(child: &Rc<Element<'_>>, value: String) -> ChartText {
         color: fill_color, 
         size: size.into(), 
         line_height: LineHeight::default(), 
-        font: iced::Font::with_name("Roboto"), 
+        font: iced::Font::default(), 
         horizontal_alignment: alignment::Horizontal::Center, 
         vertical_alignment: alignment::Vertical::Center, 
         shaping: Shaping::Basic, 

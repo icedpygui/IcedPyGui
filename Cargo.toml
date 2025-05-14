@@ -14,7 +14,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.23.3", features = ["extension-module"] }
-iced = { version = "0.13.1", features = ["advanced", "canvas", "debug", "highlighter", "image", 
+iced = { version = "0.13.1", features = ["canvas", "debug", "highlighter", "image", 
                                         "lazy", "smol", "svg", "tokio", "multi-window", "auto-detect-theme"] }
 iced_aw = {git = "https://github.com/iced-rs/iced_aw", rev = "3485f3a"}
 svg-simple-parser = "0.0.6"

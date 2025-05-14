@@ -55,7 +55,8 @@ txt1 = ipg.add_text(
 txt2 = ipg.add_text(
         parent_id="col",
         content="This is some very very very very very very very very long text.",
-        width=160.0)
+        width=160.0,
+        font="FiraSans-Regular")
 
 
 # Required to be the last widget sent to Iced,  If you start the program
