@@ -6,12 +6,11 @@ use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode, IpgDrawStatus, IpgWidget}
 use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, 
     IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
 
-use chart::draw_chart::{ChartDrawMode, ChartDrawStatus, ChartWidget, IpgChartState};
-use chart::geometries::ChartImage;
+use chart::draw_chart::{ChartWidget, IpgChartState};
 use charts_rs::BarChart;
 use iced::widget::image;
 
-use ipg_widgets::ipg_chart::{chart_item_update, construct_bar_chart, parse_svg, IpgChart};
+use ipg_widgets::ipg_chart::{chart_item_update, parse_svg, IpgChart};
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
@@ -23,6 +22,7 @@ use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, canvas_timer_style
     IpgCanvasTimer, IpgCanvasTimerParam, IpgCanvasTimerStyle, IpgCanvasTimerStyleParam};
 
 use polars::frame::DataFrame;
+use polars::prelude::*;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;
@@ -34,8 +34,7 @@ use iced::widget::text::{self, LineHeight};
 
 use core::panic;
 use std::collections::HashMap;
-use std::env;
-use std::path::Path;
+
 
 mod app;
 use app::App;
@@ -775,13 +774,9 @@ impl IPG {
     #[pyo3(signature = (
         window_id,
         chart_id,
+        polars_df,
         width,
         height,
-        border_width=2.0,
-        border_ipg_color=IpgColor::WHITE,
-        border_rgba_color=None,
-        background_ipg_color=None,
-        background_rgba_color=None,
         parent_id=None,
         gen_id=None,
         ))]
@@ -789,17 +784,9 @@ impl IPG {
         &self,
         window_id: String,
         chart_id: String,
-        name: String,
-        data: Vec<f32>,
-        start_index: usize,
-        index: Option<usize>,
-        y_axis_index: usize,
-        label_show: bool,
-        mark_lines: Vec<MarkLine>,
-        mark_points: Vec<MarkPoint>,
-        colors: Option<Vec<Option<Color>>>,
-        category: Option<SeriesCategory>,
-        stroke_dash_array: Option<String>,
+        polars_df: PyDataFrame,
+        width: f32,
+        height: f32,
         parent_id: Option<String>,
         gen_id: Option<usize>,
         )  -> PyResult<usize> 
@@ -824,18 +811,24 @@ impl IPG {
             id, IpgContainers::IpgChart(
                 IpgChart::new(id,)));
 
-        let series = 
+        let df: DataFrame = polars_df.into();
+        let mut series: Vec<charts_rs::Series> = vec![];
+        for col in df.iter() {
+            let data = col.f32().unwrap().to_vec_null_aware().left().unwrap();
+            series.push((col.name().as_str(), data).into())
+        }
 
+        // let series = vec![
+        //     ("Evaporation", vec![2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6]).into(),
+        //     (
+        //         "Precipitation",
+        //         vec![2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6],
+        //     )
+        //         .into(),
+        //     ("Temperature", vec![2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3]).into(),
+        // ];
         let mut bar_chart = BarChart::new_with_theme(
-        vec![
-            ("Evaporation", vec![2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6]).into(),
-            (
-                "Precipitation",
-                vec![2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6],
-            )
-                .into(),
-            ("Temperature", vec![2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3]).into(),
-        ],
+        series,
         vec![
             "Mon".to_string(),
             "Tue".to_string(),
@@ -847,21 +840,21 @@ impl IPG {
         ],
         charts_rs::THEME_GRAFANA,
         );
-        bar_chart.title_text = "Mixed Line and Bar".to_string();
-        bar_chart.legend_margin = Some(Box {
-            top: bar_chart.title_height,
-            bottom: 5.0,
-            ..Default::default()
-        });
-        bar_chart.series_list[2].category = Some(SeriesCategory::Line);
-        bar_chart.series_list[2].y_axis_index = 1;
-        bar_chart.series_list[2].label_show = true;
+        // bar_chart.title_text = "Mixed Line and Bar".to_string();
+        // bar_chart.legend_margin = Some(Box {
+        //     top: bar_chart.title_height,
+        //     bottom: 5.0,
+        //     ..Default::default()
+        // });
+        // bar_chart.series_list[2].category = Some(SeriesCategory::Line);
+        // bar_chart.series_list[2].y_axis_index = 1;
+        // bar_chart.series_list[2].label_show = true;
 
-        bar_chart
-            .y_axis_configs
-            .push(bar_chart.y_axis_configs[0].clone());
-        bar_chart.y_axis_configs[0].axis_formatter = Some("{c} ml".to_string());
-        bar_chart.y_axis_configs[1].axis_formatter = Some("{c} °C".to_string());
+        // bar_chart
+        //     .y_axis_configs
+        //     .push(bar_chart.y_axis_configs[0].clone());
+        // bar_chart.y_axis_configs[0].axis_formatter = Some("{c} ml".to_string());
+        // bar_chart.y_axis_configs[1].axis_formatter = Some("{c} °C".to_string());
 
         let svg = bar_chart.svg().unwrap();
         let (bar_elements, 
