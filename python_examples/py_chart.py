@@ -17,12 +17,21 @@ data = {
         "Temperature": [2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3],
     }
 
+axis_labels = [
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat",
+            "Sun",
+        ]
+
 df = pl.DataFrame(data)
 
-ipg.add_bar_chart(
+ipg.add_chart(
     window_id="main",
     chart_id="chart",
-    polars_df=df,
     width=600.0,
     height=400.0,
 )

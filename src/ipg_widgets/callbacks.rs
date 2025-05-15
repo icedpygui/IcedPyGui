@@ -103,6 +103,21 @@ pub fn set_or_get_widget_callback_data(state: &mut IpgState, wci: WidgetCallback
             IpgWidgets::IpgCardStyle(_) => {
                 return WidgetCallbackOut::default();
             },
+            IpgWidgets::IpgChartTitle(_) => {
+                return WidgetCallbackOut::default();
+            },
+            IpgWidgets::IpgChartLegend(_) => {
+                return WidgetCallbackOut::default();
+            },
+            IpgWidgets::IpgChartXAxis(_) => {
+                return WidgetCallbackOut::default();
+            },
+            IpgWidgets::IpgChartYAxis(_) => {
+                return WidgetCallbackOut::default();
+            },
+            IpgWidgets::IpgChartSeries(_) => {
+                return WidgetCallbackOut::default();
+            },
             IpgWidgets::IpgCheckBox(cbox) => {
                 cbox.is_checked = match wci.on_toggle {
                     Some(data) => data,

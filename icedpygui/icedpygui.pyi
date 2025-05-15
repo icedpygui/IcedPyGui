@@ -3994,6 +3994,302 @@ class IPG:
             The id of the event which can be used to modify the event through update_item.
         """
 
+    def add_bar_chart(
+            self,
+            window_id: str,
+            chart_id: str,
+            width: float,
+            height: float,
+            position_xy: Optional[list[float, 2]],
+            margin: Optional[list[float, 4]],
+            font_family: str,
+            background_ipgcolor: Optional[IpgColor],
+            background_rgba: Optional[list[float, 4]],
+            is_light: bool,
+            grid_stroke_ipgcolor: Optional[IpgColor],
+            grid_stroke_rgba: Optional[list[float, 4]],
+            grid_stroke_width: float,
+            radius: Optional[float],
+            parent_id: Optional[str],
+            gen_id: Optional[int],
+            ) -> int:
+        """_summary_
+
+        Args:
+            window_id (str): _description_
+            chart_id (str): _description_
+            width (float): _description_
+            height (float): _description_
+            position_xy (Optional[list[float, 2]]): _description_
+            margin (Optional[list[float, 4]]): _description_
+            font_family (str): _description_
+            background_ipgcolor (Optional[IpgColor]): _description_
+            background_rgba (Optional[list[float, 4]]): _description_
+            is_light (bool): _description_
+            grid_stroke_ipgcolor (Optional[IpgColor]): _description_
+            grid_stroke_rgba (Optional[list[float, 4]]): _description_
+            grid_stroke_width (float): _description_
+            radius (Optional[float]): _description_
+            parent_id (Optional[str]): _description_
+            gen_id (Optional[int]): _description_
+
+        Returns:
+            The id of the event which can be used to modify the event through update_item.
+        """
+    
+    def add_chart_title(
+            self,
+            chart_id: str,
+            title_text: Optional[str],
+            title_font_size: float,
+            title_font_ipgcolor: Optional[IpgColor],
+            title_font_rgba: Optional[list[float, 4]],
+            title_font_weight: Optional[str],
+            title_margin: Optional[list[float, 4]],
+            title_align: IpgHorizontalAlignment,
+            title_height: float,
+            sub_title_text: Optional[str],
+            sub_title_font_size: Optional[float],
+            sub_title_font_ipgcolor: Optional[IpgColor],
+            sub_title_font_rgba: Optional[list[float, 4]],
+            sub_title_font_weight: Optional[str],
+            sub_title_margin: Optional[list[float, 4]],
+            sub_title_align: IpgHorizontalAlignment,
+            sub_title_height: float,
+            gen_id: Optional[int],
+        ) -> int:
+        """_summary_
+
+        Args:
+            chart_id (str): _description_
+            title_text (Optional[str]): _description_
+            title_font_size (float): _description_
+            title_font_ipgcolor (Optional[IpgColor]): _description_
+            title_font_rgba (Optional[list[float, 4]]): _description_
+            title_font_weight (Optional[str]): _description_
+            title_margin (Optional[list[float, 4]]): _description_
+            title_align (IpgHorizontalAlignment): _description_
+            title_height (float): _description_
+            sub_title_text (Optional[str]): _description_
+            sub_title_font_size (Optional[float]): _description_
+            sub_title_font_ipgcolor (Optional[IpgColor]): _description_
+            sub_title_font_rgba (Optional[list[float, 4]]): _description_
+            sub_title_font_weight (Optional[str]): _description_
+            sub_title_margin (Optional[list[float, 4]]): _description_
+            sub_title_align (IpgHorizontalAlignment): _description_
+            sub_title_height (float): _description_
+            gen_id (Optional[int]): _description_
+
+        Returns:
+            The id of the event which can be used to modify the event through update_item.
+        """
+        
+    def add_chart_legend(
+            self,
+            chart_id: str,
+            legend_font_size: float,
+            legend_font_ipgcolor: Optional[IpgColor],
+            legend_font_rgba: Optional[list[float, 4]],
+            legend_font_weight: Optional[str],
+            legend_align: IpgHorizontalAlignment,
+            legend_margin: Optional[list[float, 4]],
+            legend_category: IpgLegendCategory,
+            legend_show: bool,
+            gen_id: Optional[int],
+        ) -> int:
+        """_summary_
+
+        Args:
+            chart_id (str): _description_
+            legend_font_size (float): _description_
+            legend_font_ipgcolor (Optional[IpgColor]): _description_
+            legend_font_rgba (Optional[list[float, 4]]): _description_
+            legend_font_weight (Optional[str]): _description_
+            legend_align (IpgHorizontalAlignment): _description_
+            legend_margin (Optional[list[float, 4]]): _description_
+            legend_category (IpgLegendCategory): _description_
+            legend_show (bool): _description_
+            gen_id (Optional[int]): _description_
+
+        Returns:
+            int: _description_
+        """
+
+    def add_chart_x_axis(
+            self,
+            chart_id: str,
+            x_axis_data: list[str],
+            x_axis_height: float,
+            x_axis_stroke_ipgcolor: Optional[IpgColor],
+            x_axis_stroke_rgba: Optional[list[float, 4]],
+            x_axis_font_size: float,
+            x_axis_font_ipgcolor: Optional[IpgColor],
+            x_axis_font_rgba: Optional[list[float, 4]],
+            x_axis_font_weight: Optional[str],
+            x_axis_name_gap: float,
+            x_axis_name_rotate: float,
+            x_axis_margin: Optional[list[float, 4]],
+            x_axis_hidden: bool,
+            x_boundary_gap: Optional[bool],
+            gen_id: Optional[int],
+        ) -> int:
+        """_summary_
+
+        Args:
+            chart_id (str): 
+                The unique identifier for the chart.
+            x_axis_data (list[str]): 
+                The data points or labels to be displayed along the x-axis.
+            x_axis_height (float): 
+                The height of the x-axis.
+            x_axis_stroke_ipgcolor (Optional[IpgColor]): 
+                The color of the x-axis stroke using the IpgColor class.
+            x_axis_stroke_rgba (Optional[list[float, 4]]): 
+                The color of the x-axis stroke in RGBA format.
+            x_axis_font_size (float): The font size of the x-axis labels.
+            x_axis_font_ipgcolor (Optional[IpgColor]): 
+                The color of the x-axis font using the IpgColor class.
+            x_axis_font_rgba (Optional[list[float, 4]]): 
+                The color of the x-axis font in RGBA format.
+            x_axis_font_weight (Optional[str]): 
+                The weight of the x-axis font (e.g., "bold", "normal").
+            x_axis_name_gap (float): 
+                The gap between the x-axis name and the axis line.
+            x_axis_name_rotate (float): 
+                The rotation angle of the x-axis name in degrees.
+            x_axis_margin (Optional[list[float, 4]]): 
+                The margin around the x-axis in the format [top, right, bottom, left].
+            x_axis_hidden (bool): 
+                Whether the x-axis is hidden or visible.
+            x_boundary_gap (Optional[bool]): 
+                Whether to leave a gap between the x-axis boundary and the data points.
+            gen_id (Optional[int]): 
+                The unique identifier generated by `ipg.generate_id()` for the widget.
+
+        Returns:
+            int: _description_
+        """
+        
+    def add_chart_y_axis(
+            self,
+            chart_id: str,
+            y_axis_hidden: bool,
+            y_axis_font_size: float,
+            y_axis_font_ipgcolor: Optional[IpgColor],
+            y_axis_font_rgba: Optional[list[float, 4]],
+            y_axis_font_weight: Optional[str],
+            y_axis_stroke_ipgcolor: Optional[IpgColor],
+            y_axis_stroke_rgba: Optional[list[float, 4]],
+            y_axis_width: Optional[float],
+            y_axis_split_number: int,
+            y_axis_name_gap: float,
+            y_axis_name_align: Optional[IpgHorizontalAlignment],
+            y_axis_margin: Optional[list[float, 4]],
+            y_axis_formatter: Optional[str],
+            y_axis_min: Optional[float],
+            y_axis_max: Optional[float],
+            gen_id: Optional[int],
+        ) -> int:
+        """_summary_
+
+        Args:
+            chart_id (str): 
+                The unique identifier for the chart.
+            y_axis_hidden (bool): 
+                Whether the y-axis is hidden or visible.
+            y_axis_font_size (float): 
+                The font size of the y-axis labels.
+            y_axis_font_ipgcolor (Optional[IpgColor]): 
+                The color of the y-axis font using the IpgColor class.
+            y_axis_font_rgba (Optional[list[float, 4]]): 
+                The color of the y-axis font in RGBA format.
+            y_axis_font_weight (Optional[str]): 
+                The weight of the y-axis font (e.g., "bold", "normal").
+            y_axis_stroke_ipgcolor (Optional[IpgColor]): 
+                The color of the y-axis stroke using the IpgColor class.
+            y_axis_stroke_rgba (Optional[list[float, 4]]): 
+                The color of the y-axis stroke in RGBA format.
+            y_axis_width (Optional[float]): 
+                The width of the y-axis stroke.
+            y_axis_split_number (int): 
+                The number of splits or intervals on the y-axis.
+            y_axis_name_gap (float): 
+                The gap between the y-axis name and the axis line.
+            y_axis_name_align (Optional[IpgHorizontalAlignment]): 
+                The alignment of the y-axis name (e.g., "Left", "Center", "Right").
+            y_axis_margin (Optional[list[float, 4]]): 
+                The margin around the y-axis in the format [top, right, bottom, left].
+                y_axis_formatter (Optional[str]): A formatter string for customizing the y-axis labels.
+            y_axis_min (Optional[float]): 
+                The minimum value of the y-axis.
+            y_axis_max (Optional[float]): 
+                The maximum value of the y-axis.
+            gen_id (Optional[int]): 
+                The unique identifier generated by `ipg.generate_id()` for the widget.
+
+        Returns:
+            int: _description_
+        """
+    
+    def add_chart_series(
+            self,
+            chart_id: str,
+            series_stroke_width: float,
+            series_label_font_ipgcolor: Optional[IpgColor],
+            series_label_font_rgba: Optional[list[float, 4]],
+            series_label_font_size: float,
+            series_label_font_weight: Optional[str],
+            series_label_formatter: Optional[str],
+            series_ipgcolors: list[IpgColor],
+            series_rgbas: list[float, 4],
+            series_symbol: bool,
+            symbol_ipgcolor: Optional[IpgColor],
+            symbol_rgba: Optional[list[float, 4]],
+            symbol_radius: Optional[float],
+            series_smooth: bool,
+            series_fill: bool,
+            gen_id: Optional[int],
+        ) -> int:
+        """_summary_
+
+        Args:
+            chart_id (str): The unique identifier for the chart.
+            series_stroke_width (float): 
+                The width of the stroke for the series lines.
+            series_label_font_ipgcolor (Optional[IpgColor]): 
+                The color of the series label font using the IpgColor class.
+            series_label_font_rgba (Optional[list[float, 4]]): 
+                The color of the series label font in RGBA format.
+            series_label_font_size (float): 
+                The size of the series label font.
+            series_label_font_weight (Optional[str]): 
+                The weight of the series label font (e.g., "bold", "normal").
+            series_label_formatter (Optional[str]): 
+                A formatter string for customizing the series label.
+            series_ipgcolors (list[IpgColor]): 
+                A list of colors for the series using the IpgColor class.
+            series_rgbas (list[float, 4]): 
+                A list of colors for the series in RGBA format.
+            series_symbol (bool): 
+                Whether to display symbols for the series points.
+            symbol_ipgcolor (Optional[IpgColor]): 
+                The color of the series symbols using the IpgColor class.
+            symbol_rgba (Optional[list[float, 4]]): 
+                The color of the series symbols in RGBA format.
+            symbol_radius (Optional[float]): 
+                The radius of the series symbols.
+            series_smooth (bool): 
+                Whether to smooth the series lines.
+            series_fill (bool): 
+            Whether to fill the area under the series lines.
+            gen_id (Optional[int]): 
+                The only allowable entry for this id is the value generated by ipg.generate_id().
+
+        Returns:
+            id: (int):
+                Internal id of widget and can be used by user if equated.
+        """
+    
     def get_color_palette(self,
                           base_color: Optional[IpgColor],
                           base_rgba: Optional[list[float, 4]],
@@ -4003,7 +4299,6 @@ class IPG:
 
         Parameters:
         -----------
-
             base_color: Optional[IpgColor],
                 The color with class IpgColor
             base_rgba: Optional[list[float, 4]],

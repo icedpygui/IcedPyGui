@@ -7,10 +7,9 @@ use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget,
     IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
 
 use chart::draw_chart::{ChartWidget, IpgChartState};
-use charts_rs::BarChart;
 use iced::widget::image;
 
-use ipg_widgets::ipg_chart::{chart_item_update, parse_svg, IpgChart};
+use ipg_widgets::ipg_chart::{chart_item_update, IpgChart, IpgChartLegend, IpgChartSeries, IpgChartTitle, IpgChartXAxis, IpgChartYAxis, IpgLegendCategory};
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
@@ -774,27 +773,45 @@ impl IPG {
     #[pyo3(signature = (
         window_id,
         chart_id,
-        polars_df,
         width,
         height,
+        position_xy=None,
+        margin=None,
+        font_family="Roboto".to_string(),
+        background_ipgcolor=None,
+        background_rgba=None,
+        is_light=false,
+        grid_stroke_ipgcolor=None,
+        grid_stroke_rgba=None,
+        grid_stroke_width=2.0,
+        radius=None,
         parent_id=None,
         gen_id=None,
         ))]
-    fn add_bar_chart(
+    fn add_chart(
         &self,
         window_id: String,
         chart_id: String,
-        polars_df: PyDataFrame,
         width: f32,
         height: f32,
+        position_xy: Option<[f32; 2]>,
+        margin: Option<[f32; 4]>,
+        font_family: String,
+        background_ipgcolor: Option<IpgColor>,
+        background_rgba: Option<[f32; 4]>,
+        is_light: bool,
+        grid_stroke_ipgcolor: Option<IpgColor>,
+        grid_stroke_rgba: Option<[f32; 4]>,
+        grid_stroke_width: f32,
+        radius: Option<f32>,
         parent_id: Option<String>,
         gen_id: Option<usize>,
         )  -> PyResult<usize> 
     {
-        let bounds = 
-            Rectangle::new(Point::ORIGIN, Size::new(width, height));
-    
-        let mut chart_state = access_chart_state();
+        let background_color: Option<Color> = 
+            get_color(background_rgba, background_ipgcolor, 1.0, false);
+        let grid_stroke_color: Option<Color> = 
+            get_color(grid_stroke_rgba, grid_stroke_ipgcolor, 1.0, false);
         
         let id = self.get_id(gen_id);
  
@@ -807,69 +824,400 @@ impl IPG {
         let mut state = access_state();
 
         set_state_cont_wnd_ids(&mut state, &window_id, chart_id.clone(), id, "add_chart".to_string());
+        
         state.containers.insert(
             id, IpgContainers::IpgChart(
-                IpgChart::new(id,)));
+                IpgChart::new(
+                    id,
+                    width,
+                    height,
+                    position_xy,
+                    margin,
+                    font_family,
+                    background_color,
+                    is_light,
+                    grid_stroke_color,
+                    grid_stroke_width,
+                    radius,
+                )));
 
-        let df: DataFrame = polars_df.into();
-        let mut series: Vec<charts_rs::Series> = vec![];
-        for col in df.iter() {
-            let data = col.f32().unwrap().to_vec_null_aware().left().unwrap();
-            series.push((col.name().as_str(), data).into())
-        }
+        drop(state);
 
-        // let series = vec![
-        //     ("Evaporation", vec![2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6]).into(),
-        //     (
-        //         "Precipitation",
-        //         vec![2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6],
-        //     )
-        //         .into(),
-        //     ("Temperature", vec![2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3]).into(),
-        // ];
-        let mut bar_chart = BarChart::new_with_theme(
-        series,
-        vec![
-            "Mon".to_string(),
-            "Tue".to_string(),
-            "Wed".to_string(),
-            "Thu".to_string(),
-            "Fri".to_string(),
-            "Sat".to_string(),
-            "Sun".to_string(),
-        ],
-        charts_rs::THEME_GRAFANA,
-        );
-        // bar_chart.title_text = "Mixed Line and Bar".to_string();
-        // bar_chart.legend_margin = Some(Box {
-        //     top: bar_chart.title_height,
-        //     bottom: 5.0,
-        //     ..Default::default()
-        // });
-        // bar_chart.series_list[2].category = Some(SeriesCategory::Line);
-        // bar_chart.series_list[2].y_axis_index = 1;
-        // bar_chart.series_list[2].label_show = true;
+        Ok(id)
+    }
 
-        // bar_chart
-        //     .y_axis_configs
-        //     .push(bar_chart.y_axis_configs[0].clone());
-        // bar_chart.y_axis_configs[0].axis_formatter = Some("{c} ml".to_string());
-        // bar_chart.y_axis_configs[1].axis_formatter = Some("{c} °C".to_string());
+    #[pyo3(signature = (
+        chart_id,
 
-        let svg = bar_chart.svg().unwrap();
-        let (bar_elements, 
-            text_elements) = parse_svg(svg);
-
-        // chart_state.image_curves.push(ChartWidget::Image(image));
-        chart_state.curves = bar_elements;
-        chart_state.text_curves = text_elements;
-        chart_state.width = width;
-        chart_state.height = height;
-        chart_state.background = None;
-        chart_state.border_width = Some(2.0);
-        chart_state.border_color = Some(Color::WHITE);
+        title_text=None,
+        title_font_size=14.0,
+        title_font_ipgcolor=None,
+        title_font_rgba=None,
+        title_font_weight=None,
+        title_margin=None,
+        title_align=IpgHorizontalAlignment::Center,
+        title_height=1.3,
         
-        drop(chart_state);
+        sub_title_text=None,
+        sub_title_font_size=None,
+        sub_title_font_ipgcolor=None,
+        sub_title_font_rgba=None,
+        sub_title_font_weight=None,
+        sub_title_margin=None,
+        sub_title_align=IpgHorizontalAlignment::Center,
+        sub_title_height=1.3,
+        gen_id=None,
+    ))]
+    fn add_chart_title(
+        &self,
+        chart_id: String,
+
+        title_text: Option<String>,
+        title_font_size: f32,
+        title_font_ipgcolor: Option<IpgColor>,
+        title_font_rgba: Option<[f32; 4]>,
+        title_font_weight: Option<String>,
+        title_margin: Option<[f32; 4]>,
+        title_align: IpgHorizontalAlignment,
+        title_height: f32,
+        
+        sub_title_text: Option<String>,
+        sub_title_font_size: Option<f32>,
+        sub_title_font_ipgcolor: Option<IpgColor>,
+        sub_title_font_rgba: Option<[f32; 4]>,
+        sub_title_font_weight: Option<String>,
+        sub_title_margin: Option<[f32; 4]>,
+        sub_title_align: IpgHorizontalAlignment,
+        sub_title_height: f32,
+        gen_id: Option<usize>,
+    ) -> PyResult<usize> {
+
+        let id = self.get_id(gen_id);
+
+        let title_font_color: Option<Color> = 
+            get_color(title_font_rgba, title_font_ipgcolor, 1.0, false);
+
+        let sub_title_font_color: Option<Color> = 
+            get_color(sub_title_font_rgba, sub_title_font_ipgcolor, 1.0, false);
+
+        set_state_of_widget(id, chart_id.clone());
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgChartTitle(
+            IpgChartTitle::new(
+                id,
+                chart_id,
+                title_text,
+                title_font_size,
+                title_font_color,
+                title_font_weight,
+                title_margin,
+                title_align,
+                title_height,
+                
+                sub_title_text,
+                sub_title_font_size,
+                sub_title_font_color,
+                sub_title_font_weight,
+                sub_title_margin,
+                sub_title_align,
+                sub_title_height,
+            )));
+
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (
+        chart_id,
+        legend_font_size=14.0,
+        legend_font_ipgcolor=None,
+        legend_font_rgba=None,
+        legend_font_weight=None,
+        legend_align=IpgHorizontalAlignment::Center,
+        legend_margin=None,
+        legend_category=IpgLegendCategory::Normal,
+        legend_show=false,
+        gen_id=None,
+    ))]
+    fn add_chart_legend(
+        &self,
+        chart_id: String,
+        legend_font_size: f32,
+        legend_font_ipgcolor: Option<IpgColor>,
+        legend_font_rgba: Option<[f32; 4]>,
+        legend_font_weight: Option<String>,
+        legend_align: IpgHorizontalAlignment,
+        legend_margin: Option<[f32; 4]>,
+        legend_category: IpgLegendCategory,
+        legend_show: bool,
+        gen_id: Option<usize>,
+    ) -> PyResult<usize> {
+
+        let id = self.get_id(gen_id);
+
+        let legend_font_color: Option<Color> = 
+            get_color(legend_font_rgba, legend_font_ipgcolor, 1.0, false);
+
+        set_state_of_widget(id, chart_id.clone());
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgChartLegend(
+            IpgChartLegend::new(
+                id,
+                chart_id,
+                legend_font_size,
+                legend_font_color,
+                legend_font_rgba,
+                legend_font_weight,
+                legend_align,
+                legend_margin,
+                legend_category,
+                legend_show,
+            )));
+
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (
+        chart_id,
+        x_axis_data,
+        x_axis_height,
+        x_axis_stroke_ipgcolor=None,
+        x_axis_stroke_rgba=None,
+        x_axis_font_size=14.0,
+        x_axis_font_ipgcolor=None,
+        x_axis_font_rgba=None,
+        x_axis_font_weight=None,
+        x_axis_name_gap=5.0,
+        x_axis_name_rotate=0.0,
+        x_axis_margin=None,
+        x_axis_hidden=false,
+        x_boundary_gap=None,
+        gen_id=None,
+    ))]
+    fn add_chart_x_axis(
+        &self,
+        chart_id: String,
+        x_axis_data: Vec<String>,
+        x_axis_height: f32,
+        x_axis_stroke_ipgcolor: Option<IpgColor>,
+        x_axis_stroke_rgba: Option<[f32; 4]>,
+        x_axis_font_size: f32,
+        x_axis_font_ipgcolor: Option<IpgColor>,
+        x_axis_font_rgba: Option<[f32; 4]>,
+        x_axis_font_weight: Option<String>,
+        x_axis_name_gap: f32,
+        x_axis_name_rotate: f32,
+        x_axis_margin: Option<[f32; 4]>,
+        x_axis_hidden: bool,
+        x_boundary_gap: Option<bool>,
+        gen_id: Option<usize>,
+    ) -> PyResult<usize> {
+
+        let id = self.get_id(gen_id);
+
+        let x_axis_stroke_color: Option<Color> = 
+            get_color(x_axis_stroke_rgba, x_axis_stroke_ipgcolor, 1.0, false);
+        let x_axis_font_color: Option<Color> = 
+            get_color(x_axis_font_rgba, x_axis_font_ipgcolor, 1.0, false);
+
+        set_state_of_widget(id, chart_id.clone());
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgChartXAxis(
+            IpgChartXAxis::new(
+                id, 
+                chart_id, 
+                x_axis_data, 
+                x_axis_height, 
+                x_axis_stroke_color, 
+                x_axis_font_size, 
+                x_axis_font_color, 
+                x_axis_font_weight, 
+                x_axis_name_gap, 
+                x_axis_name_rotate, 
+                x_axis_margin, 
+                x_axis_hidden, 
+                x_boundary_gap,
+            )));
+
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (
+        chart_id,
+        y_axis_hidden=false,
+        y_axis_font_size=12.0,
+        y_axis_font_ipgcolor=None,
+        y_axis_font_rgba=None,
+        y_axis_font_weight=None,
+        y_axis_stroke_ipgcolor=None,
+        y_axis_stroke_rgba=None,
+        y_axis_width=None,
+        y_axis_split_number=0,
+        y_axis_name_gap=5.0,
+        y_axis_name_align=None,
+        y_axis_margin=None,
+        y_axis_formatter=None,
+        y_axis_min=None,
+        y_axis_max=None,
+        gen_id=None,
+    ))]
+    fn add_chart_y_axis(
+        &self,
+        chart_id: String,
+        y_axis_hidden: bool,
+        y_axis_font_size: f32,
+        y_axis_font_ipgcolor: Option<IpgColor>,
+        y_axis_font_rgba: Option<[f32; 4]>,
+        y_axis_font_weight: Option<String>,
+        y_axis_stroke_ipgcolor: Option<IpgColor>,
+        y_axis_stroke_rgba: Option<[f32; 4]>,
+        y_axis_width: Option<f32>,
+        y_axis_split_number: usize,
+        y_axis_name_gap: f32,
+        y_axis_name_align: Option<IpgHorizontalAlignment>,
+        y_axis_margin: Option<[f32; 4]>,
+        y_axis_formatter: Option<String>,
+        y_axis_min: Option<f32>,
+        y_axis_max: Option<f32>,
+        gen_id: Option<usize>,
+    ) -> PyResult<usize> {
+
+        let id = self.get_id(gen_id);
+
+        let y_axis_font_color: Option<Color> = 
+            get_color(y_axis_font_rgba, y_axis_font_ipgcolor, 1.0, false);
+        let y_axis_stroke_color: Option<Color> = 
+            get_color(y_axis_stroke_rgba, y_axis_stroke_ipgcolor, 1.0, false);
+
+        set_state_of_widget(id, chart_id.clone());
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgChartYAxis(
+            IpgChartYAxis::new(
+                id,
+                chart_id,
+                y_axis_hidden,
+                y_axis_font_size,
+                y_axis_font_color,
+                y_axis_font_weight,
+                y_axis_stroke_color,
+                y_axis_width,
+                y_axis_split_number,
+                y_axis_name_gap,
+                y_axis_name_align,
+                y_axis_margin,
+                y_axis_formatter,
+                y_axis_min,
+                y_axis_max,
+            )));
+
+        drop(state);
+
+        Ok(id)
+    }
+
+    #[pyo3(signature = (
+        chart_id,
+        series_stroke_width=2.0,
+        series_label_font_ipgcolor=None,
+        series_label_font_rgba=None,
+        series_label_font_size=12.0,
+        series_label_font_weight=None,
+        series_label_formatter=None,
+        series_ipgcolors=vec![],
+        series_rgbas=vec![],
+        series_symbol=true,
+        symbol_ipgcolor=None,
+        symbol_rgba=None,
+        symbol_radius=None,
+        series_smooth=false,
+        series_fill=false,
+        gen_id=None,
+    ))]
+    fn add_chart_series(
+        &self,
+        chart_id: String,
+        series_stroke_width: f32,
+        series_label_font_ipgcolor: Option<IpgColor>,
+        series_label_font_rgba: Option<[f32; 4]>,
+        series_label_font_size: f32,
+        series_label_font_weight: Option<String>,
+        series_label_formatter: Option<String>,
+        series_ipgcolors: Vec<IpgColor>,
+        series_rgbas: Vec<[f32; 4]>,
+        series_symbol: bool,
+        symbol_ipgcolor: Option<IpgColor>,
+        symbol_rgba: Option<[f32; 4]>,
+        symbol_radius: Option<f32>,
+        series_smooth: bool,
+        series_fill: bool,
+        gen_id: Option<usize>,
+    ) -> PyResult<usize> {
+
+        let id = self.get_id(gen_id);
+
+        let series_label_font_color: Option<Color> = 
+            get_color(series_label_font_rgba, series_label_font_ipgcolor, 1.0, false);
+        
+        let series_colors: Vec<Color> = 
+            match (series_ipgcolors.len()> 0, 
+                    series_rgbas.len()>0) {
+            (true, true) => panic!("Series Colors: Select either Ipg or RGBA colors"),
+            (true, false) => {
+                let mut colors = vec![];
+                for color in series_ipgcolors.iter() {
+                    colors.push(get_color(None, Some(color.clone()), 1.0, false).unwrap());
+                }
+                colors
+            },
+            (false, true) => {
+                let mut colors = vec![];
+                for color in series_rgbas.iter() {
+                    colors.push(get_color(Some(color.clone()), None, 1.0, false).unwrap());
+                }
+                colors
+            },
+            (false, false) => vec![],
+        
+        };
+        
+        let symbol_color: Option<Color> = 
+            get_color(symbol_rgba, symbol_ipgcolor, 1.0, false);
+
+        set_state_of_widget(id, chart_id.clone());
+
+        let mut state = access_state();
+
+        state.widgets.insert(id, IpgWidgets::IpgChartSeries(
+            IpgChartSeries::new(
+                id,
+                chart_id,
+                series_stroke_width,
+                series_label_font_color,
+                series_label_font_size,
+                series_label_font_weight,
+                series_label_formatter,
+                series_colors,
+                series_symbol,
+                symbol_color,
+                symbol_radius,
+                series_smooth,
+                series_fill,
+            )));
+
+        drop(state);
 
         Ok(id)
     }
@@ -6394,135 +6742,150 @@ fn match_widget(
 {
     match widget {
         IpgWidgets::IpgButton(btn) => {
-            button_item_update(btn, item, value);
-        },
+                        button_item_update(btn, item, value);
+            },
         IpgWidgets::IpgButtonStyle(style) => {
-            button_style_update_item(style, item, value);
-        },
+                button_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgCard(card) => {
-            card_item_update(card, item, value);
-        },
+                card_item_update(card, item, value);
+            },
         IpgWidgets::IpgCardStyle(style) => {
-            card_style_update(style, item, value);
-        },
+                card_style_update(style, item, value);
+            },
+        IpgWidgets::IpgChartTitle(_) => {
+
+            },
+        IpgWidgets::IpgChartLegend(_) => {
+
+            },
+        IpgWidgets::IpgChartXAxis(_) => {
+
+            },
+        IpgWidgets::IpgChartYAxis(_) => {
+
+            },
+        IpgWidgets::IpgChartSeries(_) => {
+
+            },
         IpgWidgets::IpgCheckBox(chk) => {
-            checkbox_item_update(chk, item, value);
-        },
+                checkbox_item_update(chk, item, value);
+            },
         IpgWidgets::IpgCheckboxStyle(style) => {
-            checkbox_style_update_item(style, item, value);
-        },
+                checkbox_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgColorPicker(cp) => {
-            color_picker_update(cp, item, value);
-        },
+                color_picker_update(cp, item, value);
+            },
         IpgWidgets::IpgColorPickerStyle(style) => {
-            color_picker_style_update_item(style, item, value);
-        },
+                color_picker_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgContainerStyle(style) => {
-            container_style_update_item(style, item, value);
-        },
+                container_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgDatePicker(dp) => {
-            date_picker_item_update(dp, item, value);
-        },
+                date_picker_item_update(dp, item, value);
+            },
         IpgWidgets::IpgDividerHorizontal(div) => {
-            divider_horizontal_item_update(div, item, value);
-        },
+                divider_horizontal_item_update(div, item, value);
+            },
         IpgWidgets::IpgDividerVertical(div) => {
-            divider_vertical_item_update(div, item, value);
-        },
+                divider_vertical_item_update(div, item, value);
+            },
         IpgWidgets::IpgDividerStyle(style) => {
-            divider_style_update_item(style, item, value);
-        }
+                divider_style_update_item(style, item, value);
+            }
         IpgWidgets::IpgImage(img) => {
-            image_item_update(img, item, value);
-        },
+                image_item_update(img, item, value);
+            },
         IpgWidgets::IpgMenuStyle(style) => {
-            menu_style_update_item(style, item, value);
-        },
+                menu_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgMenuBarStyle(style) => {
-            menu_bar_style_update_item(style, item, value);
-        },
+                menu_bar_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgOpaqueStyle(style) => {
-            opaque_style_update_item(style, item, value);
-        }
+                opaque_style_update_item(style, item, value);
+            }
         IpgWidgets::IpgPickList(pl) => {
-            pick_list_item_update(pl, item, value);
-        },
+                pick_list_item_update(pl, item, value);
+            },
         IpgWidgets::IpgPickListStyle(style) => {
-            pick_list_style_update_item(style, item, value);
-        },
+                pick_list_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgProgressBar(pb) => {
-            progress_bar_item_update(pb, item, value);
-        },
+                progress_bar_item_update(pb, item, value);
+            },
         IpgWidgets::IpgProgressBarStyle(style) => {
-            progress_bar_style_update_item(style, item, value);
-        },
+                progress_bar_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgRadio(rd) => {
-            radio_item_update(rd, item, value);
-        },
+                radio_item_update(rd, item, value);
+            },
         IpgWidgets::IpgRadioStyle(style) => {
-            radio_style_update_item(style, item, value);
-        },
+                radio_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgRule(_) => (),
         IpgWidgets::IpgRuleStyle(style) => {
-            rule_style_update_item(style, item, value);
-        },
+                rule_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgScrollableStyle(style) => {
-            scroll_style_update_item(style, item, value)
-        },
+                scroll_style_update_item(style, item, value)
+            },
         IpgWidgets::IpgSelectableText(st) => {
-            selectable_text_item_update(st, item, value);
-        },
+                selectable_text_item_update(st, item, value);
+            },
         IpgWidgets::IpgSeparator(sep) => {
-            separator_item_update(sep, item, value);
-        },
+                separator_item_update(sep, item, value);
+            },
         IpgWidgets::IpgSeparatorStyle(style) => {
-            separator_style_update_item(style, item, value);
-        },
+                separator_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgSlider(slider) => {
-            slider_item_update(slider, item, value)
-        },
+                slider_item_update(slider, item, value)
+            },
         IpgWidgets::IpgSliderStyle(style) => {
-            slider_style_update_item(style, item, value)
-        },
+                slider_style_update_item(style, item, value)
+            },
         IpgWidgets::IpgSpace(_) => (),
         IpgWidgets::IpgSvg(sg) => {
-            svg_item_update(sg, item, value);
-        },
+                svg_item_update(sg, item, value);
+            },
         IpgWidgets::IpgTableStyle(style) => {
-            table_style_update_item(style, item, value);
-        }
+                table_style_update_item(style, item, value);
+            }
         IpgWidgets::IpgText(txt) => {
-            text_item_update(txt, item, value);
-        },
+                text_item_update(txt, item, value);
+            },
         IpgWidgets::IpgTextInput(ti) => {
-            text_input_item_update(ti, item, value);
-        },
+                text_input_item_update(ti, item, value);
+            },
         IpgWidgets::IpgTextInputStyle(style) => {
-            text_input_style_update_item(style, item, value);
-        },
+                text_input_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgTimer(tim) => {
-            timer_item_update(tim, item, value);
-        },
+                timer_item_update(tim, item, value);
+            },
         IpgWidgets::IpgTimerStyle(style) => {
-            timer_style_update_item(style, item, value);
-        },
+                timer_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgCanvasTimer(ctim) => {
-            canvas_timer_item_update(ctim, item, value);
-        },
+                canvas_timer_item_update(ctim, item, value);
+            },
         IpgWidgets::IpgCanvasTimerStyle(style) => {
-            canvas_timer_style_update_item(style, item, value);
-        },
+                canvas_timer_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgToggler(tog) => {
-            toggler_item_update(tog, item, value);
-        },
+                toggler_item_update(tog, item, value);
+            },
         IpgWidgets::IpgTogglerStyle(style) => {
-            toggler_style_update_item(style, item, value);
-        },
+                toggler_style_update_item(style, item, value);
+            },
         IpgWidgets::IpgToolTipStyle(style) => {
-            tool_tip_style_update_item(style, item, value);
-        },
-
-    }
+                tool_tip_style_update_item(style, item, value);
+            },
+        
+            }
 }
 
 fn match_container(

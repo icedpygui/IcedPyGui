@@ -19,20 +19,103 @@ use super::helpers::{
     get_horizontal_alignment, get_vertical_alignment, try_extract_f64, try_extract_ipg_horizontal_alignment,
     try_extract_ipg_vertical_alignment, try_extract_rgba_color, try_extract_string,
 };
+use super::ipg_enums::IpgHorizontalAlignment;
 
 #[derive(Debug, Clone)]
 pub struct IpgChart {
     pub id: usize,
+    pub width: f32,
+    pub height: f32,
+    pub position_xy: Option<[f32; 2]>,
+    pub margin: Option<[f32; 4]>,
+    pub font_family: String,
+    pub background_color: Option<Color>,
+    pub is_light: bool,
+    pub grid_stroke_color: Option<Color>,
+    pub grid_stroke_width: f32,
+    pub radius: Option<f32>,
 }
 
 impl IpgChart {
-    pub fn new(id: usize) -> Self {
-        Self { id }
+    pub fn new(
+        id: usize,
+        width: f32,
+        height: f32,
+        position_xy: Option<[f32; 2]>,
+        margin: Option<[f32; 4]>,
+        font_family: String,
+        background_color: Option<Color>,
+        is_light: bool,
+        grid_stroke_color: Option<Color>,
+        grid_stroke_width: f32,
+        radius: Option<f32>,) -> Self {
+        Self { 
+            id,
+            width,
+            height,
+            position_xy,
+            margin,
+            font_family,
+            background_color,
+            is_light,
+            grid_stroke_color,
+            grid_stroke_width,
+            radius,
+         }
     }
 }
 
 pub fn construct_chart(chart_state: &IpgChartState) -> iced::Element<Message> {
+    // let df: DataFrame = polars_df.into();
+    // let mut series: Vec<charts_rs::Series> = vec![];
+    // for col in df.iter() {
+    //     let data = col.f32().unwrap().to_vec_null_aware().left().unwrap();
+    //     series.push((col.name().as_str(), data).into())
+    // }
 
+    // let title_align = match title_align {
+    //     IpgHorizontalAlignment::Left => charts_rs::Align::Left,
+    //     IpgHorizontalAlignment::Center => charts_rs::Align::Center,
+    //     IpgHorizontalAlignment::Right => charts_rs::Align::Right,
+    // };
+
+    // let y_axis_configs: Vec<YAxisConfig> = {
+
+    // };
+    
+    // let mut bar_chart = BarChart::new_with_theme(
+    // series,
+    // axis_labels,
+    // charts_rs::THEME_GRAFANA,
+    // );
+    // bar_chart.title_text = title;
+    // bar_chart.legend_margin = Some(Box {
+    //     top: bar_chart.title_height,
+    //     bottom: 5.0,
+    //     ..Default::default()
+    // });
+    // bar_chart.series_list[2].category = Some(SeriesCategory::Line);
+    // bar_chart.series_list[2].y_axis_index = 1;
+    // bar_chart.series_list[2].label_show = true;
+
+    // bar_chart
+    //     .y_axis_configs
+    //     .push(bar_chart.y_axis_configs[0].clone());
+    // bar_chart.y_axis_configs[0].axis_formatter = Some("{c} ml".to_string());
+    // bar_chart.y_axis_configs[1].axis_formatter = Some("{c} °C".to_string());
+
+    // let svg = bar_chart.svg().unwrap();
+    // let (bar_elements, 
+    //     text_elements) = parse_svg(svg);
+
+    // // chart_state.image_curves.push(ChartWidget::Image(image));
+    // chart_state.curves = bar_elements;
+    // chart_state.text_curves = text_elements;
+    // chart_state.width = width;
+    // chart_state.height = height;
+    // chart_state.background = None;
+    // chart_state.border_width = Some(2.0);
+    // chart_state.border_color = Some(Color::WHITE);
     let draw: iced::Element<ChartMessage> = container(
         chart_state
             .view(
@@ -47,9 +130,274 @@ pub fn construct_chart(chart_state: &IpgChartState) -> iced::Element<Message> {
 }
 
 #[derive(Debug, Clone)]
+pub struct IpgChartTitle {
+    pub id: usize,
+    pub chart_id: String,
+    pub title_text: Option<String>,
+    pub title_font_size: f32,
+    pub title_font_color: Option<Color>,
+    pub title_font_weight: Option<String>,
+    pub title_margin: Option<[f32; 4]>,
+    pub title_align: IpgHorizontalAlignment,
+    pub title_height: f32,
+
+    pub sub_title_text: Option<String>,
+    pub sub_title_font_size: Option<f32>,
+    pub sub_title_font_color: Option<Color>,
+    pub sub_title_font_weight: Option<String>,
+    pub sub_title_margin: Option<[f32; 4]>,
+    pub sub_title_align: IpgHorizontalAlignment,
+    pub sub_title_height: f32,
+}
+
+impl IpgChartTitle {
+    pub fn new(
+        id: usize,
+        chart_id: String,
+        title_text: Option<String>,
+        title_font_size: f32,
+        title_font_color: Option<Color>,
+        title_font_weight: Option<String>,
+        title_margin: Option<[f32; 4]>,
+        title_align: IpgHorizontalAlignment,
+        title_height: f32,
+        
+        sub_title_text: Option<String>,
+        sub_title_font_size: Option<f32>,
+        sub_title_font_color: Option<Color>,
+        sub_title_font_weight: Option<String>,
+        sub_title_margin: Option<[f32; 4]>,
+        sub_title_align: IpgHorizontalAlignment,
+        sub_title_height: f32,
+    ) -> Self {
+        Self { 
+            id,
+            chart_id,
+            title_text,
+            title_font_size,
+            title_font_color,
+            title_font_weight,
+            title_margin,
+            title_align,
+            title_height,
+            
+            sub_title_text,
+            sub_title_font_size,
+            sub_title_font_color,
+            sub_title_font_weight,
+            sub_title_margin,
+            sub_title_align,
+            sub_title_height,
+         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct IpgChartLegend {
+    pub id: usize,
+    pub chart_id: String,
+    pub legend_font_size: f32,
+    pub legend_font_ipgcolor: Option<Color>,
+    pub legend_font_rgba: Option<[f32; 4]>,
+    pub legend_font_weight: Option<String>,
+    pub legend_align: IpgHorizontalAlignment,
+    pub legend_margin: Option<[f32; 4]>,
+    pub legend_category: IpgLegendCategory,
+    pub legend_show: bool,
+}
+
+impl IpgChartLegend {
+    pub fn new(
+        id: usize,
+        chart_id: String,
+        legend_font_size: f32,
+        legend_font_ipgcolor: Option<Color>,
+        legend_font_rgba: Option<[f32; 4]>,
+        legend_font_weight: Option<String>,
+        legend_align: IpgHorizontalAlignment,
+        legend_margin: Option<[f32; 4]>,
+        legend_category: IpgLegendCategory,
+        legend_show: bool,
+    ) -> Self {
+        Self { 
+            id,
+            chart_id,
+            legend_font_size,
+            legend_font_ipgcolor,
+            legend_font_rgba,
+            legend_font_weight,
+            legend_align,
+            legend_margin,
+            legend_category,
+            legend_show, 
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct IpgChartXAxis {
+    pub id: usize,
+    pub chart_id: String,
+    pub x_axis_data: Vec<String>,
+    pub x_axis_height: f32,
+    pub x_axis_stroke_color: Option<Color>,
+    pub x_axis_font_size: f32,
+    pub x_axis_font_color: Option<Color>,
+    pub x_axis_font_weight: Option<String>,
+    pub x_axis_name_gap: f32,
+    pub x_axis_name_rotate: f32,
+    pub x_axis_margin: Option<[f32; 4]>,
+    pub x_axis_hidden: bool,
+    pub x_boundary_gap: Option<bool>,
+}
+
+impl IpgChartXAxis {
+    pub fn new(
+        id: usize,
+        chart_id: String,
+        x_axis_data: Vec<String>,
+        x_axis_height: f32,
+        x_axis_stroke_color: Option<Color>,
+        x_axis_font_size: f32,
+        x_axis_font_color: Option<Color>,
+        x_axis_font_weight: Option<String>,
+        x_axis_name_gap: f32,
+        x_axis_name_rotate: f32,
+        x_axis_margin: Option<[f32; 4]>,
+        x_axis_hidden: bool,
+        x_boundary_gap: Option<bool>,
+    ) -> Self {
+        Self { 
+            id,
+            chart_id,
+            x_axis_data,
+            x_axis_height,
+            x_axis_stroke_color,
+            x_axis_font_size,
+            x_axis_font_color,
+            x_axis_font_weight,
+            x_axis_name_gap,
+            x_axis_name_rotate,
+            x_axis_margin,
+            x_axis_hidden,
+            x_boundary_gap,
+         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct IpgChartYAxis {
+    pub id: usize,
+    pub chart_id: String,
+    pub y_axis_hidden: bool,
+    pub y_axis_font_size: f32,
+    pub y_axis_font_color: Option<Color>,
+    pub y_axis_font_weight: Option<String>,
+    pub y_axis_stroke_color: Option<Color>,
+    pub y_axis_width: Option<f32>,
+    pub y_axis_split_number: usize,
+    pub y_axis_name_gap: f32,
+    pub y_axis_name_align: Option<IpgHorizontalAlignment>,
+    pub y_axis_margin: Option<[f32; 4]>,
+    pub y_axis_formatter: Option<String>,
+    pub y_axis_min: Option<f32>,
+    pub y_axis_max: Option<f32>,
+}
+
+impl IpgChartYAxis {
+    pub fn new(
+        id: usize,
+        chart_id: String,
+        y_axis_hidden: bool,
+        y_axis_font_size: f32,
+        y_axis_font_color: Option<Color>,
+        y_axis_font_weight: Option<String>,
+        y_axis_stroke_color: Option<Color>,
+        y_axis_width: Option<f32>,
+        y_axis_split_number: usize,
+        y_axis_name_gap: f32,
+        y_axis_name_align: Option<IpgHorizontalAlignment>,
+        y_axis_margin: Option<[f32; 4]>,
+        y_axis_formatter: Option<String>,
+        y_axis_min: Option<f32>,
+        y_axis_max: Option<f32>,
+    ) -> Self {
+        Self { 
+            id,
+            chart_id,
+            y_axis_hidden,
+            y_axis_font_size,
+            y_axis_font_color,
+            y_axis_font_weight,
+            y_axis_stroke_color,
+            y_axis_width,
+            y_axis_split_number,
+            y_axis_name_gap,
+            y_axis_name_align,
+            y_axis_margin,
+            y_axis_formatter,
+            y_axis_min,
+            y_axis_max,
+         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct IpgChartSeries {
+    pub id: usize,
+    pub chart_id: String,
+    pub series_stroke_width: f32,
+    pub series_label_font_color: Option<Color>,
+    pub series_label_font_size: f32,
+    pub series_label_font_weight: Option<String>,
+    pub series_label_formatter: Option<String>,
+    pub series_colors: Vec<Color>,
+    pub series_symbol: bool,
+    pub symbol_color: Option<Color>,
+    pub symbol_radius: Option<f32>,
+    pub series_smooth: bool,
+    pub series_fill: bool,
+}
+
+impl IpgChartSeries {
+    pub fn new(
+        id: usize,
+        chart_id: String,
+        series_stroke_width: f32,
+        series_label_font_color: Option<Color>,
+        series_label_font_size: f32,
+        series_label_font_weight: Option<String>,
+        series_label_formatter: Option<String>,
+        series_colors: Vec<Color>,
+        series_symbol: bool,
+        symbol_color: Option<Color>,
+        symbol_radius: Option<f32>,
+        series_smooth: bool,
+        series_fill: bool,
+    ) -> Self {
+        Self { 
+            id,
+            chart_id,
+            series_stroke_width,
+            series_label_font_color,
+            series_label_font_size,
+            series_label_font_weight,
+            series_label_formatter,
+            series_colors,
+            series_symbol,
+            symbol_color,
+            symbol_radius,
+            series_smooth,
+            series_fill,
+         }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum ChartMessage {
     WidgetDraw(ChartWidget),
 }
+
 
 // pub fn chart_callback(chart_message: ChartMessage, app_state: &mut IpgState, chart_state: &mut IpgChartState) {
 //     match chart_message {
@@ -241,13 +589,6 @@ fn try_extract_widget(update_obj: &PyObject) -> IpgChartWidget {
     })
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[pyclass(eq, eq_int)]
-pub enum IpgChartGeometryParam {
-    Position,
-    Rotation,
-}
-
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct BarChartElements {
     pub line: Vec<Line>,
@@ -285,6 +626,35 @@ pub struct Rect {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text {
 
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+enum ChartTheme {
+    ThemeGrafana,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum IpgChartGeometryParam {
+    Position,
+    Rotation,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum IpgLegendCategory {
+    Normal,
+    RoundRect,
+    Circle,
+    Rect,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum IpgSeriesCategory {
+    Line,
+    Bar,
 }
 
 pub fn construct_bar_chart() -> (Vec<ChartWidget>, Vec<ChartWidget>) {
