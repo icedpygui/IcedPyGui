@@ -1,18 +1,12 @@
 //! geometries
 
 use iced::{alignment, widget::{image, 
-    text::{LineHeight, Shaping}}, Color, Font, 
+    text::{LineHeight, Shaping}}, Color, 
     Pixels, Point, Radians, Rectangle, Size, Vector};
 use pyo3::pyclass;
 use serde::{Deserialize, Serialize};
 
 use super::draw_chart::{ChartDrawMode, ChartDrawStatus};
-
-// use super::{chart_helpers::{ 
-//     get_line_from_slope_intercept, 
-//     get_linear_regression, get_mid_point}, 
-//     draw_chart::{IpgDrawMode, IpgDrawStatus, ChartWidget}};
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChartCircle {
@@ -71,7 +65,6 @@ pub struct ChartLine {
 pub struct ChartPolyLine {
     pub id: usize,
     pub points: Vec<Point>,
-    pub poly_points: usize,
     pub stroke: Color,
     pub stroke_width: f32,
     pub stroke_dash_offset: Option<usize>,
@@ -115,7 +108,7 @@ pub struct ChartText {
     pub color: Color,
     pub size: Pixels,
     pub line_height: LineHeight,
-    pub font: Font,
+    pub font: String,
     pub horizontal_alignment: alignment::Horizontal,
     pub vertical_alignment: alignment::Vertical,
     pub shaping: Shaping,

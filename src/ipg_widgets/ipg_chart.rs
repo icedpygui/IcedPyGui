@@ -12,7 +12,7 @@ use crate::app::Message;
 use crate::chart::draw_chart::{IpgChartState, ChartDrawMode, 
     ChartDrawStatus, ChartWidget};
 use crate::chart::geometries::{
-    ChartCircle, ChartLine, ChartRectangle, ChartText, IpgChartWidget
+    ChartCircle, ChartLine, ChartPolyLine, ChartRectangle, ChartText, IpgChartWidget
 };
 
 use super::helpers::{
@@ -338,9 +338,7 @@ pub fn parse_svg(svg: String) -> (Vec<ChartWidget>, Vec<ChartWidget>) {
     let re = Regex::new(r"(?i)<text[^>]*?>([\s\S]*?)<\/text>").unwrap();
     for cap in re.captures_iter(&svg) {
             text_values.push(cap[1].trim().to_string());
-        }
-
-    let _title = text_values.remove(0);
+    }
 
     let (_, root) = parse(&svg).unwrap();
 
@@ -357,13 +355,12 @@ pub fn parse_svg(svg: String) -> (Vec<ChartWidget>, Vec<ChartWidget>) {
                     },
                     "circle" => {
                         let cir = get_circle(elem);
-                       bar_elements.push(ChartWidget::Circle(cir));
+                        bar_elements.push(ChartWidget::Circle(cir));
                     },
                     "rect" => {
                         
                     }
                     "text" => {
-
                         let txt = get_text(elem, text_values.remove(0));
                         text_elements.push(ChartWidget::Text(txt));
                     },
@@ -375,18 +372,23 @@ pub fn parse_svg(svg: String) -> (Vec<ChartWidget>, Vec<ChartWidget>) {
                                     let line = get_line(child, stroke);
                                     bar_elements.push(ChartWidget::Line(line));
                                 },
+                                
                                 _ => println!("g - not found"),
                             }
                         }
-                    }
+                    },
+                    "path" => {
+                        let pline = get_polyline(elem);
+                        if pline.is_some() {
+                            bar_elements.push(ChartWidget::PolyLine(pline.unwrap()));
+                        }
+                    },
                     _ => {
-                       
-                        // dbg!(elem_type);
+                       dbg!("under g ",elem.ele_type);
                     }
                 }
             }
         } else {
-
             match child.ele_type {
                 "rect" => {
                     let x = child.attributes.borrow().get("x").unwrap().parse::<f32>().unwrap();
@@ -415,10 +417,13 @@ pub fn parse_svg(svg: String) -> (Vec<ChartWidget>, Vec<ChartWidget>) {
 
                     bar_elements.push(ChartWidget::Rectangle(rect));
                 },
+                "text" => {
+                    let txt = get_text(child, text_values.remove(0));
+                    text_elements.push(ChartWidget::Text(txt));
+                }
                 _ => {
-                    // dbg!(child.ele_type);
+                    dbg!("others", child.ele_type);
                 }         
-             
             }
             
         }
@@ -485,13 +490,11 @@ fn get_text(child: &Rc<Element<'_>>, value: String) -> ChartText {
     let mut x = attr.get("x").unwrap().parse::<f32>().unwrap();
     let dx = attr.get("dx");
     if dx.is_some() {
-        dbg!(&value, &dx);
         x += dx.unwrap().parse::<f32>().unwrap();
     }
     let mut y = attr.get("y").unwrap().parse::<f32>().unwrap();
     let dy = attr.get("dy");
     if dy.is_some() {
-        dbg!(&value, &dy);
         y += dy.unwrap().parse::<f32>().unwrap();
     }  
     let fill = attr.get("fill").map(|v| &**v).unwrap();
@@ -505,8 +508,8 @@ fn get_text(child: &Rc<Element<'_>>, value: String) -> ChartText {
         color: fill_color, 
         size: size.into(), 
         line_height: LineHeight::default(), 
-        font: iced::Font::default(), 
-        horizontal_alignment: alignment::Horizontal::Center, 
+        font: "Roboto".to_string(), 
+        horizontal_alignment: alignment::Horizontal::Left, 
         vertical_alignment: alignment::Vertical::Center, 
         shaping: Shaping::Basic, 
         rotation: 0.0, 
@@ -515,6 +518,45 @@ fn get_text(child: &Rc<Element<'_>>, value: String) -> ChartText {
     }
 }
 
+fn get_polyline(child: &Rc<Element<'_>>) -> Option<ChartPolyLine> {
+    let attr = child.attributes.borrow();
+    let d = attr.get("d").map(|v| &**v);
+    
+    if let Some(d) = d {
+        // Regex to match x, y points
+        let re = Regex::new(r"([0-9.]+)\s([0-9.]+)").unwrap();
+
+        // Extract points as tuples
+        let points = re
+            .captures_iter(d)
+            .filter_map(|cap| {
+                let x = cap[1].parse::<f32>().ok();
+                let y = cap[2].parse::<f32>().ok();
+                match (x, y) {
+                    (Some(x), Some(y)) => Some(iced::Point::new(x, y)),
+                    _ => None,
+                }
+            })
+            .collect();
+        
+        let stroke = attr.get("stroke").unwrap();
+        let stroke_color = iced::Color::parse(stroke).unwrap();
+        let stroke_width = attr.get("stroke-width").unwrap().parse::<f32>().unwrap();
+
+        Some(ChartPolyLine {
+            id: 0,
+            points,
+            stroke: stroke_color,
+            stroke_width,
+            stroke_dash_offset: None,
+            stroke_dash_segments: None,
+            draw_mode: ChartDrawMode::Display,
+            status: ChartDrawStatus::Completed,
+        })
+    } else {
+        None
+    }
+}
 
 // pub fn match_chart_widget(widget: &mut IpgWidget, item: &PyObject, value: &PyObject) {
 //     let update_item = try_extract_geometry_update(item);

@@ -3,7 +3,7 @@
 use std::f32::consts::PI;
 
 use iced::widget::canvas::path::arc::Elliptical;
-use iced::{alignment, mouse, Color, Radians, Vector};
+use iced::{alignment, mouse, Color, Font, Radians, Vector};
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{self, stroke, Canvas, Frame, Geometry, LineDash, Path, Stroke};
 use iced::{Element, Point, Renderer, Theme};
@@ -366,19 +366,18 @@ impl DrawCurve {
             match &text_curve {
                 ChartWidget::Text(txt) => {
                     frame.translate(Vector::new(txt.position.x, txt.position.y));
-                    let text = canvas::Text {
+                    frame.fill_text(canvas::Text {
                         content: txt.content.clone(),
-                        position: Point::ORIGIN,
+                        position: Point::new(0.0, -3.0),
                         color: txt.color,
                         size: txt.size,
                         line_height: txt.line_height,
-                        font: txt.font,
+                        font: Font::with_name("Roboto"),
                         horizontal_alignment: txt.horizontal_alignment,
                         vertical_alignment: txt.vertical_alignment,
                         shaping: txt.shaping,
-                    };
+                    });
                     frame.rotate(&txt.rotation * PI/180.0);
-                    frame.fill_text(text);
                     
                     (None, Some(txt.color), Some(1.0))
                 },
@@ -403,31 +402,4 @@ impl DrawCurve {
          };
     }
 
-}
-
-use resvg::usvg;
-use resvg::tiny_skia;
-
-pub fn svg_to_png() {
-    let input_svg = "../python_examples/resources/charts/bar_chart.svg";
-    let output_png = "../python_examples/resources/charts/bar_chart.png";
-
-    let tree = {
-        let mut opt = usvg::Options {
-            // Get file's absolute directory.
-            resources_dir: std::fs::canonicalize(&input_svg)
-                .ok()
-                .and_then(|p| p.parent().map(|p| p.to_path_buf())),
-            ..usvg::Options::default()
-        };
-        opt.fontdb_mut().load_system_fonts();
-
-        let svg_data = std::fs::read(&input_svg).unwrap();
-        usvg::Tree::from_data(&svg_data, &opt).unwrap()
-    };
-
-    let pixmap_size = tree.size().to_int_size();
-    let mut pixmap = tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
-    resvg::render(&tree, tiny_skia::Transform::default(), &mut pixmap.as_mut());
-    pixmap.save_png(output_png).unwrap();
 }

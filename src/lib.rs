@@ -6,12 +6,12 @@ use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode, IpgDrawStatus, IpgWidget}
 use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, 
     IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
 
-use chart::draw_chart::{svg_to_png, ChartDrawMode, ChartDrawStatus, ChartWidget, IpgChartState};
+use chart::draw_chart::{ChartDrawMode, ChartDrawStatus, ChartWidget, IpgChartState};
 use chart::geometries::ChartImage;
+use charts_rs::BarChart;
 use iced::widget::image;
-use iced_aw::iced_fonts;
 
-use ipg_widgets::ipg_chart::{chart_item_update, construct_bar_chart, IpgChart};
+use ipg_widgets::ipg_chart::{chart_item_update, construct_bar_chart, parse_svg, IpgChart};
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
@@ -522,14 +522,14 @@ impl IPG {
             theme: Theme::Dark,
         }
     }
-    pub const REQUIRED_FONT_BYTES: &[u8] = include_bytes!("graphics/fonts/Roboto.ttf");
+
     #[pyo3(signature = ())]
     fn start_session(&self) {
 
         let _ = iced::daemon(App::title, App::update, App::view)
                     .subscription(App::subscription)
                     .theme(App::theme)
-                    .font(iced_fonts::REQUIRED_FONT_BYTES)
+                    .font(include_bytes!("graphics/fonts/Roboto.ttf"))
                     .scale_factor(App::scale_factor)
                     .antialiasing(true)
                     .run_with(||App::new());
@@ -789,13 +789,17 @@ impl IPG {
         &self,
         window_id: String,
         chart_id: String,
-        width: f32,
-        height: f32,
-        border_width: Option<f32>,
-        border_ipg_color: Option<IpgColor>,
-        border_rgba_color: Option<[f32; 4]>,
-        background_ipg_color: Option<IpgColor>,
-        background_rgba_color: Option<[f32; 4]>,
+        name: String,
+        data: Vec<f32>,
+        start_index: usize,
+        index: Option<usize>,
+        y_axis_index: usize,
+        label_show: bool,
+        mark_lines: Vec<MarkLine>,
+        mark_points: Vec<MarkPoint>,
+        colors: Option<Vec<Option<Color>>>,
+        category: Option<SeriesCategory>,
+        stroke_dash_array: Option<String>,
         parent_id: Option<String>,
         gen_id: Option<usize>,
         )  -> PyResult<usize> 
@@ -805,34 +809,8 @@ impl IPG {
     
         let mut chart_state = access_chart_state();
         
-        let mut current = match env::current_dir() {
-            Ok(path) => path.to_str().unwrap().to_string(),
-            Err(e) => panic!("Error getting current path: {}", e),
-        };
-        current += "/python_examples/resources/charts/bar_chart.png";
-        let path = Path::new(&current);
-
-        let handle_path = image::Handle::from_path(path);
-
-        if path.exists() {
-            println!("Path exists!");
-        } else {
-            println!("Path does not exist.");
-        }
-
         let id = self.get_id(gen_id);
-
-        let image = 
-            ChartImage{ 
-                id, 
-                path: handle_path,
-                bounds,
-                width,
-                height,  
-                draw_mode: ChartDrawMode::Display, 
-                status: ChartDrawStatus::Completed,
-                };
-                
+ 
         let prt_id = match parent_id {
             Some(id) => id,
             None => window_id.clone(),
@@ -846,7 +824,48 @@ impl IPG {
             id, IpgContainers::IpgChart(
                 IpgChart::new(id,)));
 
-        let (bar_elements, text_elements) = construct_bar_chart();
+        let series = 
+
+        let mut bar_chart = BarChart::new_with_theme(
+        vec![
+            ("Evaporation", vec![2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6]).into(),
+            (
+                "Precipitation",
+                vec![2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6],
+            )
+                .into(),
+            ("Temperature", vec![2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3]).into(),
+        ],
+        vec![
+            "Mon".to_string(),
+            "Tue".to_string(),
+            "Wed".to_string(),
+            "Thu".to_string(),
+            "Fri".to_string(),
+            "Sat".to_string(),
+            "Sun".to_string(),
+        ],
+        charts_rs::THEME_GRAFANA,
+        );
+        bar_chart.title_text = "Mixed Line and Bar".to_string();
+        bar_chart.legend_margin = Some(Box {
+            top: bar_chart.title_height,
+            bottom: 5.0,
+            ..Default::default()
+        });
+        bar_chart.series_list[2].category = Some(SeriesCategory::Line);
+        bar_chart.series_list[2].y_axis_index = 1;
+        bar_chart.series_list[2].label_show = true;
+
+        bar_chart
+            .y_axis_configs
+            .push(bar_chart.y_axis_configs[0].clone());
+        bar_chart.y_axis_configs[0].axis_formatter = Some("{c} ml".to_string());
+        bar_chart.y_axis_configs[1].axis_formatter = Some("{c} °C".to_string());
+
+        let svg = bar_chart.svg().unwrap();
+        let (bar_elements, 
+            text_elements) = parse_svg(svg);
 
         // chart_state.image_curves.push(ChartWidget::Image(image));
         chart_state.curves = bar_elements;
