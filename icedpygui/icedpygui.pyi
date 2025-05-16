@@ -3994,13 +3994,16 @@ class IPG:
             The id of the event which can be used to modify the event through update_item.
         """
 
-    def add_bar_chart(
+    def add_chart(
             self,
             window_id: str,
             chart_id: str,
+            series: list[tuple[str, float]],
+            x_axis_labels: list[str],
             width: float,
             height: float,
             position_xy: Optional[list[float, 2]],
+            theme: Optional[IpgChartTheme],
             margin: Optional[list[float, 4]],
             font_family: str,
             background_ipgcolor: Optional[IpgColor],
@@ -4018,9 +4021,12 @@ class IPG:
         Args:
             window_id (str): _description_
             chart_id (str): _description_
+            series (list[tuple[str, float]]): _description_
+            x_axis_labels (list[str]): _description_
             width (float): _description_
             height (float): _description_
             position_xy (Optional[list[float, 2]]): _description_
+            theme (Optional[IpgChartTheme]): _description_
             margin (Optional[list[float, 4]]): _description_
             font_family (str): _description_
             background_ipgcolor (Optional[IpgColor]): _description_
@@ -4034,7 +4040,7 @@ class IPG:
             gen_id (Optional[int]): _description_
 
         Returns:
-            The id of the event which can be used to modify the event through update_item.
+            int: _description_
         """
     
     def add_chart_title(
@@ -4093,7 +4099,7 @@ class IPG:
             legend_font_weight: Optional[str],
             legend_align: IpgHorizontalAlignment,
             legend_margin: Optional[list[float, 4]],
-            legend_category: IpgLegendCategory,
+            legend_category: IpgChartLegendCategory,
             legend_show: bool,
             gen_id: Optional[int],
         ) -> int:
@@ -4643,6 +4649,25 @@ class IpgCardStyle:
     Dark=''
     White=''
     Default=''
+
+
+class IpgChartTheme:
+    DarkTheme=''
+    AntTheme=''
+    VintageTheme=''
+    ShineTheme=''
+    WaldenTheme=''
+    WesterosTheme=''
+    ChalkTheme=''
+    GrafanaTheme=''
+    ShadcnTheme=''
+    
+
+class IpgChartLegendCategory:
+    Normal=''
+    RoundRect=''
+    Circle=''
+    Rect=''
 
 
 class IpgCardParam:

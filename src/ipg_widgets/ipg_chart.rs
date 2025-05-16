@@ -4,16 +4,18 @@ use std::rc::Rc;
 
 use iced::widget::container;
 use iced::widget::text::{LineHeight, Shaping};
-use iced::{alignment, Color};
+use iced::{alignment, Color, Element};
 use pyo3::{pyclass, PyObject, Python};
-use charts_rs::*;
+use charts_rs::{BarChart, SeriesCategory};
 
+use crate::access_chart_state;
 use crate::app::Message;
 use crate::chart::draw_chart::{IpgChartState, ChartDrawMode, 
     ChartDrawStatus, ChartWidget};
 use crate::chart::geometries::{
     ChartCircle, ChartLine, ChartPolyLine, ChartRectangle, ChartText, IpgChartWidget
 };
+use crate::chart::themes::IpgChartTheme;
 
 use super::helpers::{
     get_horizontal_alignment, get_vertical_alignment, try_extract_f64, try_extract_ipg_horizontal_alignment,
@@ -24,9 +26,12 @@ use super::ipg_enums::IpgHorizontalAlignment;
 #[derive(Debug, Clone)]
 pub struct IpgChart {
     pub id: usize,
+    pub series: Vec<(String, Vec<f32>)>,
+    pub x_axis_labels: Vec<String>,
     pub width: f32,
     pub height: f32,
     pub position_xy: Option<[f32; 2]>,
+    pub theme: Option<IpgChartTheme>,
     pub margin: Option<[f32; 4]>,
     pub font_family: String,
     pub background_color: Option<Color>,
@@ -39,9 +44,12 @@ pub struct IpgChart {
 impl IpgChart {
     pub fn new(
         id: usize,
+        series: Vec<(String, Vec<f32>)>,
+        x_axis_labels: Vec<String>,
         width: f32,
         height: f32,
         position_xy: Option<[f32; 2]>,
+        theme: Option<IpgChartTheme>,
         margin: Option<[f32; 4]>,
         font_family: String,
         background_color: Option<Color>,
@@ -51,9 +59,12 @@ impl IpgChart {
         radius: Option<f32>,) -> Self {
         Self { 
             id,
+            series,
+            x_axis_labels,
             width,
             height,
             position_xy,
+            theme,
             margin,
             font_family,
             background_color,
@@ -65,63 +76,54 @@ impl IpgChart {
     }
 }
 
-pub fn construct_chart(chart_state: &IpgChartState) -> iced::Element<Message> {
-    // let df: DataFrame = polars_df.into();
-    // let mut series: Vec<charts_rs::Series> = vec![];
-    // for col in df.iter() {
-    //     let data = col.f32().unwrap().to_vec_null_aware().left().unwrap();
-    //     series.push((col.name().as_str(), data).into())
-    // }
+pub fn construct_chart<'a>(chart: &'a IpgChart,
+                            mut cs: &'a IpgChartState,
+                            _content: Vec<Element<'a, Message>>,) 
+                            -> Element<'a, Message> {
 
-    // let title_align = match title_align {
-    //     IpgHorizontalAlignment::Left => charts_rs::Align::Left,
-    //     IpgHorizontalAlignment::Center => charts_rs::Align::Center,
-    //     IpgHorizontalAlignment::Right => charts_rs::Align::Right,
-    // };
-
-    // let y_axis_configs: Vec<YAxisConfig> = {
-
-    // };
-    
-    // let mut bar_chart = BarChart::new_with_theme(
-    // series,
-    // axis_labels,
-    // charts_rs::THEME_GRAFANA,
-    // );
-    // bar_chart.title_text = title;
+    let mut series: Vec<charts_rs::Series> = vec![];
+    for (s, v) in chart.series.iter() {
+        series.push((&s[..], v.clone()).into());
+    }
+    let mut bar_chart = BarChart::new_with_theme(
+    series,
+    chart.x_axis_labels.clone(),
+    charts_rs::THEME_GRAFANA,
+    );
+    bar_chart.title_text = "BarChart".to_string();
     // bar_chart.legend_margin = Some(Box {
     //     top: bar_chart.title_height,
     //     bottom: 5.0,
     //     ..Default::default()
     // });
-    // bar_chart.series_list[2].category = Some(SeriesCategory::Line);
-    // bar_chart.series_list[2].y_axis_index = 1;
-    // bar_chart.series_list[2].label_show = true;
+    bar_chart.series_list[2].category = Some(SeriesCategory::Line);
+    bar_chart.series_list[2].y_axis_index = 1;
+    bar_chart.series_list[2].label_show = true;
 
-    // bar_chart
-    //     .y_axis_configs
-    //     .push(bar_chart.y_axis_configs[0].clone());
-    // bar_chart.y_axis_configs[0].axis_formatter = Some("{c} ml".to_string());
-    // bar_chart.y_axis_configs[1].axis_formatter = Some("{c} °C".to_string());
+    bar_chart
+        .y_axis_configs
+        .push(bar_chart.y_axis_configs[0].clone());
+    bar_chart.y_axis_configs[0].axis_formatter = Some("{c} ml".to_string());
+    bar_chart.y_axis_configs[1].axis_formatter = Some("{c} °C".to_string());
 
-    // let svg = bar_chart.svg().unwrap();
-    // let (bar_elements, 
-    //     text_elements) = parse_svg(svg);
+    let svg = bar_chart.svg().unwrap();
+    let (bar_elements, 
+        text_elements) = parse_svg(svg);
 
-    // // chart_state.image_curves.push(ChartWidget::Image(image));
-    // chart_state.curves = bar_elements;
-    // chart_state.text_curves = text_elements;
-    // chart_state.width = width;
-    // chart_state.height = height;
-    // chart_state.background = None;
-    // chart_state.border_width = Some(2.0);
-    // chart_state.border_color = Some(Color::WHITE);
+    cs.curves = bar_elements;
+    cs.text_curves = text_elements;
+    cs.width = chart.width;
+    cs.height = chart.height;
+    // cs.background = chart.background_color;
+    cs.border_width = Some(2.0);
+    cs.border_color = Some(Color::WHITE);
+
     let draw: iced::Element<ChartMessage> = container(
-        chart_state
+        cs
             .view(
-                &chart_state.curves,
-                &chart_state.text_curves,
-                &chart_state.image_curves,
+                &cs.curves,
+                &cs.text_curves,
+                &cs.image_curves,
             )
             .map(ChartMessage::WidgetDraw),
     )
@@ -202,7 +204,7 @@ pub struct IpgChartLegend {
     pub legend_font_weight: Option<String>,
     pub legend_align: IpgHorizontalAlignment,
     pub legend_margin: Option<[f32; 4]>,
-    pub legend_category: IpgLegendCategory,
+    pub legend_category: IpgChartLegendCategory,
     pub legend_show: bool,
 }
 
@@ -216,7 +218,7 @@ impl IpgChartLegend {
         legend_font_weight: Option<String>,
         legend_align: IpgHorizontalAlignment,
         legend_margin: Option<[f32; 4]>,
-        legend_category: IpgLegendCategory,
+        legend_category: IpgChartLegendCategory,
         legend_show: bool,
     ) -> Self {
         Self { 
@@ -643,7 +645,7 @@ pub enum IpgChartGeometryParam {
 
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
-pub enum IpgLegendCategory {
+pub enum IpgChartLegendCategory {
     Normal,
     RoundRect,
     Circle,

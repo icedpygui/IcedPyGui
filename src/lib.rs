@@ -7,9 +7,10 @@ use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget,
     IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
 
 use chart::draw_chart::{ChartWidget, IpgChartState};
+use chart::themes::{IpgChartTheme, CHART_DEFAULT_HEIGHT, CHART_DEFAULT_WIDTH};
 use iced::widget::image;
 
-use ipg_widgets::ipg_chart::{chart_item_update, IpgChart, IpgChartLegend, IpgChartSeries, IpgChartTitle, IpgChartXAxis, IpgChartYAxis, IpgLegendCategory};
+use ipg_widgets::ipg_chart::{chart_item_update, IpgChart, IpgChartLegend, IpgChartSeries, IpgChartTitle, IpgChartXAxis, IpgChartYAxis, IpgChartLegendCategory};
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
@@ -773,9 +774,12 @@ impl IPG {
     #[pyo3(signature = (
         window_id,
         chart_id,
-        width,
-        height,
+        series,
+        x_axis_labels,
+        width=CHART_DEFAULT_WIDTH,
+        height=CHART_DEFAULT_HEIGHT,
         position_xy=None,
+        theme=None,
         margin=None,
         font_family="Roboto".to_string(),
         background_ipgcolor=None,
@@ -792,9 +796,12 @@ impl IPG {
         &self,
         window_id: String,
         chart_id: String,
+        series: PyObject,
+        x_axis_labels: PyObject,
         width: f32,
         height: f32,
         position_xy: Option<[f32; 2]>,
+        theme: Option<IpgChartTheme>,
         margin: Option<[f32; 4]>,
         font_family: String,
         background_ipgcolor: Option<IpgColor>,
@@ -813,6 +820,22 @@ impl IPG {
         let grid_stroke_color: Option<Color> = 
             get_color(grid_stroke_rgba, grid_stroke_ipgcolor, 1.0, false);
         
+        let series = Python::with_gil(|py| {
+        let res = series.extract::<Vec<(String, Vec<f32>)>>(py);
+            match res {
+                Ok(s) => s,
+                Err(_) => panic!("Add Chart series extraction failed"),
+            }
+        });
+
+        let x_axis_labels = Python::with_gil(|py| {
+        let res = x_axis_labels.extract::<Vec<String>>(py);
+            match res {
+                Ok(s) => s,
+                Err(_) => panic!("Add Chart x axis labels extraction failed"),
+            }
+        });
+
         let id = self.get_id(gen_id);
  
         let prt_id = match parent_id {
@@ -829,9 +852,12 @@ impl IPG {
             id, IpgContainers::IpgChart(
                 IpgChart::new(
                     id,
+                    series,
+                    x_axis_labels,
                     width,
                     height,
                     position_xy,
+                    theme,
                     margin,
                     font_family,
                     background_color,
@@ -938,7 +964,7 @@ impl IPG {
         legend_font_weight=None,
         legend_align=IpgHorizontalAlignment::Center,
         legend_margin=None,
-        legend_category=IpgLegendCategory::Normal,
+        legend_category=IpgChartLegendCategory::Normal,
         legend_show=false,
         gen_id=None,
     ))]
@@ -951,7 +977,7 @@ impl IPG {
         legend_font_weight: Option<String>,
         legend_align: IpgHorizontalAlignment,
         legend_margin: Option<[f32; 4]>,
-        legend_category: IpgLegendCategory,
+        legend_category: IpgChartLegendCategory,
         legend_show: bool,
         gen_id: Option<usize>,
     ) -> PyResult<usize> {
@@ -6995,6 +7021,8 @@ fn icedpygui(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<IpgCanvasGeometryParam>()?;
     m.add_class::<IpgDrawMode>()?;
     m.add_class::<IpgCanvasWidget>()?;
+    m.add_class::<IpgChartLegendCategory>()?;
+    m.add_class::<IpgChartTheme>()?;
     m.add_class::<IpgCardParam>()?;
     m.add_class::<IpgCardStyleParam>()?;
     m.add_class::<IpgCheckboxParam>()?;

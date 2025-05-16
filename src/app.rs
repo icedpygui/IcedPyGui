@@ -683,7 +683,7 @@ fn get_container<'a>(state: &'a IpgState,
                     construct_canvas(canvas_state)
                 },
                 IpgContainers::IpgChart(chart) => {
-                    construct_chart(chart_state)
+                    construct_chart(chart, chart_state, content)
                 },
                 IpgContainers::IpgColumn(col) => {
                     construct_column(col, content) 

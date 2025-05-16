@@ -1,23 +1,24 @@
 //! themes
 
 use iced::Color;
+use pyo3::pyclass;
 
 use crate::ipg_widgets::ipg_enums::IpgHorizontalAlignment;
-pub static DEFAULT_WIDTH: f32 = 600.0;
-pub static DEFAULT_HEIGHT: f32 = 400.0;
+pub static CHART_DEFAULT_WIDTH: f32 = 600.0;
+pub static CHART_DEFAULT_HEIGHT: f32 = 400.0;
 
-pub static DEFAULT_TITLE_HEIGHT: f32 = 30.0;
-pub static DEFAULT_SUB_TITLE_HEIGHT: f32 = 20.0;
+pub static CHART_DEFAULT_TITLE_HEIGHT: f32 = 30.0;
+pub static CHART_DEFAULT_SUB_TITLE_HEIGHT: f32 = 20.0;
 
-pub static DEFAULT_X_AXIS_HEIGHT: f32 = 30.0;
-pub static DEFAULT_X_AXIS_NAME_GAP: f32 = 5.0;
+pub static CHART_DEFAULT_X_AXIS_HEIGHT: f32 = 30.0;
+pub static CHART_DEFAULT_X_AXIS_NAME_GAP: f32 = 5.0;
 
-pub static DEFAULT_Y_AXIS_WIDTH: f32 = 40.0;
-pub static DEFAULT_Y_AXIS_NAME_GAP: f32 = 8.0;
-pub static DEFAULT_Y_AXIS_SPLIT_NUMBER: usize = 6;
-pub static DEFAULT_FONT_SIZE: f32 = 14.0;
+pub static CHART_DEFAULT_Y_AXIS_WIDTH: f32 = 40.0;
+pub static CHART_DEFAULT_Y_AXIS_NAME_GAP: f32 = 8.0;
+pub static CHART_DEFAULT_Y_AXIS_SPLIT_NUMBER: usize = 6;
+pub static CHART_DEFAULT_FONT_SIZE: f32 = 14.0;
 
-pub static DEFAULT_SERIES_STROKE_WIDTH: f32 = 2.0;
+pub static CHART_DEFAULT_SERIES_STROKE_WIDTH: f32 = 2.0;
 
 pub static THEME_DARK: &str = "dark";
 pub static THEME_ANT: &str = "ant";
@@ -25,17 +26,21 @@ pub static THEME_GRAFANA: &str = "grafana";
 
 static LIGHT_THEME_NAME: &str = "light";
 
-pub enum ChartTheme {
-    DARK_THEME,
-    ANT_THEME,
-    VINTAGE_THEME,
-    SHINE_THEME,
-    WALDEN_THEME,
-    WESTEROS_THEME,
-    CHALK_THEME,
-    GRAFANA_THEME,
-    SHADCN_THEME,
+
+#[derive(Debug, Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum IpgChartTheme {
+    DarkTheme,
+    AntTheme,
+    VintageTheme,
+    ShineTheme,
+    WaldenTheme,
+    WesterosTheme,
+    ChalkTheme,
+    GrafanaTheme,
+    ShadcnTheme,
 }
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Theme {
