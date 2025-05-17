@@ -18,7 +18,7 @@ iced = { version = "0.13.1", features = ["canvas", "debug", "highlighter", "imag
                                         "lazy", "smol", "svg", "tokio", "multi-window", "auto-detect-theme"] }
 iced_aw = {git = "https://github.com/iced-rs/iced_aw", rev = "3485f3a"}
 svg-simple-parser = "0.0.6"
-charts-rs = { path = "../charts-rs", features = ["resvg", "image", "image-encoder"] }
+charts-rs-mod = { path = "../charts-rs-mod", features = ["resvg", "image", "image-encoder"] }
 
 polars = { version="0.46.0", features=["strings", "lazy"]}
 pyo3-polars = "0.20.0"

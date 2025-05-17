@@ -36,6 +36,6 @@ ipg.add_chart(
     theme=IpgChartTheme.GrafanaTheme
 )
 
-
+ipg.construct_chart(["chart"])
 
 ipg.start_session()

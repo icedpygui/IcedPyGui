@@ -22,7 +22,7 @@ use polars::frame::DataFrame;
 use crate::canvas::draw_canvas::IpgCanvasState;
 use crate::chart::draw_chart::IpgChartState;
 use crate::ipg_widgets::ipg_canvas::match_canvas_widget;
-use crate::ipg_widgets::ipg_chart::{construct_chart, ChartMessage};
+use crate::ipg_widgets::ipg_chart::{display_chart, ChartMessage};
 use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, 
     construct_color_picker, ColPikMessage};
 use crate::ipg_widgets::ipg_divider::{construct_divider_horizontal, construct_divider_vertical, divider_callback, DivMessage};
@@ -682,8 +682,8 @@ fn get_container<'a>(state: &'a IpgState,
                 IpgContainers::IpgCanvas(canvas) => {
                     construct_canvas(canvas_state)
                 },
-                IpgContainers::IpgChart(chart) => {
-                    construct_chart(chart, chart_state, content)
+                IpgContainers::IpgChartId(chart) => {
+                    display_chart(chart, chart_state)
                 },
                 IpgContainers::IpgColumn(col) => {
                     construct_column(col, content) 
@@ -1357,11 +1357,6 @@ fn clone_chart_state(chart_state: &mut IpgChartState) {
     chart_state.curves = mutex_cs.curves.to_owned();
     chart_state.text_curves = mutex_cs.text_curves.to_owned();
     chart_state.image_curves = mutex_cs.image_curves.to_owned();
-    chart_state.width = mutex_cs.width;
-    chart_state.height = mutex_cs.height;
-    chart_state.border_width = mutex_cs.border_width;
-    chart_state.border_color = mutex_cs.border_color;
-    chart_state.selected_chart_color = mutex_cs.background;
 
     // zeroing out any vecs and hashmaps
     mutex_cs.curves = vec![];

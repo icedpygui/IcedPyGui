@@ -4043,6 +4043,17 @@ class IPG:
             int: _description_
         """
     
+    def construct_chart(
+            self,
+            chart_ids: list[str],
+        ):
+        """_summary_
+
+        Args:
+            chart_ids (list[str]): 
+                List of string chart ids.
+        """
+    
     def add_chart_title(
             self,
             chart_id: str,

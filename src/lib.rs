@@ -10,7 +10,7 @@ use chart::draw_chart::{ChartWidget, IpgChartState};
 use chart::themes::{IpgChartTheme, CHART_DEFAULT_HEIGHT, CHART_DEFAULT_WIDTH};
 use iced::widget::image;
 
-use ipg_widgets::ipg_chart::{chart_item_update, IpgChart, IpgChartLegend, IpgChartSeries, IpgChartTitle, IpgChartXAxis, IpgChartYAxis, IpgChartLegendCategory};
+use ipg_widgets::ipg_chart::{chart_item_update, construct_chart, IpgChart, IpgChartId, IpgChartLegend, IpgChartLegendCategory, IpgChartSeries, IpgChartTitle, IpgChartXAxis, IpgChartYAxis};
 use ipg_widgets::ipg_color_picker::{color_picker_style_update_item, color_picker_update, 
     IpgColorPicker, IpgColorPickerParam, IpgColorPickerStyle, IpgColorPickerStyleParam};
 use ipg_widgets::ipg_divider::{divider_horizontal_item_update, divider_style_update_item, 
@@ -342,30 +342,33 @@ pub fn access_canvas_state() -> MutexGuard<'static, CanvasState> {
     CANVAS_STATE.lock().unwrap()
 }
 
+use charts_rs_mod::IcedComponent;
 #[derive(Debug)]
 pub struct ChartState {
-    pub chart_ids_str: Lazy<HashMap<String, usize>>,
-    pub curves: Vec<ChartWidget>,
-    pub text_curves: Vec<ChartWidget>,
-    pub image_curves: Vec<ChartWidget>,
-    pub width: f32,
-    pub height: f32,
-    pub background: Option<Color>,
-    pub border_color: Option<Color>,
-    pub border_width: Option<f32>,
+    pub chart_ids: Lazy<HashMap<String, usize>>,
+    pub curves: Vec<IcedComponent>,
+    pub text_curves: Vec<IcedComponent>,
+    pub image_curves: Vec<IcedComponent>,
+    pub charts: Lazy<HashMap<usize, IpgChart>>,
+    pub titles: Lazy<HashMap<usize, IpgChartTitle>>,
+    pub legends: Lazy<HashMap<usize, IpgChartLegend>>,
+    pub x_axis: Lazy<HashMap<usize, IpgChartXAxis>>,
+    pub y_axis: Lazy<HashMap<usize, IpgChartYAxis>>,
+    pub series: Lazy<HashMap<usize, IpgChartSeries>>,
 }
 
 pub static CHART_STATE: Mutex<ChartState> = Mutex::new(
     ChartState {
-        chart_ids_str: Lazy::new(||HashMap::new()),
+        chart_ids: Lazy::new(||HashMap::new()),
         curves: vec![],
         text_curves: vec![],
         image_curves: vec![],
-        width: 300.0,
-        height: 300.0,
-        background: None,
-        border_color: None,
-        border_width: None,
+        charts: Lazy::new(||HashMap::new()),
+        titles: Lazy::new(||HashMap::new()),
+        legends: Lazy::new(||HashMap::new()),
+        x_axis: Lazy::new(||HashMap::new()),
+        y_axis: Lazy::new(||HashMap::new()),
+        series: Lazy::new(||HashMap::new()),
         },
 );
 
@@ -849,27 +852,43 @@ impl IPG {
         set_state_cont_wnd_ids(&mut state, &window_id, chart_id.clone(), id, "add_chart".to_string());
         
         state.containers.insert(
-            id, IpgContainers::IpgChart(
-                IpgChart::new(
+            id, IpgContainers::IpgChartId(
+                IpgChartId::new(
                     id,
-                    series,
-                    x_axis_labels,
-                    width,
-                    height,
-                    position_xy,
-                    theme,
-                    margin,
-                    font_family,
-                    background_color,
-                    is_light,
-                    grid_stroke_color,
-                    grid_stroke_width,
-                    radius,
                 )));
-
         drop(state);
 
+        let mut cs = access_chart_state();
+        cs.chart_ids.insert(chart_id, id);
+        cs.charts.insert(
+            id, 
+            IpgChart::new(
+                id,
+                series,
+                x_axis_labels,
+                width,
+                height,
+                position_xy,
+                theme,
+                margin,
+                font_family,
+                background_color,
+                is_light,
+                grid_stroke_color,
+                grid_stroke_width,
+                radius,
+            ));
+
         Ok(id)
+    }
+
+    #[pyo3(signature = (
+        chart_ids,
+    ))]
+    fn construct_chart(
+        &self,
+        chart_ids: Vec<String>) {
+            construct_chart(chart_ids);
     }
 
     #[pyo3(signature = (
@@ -6927,7 +6946,7 @@ fn match_container(
         IpgContainers::IpgCanvas(_can) => {
             canvas_item_update(canvas_state, item, value, last_id)
         },
-        IpgContainers::IpgChart(_cht) => {
+        IpgContainers::IpgChartId(_cht) => {
             chart_item_update(chart_state, item, value, last_id)
         },
         IpgContainers::IpgColumn(col) => {

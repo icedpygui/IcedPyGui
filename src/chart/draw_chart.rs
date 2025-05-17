@@ -2,6 +2,7 @@
 // #![allow(clippy::unnecessary_unwrap)]
 use std::f32::consts::PI;
 
+use charts_rs_mod::IcedComponent;
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::{alignment, mouse, Color, Font, Radians, Vector};
 use iced::widget::canvas::event::{self, Event};
@@ -51,9 +52,9 @@ pub struct IpgChartState {
     background_cache: canvas::Cache,
     text_cache: Vec<canvas::Cache>,
     image_cache: Vec<canvas::Cache>,
-    pub curves: Vec<ChartWidget>,
-    pub text_curves: Vec<ChartWidget>,
-    pub image_curves: Vec<ChartWidget>,
+    pub curves: Vec<IcedComponent>,
+    pub text_curves: Vec<IcedComponent>,
+    pub image_curves: Vec<IcedComponent>,
     pub draw_mode: ChartDrawMode,
     pub width: f32,
     pub height: f32,
@@ -110,9 +111,9 @@ impl Default for IpgChartState {
 
 impl IpgChartState {
     pub fn view<'a>(&'a self, 
-                    curves: &'a Vec<ChartWidget>, 
-                    text_curves: &'a Vec<ChartWidget>,
-                    image_curves: &'a Vec<ChartWidget>,
+                    curves: &'a Vec<IcedComponent>, 
+                    text_curves: &'a Vec<IcedComponent>,
+                    image_curves: &'a Vec<IcedComponent>,
                     ) -> Element<'a, ChartWidget> {
         Canvas::new(DrawPending {
             state: self,
@@ -157,12 +158,12 @@ impl IpgChartState {
 
 struct DrawPending<'a> {
     state: &'a IpgChartState,
-    curves: &'a Vec<ChartWidget>,
-    text_curves: &'a Vec<ChartWidget>,
-    image_curves: &'a Vec<ChartWidget>,
+    curves: &'a Vec<IcedComponent>,
+    text_curves: &'a Vec<IcedComponent>,
+    image_curves: &'a Vec<IcedComponent>,
 }
 
-impl canvas::Program<ChartWidget> for DrawPending<'_> {
+impl canvas::Program<IcedComponent> for DrawPending<'_> {
     type State = ();
 
     fn update(
@@ -171,7 +172,7 @@ impl canvas::Program<ChartWidget> for DrawPending<'_> {
         _event: Event,
         _bounds: iced::Rectangle,
         _cursor: mouse::Cursor,
-    ) -> (event::Status, Option<ChartWidget>) {
+    ) -> (event::Status, Option<IcedComponent>) {
         (event::Status::Ignored, None)
     }
 
@@ -249,7 +250,7 @@ pub struct DrawCurve {
 }
 
 impl DrawCurve {
-    fn draw_all(curves: &Vec<ChartWidget>, frame: &mut Frame, _theme: &Theme) {
+    fn draw_all(curves: &Vec<IcedComponent>, frame: &mut Frame, _theme: &Theme) {
 
         for widget in curves.iter() {
             
@@ -260,9 +261,9 @@ impl DrawCurve {
                 line_dash,
                 ) = 
                 match &widget {
-                    ChartWidget::Circle(cir) => {
+                    IcedComponent::Circle(cir) => {
                         let path = Path::new(|p| { 
-                            p.circle(cir.center, cir.radius);
+                            p.circle(Point::new(cir.center.0, cir.center.1), cir.radius);
                         });
                         if cir.fill_color.is_some() {
                             frame.fill(&path, cir.fill_color.unwrap());
@@ -271,7 +272,7 @@ impl DrawCurve {
                         (Some(path), Some(cir.stroke), Some(cir.stroke_width), cir.stroke_dash_offset, cir.stroke_dash_segments.clone())
                         
                     },
-                    ChartWidget::Ellipse(ell) => {
+                    IcedComponent::Ellipse(ell) => {
                         let path = 
                             Path::new(|p| {
                                 p.ellipse(Elliptical{ 
@@ -286,7 +287,7 @@ impl DrawCurve {
                         }
                         (Some(path), Some(ell.stroke), Some(ell.stroke_width), None, None)
                     },
-                    ChartWidget::Line(line) => {
+                    IcedComponent::Line(line) => {
                         let path = 
                             Path::new(|p| {
                                 p.move_to(line.points[0]);
@@ -294,7 +295,7 @@ impl DrawCurve {
                             });
                         (Some(path), Some(line.stroke), Some(line.stroke_width), None, None)
                     },
-                    ChartWidget::PolyLine(pl) => {
+                    IcedComponent::PolyLine(pl) => {
                         let path = 
                             Path::new(|p| {
                                 for (index, point) in pl.points.iter().enumerate() {
@@ -307,7 +308,7 @@ impl DrawCurve {
                             });
                         (Some(path), Some(pl.stroke), Some(pl.stroke_width), None, None)
                     },
-                    ChartWidget::Polygon(pg) => {
+                    IcedComponent::Polygon(pg) => {
                         let path = 
                             Path::new(|p| {
                                 for (index, point) in pg.points.iter().enumerate() {
@@ -324,7 +325,7 @@ impl DrawCurve {
                         }    
                         (Some(path), Some(pg.stroke), Some(pg.stroke_width), None, None)
                     },
-                    ChartWidget::Rectangle(rect) => {
+                    IcedComponent::Rectangle(rect) => {
                         let path =  Path::new(|p| {
                             p.rectangle(rect.top_left, rect.size)});
                             if rect.fill_color.is_some() {
@@ -361,10 +362,10 @@ impl DrawCurve {
 
     }
 
-    fn draw_text(text_curve: &ChartWidget, frame: &mut Frame, _theme: &Theme) {
+    fn draw_text(text_curve: &IcedComponent, frame: &mut Frame, _theme: &Theme) {
         let (path, color, width) = 
             match &text_curve {
-                ChartWidget::Text(txt) => {
+                IcedComponent::Text(txt) => {
                     frame.translate(Vector::new(txt.position.x, txt.position.y));
                     frame.fill_text(canvas::Text {
                         content: txt.content.clone(),
@@ -393,8 +394,8 @@ impl DrawCurve {
         
     }
 
-    fn draw_image(image_curve: &ChartWidget, frame: &mut Frame, _theme: &Theme) {
-        if let ChartWidget::Image(img) = &image_curve {
+    fn draw_image(image_curve: &IcedComponent, frame: &mut Frame, _theme: &Theme) {
+        if let IcedComponent::Image(img) = &image_curve {
              frame.draw_image(
                          img.bounds,
                         &img.path,
