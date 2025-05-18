@@ -185,22 +185,22 @@ impl canvas::Program<IcedComponent> for DrawPending<'_> {
         _cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
 
-        let background =
-            self.state.background_cache.draw(renderer, bounds.size(), 
-                            |frame| {
+        // let background =
+            // self.state.background_cache.draw(renderer, bounds.size(), 
+            //                 |frame| {
 
-                let path = Path::rectangle(Point::ORIGIN, frame.size());
-                if self.state.selected_chart_color.is_some() {
-                    frame.fill(&path, self.state.selected_chart_color.unwrap());
-                }
+            //     let path = Path::rectangle(Point::ORIGIN, frame.size());
+            //     if self.state.selected_chart_color.is_some() {
+            //         frame.fill(&path, self.state.selected_chart_color.unwrap());
+            //     }
                 
-                frame.stroke(
-                    &Path::rectangle(Point::ORIGIN, frame.size()),
-                    Stroke::default()
-                        .with_width(2.0)
-                        .with_color(theme.palette().text),
-                );
-            });
+            //     frame.stroke(
+            //         &Path::rectangle(Point::ORIGIN, frame.size()),
+            //         Stroke::default()
+            //             .with_width(2.0)
+            //             .with_color(theme.palette().text),
+            //     );
+            // });
 
         let content =
             self.state.cache.draw(renderer, bounds.size(), 
@@ -214,7 +214,7 @@ impl canvas::Program<IcedComponent> for DrawPending<'_> {
                 DrawCurve::draw_text(text_curve, frame, theme);
             }));
         }
-
+        
         // let mut image_content = vec![];
         // for (i, image_curve) in self.image_curves.iter().enumerate() {
         //     image_content.push(self.state.image_cache[i].draw(renderer, bounds.size(), |frame| {
@@ -222,7 +222,7 @@ impl canvas::Program<IcedComponent> for DrawPending<'_> {
         //     }));
         // }
             
-        let mut content = vec![background, content];
+        let mut content = vec![content];
         content.append(&mut text_content);
         // content.append(&mut image_content);
         content
@@ -253,7 +253,7 @@ impl DrawCurve {
     fn draw_all(curves: &Vec<IcedComponent>, frame: &mut Frame, _theme: &Theme) {
 
         for widget in curves.iter() {
-            
+            dbg!(widget);
             let (path, 
                 color, 
                 width, 
@@ -323,12 +323,18 @@ impl DrawCurve {
                     },
                     IcedComponent::Rect(rect) => {
                         let size = Size::new(rect.width, rect.height);
+                        let fill_color = match rect.fill_color {
+                            Some(c) => Color::from_rgba8(c.r, c.g, c.b, c.a),
+                            None => Color::TRANSPARENT,
+                        };
+                        let stroke_color = convert_color(rect.stroke_color); 
+                       
                         let path =  Path::new(|p| {
                             p.rectangle(Point::new(rect.top_left.0, rect.top_left.1), size)});
                             if rect.fill_color.is_some() {
-                                frame.fill(&path, convert_color(rect.fill_color.unwrap()));
+                                frame.fill(&path, fill_color);
                             }
-                            let stroke_color = convert_color(rect.stroke_color);   
+                              
                             (Some(path), Some(stroke_color), Some(rect.stroke_width))
                     },
                     _ => (None, None, None),
@@ -467,5 +473,5 @@ impl DrawCurve {
 }
 
 fn convert_color(c: [u8; 4]) -> Color {
-    Color::from_rgba(c[0] as f32, c[1] as f32, c[2] as f32, c[3] as f32)
+    Color::from_rgba8(c[0], c[1], c[2], c[3] as f32)
 }

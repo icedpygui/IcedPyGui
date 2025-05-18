@@ -156,6 +156,315 @@ fn get_type(ic: &IcedComponent) -> bool {
     }
 }
 
+// axis construction
+// let mut ic = vec![];
+//         let left = self.left;
+//         let top = self.top;
+//         let width = self.width;
+//         let height = self.height;
+//         let tick_length = self.tick_length;
+
+//         let stroke_color = match self.stroke_color {
+//             Some(c) => c.to_vec(),
+//             None => Color::transparent().to_vec(),
+//         };
+
+//         let stroke_width = 1.0;
+
+//         let mut line_data = vec![];
+//         if stroke_color!= Color::transparent().to_vec() {
+//             let values = match self.position {
+//                 Position::Top => {
+//                     let y = top + height;
+//                     (left, y, left + width, y)
+//                 }
+//                 Position::Right => {
+//                     let y = top + height;
+//                     (left, top, left, y)
+//                 }
+//                 Position::Bottom => (left, top, left + width, top),
+//                 _ => {
+//                     let x = left + width;
+//                     (x, top, x, top + height)
+//                 }
+//             };
+
+//             line_data.push(
+//                 IcedComponent::Line(IcedLine {
+//                     move_to: (values.0, values.1),
+//                     line_to: (values.2, values.3),
+//                     stroke_width,
+//                     stroke_color,
+//                 }))
+//         }
+        
+//         let is_horizontal = self.position == Position::Bottom || self.position == Position::Top;
+
+//         let axis_length = if is_horizontal {
+//             self.width
+//         } else {
+//             self.height
+//         };
+//         let font_size = self.font_size;
+//         let formatter = &self.formatter.clone().unwrap_or_default();
+
+//         let mut text_list = vec![];
+//         let mut text_unit_count: usize = 1;
+//         if font_size > 0.0 && !self.data.is_empty() {
+//             text_list = self
+//                 .data
+//                 .iter()
+//                 .map(|item| format_string(item, formatter))
+//                 .collect();
+//             if self.position == Position::Top || self.position == Position::Bottom {
+//                 let f = font::get_font(&self.font_family).context(GetFontSnafu).unwrap();
+//                 let total_measure = font::measure_text(f, font_size, &text_list.join(" "));
+//                 // Not enough space
+//                 if total_measure.width() > axis_length {
+//                     text_unit_count += (total_measure.width() / axis_length).ceil() as usize;
+//                 }
+//             }
+//         }
+
+//         let mut split_number = self.split_number;
+//         if split_number == 0 {
+//             split_number = self.data.len();
+//         }
+//         if stroke_color != Color::transparent().to_vec() {
+//             let unit = axis_length / split_number as f32;
+//             let tick_interval = self.tick_interval.max(text_unit_count);
+//             let tick_start = self.tick_start;
+//             for i in 0..=split_number {
+//                 if i < tick_start {
+//                     continue;
+//                 }
+//                 let index = if i > tick_start { i - tick_start } else { i };
+//                 if i != tick_start && (tick_interval != 0 && index % tick_interval != 0) {
+//                     continue;
+//                 }
+
+//                 let values = match self.position {
+//                     Position::Top => {
+//                         let x = left + unit * i as f32;
+//                         let y = top + height;
+//                         (x, y - tick_length, x, y)
+//                     }
+//                     Position::Right => {
+//                         let y = top + unit * i as f32;
+//                         (left, y, left + tick_length, y)
+//                     }
+//                     Position::Bottom => {
+//                         let x = left + unit * i as f32;
+//                         (x, top, x, top + tick_length)
+//                     }
+//                     _ => {
+//                         let y = top + unit * i as f32;
+//                         let x = left + width;
+//                         (x, y, x - tick_length, y)
+//                     }
+//                 };
+
+//                 line_data.push(
+//                     IcedComponent::Line(IcedLine {
+//                         move_to: (values.0, values.1),
+//                         line_to: (values.2, values.3),
+//                         stroke_color,
+//                         stroke_width,
+//                     }));
+//             }
+//         }
+//         ic.extend(line_data);
+
+//         let mut text_data = vec![];
+//         let name_rotate = self.name_rotate / std::f32::consts::PI * 180.0;
+//         if !text_list.is_empty() {
+//             let name_gap = self.name_gap;
+//             let f = font::get_font(&self.font_family).context(GetFontSnafu).unwrap();
+//             let mut data_len = self.data.len();
+//             let is_name_align_start = self.name_align == Align::Left;
+//             if is_name_align_start {
+//                 data_len -= 1;
+//             }
+//             let unit = axis_length / data_len as f32;
+
+//             for (index, text) in text_list.iter().enumerate() {
+//                 if index % text_unit_count != 0 {
+//                     continue;
+//                 }
+//                 let b = font::measure_text(f, font_size, text);
+//                 let mut unit_offset = unit * index as f32 + unit / 2.0;
+//                 if is_name_align_start {
+//                     unit_offset -= unit / 2.0;
+//                 }
+//                 let text_width = b.width();
+
+//                 let values = match self.position {
+//                     Position::Top => {
+//                         let y = top + height - name_gap;
+//                         let x = left + unit_offset - text_width / 2.0;
+//                         (x, y)
+//                     }
+//                     Position::Right => {
+//                         let x = left + name_gap;
+//                         let y = top + unit_offset + font_size / 2.0;
+//                         (x, y)
+//                     }
+//                     Position::Bottom => {
+//                         let y = top + font_size + name_gap;
+//                         let x = left + unit_offset - text_width / 2.0;
+//                         (x, y)
+//                     }
+//                     _ => {
+//                         let x = left + width - text_width - name_gap;
+//                         let y = top + unit_offset + font_size / 2.0 - 2.0;
+//                         (x, y)
+//                     }
+//                 };
+//                 let mut transform = None;
+//                 let mut x = Some(values.0);
+//                 let mut y = Some(values.1);
+//                 let mut text_anchor = None;
+//                 if name_rotate != 0.0 {
+//                     let w = self.name_rotate.sin().abs() * b.width();
+//                     let translate_x = (values.0 + b.width() / 2.0) as i32;
+//                     let translate_y = (values.1 + w / 2.0) as i32;
+//                     text_anchor = Some("middle".to_string());
+
+//                     let a = name_rotate as i32;
+//                     transform = Some(format!(
+//                         "translate({translate_x},{translate_y}) rotate({a})"
+//                     ));
+//                     x = None;
+//                     y = None;
+//                 }
+
+//                 let font_color = match self.font_color {
+//                     Some(c) => Some(c.to_vec()),
+//                     None => None,
+//                 };
+
+//                 text_data.push(
+//                     IcedComponent::Text(IcedText {
+//                         text: text.to_string(),
+//                         font_family: Some(self.font_family.clone()),
+//                         font_size: Some(self.font_size),
+//                         font_color,
+//                         font_weight: self.font_weight.clone(),
+//                         x,
+//                         y,
+//                         transform,
+//                         text_anchor,
+//                         line_height: None,
+//                         dx: None,
+//                         dy: None,
+//                         dominant_baseline: None,
+//                         alignment_baseline: None,
+//                     }));
+//             }
+//         };
+
+//         ic.extend(text_data);
+//         ic
+
+// legend construction
+// let stroke_width = 2.0;
+//         let stroke_color = match self.stroke_color {
+//             Some(c) => c.to_vec(),
+//             None => Color::transparent().to_vec(),
+//         };
+//         let fill_color: Option<[u8; 4]> = match self.fill {
+//             Some(c) => Some(c.to_vec()),
+//             None => None,
+//         };
+//         let font_color: Option<[u8; 4]> = match self.font_color {
+//             Some(c) => Some(c.to_vec()),
+//             None => None,
+//         };
+
+//         let mut data: Vec<IcedComponent> = vec![];
+//         match self.category {
+//             LegendCategory::Rect => {
+//                 let height = 10.0_f32;
+//                 data.push(
+//                     IcedComponent::Rect(IcedRect {
+//                         top_left: (self.left, self.top + (LEGEND_HEIGHT - height) / 2.0),
+//                         width: LEGEND_WIDTH,
+//                         height,
+//                         stroke_color,
+//                         stroke_width,
+//                         fill_color,
+//                         round_xy: None,
+//                     }
+//                 ));
+//             }
+//             LegendCategory::RoundRect => {
+//                 let height = 10.0_f32;
+//                 data.push(
+//                     IcedComponent::Rect(IcedRect {
+//                         top_left: (self.left, self.top + (LEGEND_HEIGHT - height) / 2.0),
+//                         width: LEGEND_WIDTH,
+//                         height,
+//                         stroke_color,
+//                         stroke_width,
+//                         fill_color,
+//                         round_xy: Some((2.0, 2.0)),
+//                     }
+//                 ));
+//             }
+//             LegendCategory::Circle => {
+//                 data.push(
+//                     IcedComponent::Circle(IcedCircle {
+//                         center: (self.left + LEGEND_WIDTH * 0.6,
+//                                 self.top + LEGEND_HEIGHT / 2.0),
+//                         radius: 5.5,
+//                         stroke_color,
+//                         stroke_width,
+//                         fill_color,
+//                     }
+//                 ));
+//             }
+//             _ => {
+//                 data.push(
+//                     IcedComponent::Line(IcedLine {
+//                         move_to: (self.left, self.top + LEGEND_HEIGHT / 2.0),
+//                         line_to: (self.left + LEGEND_WIDTH, self.top + LEGEND_HEIGHT / 2.0),
+//                         stroke_color,
+//                         stroke_width,
+//                     }
+//                 ));
+//                 data.push(
+//                     IcedComponent::Circle(IcedCircle {
+//                         center: (self.left + LEGEND_WIDTH / 2.0, 
+//                                 self.top + LEGEND_HEIGHT / 2.0),
+//                         radius: 5.5,
+//                         stroke_color,
+//                         stroke_width,
+//                         fill_color,
+//                     }
+//                 ));
+//             }
+//         }
+//         data.push(
+//             IcedComponent::Text(IcedText {
+//                 text: self.text.clone(),
+//                 font_family: Some(self.font_family.clone()),
+//                 font_color,
+//                 font_size: Some(self.font_size),
+//                 font_weight: self.font_weight.clone(),
+//                 x: Some(self.left + LEGEND_WIDTH + LEGEND_TEXT_MARGIN),
+//                 y: Some(self.top + self.font_size),
+//                 line_height: None,
+//                 dx: None,
+//                 dy: None,
+//                 transform: None,
+//                 dominant_baseline: None,
+//                 text_anchor: None,
+//                 alignment_baseline: None,
+//             }
+//         ));
+//         data
+
+
 #[derive(Debug, Clone)]
 pub struct IpgChartTitle {
     pub id: usize,
