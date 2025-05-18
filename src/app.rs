@@ -22,7 +22,7 @@ use polars::frame::DataFrame;
 use crate::canvas::draw_canvas::IpgCanvasState;
 use crate::chart::draw_chart::IpgChartState;
 use crate::ipg_widgets::ipg_canvas::match_canvas_widget;
-use crate::ipg_widgets::ipg_chart::{display_chart, ChartMessage};
+use crate::ipg_widgets::ipg_chart::{chart_callback, display_chart, ChartMessage};
 use crate::ipg_widgets::ipg_color_picker::{color_picker_callback, 
     construct_color_picker, ColPikMessage};
 use crate::ipg_widgets::ipg_divider::{construct_divider_horizontal, construct_divider_vertical, divider_callback, DivMessage};
@@ -194,7 +194,7 @@ impl App {
                 Task::none()
             },
             Message::Chart(chart_message) => {
-                // chart_callback(chart_message, &mut self.state, &mut self.chart_state);
+                chart_callback(chart_message, &mut self.state, &mut self.chart_state);
                 process_updates(&mut self.state, &mut self.canvas_state, &mut self.chart_state);
                 get_tasks(&mut self.state)
             },

@@ -3,15 +3,15 @@
 use std::f32::consts::PI;
 
 use charts_rs_mod::IcedComponent;
-use iced::widget::canvas::path::arc::Elliptical;
-use iced::{alignment, mouse, Color, Font, Radians, Vector};
+use iced::widget::text::{LineHeight, Shaping};
+use iced::{alignment, mouse, Color, Font, Pixels, Size, Vector};
 use iced::widget::canvas::event::{self, Event};
-use iced::widget::canvas::{self, stroke, Canvas, Frame, Geometry, LineDash, Path, Stroke};
+use iced::widget::canvas::{self, stroke, Canvas, Frame, Geometry, Path, Stroke};
 use iced::{Element, Point, Renderer, Theme};
 use pyo3::pyclass;
 
-use super::geometries::{ChartImage, IpgChartWidget,
-    ChartCircle, ChartEllipse, ChartLine, ChartPolyLine, ChartPolygon, ChartRectangle, ChartText};
+use super::geometries::{ChartImage, ChartCircle, ChartEllipse, 
+    ChartLine, ChartPolyLine, ChartPolygon, ChartRectangle, ChartText};
 
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -60,7 +60,7 @@ pub struct IpgChartState {
     pub height: f32,
     pub border_color: Option<Color>,
     pub border_width: Option<f32>,
-    pub selected_widget: Option<IpgChartWidget>,
+    pub selected_widget: Option<IcedComponent>,
     pub selected_chart_color: Option<Color>,
     pub selected_draw_color: Color,
     pub selected_fill_color: Option<Color>,
@@ -114,7 +114,7 @@ impl IpgChartState {
                     curves: &'a Vec<IcedComponent>, 
                     text_curves: &'a Vec<IcedComponent>,
                     image_curves: &'a Vec<IcedComponent>,
-                    ) -> Element<'a, ChartWidget> {
+                    ) -> Element<'a, IcedComponent> {
         Canvas::new(DrawPending {
             state: self,
             curves,
@@ -215,16 +215,16 @@ impl canvas::Program<IcedComponent> for DrawPending<'_> {
             }));
         }
 
-        let mut image_content = vec![];
-        for (i, image_curve) in self.image_curves.iter().enumerate() {
-            image_content.push(self.state.image_cache[i].draw(renderer, bounds.size(), |frame| {
-                DrawCurve::draw_image(image_curve, frame, theme);
-            }));
-        }
+        // let mut image_content = vec![];
+        // for (i, image_curve) in self.image_curves.iter().enumerate() {
+        //     image_content.push(self.state.image_cache[i].draw(renderer, bounds.size(), |frame| {
+        //         DrawCurve::draw_image(image_curve, frame, theme);
+        //     }));
+        // }
             
         let mut content = vec![background, content];
         content.append(&mut text_content);
-        content.append(&mut image_content);
+        // content.append(&mut image_content);
         content
         
 
@@ -257,103 +257,99 @@ impl DrawCurve {
             let (path, 
                 color, 
                 width, 
-                _offset,
-                line_dash,
+                // _offset,
+                // line_dash,
                 ) = 
                 match &widget {
                     IcedComponent::Circle(cir) => {
+                        let fill_color: Option<Color> = match cir.fill_color {
+                            Some(c) => Some(convert_color(c)),
+                            None => None,
+                        };
+                        let stroke_color: Color = convert_color(cir.stroke_color);
+                        
                         let path = Path::new(|p| { 
                             p.circle(Point::new(cir.center.0, cir.center.1), cir.radius);
                         });
-                        if cir.fill_color.is_some() {
-                            frame.fill(&path, cir.fill_color.unwrap());
+                        if fill_color.is_some() {
+                            frame.fill(&path, fill_color.unwrap());
                         }
 
-                        (Some(path), Some(cir.stroke), Some(cir.stroke_width), cir.stroke_dash_offset, cir.stroke_dash_segments.clone())
+                        (Some(path), Some(stroke_color), Some(cir.stroke_width))
+                        //, cir.stroke_dash_offset, cir.stroke_dash_segments.clone())
                         
-                    },
-                    IcedComponent::Ellipse(ell) => {
-                        let path = 
-                            Path::new(|p| {
-                                p.ellipse(Elliptical{ 
-                                center: ell.center, 
-                                radii: ell.radii, 
-                                rotation: ell.rotation, 
-                                start_angle: Radians(0.0), 
-                                end_angle: Radians(2.0*PI)})
-                            });
-                        if ell.fill_color.is_some() {
-                            frame.fill(&path, ell.fill_color.unwrap());
-                        }
-                        (Some(path), Some(ell.stroke), Some(ell.stroke_width), None, None)
                     },
                     IcedComponent::Line(line) => {
                         let path = 
                             Path::new(|p| {
-                                p.move_to(line.points[0]);
-                                p.line_to(line.points[1]);
+                                p.move_to(Point::new(line.move_to.0, line.line_to.1));
+                                p.line_to(Point::new(line.line_to.0, line.line_to.1));
                             });
-                        (Some(path), Some(line.stroke), Some(line.stroke_width), None, None)
+                        let stroke_color = convert_color(line.stroke_color);
+
+                        (Some(path), Some(stroke_color), Some(line.stroke_width))
                     },
-                    IcedComponent::PolyLine(pl) => {
+                    IcedComponent::Polyline(pl) => {
                         let path = 
                             Path::new(|p| {
-                                for (index, point) in pl.points.iter().enumerate() {
+                                for (index, (x, y)) in pl.points.iter().enumerate() {
                                     if index == 0 {
-                                        p.move_to(*point);
+                                        p.move_to(Point::new(*x, *y));
                                     } else {
-                                        p.line_to(*point);
+                                        p.line_to(Point::new(*x, *y));
                                     }
                                 }
                             });
-                        (Some(path), Some(pl.stroke), Some(pl.stroke_width), None, None)
+                        let stroke_color = convert_color(pl.stroke_color);
+                        (Some(path), Some(stroke_color), Some(pl.stroke_width))
                     },
                     IcedComponent::Polygon(pg) => {
                         let path = 
                             Path::new(|p| {
-                                for (index, point) in pg.points.iter().enumerate() {
+                                for (index, (x, y)) in pg.points.iter().enumerate() {
                                     if index == 0 {
-                                        p.move_to(*point);
+                                        p.move_to(Point::new(*x, *y));
                                     } else {
-                                        p.line_to(*point);
+                                        p.line_to(Point::new(*x, *y));
                                     }
                                 }
-                                p.line_to(pg.points[0]);
                         });
                         if pg.fill_color.is_some() {
-                            frame.fill(&path, pg.fill_color.unwrap());
-                        }    
-                        (Some(path), Some(pg.stroke), Some(pg.stroke_width), None, None)
+                            frame.fill(&path, convert_color(pg.fill_color.unwrap()));
+                        }
+
+                        let stroke_color = convert_color(pg.stroke_color);
+                        (Some(path), Some(stroke_color), Some(pg.stroke_width))
                     },
-                    IcedComponent::Rectangle(rect) => {
+                    IcedComponent::Rect(rect) => {
+                        let size = Size::new(rect.width, rect.height);
                         let path =  Path::new(|p| {
-                            p.rectangle(rect.top_left, rect.size)});
+                            p.rectangle(Point::new(rect.top_left.0, rect.top_left.1), size)});
                             if rect.fill_color.is_some() {
-                                frame.fill(&path, rect.fill_color.unwrap());
-                            }    
-                            (Some(path), Some(rect.stroke), Some(rect.stroke_width), None, None)
+                                frame.fill(&path, convert_color(rect.fill_color.unwrap()));
+                            }
+                            let stroke_color = convert_color(rect.stroke_color);   
+                            (Some(path), Some(stroke_color), Some(rect.stroke_width))
                     },
-                    _ => (None, None, None, None, None),
+                    _ => (None, None, None),
                 };
 
-                let stroke = match (line_dash, color, width) {
-                    (Some(line_dash), Some(color), Some(width)) => Stroke {
-                        style: stroke::Style::Solid(color),
-                        width,
-                        line_dash: LineDash {
-                            offset: 0,
-                            segments: &line_dash.clone(),
-                        },
-                        ..Stroke::default()
-                    },
-                    (None, Some(color), Some(width)) => Stroke {
-                        style: stroke::Style::Solid(color),
-                        width,
-                        ..Stroke::default()
-                    },
-                    _ => Stroke::default(),
+                let color = match color {
+                    Some(c) => c,
+                    None => Color::TRANSPARENT,
                 };
-                
+                let width = match width {
+                    Some(w) => w,
+                    None => 1.0,
+                };
+
+                let stroke = 
+                    Stroke {
+                        style: stroke::Style::Solid(color),
+                        width,
+                        ..Stroke::default()
+                    };
+                    
                 if let Some(path) = path { frame.stroke(
                     &path,
                     stroke,
@@ -366,21 +362,86 @@ impl DrawCurve {
         let (path, color, width) = 
             match &text_curve {
                 IcedComponent::Text(txt) => {
-                    frame.translate(Vector::new(txt.position.x, txt.position.y));
+                    let x = match txt.x {
+                        Some(x) => x,
+                        None => 0.0,
+                    };
+                    let y = match txt.y {
+                        Some(y) => y,
+                        None => 0.0,
+                    };
+                    let dx = match txt.dx {
+                        Some(dx) => dx,
+                        None => 0.0,
+                    };
+                    let dy = match txt.dy {
+                        Some(dy) => dy,
+                        None => 0.0,
+                    };
+                    let color = match txt.font_color {
+                        Some(c) => convert_color(c),
+                        None => Color::TRANSPARENT,
+                    };
+                    let size = match txt.font_size {
+                        Some(s) => Pixels(s),
+                        None => Pixels(16.0),
+                    };
+                    let line_height = match txt.line_height {
+                        Some(l) => LineHeight::Relative(l),
+                        None => LineHeight::Relative(1.2),
+                    };
+                    // let font = match txt.font_family.clone() {
+                    //     Some(f) => f,
+                    //     None => "Roboto".to_string(),
+                    // };
+                    let horizontal_alignment = 
+                        if txt.text_anchor.is_some() {
+                            match txt.text_anchor.clone().unwrap().as_str() {
+                                "left" => alignment::Horizontal::Left,
+                                "center" => alignment::Horizontal::Center,
+                                "right" =>alignment::Horizontal::Right,
+                                _ => alignment::Horizontal::Left,
+                            }
+                        } else {
+                            alignment::Horizontal::Center                 
+                        };
+                    // let vertical_alignment = 
+                    //     if txt.dominant_baseline.is_some() {
+                    //         match txt.text_anchor.clone().unwrap().as_str() {
+                    //             "hanging" => alignment::Vertical::Top,
+                    //             "middle" => alignment::Vertical::Center,
+                    //             "text-top" =>alignment::Vertical::Bottom,
+                    //             _ => alignment::Vertical::Top,
+                    //         }
+                    //     } else {
+                    //         alignment::Vertical::Top               
+                    //     };
+                    // vertical_alignment = 
+                    //     if txt.alignment_baseline.is_some() {
+                    //         match txt.text_anchor.clone().unwrap().as_str() {
+                    //             "hanging" => alignment::Vertical::Top,
+                    //             "middle" => alignment::Vertical::Center,
+                    //             "text-top" =>alignment::Vertical::Bottom,
+                    //             _ => alignment::Vertical::Top,
+                    //         }
+                    //     } else {
+                    //         alignment::Vertical::Top               
+                    //     };
+                    frame.translate(Vector::new(x, y));
                     frame.fill_text(canvas::Text {
-                        content: txt.content.clone(),
-                        position: Point::new(0.0, -3.0),
-                        color: txt.color,
-                        size: txt.size,
-                        line_height: txt.line_height,
-                        font: Font::with_name("Roboto"),
-                        horizontal_alignment: txt.horizontal_alignment,
-                        vertical_alignment: txt.vertical_alignment,
-                        shaping: txt.shaping,
+                        content: txt.text.clone(),
+                        position: Point::new(dx, dy),
+                        color,
+                        size,
+                        line_height,
+                        font: Font::with_name(&"Roboto"),
+                        horizontal_alignment,
+                        vertical_alignment: alignment::Vertical::Top,
+                        shaping: Shaping::Basic,
                     });
-                    frame.rotate(&txt.rotation * PI/180.0);
+                    frame.rotate(&0.0 * PI/180.0);
                     
-                    (None, Some(txt.color), Some(1.0))
+                    (None, Some(color), Some(1.0))
                 },
                 _ => (None, None, None)
             };
@@ -394,13 +455,17 @@ impl DrawCurve {
         
     }
 
-    fn draw_image(image_curve: &IcedComponent, frame: &mut Frame, _theme: &Theme) {
-        if let IcedComponent::Image(img) = &image_curve {
-             frame.draw_image(
-                         img.bounds,
-                        &img.path,
-             );
-         };
-    }
+    // fn draw_image(image_curve: &IcedComponent, frame: &mut Frame, _theme: &Theme) {
+    //     if let IcedComponent::Image(img) = &image_curve {
+    //          frame.draw_image(
+    //                      img.bounds,
+    //                     &img.path,
+    //          );
+    //      };
+    // }
 
+}
+
+fn convert_color(c: [u8; 4]) -> Color {
+    Color::from_rgba(c[0] as f32, c[1] as f32, c[2] as f32, c[3] as f32)
 }

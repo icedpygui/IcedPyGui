@@ -6,7 +6,7 @@ use canvas::draw_canvas::{IpgCanvasState, IpgDrawMode, IpgDrawStatus, IpgWidget}
 use canvas::geometries::{IpgArc, IpgBezier, IpgCanvasImage, IpgCanvasWidget, 
     IpgCircle, IpgEllipse, IpgLine, IpgPolyLine, IpgPolygon, IpgRectangle};
 
-use chart::draw_chart::{ChartWidget, IpgChartState};
+use chart::draw_chart::{IpgChartState};
 use chart::themes::{IpgChartTheme, CHART_DEFAULT_HEIGHT, CHART_DEFAULT_WIDTH};
 use iced::widget::image;
 
@@ -22,7 +22,6 @@ use ipg_widgets::ipg_timer_canvas::{canvas_timer_item_update, canvas_timer_style
     IpgCanvasTimer, IpgCanvasTimerParam, IpgCanvasTimerStyle, IpgCanvasTimerStyleParam};
 
 use polars::frame::DataFrame;
-use polars::prelude::*;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::PyObject;

@@ -6,11 +6,9 @@ use pyo3::{pyclass, PyObject, Python};
 use charts_rs_mod::{BarChart, SeriesCategory, Box, IcedComponent};
 
 
-use crate::access_chart_state;
+use crate::{access_chart_state, IpgState};
 use crate::app::Message;
-use crate::chart::draw_chart::{IpgChartState, ChartDrawMode, 
-    ChartWidget};
-use crate::chart::geometries::IpgChartWidget;
+use crate::chart::draw_chart::{IpgChartState, ChartDrawMode};
 use crate::chart::themes::IpgChartTheme;
 
 use super::helpers::{
@@ -424,82 +422,83 @@ impl IpgChartSeries {
 
 #[derive(Debug, Clone)]
 pub enum ChartMessage {
-    WidgetDraw(ChartWidget),
+    WidgetDraw(IcedComponent),
 }
 
 
-// pub fn chart_callback(chart_message: ChartMessage, app_state: &mut IpgState, chart_state: &mut IpgChartState) {
-//     match chart_message {
-//         ChartMessage::WidgetDraw(mut widget) => {
-//             match widget {
-//                 ChartWidget::Text(_) => {
-//                     let (draw_mode, draw_status) = get_draw_mode_and_status(&widget);
-//                     let id = get_widget_id(&widget);
-//                     match draw_status {
-//                         IpgDrawStatus::Completed => {
-//                             widget = set_widget_mode_or_status_or_id(widget, Some(IpgDrawMode::Display), None, None);
-//                             chart_state.text_curves.entry(id).and_modify(|k| *k= widget.clone());
-//                             chart_state.timer_event_enabled = false;
-//                             chart_state.draw_mode = IpgDrawMode::Display;
-//                         },
-//                         IpgDrawStatus::Delete => {
-//                             chart_state.text_curves.remove(&id);
-//                             chart_state.timer_event_enabled = false;
-//                         },
-//                         IpgDrawStatus::Inprogress => {
-//                             // Since the text always returns a new curve or updated curve,
-//                             // a check for the first return is need to see if a text is present. 
-//                             let present = chart_state.text_curves.get(&id);
-//                             if present.is_none() {
-//                                 chart_state.text_curves.insert(id, widget.clone());
-//                             } else {
-//                                 chart_state.text_curves.entry(id).and_modify(|k| *k= widget.clone());
-//                             }
-//                         },
-//                     }
-//                     match draw_mode {
-//                         IpgDrawMode::Edit => {
-//                             let id = get_widget_id(&widget);
-//                             chart_state.edit_widget_id = Some(id);
-//                             chart_state.text_curves.entry(id).and_modify(|k| *k= widget);
-//                         },
-//                         _ => (),
-//                     }
-//                     chart_state.request_text_redraw();
-//                 },
-//                 _ => {
-//                     let (draw_mode, draw_status) = get_draw_mode_and_status(&widget);
-//                     match draw_status {
-//                         IpgDrawStatus::Completed => {
-//                             widget = set_widget_mode_or_status_or_id(widget, Some(IpgDrawMode::Display), None, None);
-//                         },
-//                         IpgDrawStatus::Delete => {
-//                             let id = get_widget_id(&widget);
-//                             chart_state.curves.remove(&id);
-//                         },  
-//                         _ => (),
-//                     }
-//                     if draw_mode == IpgDrawMode::New {
-//                         app_state.last_id += 1;
-//                         let id = app_state.last_id;
-//                         let widget = set_widget_mode_or_status_or_id(widget.clone(), 
-//                                                                                 Some(IpgDrawMode::Display), 
-//                                                                                 Some(IpgDrawStatus::Completed), 
-//                                                                                 Some(id));
-//                         chart_state.curves.insert(id, widget);
-//                     } else {
-//                         // if not new must be in edit or rotate mode so modify.
-//                         let id = get_widget_id(&widget);
-//                         chart_state.edit_widget_id = Some(id);
-//                         chart_state.curves.entry(id).and_modify(|k| *k= widget);
-//                     }
+pub fn chart_callback(chart_message: ChartMessage, _app_state: &mut IpgState, _chart_state: &mut IpgChartState) {
+    match chart_message {
+        ChartMessage::WidgetDraw(widget) => {
+            match widget {
+                IcedComponent::Text(_) => {
+                //     let (draw_mode, draw_status) = get_draw_mode_and_status(&widget);
+                //     let id = get_widget_id(&widget);
+                //     match draw_status {
+                //         IpgDrawStatus::Completed => {
+                //             widget = set_widget_mode_or_status_or_id(widget, Some(IpgDrawMode::Display), None, None);
+                //             chart_state.text_curves.entry(id).and_modify(|k| *k= widget.clone());
+                //             chart_state.timer_event_enabled = false;
+                //             chart_state.draw_mode = IpgDrawMode::Display;
+                //         },
+                //         IpgDrawStatus::Delete => {
+                //             chart_state.text_curves.remove(&id);
+                //             chart_state.timer_event_enabled = false;
+                //         },
+                //         IpgDrawStatus::Inprogress => {
+                //             // Since the text always returns a new curve or updated curve,
+                //             // a check for the first return is need to see if a text is present. 
+                //             let present = chart_state.text_curves.get(&id);
+                //             if present.is_none() {
+                //                 chart_state.text_curves.insert(id, widget.clone());
+                //             } else {
+                //                 chart_state.text_curves.entry(id).and_modify(|k| *k= widget.clone());
+                //             }
+                //         },
+                //     }
+                //     match draw_mode {
+                //         IpgDrawMode::Edit => {
+                //             let id = get_widget_id(&widget);
+                //             chart_state.edit_widget_id = Some(id);
+                //             chart_state.text_curves.entry(id).and_modify(|k| *k= widget);
+                //         },
+                //         _ => (),
+                //     }
+                //     chart_state.request_text_redraw();
+                // },
+                // _ => {
+                //     let (draw_mode, draw_status) = get_draw_mode_and_status(&widget);
+                //     match draw_status {
+                //         IpgDrawStatus::Completed => {
+                //             widget = set_widget_mode_or_status_or_id(widget, Some(IpgDrawMode::Display), None, None);
+                //         },
+                //         IpgDrawStatus::Delete => {
+                //             let id = get_widget_id(&widget);
+                //             chart_state.curves.remove(&id);
+                //         },  
+                //         _ => (),
+                //     }
+                //     if draw_mode == IpgDrawMode::New {
+                //         app_state.last_id += 1;
+                //         let id = app_state.last_id;
+                //         let widget = set_widget_mode_or_status_or_id(widget.clone(), 
+                //                                                                 Some(IpgDrawMode::Display), 
+                //                                                                 Some(IpgDrawStatus::Completed), 
+                //                                                                 Some(id));
+                //         chart_state.curves.insert(id, widget);
+                //     } else {
+                //         // if not new must be in edit or rotate mode so modify.
+                //         let id = get_widget_id(&widget);
+                //         chart_state.edit_widget_id = Some(id);
+                //         chart_state.curves.entry(id).and_modify(|k| *k= widget);
+                //     }
                     
-//                     chart_state.request_redraw();
-//                 },
-//             }
-//         }
-//     }
-// }
+                //     chart_state.request_redraw();
+                },
+                _ => (),
+            }
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass(eq, eq_int)]
@@ -512,7 +511,6 @@ pub enum IpgChartParam {
     FilePath,
     Mode,
     PolyPoints,
-    Widget,
     TextAlignment,
 }
 
@@ -579,12 +577,12 @@ pub fn chart_item_update(chart_state: &mut IpgChartState,
             }
             None
         }
-        IpgChartParam::Widget => {
-            let selected_widget = Some(try_extract_widget(value));
-            chart_state.selected_widget = selected_widget;
-            chart_state.timer_event_enabled = selected_widget == Some(IpgChartWidget::Text);
-            None
-        }
+        // IpgChartParam::Widget => {
+        //     let selected_widget = Some(try_extract_widget(value));
+        //     chart_state.selected_widget = selected_widget;
+        //     chart_state.timer_event_enabled = selected_widget == Some(IpgChartWidget::Text);
+        //     None
+        // }
     }
 }
 
@@ -608,15 +606,15 @@ fn try_extract_mode(update_obj: &PyObject) -> ChartDrawMode {
     })
 }
 
-fn try_extract_widget(update_obj: &PyObject) -> IpgChartWidget {
-    Python::with_gil(|py| {
-        let res = update_obj.extract::<IpgChartWidget>(py);
-        match res {
-            Ok(update) => update,
-            Err(_) => panic!("Chart widget update extraction failed"),
-        }
-    })
-}
+// fn try_extract_widget(update_obj: &PyObject) -> IcedComponent {
+//     Python::with_gil(|py| {
+//         let res = update_obj.extract::<IcedComponent>(py);
+//         match res {
+//             Ok(update) => update,
+//             Err(_) => panic!("Chart IcedComponent update extraction failed"),
+//         }
+//     })
+// }
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct BarChartElements {
