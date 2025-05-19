@@ -2,13 +2,15 @@
 // #![allow(clippy::unnecessary_unwrap)]
 use std::f32::consts::PI;
 
-use charts_rs_mod::IcedComponent;
+use charts_rs_mod::GuiComponent;
 use iced::widget::text::{LineHeight, Shaping};
 use iced::{alignment, mouse, Color, Font, Pixels, Size, Vector};
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{self, stroke, Canvas, Frame, Geometry, Path, Stroke};
 use iced::{Element, Point, Renderer, Theme};
 use pyo3::pyclass;
+
+use crate::chart::path_builds::{build_arrow, build_axis, build_circle, build_line, build_polygon, build_polyline, build_straight_line};
 
 use super::geometries::{ChartImage, ChartCircle, ChartEllipse, 
     ChartLine, ChartPolyLine, ChartPolygon, ChartRectangle, ChartText};
@@ -52,15 +54,15 @@ pub struct IpgChartState {
     background_cache: canvas::Cache,
     text_cache: Vec<canvas::Cache>,
     image_cache: Vec<canvas::Cache>,
-    pub curves: Vec<IcedComponent>,
-    pub text_curves: Vec<IcedComponent>,
-    pub image_curves: Vec<IcedComponent>,
+    pub curves: Vec<GuiComponent>,
+    pub text_curves: Vec<GuiComponent>,
+    pub image_curves: Vec<GuiComponent>,
     pub draw_mode: ChartDrawMode,
     pub width: f32,
     pub height: f32,
     pub border_color: Option<Color>,
     pub border_width: Option<f32>,
-    pub selected_widget: Option<IcedComponent>,
+    pub selected_widget: Option<GuiComponent>,
     pub selected_chart_color: Option<Color>,
     pub selected_draw_color: Color,
     pub selected_fill_color: Option<Color>,
@@ -111,10 +113,10 @@ impl Default for IpgChartState {
 
 impl IpgChartState {
     pub fn view<'a>(&'a self, 
-                    curves: &'a Vec<IcedComponent>, 
-                    text_curves: &'a Vec<IcedComponent>,
-                    image_curves: &'a Vec<IcedComponent>,
-                    ) -> Element<'a, IcedComponent> {
+                    curves: &'a Vec<GuiComponent>, 
+                    text_curves: &'a Vec<GuiComponent>,
+                    image_curves: &'a Vec<GuiComponent>,
+                    ) -> Element<'a, GuiComponent> {
         Canvas::new(DrawPending {
             state: self,
             curves,
@@ -158,12 +160,12 @@ impl IpgChartState {
 
 struct DrawPending<'a> {
     state: &'a IpgChartState,
-    curves: &'a Vec<IcedComponent>,
-    text_curves: &'a Vec<IcedComponent>,
-    image_curves: &'a Vec<IcedComponent>,
+    curves: &'a Vec<GuiComponent>,
+    text_curves: &'a Vec<GuiComponent>,
+    image_curves: &'a Vec<GuiComponent>,
 }
 
-impl canvas::Program<IcedComponent> for DrawPending<'_> {
+impl canvas::Program<GuiComponent> for DrawPending<'_> {
     type State = ();
 
     fn update(
@@ -172,7 +174,7 @@ impl canvas::Program<IcedComponent> for DrawPending<'_> {
         _event: Event,
         _bounds: iced::Rectangle,
         _cursor: mouse::Cursor,
-    ) -> (event::Status, Option<IcedComponent>) {
+    ) -> (event::Status, Option<GuiComponent>) {
         (event::Status::Ignored, None)
     }
 
@@ -250,124 +252,67 @@ pub struct DrawCurve {
 }
 
 impl DrawCurve {
-    fn draw_all(curves: &Vec<IcedComponent>, frame: &mut Frame, _theme: &Theme) {
+    fn draw_all(curves: &Vec<GuiComponent>, frame: &mut Frame, _theme: &Theme) {
 
         for widget in curves.iter() {
             dbg!(widget);
-            let (path, 
-                color, 
-                width, 
-                // _offset,
-                // line_dash,
-                ) = 
                 match &widget {
-                    IcedComponent::Circle(cir) => {
-                        let fill_color: Option<Color> = match cir.fill_color {
-                            Some(c) => Some(convert_color(c)),
-                            None => None,
-                        };
-                        let stroke_color: Color = convert_color(cir.stroke_color);
-                        
-                        let path = Path::new(|p| { 
-                            p.circle(Point::new(cir.center.0, cir.center.1), cir.radius);
-                        });
-                        if fill_color.is_some() {
-                            frame.fill(&path, fill_color.unwrap());
-                        }
-
-                        (Some(path), Some(stroke_color), Some(cir.stroke_width))
-                        //, cir.stroke_dash_offset, cir.stroke_dash_segments.clone())
-                        
+                    GuiComponent::Arrow(ar) => {
+                        build_arrow(ar, frame);
                     },
-                    IcedComponent::Line(line) => {
-                        let path = 
-                            Path::new(|p| {
-                                p.move_to(Point::new(line.move_to.0, line.line_to.1));
-                                p.line_to(Point::new(line.line_to.0, line.line_to.1));
-                            });
-                        let stroke_color = convert_color(line.stroke_color);
-
-                        (Some(path), Some(stroke_color), Some(line.stroke_width))
+                    GuiComponent::Axis(ax) => {
+                        build_axis(axis, frame);
                     },
-                    IcedComponent::Polyline(pl) => {
-                        let path = 
-                            Path::new(|p| {
-                                for (index, (x, y)) in pl.points.iter().enumerate() {
-                                    if index == 0 {
-                                        p.move_to(Point::new(*x, *y));
-                                    } else {
-                                        p.line_to(Point::new(*x, *y));
-                                    }
-                                }
-                            });
-                        let stroke_color = convert_color(pl.stroke_color);
-                        (Some(path), Some(stroke_color), Some(pl.stroke_width))
+                    GuiComponent::Bubble(bu) => {
+                        build_bubble(bu, frame);
                     },
-                    IcedComponent::Polygon(pg) => {
-                        let path = 
-                            Path::new(|p| {
-                                for (index, (x, y)) in pg.points.iter().enumerate() {
-                                    if index == 0 {
-                                        p.move_to(Point::new(*x, *y));
-                                    } else {
-                                        p.line_to(Point::new(*x, *y));
-                                    }
-                                }
-                        });
-                        if pg.fill_color.is_some() {
-                            frame.fill(&path, convert_color(pg.fill_color.unwrap()));
-                        }
-
-                        let stroke_color = convert_color(pg.stroke_color);
-                        (Some(path), Some(stroke_color), Some(pg.stroke_width))
+                    GuiComponent::Circle(cir) => {
+                        build_circle(cir, frame);
                     },
-                    IcedComponent::Rect(rect) => {
-                        let size = Size::new(rect.width, rect.height);
-                        let fill_color = match rect.fill_color {
-                            Some(c) => Color::from_rgba8(c.r, c.g, c.b, c.a),
-                            None => Color::TRANSPARENT,
-                        };
-                        let stroke_color = convert_color(rect.stroke_color); 
-                       
-                        let path =  Path::new(|p| {
-                            p.rectangle(Point::new(rect.top_left.0, rect.top_left.1), size)});
-                            if rect.fill_color.is_some() {
-                                frame.fill(&path, fill_color);
-                            }
-                              
-                            (Some(path), Some(stroke_color), Some(rect.stroke_width))
+                    GuiComponent::Grid(gd) => {
+                        build_grid(gd, frame);
+                    }, 
+                    GuiComponent::Legend(leg) => {
+                        build_legend(leg, frame),
                     },
-                    _ => (None, None, None),
+                    GuiComponent::Line(line) => {
+                        build_line(line, frame);
+                    },
+                    GuiComponent::None => (),
+                    GuiComponent::Pie(pi) => {
+                        build_pie(pi, frame);
+                    },
+                    GuiComponent::Polygon(pg) => {
+                        build_polygon(pg, frame);
+                    },
+                    GuiComponent::Polyline(pl) => {
+                        build_polyline(pl, frame);
+                    },
+                    GuiComponent::Rect(rect) => {
+                        build_rect(rect, frame);
+                    },
+                    GuiComponent::SmoothLine(sl) => {
+                        build_smooth_line(sl, frame);
+                    },
+                    GuiComponent::SmoothLineFill(slf) => {
+                        build_smooth_line_fill(slf, frame);
+                    },
+                    GuiComponent::StraightLine(sl) => {
+                        build_straight_line(sl, frame);
+                    },
+                    GuiComponent::StraightLineFill(slf) => {
+                        build_straight_line_fill(slf, frame);
+                    },
+                    _ => ()
                 };
-
-                let color = match color {
-                    Some(c) => c,
-                    None => Color::TRANSPARENT,
-                };
-                let width = match width {
-                    Some(w) => w,
-                    None => 1.0,
-                };
-
-                let stroke = 
-                    Stroke {
-                        style: stroke::Style::Solid(color),
-                        width,
-                        ..Stroke::default()
-                    };
-                    
-                if let Some(path) = path { frame.stroke(
-                    &path,
-                    stroke,
-                    ) }
         }
 
     }
 
-    fn draw_text(text_curve: &IcedComponent, frame: &mut Frame, _theme: &Theme) {
+    fn draw_text(text_curve: &GuiComponent, frame: &mut Frame, _theme: &Theme) {
         let (path, color, width) = 
             match &text_curve {
-                IcedComponent::Text(txt) => {
+                GuiComponent::Text(txt) => {
                     let x = match txt.x {
                         Some(x) => x,
                         None => 0.0,
@@ -461,8 +406,8 @@ impl DrawCurve {
         
     }
 
-    // fn draw_image(image_curve: &IcedComponent, frame: &mut Frame, _theme: &Theme) {
-    //     if let IcedComponent::Image(img) = &image_curve {
+    // fn draw_image(image_curve: &GuiComponent, frame: &mut Frame, _theme: &Theme) {
+    //     if let GuiComponent::Image(img) = &image_curve {
     //          frame.draw_image(
     //                      img.bounds,
     //                     &img.path,

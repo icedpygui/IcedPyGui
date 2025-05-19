@@ -3,7 +3,7 @@ use iced::widget::container;
 
 use iced::{Color, Element};
 use pyo3::{pyclass, PyObject, Python};
-use charts_rs_mod::{BarChart, SeriesCategory, Box, IcedComponent};
+use charts_rs_mod::{BarChart, SeriesCategory, Box, GuiComponent};
 
 
 use crate::{access_chart_state, IpgState};
@@ -138,7 +138,7 @@ pub fn construct_chart(
         bar_chart.y_axis_configs[0].axis_formatter = Some("{c} ml".to_string());
         bar_chart.y_axis_configs[1].axis_formatter = Some("{c} °C".to_string());
 
-        let bc = bar_chart.iced();
+        let bc = bar_chart.gui();
         for comp in bc {
             if get_type(&comp) {
                 cs.text_curves.push(comp);
@@ -149,9 +149,9 @@ pub fn construct_chart(
         
 }
 
-fn get_type(ic: &IcedComponent) -> bool {
+fn get_type(ic: &GuiComponent) -> bool {
     match ic {
-        IcedComponent::Text(_) => true,
+        GuiComponent::Text(_) => true,
         _ => false,
     }
 }
@@ -731,7 +731,7 @@ impl IpgChartSeries {
 
 #[derive(Debug, Clone)]
 pub enum ChartMessage {
-    WidgetDraw(IcedComponent),
+    WidgetDraw(GuiComponent),
 }
 
 
@@ -739,7 +739,7 @@ pub fn chart_callback(chart_message: ChartMessage, _app_state: &mut IpgState, _c
     match chart_message {
         ChartMessage::WidgetDraw(widget) => {
             match widget {
-                IcedComponent::Text(_) => {
+                GuiComponent::Text(_) => {
                 //     let (draw_mode, draw_status) = get_draw_mode_and_status(&widget);
                 //     let id = get_widget_id(&widget);
                 //     match draw_status {

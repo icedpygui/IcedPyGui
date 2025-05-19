@@ -341,13 +341,13 @@ pub fn access_canvas_state() -> MutexGuard<'static, CanvasState> {
     CANVAS_STATE.lock().unwrap()
 }
 
-use charts_rs_mod::IcedComponent;
+use charts_rs_mod::GuiComponent;
 #[derive(Debug)]
 pub struct ChartState {
     pub chart_ids: Lazy<HashMap<String, usize>>,
-    pub curves: Vec<IcedComponent>,
-    pub text_curves: Vec<IcedComponent>,
-    pub image_curves: Vec<IcedComponent>,
+    pub curves: Vec<GuiComponent>,
+    pub text_curves: Vec<GuiComponent>,
+    pub image_curves: Vec<GuiComponent>,
     pub charts: Lazy<HashMap<usize, IpgChart>>,
     pub titles: Lazy<HashMap<usize, IpgChartTitle>>,
     pub legends: Lazy<HashMap<usize, IpgChartLegend>>,
