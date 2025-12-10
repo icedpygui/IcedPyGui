@@ -1,4 +1,7 @@
-# IcedPyGui (IPG)
+## Project moved over to https://github.com/ray-iced-projects/iced-py-gui
+
+
+## This project is archived.
 
 Python wrapper for Rust Iced Gui
 
